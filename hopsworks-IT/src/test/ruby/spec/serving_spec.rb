@@ -996,11 +996,9 @@ describe "On #{ENV['OS']}" do
       before :all do
         with_valid_project
         with_tensorflow_serving(@project[:id], @project[:projectname], @user[:username])
-      end
 
-      before :each do
         start_serving(@project, @serving)
-        sleep(5) # Wait a bit for tfserving server to be in a running state
+        wait_for_serving_status(@serving[:name], "Running")
       end
 
       after :all do
@@ -1012,27 +1010,24 @@ describe "On #{ENV['OS']}" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
         expect_status_details(200)
 
-        sleep(5)
-
-        check_process_running("tensorflow_model_server")
+        wait_for_serving_status(@serving[:name], "Stopped")
       end
 
       it "should fail to kill a non running instance" do
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
-        expect_status_details(200)
-
-        sleep(5)
-
-        check_process_running("tensorflow_model_server")
+        # serving is already stopped
 
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
         expect_status_details(400, error_code: 240003)
       end
 
-      it "should mark the serving as not running if the process dies" do
+      it "should mark the serving as failed if the process dies" do
         if kubernetes_installed
           skip "This test does not run on Kubernetes"
         end
+
+        start_serving(@project, @serving)
+        wait_for_serving_status(@serving[:name], "Running")
+
         # Simulate the process dying by its own
         system "pgrep -f tensorflow_model_server | xargs kill -9"
 
@@ -1040,9 +1035,9 @@ describe "On #{ENV['OS']}" do
         wait_result = wait_for_me_time(30, 4) do
           serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
           serving = JSON.parse(serving_list).select { |serving| serving["name"] == @serving[:name]}[0]
-          { 'success': serving['status'].eql?("Stopped"), 'status': serving['status'] }
+          { 'success': serving['status'].eql?("Failed"), 'status': serving['status'] }
         end
-        expect(wait_result[:status]).to eql "Stopped"
+        expect(wait_result[:status]).to eql "Failed"
       end
     end
   end
@@ -1083,6 +1078,11 @@ describe "On #{ENV['OS']}" do
 
       before :each do
         @serving = create_tensorflow_serving(@project[:id], @project[:projectname])
+      end
+
+      after :all do
+        purge_all_tf_serving_instances
+        delete_all_servings(@project[:id])
       end
 
       it "should delete a serving instance" do
@@ -1129,15 +1129,15 @@ describe "On #{ENV['OS']}" do
       it "should return all servings" do
         get_servings(@project, nil)
         expect_status_details(200)
-        json_body.each {|model| expect(model[:status]).to eq "Stopped"}
+        json_body.each {|model| expect(model[:status]).to eq "Created"}
         expect(json_body.length).to eq 3
       end
 
       describe "#status" do
-        it "should return all stopped servings" do
-          get_servings(@project, "?status=Stopped")
+        it "should return all servings in created state" do
+          get_servings(@project, "?status=Created")
           expect_status_details(200)
-          json_body.each {|model| expect(model[:status]).to eq "Stopped"}
+          json_body.each {|model| expect(model[:status]).to eq "Created"}
           expect(json_body.length).to eq 3
         end
 

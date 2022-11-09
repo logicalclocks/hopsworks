@@ -45,6 +45,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static io.hops.hopsworks.common.hdfs.HdfsUsersController.USER_NAME_DELIMITER;
+import static io.hops.hopsworks.common.serving.LocalhostServingController.CID_FAILED;
 import static io.hops.hopsworks.common.serving.LocalhostServingController.SERVING_DIRS;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import static io.hops.hopsworks.common.serving.LocalhostServingController.CID_STOPPED;
@@ -216,6 +217,9 @@ public class LocalhostTfServingController {
           .build();
       logger.log(Level.INFO, processDescriptor.toString());
     } catch (ServiceDiscoveryException ex) {
+      // Startup process failed for some reason
+      serving.setCid(CID_FAILED);
+      servingFacade.updateDbObject(serving, project);
       throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR_INT, Level.SEVERE, null, ex.getMessage(),
         ex);
     }
@@ -225,6 +229,8 @@ public class LocalhostTfServingController {
       try {
         certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
       } catch (IOException e) {
+        serving.setCid(CID_FAILED);
+        servingFacade.updateDbObject(serving, project);
         throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR_INT, Level.SEVERE,
             null, e.getMessage(), e);
       } finally {
@@ -238,7 +244,7 @@ public class LocalhostTfServingController {
 
       if (processResult.getExitCode() != 0) {
         // Startup process failed for some reason
-        serving.setCid(CID_STOPPED);
+        serving.setCid(CID_FAILED);
         servingFacade.updateDbObject(serving, project);
         throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR_INT, Level.INFO);
       }
@@ -254,12 +260,10 @@ public class LocalhostTfServingController {
       servingFacade.updateDbObject(serving, project);
     } catch (Exception ex) {
       // Startup process failed for some reason
-      serving.setCid(CID_STOPPED);
+      serving.setCid(CID_FAILED);
       servingFacade.updateDbObject(serving, project);
-
       throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR_INT, Level.SEVERE, null,
           ex.getMessage(), ex);
-
     } finally {
       if (settings.getHopsRpcTls()) {
         certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());

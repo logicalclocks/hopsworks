@@ -20,6 +20,7 @@ package io.hops.hopsworks.api.serving;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
+import io.hops.hopsworks.common.serving.ServingStatusCondition;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.hops.hopsworks.persistence.entity.serving.BatchingConfiguration;
@@ -58,6 +59,8 @@ public class ServingView implements Serializable {
   private ModelServer modelServer;
   private ServingTool servingTool;
   private Date deployed;
+  private String revision;
+  private ServingStatusCondition condition;
   private BatchingConfiguration batchingConfiguration;
   
   // TODO(Fabio): use expansions here
@@ -90,6 +93,8 @@ public class ServingView implements Serializable {
     this.modelServer = servingWrapper.getServing().getModelServer();
     this.servingTool = servingWrapper.getServing().getServingTool();
     this.deployed = servingWrapper.getServing().getDeployed();
+    this.revision = servingWrapper.getServing().getRevision();
+    this.condition = servingWrapper.getCondition();
     Users user = servingWrapper.getServing().getCreator();
     this.creator = user.getFname() + " " + user.getLname();
     this.batchingConfiguration = servingWrapper.getServing().getBatchingConfiguration();
@@ -253,6 +258,22 @@ public class ServingView implements Serializable {
   
   public void setDeployed(Date deployed) {
     this.deployed = deployed;
+  }
+  
+  @ApiModelProperty(value = "Revision identifier of the last deployment", readOnly = true)
+  public String getRevision() {
+    return revision;
+  }
+  public void setRevision(String revision) {
+    this.revision = revision;
+  }
+  
+  @ApiModelProperty(value = "Condition of the serving replicas", readOnly = true)
+  public ServingStatusCondition getCondition() {
+    return condition;
+  }
+  public void setCondition(ServingStatusCondition condition) {
+    this.condition = condition;
   }
 
   @ApiModelProperty(value = "Request batching configuration for inference", readOnly = true)

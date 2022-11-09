@@ -36,27 +36,28 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 package io.hops.hopsworks.common.serving;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ServingStatusEnum {
-  
-  RUNNING("Running"),
-  STOPPED("Stopped"),
-  STARTED("Started"),
+  CREATED("Created"),
   STARTING("Starting"),
+  FAILED("Failed"),
+  RUNNING("Running"),
+  IDLE("Idle"),
   UPDATING("Updating"),
   STOPPING("Stopping"),
-  TRANSFORMING("Transforming");
-
+  STOPPED("Stopped");
+  
   private final String readable;
-
+  
   ServingStatusEnum(String readable) {
     this.readable = readable;
   }
-
+  
   @JsonValue
   public String getReadable() {
     return readable;
@@ -65,24 +66,13 @@ public enum ServingStatusEnum {
   @JsonCreator
   public static ServingStatusEnum fromString(String status) {
     if (status != null) {
-      switch (status.toLowerCase()) {
-        case "running":
-          return RUNNING;
-        case "stopped":
-          return STOPPED;
-        case "started":
-          return STARTED;
-        case "starting":
-          return STARTING;
-        case "updating":
-          return UPDATING;
-        case "stopping":
-          return STOPPING;
-        case "transforming":
-          return TRANSFORMING;
-        default:
-          throw new IllegalArgumentException("Unknown status '" + status + "'");
+      status = status.toLowerCase();
+      for (ServingStatusEnum value : ServingStatusEnum.values()) {
+        if (value.toString().toLowerCase().equals(status)) {
+          return value;
+        }
       }
+      throw new IllegalArgumentException("Unknown status '" + status + "'");
     }
     return null;
   }
