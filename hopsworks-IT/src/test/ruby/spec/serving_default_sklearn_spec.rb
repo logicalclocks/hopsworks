@@ -322,10 +322,13 @@ describe "On #{ENV['OS']}" do
           delete_all_servings(@project[:id])
         end
 
-        it "should mark the serving as not running if the process dies" do
+        it "should mark the serving as failed if the process dies" do
           if kubernetes_installed
             skip "This test does not run on Kubernetes"
           end
+
+          start_serving(@project, @serving)
+          wait_for_type("sklearn_flask_server.py")
 
           # Simulate the process dying by its own
           system "pgrep -f sklearn_flask_server.py | xargs kill -9"
@@ -336,7 +339,7 @@ describe "On #{ENV['OS']}" do
           # Check that the serving is reported as dead
           serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
           serving = JSON.parse(serving_list).select {|serving| serving["name"] == @serving[:name]}[0]
-          expect(serving['status']).to eql "Stopped"
+          expect(serving['status']).to eql "Failed"
         end
       end
     end
@@ -358,7 +361,7 @@ describe "On #{ENV['OS']}" do
           delete_all_servings(@project[:id])
         end
 
-        it "should mark the serving as not running if the process dies" do
+        it "should mark the serving as failed if the process dies" do
           if kubernetes_installed
             skip "This test does not run on Kubernetes"
           end
@@ -375,7 +378,7 @@ describe "On #{ENV['OS']}" do
           # Check that the serving is reported as dead
           serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
           serving = JSON.parse(serving_list).select {|serving| serving["name"] == @serving[:name]}[0]
-          expect(serving['status']).to eql "Stopped"
+          expect(serving['status']).to eql "Failed"
         end
 
         it "should delete a serving instance" do

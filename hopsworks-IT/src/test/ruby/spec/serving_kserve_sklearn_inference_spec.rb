@@ -105,7 +105,7 @@ describe "On #{ENV['OS']}" do
 
       it "should fail to send a request to a non running model" do
         serving = get_serving(@serving[:name])
-        expect(serving[:status]).not_to eq("RUNNING")
+        expect(serving[:status]).not_to eq("Running")
 
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
             instances: test_data

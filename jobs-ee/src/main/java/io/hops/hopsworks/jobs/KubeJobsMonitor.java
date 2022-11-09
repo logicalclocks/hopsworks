@@ -70,7 +70,7 @@ public class KubeJobsMonitor implements JobsMonitor {
       
       Map<String, String> label = new HashMap<>();
       label.put("deployment-type", "job");
-      List<Pod> pods = kubeClientService.getPodList(label);
+      List<Pod> pods = kubeClientService.getPods(label);
       // Go through all fetched jobs and update state accordingly
       for (Pod pod : pods) {
         int executionId = Integer.parseInt(pod.getMetadata().getLabels().get("execution"));

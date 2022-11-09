@@ -8,9 +8,9 @@ import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryExcept
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.hops.hopsworks.common.serving.ServingLogs;
+import io.hops.hopsworks.common.serving.ServingStatusCondition;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.ServingException;
@@ -26,6 +26,7 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.javatuples.Pair;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -38,6 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -60,7 +62,7 @@ public class KubeKServeController extends KubeToolServingController {
   
   @Override
   public void createInstance(Project project, Users user, Serving serving) throws ServingException {
-    createOrReplace(project, user, buildInferenceService(project, user, serving));
+    createOrReplace(project, buildInferenceService(project, user, serving));
   }
   
   @Override
@@ -70,7 +72,7 @@ public class KubeKServeController extends KubeToolServingController {
       if (metadata != null) {
         // When updating an inference service, the current resource version must be indicated
         String resourceVersion = metadata.getString("resourceVersion");
-        createOrReplace(project, user, buildInferenceService(project, user, serving, resourceVersion));
+        createOrReplace(project, buildInferenceService(project, user, serving, resourceVersion));
       }
     } catch (KubernetesClientException e) {
       throw new ServingException(RESTCodes.ServingErrorCode.UPDATE_ERROR, Level.SEVERE, null, e.getMessage(), e);
@@ -92,54 +94,33 @@ public class KubeKServeController extends KubeToolServingController {
   
   @Override
   public KubeServingInternalStatus getInternalStatus(Project project, Serving serving) throws ServingException {
-    ServingStatusEnum status;
+    Pair<ServingStatusEnum, ServingStatusCondition> statusAndCondition;
     JSONObject inferenceService;
-    DeploymentStatus deploymentStatus;
-    DeploymentStatus transformerDeploymentStatus = null;
-    
+    List<Pod> pods;
     try {
       inferenceService = kubeKServeClientService.getInferenceService(project, serving);
-      deploymentStatus = getDeploymentStatus(project, serving, "predictor");
-      status = getServingStatus(project, serving, inferenceService);
-      if (serving.getTransformer() != null) {
-        transformerDeploymentStatus = getDeploymentStatus(project, serving, "transformer");
-      }
+      pods = getPods(project, serving, null);
     } catch (KubernetesClientException e) {
       throw new ServingException(RESTCodes.ServingErrorCode.STATUS_ERROR, Level.SEVERE, null, e.getMessage(), e);
     }
   
-    Integer availableReplicas = kubeServingUtils.getAvailableReplicas(deploymentStatus);
-    Integer availableTransformerReplicas = null;
-    if (serving.getTransformer() != null) {
-      availableTransformerReplicas = kubeServingUtils.getAvailableReplicas(transformerDeploymentStatus);
-    }
-
-    // These variables are accessed from within inner class, needs to be final or effectively final
-    ServingStatusEnum finalStatus = status;
-    Integer finalAvailableTransformerReplicas = availableTransformerReplicas;
+    // Get deployment status and condition
+    statusAndCondition = getServingStatusAndCondition(serving, inferenceService, pods);
     
-    List<String> conditions = new ArrayList<>();
-    if (inferenceService != null && inferenceService.has("status")) {
-      JSONObject jsonStatus = inferenceService.getJSONObject("status");
-      JSONArray jsonConditions = jsonStatus.has("conditions") ? jsonStatus.getJSONArray("conditions") : new JSONArray();
-      for (int i = 0; i < jsonConditions.length(); i++) {
-        JSONObject condition = jsonConditions.getJSONObject(i);
-        if (condition.has("reason") && condition.getString("reason").equals("RevisionFailed")
-          && !condition.getString("status").equals("True")) {
-          String msg = condition.getString("message");
-          String component = condition.getString("type").contains("Predictor") ? "Predictor" : "Transformer";
-          conditions.add(component + ":" + (msg.contains(":") ? msg.substring(msg.indexOf(":") + 1) : msg));
-        }
-      }
-    }
+    // Get number of running replicas
+    Map<String, Long> replicas = pods.stream().parallel().collect(
+      Collectors.groupingBy(p -> p.getMetadata().getLabels().getOrDefault("component", "predictor"),
+        Collectors.counting()));
+    Integer availablePredReplicas = replicas.getOrDefault("predictor", 0L).intValue();
+    Integer availableTransReplicas = replicas.getOrDefault("transformer", 0L).intValue();
     
     return new KubeServingInternalStatus() {
       {
-        setServingStatus(finalStatus);
+        setServingStatus(statusAndCondition.getValue0());
         setAvailable(inferenceService != null);
-        setAvailableReplicas(availableReplicas);
-        setAvailableTransformerReplicas(finalAvailableTransformerReplicas);
-        setConditions(conditions.size() > 0 ? conditions : null);
+        setAvailableReplicas(availablePredReplicas);
+        setAvailableTransformerReplicas(availableTransReplicas);
+        setCondition(statusAndCondition.getValue1());
         setModelServerInferencePath(kubeServingUtils.getModelServerInferencePath(serving, null));
         setHopsworksInferencePath(kubeServingUtils.getHopsworksInferencePath(serving, null));
       }
@@ -149,7 +130,7 @@ public class KubeKServeController extends KubeToolServingController {
   @Override
   public List<ServingLogs> getLogs(Project project, Serving serving, String component, Integer tailingLines) {
     ArrayList<ServingLogs> logs = new ArrayList<>();
-    List<Pod> pods = getPodList(project, serving, component);
+    List<Pod> pods = getPods(project, serving, component);
     for (Pod pod : pods) {
       String content = kubeClientService.getLogs(pod.getMetadata().getNamespace(), pod.getMetadata().getName(),
         KubeServingUtils.KSERVE_CONTAINER, tailingLines, KubeServingUtils.LIMIT_BYTES);
@@ -158,72 +139,128 @@ public class KubeKServeController extends KubeToolServingController {
     return logs;
   }
   
-  public DeploymentStatus getDeploymentStatus(Project project, Serving serving, String component) {
-    Map<String, String> labelMap = new HashMap<>();
-    labelMap.put(KubeServingUtils.SERVING_ID_LABEL_NAME, String.valueOf(serving.getId()));
-    labelMap.put(KubeServingUtils.REVISION_LABEL_NAME, String.valueOf(serving.getRevision()));
-    labelMap.put(KubeServingUtils.COMPONENT_LABEL_NAME, component);
-    return kubeClientService.getDeploymentStatus(project, labelMap);
-  }
-  
-  private void createOrReplace(Project project, Users user, JSONObject inferenceService) {
+  private void createOrReplace(Project project, JSONObject inferenceService) {
     kubeKServeClientService.createOrReplaceInferenceService(project, inferenceService);
   }
   
-  private ServingStatusEnum getServingStatus(Project project, Serving serving, JSONObject inferenceService) {
+  private Pair<ServingStatusEnum, ServingStatusCondition> getServingStatusAndCondition(Serving serving,
+    JSONObject inferenceService, List<Pod> pods) {
     
+    // Detect created, stopped or stopping deployments.
     if (serving.getDeployed() == null) {
-      // If the serving has not been deployed
+      // if the deployment is not deployed, it can be stopping, stopped or just created.
+      ServingStatusCondition condition = kubeServingUtils.getDeploymentCondition(serving.getDeployed(), pods);
       if (inferenceService == null) {
-        // and the inference service is not created, check running pods
-        List<Pod> podList = getPodList(project, serving, null);
-        return podList.isEmpty()
-          ? ServingStatusEnum.STOPPED
-          : ServingStatusEnum.STOPPING;
+        // if the inference service is not created, check running pods
+        if (pods.isEmpty()) {
+          // if no pods are running, inference service is stopped or has never been started (no revision number)
+          return new Pair<>(
+            serving.getRevision() == null ? ServingStatusEnum.CREATED : ServingStatusEnum.STOPPED,
+            condition
+          );
+        }
       }
       // Otherwise, the serving is still stopping
-      return ServingStatusEnum.STOPPING;
+      return new Pair<>(ServingStatusEnum.STOPPING, condition);
     }
     
-    // If the serving has been deployed
-    if (inferenceService == null || !inferenceService.has("metadata") || !inferenceService.has("status")) {
-      // but the inference service is not created, the serving is still starting
-      return ServingStatusEnum.STARTING;
+    // If the deployment has been deployed
+    if (inferenceService == null || !inferenceService.has("metadata") || !inferenceService.has("status")
+      || !inferenceService.getJSONObject("status").has("conditions")) {
+      // but the inference service is not created, the deployment is still starting
+      return new Pair<>(
+        ServingStatusEnum.STARTING,
+        ServingStatusCondition.getScheduledInProgressCondition()
+      );
     }
 
     // Otherwise, check inference service conditions
     JSONObject status = inferenceService.getJSONObject("status");
-    JSONArray conditions = status.has("conditions") ? status.getJSONArray("conditions") : new JSONArray();
+    if (!status.has("conditions")) {
+      // if conditions are not available yet, the serving is still starting
+      return new Pair<>(
+        ServingStatusEnum.STARTING,
+        ServingStatusCondition.getScheduledInProgressCondition()
+      );
+    }
+    JSONArray conditions = status.getJSONArray("conditions");
+    
+    // Extract ready condition
+    JSONObject ready = null;
     for (int i = 0; i < conditions.length(); i++) {
       JSONObject condition = conditions.getJSONObject(i);
-      if (condition.getString("type").endsWith("Ready") && !condition.getString("status").equals("True")) {
-        JSONObject metadata = inferenceService.getJSONObject("metadata");
-        String revision = metadata.getJSONObject("labels").getString(KubeServingUtils.REVISION_LABEL_NAME);
-        return metadata.getInt("generation") == 1 && revision.equals(serving.getRevision())
-          ? ServingStatusEnum.STARTING
-          : ServingStatusEnum.UPDATING;
+      if (condition.getString("type").equals("Ready")) {
+        ready = condition;
       }
     }
     
-    // If nº of available replicas matches or scale-to-zero enabled, the serving is running
-    return ServingStatusEnum.RUNNING;
+    // Check inference service ready status
+    String readyStatus = ready != null ? ready.getString("status") : "False";
+    if (readyStatus.equals("False") || readyStatus.equals("Unknown")) {
+      // Sometimes Knative fails to reconcile the ingress with a warning message: "object has been updated". In this
+      // case, KServe temporarily sets Ready to False, until Knative reconciles the ingress successfully.
+      
+      ServingStatusCondition condition = kubeServingUtils.getDeploymentCondition(serving.getDeployed(), pods);
+      if (condition.getStatus() != null && !condition.getStatus()) {
+        // if the status is False, it failed
+        return new Pair<>(ServingStatusEnum.FAILED, condition);
+      }
+
+      // otherwise, it is starting or updating
+      JSONObject metadata = inferenceService.getJSONObject("metadata");
+      String revision = metadata.getJSONObject("labels").getString(KubeServingUtils.REVISION_LABEL_NAME);
+      ServingStatusEnum servingStatus = metadata.getInt("generation") == 1 && revision.equals(serving.getRevision())
+        ? ServingStatusEnum.STARTING
+        : ServingStatusEnum.UPDATING;
+      return new Pair<>(servingStatus, condition);
+    }
+  
+    // if the status is True, the inference service is either running or idle.
+    if (pods.isEmpty()) {
+      // if no pods running, the deployment scaled to zero replicas
+      return new Pair<>(
+        ServingStatusEnum.IDLE,
+        ServingStatusCondition.getReadySuccessCondition(kubeServingUtils.READY_SUCCESS_IDLE_CONDITION_MESSAGE)
+      );
+    }
+    // if no available predictors or no available transformers, deployment is IDLE
+    Integer predReplicas = 0, transReplicas = 0;
+    for (Pod pod : pods) {
+      String component = pod.getMetadata().getLabels().getOrDefault("component", "predictor");
+      if (component.equals("predictor")) {
+        predReplicas += 1;
+      } else {
+        transReplicas += 1;
+      }
+    }
+    if (predReplicas == 0 || (serving.getTransformer() != null && transReplicas == 0)) {
+      return new Pair<>(
+        ServingStatusEnum.IDLE,
+        ServingStatusCondition.getReadySuccessCondition(kubeServingUtils.READY_SUCCESS_IDLE_CONDITION_MESSAGE)
+      );
+    }
+    return new Pair<>(
+      ServingStatusEnum.RUNNING,
+      ServingStatusCondition.getReadySuccessCondition()
+    );
   }
   
-  private List<Pod> getPodList(Project project, Serving serving, String component) {
+  private List<Pod> getPods(Project project, Serving serving, String component) {
     Map<String, String> labelMap = new HashMap<>();
     labelMap.put(KubeServingUtils.SERVING_ID_LABEL_NAME, String.valueOf(serving.getId()));
     labelMap.put(KubeServingUtils.REVISION_LABEL_NAME, String.valueOf(serving.getRevision()));
     if (component != null) {
       labelMap.put(KubeServingUtils.COMPONENT_LABEL_NAME, component);
     }
-    return kubeClientService.getPodList(project, labelMap);
+    return kubeClientService.getPods(project, labelMap);
   }
 
   private JSONObject buildInferenceService(Project project, Users user, Serving serving) throws ServingException {
     return buildInferenceService(project, user, serving, null);
   }
+
   private JSONObject buildInferenceService(Project project, Users user, Serving serving, String resourceVersion)
-      throws ServingException {
+    throws ServingException {
     
     // Metadata
     JSONObject metadata = kubeJsonUtils.buildInferenceServiceMetadata(getInferenceServiceMetadataObject(project,
@@ -238,7 +275,7 @@ public class KubeKServeController extends KubeToolServingController {
     } catch (ServiceDiscoveryException | ApiKeyException e) {
       throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR_INT, Level.INFO, null, e.getMessage(), e);
     }
-  
+
     // Add transformer if defined
     JSONObject transformer = null;
     if (serving.getTransformer() != null) {

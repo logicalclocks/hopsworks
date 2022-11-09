@@ -118,9 +118,7 @@ describe "On #{ENV['OS']}" do
 
         after :all do
           stop_serving(@project, @serving)
-
-          # Sleep some time while the inference service stops
-          sleep(10) # 30
+          wait_for_serving_status(@serving[:name], "Stopped")
         end
 
         it "should fail to infer from a KServe serving with JWT authentication" do
@@ -156,7 +154,7 @@ describe "On #{ENV['OS']}" do
 
       it "should fail to send a request to a non running model" do
         serving = get_serving(@serving[:name])
-        expect(serving[:status]).not_to eq("RUNNING")
+        expect(serving[:status]).not_to eq("Running")
 
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
             signature_name: 'predict_images',

@@ -5,6 +5,7 @@
 package io.hops.hopsworks.kube.serving;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -12,9 +13,11 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.Toleration;
 import io.fabric8.kubernetes.api.model.TolerationBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentCondition;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.hops.hopsworks.common.serving.ServingLogs;
+import io.hops.hopsworks.common.serving.ServingStatusCondition;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.ServingException;
@@ -26,6 +29,7 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.javatuples.Pair;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -35,6 +39,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -109,32 +114,31 @@ public class KubeDeploymentServingController extends KubeToolServingController {
     KubePredictorServerUtils kubePredictorServerUtils = kubePredictorUtils.getPredictorServerUtils(serving);
     
     DeploymentStatus deploymentStatus;
-    List<Pod> podList;
+    List<Pod> pods;
     Service instanceService;
     try {
       deploymentStatus = kubeClientService.getDeploymentStatus(project, getDeploymentName(servingId,
         kubePredictorServerUtils));
-      podList = getPodList(project, serving);
+      pods = getPods(project, serving);
       instanceService = kubeClientService.getServiceInfo(project, getServiceName(servingId, kubePredictorServerUtils));
     } catch (KubernetesClientException e) {
       throw new ServingException(RESTCodes.ServingErrorCode.STATUS_ERROR, Level.SEVERE,
         "Error while getting service status", e.getMessage(), e);
     }
 
-    ServingStatusEnum status = getServingStatus(serving, deploymentStatus, podList);
-    Integer nodePort = instanceService == null ? null : instanceService.getSpec().getPorts().get(0).getNodePort();
+    // Get deployment status and condition
+    Pair<ServingStatusEnum, ServingStatusCondition> statusAndCondition = getServingStatusAndCondition(serving,
+      deploymentStatus, pods);
+  
+    // Get number of running replicas
     Integer availableReplicas = kubeServingUtils.getAvailableReplicas(deploymentStatus);
-    List<String> conditions = deploymentStatus == null ? new ArrayList<>() : deploymentStatus.getConditions().stream()
-      .filter(c -> c.getType().equals("Available") && c.getStatus().equals("False"))
-      .map(c -> String.format("Predictor: %s - %s", c.getReason(), c.getMessage()))
-      .collect(Collectors.toList());
-    
+
     return new KubeServingInternalStatus() {
       {
-        setServingStatus(status);
+        setServingStatus(statusAndCondition.getValue0());
         setAvailable(deploymentStatus != null && instanceService != null);
         setAvailableReplicas(availableReplicas);
-        setConditions(conditions.size() > 0 ? conditions : null);
+        setCondition(statusAndCondition.getValue1());
         setModelServerInferencePath(kubeServingUtils.getModelServerInferencePath(serving, null));
         setHopsworksInferencePath(kubeServingUtils.getHopsworksInferencePath(serving, null));
       }
@@ -144,7 +148,7 @@ public class KubeDeploymentServingController extends KubeToolServingController {
   @Override
   public List<ServingLogs> getLogs(Project project, Serving serving, String component, Integer tailingLines) {
     ArrayList<ServingLogs> logs = new ArrayList<>();
-    List<Pod> pods = getPodList(project, serving);
+    List<Pod> pods = getPods(project, serving);
     for (Pod pod : pods) {
       String content = kubeClientService.getLogs(pod.getMetadata().getNamespace(), pod.getMetadata().getName(),
         tailingLines, KubeServingUtils.LIMIT_BYTES);
@@ -153,34 +157,79 @@ public class KubeDeploymentServingController extends KubeToolServingController {
     return logs;
   }
   
-  private ServingStatusEnum getServingStatus(Serving serving, DeploymentStatus deploymentStatus, List<Pod> podList) {
-    if (deploymentStatus != null) {
-      Integer availableReplicas = deploymentStatus.getAvailableReplicas();
-      if (availableReplicas == null ||
-        (!availableReplicas.equals(serving.getInstances()) && deploymentStatus.getObservedGeneration() == 1)) {
-        // if there is a mismatch between the requested number of instances and the number actually active
-        // in Kubernetes, and it's the 1st generation, the serving cluster is starting
-        return ServingStatusEnum.STARTING;
-      } else if (availableReplicas.equals(serving.getInstances())) {
-        return ServingStatusEnum.RUNNING;
-      } else {
-        return ServingStatusEnum.UPDATING;
+  private Pair<ServingStatusEnum, ServingStatusCondition> getServingStatusAndCondition(Serving serving,
+    DeploymentStatus deploymentStatus, List<Pod> pods) {
+    
+    // Detect created, stopped or stopping deployments.
+    if (serving.getDeployed() == null) {
+      // if the deployment is not deployed, it can be stopping, stopped or just created
+      ServingStatusCondition condition = kubeServingUtils.getDeploymentCondition(serving.getDeployed(), pods);
+      if (deploymentStatus == null) {
+        // and the deployment spec is not created, check running pods
+        if (pods.isEmpty()) {
+          // if no pods are running, inference service is stopped or has neever been started (no revision number)
+          return new Pair<>(
+            serving.getRevision() == null ? ServingStatusEnum.CREATED : ServingStatusEnum.STOPPED,
+            condition
+          );
+        }
       }
-    } else {
-      if (podList.isEmpty()) {
-        return ServingStatusEnum.STOPPED;
-      } else {
-        // If there are still Pod running, we are still in the stopping phase.
-        return ServingStatusEnum.STOPPING;
-      }
+      // Otherwise, the serving is still stopping
+      return new Pair<>(ServingStatusEnum.STOPPING, condition);
     }
+  
+    // If the deployment has been deployed
+    if (deploymentStatus == null) {
+      // but the spec is not created, the deployment is still starting
+      return new Pair<>(
+        ServingStatusEnum.STARTING,
+        ServingStatusCondition.getScheduledInProgressCondition()
+      );
+    }
+  
+    Optional<DeploymentCondition> givenCondition = deploymentStatus.getConditions().stream()
+      .filter(c -> c.getType().equals("ReplicaFailure")).findFirst();
+    if (givenCondition.isPresent() && givenCondition.get().getStatus().equals("True")) {
+      // if the given deployment condition is replica failure, the deployment failed
+      return new Pair<>(ServingStatusEnum.FAILED, kubeServingUtils.getDeploymentCondition(serving.getDeployed(), pods));
+    }
+    
+    boolean anyRestartedContainer = pods.stream().anyMatch(p -> {
+      if (p.getStatus().getContainerStatuses().size() == 0) return false;
+      ContainerStatus status = p.getStatus().getContainerStatuses().get(0);
+      return status.getRestartCount() != null && status.getRestartCount() > 2;
+    });
+    if (anyRestartedContainer) {
+      ServingStatusCondition condition = ServingStatusCondition.getStartedFailedCondition(
+        "predictor" + kubeServingUtils.STARTED_FAILED_CONDITION_MESSAGE);
+      return new Pair<>(ServingStatusEnum.FAILED, condition);
+    }
+  
+    ServingStatusCondition condition = kubeServingUtils.getDeploymentCondition(serving.getDeployed(), pods);
+    if (condition.getStatus() != null && !condition.getStatus()) {
+      // if it's a failing condition, the deployment is failing to start
+      return new Pair<>(ServingStatusEnum.FAILED, condition);
+    }
+  
+    // otherwise, it is starting, updating or running
+    Integer availableReplicas = deploymentStatus.getAvailableReplicas();
+    ServingStatusEnum servingStatus = ServingStatusEnum.RUNNING;
+    if (availableReplicas == null || !availableReplicas.equals(serving.getInstances())) {
+      // if there is a mismatch between the requested number of instances and the number actually active
+      // in Kubernetes, and it's the 1st generation, the serving cluster is starting
+      servingStatus = deploymentStatus.getObservedGeneration() == 1
+        ? ServingStatusEnum.STARTING
+        : ServingStatusEnum.UPDATING;
+    }
+
+    return new Pair<>(servingStatus, condition);
   }
   
-  private List<Pod> getPodList(Project project, Serving serving) {
+  private List<Pod> getPods(Project project, Serving serving) {
     String servingId = String.valueOf(serving.getId());
     Map<String, String> labelMap = new HashMap<>();
     labelMap.put("model", servingId);
-    return kubeClientService.getPodList(project, labelMap);
+    return kubeClientService.getPods(project, labelMap);
   }
   
   private Deployment buildDeployment(Project project, Users user, Serving serving,

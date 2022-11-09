@@ -20,6 +20,7 @@ package io.hops.hopsworks.api.serving;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
+import io.hops.hopsworks.common.serving.ServingStatusCondition;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.hops.hopsworks.persistence.entity.serving.DeployableComponentResources;
@@ -35,7 +36,6 @@ import io.swagger.annotations.ApiModelProperty;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
 
 @ApiModel(value = "Represents a Serving model")
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -68,7 +68,7 @@ public class ServingView implements Serializable {
   private DeployableComponentResources transformerResources;
   private Date deployed;
   private String revision;
-  private List<String> conditions;
+  private ServingStatusCondition condition;
   private BatchingConfiguration batchingConfiguration;
 
   // TODO(Fabio): use expansions here
@@ -107,7 +107,7 @@ public class ServingView implements Serializable {
     this.servingTool = servingWrapper.getServing().getServingTool();
     this.deployed = servingWrapper.getServing().getDeployed();
     this.revision = servingWrapper.getServing().getRevision();
-    this.conditions = servingWrapper.getConditions();
+    this.condition = servingWrapper.getCondition();
     Users user = servingWrapper.getServing().getCreator();
     this.creator = user.getFname() + " " + user.getLname();
     this.predictorResources = servingWrapper.getServing().getPredictorResources();
@@ -298,12 +298,12 @@ public class ServingView implements Serializable {
     this.revision = revision;
   }
   
-  @ApiModelProperty(value = "Conditions of the serving replicas", readOnly = true)
-  public List<String> getConditions() {
-    return conditions;
+  @ApiModelProperty(value = "Condition of the serving replicas", readOnly = true)
+  public ServingStatusCondition getCondition() {
+    return condition;
   }
-  public void setConditions(List<String> conditions) {
-    this.conditions = conditions;
+  public void setCondition(ServingStatusCondition condition) {
+    this.condition = condition;
   }
 
   @ApiModelProperty(value = "Resource configuration for predictor", readOnly = true)

@@ -12,6 +12,7 @@ import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.hops.hopsworks.common.serving.util.KafkaServingHelper;
 import io.hops.hopsworks.common.serving.util.ServingCommands;
+import io.hops.hopsworks.common.serving.util.ServingUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -67,6 +68,8 @@ public class KubeServingController implements ServingController {
   @EJB
   private KubeDeploymentServingController kubeDeploymentServingController;
   @EJB
+  private ServingUtils servingUtils;
+  @EJB
   private KubeServingUtils kubeServingUtils;
   @EJB
   private KubeArtifactUtils kubeArtifactUtils;
@@ -92,7 +95,7 @@ public class KubeServingController implements ServingController {
     for (Serving serving : servingList) {
       ServingWrapper servingWrapper = getServingInternal(project, serving);
       // If status filter is set only add servings with the defined status
-      if (statusFilter != null && !servingWrapper.getStatus().name().equals(statusFilter.name())) {
+      if (statusFilter != null && servingWrapper.getStatus() != statusFilter) {
         continue;
       }
       servingWrapperList.add(servingWrapper);
@@ -134,12 +137,12 @@ public class KubeServingController implements ServingController {
         KubeServingInternalStatus internalStatus = toolServingController.getInternalStatus(project, serving);
         ServingStatusEnum status = internalStatus.getServingStatus();
         
-        if (!internalStatus.getAvailable() && status == ServingStatusEnum.STARTING) {
-          // If the serving is starting but we can't get the nº of available replicas, the inference service is not
-          // created yet. Therefore, we cannot delete it since it is still not materialized in the api server.
-          // Checking the available replicas for the predictor is enough. Ignore transformer.
+        if (!internalStatus.getAvailable() ||
+           status == ServingStatusEnum.STARTING || status == ServingStatusEnum.UPDATING) {
+          // If the serving is starting/updating or we can't get the nº of available replicas, (inference
+          // service not created yet), don't allow deletions.
           throw new ServingException(RESTCodes.ServingErrorCode.DELETION_ERROR, Level.FINE,
-            "Instance is busy. Please, try later.");
+            "Deployment is starting. Please, try later.");
         }
       }
     } finally {
@@ -159,58 +162,23 @@ public class KubeServingController implements ServingController {
     // Nothing to do here. This function is called when a project is deleted.
     // During the project deletion, the namespace is deleted. Kubernetes takes care of removing
     // pods, namespaces and services
-    return;
   }
   
   @Override
   public void startOrStop(Project project, Users user, Integer servingId, ServingCommands command)
     throws ServingException {
-    Serving serving = servingFacade.acquireLock(project, servingId);
+    Serving serving = servingFacade.acquireLock(project, servingId); // lock serving
     KubeToolServingController toolServingController = getServingController(serving);
     
     try {
       KubeServingInternalStatus internalStatus = toolServingController.getInternalStatus(project, serving);
-      ServingStatusEnum status = internalStatus.getServingStatus();
-      
       if (command == START) {
-        if (serving.getDeployed() == null || status == ServingStatusEnum.STOPPED
-          || status == ServingStatusEnum.STOPPING) {
-          // If the serving is not deployed, create a new instance
-          String newRevision = kubeServingUtils.getNewRevisionID();
-          serving.setRevision(newRevision);
-          toolServingController.createInstance(project, user, serving);
-          serving.setDeployed(new Date());
-          servingFacade.updateDbObject(serving, project);
-        } else {
-          // Otherwise, an instance has already been created
-          throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR, Level.FINE,
-            "Instance is already " + status.toString().toLowerCase());
-        }
-      }
-      
-      if (command == STOP) {
-        if (serving.getDeployed() != null) {
-          // If the serving is deployed, check the serving status
-          if (!internalStatus.getAvailable() && status == ServingStatusEnum.STARTING) {
-            // If the serving is starting but we can't get the nº of available replicas, the inference service is not
-            // created yet. Therefore, we cannot stop it since it cannot be found.
-            throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR_INT, Level.FINE,
-              "Instance is busy. Please, try later.");
-          }
-          if (status != ServingStatusEnum.STOPPED) {
-            // If serving is deployed and the inference service can be found, delete it
-            toolServingController.deleteInstance(project, serving);
-            serving.setDeployed(null);
-            servingFacade.updateDbObject(serving, project);
-          }
-        } else {
-          // Otherwise, the instance is already stopped or stopping
-          throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR, Level.FINE,
-            "Instance is already " + status.toString().toLowerCase());
-        }
+        start(project, user, serving, internalStatus);
+      } else if  (command == STOP) {
+        stop(project, serving, internalStatus);
       }
     } finally {
-      servingFacade.releaseLock(project, servingId);
+      servingFacade.releaseLock(project, servingId); // unlock serving
     }
   }
   
@@ -218,12 +186,146 @@ public class KubeServingController implements ServingController {
   public void put(Project project, Users user, ServingWrapper servingWrapper)
     throws KafkaException, UserException, ProjectException, ServingException, ExecutionException,
     InterruptedException {
+
+    // Create model artifact if it doesn't exist
+    prepareModelArtifact(project, user, servingWrapper);
+    
+    if (servingWrapper.getServing().getId() == null) {
+      createServing(project, user, servingWrapper);
+    } else {
+      updateServing(project, user, servingWrapper);
+    }
+  }
+  
+  @Override
+  public List<ServingLogs> getLogs(Project project, Integer servingId, String component, Integer tailingLines)
+    throws ServingException {
+    Serving serving = servingFacade.acquireLock(project, servingId);
+    KubeToolServingController toolServingController = getServingController(serving);
+    
+    try {
+      KubeServingInternalStatus internalStatus = toolServingController.getInternalStatus(project, serving);
+      
+      if (internalStatus.getServingStatus() == ServingStatusEnum.CREATED ||
+          internalStatus.getServingStatus() == ServingStatusEnum.IDLE ||
+          internalStatus.getServingStatus() == ServingStatusEnum.STOPPED ||
+          internalStatus.getServingStatus() == ServingStatusEnum.STOPPING) {
+        throw new ServingException(RESTCodes.ServingErrorCode.SERVER_LOGS_NOT_AVAILABLE, Level.FINE);
+      }
+  
+      if (component.equals("transformer") &&
+        (serving.getServingTool() != ServingTool.KSERVE || serving.getTransformer() == null)) {
+        throw new IllegalArgumentException("Transformer logs only available in KServe deployments with transformer");
+      }
+  
+      return toolServingController.getLogs(project, serving, component, tailingLines);
+    } finally {
+      servingFacade.releaseLock(project, serving.getId());
+    }
+  }
+  
+  @Override
+  public String getClassName() {
+    return KubeServingController.class.getName();
+  }
+  
+  private void start(Project project, Users user, Serving serving, KubeServingInternalStatus internalStatus)
+     throws ServingException {
+    switch (internalStatus.getServingStatus()) {
+      case CREATED:
+      case STOPPED:
+        if (serving.getDeployed() == null) {
+          // if the serving is not deployed, create a new instance
+          String newRevision = servingUtils.getNewRevisionID();
+          serving.setRevision(newRevision);
+          getServingController(serving).createInstance(project, user, serving);
+          serving.setDeployed(new Date());
+          servingFacade.updateDbObject(serving, project);
+        }
+        break;
+      case STARTING:
+      case RUNNING:
+      case IDLE:
+      case UPDATING:
+        if (serving.getDeployed() == null) {
+          // if not deployed, deployment is stopping
+          throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR, Level.FINE,
+            "Deployment is busy. Please, try later.");
+        }
+        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR, Level.FINE,
+          "Deployment is already started.");
+      case STOPPING:
+        if (serving.getDeployed() == null) {
+          throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR, Level.FINE,
+            "Deployment is stopping. Please, try later.");
+        }
+        // if deployed, deployment might be starting again
+        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR, Level.FINE,
+          "Deployment is busy. Please, try later.");
+      case FAILED:
+        if (serving.getDeployed() == null) {
+          // if not deployed, deployment is stopping
+          throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR, Level.FINE,
+            "Deployment is busy. Please, try later.");
+        }
+        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR, Level.FINE,
+          "Deployment is in a failed state and cannot be started.");
+    }
+  }
+  
+  private void stop(Project project, Serving serving, KubeServingInternalStatus internalStatus)
+      throws ServingException {
+    switch (internalStatus.getServingStatus()) {
+      case CREATED:
+      case STOPPING:
+      case STOPPED:
+        if (serving.getDeployed() == null) {
+          throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR, Level.FINE,
+            "Deployment is already stopped.");
+        }
+        // if there's deployed time, deployment is starting
+        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR, Level.FINE,
+          "Deployment is busy. Please, try later.");
+      case STARTING:
+        if (serving.getDeployed() == null) {
+          // if not deployed, the deployment might be stopping already
+          throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR, Level.FINE,
+            "Deployment is busy. Please, try later.");
+        }
+        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR, Level.FINE,
+          "Deployment is starting. Please, try later.");
+      case RUNNING:
+      case FAILED:
+      case IDLE:
+        if (serving.getDeployed() != null) {
+          // if the serving is deployed
+          if (internalStatus.getAvailable()) {
+            // and the inference service can be found, delete it
+            getServingController(serving).deleteInstance(project, serving);
+            serving.setDeployed(null);
+            servingFacade.updateDbObject(serving, project);
+          }
+        }
+        break;
+      case UPDATING:
+        if (serving.getDeployed() == null) {
+          // if not deployed, the deployment might be stopping already
+          throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR, Level.FINE,
+            "Deployment is busy. Please, try later.");
+        }
+        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR, Level.FINE,
+          "Deployment is updating. Please, try later.");
+    }
+  }
+  
+  private void prepareModelArtifact(Project project, Users user, ServingWrapper servingWrapper)
+      throws ServingException {
     Serving serving = servingWrapper.getServing();
     
     try {
       // Ensure artifacts root directory exists
       kubeArtifactUtils.createArtifactsRootDir(project, user, serving);
-  
+
       if (serving.getArtifactVersion() == null || serving.getArtifactVersion() == -1) {
         // If the artifact version is greater than 0, the artifact already exists.
         // Otherwise, a version value of -1 or null will create a new artifact.
@@ -232,7 +334,7 @@ public class KubeServingController implements ServingController {
           ? kubeArtifactUtils.getNextArtifactVersion(serving)
           : 0;
         serving.setArtifactVersion(version);
-        Boolean created = kubeArtifactUtils.createArtifact(project, user, serving);
+        boolean created = kubeArtifactUtils.createArtifact(project, user, serving);
         if (created) {
           if (serving.getPredictor() != null) { // Update predictor name
             serving.setPredictor(kubePredictorUtils.getPredictorFileName(serving, false));
@@ -262,124 +364,100 @@ public class KubeServingController implements ServingController {
       throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR_INT, Level.INFO, "Artifact could not be " +
         "created or verified", e.getMessage(), e);
     }
-    
-    if (serving.getId() == null) {
-      // Create request
-      serving.setCreated(new Date());
-      serving.setCreator(user);
-      serving.setProject(project);
-      
-      // Setup the Kafka topic for logging
-      kafkaServingHelper.setupKafkaServingTopic(project, servingWrapper, serving, null);
-  
-      // Setup inference batching if enabled
-      setupDefaultInferenceBatching(serving);
-      
-      Serving newServing = servingFacade.merge(serving);
-      servingWrapper.setServing(newServing);
-      servingWrapper.setKafkaTopicDTO(kafkaServingHelper.buildTopicDTO(newServing));
-    } else {
-      Serving oldServing = servingFacade.acquireLock(project, serving.getId());
-      KubeToolServingController toolServingController = getServingController(oldServing);
-      
-      // If artifact already exists, check the asset scripts are not modified
-      if (oldServing.getModelName() == serving.getModelName() && oldServing.getArtifactVersion() > 0 &&
-        oldServing.getArtifactVersion() == serving.getArtifactVersion()) {
-        if (oldServing.getPredictor() != null && !oldServing.getPredictor().equals(serving.getPredictor())) {
-          throw new IllegalArgumentException("Predictor script cannot change in an existent artifact");
-        }
-        if (oldServing.getTransformer() != null && !oldServing.getTransformer().equals(serving.getTransformer())) {
-          throw new IllegalArgumentException("Transformer script cannot change in an existent artifact");
-        }
-      }
-      
-      // Set missing fields to keep consistency with the stored serving entity
-      serving = servingFacade.fill(serving, oldServing);
-      
-      // Setup the Kafka topic for logging
-      kafkaServingHelper.setupKafkaServingTopic(project, servingWrapper, serving, oldServing);
-      
-      // Setup inference batching if enabled
-      setupDefaultInferenceBatching(serving);
-      
-      try {
-        // Avoid updating if there are no changes
-        if (oldServing.equals(serving)) {
-          return;
-        }
-  
-        // Get current serving status
-        KubeServingInternalStatus internalStatus = toolServingController.getInternalStatus(project, oldServing);
-        ServingStatusEnum status = internalStatus.getServingStatus();
-        
-        // Merge serving fields
-        Serving newServing = servingFacade.mergeServings(oldServing, serving);
-        if (newServing.getDeployed() != null) {
-          // If the serving is deployed, check the serving status
-          if (!internalStatus.getAvailable() && status == ServingStatusEnum.STARTING) {
-            // If the serving is starting but we can't get the nº of available replicas, the inference service is not
-            // created yet. Therefore, we cannot update it since it cannot be found.
-            throw new ServingException(RESTCodes.ServingErrorCode.UPDATE_ERROR, Level.FINE,
-              "Instance is busy. Please, try later.");
-          }
-          if (status == ServingStatusEnum.RUNNING) {
-            // Generate pseudo-random revision id
-            String newRevision = kubeServingUtils.getNewRevisionID();
-            newServing.setRevision(newRevision);
-            // If serving name or serving tool change, delete old instance and create the new one
-            // Otherwise, update current instance
-            if (!newServing.getName().equals(oldServing.getName()) ||
-              newServing.getServingTool() != oldServing.getServingTool()) {
-              toolServingController.deleteInstance(project, oldServing);
-              getServingController(newServing).createInstance(project, user, newServing);
-            } else {
-              toolServingController.updateInstance(project, user, newServing);
-            }
-          } else if (status == ServingStatusEnum.STARTING || status == ServingStatusEnum.UPDATING) {
-            // If the serving is already starting or updating, applying an additional update can overload the node with
-            // idle terminating pods.
-            throw new ServingException(RESTCodes.ServingErrorCode.UPDATE_ERROR, Level.FINE,
-              "Instance is already updating. Please, try later.");
-          }
-        }
-        // Update the serving object in the database and serving wrapper
-        serving = servingFacade.updateDbObject(newServing, project);
-        servingWrapper.setServing(serving);
-        servingWrapper.setKafkaTopicDTO(kafkaServingHelper.buildTopicDTO(serving));
-      } finally {
-        servingFacade.releaseLock(project, serving.getId());
-      }
-    }
   }
   
-  @Override
-  public List<ServingLogs> getLogs(Project project, Integer servingId, String component, Integer tailingLines)
-    throws ServingException {
-    Serving serving = servingFacade.acquireLock(project, servingId);
-    KubeToolServingController toolServingController = getServingController(serving);
+  private void createServing(Project project, Users user, ServingWrapper servingWrapper)
+    throws ProjectException, ServingException, KafkaException, UserException, ExecutionException, InterruptedException {
+    Serving serving = servingWrapper.getServing();
     
+    // New serving request
+    serving.setCreated(new Date());
+    serving.setCreator(user);
+    serving.setProject(project);
+  
+    // Setup the Kafka topic for logging
+    kafkaServingHelper.setupKafkaServingTopic(project, servingWrapper, serving, null);
+  
+    // Setup inference batching if enabled
+    setupDefaultInferenceBatching(serving);
+  
+    Serving newServing = servingFacade.merge(serving);
+    servingWrapper.setServing(newServing);
+    servingWrapper.setKafkaTopicDTO(kafkaServingHelper.buildTopicDTO(newServing));
+  }
+  
+  private void updateServing(Project project, Users user, ServingWrapper servingWrapper)
+    throws ServingException, ProjectException, KafkaException, UserException, ExecutionException, InterruptedException {
+    Serving serving = servingWrapper.getServing();
+    
+    // Update serving request
+    Serving oldServing = servingFacade.acquireLock(project, serving.getId());
+    KubeToolServingController toolServingController = getServingController(oldServing);
+  
+    // If artifact already exists, check the asset scripts are not modified
+    if (oldServing.getModelName() == serving.getModelName() && oldServing.getArtifactVersion() > 0 &&
+      oldServing.getArtifactVersion() == serving.getArtifactVersion()) {
+      if (oldServing.getPredictor() != null && !oldServing.getPredictor().equals(serving.getPredictor())) {
+        throw new IllegalArgumentException("Predictor script cannot change in an existent artifact");
+      }
+      if (oldServing.getTransformer() != null && !oldServing.getTransformer().equals(serving.getTransformer())) {
+        throw new IllegalArgumentException("Transformer script cannot change in an existent artifact");
+      }
+    }
+  
+    // Set missing fields to keep consistency with the stored serving entity
+    serving = servingFacade.fill(serving, oldServing);
+  
+    // Setup the Kafka topic for logging
+    kafkaServingHelper.setupKafkaServingTopic(project, servingWrapper, serving, oldServing);
+  
+    // Setup inference batching if enabled
+    setupDefaultInferenceBatching(serving);
+  
     try {
-      KubeServingInternalStatus internalStatus = toolServingController.getInternalStatus(project, serving);
-      
-      if (internalStatus.getServingStatus() == ServingStatusEnum.STOPPED
-        || internalStatus.getServingStatus() == ServingStatusEnum.STOPPING) {
-        throw new ServingException(RESTCodes.ServingErrorCode.SERVER_LOGS_NOT_AVAILABLE, Level.FINE);
+      // Avoid updating if there are no changes
+      if (oldServing.equals(serving)) {
+        return;
       }
-  
-      if (component.equals("transformer") &&
-        (serving.getServingTool() != ServingTool.KSERVE || serving.getTransformer() == null)) {
-        throw new IllegalArgumentException("Transformer logs only available in KServe deployments with transformer");
+    
+      // Get current serving status
+      KubeServingInternalStatus internalStatus = toolServingController.getInternalStatus(project, oldServing);
+      ServingStatusEnum status = internalStatus.getServingStatus();
+    
+      // Merge serving fields
+      Serving newServing = servingFacade.mergeServings(oldServing, serving);
+      if (newServing.getDeployed() != null) {
+        // If the serving is deployed, check the serving status
+        if (!internalStatus.getAvailable() ||
+            status == ServingStatusEnum.STARTING || status == ServingStatusEnum.UPDATING) {
+          // If the serving is starting/updating or we can't get the nº of available replicas (inference
+          // service not created yet), don't allow updates.
+          throw new ServingException(RESTCodes.ServingErrorCode.UPDATE_ERROR, Level.FINE,
+            "Deployment is starting. Please, try later.");
+        }
+        if (status == ServingStatusEnum.RUNNING || status == ServingStatusEnum.IDLE ||
+            status == ServingStatusEnum.FAILED) {
+          // If running, idle or failed. Update the inference service.
+          String newRevision = servingUtils.getNewRevisionID(); // Generate pseudo-random revision id
+          newServing.setRevision(newRevision);
+          // If serving name or serving tool change, delete old instance and create the new one
+          // Otherwise, update current instance
+          if (!newServing.getName().equals(oldServing.getName()) ||
+            newServing.getServingTool() != oldServing.getServingTool()) {
+            toolServingController.deleteInstance(project, oldServing);
+            getServingController(newServing).createInstance(project, user, newServing);
+          } else {
+            toolServingController.updateInstance(project, user, newServing);
+          }
+        }
       }
-  
-      return toolServingController.getLogs(project, serving, component, tailingLines);
+      // Update the serving object in the database and serving wrapper
+      serving = servingFacade.updateDbObject(newServing, project);
+      servingWrapper.setServing(serving);
+      servingWrapper.setKafkaTopicDTO(kafkaServingHelper.buildTopicDTO(serving));
     } finally {
       servingFacade.releaseLock(project, serving.getId());
     }
-  }
-  
-  @Override
-  public String getClassName() {
-    return KubeServingController.class.getName();
   }
   
   private ServingWrapper getServingInternal(Project project, Serving serving)
@@ -392,7 +470,7 @@ public class KubeServingController implements ServingController {
     servingWrapper.setStatus(internalStatus.getServingStatus());
     servingWrapper.setAvailableReplicas(internalStatus.getAvailableReplicas());
     servingWrapper.setAvailableTransformerReplicas(internalStatus.getAvailableTransformerReplicas());
-    servingWrapper.setConditions(internalStatus.getConditions());
+    servingWrapper.setCondition(internalStatus.getCondition());
   
     servingWrapper.setHopsworksInferencePath(internalStatus.getHopsworksInferencePath());
     servingWrapper.setModelServerInferencePath(internalStatus.getModelServerInferencePath());

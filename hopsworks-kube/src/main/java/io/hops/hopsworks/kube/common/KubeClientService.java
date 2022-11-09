@@ -415,11 +415,11 @@ public class KubeClientService {
     Retry retry = Retry.of("waitForDeployment: " + deploymentName, retryConfig);
     Optional<Integer> availableReplicas = Retry.decorateSupplier(retry, () -> getDeploymentStatus(project,
             deploymentName, 1)
-      .map(o -> o.getAvailableReplicas()))
+      .map(DeploymentStatus::getAvailableReplicas))
       .get();
     if (!availableReplicas.isPresent()) {
       //Get the pods
-      List<Pod> podsList = getPodList(project, podLabels);
+      List<Pod> podsList = getPods(project, podLabels);
       StringJoiner joiner = new StringJoiner(",");
       if (!podsList.isEmpty()) {
         //Can there be more than one jupyter pod??
@@ -562,18 +562,18 @@ public class KubeClientService {
 
   // Pods
   
-  public List<Pod> getPodList(Project project, Map<String, String> podLabels)
+  public List<Pod> getPods(Project project, Map<String, String> podLabels)
     throws KubernetesClientException {
-    return getPodList(getKubeProjectName(project), podLabels);
+    return getPods(getKubeProjectName(project), podLabels);
   }
   
-  public List<Pod> getPodList(final String kubeProjectNs,
+  public List<Pod> getPods(final String kubeProjectNs,
       final Map<String, String> podLabels) throws KubernetesClientException {
     return handleClientOp((client) -> client.pods().inNamespace(kubeProjectNs)
         .withLabels(podLabels).list().getItems());
   }
   
-  public List<Pod> getPodList(Map<String, String> podLabels) throws KubernetesClientException {
+  public List<Pod> getPods(Map<String, String> podLabels) throws KubernetesClientException {
     return handleClientOp((client) -> client.pods().inAnyNamespace().withLabels(podLabels).list().getItems());
   }
   

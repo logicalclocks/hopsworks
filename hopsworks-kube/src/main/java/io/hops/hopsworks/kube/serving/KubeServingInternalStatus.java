@@ -4,9 +4,8 @@
 
 package io.hops.hopsworks.kube.serving;
 
+import io.hops.hopsworks.common.serving.ServingStatusCondition;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
-
-import java.util.List;
 
 public class KubeServingInternalStatus {
   
@@ -16,7 +15,7 @@ public class KubeServingInternalStatus {
   private Boolean available; // Whether the service is reachable or not. If so, we can perform actions.
   private Integer availableReplicas;
   private Integer availableTransformerReplicas;
-  private List<String> conditions;
+  private ServingStatusCondition condition;
   
   public KubeServingInternalStatus() {
   }
@@ -30,8 +29,8 @@ public class KubeServingInternalStatus {
     this.servingStatus = servingStatus;
   }
   
-  public List<String> getConditions() { return conditions; }
-  public void setConditions(List<String> conditions) { this.conditions = conditions; }
+  public ServingStatusCondition getCondition() { return condition; }
+  public void setCondition(ServingStatusCondition condition) { this.condition = condition; }
   
   public Boolean getAvailable() { return available; }
   public void setAvailable(Boolean available) { this.available = available; }

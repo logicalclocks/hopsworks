@@ -19,8 +19,6 @@ package io.hops.hopsworks.common.serving;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 
-import java.util.List;
-
 public class ServingWrapper {
   private Serving serving;
 
@@ -30,7 +28,7 @@ public class ServingWrapper {
   private String hopsworksInferencePath;
   private String modelServerInferencePath;
   private Integer internalPort;
-  private List<String> conditions;
+  private ServingStatusCondition condition;
   
   private TopicDTO kafkaTopicDTO;
 
@@ -79,8 +77,8 @@ public class ServingWrapper {
     this.modelServerInferencePath = modelServerInferencePath;
   }
   
-  public List<String> getConditions() { return conditions; }
-  public void setConditions(List<String> conditions) { this.conditions = conditions; }
+  public ServingStatusCondition getCondition() { return condition; }
+  public void setCondition(ServingStatusCondition condition) { this.condition = condition; }
   
   public TopicDTO getKafkaTopicDTO() {
     return kafkaTopicDTO;

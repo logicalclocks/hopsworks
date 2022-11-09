@@ -4,13 +4,16 @@
 
 package io.hops.hopsworks.kube.serving.utils;
 
+import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
+import io.hops.hopsworks.common.serving.ServingStatusCondition;
 import io.hops.hopsworks.common.serving.inference.InferenceVerb;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.serving.ServingTool;
-import org.apache.commons.lang3.RandomStringUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -18,16 +21,16 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class KubeServingUtils {
-  
-  private final static Integer LAST_REVISION_LENGTH = 8;
-  
+
   @EJB
   private Settings settings;
   @EJB
@@ -89,6 +92,14 @@ public class KubeServingUtils {
   // Container names
   public final static String KSERVE_CONTAINER = "kserve-container";
   
+  // Condition messages
+  
+  public final static String STARTED_FAILED_CONDITION_MESSAGE = " terminated " +
+    "unsuccessfully";
+  
+  public final String READY_SUCCESS_IDLE_CONDITION_MESSAGE = "Deployment is ready, but idle. " +
+    "Higher latencies are expected in the first predictions";
+  
   // Labels and annotations
   
   public Map<String, String> getHopsworksServingLabels(Project project, Serving serving) {
@@ -137,10 +148,6 @@ public class KubeServingUtils {
   
   // Deployment
   
-  public String getNewRevisionID() {
-    return RandomStringUtils.randomNumeric(LAST_REVISION_LENGTH);
-  }
-  
   public Integer getAvailableReplicas(DeploymentStatus deploymentStatus) {
     return deploymentStatus != null && deploymentStatus.getAvailableReplicas() != null
       ? deploymentStatus.getAvailableReplicas()
@@ -159,6 +166,140 @@ public class KubeServingUtils {
   public String getHopsworksInferencePath(Serving serving, InferenceVerb verb) {
     return "/project/" +
       serving.getProject().getId() + "/inference/models/" + serving.getName() + (verb != null ? verb.toString() : "");
+  }
+  
+  public ServingStatusCondition getDeploymentCondition(Date deployed, List<Pod> pods) {
+    ServingStatusCondition condition = null;
+    
+    if (pods.isEmpty()) {
+      return deployed != null
+        ? ServingStatusCondition.getScheduledInProgressCondition()
+        : ServingStatusCondition.getStoppedSuccessCondition();
+    }
+    
+    for (Pod pod : pods) {
+      Map<String, PodCondition> conditionsMap =
+        pod.getStatus().getConditions().stream().collect(Collectors.toMap(PodCondition::getType, item -> item));
+      
+      // check pod scheduled condition
+      if (conditionsMap.containsKey("PodScheduled")) {
+        PodCondition cond = conditionsMap.get("PodScheduled");
+        if (!cond.getStatus().equals("True")) {
+          if (cond.getReason().equals("Unschedulable") || cond.getReason().equals("SchedulerError")) {
+            // this pod can't be scheduled
+            condition = deployed != null
+              ? ServingStatusCondition.getScheduledFailedCondition(cond.getMessage())
+              : ServingStatusCondition.getStoppedInProgressCondition();
+          } else {
+            // this pod is still pending
+            condition = ServingStatusCondition.getScheduledInProgressCondition();
+          }
+          break; // if one pod can't be scheduled, skip checking other pods
+        }
+      } else {
+        // this pod is still pending
+        condition = ServingStatusCondition.getScheduledInProgressCondition();
+        continue; // check next pod
+      }
+      
+      // check initialized condition
+      if (conditionsMap.containsKey("Initialized")) {
+        PodCondition cond = conditionsMap.get("Initialized");
+        if (!cond.getStatus().equals("True")) {
+          if (cond.getReason().equals("ContainersNotInitialized")) {
+            ContainerStateTerminated terminatedState =
+              pod.getStatus().getInitContainerStatuses().get(0).getLastState().getTerminated();
+            if (terminatedState != null && terminatedState.getExitCode() > 0) {
+              // this pod failed to initialized
+              condition = deployed != null
+                ? ServingStatusCondition.getInitializedFailedCondition("storage initializer finished unsuccessfully")
+                : ServingStatusCondition.getStoppedInProgressCondition();
+            } else {
+              // this pod is still initializing
+              condition = ServingStatusCondition.getInitializedInProgressCondition();
+            }
+            break; // if one pod can't be initialized, skip checking other pods
+          } else {
+            // this pod is still initializing
+            condition = ServingStatusCondition.getInitializedInProgressCondition();
+            continue; // check next pod
+          }
+        }
+      } else {
+        // this pod is still initializing
+        condition = ServingStatusCondition.getInitializedInProgressCondition();
+        continue; // check next pod
+      }
+      
+      // check containers ready condition
+      if (conditionsMap.containsKey("ContainersReady")) {
+        PodCondition cond = conditionsMap.get("ContainersReady");
+        if (!cond.getStatus().equals("True")) {
+          if (cond.getReason().equals("PodFailed") || cond.getReason().equals("ContainersNotReady")) {
+            boolean anyFailingContainer = pod.getStatus().getContainerStatuses().stream().parallel().anyMatch(s -> {
+              ContainerStateTerminated terminatedState = s.getLastState().getTerminated();
+              return terminatedState != null && terminatedState.getExitCode() > 0;
+            });
+            if (anyFailingContainer) {
+              // this pod have failing containers
+              condition = deployed != null
+                ? ServingStatusCondition.getStartedFailedCondition(pod.getMetadata().getLabels()
+                  .getOrDefault("component", "predictor") + STARTED_FAILED_CONDITION_MESSAGE)
+                : ServingStatusCondition.getStoppedInProgressCondition();
+            } else {
+              // this pod is still pending
+              condition = deployed != null
+                ? ServingStatusCondition.getStartedInProgressCondition()
+                : ServingStatusCondition.getStoppedInProgressCondition();
+            }
+            break; // if one pod can't be started, skip checking other pods
+          } else {
+            // this pod is still pending
+            condition = deployed != null
+              ? ServingStatusCondition.getStartedInProgressCondition()
+              : ServingStatusCondition.getStoppedInProgressCondition();
+            continue; // check next pod
+          }
+        }
+      } else {
+        // this pod is still pending
+        condition = deployed != null
+          ? ServingStatusCondition.getStartedInProgressCondition()
+          : ServingStatusCondition.getStoppedInProgressCondition();
+        continue; // check next pod
+      }
+      
+      // check pod ready condition
+      if (conditionsMap.containsKey("Ready")) {
+        PodCondition cond = conditionsMap.get("Ready");
+        if (!cond.getStatus().equals("True")) {
+          if (cond.getReason().equals("PodFailed") || cond.getReason().equals("ContainersNotReady")
+            || cond.getReason().equals("ReadinessGatesNotReady")) {
+            // pod containers are running, but connectivity is not setup properly
+            condition = deployed != null
+              ? ServingStatusCondition.getReadyFailedCondition(cond.getMessage())
+              : ServingStatusCondition.getStoppedInProgressCondition();
+          } else {
+            // connectivity is still being setup
+            condition = deployed != null
+              ? ServingStatusCondition.getReadyInProgressCondition()
+              : ServingStatusCondition.getStoppedInProgressCondition();
+          }
+          break; // if one pod can't be setup, skip checking other pods
+        }
+        condition = deployed != null
+          ? ServingStatusCondition.getReadySuccessCondition()
+          : ServingStatusCondition.getUnscheduledInProgressCondition();
+        // check next pod
+      } else {
+        // connectivity is still being setup
+        condition = deployed != null
+          ? ServingStatusCondition.getReadyInProgressCondition()
+          : ServingStatusCondition.getStoppedInProgressCondition();
+      }
+    } // end - pods loop
+    
+    return condition;
   }
   
   // Node selector and tolerations
