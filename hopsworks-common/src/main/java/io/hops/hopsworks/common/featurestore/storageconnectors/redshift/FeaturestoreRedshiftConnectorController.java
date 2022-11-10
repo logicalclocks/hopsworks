@@ -95,7 +95,7 @@ public class FeaturestoreRedshiftConnectorController {
       FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO) {
     featurestoreRedshiftConnector.setClusterIdentifier(
       storageConnectorUtil.getValueOrNull(featurestoreRedshiftConnectorDTO.getClusterIdentifier()));
-    if (featurestoreRedshiftConnectorDTO.getDatabaseDriver() != null) {
+    if (!storageConnectorUtil.isNullOrWhitespace(featurestoreRedshiftConnectorDTO.getDatabaseDriver())) {
       featurestoreRedshiftConnector.setDatabaseDriver(
         storageConnectorUtil.getValueOrNull(featurestoreRedshiftConnectorDTO.getDatabaseDriver()));
     } else {
