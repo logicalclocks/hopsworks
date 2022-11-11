@@ -841,6 +841,27 @@ describe "On #{ENV['OS']}" do
         json_fs_query = '{"leftFeatureGroup":' +  json_result + ',"leftFeatures":' + parsed_json["features"].to_json + ',"joins":[]}'
         json_result = put create_query_endpoint, json_fs_query
         parsed_json = JSON.parse(json_result)
+        expect(parsed_json["query"].gsub("\n", " ") == "SELECT `fg0`.`testfeature`, `fg0`.`testfeature2` FROM `#{project_name.downcase}_featurestore`.`#{featuregroup_name}_1` `fg0`")
+        expect(parsed_json["queryOnline"].gsub("\n", " ") == "SELECT `fg0`.`testfeature`, `fg0`.`testfeature2` FROM `#{project_name}`.`#{featuregroup_name}_1` `fg0`")
+      end
+
+      it "should be able to enable hudi featuregroup as online and retrieve correct online/offline queries with time travel" do
+        featurestore_id = get_featurestore_id(@project[:id])
+        project_name = @project['projectname']
+        featurestore_name = project_name.downcase + "_featurestore"
+        json_result, featuregroup_name = create_cached_featuregroup_with_partition(@project[:id], featurestore_id, time_travel_format: "HUDI", online: true)
+        parsed_json = JSON.parse(json_result)
+        featuregroup_id = parsed_json["id"]
+        path = "/apps/hive/warehouse/#{featurestore_name}.db/#{featuregroup_name}_1"
+        hoodie_path = path + "/.hoodie"
+        mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
+        touchz(hoodie_path + "/20201024221125.commit", getHopsworksUser, getHopsworksUser)
+        commit_metadata = {commitDateString:20201024221125,commitTime:1603577485000,rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
+        _ = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
+        create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/query"
+        json_fs_query = '{"leftFeatureGroup":' +  json_result + ',"leftFeatures":' + parsed_json["features"].to_json + ',"joins":[],"left_feature_group_end_time":' + commit_metadata["commitTime"].to_s + '}'
+        json_result = put create_query_endpoint, json_fs_query
+        parsed_json = JSON.parse(json_result)
         expect(parsed_json["query"].gsub("\n", " ") == "SELECT `fg0`.`testfeature`, `fg0`.`testfeature2` FROM `fg0` `fg0`")
         expect(parsed_json["queryOnline"].gsub("\n", " ") == "SELECT `fg0`.`testfeature`, `fg0`.`testfeature2` FROM `#{project_name}`.`#{featuregroup_name}_1` `fg0`")
       end

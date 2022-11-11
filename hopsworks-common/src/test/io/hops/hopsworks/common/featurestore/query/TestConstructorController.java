@@ -409,8 +409,24 @@ public class TestConstructorController {
     Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(availableLeft)).thenReturn(availableLeft);
     String actual = target.makeOfflineQuery(query);
     String expected = "SELECT `fg0`.`ft1` `ft1`\n" +
-        "FROM `fg0` `fg0`\n" +
+        "FROM `fs1`.`fgHudi_1` `fg0`\n" +
         "ORDER BY `fg0`.`ft1`";
+    Assert.assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testMakeOfflineQuery_sparkQueryTimetravel() throws Exception {
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", "fg0", true));
+    Query query = new Query("fs1", "project_fs1", fgHudi, "fg0", availableLeft, availableLeft);
+    query.setOrderByFeatures(availableLeft);
+    query.setHiveEngine(false);
+    query.setLeftFeatureGroupEndTimestamp(1640995200000L);
+    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(availableLeft)).thenReturn(availableLeft);
+    String actual = target.makeOfflineQuery(query);
+    String expected = "SELECT `fg0`.`ft1` `ft1`\n" +
+            "FROM `fg0` `fg0`\n" +
+            "ORDER BY `fg0`.`ft1`";
     Assert.assertEquals(expected, actual);
   }
 
@@ -439,8 +455,8 @@ public class TestConstructorController {
 
     String actual = target.makeOfflineQuery(leftQuery);
     String expected = "SELECT `fg0`.`ft1` `ft1`, `fg1`.`ft1` `ft1`\n" +
-        "FROM `fg0` `fg0`\n" +
-        "INNER JOIN `fg1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft1`\n" +
+        "FROM `fs1`.`fgHudi_1` `fg0`\n" +
+        "INNER JOIN `fs1`.`fgHudi_1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft1`\n" +
         "ORDER BY `fg0`.`ft1`";
     Assert.assertEquals(expected, actual);
   }
@@ -571,8 +587,8 @@ public class TestConstructorController {
     availableThird.add(new Feature("ft1", "fg2", "Float", null, null));
 
     Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(Mockito.any()))
-        .thenReturn(availableSecond, availableThird, Stream.of(availableFirst, availableSecond, availableThird)
-            .flatMap(Collection::stream).collect(Collectors.toList()));
+            .thenReturn(availableSecond, availableThird, Stream.of(availableFirst, availableSecond, availableThird)
+                    .flatMap(Collection::stream).collect(Collectors.toList()));
 
     fg1.getCachedFeaturegroup().setTimeTravelFormat(TimeTravelFormat.HUDI);
     fg2.getCachedFeaturegroup().setTimeTravelFormat(TimeTravelFormat.HUDI);
@@ -584,17 +600,58 @@ public class TestConstructorController {
 
     Join join = new Join(leftQuery, secondQuery, availableFirst, availableSecond, JoinType.INNER, null, singleEqualsJoinOperator);
     Join secondJoin = new Join(leftQuery, thirdQuery, availableFirst, availableFirst, JoinType.INNER, null,
-        singleEqualsJoinOperator);
+            singleEqualsJoinOperator);
     leftQuery.setJoins(Arrays.asList(join, secondJoin));
 
     String query = target.generateSQL(leftQuery, false)
-        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
+            .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
     Assert.assertEquals("SELECT `fg0`.`ft1` `ft1`, `fg1`.`ft2` `ft2`, `fg2`.`ft1` `ft1` " +
-        "FROM `fg0` `fg0` " +
-        "INNER JOIN `fg1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft2` " +
-        "INNER JOIN `fg2` `fg2` ON `fg0`.`ft1` = `fg2`.`ft1`", query);
+            "FROM `fs1`.`fg1_1` `fg0` " +
+            "INNER JOIN `fs1`.`fg2_1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft2` " +
+            "INNER JOIN `fs1`.`fg3_1` `fg2` ON `fg0`.`ft1` = `fg2`.`ft1`", query);
   }
 
+  @Test
+  public void testTreeWayHudiJoinSQLNodeTimeTravel() throws Exception {
+    List<Feature> availableFirst = new ArrayList<>();
+    availableFirst.add(new Feature("ft1", "fg0", "Float", null, null));
+
+    List<Feature> availableSecond = new ArrayList<>();
+    availableSecond.add(new Feature("ft2", "fg1", "Float", null, null));
+
+    List<Feature> availableThird = new ArrayList<>();
+    availableThird.add(new Feature("ft1", "fg2", "Float", null, null));
+
+    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(Mockito.any()))
+            .thenReturn(availableSecond, availableThird, Stream.of(availableFirst, availableSecond, availableThird)
+                    .flatMap(Collection::stream).collect(Collectors.toList()));
+
+    fg1.getCachedFeaturegroup().setTimeTravelFormat(TimeTravelFormat.HUDI);
+    fg2.getCachedFeaturegroup().setTimeTravelFormat(TimeTravelFormat.HUDI);
+    fg3.getCachedFeaturegroup().setTimeTravelFormat(TimeTravelFormat.HUDI);
+
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableFirst, availableFirst);
+    leftQuery.setLeftFeatureGroupEndTimestamp(1640995200000L);
+    leftQuery.setLeftFeatureGroupStartTimestamp(1640990200000L);
+    Query secondQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableSecond , availableSecond);
+    secondQuery.setLeftFeatureGroupEndTimestamp(1640995200000L);
+    secondQuery.setLeftFeatureGroupStartTimestamp(1640990200000L);
+    Query thirdQuery = new Query("fs1", "project_fs1", fg3,"fg2", availableThird, availableThird);
+    thirdQuery.setLeftFeatureGroupEndTimestamp(1640995200000L);
+    thirdQuery.setLeftFeatureGroupStartTimestamp(1640990200000L);
+
+    Join join = new Join(leftQuery, secondQuery, availableFirst, availableSecond, JoinType.INNER, null, singleEqualsJoinOperator);
+    Join secondJoin = new Join(leftQuery, thirdQuery, availableFirst, availableFirst, JoinType.INNER, null,
+            singleEqualsJoinOperator);
+    leftQuery.setJoins(Arrays.asList(join, secondJoin));
+
+    String query = target.generateSQL(leftQuery, false)
+            .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
+    Assert.assertEquals("SELECT `fg0`.`ft1` `ft1`, `fg1`.`ft2` `ft2`, `fg2`.`ft1` `ft1` " +
+            "FROM `fg0` `fg0` " +
+            "INNER JOIN `fg1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft2` " +
+            "INNER JOIN `fg2` `fg2` ON `fg0`.`ft1` = `fg2`.`ft1`", query);
+  }
 
   @Test
   public void testTreeWayHudiJoinSQLNodeHiveEngine() throws Exception {
