@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.query;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
@@ -77,7 +78,8 @@ public class ConstructorController {
   private JoinController joinController;
   @EJB
   private PitJoinController pitJoinController;
-
+  @EJB
+  private FeaturestoreFacade featurestoreFacade;
 
   public ConstructorController() {
   }
@@ -257,10 +259,7 @@ public class ConstructorController {
       tableIdentifierStr.add("`" + query.getProject() + "`");
       tableIdentifierStr.add("`" + query.getFeaturegroup().getName() + "_" + query.getFeaturegroup().getVersion()
           + "`");
-    } else if ((query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.STREAM_FEATURE_GROUP ||
-      (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
-      query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() != TimeTravelFormat.HUDI))
-      || query.getHiveEngine()) {
+    } else if (query.getHiveEngine() || !isHudiTimeTravelFeatureGroup(query)) {
       tableIdentifierStr.add("`" + query.getFeatureStore() + "`");
       tableIdentifierStr.add("`" + query.getFeaturegroup().getName() + "_" + query.getFeaturegroup().getVersion()
           + "`");
@@ -295,19 +294,21 @@ public class ConstructorController {
 
   public List<HudiFeatureGroupAliasDTO> getHudiAliases(Query query) throws ServiceException {
     List<HudiFeatureGroupAliasDTO> aliases = new ArrayList<>();
-
-    if ((query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
-        query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI)) {
-
-      CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO(query.getFeaturegroup());
-      Featuregroup featuregroup = query.getFeaturegroup();
+    Featuregroup featuregroup = query.getFeaturegroup();
+    if (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
+            isHudiTimeTravelFeatureGroup(query)) {
+      CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO(featuregroup);
+      String featurestoreName = featurestoreFacade.getHiveDbName(featuregroup.getFeaturestore().getHiveDbId());
+      featuregroupDTO.setFeaturestoreName(featurestoreName);
       featuregroupDTO.setLocation(featurestoreUtils.resolveLocationURI(
           featuregroup.getCachedFeaturegroup().getHiveTbls().getSdId().getLocation()));
       aliases.add(new HudiFeatureGroupAliasDTO(query.getAs(), featuregroupDTO,
           query.getLeftFeatureGroupStartTimestamp(), query.getLeftFeatureGroupEndTimestamp()));
-    } else if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.STREAM_FEATURE_GROUP) {
-      StreamFeatureGroupDTO featuregroupDTO = new StreamFeatureGroupDTO(query.getFeaturegroup());
-      Featuregroup featuregroup = query.getFeaturegroup();
+    } else if (featuregroup.getFeaturegroupType() == FeaturegroupType.STREAM_FEATURE_GROUP &&
+            isHudiTimeTravelFeatureGroup(query)) {
+      StreamFeatureGroupDTO featuregroupDTO = new StreamFeatureGroupDTO(featuregroup);
+      String featurestoreName = featurestoreFacade.getHiveDbName(featuregroup.getFeaturestore().getHiveDbId());
+      featuregroupDTO.setFeaturestoreName(featurestoreName);
       featuregroupDTO.setLocation(featurestoreUtils.resolveLocationURI(
         featuregroup.getStreamFeatureGroup().getHiveTbls().getSdId().getLocation()));
       aliases.add(new HudiFeatureGroupAliasDTO(query.getAs(), featuregroupDTO,
@@ -321,6 +322,16 @@ public class ConstructorController {
     }
 
     return aliases;
+  }
+
+  private boolean isHudiTimeTravelFeatureGroup(Query query) {
+    Boolean isHudiFg = (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.STREAM_FEATURE_GROUP ||
+            (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
+                    query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI));
+    Boolean hasTimeTravel = (query.getLeftFeatureGroupStartTimestamp() != null &&
+            query.getLeftFeatureGroupStartTimestamp() != 0) ||
+            query.getLeftFeatureGroupEndTimestamp() != null;
+    return isHudiFg && hasTimeTravel;
   }
 
   // TODO(Fabio): does it make sense to this in the same pass as where we generate the table nodes?
