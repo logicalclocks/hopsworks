@@ -37,15 +37,12 @@ import javax.ejb.Timer;
 import javax.ejb.TimerService;
 import javax.inject.Inject;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static io.hops.hopsworks.common.serving.LocalhostServingController.SERVING_DIRS;
-import static io.hops.hopsworks.common.serving.LocalhostServingController.CID_STOPPED;
+import static io.hops.hopsworks.common.serving.LocalhostServingController.CID_FAILED;
 
 /**
  * This singleton iterates over the running Serving instances and checks whether
@@ -57,8 +54,7 @@ import static io.hops.hopsworks.common.serving.LocalhostServingController.CID_ST
 @Startup
 public class LocalhostServingMonitor {
 
-  private final static Logger LOGGER =
-      Logger.getLogger(LocalhostServingMonitor.class.getName());
+  private final static Logger LOGGER = Logger.getLogger(LocalhostServingMonitor.class.getName());
 
   @Resource
   private TimerService timerService;
@@ -103,6 +99,7 @@ public class LocalhostServingMonitor {
       for (Serving serving : servingList) {
         try {
           Serving dbServing = servingFacade.acquireLock(serving.getProject(), serving.getId());
+          
           ProcessDescriptor.Builder builder = new ProcessDescriptor.Builder().addCommand("/usr/bin/sudo");
           if (serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
             builder.addCommand(tfScript);
@@ -115,49 +112,23 @@ public class LocalhostServingMonitor {
               .addCommand(dbServing.getName())
               .ignoreOutErrStreams(true)
               .build();
-
           LOGGER.log(Level.FINE, processDescriptor.toString());
           try {
             ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
-
             if (processResult.getExitCode() != 0) {
-
-              // The processes is dead, run the kill script to delete the directory
-              // and update the value in the db
-              Path secretDir = Paths.get(settings.getStagingDir(), SERVING_DIRS + serving.getLocalDir());
-              builder = new ProcessDescriptor.Builder().addCommand("/usr/bin/sudo");
-              if (serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
-                builder.addCommand(tfScript);
-              }
-              if (serving.getModelServer() == ModelServer.PYTHON) {
-                builder.addCommand(sklearnScript);
-              }
-              processDescriptor = builder.addCommand("kill")
-                  .addCommand(dbServing.getCid())
-                  .addCommand(dbServing.getName())
-                  .addCommand(dbServing.getProject().getName().toLowerCase())
-                  .addCommand(secretDir.toString())
-                  .ignoreOutErrStreams(true)
-                  .build();
-
-              LOGGER.log(Level.FINE, processDescriptor.toString());
-              osProcessExecutor.execute(processDescriptor);
-
-              // If the process succeeded to delete the localDir update the db
-              dbServing.setCid(CID_STOPPED);
-              dbServing.setLocalPort(-1);
+              // The process is dead
+              dbServing.setCid(CID_FAILED);
               servingFacade.updateDbObject(dbServing, dbServing.getProject());
             }
-
           } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Could not clean up serving instance with id: "
-                + serving.getId(), e);
+            LOGGER.log(Level.SEVERE, "Could not check if serving with id  '" + serving.getId() + "' is alive", e);
+          } catch (ServingException e) {
+            LOGGER.log(Level.SEVERE, "Could not update status of serving with id: " + serving.getId(), e);
           }
 
           servingFacade.releaseLock(serving.getProject(), serving.getId());
         } catch (ServingException e) {
-          LOGGER.log(Level.INFO, "Error processing serving instance with id: "
-              + serving.getId(), e);
+          LOGGER.log(Level.INFO, "Error processing serving instance with id: " + serving.getId(), e);
         }
       }
     } catch(Exception e) {

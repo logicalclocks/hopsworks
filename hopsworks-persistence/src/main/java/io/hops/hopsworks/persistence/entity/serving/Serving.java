@@ -148,7 +148,10 @@ public class Serving implements Serializable {
   @Column(name = "deployed")
   @Temporal(TemporalType.TIMESTAMP)
   private Date deployed;
-
+  @Basic(optional = true)
+  @Size(min = 1, max = 8)
+  @Column(name = "revision")
+  private String revision;
   @Column(name = "batching_configuration")
   @NotNull
   @Convert(converter = BatchingConfigurationConverter.class)
@@ -339,6 +342,14 @@ public class Serving implements Serializable {
     this.deployed = deployed;
   }
 
+  public String getRevision() {
+    return revision;
+  }
+  
+  public void setRevision(String revision) {
+    this.revision = revision;
+  }
+
   public BatchingConfiguration getBatchingConfiguration() { return batchingConfiguration; }
 
   public void setBatchingConfiguration(BatchingConfiguration batchingConfiguration) {
@@ -374,6 +385,7 @@ public class Serving implements Serializable {
     if (modelServer != null ? !modelServer.equals(serving.modelServer) : serving.modelServer != null) return false;
     if (servingTool != null ? !servingTool.equals(serving.servingTool) : serving.servingTool != null) return false;
     if (deployed != null ? !deployed.equals(serving.deployed) : serving.deployed != null) return false;
+    if (revision != null ? !revision.equals(serving.revision) : serving.revision != null) return false;
     if (batchingConfiguration != null ? !batchingConfiguration.equals(serving.batchingConfiguration) :
         serving.batchingConfiguration != null) return false;
     return localDir != null ? localDir.equals(serving.localDir) : serving.localDir == null;
@@ -402,6 +414,7 @@ public class Serving implements Serializable {
     result = 31 * result + (modelServer != null ? modelServer.hashCode() : 0);
     result = 31 * result + (servingTool != null ? servingTool.hashCode() : 0);
     result = 31 * result + (deployed != null ? deployed.hashCode() : 0);
+    result = 31 * result + (revision != null ? revision.hashCode() : 0);
     result = 31 * result + (batchingConfiguration != null ? batchingConfiguration.hashCode() : 0);
     return result;
   }

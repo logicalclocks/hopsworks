@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.serving;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.serving.inference.LocalhostSkLearnInferenceUtils;
 import io.hops.hopsworks.common.serving.inference.LocalhostTfInferenceUtils;
+import io.hops.hopsworks.common.serving.util.ServingUtils;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
@@ -56,6 +57,7 @@ import java.util.logging.Level;
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class LocalhostServingController implements ServingController {
 
+  public static final String CID_FAILED = "failed";
   public static final String CID_STOPPED = "stopped";
   public static final String SERVING_DIRS = "/serving/";
 
@@ -67,6 +69,8 @@ public class LocalhostServingController implements ServingController {
   private LocalhostSkLearnServingController skLearnServingController;
   @EJB
   private LocalhostTfServingController tfServingController;
+  @EJB
+  private ServingUtils servingUtils;
   @EJB
   private LocalhostTfInferenceUtils localhostTfInferenceUtils;
   @EJB
@@ -95,7 +99,7 @@ public class LocalhostServingController implements ServingController {
     for (Serving serving : servingList) {
       ServingWrapper servingWrapper = getServingInternal(serving);
       // If status filter is set only add servings with the defined status
-      if(statusFilter != null && !servingWrapper.getStatus().name().equals(statusFilter.name())) {
+      if(statusFilter != null && servingWrapper.getStatus() != statusFilter) {
         continue;
       }
       servingWrapperList.add(servingWrapper);
@@ -146,19 +150,8 @@ public class LocalhostServingController implements ServingController {
    */
   @Override
   public void deleteAll(Project project) throws ServingException {
-    List<Serving> servingList = servingFacade.findForProject(project);
-    for (Serving serving : servingList) {
-      // Acquire lock
-      servingFacade.acquireLock(project, serving.getId());
-
-      ServingStatusEnum status = getServingStatus(serving);
-
-      // getServingStatus returns STARTING if the PID is set to -2 and there is a lock.
-      // If we reached this point, we just acquired a lock
-      if (!status.equals(ServingStatusEnum.STARTING)) {
-        killServingInstance(project, serving, false);
-      }
-      servingFacade.delete(serving);
+    for (Serving serving : servingFacade.findForProject(project)) {
+      delete(project, serving.getId());
     }
   }
   
@@ -171,12 +164,15 @@ public class LocalhostServingController implements ServingController {
    */
   @Override
   public void delete(Project project, Integer id) throws ServingException {
+    // acquire lock
     Serving serving = servingFacade.acquireLock(project, id);
+  
+    // get status
     ServingStatusEnum status = getServingStatus(serving);
-
-    // getServingStatus returns STARTING if the PID is set to -2 and there is a lock.
-    // If we reached this point, we just acquired a lock
+  
+    // if we reached this point, we just acquired a lock
     if (!status.equals(ServingStatusEnum.STARTING)) {
+      // if cid is not stopped
       killServingInstance(project, serving, false);
     }
     servingFacade.delete(serving);
@@ -194,21 +190,43 @@ public class LocalhostServingController implements ServingController {
    * @param serving the serving to get the internal representation for
    * @return internal representation of the serving
    */
-  private ServingWrapper getServingInternal(Serving serving) throws ServingException {
+  private ServingWrapper getServingInternal(Serving serving) {
     ServingWrapper servingWrapper = new ServingWrapper(serving);
 
     ServingStatusEnum status = getServingStatus(serving);
     servingWrapper.setStatus(status);
     switch (status) {
+      case CREATED:
       case STOPPED:
-      case STARTING:
-      case UPDATING:
-        servingWrapper.setAvailableReplicas(0);
-        servingWrapper.setInternalPort(null);
+        servingWrapper.setCondition(ServingStatusCondition.getStoppedSuccessCondition());
         break;
+      case STOPPING:
+        servingWrapper.setCondition(ServingStatusCondition.getStoppedInProgressCondition());
+        break;
+      case FAILED:
+        servingWrapper.setCondition(ServingStatusCondition.getStartedFailedCondition("deployment terminated " +
+          "unsuccessfully"));
+        break;
+      case UPDATING:
+      case STARTING:
+        servingWrapper.setCondition(ServingStatusCondition.getStartedInProgressCondition());
+        break;
+      case IDLE:
       case RUNNING:
-        servingWrapper.setAvailableReplicas(1);
+        servingWrapper.setCondition(ServingStatusCondition.getReadySuccessCondition());
+        break;
+    }
+    
+    if (status == ServingStatusEnum.RUNNING) {
+      servingWrapper.setAvailableReplicas(1);
+      servingWrapper.setInternalPort(serving.getLocalPort());
+    } else {
+      servingWrapper.setAvailableReplicas(0);
+      if (status == ServingStatusEnum.IDLE) {
         servingWrapper.setInternalPort(serving.getLocalPort());
+      } else {
+        servingWrapper.setInternalPort(null);
+      }
     }
     
     String path;
@@ -240,27 +258,26 @@ public class LocalhostServingController implements ServingController {
   @Override
   public void startOrStop(Project project, Users user, Integer servingId, ServingCommands command)
       throws ServingException {
-
+    
+    // acquire lock
     Serving serving = servingFacade.acquireLock(project, servingId);
-    ServingStatusEnum currentStatus = getServingStatus(serving);
+    
+    // get status
+    ServingStatusEnum status = getServingStatus(serving);
 
-    // getServingStatus returns STARTING if the PID is set to -2 and there is a lock.
-    // If we reached this point, we just acquired a lock
-    if (currentStatus == ServingStatusEnum.STARTING
-        && command == ServingCommands.START) {
+    if (command == ServingCommands.START && status == ServingStatusEnum.STARTING) {
+      // if status is Starting, cid is stopped and the lock is acquired
       startServingInstance(project, user, serving);
-
-      // getServingStatus returns UPDATING if the PID is different than -2 and there is a lock.
-      // If we reached this point, we just acquired a lock
-    } else if (currentStatus == ServingStatusEnum.UPDATING &&
-        command == ServingCommands.STOP) {
+    } else if (command == ServingCommands.STOP &&
+      (status == ServingStatusEnum.UPDATING || status == ServingStatusEnum.FAILED)) {
+      // if status is updating, cid is neither stopped nor failed, and the lock is acquired
       killServingInstance(project, serving, true);
     } else {
-      // Release lock before throwing the exception
+      // release lock before throwing the exception
       servingFacade.releaseLock(project, servingId);
 
       String userMsg = "Instance is already " + (command == ServingCommands.START ?
-        ServingStatusEnum.STARTED.toString() : ServingStatusEnum.STOPPED.toString()).toLowerCase();
+        ServingStatusEnum.STARTING.toString() : ServingStatusEnum.STOPPED.toString()).toLowerCase();
       throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR, Level.FINE, userMsg);
     }
   }
@@ -281,7 +298,9 @@ public class LocalhostServingController implements ServingController {
   public void put(Project project, Users user, ServingWrapper servingWrapper)
       throws ProjectException, ServingException, KafkaException, UserException,
     InterruptedException, ExecutionException {
+    
     Serving serving = servingWrapper.getServing();
+    
     if (serving.getId() == null) {
       // Create request
       serving.setCreated(new Date());
@@ -307,7 +326,10 @@ public class LocalhostServingController implements ServingController {
       kafkaServingHelper.setupKafkaServingTopic(project, servingWrapper, serving, oldDbServing);
       // Update the object in the database
       Serving dbServing = servingFacade.updateDbObject(serving, project);
-      if (status == ServingStatusEnum.RUNNING || status == ServingStatusEnum.UPDATING) {
+      if (status == ServingStatusEnum.RUNNING || status == ServingStatusEnum.UPDATING ||
+          status == ServingStatusEnum.IDLE) {
+        String newRevision = servingUtils.getNewRevisionID();
+        serving.setRevision(newRevision);
         Boolean samePredictor = (oldDbServing.getPredictor() == null && dbServing.getPredictor() == null) ||
           (oldDbServing.getPredictor() != null && dbServing.getPredictor() != null &&
             oldDbServing.getPredictor().equals(dbServing.getPredictor()));
@@ -322,7 +344,7 @@ public class LocalhostServingController implements ServingController {
         } else {
           // To update the version call the script and download the new version in the directory
           // the server polls for new versions and it will pick it up.
-          if(serving.getModelServer() == ModelServer.TENSORFLOW_SERVING){
+          if(serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
             tfServingController.updateModelVersion(project, user, dbServing);
           } else {
             //If we do not need to update model version there is nothing left to do and we can release the lock
@@ -342,14 +364,16 @@ public class LocalhostServingController implements ServingController {
   public List<ServingLogs> getLogs(Project project, Integer servingId, String component, Integer tailingLines)
     throws ServingException {
     throw new ServingException(RESTCodes.ServingErrorCode.KUBERNETES_NOT_INSTALLED, Level.FINE, "Direct access to " +
-      "server logs only supported in Kubernetes deployments");
+      "server logs is only supported in Kubernetes deployments");
   }
   
   private void startServingInstance(Project project, Users user, Serving serving) throws ServingException {
+    String newRevision = servingUtils.getNewRevisionID();
+    serving.setRevision(newRevision);
+    
     if(serving.getModelServer() == ModelServer.TENSORFLOW_SERVING){
       tfServingController.startServingInstance(project, user, serving);
-    }
-    if(serving.getModelServer() == ModelServer.PYTHON){
+    } else if(serving.getModelServer() == ModelServer.PYTHON){
       skLearnServingController.startServingInstance(project, user, serving);
     }
   }
@@ -358,8 +382,7 @@ public class LocalhostServingController implements ServingController {
       throws ServingException {
     if(serving.getModelServer() == ModelServer.TENSORFLOW_SERVING){
       tfServingController.killServingInstance(project, serving, releaseLock);
-    }
-    if(serving.getModelServer() == ModelServer.PYTHON){
+    } else if(serving.getModelServer() == ModelServer.PYTHON){
       skLearnServingController.killServingInstance(project, serving, releaseLock);
     }
   }
@@ -373,20 +396,23 @@ public class LocalhostServingController implements ServingController {
     startServingInstance(project, user, newInstance);
   }
 
-  private ServingStatusEnum getServingStatus(Serving serving) {
-    // Compute status
-    if (serving.getCid().equals(CID_STOPPED) && serving.getLockIP() == null) {
-      // The Pid is not in the database, and nobody has the lock, the instance is stopped
-      return ServingStatusEnum.STOPPED;
-    } else if (serving.getCid().equals(CID_STOPPED)) {
-      // The Pid is -1, but someone has the lock, the instance is starting
-      return ServingStatusEnum.STARTING;
-    } else if (!serving.getCid().equals(CID_STOPPED) && serving.getLockIP() == null){
-      // The Pid is in the database and nobody as the lock. Instance is running
-      return ServingStatusEnum.RUNNING;
-    } else {
-      // Someone is updating the instance.
-      return ServingStatusEnum.UPDATING;
+  public static ServingStatusEnum getServingStatus(Serving serving) {
+    if (serving.getCid().equals(CID_STOPPED)) {
+      // if cid is stopped,
+      if (serving.getLockIP() != null) {
+        // and the lock is acquired, the instance is starting
+        return ServingStatusEnum.STARTING;
+      }
+      // otherwise the instance is stopped or just created
+      return serving.getRevision() == null ? ServingStatusEnum.CREATED : ServingStatusEnum.STOPPED;
     }
+    if (serving.getCid().equals(CID_FAILED)) {
+      // if cid is failed, the instance failed to start or during runtime
+      return ServingStatusEnum.FAILED;
+    }
+    // otherwise, instance is updating or running
+    return serving.getLockIP() != null
+      ? ServingStatusEnum.UPDATING
+      : ServingStatusEnum.RUNNING;
   }
 }

@@ -245,21 +245,38 @@ public class TestQuotasEnforcement {
   public void testQuotasRunningModelDeployments() throws Exception {
     Settings settings = Mockito.mock(Settings.class);
     List<ServingWrapper> mockServings = new ArrayList<>();
+  
     ServingWrapper sw0 = new ServingWrapper(new Serving());
-    sw0.setStatus(ServingStatusEnum.STOPPED);
+    sw0.setStatus(ServingStatusEnum.CREATED);
     mockServings.add(sw0);
-
+  
     ServingWrapper sw1 = new ServingWrapper(new Serving());
-    sw1.setStatus(ServingStatusEnum.RUNNING);
+    sw1.setStatus(ServingStatusEnum.STARTING);
     mockServings.add(sw1);
-
+  
     ServingWrapper sw2 = new ServingWrapper(new Serving());
-    sw2.setStatus(ServingStatusEnum.STARTED);
+    sw2.setStatus(ServingStatusEnum.FAILED);
     mockServings.add(sw2);
 
     ServingWrapper sw3 = new ServingWrapper(new Serving());
-    sw3.setStatus(ServingStatusEnum.STARTING);
+    sw3.setStatus(ServingStatusEnum.RUNNING);
     mockServings.add(sw3);
+  
+    ServingWrapper sw4 = new ServingWrapper(new Serving());
+    sw4.setStatus(ServingStatusEnum.IDLE);
+    mockServings.add(sw4);
+    
+    ServingWrapper sw5 = new ServingWrapper(new Serving());
+    sw5.setStatus(ServingStatusEnum.UPDATING);
+    mockServings.add(sw5);
+
+    ServingWrapper sw6 = new ServingWrapper(new Serving());
+    sw6.setStatus(ServingStatusEnum.STOPPING);
+    mockServings.add(sw6);
+  
+    ServingWrapper sw7 = new ServingWrapper(new Serving());
+    sw7.setStatus(ServingStatusEnum.STOPPED);
+    mockServings.add(sw7);
 
     ServingController servingController = Mockito.mock(ServingController.class);
     Mockito.when(servingController.getAll(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(mockServings);
@@ -272,11 +289,11 @@ public class TestQuotasEnforcement {
     project.setName("ProjectName");
 
     // It should go through
-    Mockito.when(settings.getQuotasRunningModelDeployments()).thenReturn(4L);
+    Mockito.when(settings.getQuotasRunningModelDeployments()).thenReturn(6L);
     qe.enforceRunningModelDeploymentsQuota(project);
 
     // Now it should throw an exception
-    Mockito.when(settings.getQuotasRunningModelDeployments()).thenReturn(3L);
+    Mockito.when(settings.getQuotasRunningModelDeployments()).thenReturn(5L);
     thrown.expect(QuotaEnforcementException.class);
     thrown.expectMessage("Running model deployments quota reached for Project");
     qe.enforceRunningModelDeploymentsQuota(project);

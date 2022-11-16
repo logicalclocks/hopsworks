@@ -27,6 +27,7 @@ public class ServingWrapper {
   private String hopsworksInferencePath;
   private String modelServerInferencePath;
   private Integer internalPort;
+  private ServingStatusCondition condition;
   
   private TopicDTO kafkaTopicDTO;
 
@@ -70,6 +71,9 @@ public class ServingWrapper {
   public void setModelServerInferencePath(String modelServerInferencePath) {
     this.modelServerInferencePath = modelServerInferencePath;
   }
+  
+  public ServingStatusCondition getCondition() { return condition; }
+  public void setCondition(ServingStatusCondition condition) { this.condition = condition; }
   
   public TopicDTO getKafkaTopicDTO() {
     return kafkaTopicDTO;

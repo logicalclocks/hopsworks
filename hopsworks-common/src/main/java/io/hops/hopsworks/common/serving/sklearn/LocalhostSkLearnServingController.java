@@ -46,6 +46,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static io.hops.hopsworks.common.hdfs.HdfsUsersController.USER_NAME_DELIMITER;
+import static io.hops.hopsworks.common.serving.LocalhostServingController.CID_FAILED;
 import static io.hops.hopsworks.common.serving.LocalhostServingController.CID_STOPPED;
 import static io.hops.hopsworks.common.serving.LocalhostServingController.SERVING_DIRS;
 
@@ -135,12 +136,13 @@ public class LocalhostSkLearnServingController {
     Integer port = ThreadLocalRandom.current().nextInt(40000, 59999);
     Path secretDir = Paths.get(settings.getStagingDir(), SERVING_DIRS + serving.getLocalDir());
     String predictorFilename = serving.getPredictor();
+    
     if (serving.getPredictor().contains("/")) {
       String[] splits = serving.getPredictor().split("/");
       predictorFilename = splits[splits.length - 1];
     }
+    
     try {
-      
       ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
           .addCommand("/usr/bin/sudo")
           .addCommand(script)
@@ -167,7 +169,7 @@ public class LocalhostSkLearnServingController {
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
       if (processResult.getExitCode() != 0) {
         // Startup process failed for some reason
-        serving.setCid(CID_STOPPED);
+        serving.setCid(CID_FAILED);
         servingFacade.updateDbObject(serving, project);
         throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR_INT, Level.WARNING,
           "Could not start sklearn serving", "ut:" + processResult.getStdout() + ", err:" + processResult.getStderr());
@@ -188,10 +190,14 @@ public class LocalhostSkLearnServingController {
       }
   
       if (Strings.isNullOrEmpty(pidContents)) {
+        serving.setCid(CID_FAILED);
+        servingFacade.updateDbObject(serving, project);
         throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR_INT, Level.WARNING,
           "Could not start sklearn serving because pid file could not be read or was empty");
       }
+      
       logger.log(Level.FINE, "sklearn pidContents:"+pidContents);
+      
       // Update the info in the db
       serving.setCid(pidContents);
       serving.setLocalPort(port);
@@ -199,12 +205,10 @@ public class LocalhostSkLearnServingController {
       servingFacade.updateDbObject(serving, project);
     } catch (Exception ex) {
       // Startup process failed for some reason
-      serving.setCid(CID_STOPPED);
+      serving.setCid(CID_FAILED);
       servingFacade.updateDbObject(serving, project);
-
       throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR_INT, Level.SEVERE, null,
           ex.getMessage(), ex);
-
     } finally {
       if (settings.getHopsRpcTls()) {
         certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
@@ -213,5 +217,4 @@ public class LocalhostSkLearnServingController {
       servingFacade.releaseLock(project, serving.getId());
     }
   }
-  
 }
