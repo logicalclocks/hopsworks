@@ -42,6 +42,12 @@ public class FeatureGroupFeatureDTO {
 
   public FeatureGroupFeatureDTO(){}
 
+  // for testing
+  public FeatureGroupFeatureDTO(String name, String type) {
+    this.name = name;
+    this.type = type;
+  }
+
   public FeatureGroupFeatureDTO(String name, String type, String description, Boolean primary,
                                 Boolean partition, String onlineType, String defaultValue, Integer featureGroupId) {
     this.name = name;

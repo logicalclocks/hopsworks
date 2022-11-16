@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.featuregroup;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
@@ -46,6 +47,14 @@ public class FeatureGroupInputValidation {
   @EJB
   private OnlineFeaturegroupController onlineFeaturegroupController;
   
+  public FeatureGroupInputValidation() {
+  }
+  
+  // for testing
+  public FeatureGroupInputValidation(FeaturestoreInputValidation featureStoreInputValidation) {
+    this.featureStoreInputValidation = featureStoreInputValidation;
+  }
+  
   /**
    * Verify entity names input by the user for creation of entities in the featurestore
    *
@@ -71,7 +80,16 @@ public class FeatureGroupInputValidation {
         featureStoreInputValidation.nameValidation(featureGroupFeatureDTO.getName());
         featureStoreInputValidation.descriptionValidation(featureGroupFeatureDTO.getName(),
           featureGroupFeatureDTO.getDescription());
+        verifyOfflineFeatureType(featureGroupFeatureDTO);
       }
+    }
+  }
+  
+  public void verifyOfflineFeatureType(FeatureGroupFeatureDTO feature) throws FeaturestoreException {
+    if (Strings.isNullOrEmpty(feature.getType())) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_OFFLINE_TYPE_NOT_PROVIDED, Level.FINE,
+        "There was no offline type provided for feature `" + feature.getName() + "`. Offline types " +
+          "are mandatory.");
     }
   }
 
