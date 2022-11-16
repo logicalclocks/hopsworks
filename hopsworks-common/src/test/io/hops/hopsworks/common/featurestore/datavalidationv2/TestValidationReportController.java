@@ -24,7 +24,6 @@ import io.hops.hopsworks.common.featurestore.datavalidationv2.results.Validation
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationReport;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import org.junit.Test;
 import java.util.ArrayList;
@@ -36,9 +35,6 @@ import static org.junit.Assert.assertThrows;
 import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.MAX_CHARACTERS_IN_VALIDATION_REPORT_EVALUATION_PARAMETERS;
 import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.MAX_CHARACTERS_IN_VALIDATION_REPORT_META;
 import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.MAX_CHARACTERS_IN_VALIDATION_REPORT_STATISTICS;
-import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.MAX_CHARACTERS_IN_VALIDATION_RESULT_EXPECTATION_CONFIG;
-import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.MAX_CHARACTERS_IN_VALIDATION_RESULT_META;
-
 public class TestValidationReportController {
 
   private ValidationReportController validationReportController = new ValidationReportController();
@@ -189,111 +185,5 @@ public class TestValidationReportController {
     );
     assertEquals("Rest code error corresponding to json parse failure: ", 201,
       notAJsonException.getErrorCode().getCode() - notAJsonException.getErrorCode().getRange());
-  }
-
-  // ValidationResult input validation
-
-  @Test
-  public void testVerifyValidationResultMeta() {
-    ValidationResultDTO resultDTO = makeValidValidationResultDTO();
-    // Null
-    resultDTO.setMeta(null);
-    FeaturestoreException nullInputException = assertThrows(
-      FeaturestoreException.class,
-      () -> validationReportController.convertResultDTOToPersistent(new ValidationReport(), resultDTO)
-    );
-    assertEquals("Rest code error corresponding to null input error: ", 202,
-      nullInputException.getErrorCode().getCode() - nullInputException.getErrorCode().getRange());
-
-    // Long input
-    String longInput = ("{\"longInput\": \"" +
-      StringUtils.repeat("A", MAX_CHARACTERS_IN_VALIDATION_RESULT_META + 10) + "\"}");
-    resultDTO.setMeta(longInput);
-    FeaturestoreException longInputException = assertThrows(
-      FeaturestoreException.class,
-      () -> validationReportController.convertResultDTOToPersistent(new ValidationReport(), resultDTO)
-    );
-    assertEquals("Rest code error corresponding to exceed max character error: ", 200,
-      longInputException.getErrorCode().getCode() - longInputException.getErrorCode().getRange());
-
-    // Invalid Json
-    String notAJsonInput = "I am not a Json";
-    resultDTO.setMeta(notAJsonInput);
-    FeaturestoreException notAJsonException = assertThrows(
-      FeaturestoreException.class,
-      () -> validationReportController.convertResultDTOToPersistent(new ValidationReport(), resultDTO)
-    );
-    assertEquals("Rest code error corresponding to json parse failure: ", 201,
-      notAJsonException.getErrorCode().getCode() - notAJsonException.getErrorCode().getRange());
-  }
-
-  @Test
-  public void testVerifyValidationResultExpectationConfig() {
-    ValidationResultDTO resultDTO = makeValidValidationResultDTO();
-    // Null
-    resultDTO.setExpectationConfig(null);
-    FeaturestoreException nullInputException = assertThrows(
-      FeaturestoreException.class,
-      () -> validationReportController.convertResultDTOToPersistent(new ValidationReport(), resultDTO)
-    );
-    assertEquals("Rest code error corresponding to null input error: ", 202,
-      nullInputException.getErrorCode().getCode() - nullInputException.getErrorCode().getRange());
-
-    // Long input
-    String longInput = ("{\"longInput\": \"" +
-      StringUtils.repeat("A", MAX_CHARACTERS_IN_VALIDATION_RESULT_EXPECTATION_CONFIG + 10) + "\"}");
-    resultDTO.setExpectationConfig(longInput);
-    FeaturestoreException longInputException = assertThrows(
-      FeaturestoreException.class,
-      () -> validationReportController.convertResultDTOToPersistent(new ValidationReport(), resultDTO)
-    );
-    assertEquals("Rest code error corresponding to exceed max character error: ", 200,
-      longInputException.getErrorCode().getCode() - longInputException.getErrorCode().getRange());
-
-    // Invalid Json
-    String notAJsonInput = "I am not a Json";
-    resultDTO.setExpectationConfig(notAJsonInput);
-    FeaturestoreException notAJsonException = assertThrows(
-      FeaturestoreException.class,
-      () -> validationReportController.convertResultDTOToPersistent(new ValidationReport(), resultDTO)
-    );
-    assertEquals("Rest code error corresponding to json parse failure: ", 201,
-      notAJsonException.getErrorCode().getCode() - notAJsonException.getErrorCode().getRange());
-  }
-
-  @Test
-  public void testVerifyValidationResultExceptionInfo() {
-    ValidationResultDTO resultDTO = makeValidValidationResultDTO();
-    // Null is silently turned into empty json for exception info
-
-    // Long input is silently caught for exception info
-
-    // Invalid Json
-    String notAJsonInput = "I am not a Json";
-    resultDTO.setExceptionInfo(notAJsonInput);
-    FeaturestoreException notAJsonException = assertThrows(
-      FeaturestoreException.class,
-      () -> validationReportController.convertResultDTOToPersistent(new ValidationReport(), resultDTO)
-    );
-    assertEquals("Rest code error corresponding to json parse failure: ", 201,
-      notAJsonException.getErrorCode().getCode() - notAJsonException.getErrorCode().getRange());
-  }
-
-  @Test
-  public void testVerifyValidationResultResultAndObservedValue() {
-    ValidationResultDTO resultDTO = makeValidValidationResultDTO();
-    // Null is silently caught and made into empty json.
-
-    // Invalid Json
-    String notAJsonInput = "I am not a Json";
-    resultDTO.setResult(notAJsonInput);
-    FeaturestoreException notAJsonException = assertThrows(
-      FeaturestoreException.class,
-      () -> validationReportController.convertResultDTOToPersistent(new ValidationReport(), resultDTO)
-    );
-    assertEquals("Rest code error corresponding to json parse failure: ", 201,
-      notAJsonException.getErrorCode().getCode() - notAJsonException.getErrorCode().getRange());
-
-    // Long input is silently caught and result is truncated for result field.
   }
 }

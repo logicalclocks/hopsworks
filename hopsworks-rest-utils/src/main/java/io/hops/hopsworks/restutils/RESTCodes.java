@@ -1638,7 +1638,9 @@ public class RESTCodes {
     FAILURE_HDFS_USER_OPERATION(209, "HDFS user operation failure",
       Response.Status.INTERNAL_SERVER_ERROR),
     FEATURE_NAME_NOT_FOUND(210, "The Feature Name was not found in this version of the Feature Group.",
-        Response.Status.BAD_REQUEST);
+        Response.Status.BAD_REQUEST),
+    VALIDATION_RESULT_IS_NOT_VALID_JSON(211, "The validation result is not a valid json.", 
+      Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

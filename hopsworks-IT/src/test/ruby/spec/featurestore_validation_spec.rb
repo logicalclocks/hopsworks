@@ -259,7 +259,7 @@ describe "On #{ENV['OS']}" do
       end
     end
 
-    describe "expectation suite others" do
+    describe "Expectation Suite others" do
       context 'with valid project, featurestore service enabled' do
         before :all do
           with_valid_project
@@ -665,6 +665,205 @@ describe "On #{ENV['OS']}" do
           expect(test_file(dto_parsed["fullReportPath"])).to eq(true)
           delete_featuregroup_checked(project.id, featurestore_id, fg_json["id"])
           expect(test_file(dto_parsed["fullReportPath"])).to eq(false)
+        end
+      end
+    end
+
+    describe "Validation Result History Basic" do
+      context 'with valid project, featurestore service enabled, a feature group and an expectation suite' do
+        before :all do
+          with_valid_project
+        end
+
+        it "should be able to retrieve the validation result history of associated with an expectation (via its id)" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          fg_dto, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
+          expect_status_details(201)
+          fg_json = JSON.parse(fg_dto)
+          expectation_suite = generate_template_expectation_suite()
+          suite_dto = create_expectation_suite(project.id, featurestore_id, fg_json["id"], expectation_suite)
+          expect_status_details(201)
+          suite_json = JSON.parse(suite_dto)
+          validation_report = generate_template_validation_report()
+          report_dto = create_validation_report(project.id, featurestore_id, fg_json["id"], validation_report)
+          expect_status_details(201)
+          history_dto = get_validation_history(project.id, featurestore_id, fg_json["id"], suite_json["expectations"][0]["id"])
+          expect_status_details(200)
+          history_json = JSON.parse(history_dto)
+          expect(history_json["count"]).to eq(1)
+          expectation_config_json = JSON.parse(history_json["items"][0]["expectationConfig"])
+          expect(expectation_config_json["meta"]["expectationId"]).to eq(suite_json["expectations"][0]["id"])
+        end
+      end
+    end
+
+    describe "Validation Result History Sort_by, Filter_by and Pagination" do
+      context 'with valid project, featurestore service enabled, a feature group and an expectation suite' do
+        before :all do
+          # Populate validation reports to try different filtering, sorting and pagination option 
+          # in the validation history tests
+          with_valid_project
+          @featurestore_id = get_featurestore_id(@project[:id])
+          fg_dto, featuregroup_name = create_cached_featuregroup(@project[:id], @featurestore_id)
+          expect_status_details(201)
+          @fg_json = JSON.parse(fg_dto)
+          expectation_suite = generate_template_expectation_suite()
+          expectation_suite["validationIngestionPolicy"] = "ALWAYS"
+          suite_dto = create_expectation_suite(@project[:id], @featurestore_id, @fg_json["id"], expectation_suite)
+          expect_status_details(201)
+          @suite_json = JSON.parse(suite_dto)
+          validation_report = generate_template_validation_report()
+          validation_report[:results].pop()
+          validation_result = generate_template_validation_result()
+          meta_json = JSON.parse(validation_report[:meta])
+          meta_json["age"] = "oldest"
+          meta_json["run_id"]["run_time"] = "2022-01-01T14:06:24.481236+00:00"
+          validation_report[:meta] = JSON.generate(meta_json)
+          validation_result[:meta] = JSON.generate(meta_json)
+          validation_report[:results].append(validation_result)
+          validation_report_ingested_1_dto = create_validation_report(@project[:id], @featurestore_id, @fg_json["id"], validation_report)
+          expect_status_details(201)
+          @validation_report_ingested_1_json = JSON.parse(validation_report_ingested_1_dto)
+          validation_report[:results].pop()
+          meta_json = JSON.parse(validation_report[:meta])
+          meta_json["age"] = "lågom"
+          meta_json["run_id"]["run_time"] = "2022-02-01T14:06:24.481236+00:00"
+          validation_report[:meta] = JSON.generate(meta_json)
+          validation_result[:meta] = JSON.generate(meta_json)
+          validation_report[:results].append(validation_result)
+          validation_report_ingested_2_dto = create_validation_report(@project[:id], @featurestore_id, @fg_json["id"], validation_report)
+          expect_status_details(201)
+          @validation_report_ingested_2_json = JSON.parse(validation_report_ingested_2_dto) 
+          # Update suite to strict to have an example of a rejected ingestion
+          @suite_json["validationIngestionPolicy"] = "STRICT"
+          update_metadata_expectation_suite(@project[:id], @featurestore_id, @fg_json["id"], @suite_json)
+          # Set success to false to infer insertion was rejected
+          validation_report[:success] = false
+          validation_report[:results].pop()
+          meta_json = JSON.parse(validation_report[:meta])
+          meta_json["age"] = "youngest"
+          meta_json["run_id"]["run_time"] = "2022-03-01T14:06:24.481236+00:00"
+          validation_report[:meta] = JSON.generate(meta_json)
+          validation_result[:meta] = JSON.generate(meta_json)
+          validation_report[:results].append(validation_result)
+          validation_report_rejected_dto = create_validation_report(@project[:id], @featurestore_id, @fg_json["id"], validation_report)
+          expect_status_details(201)
+          @validation_report_rejected_json = JSON.parse(validation_report_rejected_dto)
+        end
+
+        it "should be able to retrieve the whole time-ordered validation result history, descending order" do
+          validation_history_dto = get_validation_history(@project[:id], @featurestore_id, @fg_json["id"], @suite_json["expectations"][0]["id"], sort_by:"validation_time:desc")
+          expect_status_details(200)
+          validation_history_json = JSON.parse(validation_history_dto)
+          expect(validation_history_json["count"]).to eq(3)
+          youngest_meta = JSON.parse(validation_history_json["items"][0]["meta"])
+          expect(youngest_meta["age"]).to eq("youngest")
+          lagom_meta = JSON.parse(validation_history_json["items"][1]["meta"])
+          expect(lagom_meta["age"]).to eq("lågom")
+          oldest_meta = JSON.parse(validation_history_json["items"][2]["meta"])
+          expect(oldest_meta["age"]).to eq("oldest")
+        end
+
+        it "should be able to retrieve the whole time-ordered validation result history, ascending order" do
+          validation_history_dto = get_validation_history(@project[:id], @featurestore_id, @fg_json["id"], @suite_json["expectations"][0]["id"], sort_by:"validation_time:asc")
+          expect_status_details(200)
+          validation_history_json = JSON.parse(validation_history_dto)
+          expect(validation_history_json["count"]).to eq(3)
+          youngest_meta = JSON.parse(validation_history_json["items"][2]["meta"])
+          expect(youngest_meta["age"]).to eq("youngest")
+          lagom_meta = JSON.parse(validation_history_json["items"][1]["meta"])
+          expect(lagom_meta["age"]).to eq("lågom")
+          oldest_meta = JSON.parse(validation_history_json["items"][0]["meta"])
+          expect(oldest_meta["age"]).to eq("oldest")
+        end
+
+        it "should be able to retrieve validation result history filtered for rejected insertion only" do
+          validation_history_dto = get_validation_history(@project[:id], @featurestore_id, @fg_json["id"], @suite_json["expectations"][0]["id"],\
+          sort_by:"validation_time:desc", filter_by:"ingestion_result_eq:REJECTED")
+          expect_status_details(200)
+          validation_history_json = JSON.parse(validation_history_dto)
+          expect(validation_history_json["count"]).to eq(1)
+          youngest_meta = JSON.parse(validation_history_json["items"][0]["meta"])
+          expect(youngest_meta["age"]).to eq("youngest")
+        end
+
+        it "should be able to retrieve validation result history filtered for accepted insertion only" do
+          validation_history_dto = get_validation_history(@project[:id], @featurestore_id, @fg_json["id"], @suite_json["expectations"][0]["id"],\
+          sort_by:"validation_time:desc", filter_by:"ingestion_result_eq:INGESTED")
+          expect_status_details(200)
+          validation_history_json = JSON.parse(validation_history_dto)
+          expect(validation_history_json["count"]).to eq(2)
+          lagom_meta = JSON.parse(validation_history_json["items"][0]["meta"])
+          expect(lagom_meta["age"]).to eq("lågom")
+          oldest_meta = JSON.parse(validation_history_json["items"][1]["meta"])
+          expect(oldest_meta["age"]).to eq("oldest")
+        end
+
+        it "should be able to retrieve part of validation result history, using pagination" do
+          validation_history_dto = get_validation_history(@project[:id], @featurestore_id, @fg_json["id"], @suite_json["expectations"][0]["id"],\
+          sort_by:"validation_time:desc", offset:1, limit:2)
+          expect_status_details(200)
+          validation_history_json = JSON.parse(validation_history_dto)
+          expect(validation_history_json["count"]).to eq(3)
+          lagom_meta = JSON.parse(validation_history_json["items"][0]["meta"])
+          expect(lagom_meta["age"]).to eq("lågom")
+          oldest_meta = JSON.parse(validation_history_json["items"][1]["meta"])
+          expect(oldest_meta["age"]).to eq("oldest")
+        end
+
+        it "should be able to retrieve part of validation result history, filtering on validation time greater than" do
+          validation_history_dto = get_validation_history(@project[:id], @featurestore_id, @fg_json["id"], @suite_json["expectations"][0]["id"],\
+          sort_by:"validation_time:desc", filter_by:"validation_time_gt:1643724865000")
+          expect_status_details(200)
+          validation_history_json = JSON.parse(validation_history_dto)
+          expect(validation_history_json["count"]).to eq(1)
+          youngest_meta = JSON.parse(validation_history_json["items"][0]["meta"])
+          expect(youngest_meta["age"]).to eq("youngest")
+        end
+
+        it "should be able to retrieve part of validation result history, filtering on validation time greater than or equal to" do
+          validation_history_dto = get_validation_history(@project[:id], @featurestore_id, @fg_json["id"], @suite_json["expectations"][0]["id"],\
+          sort_by:"validation_time:desc", filter_by:"validation_time_gte:1643724865000")
+          expect_status_details(200)
+          validation_history_json = JSON.parse(validation_history_dto)
+          expect(validation_history_json["count"]).to eq(2)
+          youngest_meta = JSON.parse(validation_history_json["items"][0]["meta"])
+          expect(youngest_meta["age"]).to eq("youngest")
+          lagom_meta = JSON.parse(validation_history_json["items"][1]["meta"])
+          expect(lagom_meta["age"]).to eq("lågom")
+        end
+
+        it "should be able to retrieve part of validation result history, filtering on validation time less than" do
+          validation_history_dto = get_validation_history(@project[:id], @featurestore_id, @fg_json["id"], @suite_json["expectations"][0]["id"],\
+          sort_by:"validation_time:desc", filter_by:"validation_time_lt:1643724865000")
+          expect_status_details(200)
+          validation_history_json = JSON.parse(validation_history_dto)
+          expect(validation_history_json["count"]).to eq(1)
+          oldest_meta = JSON.parse(validation_history_json["items"][0]["meta"])
+          expect(oldest_meta["age"]).to eq("oldest")
+        end
+
+        it "should be able to retrieve part of validation result history, filtering on validation time less than or equal to" do
+          validation_history_dto = get_validation_history(@project[:id], @featurestore_id, @fg_json["id"], @suite_json["expectations"][0]["id"],\
+          sort_by:"validation_time:desc", filter_by:"validation_time_lte:1643724865000")
+          expect_status_details(200)
+          validation_history_json = JSON.parse(validation_history_dto)
+          expect(validation_history_json["count"]).to eq(2)
+          lagom_meta = JSON.parse(validation_history_json["items"][0]["meta"])
+          expect(lagom_meta["age"]).to eq("lågom")
+          oldest_meta = JSON.parse(validation_history_json["items"][1]["meta"])
+          expect(oldest_meta["age"]).to eq("oldest")
+        end
+
+        it "should be able to retrieve part of validation result history, filtering on validation time equal to" do
+          validation_history_dto = get_validation_history(@project[:id], @featurestore_id, @fg_json["id"], @suite_json["expectations"][0]["id"],\
+          sort_by:"validation_time:desc", filter_by:"validation_time_eq:1643724865000")
+          expect_status_details(200)
+          validation_history_json = JSON.parse(validation_history_dto)
+          expect(validation_history_json["count"]).to eq(1)
+          lagom_meta = JSON.parse(validation_history_json["items"][0]["meta"])
+          expect(lagom_meta["age"]).to eq("lågom")
         end
       end
     end

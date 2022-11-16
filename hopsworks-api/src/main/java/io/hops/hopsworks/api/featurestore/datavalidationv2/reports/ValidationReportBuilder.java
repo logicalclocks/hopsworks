@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.featurestore.datavalidationv2.reports;
 
+import io.hops.hopsworks.api.featurestore.datavalidationv2.results.ValidationResultBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade.CollectionInfo;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.ValidationReportController;
@@ -43,6 +44,8 @@ public class ValidationReportBuilder {
 
   @EJB
   private ValidationReportController validationReportController;
+  @EJB
+  private ValidationResultBuilder validationResultBuilder;
   @EJB
   private InodeController inodeController;
 
@@ -75,8 +78,7 @@ public class ValidationReportBuilder {
     List<ValidationResultDTO> validationResultDTOs = new ArrayList<ValidationResultDTO>();
 
     for (ValidationResult validationResult : validationReport.getValidationResults()) {
-      ValidationResultDTO validationResultDTO = new ValidationResultDTO(validationResult);
-      validationResultDTOs.add(validationResultDTO);
+      validationResultDTOs.add(validationResultBuilder.build(uriInfo, project, featuregroup, validationResult));
     }
     dto.setResults(validationResultDTOs);
     return dto;
