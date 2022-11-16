@@ -19,15 +19,20 @@ package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalid
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.Objects;
 
 @Entity
@@ -49,6 +54,10 @@ public class ValidationResult implements Serializable {
   @NotNull
   @Column(name = "success")
   private Boolean success;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "ingestion_result")
+  private IngestionResult ingestionResult;
   
   @Basic
   @Column(name = "meta")
@@ -69,6 +78,11 @@ public class ValidationResult implements Serializable {
   @JoinColumn(name = "expectation_id", referencedColumnName = "id")
   @ManyToOne
   private Expectation expectation;
+
+  @Basic(optional = false)
+  @Column(name = "validation_time")
+  @Temporal(TemporalType.TIMESTAMP)
+  private Date validationTime;
   
   public Integer getId() {
     return id;
@@ -133,6 +147,22 @@ public class ValidationResult implements Serializable {
   
   public void setExpectation(Expectation expectation) {
     this.expectation = expectation;
+  }
+
+  public Date getValidationTime() {
+    return validationTime;
+  }
+
+  public void setValidationTime(Date validationTime) {
+    this.validationTime = validationTime;
+  }
+
+  public IngestionResult getIngestionResult() {
+    return ingestionResult;
+  }
+
+  public void setIngestionResult(IngestionResult ingestionResult) {
+    this.ingestionResult = ingestionResult;
   }
   
   @Override

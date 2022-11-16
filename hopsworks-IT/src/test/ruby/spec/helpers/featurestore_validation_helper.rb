@@ -136,4 +136,41 @@ module FeaturestoreValidationHelper
   def delete_validation_report(project_id, featurestore_id, featuregroup_id, validation_report_id)
     delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/validationreport/#{validation_report_id}"
   end
+
+  def build_validation_history_url(project_id, featurestore_id, featuregroup_id, expectation_id)
+    "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/validationresult/history/#{expectation_id}"
+  end
+
+  def get_validation_history(project_id, featurestore_id, featuregroup_id, expectation_id, filter_by: nil, sort_by: nil, offset: nil, limit: nil)
+    query_params = "?"
+    if filter_by
+      query_params << "filter_by=#{filter_by}"
+    end
+    if sort_by
+      if query_params[-1] == "?"
+        query_params << "sort_by=#{sort_by}"
+      else
+        query_params << "&sort_by=#{sort_by}"
+      end
+    end
+    if offset
+      if query_params[-1] == "?"
+        query_params << "offset=#{offset}"
+      else
+        query_params << "&offset=#{offset}"
+      end
+    end
+    if limit
+      if query_params[-1] == "?"
+        query_params << "limit=#{limit}"
+      else
+        query_params << "&limit=#{limit}"
+      end
+    end
+    if query_params == "?"
+      get build_validation_history_url(project_id, featurestore_id, featuregroup_id, expectation_id)
+    else
+      get build_validation_history_url(project_id, featurestore_id, featuregroup_id, expectation_id) + query_params
+    end
+  end
 end

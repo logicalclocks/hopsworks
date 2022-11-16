@@ -18,16 +18,21 @@ package io.hops.hopsworks.common.featurestore.datavalidationv2.results;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.IngestionResult;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationResult;
 
 @XmlRootElement
-public class ValidationResultDTO {
+public class ValidationResultDTO extends RestDTO<ValidationResultDTO> {
   private Integer id;
   private String expectationConfig;
   private String result;
   private Boolean success;
   private String meta;
   private String exceptionInfo;
+  private String validationTime;
+  private IngestionResult ingestionResult;
+  private Integer expectationId;
 
   public ValidationResultDTO() {}
 
@@ -73,6 +78,14 @@ public class ValidationResultDTO {
     this.id = id;
   }
 
+  public Integer getExpectationId() {
+    return expectationId;
+  }
+
+  public void setExpectationId(Integer expectationId) {
+    this.expectationId = expectationId;
+  }
+
   public Boolean getSuccess() {
     return success;
   }
@@ -97,6 +110,22 @@ public class ValidationResultDTO {
     this.meta = meta;
   }
 
+  public String getValidationTime() {
+    return validationTime;
+  }
+
+  public void setValidationTime(String validationTime) {
+    this.validationTime = validationTime;
+  }
+
+  public IngestionResult getIngestionResult() {
+    return ingestionResult;
+  }
+
+  public void setIngestionResult(IngestionResult ingestionResult) {
+    this.ingestionResult = ingestionResult;
+  }
+
   @Override
   public String toString() {
     return "ValidationResultDTO{"
@@ -105,6 +134,8 @@ public class ValidationResultDTO {
       + ", expectationConfig: " + expectationConfig
       + ", exceptionInfo: " + exceptionInfo
       + ", meta: " + meta
+      + ", validationTime: " + validationTime
+      + ", ingestionResult: " + ingestionResult
       + "}";
   }
 }
