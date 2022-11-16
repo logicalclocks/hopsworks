@@ -23,6 +23,7 @@ import io.hops.hopsworks.api.featurestore.code.CodeResource;
 import io.hops.hopsworks.api.featurestore.commit.CommitResource;
 import io.hops.hopsworks.api.featurestore.datavalidation.alert.FeatureGroupAlertResource;
 import io.hops.hopsworks.api.featurestore.datavalidationv2.reports.ValidationReportResource;
+import io.hops.hopsworks.api.featurestore.datavalidationv2.results.ValidationResultResource;
 import io.hops.hopsworks.api.featurestore.datavalidationv2.suites.ExpectationSuiteResource;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.jobs.JobDTO;
@@ -148,6 +149,8 @@ public class FeaturegroupService {
   private ExpectationSuiteResource expectationSuiteResource;
   @Inject
   private ValidationReportResource validationReportResource;
+  @Inject
+  private ValidationResultResource validationResultResource;
   @EJB
   private DatasetHelper datasetHelper;
   @EJB
@@ -725,4 +728,20 @@ public class FeaturegroupService {
     return Response.created(jobDTO.getHref()).entity(jobDTO).build();
   }
 
+  /////////////////////////////////////////
+  //// Validation Result History Service
+  ////////////////////////////////////////
+  
+  @Path("/{featureGroupId}/validationresult")
+  @Logged(logLevel = LogLevel.OFF)
+  public ValidationResultResource validationResultResource(
+    @PathParam("featureGroupId")
+      Integer featureGroupId
+  ) throws FeaturestoreException {
+    this.validationResultResource.setProject(project);
+    this.validationResultResource.setFeaturestore(featurestore);
+    this.validationResultResource.setFeatureGroup(featureGroupId);
+
+    return validationResultResource;
+  }
 }
