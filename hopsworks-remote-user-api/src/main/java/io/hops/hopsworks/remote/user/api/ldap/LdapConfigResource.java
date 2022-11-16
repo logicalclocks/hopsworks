@@ -59,7 +59,7 @@ public class LdapConfigResource {
       if (ldapConfigDTO == null) {
         throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
       }
-      if (!DefaultConfig.MIT_LDAP.equals(defaultConfig)) {
+      if (DefaultConfig.MIT_KRB.equals(defaultConfig) || DefaultConfig.ACTIVE_DIRECTORY.equals(defaultConfig)) {
         throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Default not " +
           "applicable.");
       }
