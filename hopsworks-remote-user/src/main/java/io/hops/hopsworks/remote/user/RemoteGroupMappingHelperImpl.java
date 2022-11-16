@@ -31,7 +31,7 @@ public class RemoteGroupMappingHelperImpl  implements RemoteGroupMappingHelper {
   @Override
   public void syncMapping(RemoteUser remoteUser) throws UserException {
     check();
-    remoteGroupMapping.syncMapping(remoteUser);
+    remoteGroupMapping.syncMapping(remoteUser, null);
   }
   
   @Override

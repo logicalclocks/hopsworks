@@ -27,6 +27,7 @@ import io.hops.hopsworks.jwt.utils.ProxyAuthHelper;
 import io.hops.hopsworks.persistence.entity.remote.user.RemoteUser;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountType;
+import io.hops.hopsworks.remote.user.RemoteGroupMapping;
 import io.hops.hopsworks.remote.user.RemoteUserAuthController;
 import io.hops.hopsworks.remote.user.jwt.JWTHelper;
 import io.hops.hopsworks.remote.user.ldap.LdapUserController;
@@ -92,6 +93,8 @@ public class AuthResource {
   private Settings settings;
   @EJB
   private OAuthController oAuthController;
+  @EJB
+  private RemoteGroupMapping remoteGroupMapping;
 
   @GET
   @Path("krb/session")
@@ -128,7 +131,9 @@ public class AuthResource {
       ldapUserState = ldapUserController.login(username, password, true,
         ldapUserState.getRemoteUserDTO().getEmail().get(0));
     }
-    return remoteUserLogin(ldapUserState, req, res, cookie);
+    Response loginResponse = remoteUserLogin(ldapUserState, req, res, cookie);
+    remoteGroupMapping.syncMapping(ldapUserState.getRemoteUser(), ldapUserState.getRemoteUserDTO().getGroups());
+    return loginResponse;
   }
 
   @POST
@@ -154,7 +159,10 @@ public class AuthResource {
         krbLdapUserState =
           ldapUserController.getKrbLdapUser(principalName, true, krbLdapUserState.getRemoteUserDTO().getEmail().get(0));
       }
-      return remoteUserLogin(krbLdapUserState, req, res, cookie);
+      Response loginResponse = remoteUserLogin(krbLdapUserState, req, res, cookie);
+      remoteGroupMapping.syncUserMappingAsync(krbLdapUserState.getRemoteUser(),
+          krbLdapUserState.getRemoteUserDTO().getGroups());
+      return loginResponse;
     } catch (NoSuchAlgorithmException | SigningKeyNotFoundException | DuplicateSigningKeyException | LoginException e) {
       RESTException ex =
         new HopsSecurityException(RESTCodes.SecurityErrorCode.EJB_ACCESS_LOCAL, Level.FINE, e.getMessage(), null, e);

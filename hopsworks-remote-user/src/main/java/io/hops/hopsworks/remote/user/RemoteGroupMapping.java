@@ -43,7 +43,7 @@ public class RemoteGroupMapping {
     List<RemoteUser> remoteUsers = remoteUserFacade.findAll();
     for (RemoteUser remoteUser : remoteUsers) {
       try {
-        syncMapping(remoteUser);
+        syncMapping(remoteUser, null);
       } catch (UserException e) {
       }
     }
@@ -54,18 +54,31 @@ public class RemoteGroupMapping {
     List<RemoteUser> remoteUsers = remoteUserFacade.findAll();
     for (RemoteUser remoteUser : remoteUsers) {
       try {
-        syncMapping(remoteUser);
+        syncMapping(remoteUser, null);
       } catch (UserException e) {
       }
     }
   }
+
+  @Asynchronous
+  public void syncUserMappingAsync(RemoteUser user, List<String> groups) {
+    try {
+      LOGGER.log(Level.FINE, "Synchronizing remote user " + user + " groups with Projects");
+      syncMapping(user, groups);
+      LOGGER.log(Level.FINE, "Finished synchronizing remote user " + user + " groups with Projects");
+    } catch (UserException ex) {
+      LOGGER.log(Level.SEVERE, "Failed to synchronize remote user " + user + " groups with Projects", ex);
+    }
+  }
   
-  public void syncMapping(RemoteUser remoteUser) throws UserException {
+  public void syncMapping(RemoteUser remoteUser, List<String> groups) throws UserException {
     if (remoteUser == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "Remote user not found");
     }
     try {
-      List<String> groups = ldapRealm.getUserGroups(remoteUser);
+      if (groups == null) {
+        groups = ldapRealm.getUserGroups(remoteUser);
+      }
       //if the user is not active but exists reactivate
       if (groups != null && !groups.isEmpty() && (RemoteUserStatus.DELETED.equals(remoteUser.getStatus()) ||
         RemoteUserStatus.DEACTIVATED.equals(remoteUser.getStatus()))) {
