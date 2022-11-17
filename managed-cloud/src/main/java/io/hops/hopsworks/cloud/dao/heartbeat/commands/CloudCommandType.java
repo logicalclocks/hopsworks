@@ -10,7 +10,11 @@ import java.util.Objects;
 public class CloudCommandType {
   public static final CloudCommandType REMOVE_NODES = CloudCommandType.of("REMOVE_NODES");
   public static final CloudCommandType DECOMMISSION_NODE = CloudCommandType.of("DECOMMISSION_NODE");
-
+  public static final CloudCommandType BACKUP = CloudCommandType.of("BACKUP");
+  public static final CloudCommandType RESTORE = CloudCommandType.of("RESTORE");
+  public static final CloudCommandType BACKUP_DONE = CloudCommandType.of("BACKUP_DONE");
+  public static final CloudCommandType DELETE_BACKUP = CloudCommandType.of("DELETE_BACKUP");
+  
   private final String type;
 
   public static CloudCommandType of(String type) {

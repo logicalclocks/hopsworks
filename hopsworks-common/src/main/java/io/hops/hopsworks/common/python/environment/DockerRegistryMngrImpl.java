@@ -48,6 +48,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -205,5 +207,23 @@ public abstract class DockerRegistryMngrImpl implements DockerRegistryMngr {
           + " out: " + processResult.getStdout() + "\n err: " +
           processResult.getStderr());
     }
+  }
+  
+  @Override
+  public Map<String, Future<ProcessResult>> backupImages(String backupId)
+          throws IOException, ServiceDiscoveryException {
+    throw new UnsupportedOperationException("online backup only supported on cluster with managed repo");
+  }
+
+  @Override
+  public Map<String, Future<ProcessResult>> resotreImages(String backupId)
+          throws IOException, ServiceDiscoveryException {
+    throw new UnsupportedOperationException("online backup only supported on cluster with managed repo");
+  }
+  
+  @Override
+  public List<String> deleteBackup(String backupId)
+          throws IOException, ServiceDiscoveryException {
+    throw new UnsupportedOperationException("online backup only supported on cluster with managed repo");
   }
 }

@@ -61,4 +61,25 @@ public class ECRClientService {
     
     return filteredTags;
   }
+  
+  public List<String> getImageTags(final String repositoryName, String filter) {
+    ListImagesIterable imagesIterable
+            = client.listImagesPaginator(builder
+              -> builder.repositoryName(repositoryName)
+                    .filter(filterBuilder
+                      -> filterBuilder.tagStatus(TagStatus.TAGGED)));
+
+    List<ImageIdentifier> filteredImages
+            = imagesIterable.stream().flatMap(listImagesResponse
+              -> listImagesResponse.imageIds().stream().filter(imageIdentifier -> {
+                  return imageIdentifier.imageTag().contains(filter);
+              }
+            )).collect(Collectors.toList());
+
+    List<String> filteredTags
+            = filteredImages.stream().map(ImageIdentifier::imageTag)
+                    .collect(Collectors.toList());
+
+    return filteredTags;
+  }
 }

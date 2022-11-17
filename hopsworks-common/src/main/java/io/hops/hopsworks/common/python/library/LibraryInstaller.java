@@ -159,6 +159,8 @@ public class LibraryInstaller {
       LOG.log(Level.FINE, "isAlive-start: " + System.currentTimeMillis());
       registryGCCycles.incrementAndGet();
       final List<CondaCommands> allCondaCommandsOngoing = condaCommandFacade.findByStatus(CondaStatus.ONGOING);
+      
+      boolean ongoingBackup = settings.getOngoingBackup();
       // Run Registry GC every 10 seconds if there are no pending operations call registry GC, else proceed with
       // other conda ops
       if (registryGCCycles.get() % 10 == 0 && allCondaCommandsOngoing.isEmpty()) {
@@ -172,7 +174,9 @@ public class LibraryInstaller {
         } catch (Exception ex) {
           LOG.log(Level.WARNING, "Could not run conda remove commands", ex);
         }
-      } else {
+      } else if(!ongoingBackup){
+        // Do not start installing library during backup to ensure that the state of the DB
+        // and the docker image stay in sync during all the backup time
         // Group new commands by project and run in parallel
         Map<Project, List<CondaCommands>> allCondaCommandsNewByProject =
           getCondaCommandsByProject(condaCommandFacade.findByStatus(CondaStatus.NEW));

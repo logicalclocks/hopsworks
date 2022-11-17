@@ -407,7 +407,7 @@ public class LibraryController {
 
     ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
     if (processResult.getExitCode() != 0) {
-      String errorMsg = "Could list libraries in the docker image. " +
+      String errorMsg = "Could not list libraries in the docker image. " +
         "Try to retry the command or recreate the environment" +
         "\n Exit code: " + processResult.getExitCode() +
         "\nout: " + processResult.getStdout() +

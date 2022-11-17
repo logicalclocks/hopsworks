@@ -14,6 +14,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.cloud.dao.heartbeat.DecommissionStatus;
+import io.hops.hopsworks.cloud.dao.heartbeat.commands.BackupCommand;
 import io.hops.hopsworks.cloud.dao.heartbeat.commands.DecommissionNodeCommand;
 import io.hops.hopsworks.common.dao.host.HostDTO;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
@@ -105,6 +106,8 @@ public class CloudManager {
   private UserFacade userFacade;
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
+  @EJB
+  private BackupService backupService;
 
   private DecommissionStatus toSend = new DecommissionStatus();
   final Set<CloudNode> decommissionedNodes = new HashSet<>();
@@ -218,7 +221,16 @@ public class CloudManager {
         final List<DecommissionNodeCommand> decomissionNodeRequests = response.getCommands().stream()
             .filter(cc -> cc.getType().equals(CloudCommandType.DECOMMISSION_NODE))
             .map(cc -> (DecommissionNodeCommand) cc).collect(Collectors.toList());
-
+        
+        final List<BackupCommand> backupCommand = response.getCommands().stream()
+            .filter(cc -> cc.getType().equals(CloudCommandType.BACKUP) || 
+                    cc.getType().equals(CloudCommandType.RESTORE) || 
+                    cc.getType().equals(CloudCommandType.BACKUP_DONE) ||
+                    cc.getType().equals(CloudCommandType.DELETE_BACKUP))
+            .map(cc -> (BackupCommand) cc).collect(Collectors.toList());
+        
+        backupService.handleBackup(backupCommand, commandsStatus);
+        
         toSend = setAndGetDecommission(removeNodesRequests, allNodesButHead, decomissionNodeRequests);
 
         if (firstHeartbeat) {

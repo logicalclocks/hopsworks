@@ -77,4 +77,29 @@ public class ACRClientService {
       return new ArrayList<>();
     }
   }
+  
+  public List<String> getImageTags(final String repositoryName, String filter) throws IOException, 
+          ServiceDiscoveryException {
+
+    String registry = projectUtils.getRegistryAddress();
+    
+    String prog = settings.getSudoersDir() + "/dockerImage.sh";
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+            .addCommand("/usr/bin/sudo")
+            .addCommand(prog)
+            .addCommand("list-tags-acr")
+            .addCommand(registry)
+            .addCommand(repositoryName)
+            .addCommand(filter)
+            .redirectErrorStream(true)
+            .setWaitTimeout(1, TimeUnit.MINUTES)
+            .build();
+
+    ProcessResult processResult
+            = osProcessExecutor.execute(processDescriptor);
+    if (processResult.getExitCode() != 0) {
+      throw new IOException("Failed to get the images tags from the repositor");
+    }
+    return Arrays.asList(processResult.getStdout().split("\n"));
+  }
 }

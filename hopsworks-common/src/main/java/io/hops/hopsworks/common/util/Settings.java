@@ -415,6 +415,8 @@ public class Settings implements Serializable {
    */
   private static final String VARIABLE_LOGIN_PAGE_OVERWRITE = "login_page_overwrite";
   
+  private static final String VARIABLE_ONGOING_BACKUP = "ongoing_backup";
+  
   private String setVar(String varName, String defaultValue) {
     return setStrVar(varName, defaultValue);
   }
@@ -867,6 +869,7 @@ public class Settings implements Serializable {
       
       LOGIN_PAGE_OVERWRITE = setStrVar(VARIABLE_LOGIN_PAGE_OVERWRITE, LOGIN_PAGE_OVERWRITE);
       
+      ONGOING_BACKUP = setBoolVar(VARIABLE_ONGOING_BACKUP, ONGOING_BACKUP);
       cached = true;
     }
   }
@@ -3901,5 +3904,18 @@ public class Settings implements Serializable {
   public synchronized String getLoginPageOverwrite() {
     checkCache();
     return LOGIN_PAGE_OVERWRITE;
+  }
+  
+  private boolean ONGOING_BACKUP = false;
+  public synchronized boolean getOngoingBackup() {
+    checkCache();
+    return ONGOING_BACKUP;
+  }
+  
+  public synchronized void setOngoingBackup(Boolean ongoing) {
+    if(ONGOING_BACKUP !=ongoing) {
+      em.merge(new Variables(VARIABLE_ONGOING_BACKUP, ongoing.toString(), VariablesVisibility.ADMIN, false));
+      ONGOING_BACKUP = ongoing;
+    }
   }
 }
