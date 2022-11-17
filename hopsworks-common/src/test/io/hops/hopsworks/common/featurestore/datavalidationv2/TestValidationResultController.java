@@ -115,16 +115,7 @@ public class TestValidationResultController {
     assertEquals("Rest code error corresponding to null input error: ", 202,
       nullInputException.getErrorCode().getCode() - nullInputException.getErrorCode().getRange());
 
-    // Long input
-    String longInput = ("{\"longInput\": \"" +
-      StringUtils.repeat("A", MAX_CHARACTERS_IN_VALIDATION_RESULT_EXPECTATION_CONFIG + 10) + "\"}");
-    resultDTO.setExpectationConfig(longInput);
-    FeaturestoreException longInputException = assertThrows(
-      FeaturestoreException.class,
-      () -> validationResultController.convertResultDTOToPersistent(new ValidationReport(), resultDTO)
-    );
-    assertEquals("Rest code error corresponding to exceed max character error: ", 200,
-      longInputException.getErrorCode().getCode() - longInputException.getErrorCode().getRange());
+    // Long input are silently shortened.
 
     // Invalid Json
     String notAJsonInput = "I am not a Json";

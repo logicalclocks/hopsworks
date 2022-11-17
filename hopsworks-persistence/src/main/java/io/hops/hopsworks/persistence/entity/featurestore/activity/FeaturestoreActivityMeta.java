@@ -24,6 +24,7 @@ public enum FeaturestoreActivityMeta {
   ONLINE_DISABLED("Feature group not available online"),
   TD_CREATED("The training dataset was created"),
   FV_CREATED("The feature view was created"),
+  EXPECTATION_SUITE_ATTACHED_ON_FG_CREATION("An Expectation Suite was attached on Feature Group creation."),
   EXPECTATION_SUITE_ATTACHED("An Expectation Suite was attached to the Feature Group."),
   EXPECTATION_SUITE_UPDATED("The Expectation Suite was updated."),
   EXPECTATION_SUITE_DELETED("The Expectation Suite was deleted."),
