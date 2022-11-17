@@ -127,7 +127,7 @@ public class FeaturestoreConstants {
   public static final int MAX_CHARACTERS_IN_GE_CLOUD_ID = 200;
   public static final int MAX_CHARACTERS_IN_DATA_ASSET_TYPE = 50;
   public static final int MAX_CHARACTERS_IN_EXPECTATION_META = 1000;
-  public static final int MAX_CHARACTERS_IN_EXPECTATION_KWARGS = 1000;
+  public static final int MAX_CHARACTERS_IN_EXPECTATION_KWARGS = 5000;
   public static final int MAX_CHARACTERS_IN_EXPECTATION_EXPECTATION_TYPE = 150;
   public static final int MAX_CHARACTERS_IN_VALIDATION_REPORT_EVALUATION_PARAMETERS = 1000;
   public static final int MAX_CHARACTERS_IN_VALIDATION_REPORT_STATISTICS = 1000;

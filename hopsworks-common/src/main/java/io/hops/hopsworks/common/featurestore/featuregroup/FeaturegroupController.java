@@ -290,6 +290,11 @@ public class FeaturegroupController {
 
     // Log activity
     fsActivityFacade.logMetadataActivity(user, featuregroup, FeaturestoreActivityMeta.FG_CREATED, null);
+    if (featuregroup.getExpectationSuite() != null) {
+      fsActivityFacade.logExpectationSuiteActivity(
+        user, featuregroup, featuregroup.getExpectationSuite(), 
+        FeaturestoreActivityMeta.EXPECTATION_SUITE_ATTACHED_ON_FG_CREATION, "");
+    }
 
     return completeFeaturegroupDTO;
   }
