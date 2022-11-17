@@ -76,7 +76,6 @@ public class ValidationResultController {
     ValidationResult result = new ValidationResult();
     result.setMeta(dto.getMeta());
     result.setSuccess(dto.getSuccess());
-    result.setExpectationConfig(dto.getExpectationConfig());
     result.setValidationReport(report);
     result.setIngestionResult(report.getIngestionResult());
     result.setValidationTime(report.getValidationTime());
@@ -85,6 +84,9 @@ public class ValidationResultController {
     // - Get the expectation id from the meta field in the expectation_config field.
     // - Shorten result field if too long
     // - Shorten exceptionInfo field if too long
+    // - Shorten expectationConfig field if too long
+    result.setExpectation(parseExpectationIdFromResultDTO(dto.getExpectationConfig()));
+
     if (dto.getResult().length() > MAX_CHARACTERS_IN_VALIDATION_RESULT_RESULT_FIELD) {
       result.setResult(validationResultShortenResultField(dto.getResult()));
     } else {
@@ -96,8 +98,18 @@ public class ValidationResultController {
     } else {
       result.setExceptionInfo(dto.getExceptionInfo());
     }
+    if (dto.getExpectationConfig().length() > MAX_CHARACTERS_IN_VALIDATION_RESULT_EXPECTATION_CONFIG) {
+      result.setExpectationConfig(
+        validationResultShortenExpectationConfigField(
+          dto.getExpectationConfig(), 
+          result.getExpectation().getId()
+        )
+      );
+    } else {
+      result.setExpectationConfig(dto.getExpectationConfig());
+    }
 
-    result.setExpectation(parseExpectationIdFromResultDTO(dto.getExpectationConfig()));
+    
     return result;
   }
 
@@ -223,6 +235,34 @@ public class ValidationResultController {
     return shortExceptionInfoJson.toString();
   }
 
+  public String validationResultShortenExpectationConfigField(String expectationConfig, Integer expectationId) {
+    JSONObject expectationConfigJson;
+    try {
+      expectationConfigJson = new JSONObject(expectationConfig);
+    } catch (JSONException e) {
+      LOGGER.warning(String.format(
+        "Parsing expectationConfig field threw JSONException that should have " +
+        " been handled when verifying input.\n%s\n%s",
+        e.getMessage(), e.getStackTrace().toString()));
+      expectationConfigJson = new JSONObject();
+    }
+
+    // Create a shorten version with three same fields: expectation_type, kwargs, meta
+    JSONObject shortexpectationConfigJson = new JSONObject();
+    JSONObject configMeta = new JSONObject();
+    // Store user message and expectationId in meta field.
+    String userMessage = "expectation_config field exceeded max available space in SQL table, " +
+        "download validation report file to access the complete info. ";
+    configMeta.put("userMessage", userMessage);    
+    configMeta.put("expectationId", expectationId);
+    shortexpectationConfigJson.put("meta", configMeta);
+    // Expectation type takes limited space
+    shortexpectationConfigJson.put("expectation_type", expectationConfigJson.getString("expectation_type"));
+    shortexpectationConfigJson.put("kwargs", new JSONObject());
+
+    return shortexpectationConfigJson.toString();
+  }
+
   public JSONObject convertValidationResultDTOToJson(ValidationResultDTO resultDTO) throws FeaturestoreException {
     JSONObject resultJSON = new JSONObject();
 
@@ -290,14 +330,7 @@ public class ValidationResultController {
       );
     }
 
-    if (expectationConfig.length() > MAX_CHARACTERS_IN_VALIDATION_RESULT_EXPECTATION_CONFIG) {
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.INPUT_FIELD_EXCEEDS_MAX_ALLOWED_CHARACTER,
-        Level.SEVERE,
-        String.format("Validation result expectation config field %s exceeds the max allowed character length %d.",
-          expectationConfig, MAX_CHARACTERS_IN_VALIDATION_RESULT_EXPECTATION_CONFIG)
-      );
-    }
+    // Long expectationConfig are shortened and need not throw an error
 
     try {
       new JSONObject(expectationConfig);
