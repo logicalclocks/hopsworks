@@ -2593,7 +2593,7 @@ public class Settings implements Serializable {
   private String OAUTH_REDIRECT_URI = OAUTH_REDIRECT_URI_PATH;
   private String OAUTH_LOGOUT_REDIRECT_URI = OAUTH_LOGOUT_REDIRECT_URI_PATH;
   private int OAUTH_ACCOUNT_STATUS = 1;
-  private long LDAP_GROUP_MAPPING_SYNC_INTERVAL = 0;
+  private String LDAP_GROUP_MAPPING_SYNC_INTERVAL = "0";
   
   private boolean REMOTE_AUTH_NEED_CONSENT = true;
   
@@ -2640,7 +2640,7 @@ public class Settings implements Serializable {
     DISABLE_REGISTRATION = setBoolVar(VARIABLE_DISABLE_REGISTRATION, DISABLE_REGISTRATION);
     DISABLE_REGISTRATION_UI = setBoolVar(VARIABLE_DISABLE_REGISTRATION_UI, DISABLE_REGISTRATION_UI);
   
-    LDAP_GROUP_MAPPING_SYNC_INTERVAL = setLongVar(VARIABLE_LDAP_GROUP_MAPPING_SYNC_INTERVAL,
+    LDAP_GROUP_MAPPING_SYNC_INTERVAL = setStrVar(VARIABLE_LDAP_GROUP_MAPPING_SYNC_INTERVAL,
       LDAP_GROUP_MAPPING_SYNC_INTERVAL);
   
     VALIDATE_REMOTE_USER_EMAIL_VERIFIED =
@@ -2926,7 +2926,7 @@ public class Settings implements Serializable {
     return isRegistrationDisabled() || DISABLE_REGISTRATION_UI;
   }
 
-  public synchronized long ldapGroupMappingSyncInterval() {
+  public synchronized String ldapGroupMappingSyncInterval() {
     checkCache();
     return LDAP_GROUP_MAPPING_SYNC_INTERVAL;
   }
