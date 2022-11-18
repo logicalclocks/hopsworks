@@ -18,7 +18,6 @@ package io.hops.hopsworks.api.tutorials;
 
 import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.persistence.entity.tutorials.Tutorial;
-import io.hops.hopsworks.persistence.entity.tutorials.TutorialCategory;
 
 public class TutorialDTO extends RestDTO<TutorialDTO> {
   private Integer id;
@@ -26,12 +25,7 @@ public class TutorialDTO extends RestDTO<TutorialDTO> {
   private String name;
   private String githubUrl;
   private String colabUrl = null;
-  private String imageUrl;
   private String description;
-  private String duration;
-  private String tags;
-  private TutorialCategory category;
-  private String style;
 
   public TutorialDTO() {}
 
@@ -40,15 +34,8 @@ public class TutorialDTO extends RestDTO<TutorialDTO> {
     this.index = tutorial.getIdx();
     this.name = tutorial.getName();
     this.githubUrl = "https://github.com/" + tutorial.getGithubPath();
-    if (tutorial.isSingleNotebook()) {
-      this.colabUrl = "https://colab.research.google.com/github/" + tutorial.getGithubPath();
-    }
-    this.imageUrl = tutorial.getImageUrl();
+    this.colabUrl = "https://colab.research.google.com/github/" + tutorial.getGithubPath();
     this.description = tutorial.getDescription();
-    this.duration = tutorial.getDuration();
-    this.tags = tutorial.getTags();
-    this.category = tutorial.getCategory();
-    this.style = tutorial.getStyle();
   }
 
   public Integer getId() {
@@ -91,14 +78,6 @@ public class TutorialDTO extends RestDTO<TutorialDTO> {
     this.colabUrl = colabUrl;
   }
 
-  public String getImageUrl() {
-    return imageUrl;
-  }
-
-  public void setImageUrl(String imageUrl) {
-    this.imageUrl = imageUrl;
-  }
-
   public String getDescription() {
     return description;
   }
@@ -107,35 +86,4 @@ public class TutorialDTO extends RestDTO<TutorialDTO> {
     this.description = description;
   }
 
-  public String getDuration() {
-    return duration;
-  }
-
-  public void setDuration(String duration) {
-    this.duration = duration;
-  }
-
-  public String getTags() {
-    return tags;
-  }
-
-  public void setTags(String tags) {
-    this.tags = tags;
-  }
-
-  public TutorialCategory getCategory() {
-    return category;
-  }
-
-  public void setCategory(TutorialCategory category) {
-    this.category = category;
-  }
-
-  public String getStyle() {
-    return style;
-  }
-
-  public void setStyle(String style) {
-    this.style = style;
-  }
 }

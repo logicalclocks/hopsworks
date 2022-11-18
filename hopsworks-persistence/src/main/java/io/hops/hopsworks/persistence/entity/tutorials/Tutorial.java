@@ -19,8 +19,6 @@ package io.hops.hopsworks.persistence.entity.tutorials;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -67,32 +65,8 @@ public class Tutorial implements Serializable {
   private String githubPath;
 
   @Basic(optional = false)
-  @Column(name = "image_url")
-  private String imageUrl;
-
-  @Basic(optional = false)
-  @Column(name = "single_notebook")
-  private boolean singleNotebook;
-
-  @Basic(optional = false)
   @Column(name = "description")
   private String description;
-
-  @Basic(optional = false)
-  @Column(name = "duration")
-  private String duration;
-
-  @Basic(optional = false)
-  @Column(name = "tags")
-  private String tags;
-  
-  @Enumerated(EnumType.STRING)
-  @Column(name = "category")
-  private TutorialCategory category;
-
-  @Basic
-  @Column(name = "style")
-  private String style;
 
   public Integer getId() {
     return id;
@@ -126,22 +100,6 @@ public class Tutorial implements Serializable {
     this.githubPath = githubPath;
   }
 
-  public String getImageUrl() {
-    return imageUrl;
-  }
-
-  public void setImageUrl(String imageUrl) {
-    this.imageUrl = imageUrl;
-  }
-
-  public boolean isSingleNotebook() {
-    return singleNotebook;
-  }
-
-  public void setSingleNotebook(boolean singleNotebook) {
-    this.singleNotebook = singleNotebook;
-  }
-
   public String getDescription() {
     return description;
   }
@@ -150,59 +108,27 @@ public class Tutorial implements Serializable {
     this.description = description;
   }
 
-  public String getDuration() {
-    return duration;
-  }
-
-  public void setDuration(String duration) {
-    this.duration = duration;
-  }
-
-  public String getTags() {
-    return tags;
-  }
-
-  public void setTags(String tags) {
-    this.tags = tags;
-  }
-
-  public TutorialCategory getCategory() {
-    return category;
-  }
-
-  public void setCategory(TutorialCategory category) {
-    this.category = category;
-  }
-
-  public String getStyle() {
-    return style;
-  }
-
-  public void setStyle(String style) {
-    this.style = style;
-  }
-
   @Override
   public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
     Tutorial tutorial = (Tutorial) o;
-    return singleNotebook == tutorial.singleNotebook && Objects.equals(id, tutorial.id) &&
-      Objects.equals(idx, tutorial.idx) && Objects.equals(name, tutorial.name) &&
-      Objects.equals(githubPath, tutorial.githubPath) &&
-      Objects.equals(imageUrl, tutorial.imageUrl) &&
-      Objects.equals(description, tutorial.description) &&
-      Objects.equals(duration, tutorial.duration) && Objects.equals(tags, tutorial.tags) &&
-      category == tutorial.category && Objects.equals(style, tutorial.style);
+
+    if (!Objects.equals(id, tutorial.id)) return false;
+    if (!Objects.equals(idx, tutorial.idx)) return false;
+    if (!Objects.equals(name, tutorial.name)) return false;
+    if (!Objects.equals(githubPath, tutorial.githubPath)) return false;
+    return Objects.equals(description, tutorial.description);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, idx, name, githubPath, imageUrl, singleNotebook, description, duration, tags, category,
-      style);
+    int result = id != null ? id.hashCode() : 0;
+    result = 31 * result + (idx != null ? idx.hashCode() : 0);
+    result = 31 * result + (name != null ? name.hashCode() : 0);
+    result = 31 * result + (githubPath != null ? githubPath.hashCode() : 0);
+    result = 31 * result + (description != null ? description.hashCode() : 0);
+    return result;
   }
 }
