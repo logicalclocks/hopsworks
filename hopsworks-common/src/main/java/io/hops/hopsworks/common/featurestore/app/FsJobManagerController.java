@@ -254,7 +254,7 @@ public class FsJobManagerController {
     DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
     try {
       String jobName = getJobName(op, type, Utils.getFeatureStoreEntityName(entityName, entityVersion), false);
-      String jobConfigurationPath = createJobFolder(project, user, jobName);
+      String jobConfigurationPath = getJobConfigurationPath(createJobFolder(project, user, jobName));
       jobConfiguration.put("feature_store",
         featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject()));
       jobConfiguration.put("type", type.toString());
@@ -487,7 +487,8 @@ public class FsJobManagerController {
           options.put("table", importFgJobConf.getTable());
           break;
         default:
-          break;
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.WARNING,
+            "Storage connector type "+ connectorType.name() + " not supported for importing data");
       }
     }
     // get new version
