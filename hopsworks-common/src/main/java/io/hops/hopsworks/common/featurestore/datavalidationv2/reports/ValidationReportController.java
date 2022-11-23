@@ -266,9 +266,10 @@ public class ValidationReportController {
     Date validationTime;
     try {
       JSONObject reportMeta = new JSONObject(reportDTO.getMeta());
-      String validationTimeString = reportMeta.getJSONObject("run_id").getString("run_time");
-      String formatDateString = "yyyy-MM-dd'T'hh:mm:ss.SSSSSSX";
-      validationTime = new SimpleDateFormat(formatDateString).parse(validationTimeString);
+      String validationTimeString = reportMeta.getString("validation_time");
+      String formatDateString = "yyyyMMdd'T'HHmmss.SSS";
+      validationTime = new SimpleDateFormat(formatDateString).parse(
+        validationTimeString.substring(0, validationTimeString.length() - 4));
     } catch (JSONException | ParseException exception) {
       validationTime = new Date();
     }
