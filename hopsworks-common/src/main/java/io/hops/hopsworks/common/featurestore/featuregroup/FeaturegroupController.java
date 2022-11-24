@@ -778,6 +778,7 @@ public class FeaturegroupController {
     featureGroupInputValidation.verifyOnlineOfflineTypeMatch(featureGroupDTO);
     featureGroupInputValidation.verifyOnlineSchemaValid(featureGroupDTO);
     featureGroupInputValidation.verifyPrimaryKeySupported(featureGroupDTO);
+    featureGroupInputValidation.verifyPartitionKeySupported(featureGroupDTO);
     verifyFeatureGroupVersion(featureGroupDTO.getVersion());
     statisticColumnController.verifyStatisticColumnsExist(featureGroupDTO);
   }

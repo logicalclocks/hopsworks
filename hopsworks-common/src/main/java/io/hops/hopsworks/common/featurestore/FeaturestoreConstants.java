@@ -90,6 +90,8 @@ public class FeaturestoreConstants {
   public static final Integer MAX_MYSQL_PRIMARY_KEY_SIZE = 4000;
   public static final List<String> SUPPORTED_MYSQL_PRIMARY_KEYS = Arrays.asList("INT",
     "TINYINT", "SMALLINT", "BIGINT", "VARCHAR", "VARBINARY");
+  public static final List<String> SUPPORTED_HUDI_PARTITION_KEYS = Arrays.asList("INT",
+          "BIGINT", "FLOAT", "DOUBLE", "DATE", "STRING");
   public static final int ONLINE_FEATURESTORE_USERNAME_MAX_LENGTH = 32;
   public static final int ONLINE_FEATURESTORE_PW_LENGTH = 32;
   public static final String FEATURESTORE_HIVE_DB_SUFFIX = "_featurestore";

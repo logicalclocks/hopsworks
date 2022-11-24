@@ -743,6 +743,27 @@ describe "On #{ENV['OS']}" do
         expect_status_details(400)
       end
 
+      it "should fail when creating hudi cached featuregroup with partition key type timestamp" do
+        features = [
+        {
+            type: "TIMESTAMP",
+            name: "testfeature",
+            description: "testfeaturedescription",
+            primary: false,
+            onlineType: "TIMESTAMP",
+            partition: true
+        },
+        ]
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        create_cached_featuregroup(project.id, featurestore_id, features: features, time_travel_format: "HUDI")
+        expect_status_details(400)
+        expect(parsed_json.key?("errorCode")).to be true
+        expect(parsed_json.key?("errorMsg")).to be true
+        expect(parsed_json.key?("usrMsg")).to be true
+        expect(parsed_json["errorCode"] == 270176).to be true
+      end
+
       it "should not fail when creating hudi cached featuregroup without partition key" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
