@@ -8,11 +8,14 @@ import io.hops.hopsworks.common.remote.RemoteUserDTO;
 import io.hops.hopsworks.common.remote.RemoteUsersDTO;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.remote.user.RemoteUser;
+import org.apache.hadoop.util.BackOff;
+import org.apache.hadoop.util.ExponentialBackOff;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.naming.CommunicationException;
 import javax.naming.CompositeName;
 import javax.naming.Context;
 import javax.naming.InvalidNameException;
@@ -31,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -44,6 +48,7 @@ public class LdapRealm {
   private static final String SUBST_SUBJECT_DN = "%d";
   private static final String SUBST_SUBJECT_CN = "%c";
   private static final String JNDICF_DEFAULT = "com.sun.jndi.ldap.LdapCtxFactory";
+  private static final String BASEDN_PROPERTY_NAME = "hopsworks.ldap.basedn";
   private static final String OBJECTGUID = "objectGUID";
   
   @EJB
@@ -242,7 +247,74 @@ public class LdapRealm {
     groupsList.addAll(dynamicGroupSearch(dynSearchFilter));
     return groupsList;
   }
-  
+
+  // Fixes https://hopsworks.atlassian.net/browse/HWORKS-301
+  private NamingEnumeration<SearchResult> doSearch(String name, String filter, SearchControls searchControls)
+      throws NamingException {
+    try {
+      return dirContext.search(name, filter, searchControls);
+    } catch (CommunicationException ex) {
+      final BackOff backOff = new ExponentialBackOff.Builder()
+          .setInitialIntervalMillis(200)
+          .setMaximumIntervalMillis(2000)
+          .setMaximumRetries(10)
+          .build();
+      int attempt = 1;
+      while (true) {
+        LOGGER.log(Level.FINE, "LDAP search using injected DirContext failed. Retrying with a new DirContext", ex);
+        Hashtable props = dirContext.getEnvironment();
+        props.put(Context.INITIAL_CONTEXT_FACTORY, JNDICF_DEFAULT);
+        String providerUrl = (String) props.get(Context.PROVIDER_URL);
+        /**
+         * Base DN is normally configured in the JNDI lookup attribute of the LDAP External Resource
+         * The resource automatically concatenates the PROVIDER URL with the JNDI LOOKUP before it calls
+         * the Context Factory.
+         *
+         * We need to do the same here but we don't have access to the JNDI Lookup property of the injected
+         * resource. For that reason we have to duplicate it as Java property and do the concatenation.
+         */
+        String basedn = (String) props.get(BASEDN_PROPERTY_NAME);
+        if (basedn == null) {
+          throw new NamingException("Initial LDAP search with injected DirContext failed. Tried to create a new " +
+              "DirContext to retry the search but " + BASEDN_PROPERTY_NAME + " is empty. Make sure you have set it in" +
+              " Payara External Resource configuration");
+        }
+        props.put(Context.PROVIDER_URL, String.format("%s/%s", providerUrl, basedn));
+        DirContext clonedContext = new InitialDirContext(props);
+        try {
+          LOGGER.log(Level.FINE, "Retrying LDAP search with new LdapContext");
+          NamingEnumeration<SearchResult> r = clonedContext.search(name, filter, searchControls);
+          LOGGER.log(Level.FINE, "LDAP search with new LdapContext succeed");
+          return r;
+        } catch (CommunicationException iex) {
+          long backoffTimeout = backOff.getBackOffInMillis();
+          if (backoffTimeout == -1L) {
+            LOGGER.log(Level.SEVERE, "LDAP search with injected DirContext failed. Search was retried with a new " +
+                "LdapContext but all new attempts failed. For the initial error look further down in the logs", iex);
+            LOGGER.log(Level.SEVERE, "LDAP search with injected DirContext failed", ex);
+            throw ex;
+          } else {
+            try {
+              LOGGER.log(Level.WARNING,
+                  "LDAP search with injected DirContext initially failed. Attempt " + attempt + " failed too but we " +
+                      "will retry in " + backoffTimeout + "ms");
+              TimeUnit.MILLISECONDS.sleep(backoffTimeout);
+              attempt++;
+            } catch (InterruptedException inex) {
+              throw new NamingException(inex.getMessage());
+            }
+          }
+        } finally {
+          try {
+            clonedContext.close();
+          } catch (NamingException cex) {
+            LOGGER.log(Level.INFO, "Failed to close cloned DirContext", cex);
+          }
+        }
+      }
+    }
+  }
+
   private List<String> getUserGroups(String userDN) {
     StringBuffer sb = new StringBuffer(groupSearchFilter);
     StringBuffer dynsb = new StringBuffer(searchFilter);
@@ -266,7 +338,7 @@ public class LdapRealm {
     ctls.setCountLimit(1);
   
     try {
-      answer = dirContext.search(baseDN, filter, ctls);
+      answer = doSearch(baseDN, filter, ctls);
       if (answer.hasMore()) {
         SearchResult res = (SearchResult) answer.next();
         CompositeName compDN = new CompositeName(res.getNameInNamespace());
@@ -302,7 +374,7 @@ public class LdapRealm {
     ctls.setReturningAttributes(returningAttrs);
     ctls.setCountLimit(1);
     try {
-      answer = dirContext.search(baseDN, filter, ctls);
+      answer = doSearch(baseDN, filter, ctls);
       if (answer.hasMore()) {
         SearchResult res = (SearchResult) answer.next();
         Attributes attrs = res.getAttributes();
@@ -368,7 +440,7 @@ public class LdapRealm {
       ctls.setSearchScope(SearchControls.SUBTREE_SCOPE);
       ctls.setReturningObjFlag(false);
       
-      e = dirContext.search(groupDN, dynSearchFilter, ctls);
+      e = doSearch(groupDN, dynSearchFilter, ctls);
       while (e.hasMoreElements()) {
         SearchResult result = (SearchResult) e.next();
         Attribute isMemberOf = result.getAttributes().get(dynamicGroupTarget);
@@ -417,7 +489,7 @@ public class LdapRealm {
     ctls.setSearchScope(SearchControls.SUBTREE_SCOPE);
     NamingEnumeration e = null;
     try {
-      e = dirContext.search(dn, searchFilter, ctls);
+      e = doSearch(dn, searchFilter, ctls);
       while (e.hasMoreElements()) {
         SearchResult result = (SearchResult) e.next();
         Attribute grpAttr = result.getAttributes().get(target);
@@ -458,7 +530,7 @@ public class LdapRealm {
     ctls.setReturningAttributes(returningAttrs);
     NamingEnumeration e = null;
     try {
-      e = dirContext.search(groupDN, memberOfQuery, ctls);
+      e = doSearch(groupDN, memberOfQuery, ctls);
       while (e.hasMoreElements()) {
         SearchResult result = (SearchResult) e.next();
         Attributes attrs = result.getAttributes();
