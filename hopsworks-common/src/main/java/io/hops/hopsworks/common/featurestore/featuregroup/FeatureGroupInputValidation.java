@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegr
 import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupDTO;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.lang.StringUtils;
 
@@ -284,5 +285,39 @@ public class FeatureGroupInputValidation {
     
     // default
     return 8;
+  }
+
+  /**
+   * Make sure partition keys are supported.
+   * @param featuregroupDTO
+   * @throws FeaturestoreException
+   */
+  public void verifyPartitionKeySupported(FeaturegroupDTO featuregroupDTO) throws FeaturestoreException{
+    if ((featuregroupDTO instanceof CachedFeaturegroupDTO
+            && ((CachedFeaturegroupDTO) featuregroupDTO).getTimeTravelFormat() == TimeTravelFormat.HUDI) ||
+            (featuregroupDTO instanceof StreamFeatureGroupDTO)) {
+      for (FeatureGroupFeatureDTO feature : featuregroupDTO.getFeatures()) {
+        if (feature.getPartition()) {
+          String pkType = feature.getType().toLowerCase().replace(" ", "");
+
+          Boolean found = false;
+          for (String supportedName : FeaturestoreConstants.SUPPORTED_HUDI_PARTITION_KEYS) {
+            if (pkType.startsWith(supportedName.toLowerCase())) {
+              found = true;
+              break;
+            }
+          }
+
+          if (!found) {
+            throw new FeaturestoreException(
+                    COULD_NOT_CREATE_ONLINE_FEATUREGROUP,
+                    Level.SEVERE,
+                    "Cannot create an online feature group because partition key type is not supported. " +
+                            "Feature: " + feature.getName() + " " +
+                            "(offline type '" + feature.getType() + "')");
+          }
+        }
+      }
+    }
   }
 }
