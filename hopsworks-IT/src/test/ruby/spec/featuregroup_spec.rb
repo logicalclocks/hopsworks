@@ -880,7 +880,7 @@ describe "On #{ENV['OS']}" do
         commit_metadata = {commitDateString:20201024221125,commitTime:1603577485000,rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
         _ = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
         create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/query"
-        json_fs_query = '{"leftFeatureGroup":' +  json_result + ',"leftFeatures":' + parsed_json["features"].to_json + ',"joins":[],"left_feature_group_end_time":' + commit_metadata["commitTime"].to_s + '}'
+        json_fs_query = '{"leftFeatureGroup":' +  json_result + ',"leftFeatures":' + parsed_json["features"].to_json + ',"joins":[],"left_feature_group_end_time":' + 1603577485000.to_s + '}'
         json_result = put create_query_endpoint, json_fs_query
         parsed_json = JSON.parse(json_result)
         expect(parsed_json["query"].gsub("\n", " ") == "SELECT `fg0`.`testfeature`, `fg0`.`testfeature2` FROM `fg0` `fg0`")
@@ -2418,7 +2418,7 @@ describe "On #{ENV['OS']}" do
         expect_status_details(200)
       end
 
-      it "should be able to limit the number of rows in a preview" do
+      it "should be able to limit the number of rows in a preview and should fetch the online feature data if the fg is online enabled and storage not specified" do
         project = create_project(validate_session: false)
         featurestore_id = get_featurestore_id(project.id)
         json_result, _ = create_cached_featuregroup(project.id, featurestore_id, featuregroup_name: 'online_fg', online:true)
@@ -2435,21 +2435,8 @@ describe "On #{ENV['OS']}" do
         expect_status_details(200)
         parsed_json = JSON.parse(response.body)
         expect(parsed_json['items'].length).to eql 1
-      end
 
-      it "should fetch the online feature data if the fg is online enabled and storage not specified" do
-        project = create_project(validate_session: false)
-        featurestore_id = get_featurestore_id(project.id)
-        json_result, _ = create_cached_featuregroup(project.id, featurestore_id, featuregroup_name: 'online_fg', online:true)
-        parsed_json = JSON.parse(json_result)
-        expect_status_details(201)
-        featuregroup_id = parsed_json["id"]
-
-        # add sample ros
-        OnlineFg.db_name = project[:projectname]
-        OnlineFg.create(testfeature: 3).save # use different keys which are not in other tests
-        OnlineFg.create(testfeature: 4).save
-
+        # should fetch the online feature data if the fg is online enabled and storage not specified
         get "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/preview?&limit=1"
         expect_status_details(200)
         parsed_json = JSON.parse(response.body)
