@@ -21,6 +21,7 @@ import io.hops.hopsworks.common.git.BasicAuthSecrets;
 import io.hops.hopsworks.common.git.CloneCommandConfiguration;
 import io.hops.hopsworks.common.git.CommitCommandConfiguration;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GitOpException;
 import io.hops.hopsworks.persistence.entity.git.GitRepository;
 import io.hops.hopsworks.persistence.entity.git.config.GitCommandConfiguration;
@@ -49,6 +50,8 @@ public class GitCommandConfigurationValidator {
   private GitRepositoryFacade gitRepositoryFacade;
   @EJB
   private InodeController inodeController;
+  @EJB
+  private Settings settings;
 
   public void verifyCloneOptions(CloneCommandConfiguration config) throws IllegalArgumentException {
     if (Strings.isNullOrEmpty(config.getUrl())) {
@@ -91,6 +94,14 @@ public class GitCommandConfigurationValidator {
     Optional<GitRepository> optional = gitRepositoryFacade.findByIdAndProject(project, repositoryId);
     return optional.orElseThrow(() -> new GitOpException(RESTCodes.GitOpErrorCode.REPOSITORY_NOT_FOUND, Level.INFO,
             "No repository with id [" + repositoryId + "] in project [" + project.getId() + "] found in database."));
+  }
+
+  public void verifyReadOnly(GitCommandType gitCommandType, GitRepository repository) throws GitOpException {
+    if (settings.getEnableGitReadOnlyRepositories() && (gitCommandType == GitCommandType.COMMIT
+            || gitCommandType == GitCommandType.FILE_CHECKOUT || gitCommandType == GitCommandType.PUSH)) {
+      throw new GitOpException(RESTCodes.GitOpErrorCode.READ_ONLY_REPOSITORY, Level.INFO,
+              "Git operation forbidden. Repository is read only. Contact your admin to enable this feature.");
+    }
   }
 
   /**

@@ -40,6 +40,7 @@ public class GitCommandConfiguration implements Serializable {
   private boolean deleteOnRemote;
   private GitCommandType commandType;
   private String path;
+  private Boolean readOnly;
 
   public GitCommandConfiguration(){}
 
@@ -102,4 +103,8 @@ public class GitCommandConfiguration implements Serializable {
   public String getPath() { return path; }
 
   public void setPath(String path) { this.path = path; }
+
+  public Boolean getReadOnly() { return readOnly; }
+
+  public void setReadOnly(Boolean readOnly) { this.readOnly = readOnly; }
 }

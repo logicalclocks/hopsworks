@@ -24,6 +24,7 @@ import io.hops.hopsworks.common.dao.git.GitOpExecutionFacade;
 import io.hops.hopsworks.common.dao.git.GitRepositoryFacade;
 import io.hops.hopsworks.common.git.GitCommitDTO;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.git.GitCommit;
 import io.hops.hopsworks.persistence.entity.git.GitOpExecution;
 import io.hops.hopsworks.persistence.entity.git.GitRepository;
@@ -59,6 +60,8 @@ public class GitRepositoryBuilder {
   private GitOpExecutionBuilder gitOpExecutionBuilder;
   @EJB
   private GitCommitsFacade gitCommitsFacade;
+  @EJB
+  private Settings settings;
 
   private URI uri(UriInfo uriInfo, Project project) {
     return uriInfo.getBaseUriBuilder()
@@ -95,7 +98,7 @@ public class GitRepositoryBuilder {
       repositoryDTO.setCurrentBranch(repository.getCurrentBranch());
       repositoryDTO.setCreator(
           usersBuilder.build(uriInfo, resourceRequest.get(ResourceRequest.Name.CREATOR), repository.getCreator()));
-
+      repositoryDTO.setReadOnly(settings.getEnableGitReadOnlyRepositories());
       Optional<GitCommit> commitOptional = gitCommitsFacade.findByHashAndRepository(repository);
       if (commitOptional.isPresent()) {
         GitCommit commit = commitOptional.get();

@@ -33,11 +33,12 @@ public class GitRepositoryDTO extends RestDTO<GitRepositoryDTO> {
   private String currentBranch;
   private GitCommitDTO currentCommit;
   private GitOpExecutionDTO ongoingOperation;
+  private Boolean readOnly;
 
   public GitRepositoryDTO() {}
 
   public GitRepositoryDTO(Integer id, String name, String path, UserDTO creator, GitProvider provider,
-                          String currentBranch, GitCommitDTO currentCommitHash) {
+                          String currentBranch, GitCommitDTO currentCommitHash, Boolean readOnly) {
     this.id = id;
     this.name = name;
     this.path = path;
@@ -45,6 +46,7 @@ public class GitRepositoryDTO extends RestDTO<GitRepositoryDTO> {
     this.provider = provider;
     this.currentBranch = currentBranch;
     this.currentCommit = currentCommitHash;
+    this.readOnly = readOnly;
   }
 
   public Integer getId() { return id; }
@@ -83,6 +85,10 @@ public class GitRepositoryDTO extends RestDTO<GitRepositoryDTO> {
 
   public void setCurrentCommit(GitCommitDTO currentCommit) { this.currentCommit = currentCommit; }
 
+  public Boolean getReadOnly() { return readOnly; }
+
+  public void setReadOnly(Boolean readOnly) { this.readOnly = readOnly; }
+
   @Override
   public String toString() {
     return "GitRepositoryDTO{" +
@@ -94,6 +100,7 @@ public class GitRepositoryDTO extends RestDTO<GitRepositoryDTO> {
         ", currentBranch='" + currentBranch + '\'' +
         ", currentCommit=" + currentCommit +
         ", ongoingOperation=" + ongoingOperation +
+        ", readonly=" + readOnly +
         '}';
   }
 }
