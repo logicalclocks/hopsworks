@@ -20,10 +20,24 @@ import com.predic8.membrane.core.Router;
 import com.predic8.membrane.core.interceptor.HTTPClientInterceptor;
 import com.predic8.membrane.core.transport.http.client.HttpClientConfiguration;
 
-public class HopsHTTPClientInterceptor extends HTTPClientInterceptor {
+import javax.enterprise.concurrent.ManagedExecutorService;
+import javax.naming.InitialContext;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+public class HopsHTTPClientInterceptor extends HTTPClientInterceptor {
+  
+  private static final Logger LOGGER = Logger.getLogger(HopsHTTPClientInterceptor.class.getName());
+  
   @Override
   public void init(Router router) throws Exception {
-    super.init(router, new HopsHttpClient(new HttpClientConfiguration()));
+    ManagedExecutorService managedExecutorService;
+    try {
+      managedExecutorService = InitialContext.doLookup("concurrent/jupyterExecutorService");
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Error looking up for the jupyterExecutorService", e);
+      throw e;
+    }
+    super.init(router, new HopsHttpClient(new HttpClientConfiguration(), managedExecutorService));
   }
 }

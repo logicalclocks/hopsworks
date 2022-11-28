@@ -100,10 +100,9 @@ public class MembraneServlet extends HttpServlet {
     sp.setTargetURL(urlBuf.toString());
 
     try {
-      Router router = new HopsRouter();
-      router.add(sp);
-      router.init();
-      new HopsServletHandler(req, resp, router.getTransport(), targetUriObj).run();
+      Router router = HopsRouter.instance(sp);
+      HopsServletHandler handler = HopsServletHandler.instance(req, resp, router.getTransport(), targetUriObj);
+      handler.run();
     } catch (Exception ex) {
       LOGGER.log(Level.SEVERE, null, ex);
     }

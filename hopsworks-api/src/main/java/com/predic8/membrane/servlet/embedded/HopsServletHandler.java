@@ -52,21 +52,36 @@ class HopsServletHandler extends AbstractHttpHandler {
 
   private final HttpServletRequest request;
   private final HttpServletResponse response;
-  private URI targetUriObj = null;
-  private HttpHost targetHost = null;
+  private URI targetUriObj;
+  private HttpHost targetHost;
 
-  public HopsServletHandler(HttpServletRequest request,
-          HttpServletResponse response,
-          Transport transport, URI targetUriObj) throws IOException {
+  private HopsServletHandler(HttpServletRequest request, HttpServletResponse response, Transport transport,
+                             URI targetUriObj, HttpHost targetHost) {
     super(transport);
     this.request = request;
     this.response = response;
     this.targetUriObj = targetUriObj;
-    this.targetHost = URIUtils.extractHost(targetUriObj);
-
+    this.targetHost = targetHost;
+  }
+  
+  private void setExchange() {
     exchange = new Exchange(this);
-
     exchange.setProperty(Exchange.HTTP_SERVLET_REQUEST, request);
+  }
+  
+  public static HopsServletHandler instance(HttpServletRequest request,
+                                            HttpServletResponse response,
+                                            Transport transport,
+                                            URI targetUriObj) {
+    HttpHost targetHost;
+    try {
+      targetHost = URIUtils.extractHost(targetUriObj);
+    } catch (Exception e) {
+      targetHost = null;
+    }
+    HopsServletHandler handler = new HopsServletHandler(request, response, transport, targetUriObj, targetHost);
+    handler.setExchange();
+    return handler;
   }
 
   public void run() {

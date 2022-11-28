@@ -26,9 +26,9 @@ import com.predic8.membrane.core.transport.http.WebSocketStreamPump;
 import com.predic8.membrane.core.transport.http.client.HttpClientConfiguration;
 
 import javax.enterprise.concurrent.ManagedExecutorService;
-import javax.naming.InitialContext;
 import java.io.IOException;
 import java.net.SocketException;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
@@ -38,15 +38,10 @@ public class HopsHttpClient extends HttpClient {
 
   private ManagedExecutorService managedExecutorService;
 
-  public HopsHttpClient(HttpClientConfiguration configuration) {
+  public HopsHttpClient(HttpClientConfiguration configuration,ManagedExecutorService managedExecutorService ) {
     super(configuration);
 
-    try {
-      managedExecutorService = InitialContext.doLookup("concurrent/hopsExecutorService");
-    } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "Error looking up for the hopsExecutorService", e);
-      // Nothing else we can do here
-    }
+    this.managedExecutorService = managedExecutorService;
   }
 
   @Override
@@ -77,12 +72,16 @@ public class HopsHttpClient extends HttpClient {
       @Override
       public void setExchangeFinished() {
         // Backward Thread
-        if (managedExecutorService != null) {
-          managedExecutorService.submit(b);
-        }
         try {
+          if (managedExecutorService != null) {
+            managedExecutorService.submit(b);
+          }
           // Onward Thread
           a.run();
+         
+        } catch (RejectedExecutionException e) {
+          LOGGER.log(Level.WARNING, "Too many notebooks opened - jupyter executor pool is full", e);
+          throw e;
         } finally {
           try {
             con.close();

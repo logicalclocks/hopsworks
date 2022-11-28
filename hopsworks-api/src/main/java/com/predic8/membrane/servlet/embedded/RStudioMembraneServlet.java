@@ -135,16 +135,13 @@ public class RStudioMembraneServlet extends HttpServlet {
     sp.setTargetURL(newQueryBuf.toString());
     // only set external hostname in case admin console is used
     try {
-      router = new HopsRouter();
-      router.add(sp);
-      router.init();
+      router = HopsRouter.instance(sp);
       ProxyRule proxy = new ProxyRule(new ProxyRuleKey(-1));
       router.getRuleManager().addProxy(proxy,
               RuleManager.RuleDefinitionSource.MANUAL);
       router.getRuleManager().addProxy(sp,
               RuleManager.RuleDefinitionSource.MANUAL);
-      new HopsServletHandler(req, resp, router.getTransport(),
-              targetUriObj).run();
+      HopsServletHandler.instance(req, resp, router.getTransport(), targetUriObj).run();
     } catch (Exception ex) {
       Logger.getLogger(RStudioMembraneServlet.class.getName()).log(Level.SEVERE, null,
               ex);

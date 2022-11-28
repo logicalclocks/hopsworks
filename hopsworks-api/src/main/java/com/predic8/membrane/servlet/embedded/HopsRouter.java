@@ -16,9 +16,11 @@
 package com.predic8.membrane.servlet.embedded;
 
 import com.predic8.membrane.core.Router;
+import com.predic8.membrane.core.exchangestore.ExchangeStore;
 import com.predic8.membrane.core.exchangestore.LimitedMemoryExchangeStore;
 import com.predic8.membrane.core.interceptor.DispatchingInterceptor;
 import com.predic8.membrane.core.interceptor.ExchangeStoreInterceptor;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,29 +28,41 @@ import com.predic8.membrane.core.interceptor.Interceptor;
 import com.predic8.membrane.core.interceptor.RuleMatchingInterceptor;
 import com.predic8.membrane.core.interceptor.rewrite.ReverseProxyingInterceptor;
 import com.predic8.membrane.core.interceptor.tunnel.WebSocketInterceptor;
+import com.predic8.membrane.core.rules.ServiceProxy;
 import com.predic8.membrane.core.transport.Transport;
 
 public class HopsRouter extends Router {
 
-  public HopsRouter() throws Exception {
-    this.exchangeStore = new LimitedMemoryExchangeStore();
-    transport = createTransport();
+  private HopsRouter(ExchangeStore exchangeStore, Transport transport) {
+    super();
+    this.exchangeStore = exchangeStore;
+    this.transport = transport;
   }
 
-  private Transport createTransport() throws Exception {
+  public static HopsRouter instance(ServiceProxy serviceProxy) throws Exception {
+    ExchangeStore exchangeStore = new LimitedMemoryExchangeStore();
+    Transport transport = createTransport(exchangeStore);
+    HopsRouter router = new HopsRouter(exchangeStore, transport);
+    transport.init(router);
+    router.add(serviceProxy);
+    router.init();
+    return router;
+  }
+  
+  private static Transport createTransport(ExchangeStore exchangeStore) throws Exception {
     Transport transport = new HopsTransport();
 
     List<Interceptor> interceptors = new ArrayList<>();
 
     interceptors.add(new RuleMatchingInterceptor());
-    interceptors.add(new ExchangeStoreInterceptor(this.exchangeStore));
+    interceptors.add(new ExchangeStoreInterceptor(exchangeStore));
     interceptors.add(new DispatchingInterceptor());
 
     interceptors.add(new ReverseProxyingInterceptor());
     interceptors.add(new WebSocketInterceptor());
     interceptors.add(new HopsHTTPClientInterceptor());
     transport.setInterceptors(interceptors);
-    transport.init(this);
+    
     return transport;
   }
 
