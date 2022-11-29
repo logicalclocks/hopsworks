@@ -38,7 +38,6 @@
  */
 package io.hops.hopsworks.api.util;
 
-import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
@@ -173,7 +172,6 @@ public class UploadService {
    * Sets the upload path for the file to be uploaded.
    * <p/>
    * @param datasetPath the dsPath object built by the DatasetService.java
-   * @throws DatasetException DatasetException
    */
   private void confFileUpload(DatasetPath datasetPath) {
     if (datasetPath.getRelativePath() != null) {
@@ -244,18 +242,17 @@ public class UploadService {
     @Context HttpServletRequest request, @Context SecurityContext sc) throws IOException,
     DatasetException, ProjectException {
     configureUploader(sc);
-    String fileName = flowFilename;
     Inode parent;
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     int resumableChunkNumber = getResumableChunkNumber(request);
     if (resumableChunkNumber == 1) {//check if file exist, permission only on the first chunk
       if (this.fileParent != null) {
         int pathLen = Utils.pathLen(this.path) - 1;
-        long partitionId = HopsUtils.calculatePartitionId(this.fileParent.getId(), fileName, pathLen);
-        parent = inodes.findByInodePK(this.fileParent, fileName, partitionId);
+        long partitionId = HopsUtils.calculatePartitionId(this.fileParent.getId(), flowFilename, pathLen);
+        parent = inodes.findByInodePK(this.fileParent, flowFilename, partitionId);
         if (parent != null) {
           throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, Level.FINE,
-            "filename: " + fileName);
+            "filename: " + flowFilename);
         }
       }
       //test if the user have permission to create a file in the path.
@@ -266,7 +263,7 @@ public class UploadService {
         DistributedFileSystemOps udfso = null;
         try {
           udfso = dfs.getDfsOps(username);
-          udfso.touchz(new Path(this.path, fileName));
+          udfso.touchz(new Path(this.path, flowFilename));
         } catch (AccessControlException ex) {
           throw new AccessControlException("Permission denied: You can not upload to this folder. ");
         } finally {
@@ -349,24 +346,16 @@ public class UploadService {
     if (finished) {
       DistributedFileSystemOps dfsOps = null;
       try {
-        String fileContent = null;
         Path location = new Path(this.path, fileName);
         String stagingFilePath = new Path(stagingManager.getStagingPath() + this.path, fileName).toString();
 
-        //If the user has a role in the owning project of the Dataset and that is Data Owner
-        //perform operation as superuser
-        if ((!Strings.isNullOrEmpty(role) && role.equals(AllowedProjectRoles.DATA_OWNER))) {
-          dfsOps = dfs.getDfsOps();
-        } else {
-          dfsOps = dfs.getDfsOps(username);
-        }
-
+        dfsOps = dfs.getDfsOps(username);
         dfsOps.copyToHDFSFromLocal(true, stagingFilePath, location.toString());
         dfsOps.setPermission(location, dfsOps.getParentPermission(location));
         dfsOps.setOwner(location, username, dfsOps.getFileStatus(location).getGroup());
         logger.log(Level.INFO, "Copied to HDFS");
 
-        json.setSuccessMessage("Successfuly uploaded file to " + this.path);
+        json.setSuccessMessage("Successfully uploaded file to " + this.path);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
 
       } catch (AccessControlException ex) {
