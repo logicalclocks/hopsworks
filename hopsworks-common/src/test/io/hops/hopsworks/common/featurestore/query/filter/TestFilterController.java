@@ -178,7 +178,7 @@ public class TestFilterController {
     filterLogicDTO.setLeftFilter(filter);
     filterLogicDTO.setRightLogic(filterLogicDTO2);
   
-    FilterLogic result = filterController.convertFilterLogic(filterLogicDTO, fgLookup, availableFeatureLookup);
+    FilterLogic result = filterController.convertFilterLogic(filterLogicDTO, availableFeatureLookup);
     Feature feature = result.getLeftFilter().getFeatures().get(0);
   
     Assert.assertEquals(result.getType(), SqlFilterLogic.AND);
@@ -197,7 +197,7 @@ public class TestFilterController {
       new FeatureGroupFeatureDTO("fg2_ft", "double", "");
     FilterDTO filter = new FilterDTO(featureGroupFeatureDTO, SqlCondition.EQUALS, "10");
     
-    Filter result = filterController.convertFilter(filter, fgLookup, availableFeatureLookup);
+    Filter result = filterController.convertFilter(filter, availableFeatureLookup);
     Feature feature = result.getFeatures().get(0);
   
     Assert.assertEquals(SqlCondition.EQUALS, result.getCondition());
@@ -213,7 +213,7 @@ public class TestFilterController {
     FeatureGroupFeatureDTO value =
         new FeatureGroupFeatureDTO("fg1_ft", "integer", null, null, 1);
 
-    FilterValue result = filterController.convertFilterValue(objectMapper.writeValueAsString(value), fgLookup,
+    FilterValue result = filterController.convertFilterValue(objectMapper.writeValueAsString(value),
         availableFeatureLookup);
     
     Assert.assertEquals("`fg1`.`fg1_ft`", result.makeSqlValue());
@@ -221,11 +221,11 @@ public class TestFilterController {
   
   @Test
   public void testConvertFilterValue_nonFeature() throws Exception {
-    FilterValue resultOfIntegerValue = filterController.convertFilterValue("123", fgLookup,
+    FilterValue resultOfIntegerValue = filterController.convertFilterValue("123",
         availableFeatureLookup);
-    FilterValue resultOfStringValue = filterController.convertFilterValue("abc", fgLookup,
+    FilterValue resultOfStringValue = filterController.convertFilterValue("abc",
         availableFeatureLookup);
-    FilterValue resultOfArrayValue = filterController.convertFilterValue("[1, 2, 3]", fgLookup,
+    FilterValue resultOfArrayValue = filterController.convertFilterValue("[1, 2, 3]",
         availableFeatureLookup);
     
     Assert.assertEquals("123", resultOfIntegerValue.makeSqlValue());
@@ -238,7 +238,7 @@ public class TestFilterController {
     FeatureGroupFeatureDTO featureGroupFeatureDTO =
       new FeatureGroupFeatureDTO("fg2_ft", "double", "");
   
-    Feature result = filterController.findFilteredFeature(featureGroupFeatureDTO, fgLookup, availableFeatureLookup);
+    Feature result = filterController.findFilteredFeature(featureGroupFeatureDTO, availableFeatureLookup);
   
     Assert.assertEquals("fg2_ft", result.getName());
     Assert.assertEquals("fg2", result.getFgAlias(false));
@@ -251,7 +251,7 @@ public class TestFilterController {
     FeatureGroupFeatureDTO featureGroupFeatureDTO =
       new FeatureGroupFeatureDTO("fg2_ft", "double", "", 2, true);
   
-    Feature result = filterController.findFilteredFeature(featureGroupFeatureDTO, fgLookup, availableFeatureLookup);
+    Feature result = filterController.findFilteredFeature(featureGroupFeatureDTO, availableFeatureLookup);
   
     Assert.assertEquals("fg2_ft", result.getName());
     Assert.assertEquals("fg2", result.getFgAlias(false));
@@ -265,7 +265,7 @@ public class TestFilterController {
       new FeatureGroupFeatureDTO("not_a_feature", "double", "");
   
     thrown.expect(FeaturestoreException.class);
-    filterController.findFilteredFeature(featureGroupFeatureDTO, fgLookup, availableFeatureLookup);
+    filterController.findFilteredFeature(featureGroupFeatureDTO, availableFeatureLookup);
   }
   
   @Test
@@ -274,7 +274,16 @@ public class TestFilterController {
       new FeatureGroupFeatureDTO("not_a_feature_of_fg2", "double", "", 2, true);
     
     thrown.expect(FeaturestoreException.class);
-    filterController.findFilteredFeature(featureGroupFeatureDTO, fgLookup, availableFeatureLookup);
+    filterController.findFilteredFeature(featureGroupFeatureDTO, availableFeatureLookup);
+  }
+
+  @Test
+  public void testFindFilteredFeatureWithIdNotAvailableException() throws Exception {
+    FeatureGroupFeatureDTO featureGroupFeatureDTO =
+        new FeatureGroupFeatureDTO("not_a_feature_of_fg2", "double", "", 3, true);
+
+    thrown.expect(FeaturestoreException.class);
+    filterController.findFilteredFeature(featureGroupFeatureDTO, availableFeatureLookup);
   }
   
   @Test

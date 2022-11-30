@@ -188,7 +188,7 @@ public class QueryController {
 
     // If there are any filters, recursively convert the
     if (queryDTO.getFilter() != null) {
-      query.setFilter(filterController.convertFilterLogic(queryDTO.getFilter(), fgLookup, availableFeatureLookup));
+      query.setFilter(filterController.convertFilterLogic(queryDTO.getFilter(), availableFeatureLookup));
     }
 
     return query;
