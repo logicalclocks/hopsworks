@@ -595,7 +595,7 @@ describe "On #{ENV['OS']}" do
           expect_status_details(201)
           meta_json = JSON.parse(template_validation_report[:meta])
           meta_json["age"] = "latest"
-          meta_json["run_id"]["run_time"] = "2022-03-11T14:06:24.481236+00:00"
+          meta_json["validation_time"] = "20220312T130624.481059Z"
           template_validation_report[:meta] = JSON.generate(meta_json)
           sleep 3 
           created_report_2 = create_validation_report(project.id, featurestore_id, fg_json["id"], template_validation_report)
@@ -619,9 +619,8 @@ describe "On #{ENV['OS']}" do
           expect_status_details(201)
           meta_json = JSON.parse(template_validation_report[:meta])
           meta_json["age"] = "latest"
-          meta_json["run_id"]["run_time"] = "2022-03-11T14:06:24.481236+00:00"
+          meta_json["validation_time"] = "20220312T130624.481059Z"
           template_validation_report[:meta] = JSON.generate(meta_json)
-          sleep 3
           created_report_2 = create_validation_report(project.id, featurestore_id, fg_json["id"], template_validation_report)
           expect_status_details(201)
           dtos = get_all_validation_report(project.id, featurestore_id, fg_json["id"])
@@ -718,7 +717,7 @@ describe "On #{ENV['OS']}" do
           validation_result = generate_template_validation_result()
           meta_json = JSON.parse(validation_report[:meta])
           meta_json["age"] = "oldest"
-          meta_json["run_id"]["run_time"] = "2022-01-01T14:06:24.481236+00:00"
+          meta_json["validation_time"] = "20220101T140624.481059Z"
           validation_report[:meta] = JSON.generate(meta_json)
           validation_result[:meta] = JSON.generate(meta_json)
           validation_report[:results].append(validation_result)
@@ -728,7 +727,7 @@ describe "On #{ENV['OS']}" do
           validation_report[:results].pop()
           meta_json = JSON.parse(validation_report[:meta])
           meta_json["age"] = "lågom"
-          meta_json["run_id"]["run_time"] = "2022-02-01T14:06:24.481236+00:00"
+          meta_json["validation_time"] = "20220201T140624.481059Z"
           validation_report[:meta] = JSON.generate(meta_json)
           validation_result[:meta] = JSON.generate(meta_json)
           validation_report[:results].append(validation_result)
@@ -743,7 +742,7 @@ describe "On #{ENV['OS']}" do
           validation_report[:results].pop()
           meta_json = JSON.parse(validation_report[:meta])
           meta_json["age"] = "youngest"
-          meta_json["run_id"]["run_time"] = "2022-03-01T14:06:24.481236+00:00"
+          meta_json["validation_time"] = "20220301T140624.481059Z"
           validation_report[:meta] = JSON.generate(meta_json)
           validation_result[:meta] = JSON.generate(meta_json)
           validation_report[:results].append(validation_result)
@@ -814,7 +813,7 @@ describe "On #{ENV['OS']}" do
 
         it "should be able to retrieve part of validation result history, filtering on validation time greater than" do
           validation_history_dto = get_validation_history(@project[:id], @featurestore_id, @fg_json["id"], @suite_json["expectations"][0]["id"],\
-          sort_by:"validation_time:desc", filter_by:"validation_time_gt:1643724865000")
+          sort_by:"validation_time:desc", filter_by:"validation_time_gt:1643724384000")
           expect_status_details(200)
           validation_history_json = JSON.parse(validation_history_dto)
           expect(validation_history_json["count"]).to eq(1)
@@ -824,7 +823,7 @@ describe "On #{ENV['OS']}" do
 
         it "should be able to retrieve part of validation result history, filtering on validation time greater than or equal to" do
           validation_history_dto = get_validation_history(@project[:id], @featurestore_id, @fg_json["id"], @suite_json["expectations"][0]["id"],\
-          sort_by:"validation_time:desc", filter_by:"validation_time_gte:1643724865000")
+          sort_by:"validation_time:desc", filter_by:"validation_time_gte:1643724384000")
           expect_status_details(200)
           validation_history_json = JSON.parse(validation_history_dto)
           expect(validation_history_json["count"]).to eq(2)
@@ -836,7 +835,7 @@ describe "On #{ENV['OS']}" do
 
         it "should be able to retrieve part of validation result history, filtering on validation time less than" do
           validation_history_dto = get_validation_history(@project[:id], @featurestore_id, @fg_json["id"], @suite_json["expectations"][0]["id"],\
-          sort_by:"validation_time:desc", filter_by:"validation_time_lt:1643724865000")
+          sort_by:"validation_time:desc", filter_by:"validation_time_lt:1643724384000")
           expect_status_details(200)
           validation_history_json = JSON.parse(validation_history_dto)
           expect(validation_history_json["count"]).to eq(1)
@@ -846,7 +845,7 @@ describe "On #{ENV['OS']}" do
 
         it "should be able to retrieve part of validation result history, filtering on validation time less than or equal to" do
           validation_history_dto = get_validation_history(@project[:id], @featurestore_id, @fg_json["id"], @suite_json["expectations"][0]["id"],\
-          sort_by:"validation_time:desc", filter_by:"validation_time_lte:1643724865000")
+          sort_by:"validation_time:desc", filter_by:"validation_time_lte:1643724384000")
           expect_status_details(200)
           validation_history_json = JSON.parse(validation_history_dto)
           expect(validation_history_json["count"]).to eq(2)
@@ -858,7 +857,7 @@ describe "On #{ENV['OS']}" do
 
         it "should be able to retrieve part of validation result history, filtering on validation time equal to" do
           validation_history_dto = get_validation_history(@project[:id], @featurestore_id, @fg_json["id"], @suite_json["expectations"][0]["id"],\
-          sort_by:"validation_time:desc", filter_by:"validation_time_eq:1643724865000")
+          sort_by:"validation_time:desc", filter_by:"validation_time_eq:1643724384000")
           expect_status_details(200)
           validation_history_json = JSON.parse(validation_history_dto)
           expect(validation_history_json["count"]).to eq(1)
