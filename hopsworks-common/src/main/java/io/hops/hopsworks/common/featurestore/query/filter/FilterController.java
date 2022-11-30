@@ -96,10 +96,10 @@ public class FilterController {
           .collect(Collectors.toList())
       );
     }
-    return convertFilterLogic(filterLogicDTO, fgLookup, availableFeatureLookup);
+    return convertFilterLogic(filterLogicDTO, availableFeatureLookup);
   }
 
-  public FilterLogic convertFilterLogic(FilterLogicDTO filterLogicDTO, Map<Integer, Featuregroup> fgLookup,
+  public FilterLogic convertFilterLogic(FilterLogicDTO filterLogicDTO,
       Map<Integer, List<Feature>> availableFeatureLookup)
       throws FeaturestoreException {
 
@@ -107,16 +107,16 @@ public class FilterController {
     validateFilterLogicDTO(filterLogicDTO);
 
     if (filterLogicDTO.getLeftFilter() != null) {
-      filterLogic.setLeftFilter(convertFilter(filterLogicDTO.getLeftFilter(), fgLookup, availableFeatureLookup));
+      filterLogic.setLeftFilter(convertFilter(filterLogicDTO.getLeftFilter(), availableFeatureLookup));
     }
     if (filterLogicDTO.getRightFilter() != null) {
-      filterLogic.setRightFilter(convertFilter(filterLogicDTO.getRightFilter(), fgLookup, availableFeatureLookup));
+      filterLogic.setRightFilter(convertFilter(filterLogicDTO.getRightFilter(), availableFeatureLookup));
     }
     if (filterLogicDTO.getLeftLogic() != null) {
-      filterLogic.setLeftLogic(convertFilterLogic(filterLogicDTO.getLeftLogic(), fgLookup, availableFeatureLookup));
+      filterLogic.setLeftLogic(convertFilterLogic(filterLogicDTO.getLeftLogic(), availableFeatureLookup));
     }
     if (filterLogicDTO.getRightLogic() != null) {
-      filterLogic.setRightLogic(convertFilterLogic(filterLogicDTO.getRightLogic(), fgLookup, availableFeatureLookup));
+      filterLogic.setRightLogic(convertFilterLogic(filterLogicDTO.getRightLogic(), availableFeatureLookup));
     }
     return filterLogic;
   }
@@ -152,13 +152,13 @@ public class FilterController {
     }
   }
 
-  Filter convertFilter(FilterDTO filterDTO, Map<Integer, Featuregroup> fgLookup,
+  Filter convertFilter(FilterDTO filterDTO,
       Map<Integer, List<Feature>> availableFeatureLookup) throws FeaturestoreException {
-    return new Filter(Arrays.asList(findFilteredFeature(filterDTO.getFeature(), fgLookup, availableFeatureLookup)),
-        filterDTO.getCondition(), convertFilterValue(filterDTO.getValue(), fgLookup, availableFeatureLookup));
+    return new Filter(Arrays.asList(findFilteredFeature(filterDTO.getFeature(), availableFeatureLookup)),
+        filterDTO.getCondition(), convertFilterValue(filterDTO.getValue(), availableFeatureLookup));
   }
 
-  FilterValue convertFilterValue(String value, Map<Integer, Featuregroup> fgLookup,
+  FilterValue convertFilterValue(String value,
       Map<Integer, List<Feature>> availableFeatureLookup) throws FeaturestoreException {
 
     try {
@@ -167,18 +167,23 @@ public class FilterController {
       if (featureDto == null) {
         return new FilterValue("null");
       }
-      Feature feature = findFilteredFeature(featureDto, fgLookup, availableFeatureLookup);
+      Feature feature = findFilteredFeature(featureDto, availableFeatureLookup);
       return new FilterValue(feature.getFeatureGroup().getId(), feature.getFgAlias(), feature.getName());
     } catch (IOException e) {
       return new FilterValue(value);
     }
   }
 
-  Feature findFilteredFeature(FeatureGroupFeatureDTO featureDTO, Map<Integer, Featuregroup> fgLookup,
+  Feature findFilteredFeature(FeatureGroupFeatureDTO featureDTO,
       Map<Integer, List<Feature>> availableFeatureLookup) throws FeaturestoreException {
     Optional<Feature> feature = Optional.empty();
 
     if (featureDTO.getFeatureGroupId() != null) {
+      if (!availableFeatureLookup.containsKey(featureDTO.getFeatureGroupId())) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_DOES_NOT_EXIST,
+            Level.FINE,
+            "Filtered feature : '" + featureDTO.getName() + "' not found in main query.");
+      }
       // feature group is specified by user or api
       feature = availableFeatureLookup.get(featureDTO.getFeatureGroupId()).stream()
           .filter(af -> af.getName().equals(featureDTO.getName()))
