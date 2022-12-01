@@ -558,6 +558,14 @@ public class FeaturegroupController {
   public void deleteFeaturegroup(Featuregroup featuregroup, Project project, Users user)
     throws SQLException, FeaturestoreException, ServiceException, IOException, SchemaException, KafkaException,
     JobException {
+    // In some cases, fg metadata was not deleted. https://hopsworks.atlassian.net/browse/FSTORE-377
+    // This enables users to delete a corrupted fg using the hsfs client.
+    if (featuregroup.getOnDemandFeaturegroup() == null
+        && featuregroup.getCachedFeaturegroup() == null
+        && featuregroup.getStreamFeatureGroup() == null) {
+      deleteFeatureGroupMeta(featuregroup);
+      return;
+    }
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
         //Delete hive_table will cascade to cached_featuregroup_table which will cascade to feature_group table
@@ -595,6 +603,16 @@ public class FeaturegroupController {
     // Statistics adn validation files need to be deleted explicitly
     validationReportController.deleteFeaturegroupDataValidationDir(user, featuregroup);
     statisticsController.deleteStatistics(project, user, featuregroup);
+    // In some cases, fg metadata was not deleted. https://hopsworks.atlassian.net/browse/FSTORE-377
+    // Remove the metadata if it still exists.
+    deleteFeatureGroupMeta(featuregroup);
+  }
+
+  private void deleteFeatureGroupMeta(Featuregroup featuregroup) {
+    if (featuregroupFacade.findByIdAndFeaturestore(featuregroup.getId(),
+        featuregroup.getFeaturestore()).isPresent()) {
+      featuregroupFacade.remove(featuregroup);
+    }
   }
 
   /**
