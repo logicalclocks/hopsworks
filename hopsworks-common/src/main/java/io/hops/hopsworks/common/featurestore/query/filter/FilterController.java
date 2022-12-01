@@ -227,7 +227,7 @@ public class FilterController {
   public SqlNode generateFilterNode(Filter filter, boolean online) {
     SqlNode sqlNode;
     Feature feature = filter.getFeatures().get(0);
-    if (feature.getDefaultValue() == null || online) {
+    if (feature.getDefaultValue() == null) {
       if (feature.getFgAlias(false) != null) {
         sqlNode = new SqlIdentifier(Arrays.asList("`" + feature.getFgAlias(false) + "`",
             "`" + feature.getName() + "`"), SqlParserPos.ZERO);
@@ -298,7 +298,7 @@ public class FilterController {
   public SqlNode generateFilterNodeList(Filter filter, boolean online) {
     SqlNodeList operandList = new SqlNodeList(SqlParserPos.ZERO);
     for (Feature feature : filter.getFeatures()) {
-      if (feature.getDefaultValue() == null || online) {
+      if (feature.getDefaultValue() == null) {
         if (feature.getFgAlias(false) != null) {
           operandList.add(new SqlIdentifier(Arrays.asList("`" + feature.getFgAlias(false) + "`",
               "`" + feature.getName() + "`"), SqlParserPos.ZERO));

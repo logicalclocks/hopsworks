@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.featurestore.featuregroup.stream;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteController;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
@@ -69,6 +70,8 @@ public class StreamFeatureGroupController {
   private OnlineFeaturegroupController onlineFeaturegroupController;
   @EJB
   private OfflineFeatureGroupController offlineFeatureGroupController;
+  @EJB
+  private FeaturegroupController featuregroupController;
   @EJB
   private FeaturestoreUtils featurestoreUtils;
   @EJB
@@ -164,7 +167,7 @@ public class StreamFeatureGroupController {
     cachedFeaturegroupController.verifyPrimaryKey(streamFeatureGroupDTO.getFeatures(), TimeTravelFormat.HUDI);
     
     //Prepare DDL statement
-    String tableName = cachedFeaturegroupController.getTblName(streamFeatureGroupDTO.getName(),
+    String tableName = featuregroupController.getTblName(streamFeatureGroupDTO.getName(),
       streamFeatureGroupDTO.getVersion());
     offlineFeatureGroupController.createHiveTable(featurestore, tableName, streamFeatureGroupDTO.getDescription(),
       cachedFeaturegroupController.addHudiSpecFeatures(streamFeatureGroupDTO.getFeatures()),
@@ -217,7 +220,7 @@ public class StreamFeatureGroupController {
       featuregroup.getId(), featuregroup.getFeaturestore(), project,
       user);
     
-    String tableName = cachedFeaturegroupController.getTblName(featuregroup.getName(), featuregroup.getVersion());
+    String tableName = featuregroupController.getTblName(featuregroup.getName(), featuregroup.getVersion());
     
     // verify user input specific for cached feature groups - if any
     List<FeatureGroupFeatureDTO> newFeatures = new ArrayList<>();

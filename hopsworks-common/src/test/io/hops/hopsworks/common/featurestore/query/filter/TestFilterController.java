@@ -334,7 +334,8 @@ public class TestFilterController {
       filterController.generateFilterLogicNode(filterLogic, true).toSqlString(new SparkSqlDialect(SqlDialect
         .EMPTY_CONTEXT)).getSql();
   
-    String expected = "`fg1`.`fg1_pk` = 'abc' AND (`fg3`.`fg3_pk` <> 'abc' OR `fg2`.`fg2_ft` <= 10)";
+    String expected = "`fg1`.`fg1_pk` = 'abc' AND (`fg3`.`fg3_pk` <> 'abc' OR " +
+        "CASE WHEN `fg2`.`fg2_ft` IS NULL THEN 10.0 ELSE `fg2`.`fg2_ft` END <= 10)";
     Assert.assertEquals(expected, result);
   }
   
@@ -355,7 +356,8 @@ public class TestFilterController {
       filterController.generateFilterLogicNode(filterLogic, true).toSqlString(new SparkSqlDialect(SqlDialect
         .EMPTY_CONTEXT)).getSql();
   
-    String expected = "`fg1`.`fg1_pk` = 'abc' AND `fg3`.`fg3_pk` <> 'abc' OR `fg2`.`fg2_ft` <= 10";
+    String expected = "`fg1`.`fg1_pk` = 'abc' AND `fg3`.`fg3_pk` <> 'abc' OR " +
+        "CASE WHEN `fg2`.`fg2_ft` IS NULL THEN 10.0 ELSE `fg2`.`fg2_ft` END <= 10";
     Assert.assertEquals(expected, result);
   }
   
@@ -394,7 +396,7 @@ public class TestFilterController {
     String result = filterController.generateFilterLogicNode(filter, true).toSqlString(new SparkSqlDialect(SqlDialect
       .EMPTY_CONTEXT)).getSql();
     System.out.println(result);
-    String expected = "(`fg2`.`fg2_pk`, `fg2`.`fg2_ft`) IN ?";
+    String expected = "(`fg2`.`fg2_pk`, CASE WHEN `fg2`.`fg2_ft` IS NULL THEN 10.0 ELSE `fg2`.`fg2_ft` END) IN ?";
     Assert.assertEquals(expected, result);
   }
 
@@ -429,7 +431,7 @@ public class TestFilterController {
     String result = filterController.generateFilterNode(filter, true).toSqlString(new SparkSqlDialect(SqlDialect
       .EMPTY_CONTEXT)).getSql();
   
-    String expected = "`fg2`.`fg2_ft` = 1";
+    String expected = "CASE WHEN `fg2`.`fg2_ft` IS NULL THEN 10.0 ELSE `fg2`.`fg2_ft` END = 1";
     Assert.assertEquals(expected, result);
   }
   

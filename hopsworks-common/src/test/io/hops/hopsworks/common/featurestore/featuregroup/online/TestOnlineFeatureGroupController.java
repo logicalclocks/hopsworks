@@ -43,7 +43,7 @@ public class TestOnlineFeatureGroupController {
     List<FeatureGroupFeatureDTO> features = new ArrayList<>();
     features.add(new FeatureGroupFeatureDTO("feature", "string", ""));
     String output = onlineFeaturegroupController.buildAlterStatement("tbl", "db", features);
-    String expected = "ALTER TABLE `db`.`tbl` ADD COLUMN `feature` VARCHAR(100) DEFAULT NULL;";
+    String expected = "ALTER TABLE `db`.`tbl` ADD COLUMN `feature` VARCHAR(100) DEFAULT NULL, ALGORITHM=INPLACE;";
     Assert.assertEquals(expected, output);
   }
   
@@ -53,7 +53,7 @@ public class TestOnlineFeatureGroupController {
     features.add(new FeatureGroupFeatureDTO("feature", "string", "",
       false, "defaultValue"));
     String output = onlineFeaturegroupController.buildAlterStatement("tbl", "db", features);
-    String expected = "ALTER TABLE `db`.`tbl` ADD COLUMN `feature` VARCHAR(100) NOT NULL DEFAULT 'defaultValue';";
+    String expected = "ALTER TABLE `db`.`tbl` ADD COLUMN `feature` VARCHAR(100), ALGORITHM=INPLACE;";
     Assert.assertEquals(expected, output);
   }
   
@@ -63,7 +63,7 @@ public class TestOnlineFeatureGroupController {
     features.add(new FeatureGroupFeatureDTO("feature", "float", "",
       false, "10.0"));
     String output = onlineFeaturegroupController.buildAlterStatement("tbl", "db", features);
-    String expected = "ALTER TABLE `db`.`tbl` ADD COLUMN `feature` float NOT NULL DEFAULT 10.0;";
+    String expected = "ALTER TABLE `db`.`tbl` ADD COLUMN `feature` float, ALGORITHM=INPLACE;";
     Assert.assertEquals(expected, output);
   }
 
@@ -72,10 +72,12 @@ public class TestOnlineFeatureGroupController {
     List<FeatureGroupFeatureDTO> features = new ArrayList<>();
     features.add(new FeatureGroupFeatureDTO("feature", "float", "",
       false, "10.0"));
-    features.add(new FeatureGroupFeatureDTO("feature2", "float", ""));
+    features.add(new FeatureGroupFeatureDTO("feature2", "float", "",
+        false, "19.0"));
+    features.add(new FeatureGroupFeatureDTO("feature3", "float", ""));
     String output = onlineFeaturegroupController.buildAlterStatement("tbl", "db", features);
-    String expected = "ALTER TABLE `db`.`tbl` ADD COLUMN `feature` float NOT NULL DEFAULT 10.0, ADD COLUMN `feature2`" +
-      " float DEFAULT NULL;";
+    String expected = "ALTER TABLE `db`.`tbl` ADD COLUMN `feature` float, ADD COLUMN `feature2` float, " +
+        "ADD COLUMN `feature3` float DEFAULT NULL, ALGORITHM=INPLACE;";
     Assert.assertEquals(expected, output);
   }
   

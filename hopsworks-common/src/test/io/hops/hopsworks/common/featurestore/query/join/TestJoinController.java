@@ -91,6 +91,31 @@ public class TestJoinController {
     Assert.assertEquals("`fg1`.`ft1` = `fg2`.`ft1` AND `fg1`.`ft2` = `fg2`.`ft2` AND `fg1`.`ft3` = `fg2`.`ft3`",
       sqlConditionStr);
   }
+
+  @Test
+  public void testThreeConditionsOnOnline() {
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", true));
+    availableLeft.add(new Feature("ft2", true));
+    availableLeft.add(new Feature("ft3", true));
+
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("ft1", true));
+    availableRight.add(new Feature("ft2", true));
+    availableRight.add(new Feature("ft3", true));
+
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg2", availableRight, availableRight);
+
+    Join join = new Join(leftQuery, rightQuery, availableLeft, availableLeft, JoinType.INNER, null,
+        Arrays.asList(SqlCondition.EQUALS, SqlCondition.EQUALS, SqlCondition.EQUALS));
+    leftQuery.setJoins(Arrays.asList(join));
+
+    SqlNode sqlNode = joinController.getLeftRightCondition(join, true);
+    String sqlConditionStr = sqlNode.toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).toString();
+    Assert.assertEquals("`fg1`.`ft1` = `fg2`.`ft1` AND `fg1`.`ft2` = `fg2`.`ft2` AND `fg1`.`ft3` = `fg2`.`ft3`",
+        sqlConditionStr);
+  }
   
   @Test
   public void testFourConditionsOn() {
@@ -118,5 +143,77 @@ public class TestJoinController {
     Assert.assertEquals("`fg1`.`ft1` = `fg2`.`ft1` AND `fg1`.`ft2` = `fg2`.`ft2` " +
         "AND `fg1`.`ft3` = `fg2`.`ft3` AND `fg1`.`ft4` = `fg2`.`ft4`",
       sqlConditionStr);
+  }
+
+  @Test
+  public void testFourConditionsOnOnline() {
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", true));
+    availableLeft.add(new Feature("ft2", true));
+    availableLeft.add(new Feature("ft3", true));
+    availableLeft.add(new Feature("ft4", true));
+
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("ft1", true));
+    availableRight.add(new Feature("ft2", true));
+    availableRight.add(new Feature("ft3", true));
+    availableRight.add(new Feature("ft4", true));
+
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg2", availableRight, availableRight);
+
+    Join join = new Join(leftQuery, rightQuery, availableLeft, availableLeft, JoinType.INNER, null,
+        Arrays.asList(SqlCondition.EQUALS, SqlCondition.EQUALS, SqlCondition.EQUALS, SqlCondition.EQUALS));
+    leftQuery.setJoins(Arrays.asList(join));
+
+    SqlNode sqlNode = joinController.getLeftRightCondition(join, true);
+    String sqlConditionStr = sqlNode.toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).toString();
+    Assert.assertEquals("`fg1`.`ft1` = `fg2`.`ft1` AND `fg1`.`ft2` = `fg2`.`ft2` " +
+            "AND `fg1`.`ft3` = `fg2`.`ft3` AND `fg1`.`ft4` = `fg2`.`ft4`",
+        sqlConditionStr);
+  }
+
+  @Test
+  public void testWithDefaultValue() {
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", "x", "varchar", true, "test", null));
+
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("ft1", "y", "varchar", true, "test", null));
+
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg2", availableRight, availableRight);
+
+    Join join = new Join(leftQuery, rightQuery, availableLeft, availableRight, JoinType.INNER, null,
+        Arrays.asList(SqlCondition.EQUALS, SqlCondition.EQUALS, SqlCondition.EQUALS, SqlCondition.EQUALS));
+    leftQuery.setJoins(Arrays.asList(join));
+
+    SqlNode sqlNode = joinController.getLeftRightCondition(join, false);
+    String sqlConditionStr = sqlNode.toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).toString();
+    Assert.assertEquals("CASE WHEN `x`.`ft1` IS NULL THEN test ELSE `x`.`ft1` END = " +
+            "CASE WHEN `y`.`ft1` IS NULL THEN test ELSE `y`.`ft1` END",
+        sqlConditionStr);
+  }
+
+  @Test
+  public void testOnlineWithDefaultValue() {
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", "x", "varchar", true, "test", null));
+
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("ft1", "y", "varchar", true, "test", null));
+
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg2", availableRight, availableRight);
+
+    Join join = new Join(leftQuery, rightQuery, availableLeft, availableRight, JoinType.INNER, null,
+        Arrays.asList(SqlCondition.EQUALS, SqlCondition.EQUALS, SqlCondition.EQUALS, SqlCondition.EQUALS));
+    leftQuery.setJoins(Arrays.asList(join));
+
+    SqlNode sqlNode = joinController.getLeftRightCondition(join, true);
+    String sqlConditionStr = sqlNode.toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).toString();
+    Assert.assertEquals("CASE WHEN `x`.`ft1` IS NULL THEN test ELSE `x`.`ft1` END = " +
+            "CASE WHEN `y`.`ft1` IS NULL THEN test ELSE `y`.`ft1` END",
+        sqlConditionStr);
   }
 }

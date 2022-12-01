@@ -109,13 +109,13 @@ public class JoinController {
                                     boolean online, SqlCondition sqlBinaryOperator) {
     SqlNode leftHandside;
     SqlNode rightHandside;
-    if (leftOn.getDefaultValue() == null || online) {
+    if (leftOn.getDefaultValue() == null) {
       leftHandside = new SqlIdentifier(Arrays.asList("`" + leftFgAs + "`", "`" + leftOn.getName() + "`"),
         SqlParserPos.ZERO);
     } else {
       leftHandside = constructorController.caseWhenDefault(leftOn);
     }
-    if (rightOn.getDefaultValue() == null || online) {
+    if (rightOn.getDefaultValue() == null) {
       rightHandside = new SqlIdentifier(Arrays.asList("`" + rightFgAs + "`", "`" + rightOn.getName() + "`"),
         SqlParserPos.ZERO);
     } else {

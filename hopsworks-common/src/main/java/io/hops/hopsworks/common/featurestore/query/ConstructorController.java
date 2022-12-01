@@ -151,10 +151,10 @@ public class ConstructorController {
     for (Feature f : collectFeatures(query)) {
       // Build the select part. List of features selected by the user. Each feature will be fg_alias.fg_name
       // we should use the ` to avoid syntax errors on reserved keywords used as feature names (e.g. date)
-      if (f.getDefaultValue() == null || online) {
+      if (f.getDefaultValue() == null) {
         selectList.add(getWithOrWithoutAs(f, true,true));
       } else {
-        selectList.add(selectWithDefaultAs(f));
+        selectList.add(selectWithDefaultAs(f, true));
       }
     }
 
@@ -184,10 +184,10 @@ public class ConstructorController {
         // Build the order by part. List of features selected by the user. Each feature will be fg_alias.fg_name
         // we should use the ` to avoid syntax errors on reserved keywords used as feature names (e.g. date)
         // if feature gas prefix don't add it here as it will not work for order by.
-        if (f.getDefaultValue() == null || online) {
+        if (f.getDefaultValue() == null) {
           orderByList.add(getWithOrWithoutAs(f, false,false));
         } else {
-          orderByList.add(selectWithDefaultAs(f));
+          orderByList.add(selectWithDefaultAs(f, false));
         }
       }
     }
@@ -223,9 +223,13 @@ public class ConstructorController {
         featureIdentifier);
   }
 
-  public SqlNode selectWithDefaultAs(Feature feature) {
+  public SqlNode selectWithDefaultAs(Feature feature, boolean withPrefix) {
+    String featureName = feature.getName();
+    if (feature.getPrefix() != null && withPrefix) {
+      featureName = feature.getPrefix() + featureName;
+    }
     return SqlStdOperatorTable.AS.createCall(new SqlNodeList(Arrays.asList(caseWhenDefault(feature),
-        new SqlIdentifier("`" + feature.getName() + "`", SqlParserPos.ZERO)), SqlParserPos.ZERO));
+        new SqlIdentifier("`" + featureName + "`", SqlParserPos.ZERO)), SqlParserPos.ZERO));
   }
 
   public List<Feature> collectFeatures(Query query) {
