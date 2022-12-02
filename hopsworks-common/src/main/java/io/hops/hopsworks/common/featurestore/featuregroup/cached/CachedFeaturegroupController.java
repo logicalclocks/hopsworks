@@ -22,6 +22,7 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteController;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
@@ -121,6 +122,8 @@ public class CachedFeaturegroupController {
   private FeaturestoreActivityFacade fsActivityFacade;
   @EJB
   private ExpectationSuiteController expectationSuiteController;
+  @EJB
+  private FeaturegroupController featuregroupController;
 
   private static final Logger LOGGER = Logger.getLogger(CachedFeaturegroupController.class.getName());
   private static final List<String> HUDI_SPEC_FEATURE_NAMES = Arrays.asList("_hoodie_record_key",
@@ -175,17 +178,6 @@ public class CachedFeaturegroupController {
   }
 
   /**
-   * Gets the featuregroup Hive table name
-   *
-   * @param featuregroupName name of the featuregroup
-   * @param version          version of the featuregroup
-   * @return                 the hive table name of the featuregroup (featuregroup_version)
-   */
-  public String getTblName(String featuregroupName, Integer version) {
-    return featuregroupName + "_" + version.toString();
-  }
-
-  /**
    * Previews a given featuregroup by doing a SELECT LIMIT query on the Hive Table (offline feature data)
    * and the MySQL table (online feature data)
    *
@@ -227,17 +219,9 @@ public class CachedFeaturegroupController {
   public FeaturegroupPreview getOfflineFeaturegroupPreview(Featuregroup featuregroup, Project project,
                                                            Users user, String partition, int limit)
       throws FeaturestoreException, HopsSecurityException, SQLException {
-    String tbl = getTblName(featuregroup.getName(), featuregroup.getVersion());
-    
-    List<FeatureGroupFeatureDTO> features = null;
-  
-    if (featuregroup.getStreamFeatureGroup() != null) {
-      features = getFeaturesDTO(featuregroup.getStreamFeatureGroup(), featuregroup.getId(),
-        featuregroup.getFeaturestore(), project, user);
-    } else {
-      features = getFeaturesDTO(featuregroup.getCachedFeaturegroup(), featuregroup.getId(),
-        featuregroup.getFeaturestore(), project, user);
-    }
+    String tbl = featuregroupController.getTblName(featuregroup.getName(), featuregroup.getVersion());
+
+    List<FeatureGroupFeatureDTO> features =  featuregroupController.getFeatures(featuregroup, project, user);
 
     // This is not great, but at the same time the query runs as the user.
     SqlNodeList selectList = new SqlNodeList(SqlParserPos.ZERO);
@@ -246,7 +230,7 @@ public class CachedFeaturegroupController {
         selectList.add(new SqlIdentifier(Arrays.asList("`" + tbl + "`", "`" + feature.getName() + "`"),
           SqlParserPos.ZERO));
       } else {
-        selectList.add(constructorController.selectWithDefaultAs(new Feature(feature, tbl)));
+        selectList.add(constructorController.selectWithDefaultAs(new Feature(feature, tbl), false));
       }
     }
 
@@ -319,8 +303,8 @@ public class CachedFeaturegroupController {
     verifyPrimaryKey(cachedFeaturegroupDTO.getFeatures(), cachedFeaturegroupDTO.getTimeTravelFormat());
 
     //Prepare DDL statement
-    String tableName = getTblName(cachedFeaturegroupDTO.getName(), cachedFeaturegroupDTO.getVersion());
-    offlineFeatureGroupController.createHiveTable(featurestore, tableName, cachedFeaturegroupDTO.getDescription(),
+    String tbl = featuregroupController.getTblName(cachedFeaturegroupDTO.getName(), cachedFeaturegroupDTO.getVersion());
+    offlineFeatureGroupController.createHiveTable(featurestore, tbl, cachedFeaturegroupDTO.getDescription(),
         cachedFeaturegroupDTO.getTimeTravelFormat() == TimeTravelFormat.HUDI ?
             addHudiSpecFeatures(cachedFeaturegroupDTO.getFeatures()) :
             cachedFeaturegroupDTO.getFeatures(),
@@ -329,7 +313,7 @@ public class CachedFeaturegroupController {
     boolean onlineEnabled = settings.isOnlineFeaturestore() && cachedFeaturegroupDTO.getOnlineEnabled();
     
     //Get HiveTblId of the newly created table from the metastore
-    HiveTbls hiveTbls = cachedFeatureGroupFacade.getHiveTableByNameAndDB(tableName, featurestore.getHiveDbId())
+    HiveTbls hiveTbls = cachedFeatureGroupFacade.getHiveTableByNameAndDB(tbl, featurestore.getHiveDbId())
         .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP,
             Level.WARNING, "", "Table created correctly but not in the metastore"));
 
@@ -495,7 +479,7 @@ public class CachedFeaturegroupController {
   public void dropHiveFeaturegroup(Featuregroup featuregroup, Project project, Users user)
       throws FeaturestoreException, IOException, ServiceException {
     String db = featurestoreController.getOfflineFeaturestoreDbName(featuregroup.getFeaturestore().getProject());
-    String tableName = getTblName(featuregroup.getName(), featuregroup.getVersion());
+    String tableName = featuregroupController.getTblName(featuregroup.getName(), featuregroup.getVersion());
     offlineFeatureGroupController.dropFeatureGroup(db, tableName, project, user);
   }
 
@@ -703,8 +687,8 @@ public class CachedFeaturegroupController {
 
     List<FeatureGroupFeatureDTO> previousSchema = getFeaturesDTO(featuregroup.getCachedFeaturegroup(),
       featuregroup.getId(), featuregroup.getFeaturestore(), project, user);
-    
-    String tableName = getTblName(featuregroup.getName(), featuregroup.getVersion());
+
+    String tableName = featuregroupController.getTblName(featuregroup.getName(), featuregroup.getVersion());
 
     // verify user input specific for cached feature groups - if any
     List<FeatureGroupFeatureDTO> newFeatures = new ArrayList<>();

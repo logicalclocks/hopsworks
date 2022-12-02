@@ -735,6 +735,17 @@ public class FeaturegroupController {
     return new ArrayList<>();
   }
 
+  /**
+   * Gets the featuregroup table name
+   *
+   * @param featuregroupName name of the featuregroup
+   * @param version          version of the featuregroup
+   * @return                 the table name of the featuregroup (featuregroup_version)
+   */
+  public String getTblName(String featuregroupName, Integer version) {
+    return featuregroupName + "_" + version.toString();
+  }
+
   public String getFeatureGroupLocation(Featuregroup featureGroup) {
     // Cached feature groups also have a `location` field.
     // the issue is that the host is slightly different due to a configuration of Hive
