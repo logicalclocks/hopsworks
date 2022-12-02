@@ -412,6 +412,17 @@ public class TestFilterController {
     String expected = "`fg1`.`fg1_pk` IN ('ab', 'cd')";
     Assert.assertEquals(expected, result);
   }
+
+  @Test
+  public void testGenerateFilterLogicNodeSingleLIKE() throws Exception {
+    Filter filter = new Filter(Arrays.asList(fg1Features.get(0)), SqlCondition.LIKE, "%abc%");
+
+    String result = filterController.generateFilterNode(filter, false).toSqlString(new SparkSqlDialect(SqlDialect
+        .EMPTY_CONTEXT)).getSql();
+
+    String expected = "`fg1`.`fg1_pk` LIKE '%abc%'";
+    Assert.assertEquals(expected, result);
+  }
   
   @Test
   public void testGenerateFilterNodeDefault() {
