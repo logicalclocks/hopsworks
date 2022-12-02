@@ -373,6 +373,47 @@ public class TestConstructorController {
   }
 
   @Test
+  public void testSingleSideSQLQueryWithPrefix() throws Exception {
+    ConstructorController constructorController = new ConstructorController();
+
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", "fg0", "varchar", true, null, "pre"));
+
+    Query singleSideQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableLeft, availableLeft);
+    String query = constructorController.generateSQL(singleSideQuery, false)
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
+    Assert.assertEquals("SELECT `fg0`.`ft1` `preft1` FROM `fs1`.`fg1_1` `fg0`", query);
+  }
+
+  @Test
+  public void testSingleSideSQLQueryWithDefault() throws Exception {
+    ConstructorController constructorController = new ConstructorController();
+
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", "fg0", "varchar", true, "test", null));
+
+    Query singleSideQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableLeft, availableLeft);
+    String query = constructorController.generateSQL(singleSideQuery, false)
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
+    Assert.assertEquals("SELECT CASE WHEN `fg0`.`ft1` IS NULL THEN test ELSE `fg0`.`ft1` END " +
+        "`ft1` FROM `fs1`.`fg1_1` `fg0`", query);
+  }
+
+  @Test
+  public void testSingleSideSQLQueryWithDefaultAndPrefix() throws Exception {
+    ConstructorController constructorController = new ConstructorController();
+
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", "fg0", "varchar", true, "test", "pre"));
+
+    Query singleSideQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableLeft, availableLeft);
+    String query = constructorController.generateSQL(singleSideQuery, false)
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
+    Assert.assertEquals("SELECT CASE WHEN `fg0`.`ft1` IS NULL THEN test ELSE `fg0`.`ft1` END " +
+        "`preft1` FROM `fs1`.`fg1_1` `fg0`", query);
+  }
+
+  @Test
   public void testSingleSideSQLQueryOnline() throws Exception {
     ConstructorController constructorController = new ConstructorController();
 
@@ -383,6 +424,47 @@ public class TestConstructorController {
     String query = constructorController.generateSQL(singleSideQuery, true)
         .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
     Assert.assertEquals("SELECT `fg0`.`ft1` `ft1` FROM `project_fs1`.`fg1_1` `fg0`", query);
+  }
+
+  @Test
+  public void testSingleSideSQLQueryOnlineWithPrefix() throws Exception {
+    ConstructorController constructorController = new ConstructorController();
+
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", "fg0", "Float", null, "pre"));
+
+    Query singleSideQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableLeft, availableLeft);
+    String query = constructorController.generateSQL(singleSideQuery, true)
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
+    Assert.assertEquals("SELECT `fg0`.`ft1` `preft1` FROM `project_fs1`.`fg1_1` `fg0`", query);
+  }
+
+  @Test
+  public void testSingleSideSQLQueryOnlineWithDefault() throws Exception {
+    ConstructorController constructorController = new ConstructorController();
+
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", "fg0", "varchar", true, "test", null));
+
+    Query singleSideQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableLeft, availableLeft);
+    String query = constructorController.generateSQL(singleSideQuery, true)
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
+    Assert.assertEquals("SELECT CASE WHEN `fg0`.`ft1` IS NULL THEN test ELSE `fg0`.`ft1` END " +
+        "`ft1` FROM `project_fs1`.`fg1_1` `fg0`", query);
+  }
+
+  @Test
+  public void testSingleSideSQLQueryOnlineWithDefaultAndPrefix() throws Exception {
+    ConstructorController constructorController = new ConstructorController();
+
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", "fg0", "varchar", true, "test", "pre"));
+
+    Query singleSideQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableLeft, availableLeft);
+    String query = constructorController.generateSQL(singleSideQuery, true)
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
+    Assert.assertEquals("SELECT CASE WHEN `fg0`.`ft1` IS NULL THEN test ELSE `fg0`.`ft1` END " +
+        "`preft1` FROM `project_fs1`.`fg1_1` `fg0`", query);
   }
 
   @Test
@@ -755,9 +837,19 @@ public class TestConstructorController {
   public void testSelectWithDefaultAsSpark() {
     Feature feature =
         new Feature("feature", "fg", "Float", false, "10.0", null);
-    String output = target.selectWithDefaultAs(feature)
+    String output = target.selectWithDefaultAs(feature, true)
         .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
     String expected = "CASE WHEN `fg`.`feature` IS NULL THEN 10.0 ELSE `fg`.`feature` END `feature`";
+    Assert.assertEquals(expected, output);
+  }
+
+  @Test
+  public void testSelectWithDefaultAndPrefixAsSpark() {
+    Feature feature =
+        new Feature("feature", "fg", "Float", false, "10.0", "pre");
+    String output = target.selectWithDefaultAs(feature, true)
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+    String expected = "CASE WHEN `fg`.`feature` IS NULL THEN 10.0 ELSE `fg`.`feature` END `prefeature`";
     Assert.assertEquals(expected, output);
   }
 
@@ -765,9 +857,19 @@ public class TestConstructorController {
   public void testSelectWithDefaultAsHive() {
     Feature feature =
         new Feature("feature", "fg", "Float", false, "10.0", null);
-    String output = target.selectWithDefaultAs(feature)
+    String output = target.selectWithDefaultAs(feature, true)
         .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
     String expected = "CASE WHEN `fg`.`feature` IS NULL THEN 10.0 ELSE `fg`.`feature` END `feature`";
+    Assert.assertEquals(expected, output);
+  }
+
+  @Test
+  public void testSelectWithDefaultAndPrefixAsHive() {
+    Feature feature =
+        new Feature("feature", "fg", "Float", false, "10.0", "pre");
+    String output = target.selectWithDefaultAs(feature, true)
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+    String expected = "CASE WHEN `fg`.`feature` IS NULL THEN 10.0 ELSE `fg`.`feature` END `prefeature`";
     Assert.assertEquals(expected, output);
   }
 

@@ -21,9 +21,13 @@ import com.logicalclocks.shaded.org.apache.commons.lang3.StringUtils;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.kafka.schemas.SubjectDTO;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreFacade;
+import io.hops.hopsworks.common.featurestore.query.ConstructorController;
+import io.hops.hopsworks.common.featurestore.query.Feature;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.kafka.SchemasController;
@@ -44,6 +48,13 @@ import io.hops.hopsworks.persistence.entity.kafka.schemas.SchemaCompatibility;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.calcite.sql.SqlDialect;
+import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlLiteral;
+import org.apache.calcite.sql.SqlNodeList;
+import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.dialect.MysqlSqlDialect;
+import org.apache.calcite.sql.parser.SqlParserPos;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -83,6 +94,12 @@ public class OnlineFeaturegroupController {
   private SubjectsCompatibilityController subjectsCompatibilityController;
   @EJB
   private ProjectController projectController;
+  @EJB
+  private CachedFeaturegroupController cachedFeaturegroupController;
+  @EJB
+  private ConstructorController constructorController;
+  @EJB
+  private FeaturegroupController featuregroupController;
   
   private final static List<String> SUPPORTED_MYSQL_TYPES = Arrays.asList("INT", "TINYINT",
     "SMALLINT", "BIGINT", "FLOAT", "DOUBLE", "DECIMAL", "DATE", "TIMESTAMP");
@@ -277,18 +294,12 @@ public class OnlineFeaturegroupController {
     for (FeatureGroupFeatureDTO featureDTO : featureDTOs) {
       StringBuilder add =
         new StringBuilder("ADD COLUMN `" + featureDTO.getName() + "` " + getOnlineType(featureDTO));
-      if (featureDTO.getDefaultValue() != null) {
-        add.append(" NOT NULL DEFAULT ");
-        if (featureDTO.getType().equalsIgnoreCase("string")) {
-          add.append("'" + featureDTO.getDefaultValue() + "'");
-        } else {
-          add.append(featureDTO.getDefaultValue() + "");
-        }
-      } else {
+      if (featureDTO.getDefaultValue() == null) {
         add.append(" DEFAULT NULL");
       }
       addColumn.add(add.toString());
     }
+    addColumn.add("ALGORITHM=INPLACE");
     alterTableStatement.append(StringUtils.join(addColumn, ", ") + ";");
     return alterTableStatement.toString();
   }
@@ -333,16 +344,34 @@ public class OnlineFeaturegroupController {
    * @throws FeaturestoreException
    * @throws SQLException
    */
-  public FeaturegroupPreview getFeaturegroupPreview(Featuregroup featuregroup, Project project,
-                                                    Users user, int limit)
+  public FeaturegroupPreview getFeaturegroupPreview(Featuregroup featuregroup, Project project, Users user, int limit)
       throws FeaturestoreException, SQLException {
-    String tblName = featuregroup.getName() + "_" + featuregroup.getVersion();
-    String query = "SELECT * FROM " + tblName + " LIMIT " + limit;
+    String tbl = featuregroupController.getTblName(featuregroup.getName(), featuregroup.getVersion());
+
+    List<FeatureGroupFeatureDTO> features =  featuregroupController.getFeatures(featuregroup, project, user);
+
+    // This is not great, but at the same time the query runs as the user.
+    SqlNodeList selectList = new SqlNodeList(SqlParserPos.ZERO);
+    for (FeatureGroupFeatureDTO feature : features) {
+      if (feature.getDefaultValue() == null) {
+        selectList.add(new SqlIdentifier(Arrays.asList("`" + tbl + "`", "`" + feature.getName() + "`"),
+            SqlParserPos.ZERO));
+      } else {
+        selectList.add(constructorController.selectWithDefaultAs(new Feature(feature, tbl), false));
+      }
+    }
+
+    SqlSelect select = new SqlSelect(SqlParserPos.ZERO, null, selectList,
+        new SqlIdentifier("`" + tbl + "`", SqlParserPos.ZERO),
+        null, null, null, null, null, null,
+        SqlLiteral.createExactNumeric(String.valueOf(limit), SqlParserPos.ZERO), null);
     String db = onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject());
     try {
-      return onlineFeaturestoreController.executeReadJDBCQuery(query, db, project, user);
+      return onlineFeaturestoreController.executeReadJDBCQuery(
+          select.toSqlString(new MysqlSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql(), db, project, user);
     } catch(Exception e) {
-      return onlineFeaturestoreController.executeReadJDBCQuery(query, db, project, user);
+      return onlineFeaturestoreController.executeReadJDBCQuery(
+          select.toSqlString(new MysqlSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql(), db, project, user);
     }
   }
 
