@@ -2539,26 +2539,6 @@ public class ProjectController {
               "project: " + project.getName(), ex.getMessage(), ex);
           }
           break;
-        case FS:
-          try {
-            //Move example data and notebooks to HDFS
-            String userHdfsName = hdfsUsersController.getHdfsUserName(project, user);
-            String datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET_JUPYTER);
-            //Move example notebooks to Jupyter dataset
-            String featurestoreExampleNotebooksSrc =
-                "/user/" + settings.getHdfsSuperUser() + "/" + Settings.HOPS_FEATURESTORE_TOUR_DATA + "/notebooks";
-            String featurestoreExampleNotebooksDst = projectPath + Settings.HOPS_TOUR_DATASET_JUPYTER;
-            udfso.copyInHdfs(
-                new Path(featurestoreExampleNotebooksSrc + "/*"), new Path(featurestoreExampleNotebooksDst));
-            Inode featurestoreNotebooksDst = inodeController.getInodeAtPath(featurestoreExampleNotebooksDst);
-            datasetController.recChangeOwnershipAndPermission(new Path(featurestoreExampleNotebooksDst),
-              FsPermission.createImmutable(featurestoreNotebooksDst.getPermission()),
-              userHdfsName, datasetGroup, dfso, udfso);
-          } catch (IOException ex) {
-            throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_TOUR_FILES_ERROR, Level.SEVERE,
-              "project: " + project.getName(), ex.getMessage(), ex);
-          }
-          break;
         default:
           break;
       }

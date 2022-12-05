@@ -548,8 +548,7 @@ public class ProjectService {
         Response.Status.CREATED).entity(json).build();
   }
 
-  private void populateActiveServices(List<String> projectServices,
-      TourProjectType tourType) {
+  private void populateActiveServices(List<String> projectServices, TourProjectType tourType) {
     for (ProjectServiceEnum service : tourType.getActiveServices()) {
       projectServices.add(service.name());
     }
@@ -590,13 +589,6 @@ public class ProjectService {
         projectDTO.setProjectName("demo_" + TourProjectType.SPARK.getTourName() + "_" + username);
         populateActiveServices(projectServices, TourProjectType.SPARK);
         readMeMessage = "jar file to demonstrate the creation of a spark batch job";
-        break;
-      case FS:
-        // It's a Featurestore guide
-        projectDTO.setProjectName("demo_" + TourProjectType.FS.getTourName() + "_" + username);
-        populateActiveServices(projectServices, TourProjectType.FS);
-        readMeMessage = "Dataset containing a jar file and data that can be used to run a sample spark-job for "
-          + "inserting data in the feature store.";
         break;
       case ML:
         // It's a TensorFlow guide

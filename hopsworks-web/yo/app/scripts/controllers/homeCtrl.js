@@ -60,8 +60,7 @@ angular.module('hopsWorksApp')
             self.tours = [
                 {'name': 'Deep Learning', 'tip': 'Take a tour by creating a project and running a Deep Learning notebook!'},
                 {'name': 'Spark', 'tip': 'Take a tour of Hopsworks by creating a project and running a Spark job!'},
-                {'name': 'Kafka', 'tip': 'Take a tour of Hopsworks by creating a project and running a Kafka job!'},
-                {'name': 'Feature Store', 'tip': 'Take a tour of Hopsworks by creating a project and creating/reading features from your own Feature Store!'}
+                {'name': 'Kafka', 'tip': 'Take a tour of Hopsworks by creating a project and running a Kafka job!'}
             ];
             self.tutorials = [];
             self.working = [];
@@ -199,8 +198,6 @@ angular.module('hopsWorksApp')
               var internalTourName = '';
               if(uiTourName === 'Deep Learning') {
                 internalTourName = 'ml';
-              } else if(uiTourName === 'Feature Store') {
-                internalTourName = 'fs';
               } else {
                 internalTourName = uiTourName;
               }
