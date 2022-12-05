@@ -44,9 +44,7 @@ public enum TourProjectType {
   SPARK("spark", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS}, "spark"),
   KAFKA("kafka", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS, ProjectServiceEnum.KAFKA}, "kafka"),
   ML("ml", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS, ProjectServiceEnum.JUPYTER,
-    ProjectServiceEnum.SERVING, ProjectServiceEnum.FEATURESTORE}, "deep learning"),
-  FS("fs", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS, ProjectServiceEnum.JUPYTER,
-      ProjectServiceEnum.HIVE, ProjectServiceEnum.FEATURESTORE}, "featurestore");
+    ProjectServiceEnum.SERVING, ProjectServiceEnum.FEATURESTORE}, "deep learning");
 
   private final String tourName;
   private final ProjectServiceEnum[] activeServices;

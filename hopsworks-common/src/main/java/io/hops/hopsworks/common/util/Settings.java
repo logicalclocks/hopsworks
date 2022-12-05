@@ -1424,7 +1424,6 @@ public class Settings implements Serializable {
   
 
   //Featurestore constants
-  public static final String HOPS_FEATURESTORE_TOUR_DATA = "featurestore_demo";
   public static final String HOPS_FEATURESTORE_TOUR_JOB_CLASS = "io.hops.examples.featurestore_tour.Main";
   public static final String HOPS_FEATURESTORE_TOUR_JOB_NAME = "featurestore_tour_job";
   public static final String HOPS_FEATURESTORE_TOUR_JOB_INPUT_PARAM = "--input ";
