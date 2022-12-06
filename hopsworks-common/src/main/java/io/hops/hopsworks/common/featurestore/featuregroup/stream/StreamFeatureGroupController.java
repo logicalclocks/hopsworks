@@ -164,7 +164,7 @@ public class StreamFeatureGroupController {
    */
   public StreamFeatureGroup createStreamFeatureGroup(Featurestore featurestore,
     StreamFeatureGroupDTO streamFeatureGroupDTO, Project project, Users user) throws FeaturestoreException {
-    cachedFeaturegroupController.verifyPrimaryKey(streamFeatureGroupDTO.getFeatures(), TimeTravelFormat.HUDI);
+    cachedFeaturegroupController.verifyPrimaryKey(streamFeatureGroupDTO, TimeTravelFormat.HUDI);
     
     //Prepare DDL statement
     String tableName = featuregroupController.getTblName(streamFeatureGroupDTO.getName(),
