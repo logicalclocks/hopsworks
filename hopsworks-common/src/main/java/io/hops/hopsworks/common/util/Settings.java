@@ -230,7 +230,13 @@ public class Settings implements Serializable {
 
   //Used by RESTException to include devMsg or not in response
   private static final String VARIABLE_HOPSWORKS_REST_LOG_LEVEL = "hopsworks_rest_log_level";
-  
+
+  /*
+   * -------------------- Data science profile ------------------
+   */
+
+  private final static String VARIABLE_ENABLE_DATA_SCIENCE_PROFILE = "enable_data_science_profile";
+
   /*
    * -------------------- Serving ---------------
    */
@@ -698,6 +704,8 @@ public class Settings implements Serializable {
       IMMUTABLE_PYTHON_LIBRARY_NAMES = toSetFromCsv(
           setStrVar(VARIABLE_IMMUTABLE_PYTHON_LIBRARY_NAMES, DEFAULT_IMMUTABLE_PYTHON_LIBRARY_NAMES),
           ",");
+
+      ENABLE_DATA_SCIENCE_PROFILE = setBoolVar(VARIABLE_ENABLE_DATA_SCIENCE_PROFILE, ENABLE_DATA_SCIENCE_PROFILE);
 
       SERVING_MONITOR_INT = setStrVar(VARIABLE_SERVING_MONITOR_INT, SERVING_MONITOR_INT);
       SERVING_CONNECTION_POOL_SIZE = setIntVar(VARIABLE_SERVING_CONNECTION_POOL_SIZE,
@@ -3308,6 +3316,12 @@ public class Settings implements Serializable {
   public synchronized Boolean getHopsworksEnterprise() {
     checkCache();
     return HOPSWORKS_ENTERPRISE;
+  }
+
+  private boolean ENABLE_DATA_SCIENCE_PROFILE = false;
+  public synchronized boolean getEnableDataScienceProfile() {
+    checkCache();
+    return ENABLE_DATA_SCIENCE_PROFILE;
   }
 
   private String SERVING_MONITOR_INT = "30s";
