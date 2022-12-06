@@ -222,7 +222,7 @@ public class JupyterConfigFilesGenerator {
     DockerJobConfiguration dockerJobConfiguration = (DockerJobConfiguration)js.getDockerConfig();
 
     JupyterContentsManager jcm = JupyterContentsManager.HDFS_CONTENTS_MANAGER;
-    JupyterNotebookConfigTemplate template = JupyterNotebookConfigTemplateBuilder.newBuilder()
+    JupyterNotebookConfigTemplateBuilder builder = JupyterNotebookConfigTemplateBuilder.newBuilder()
         .setProject(project)
         .setNamenodeIp(namenode.getAddress())
         .setNamenodePort(String.valueOf(namenode.getPort()))
@@ -232,8 +232,6 @@ public class JupyterConfigFilesGenerator {
         .setPort(port)
         .setBaseDirectory(js.getBaseDir())
         .setHdfsUser(hdfsUser)
-        .setWhiteListedKernels("'" + pythonKernelName(project.getPythonEnvironment().getPythonVersion()) +
-            "', 'pysparkkernel', 'sparkkernel', 'sparkrkernel'")
         .setHadoopHome(settings.getHadoopSymbolicLinkDir())
         .setJupyterCertsDirectory(certsDir)
         .setSecretDirectory(settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret())
@@ -246,8 +244,17 @@ public class JupyterConfigFilesGenerator {
         .setKafkaBrokers(kafkaBrokers.getKafkaBrokersString())
         .setHopsworksPublicHost(settings.getHopsworksPublicHost())
         .setAllocatedNotebookMBs(dockerJobConfiguration.getResourceConfig().getMemory())
-        .setAllocatedNotebookCores(dockerJobConfiguration.getResourceConfig().getCores())
-        .build();
+        .setAllocatedNotebookCores(dockerJobConfiguration.getResourceConfig().getCores());
+
+    if(settings.isPythonKernelEnabled()) {
+      builder.setWhiteListedKernels("'" + pythonKernelName(project.getPythonEnvironment().getPythonVersion()) +
+        "', 'pysparkkernel', 'sparkkernel', 'sparkrkernel'");
+    } else {
+      builder.setWhiteListedKernels("'pysparkkernel', 'sparkkernel', 'sparkrkernel'");
+    }
+
+    JupyterNotebookConfigTemplate template = builder.build();
+
     Map<String, Object> dataModel = new HashMap<>(1);
     dataModel.put("conf", template);
     try {
@@ -340,15 +347,13 @@ public class JupyterConfigFilesGenerator {
     
     if (!jupyter_config_file.exists()) {
       String pythonKernelName = pythonKernelName(project.getPythonEnvironment().getPythonVersion());
-      if (settings.isPythonKernelEnabled()) {
-        String pythonKernelPath = pythonKernelPath(kernelsDir, pythonKernelName);
-        File pythonKernelFile = new File(pythonKernelPath, KernelTemplate.FILE_NAME);
-        
-        new File(pythonKernelPath).mkdir();
-        // Create the python kernel
-        try (Writer out = new FileWriter(pythonKernelFile, false)) {
-          createJupyterKernelConfig(out, project, js, hdfsUser);
-        }
+      String pythonKernelPath = pythonKernelPath(kernelsDir, pythonKernelName);
+      File pythonKernelFile = new File(pythonKernelPath, KernelTemplate.FILE_NAME);
+
+      new File(pythonKernelPath).mkdir();
+      // Create the python kernel
+      try (Writer out = new FileWriter(pythonKernelFile, false)) {
+        createJupyterKernelConfig(out, project, js, hdfsUser);
       }
   
       try (Writer out = new FileWriter(jupyter_config_file, false)) {

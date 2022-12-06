@@ -254,13 +254,8 @@ public class JupyterService {
 
     Users user = jWTHelper.getUserPrincipal(sc);
     JupyterSettings js = jupyterSettingsFacade.findByProjectUser(project, user.getEmail());
-
-    if (settings.isPythonKernelEnabled()) {
-      js.setPrivateDir(settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret());
-    }
-
+    js.setPrivateDir(settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret());
     js.setMode(JupyterMode.JUPYTER_LAB);
-
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(js).build();
   }
 
