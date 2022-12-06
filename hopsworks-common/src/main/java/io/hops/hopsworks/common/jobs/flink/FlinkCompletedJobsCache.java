@@ -18,11 +18,10 @@ package io.hops.hopsworks.common.jobs.flink;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.security.UserNotFoundException;
 
 import javax.annotation.PostConstruct;
@@ -36,6 +35,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static org.apache.flink.configuration.GlobalConfiguration.loadConfiguration;
 
 
 @Singleton
@@ -52,19 +53,15 @@ public class FlinkCompletedJobsCache {
   @EJB
   private FlinkController flinkController;
   @EJB
-  private Settings settings;
-  @EJB
   private ProjectTeamFacade projectTeamFacade;
   @EJB
-  private UserFacade userFacade;
-  
-  
+  private Settings settings;
+
   @PostConstruct
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void init() {
-
     try {
-      String archivePath = flinkController.getArchiveDir();
+      String archivePath = getArchiveDir(settings.getFlinkConfDir());
       cache = CacheBuilder.newBuilder().maximumSize(1000000).build(new CacheLoader<String, Project>() {
         @Override
         public Project load(String job) throws UserNotFoundException {
@@ -79,17 +76,11 @@ public class FlinkCompletedJobsCache {
         LOGGER.log(Level.FINER, "Filling cache with job:" + job + ", project:" + jobsProjects.get(job));
         cache.put(job, jobsProjects.get(job));
       }
-    } catch (IOException e) {
-      LOGGER.log(Level.SEVERE, "Could not access " + settings.getFlinkConfFile(), e);
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Could not access configuration file", e);
     }
-    
   }
-  
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public boolean hasAccessToFlinkJob(String job, String user) {
-    return hasAccessToFlinkJob(job, userFacade.findByEmail(user));
-  }
-  
+
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public boolean hasAccessToFlinkJob(String job, Users user) {
     try {
@@ -98,5 +89,14 @@ public class FlinkCompletedJobsCache {
       LOGGER.log(Level.FINE, e.getMessage(), e);
       return false;
     }
+  }
+
+  /**
+   * read historyserver.archive.fs.dir path from flink-conf.yaml
+   * @return the value of historyserver.archive.fs.dir
+   * @throws IOException If the flink conf file could be read.
+   */
+  public String getArchiveDir(String flinkConfDir) {
+    return loadConfiguration(flinkConfDir).getString("historyserver.archive.fs.dir", "");
   }
 }

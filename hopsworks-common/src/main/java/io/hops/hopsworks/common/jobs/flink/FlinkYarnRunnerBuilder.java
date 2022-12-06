@@ -61,15 +61,14 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
-import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.apache.flink.configuration.GlobalConfiguration.loadConfiguration;
 
 /**
  * All classes in this package contain code taken from
@@ -121,7 +120,7 @@ public class FlinkYarnRunnerBuilder {
     YarnRunner.Builder builder = new YarnRunner.Builder(Settings.FLINK_AM_MAIN);
   
     org.apache.flink.configuration.Configuration flinkConf
-      = org.apache.flink.configuration.GlobalConfiguration.loadConfiguration(settings.getFlinkConfDir());
+      = loadConfiguration(settings.getFlinkConfDir());
     YarnConfiguration yarnConf = new YarnConfiguration(conf);
   
     try {
@@ -138,16 +137,7 @@ public class FlinkYarnRunnerBuilder {
     Map<String, String> finalJobProps = flinkConfigurationUtil
       .setFrameworkProperties(project, job.getJobConfig(), settings, jobUser, hopsworksUser, extraJavaOptions,
         kafkaBrokersString, hopsworksRestEndpoint, servingConfig, serviceDiscoveryController);
-  
-    //Parse properties from Flink config file
-    Yaml yaml = new Yaml();
-    try (InputStream in = new FileInputStream(new File(settings.getFlinkConfFile()))) {
-      Map<String, String> flinkConfProps = (Map<String, String>) yaml.load(in);
-      for (String key : flinkConfProps.keySet()) {
-        finalJobProps.putIfAbsent(key, String.valueOf(flinkConfProps.get(key)));
-      }
-    }
-  
+
     addDynamicProperty(Settings.LOGSTASH_JOB_INFO,
       project.getName().toLowerCase() + "," + job.getName() + "," + job.getId() + "," + YarnRunner.APPID_PLACEHOLDER);
   
