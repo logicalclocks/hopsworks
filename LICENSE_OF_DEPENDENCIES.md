@@ -109,7 +109,6 @@ Backend Dependencies
 * org.apache.thrift:libfb303:jar:0.9.3 [ApacheV2](https://github.com/apache/thrift/blob/master/LICENSE)
 * org.apache.thrift:libthrift:jar:0.9.3 [ApacheV2](https://github.com/apache/thrift/blob/master/LICENSE)
 * org.apache.zookeeper:zookeeper:jar:3.4.7 [ApacheV2](https://github.com/apache/zookeeper)
-* org.codehaus.jettison:jettison:jar:1.1 [ApacheV2](http://www.apache.org/licenses/LICENSE-2.0)
 * org.codehaus.plexus:plexus-utils:jar:3.0.18 [ApacheV2](http://www.apache.org/licenses/LICENSE-2.0)
 * org.eclipse.persistence:eclipselink:jar:2.5.2 [EDL](http://www.eclipse.org/org/documents/edl-v10.php)
 * org.eclipse.persistence:org.eclipse.persistence.jpa.modelgen.processor:jar:2.5.2 [EDL](http://www.eclipse.org/org/documents/edl-v10.php)
