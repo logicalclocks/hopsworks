@@ -20,28 +20,17 @@ import io.hops.hopsworks.common.provenance.ops.dto.ProvOpsDTO;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.restutils.RESTCodes;
-
-import java.util.logging.Level;
 
 public interface ProvOpsControllerIface {
-  default ProvOpsDTO provFileOpsList(Project project, ProvOpsParamBuilder params)
-    throws ProvenanceException, GenericException {
-    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.FINE);
-  }
+  ProvOpsDTO provFileOpsList(Project project, ProvOpsParamBuilder params)
+    throws ProvenanceException, GenericException;
+    
+  ProvOpsDTO provFileOpsCount(Project project, ProvOpsParamBuilder params)
+    throws ProvenanceException, GenericException;
   
-  default ProvOpsDTO provFileOpsCount(Project project, ProvOpsParamBuilder params)
-    throws ProvenanceException, GenericException {
-    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.FINE);
-  }
-  
-  default ProvOpsDTO provFileOpsAggs(Project project, ProvOpsParamBuilder params)
-    throws ProvenanceException, GenericException {
-    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.FINE);
-  }
-  
-  default ProvLinksDTO provLinks(Project project, ProvLinksParamBuilder params, boolean filterAlive)
-    throws ProvenanceException, GenericException {
-    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.FINE);
-  }
+  ProvOpsDTO provFileOpsAggs(Project project, ProvOpsParamBuilder params)
+    throws ProvenanceException, GenericException;
+    
+  ProvLinksDTO provLinks(Project project, ProvLinksParamBuilder params, boolean filterAlive)
+    throws ProvenanceException, GenericException;
 }

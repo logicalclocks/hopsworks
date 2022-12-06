@@ -20,6 +20,7 @@ import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.tags.TagControllerIface;
 import io.hops.hopsworks.common.tags.TagsDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -40,7 +41,7 @@ public class TagBuilder {
   private TagSchemasBuilder tagSchemasBuilder;
   
   public TagsDTO build(TagUri tagUri, ResourceRequest resourceRequest, Users user, DatasetPath path)
-    throws DatasetException, MetadataException, SchematizedTagException {
+    throws DatasetException, MetadataException, SchematizedTagException, GenericException {
     TagsDTO dto = tagUri.addUri(new TagsDTO(), path);
     if (resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.TAGS)) {
       Map<String, String> tags = tagController.getAll(user, path);
@@ -58,7 +59,7 @@ public class TagBuilder {
   
   public TagsDTO build(TagUri tagUri, ResourceRequest resourceRequest, Users user, DatasetPath path,
                        String name)
-    throws SchematizedTagException, DatasetException, MetadataException {
+    throws SchematizedTagException, DatasetException, MetadataException, GenericException {
     TagsDTO dto = tagUri.addUri(new TagsDTO(), path, name);
     if (resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.TAGS)) {
       String value = tagController.get(user, path, name);
@@ -72,7 +73,7 @@ public class TagBuilder {
   @Deprecated
   public TagsDTO buildAsMap(TagUri tagUri, ResourceRequest resourceRequest, Users user, DatasetPath path,
                             String name)
-    throws SchematizedTagException, DatasetException, MetadataException {
+    throws SchematizedTagException, DatasetException, MetadataException, GenericException {
     TagsDTO dto = tagUri.addUri(new TagsDTO(), path, name);
     if (resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.TAGS)) {
       TagsDTO item = tagUri.addUri(new TagsDTO(), path, name);
@@ -104,7 +105,7 @@ public class TagBuilder {
   
   private TagsDTO buildFull(TagsDTO dto, TagUri tagUri, ResourceRequest resourceRequest,
                             String name, String value)
-    throws SchematizedTagException {
+    throws SchematizedTagException, GenericException {
     buildBase(dto, name, value);
     dto.setSchema(tagSchemasBuilder.build(tagUri.getUriInfo(), resourceRequest, name));
     return dto;

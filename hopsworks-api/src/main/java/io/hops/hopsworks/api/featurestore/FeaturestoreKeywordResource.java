@@ -27,6 +27,7 @@ import io.hops.hopsworks.common.featurestore.keyword.KeywordControllerIface;
 import io.hops.hopsworks.common.featurestore.keyword.KeywordDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
@@ -116,7 +117,7 @@ public class FeaturestoreKeywordResource {
   public Response getKeywords(@Context SecurityContext sc,
                               @Context HttpServletRequest req,
                               @Context UriInfo uriInfo)
-      throws FeaturestoreException, MetadataException {
+    throws FeaturestoreException, MetadataException, GenericException {
     Users user = jwtHelper.getUserPrincipal(sc);
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
@@ -147,7 +148,7 @@ public class FeaturestoreKeywordResource {
   public Response replaceKeywords(@Context SecurityContext sc,
                                   @Context HttpServletRequest req,
                                   @Context UriInfo uriInfo, KeywordDTO keywordDTO)
-      throws FeaturestoreException, MetadataException {
+    throws FeaturestoreException, MetadataException, GenericException {
     Users user = jwtHelper.getUserPrincipal(sc);
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
@@ -178,7 +179,7 @@ public class FeaturestoreKeywordResource {
                                  @Context UriInfo uriInfo,
                                  @Context HttpServletRequest req,
                                  @QueryParam("keyword") String keyword)
-      throws FeaturestoreException, MetadataException {
+    throws FeaturestoreException, MetadataException, GenericException {
     Users user = jwtHelper.getUserPrincipal(sc);
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);

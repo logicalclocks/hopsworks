@@ -800,7 +800,6 @@ public class RESTCodes {
     SECURITY_EXCEPTION(8, "A Java security error occurred.", Response.Status.INTERNAL_SERVER_ERROR),
     ENDPOINT_ANNOTATION_MISSING(9, "The requested endpoint did not have any project role annotation",
         Response.Status.SERVICE_UNAVAILABLE),
-    ENTERPRISE_FEATURE(10, "This feature is only available in the enterprise edition", Response.Status.BAD_REQUEST),
     NOT_AUTHORIZED_TO_ACCESS(11, "Project not accessible to user", Response.Status.BAD_REQUEST);
 
     private Integer code;
@@ -2320,4 +2319,39 @@ public class RESTCodes {
       return range;
     }
   }
+  
+  public enum UnsupportedOperationErrorCode implements RESTErrorCode {
+    ENTERPRISE_FEATURE(1, "This feature is only available in the enterprise edition", Response.Status.NOT_IMPLEMENTED);
+    
+    private Integer code;
+    private String message;
+    private Response.Status respStatus;
+    public final int range = 400000;
+  
+    UnsupportedOperationErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+    
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+  
 }

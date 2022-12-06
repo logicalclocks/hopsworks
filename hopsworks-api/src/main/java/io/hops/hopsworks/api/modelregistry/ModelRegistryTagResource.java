@@ -28,6 +28,7 @@ import io.hops.hopsworks.common.tags.AttachTagResult;
 import io.hops.hopsworks.common.tags.TagControllerIface;
 import io.hops.hopsworks.common.tags.TagsDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -111,7 +112,7 @@ public abstract class ModelRegistryTagResource {
                          @Context UriInfo uriInfo,
                          @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name,
                          @ApiParam(value = "Value to set for the tag") String value)
-    throws MetadataException, SchematizedTagException, DatasetException {
+    throws MetadataException, SchematizedTagException, DatasetException, GenericException {
     
     Users user = jwtHelper.getUserPrincipal(sc);
     AttachTagResult result = tagController.upsert(user, getDatasetPath(), name, value);
@@ -138,7 +139,7 @@ public abstract class ModelRegistryTagResource {
   public Response bulkPutTags(@Context SecurityContext sc, @Context UriInfo uriInfo,
                               @Context HttpServletRequest req,
                               TagsDTO tags)
-    throws MetadataException, SchematizedTagException, DatasetException {
+    throws MetadataException, SchematizedTagException, DatasetException, GenericException {
     
     Users user = jwtHelper.getUserPrincipal(sc);
     AttachTagResult result;
@@ -174,7 +175,7 @@ public abstract class ModelRegistryTagResource {
   public Response getTags(@Context SecurityContext sc, @Context UriInfo uriInfo,
                           @Context HttpServletRequest req,
                           @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
-    throws DatasetException, MetadataException, SchematizedTagException {
+    throws DatasetException, MetadataException, SchematizedTagException, GenericException {
     
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
@@ -197,7 +198,7 @@ public abstract class ModelRegistryTagResource {
                          @Context HttpServletRequest req,
                          @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name,
                          @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
-    throws DatasetException, MetadataException, SchematizedTagException {
+    throws DatasetException, MetadataException, SchematizedTagException, GenericException {
     
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
@@ -217,7 +218,7 @@ public abstract class ModelRegistryTagResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response deleteTags(@Context SecurityContext sc,
                              @Context HttpServletRequest req)
-    throws DatasetException, MetadataException {
+    throws DatasetException, MetadataException, GenericException {
     
     Users user = jwtHelper.getUserPrincipal(sc);
     tagController.deleteAll(user, getDatasetPath());
@@ -236,7 +237,7 @@ public abstract class ModelRegistryTagResource {
   public Response deleteTag(@Context SecurityContext sc,
                             @Context HttpServletRequest req,
                             @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name)
-    throws DatasetException, MetadataException {
+    throws DatasetException, MetadataException, GenericException {
     
     Users user = jwtHelper.getUserPrincipal(sc);
     tagController.delete(user, getDatasetPath(), name);

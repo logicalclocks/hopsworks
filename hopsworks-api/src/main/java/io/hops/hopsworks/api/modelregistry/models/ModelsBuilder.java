@@ -30,7 +30,6 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dataset.FilePreviewMode;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
-import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.state.ProvStateParamBuilder;
@@ -88,8 +87,6 @@ public class ModelsBuilder {
   @EJB
   private ProjectTeamFacade projectTeamFacade;
   @EJB
-  private FeaturestoreFacade featurestoreFacade;
-  @EJB
   private ModelsController modelsController;
   @EJB
   private InodeBuilder inodeBuilder;
@@ -138,7 +135,7 @@ public class ModelsBuilder {
                         Project userProject,
                         Project modelRegistryProject
   )
-          throws ModelRegistryException, GenericException, SchematizedTagException, MetadataException {
+    throws ModelRegistryException, GenericException, SchematizedTagException, MetadataException {
     ModelDTO dto = new ModelDTO();
     uri(dto, uriInfo, userProject, modelRegistryProject);
     expand(dto, resourceRequest);
@@ -194,7 +191,7 @@ public class ModelsBuilder {
                         Project modelRegistryProject,
                         ProvStateDTO fileProvenanceHit,
                         String modelsFolder) throws DatasetException, ModelRegistryException, SchematizedTagException,
-      MetadataException {
+    MetadataException, GenericException {
     ModelDTO modelDTO = new ModelDTO();
     uri(modelDTO, uriInfo, userProject, modelRegistryProject, fileProvenanceHit);
     if (expand(modelDTO, resourceRequest).isExpand()) {

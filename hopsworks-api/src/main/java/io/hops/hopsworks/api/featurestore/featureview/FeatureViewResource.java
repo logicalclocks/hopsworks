@@ -27,6 +27,7 @@ import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
@@ -100,7 +101,7 @@ public class FeatureViewResource {
       @Context
           UriInfo uriInfo,
       FeatureViewDTO featureViewDTO) throws FeaturestoreException, ProvenanceException, ServiceException, IOException,
-        SchematizedTagException, MetadataException, DatasetException {
+    SchematizedTagException, MetadataException, DatasetException, GenericException {
     if (featureViewDTO == null) {
       throw new IllegalArgumentException("Input JSON for creating a new Feature View cannot be null");
     }
@@ -137,7 +138,7 @@ public class FeatureViewResource {
       @BeanParam
         FeatureViewBeanParam param
   ) throws FeaturestoreException, ServiceException, MetadataException, DatasetException,
-      SchematizedTagException {
+    SchematizedTagException, GenericException {
     Users user = jWTHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = makeResourceRequest(param);
     List<FeatureView> featureViews = featureViewController.getByFeatureStore(featurestore,
@@ -170,7 +171,7 @@ public class FeatureViewResource {
       @PathParam("name")
           String name
   ) throws FeaturestoreException, ServiceException, MetadataException, DatasetException,
-      SchematizedTagException {
+    SchematizedTagException, GenericException {
     Users user = jWTHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = makeResourceRequest(param);
     List<FeatureView> featureViews = featureViewController.getByNameAndFeatureStore(name, featurestore,
@@ -206,7 +207,7 @@ public class FeatureViewResource {
       @PathParam("version")
           Integer version
   ) throws FeaturestoreException, ServiceException, MetadataException, DatasetException,
-      SchematizedTagException {
+    SchematizedTagException, GenericException {
     Users user = jWTHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = makeResourceRequest(param);
     FeatureView featureView = featureViewController.getByNameVersionAndFeatureStore(name, version, featurestore);
@@ -291,7 +292,7 @@ public class FeatureViewResource {
       @PathParam("version")
           Integer version,
       FeatureViewDTO featureViewDTO) throws FeaturestoreException, ServiceException,
-      SchematizedTagException, MetadataException, DatasetException {
+    SchematizedTagException, MetadataException, DatasetException, GenericException {
     if (featureViewDTO == null) {
       throw new IllegalArgumentException("Input JSON for updating a Feature View cannot be null");
     }

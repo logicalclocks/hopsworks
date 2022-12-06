@@ -122,7 +122,7 @@ public class ModelsResource {
     @BeanParam ModelsBeanParam modelsBeanParam,
     @Context UriInfo uriInfo,
     @Context SecurityContext sc)
-          throws ModelRegistryException, GenericException, SchematizedTagException, MetadataException {
+    throws ModelRegistryException, GenericException, SchematizedTagException, MetadataException {
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELS);
     resourceRequest.setOffset(pagination.getOffset());
@@ -148,8 +148,8 @@ public class ModelsResource {
     @BeanParam ModelsBeanParam modelsBeanParam,
     @Context UriInfo uriInfo,
     @Context SecurityContext sc)
-          throws ProvenanceException, ModelRegistryException, DatasetException, GenericException,
-          SchematizedTagException, MetadataException {
+    throws ProvenanceException, ModelRegistryException, DatasetException, GenericException,
+    SchematizedTagException, MetadataException {
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELS);
     resourceRequest.setExpansions(modelsBeanParam.getExpansions().getResources());

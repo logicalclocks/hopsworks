@@ -16,13 +16,42 @@
 package io.hops.hopsworks.common.provenance.ops;
 
 import io.hops.hopsworks.common.integrations.CommunityStereotype;
+import io.hops.hopsworks.common.provenance.ops.dto.ProvLinksDTO;
+import io.hops.hopsworks.common.provenance.ops.dto.ProvOpsDTO;
+import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.util.logging.Level;
 
 @Stateless
 @CommunityStereotype
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProvOpsControllerImpl implements ProvOpsControllerIface {
+  @Override
+  public ProvOpsDTO provFileOpsList(Project project, ProvOpsParamBuilder params)
+    throws GenericException {
+    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.INFO);
+  }
+  
+  @Override
+  public ProvOpsDTO provFileOpsCount(Project project, ProvOpsParamBuilder params)
+    throws GenericException {
+    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.INFO);
+  }
+  
+  @Override
+  public ProvOpsDTO provFileOpsAggs(Project project, ProvOpsParamBuilder params)
+    throws GenericException {
+    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.INFO);
+  }
+  
+  @Override
+  public ProvLinksDTO provLinks(Project project, ProvLinksParamBuilder params, boolean filterAlive)
+    throws GenericException {
+    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.INFO);
+  }
 }

@@ -17,10 +17,43 @@
 package io.hops.hopsworks.common.featurestore.keyword;
 
 import io.hops.hopsworks.common.integrations.CommunityStereotype;
+import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.Stateless;
+import java.util.List;
+import java.util.logging.Level;
 
 @Stateless
 @CommunityStereotype
 public class KeywordControllerCommunity implements KeywordControllerIface {
+  @Override
+  public List<String> getAll(Project project, Users user, Featuregroup featureGroup, TrainingDataset trainingDataset,
+    FeatureView featureView) throws GenericException {
+    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.INFO);
+  }
+  
+  @Override
+  public List<String> replaceKeywords(Project project, Users user, Featuregroup featureGroup,
+    TrainingDataset trainingDataset, FeatureView featureView, List<String> keywords)
+    throws GenericException {
+    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.INFO);
+  }
+  
+  @Override
+  public List<String> deleteKeywords(Project project, Users user, Featuregroup featureGroup,
+    TrainingDataset trainingDataset, FeatureView featureView, List<String> keywords)
+    throws GenericException {
+    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.INFO);
+  }
+  
+  @Override
+  public List<String> getUsedKeywords() throws GenericException {
+    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.INFO);
+  }
 }

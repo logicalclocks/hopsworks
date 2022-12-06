@@ -69,7 +69,7 @@ public class ModelRegistryBuilder {
 
   //Build collection
   public ModelRegistryDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Users user, Project project)
-          throws GenericException, ModelRegistryException, SchematizedTagException, MetadataException {
+    throws GenericException, ModelRegistryException, SchematizedTagException, MetadataException {
     ModelRegistryDTO dto = new ModelRegistryDTO();
     uri(dto, uriInfo, project);
     expand(dto, resourceRequest);
@@ -99,7 +99,7 @@ public class ModelRegistryBuilder {
   //Build specific
   public ModelRegistryDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Users user, Project userProject,
                                 Project modelRegistryProject) throws GenericException, ModelRegistryException,
-          SchematizedTagException, MetadataException {
+    SchematizedTagException, MetadataException {
     ModelRegistryDTO dto = new ModelRegistryDTO();
     uri(dto, uriInfo, userProject, modelRegistryProject);
     expand(dto, resourceRequest);

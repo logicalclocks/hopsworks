@@ -36,6 +36,7 @@ import io.hops.hopsworks.common.featurestore.keyword.KeywordDTO;
 import io.hops.hopsworks.common.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
@@ -297,7 +298,7 @@ public class FeaturestoreService {
   @ApiOperation(value = "Get available keywords for the featurestore", response = KeywordDTO.class)
   public Response getUsedKeywords(@Context SecurityContext sc,
                                   @Context HttpServletRequest req,
-                                  @Context UriInfo uriInfo) throws FeaturestoreException {
+                                  @Context UriInfo uriInfo) throws FeaturestoreException, GenericException {
     List<String> keywords = keywordControllerIface.getUsedKeywords();
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
     KeywordDTO dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project, keywords);

@@ -89,7 +89,7 @@ public class ModelRegistryResource {
     @BeanParam Pagination pagination,
     @Context UriInfo uriInfo,
     @Context SecurityContext sc) throws GenericException, ModelRegistryException, SchematizedTagException,
-          MetadataException {
+    MetadataException {
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELREGISTRIES);
     resourceRequest.setExpansions(modelRegistryBeanParam.getExpansions().getResources());
@@ -114,7 +114,7 @@ public class ModelRegistryResource {
           @BeanParam Pagination pagination,
           @Context UriInfo uriInfo,
           @Context SecurityContext sc) throws GenericException, ModelRegistryException, SchematizedTagException,
-          MetadataException {
+    MetadataException {
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELREGISTRIES);
     resourceRequest.setExpansions(modelRegistryBeanParam.getExpansions().getResources());

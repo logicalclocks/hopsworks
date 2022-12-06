@@ -21,6 +21,7 @@ import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.tags.SchemaDTO;
 import io.hops.hopsworks.common.tags.TagSchemasControllerIface;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
@@ -72,7 +73,7 @@ public class TagSchemasResource {
   public Response getAll(@Context SecurityContext sc, @Context UriInfo uriInfo,
                          @Context HttpServletRequest req,
                          @BeanParam Pagination pagination,
-                         @BeanParam TagsBeanParam tagsBeanParam) throws SchematizedTagException {
+                         @BeanParam TagsBeanParam tagsBeanParam) throws SchematizedTagException, GenericException {
     
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAG_SCHEMAS);
     resourceRequest.setOffset(pagination.getOffset());
@@ -93,7 +94,7 @@ public class TagSchemasResource {
   public Response get(@Context SecurityContext sc, @Context UriInfo uriInfo,
                       @Context HttpServletRequest req,
                       @PathParam("name") String schemaName)
-    throws SchematizedTagException {
+    throws SchematizedTagException, GenericException {
     
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAG_SCHEMAS);
     SchemaDTO dto = tagSchemasBuilder.build(uriInfo, resourceRequest, schemaName);
@@ -107,7 +108,7 @@ public class TagSchemasResource {
   public Response post(@Context SecurityContext sc, @Context UriInfo uriInfo,
                        @QueryParam("name") String schemaName,
                        String schema)
-    throws SchematizedTagException {
+    throws SchematizedTagException, GenericException {
     
     tagSchemasController.create(schemaName, schema);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAG_SCHEMAS);
@@ -121,7 +122,7 @@ public class TagSchemasResource {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles={"HOPS_ADMIN"})
   public Response delete(@Context SecurityContext sc, @Context UriInfo uriInfo,
-                         @PathParam("name") String schemaName) {
+                         @PathParam("name") String schemaName) throws GenericException {
     
     tagSchemasController.delete(schemaName);
     return Response.noContent().build();
