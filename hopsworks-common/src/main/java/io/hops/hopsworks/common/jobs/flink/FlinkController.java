@@ -55,7 +55,6 @@ import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.UserGroupInformationService;
-import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
@@ -75,7 +74,6 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
-import org.yaml.snakeyaml.Yaml;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -83,9 +81,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.List;
@@ -260,18 +256,5 @@ public class FlinkController {
       }
     }
     throw new UserNotFoundException("Flink job belongs to a deleted project or a removed project member.");
-  }
-  
-  /**
-   * read historyserver.archive.fs.dir path from flink-conf.yaml
-   * @return the value of historyserver.archive.fs.dir
-   * @throws IOException If the flink conf file could be read.
-   */
-  public String getArchiveDir() throws IOException {
-    Yaml yaml = new Yaml();
-    try (InputStream in = new FileInputStream(new File(settings.getFlinkConfFile()))) {
-      Map<String, Object> obj = (Map<String, Object>) yaml.load(in);
-      return Utils.prepPath((String) obj.get("historyserver.archive.fs.dir"));
-    }
   }
 }

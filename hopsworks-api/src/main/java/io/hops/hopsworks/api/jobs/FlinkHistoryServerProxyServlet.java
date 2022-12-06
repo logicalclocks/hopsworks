@@ -83,7 +83,7 @@ public class FlinkHistoryServerProxyServlet extends ProxyServlet {
       && !servletRequest.getPathInfo().startsWith("/jobs/overview")) {
     
       String job = servletRequest.getPathInfo().split("/")[2];
-      if (!Strings.isNullOrEmpty(job) && !cache.hasAccessToFlinkJob(job, user.getEmail())) {
+      if (!Strings.isNullOrEmpty(job) && !cache.hasAccessToFlinkJob(job, user)) {
         servletResponse.sendError(403, "You are not authorized to access this Flink job");
       }
     }

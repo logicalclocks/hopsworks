@@ -154,7 +154,6 @@
     <service-discovery-client.version>0.6-SNAPSHOT</service-discovery-client.version>
     <service-proxy.version>4.6.3</service-proxy.version>
     <slf4j-api.version>1.7.21</slf4j-api.version>
-    <snakeyaml.version>1.27</snakeyaml.version>
     <spnego.version>7.0</spnego.version>
     <swagger-annotations.version>1.6.2</swagger-annotations.version>
     <swagger.jersey2.jaxrs.version>1.6.2</swagger.jersey2.jaxrs.version>
@@ -931,11 +930,6 @@
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
         <version>${slf4j-api.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.yaml</groupId>
-        <artifactId>snakeyaml</artifactId>
-        <version>${snakeyaml.version}</version>
       </dependency>
       <dependency>
         <groupId>software.amazon.awssdk</groupId>

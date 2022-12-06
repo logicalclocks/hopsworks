@@ -1131,21 +1131,13 @@ public class Settings implements Serializable {
   }
 
   public String getFlinkConfDir() {
-    String flinkDir = getFlinkDir();
-    return flinkDir + File.separator + FLINK_CONF_DIR + File.separator;
+    return getFlinkDir() + File.separator + FLINK_CONF_DIR + File.separator;
   }
   
   private final String FLINK_LIB_DIR = "lib";
   
   public String getFlinkLibDir() {
-    String flinkDir = getFlinkDir();
-    return flinkDir + File.separator + FLINK_LIB_DIR + File.separator;
-  }
-
-  private final String FLINK_CONF_FILE = "flink-conf.yaml";
-
-  public String getFlinkConfFile() {
-    return getFlinkConfDir() + File.separator + FLINK_CONF_FILE;
+    return getFlinkDir() + File.separator + FLINK_LIB_DIR + File.separator;
   }
 
   private String AIRFLOW_DIR = "/srv/hops/airflow";
