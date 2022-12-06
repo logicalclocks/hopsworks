@@ -100,7 +100,7 @@
     <commons-httpclient.version>3.1</commons-httpclient.version>
     <commons-io.version>2.11.0</commons-io.version>
     <commons-logging.version>1.2</commons-logging.version>
-    <commons-net.version>3.6</commons-net.version>
+    <commons-net.version>3.9.0</commons-net.version>
     <commons.lang3.version>3.8.1</commons.lang3.version>
     <eclipse-egit-github-core.version>2.1.5</eclipse-egit-github-core.version>
     <ehcache.version>3.7.0</ehcache.version>
