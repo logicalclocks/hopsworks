@@ -757,9 +757,8 @@ describe "On #{ENV['OS']}" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
         create_cached_featuregroup(project.id, featurestore_id, features: features, time_travel_format: "HUDI")
-        expect_status_details(400)
+        expect_status_details(500)
         expect(parsed_json.key?("errorCode")).to be true
-        expect(parsed_json.key?("errorMsg")).to be true
         expect(parsed_json.key?("usrMsg")).to be true
         expect(parsed_json["errorCode"] == 270176).to be true
       end
