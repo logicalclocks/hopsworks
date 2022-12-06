@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 
 
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import org.apache.calcite.sql.SqlDialect;
@@ -170,11 +171,34 @@ public class TestCachedFeatureGroupController {
   }
   
   @Test
-  public void testVerifyPrimaryKeyHudi() throws Exception {
+  public void testVerifyPrimaryKeyHudi_cachedFeatureGroup() throws Exception {
     List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
     newSchema.add(new FeatureGroupFeatureDTO("part_param", "Integer", "", false, true));
+    CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO();
+    featuregroupDTO.setFeatures(newSchema);
 
     thrown.expect(FeaturestoreException.class);
-    cachedFeaturegroupController.verifyPrimaryKey(newSchema, TimeTravelFormat.HUDI);
+    cachedFeaturegroupController.verifyPrimaryKey(featuregroupDTO, TimeTravelFormat.HUDI);
+  }
+
+  @Test
+  public void testVerifyPrimaryKeyHudi_streamFeatureGroup() throws Exception {
+    List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
+    newSchema.add(new FeatureGroupFeatureDTO("part_param", "Integer", "", false, true));
+    StreamFeatureGroupDTO featuregroupDTO = new StreamFeatureGroupDTO();
+    featuregroupDTO.setFeatures(newSchema);
+    
+    thrown.expect(FeaturestoreException.class);
+    cachedFeaturegroupController.verifyPrimaryKey(featuregroupDTO, TimeTravelFormat.HUDI);
+  }
+  
+  @Test
+  public void testVerifyPrimaryKeyHudi() throws Exception {
+    List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
+    newSchema.add(new FeatureGroupFeatureDTO("part_param", "Integer", "", true, true));
+    StreamFeatureGroupDTO featuregroupDTO = new StreamFeatureGroupDTO();
+    featuregroupDTO.setFeatures(newSchema);
+    
+    cachedFeaturegroupController.verifyPrimaryKey(featuregroupDTO, TimeTravelFormat.HUDI);
   }
 }

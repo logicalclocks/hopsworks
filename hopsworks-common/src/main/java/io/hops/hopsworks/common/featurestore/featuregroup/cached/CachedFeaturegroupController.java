@@ -25,6 +25,7 @@ import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
+import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupDTO;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.query.ConstructorController;
 import io.hops.hopsworks.common.featurestore.query.Feature;
@@ -298,9 +299,8 @@ public class CachedFeaturegroupController {
   public CachedFeaturegroup createCachedFeaturegroup(Featurestore featurestore,
                                                      CachedFeaturegroupDTO cachedFeaturegroupDTO, Project project,
                                                      Users user)
-      throws FeaturestoreException, SQLException, KafkaException, SchemaException, ProjectException, UserException,
-      ServiceException, HopsSecurityException, IOException {
-    verifyPrimaryKey(cachedFeaturegroupDTO.getFeatures(), cachedFeaturegroupDTO.getTimeTravelFormat());
+      throws FeaturestoreException {
+    verifyPrimaryKey(cachedFeaturegroupDTO, cachedFeaturegroupDTO.getTimeTravelFormat());
 
     //Prepare DDL statement
     String tbl = featuregroupController.getTblName(cachedFeaturegroupDTO.getName(), cachedFeaturegroupDTO.getVersion());
@@ -817,12 +817,19 @@ public class CachedFeaturegroupController {
     return newFeatures;
   }
 
-  public void verifyPrimaryKey(List<FeatureGroupFeatureDTO> features,
+  public void verifyPrimaryKey(FeaturegroupDTO featuregroupDTO,
                                TimeTravelFormat timeTravelFormat) throws FeaturestoreException {
     // Currently the Hudi implementation requires having at last one primary key
-    if (timeTravelFormat == TimeTravelFormat.HUDI && (features.stream().noneMatch(FeatureGroupFeatureDTO::getPrimary)))
+    if (timeTravelFormat == TimeTravelFormat.HUDI &&
+        (featuregroupDTO.getFeatures().stream().noneMatch(FeatureGroupFeatureDTO::getPrimary)))
     {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.PRIMARY_KEY_REQUIRED, Level.FINE);
+      if (featuregroupDTO instanceof StreamFeatureGroupDTO) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.PRIMARY_KEY_REQUIRED, Level.FINE, "Stream " +
+          "enabled feature groups only support `HUDI` time travel format, which requires a primary key to be set.");
+      } else {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.PRIMARY_KEY_REQUIRED, Level.FINE, "Time " +
+          "travel format `HUDI` requires a primary key to be set.");
+      }
     }
   }
 
