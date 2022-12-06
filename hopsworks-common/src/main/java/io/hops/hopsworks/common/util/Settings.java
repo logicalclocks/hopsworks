@@ -126,7 +126,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_PYPI_SIMPLE_ENDPOINT = "pypi_simple_endpoint";
   private static final String VARIABLE_PYTHON_LIBRARY_UPDATES_MONITOR_INTERVAL =
     "python_library_updates_monitor_interval";
-  private static final String VARIABLE_PYTHON_KERNEL = "python_kernel";
   private static final String VARIABLE_HADOOP_VERSION = "hadoop_version";
   private static final String VARIABLE_KIBANA_IP = "kibana_ip";
   private static final String VARIABLE_LOCALHOST = "localhost";
@@ -287,6 +286,9 @@ public class Settings implements Serializable {
    */
   private static final String VARIABLE_JUPYTER_HOST = "jupyter_host";
   private static final String VARIABLE_JUPYTER_ORIGIN_SCHEME = "jupyter_origin_scheme";
+
+  private static final String VARIABLE_ENABLE_JUPYTER_PYTHON_KERNEL_NON_KUBERNETES =
+    "enable_jupyter_python_kernel_non_kubernetes";
 
   // JWT Variables
   private static final String VARIABLE_JWT_SIGNATURE_ALGORITHM = "jwt_signature_algorithm";
@@ -579,7 +581,6 @@ public class Settings implements Serializable {
       LOCALHOST = setBoolVar(VARIABLE_LOCALHOST, LOCALHOST);
       CLOUD = setStrVar(VARIABLE_CLOUD, CLOUD);
       REQUESTS_VERIFY = setBoolVar(VARIABLE_REQUESTS_VERIFY, REQUESTS_VERIFY);
-      PYTHON_KERNEL = setBoolVar(VARIABLE_PYTHON_KERNEL, PYTHON_KERNEL);
       TWOFACTOR_AUTH = setVar(VARIABLE_TWOFACTOR_AUTH, TWOFACTOR_AUTH);
       TWOFACTOR_EXCLUDE = setVar(VARIABLE_TWOFACTOR_EXCLUD, TWOFACTOR_EXCLUDE);
       HOPSWORKS_USER = setVar(VARIABLE_HOPSWORKS_USER, HOPSWORKS_USER);
@@ -878,6 +879,10 @@ public class Settings implements Serializable {
       LOGIN_PAGE_OVERWRITE = setStrVar(VARIABLE_LOGIN_PAGE_OVERWRITE, LOGIN_PAGE_OVERWRITE);
       
       ONGOING_BACKUP = setBoolVar(VARIABLE_ONGOING_BACKUP, ONGOING_BACKUP);
+
+      ENABLE_JUPYTER_PYTHON_KERNEL_NON_KUBERNETES = setBoolVar(VARIABLE_ENABLE_JUPYTER_PYTHON_KERNEL_NON_KUBERNETES,
+        ENABLE_JUPYTER_PYTHON_KERNEL_NON_KUBERNETES);
+
       cached = true;
     }
   }
@@ -2441,13 +2446,6 @@ public class Settings implements Serializable {
     return state;
   }
 
-  private boolean PYTHON_KERNEL = true;
-
-  public synchronized boolean isPythonKernelEnabled() {
-    checkCache();
-    return PYTHON_KERNEL;
-  }
-
   private String PYPI_REST_ENDPOINT = "https://pypi.org/pypi/{package}/json";
 
   public synchronized String getPyPiRESTEndpoint() {
@@ -3376,6 +3374,16 @@ public class Settings implements Serializable {
   public synchronized String getJupyterHost() {
     checkCache();
     return JUPYTER_HOST;
+  }
+
+  private boolean ENABLE_JUPYTER_PYTHON_KERNEL_NON_KUBERNETES = false;
+
+  public synchronized boolean isPythonKernelEnabled() {
+    checkCache();
+    if(getKubeInstalled()) {
+      return true;
+    }
+    return ENABLE_JUPYTER_PYTHON_KERNEL_NON_KUBERNETES;
   }
 
   //These dependencies were collected by installing jupyterlab in a new environment
