@@ -20,8 +20,6 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.util.Pagination;
-import io.hops.hopsworks.audit.logger.LogLevel;
-import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.results.ValidationResultDTO;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteController;
@@ -51,7 +49,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
-@Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Expectation resource", description = "A service that manages a feature group's expectation")
@@ -67,17 +64,14 @@ public class ValidationResultResource {
   private Featurestore featurestore;
   private Featuregroup featuregroup;
 
-  @Logged(logLevel = LogLevel.OFF)
   public void setProject(Project project) {
     this.project = project;
   }
 
-  @Logged(logLevel = LogLevel.OFF)
   public void setFeaturestore(Featurestore featurestore) {
     this.featurestore = featurestore;
   }
 
-  @Logged(logLevel = LogLevel.OFF)
   public void setFeatureGroup(Integer featureGroupId) throws FeaturestoreException {
     this.featuregroup = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
   }
