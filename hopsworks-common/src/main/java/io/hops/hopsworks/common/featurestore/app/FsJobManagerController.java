@@ -111,13 +111,16 @@ public class FsJobManagerController {
   private ObjectMapper objectMapper = new ObjectMapper();
   private SimpleDateFormat formatter = new SimpleDateFormat("ddMMyyyyHHmmss");
 
+  // fg
   private final static String INSERT_FG_OP = "insert_fg";
-  private final static String TRAINING_DATASET_OP = "create_td";
-  private final static String FEATURE_VIEW_TRAINING_DATASET_OP = "create_fv_td";
   private final static String COMPUTE_STATS_OP = "compute_stats";
   private final static String DELTA_STREAMER_OP = "offline_fg_backfill";
   private final static String GE_VALIDATE_OP = "ge_validate";
   private final static String IMPORT_FEATUREGROUP_OP = "import_fg";
+  // td
+  private final static String TRAINING_DATASET_OP = "create_td";
+  // fv
+  private final static String FEATURE_VIEW_TRAINING_DATASET_OP = "create_fv_td";
 
   public IngestionJob setupIngestionJob(Project project, Users user, Featuregroup featureGroup,
                                         SparkJobConfiguration sparkJobConfiguration, IngestionDataFormat dataFormat,
@@ -140,7 +143,7 @@ public class FsJobManagerController {
       jobConfiguration.put("write_options", writeOptions);
 
       String jobConfigurationStr = objectMapper.writeValueAsString(jobConfiguration);
-      String jobName = getJobName(INSERT_FG_OP, JobEntityType.FG, Utils.getFeaturegroupName(featureGroup), true);
+      String jobName = getJobName(INSERT_FG_OP, Utils.getFeaturegroupName(featureGroup), true);
       String jobFolder = createJobFolder(project, user, jobName);
       String jobConfigurationPath = getJobConfigurationPath(jobFolder);
       writeToHDFS(jobConfigurationPath, jobConfigurationStr, udfso);
@@ -199,7 +202,7 @@ public class FsJobManagerController {
     Map<String, String> jobConfiguration = new HashMap<>();
 
     try {
-      String jobName = getJobName(op, type, Utils.getFeatureStoreEntityName(entityName, entityVersion),
+      String jobName = getJobName(op, Utils.getFeatureStoreEntityName(entityName, entityVersion),
           nameIncludeTimestamp);
       String jobFolder = createJobFolder(project, user, jobName);
       String jobConfigurationPath = getJobConfigurationPath(jobFolder);
@@ -254,7 +257,7 @@ public class FsJobManagerController {
           throws FeaturestoreException, JobException, GenericException, ProjectException, ServiceException {
     DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
     try {
-      String jobName = getJobName(op, type, Utils.getFeatureStoreEntityName(entityName, entityVersion), false);
+      String jobName = getJobName(op, Utils.getFeatureStoreEntityName(entityName, entityVersion), false);
       String jobConfigurationPath = getJobConfigurationPath(createJobFolder(project, user, jobName));
       jobConfiguration.put("feature_store",
         featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject()));
@@ -290,7 +293,7 @@ public class FsJobManagerController {
       entityVersion = trainingDataset.getVersion();
       type = JobEntityType.TD;
     }
-    
+
     return setupAndStartJob(project, user, featurestore, entityName, entityVersion, type, COMPUTE_STATS_OP,
       "statistics", true);
   }
@@ -344,14 +347,14 @@ public class FsJobManagerController {
         jobConfiguration.put("name", featureViewName);
         jobConfiguration.put("version", String.valueOf(featureViewVersion));
         jobConfiguration.put("td_version", String.valueOf(trainingDataset.getVersion()));
-        jobName = getJobName(jobType, JobEntityType.FV,
-            Utils.getFeatureStoreEntityName(featureViewName, featureViewVersion), true);
+        jobName = getJobName(jobType, Utils.getFeatureStoreEntityName(featureViewName, featureViewVersion),
+            true);
         String jobFolder = createJobFolder(project, user, jobName);
         jobConfigurationPath = getJobConfigurationPath(jobFolder);
       } else {
         jobConfiguration.put("name", trainingDataset.getName());
         jobConfiguration.put("version", String.valueOf(trainingDataset.getVersion()));
-        jobName = getJobName(jobType, JobEntityType.TD, Utils.getFeatureStoreEntityName(trainingDataset.getName(),
+        jobName = getJobName(jobType, Utils.getFeatureStoreEntityName(trainingDataset.getName(),
                 trainingDataset.getVersion()), true);
         String jobFolder = createJobFolder(project, user, jobName);
         // For FeatureView, query is constructed from scratch when launching the job.
@@ -396,7 +399,7 @@ public class FsJobManagerController {
     }
   
     try {
-      String jobName = getJobName(DELTA_STREAMER_OP, JobEntityType.FG, Utils.getFeaturegroupName(featuregroup), false);
+      String jobName = getJobName(DELTA_STREAMER_OP, Utils.getFeaturegroupName(featuregroup), false);
       String jobFolder = createJobFolder(project, user, jobName);
       String jobConfigurationPath = getJobConfigurationPath(jobFolder);
       Map<String, Object> jobConfiguration = new HashMap<>();
@@ -427,9 +430,8 @@ public class FsJobManagerController {
   private String getJobConfigurationPath(String jobFolder) {
     return jobFolder + "/config_" + System.currentTimeMillis();
   }
-  
-  private String getJobName(String op, JobEntityType entityType, String entityName, boolean withTimeStamp) {
-    // TODO: add entity type: entityType.label + "_"
+
+  private String getJobName(String op, String entityName, boolean withTimeStamp) {
     String name = entityName + "_" + op;
     if (withTimeStamp) {
       name = name + "_" + formatter.format(new Date());
@@ -467,11 +469,34 @@ public class FsJobManagerController {
 
     return jobController.putJob(user, project, job, sparkJobConfiguration);
   }
-  
-  public void deleteDeltaStreamerJob(Project project, Users user, Featuregroup featuregroup)
+
+  public void deleteJobs(Project project, Users user, Featuregroup featuregroup)
       throws JobException {
-    jobController.deleteJob(jobController.getJob(project,
-      getJobName(DELTA_STREAMER_OP, JobEntityType.FG, Utils.getFeaturegroupName(featuregroup), false)), user);
+    String jobNameRegex = String.format("%s_(%s|%s|%s|%s|%s).*", Utils.getFeaturegroupName(featuregroup),
+        INSERT_FG_OP, COMPUTE_STATS_OP, DELTA_STREAMER_OP, GE_VALIDATE_OP, IMPORT_FEATUREGROUP_OP);
+    deleteJobs(project, user, jobNameRegex);
+  }
+
+  public void deleteJobs(Project project, Users user, TrainingDataset trainingDataset)
+      throws JobException {
+    String jobNameRegex = String.format("%s_(%s).*", Utils.getTrainingDatasetName(trainingDataset),
+        TRAINING_DATASET_OP);
+    deleteJobs(project, user, jobNameRegex);
+  }
+
+  public void deleteJobs(Project project, Users user, FeatureView featureView)
+      throws JobException {
+    String jobNameRegex = String.format("%s_(%s).*", Utils.getFeatureViewName(featureView),
+        FEATURE_VIEW_TRAINING_DATASET_OP);
+    deleteJobs(project, user, jobNameRegex);
+  }
+
+  private void deleteJobs(Project project, Users user, String jobPrefix)
+      throws JobException {
+    List<Jobs> jobsList = jobController.getJobsWithJobNameRegex(project, jobPrefix);
+    for (Jobs job: jobsList) {
+      jobController.deleteJob(job, user);
+    }
   }
 
   public Jobs setupImportFgJob(Project project, Users user, Featurestore featurestore, ImportFgJobConf importFgJobConf)

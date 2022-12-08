@@ -135,6 +135,21 @@ public class JobFacade extends AbstractFacade<Jobs> {
       return null;
     }
   }
+
+  /**
+   * Checks if a job with the given regex exists in this project.
+   *
+   * @param project project to search.
+   * @param jobNameRegex regex of the job name.
+   * @return jobs where the regex was found.
+   */
+  public List<Jobs> findByProjectAndJobNameRegex(Project project, String jobNameRegex) {
+    Query query = em.createNativeQuery(
+        "SELECT * FROM hopsworks.`jobs` WHERE `project_id` = ?1 AND `name` REGEXP ?2;", Jobs.class);
+    query.setParameter(1, project.getId());
+    query.setParameter(2, jobNameRegex);
+    return query.getResultList();
+  }
   
   public Jobs findByProjectAndId(Project project, int id) {
     TypedQuery<Jobs> query = em.createNamedQuery("Jobs.findByProjectAndId", Jobs.class);

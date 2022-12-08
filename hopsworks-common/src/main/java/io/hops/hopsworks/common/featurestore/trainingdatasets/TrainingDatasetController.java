@@ -22,6 +22,7 @@ import com.logicalclocks.shaded.com.google.common.collect.Streams;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
+import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
 import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
@@ -55,6 +56,7 @@ import io.hops.hopsworks.common.security.QuotasEnforcement;
 import io.hops.hopsworks.common.security.QuotaEnforcementException;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
@@ -93,6 +95,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -166,6 +169,8 @@ public class TrainingDatasetController {
   private QuotasEnforcement quotasEnforcement;
   @EJB
   private FilterController filterController;
+  @Inject
+  private FsJobManagerController fsJobManagerController;
 
   /**
    * Gets all trainingDatasets for a particular featurestore and project
@@ -803,7 +808,7 @@ public class TrainingDatasetController {
   }
 
   public String delete(Users user, Project project, Featurestore featurestore, Integer trainingDatasetId)
-      throws FeaturestoreException {
+      throws FeaturestoreException, JobException {
     TrainingDataset trainingDataset =
         trainingDatasetFacade.findByIdAndFeaturestore(trainingDatasetId, featurestore)
             .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
@@ -812,7 +817,7 @@ public class TrainingDatasetController {
   }
 
   public void delete(Users user, Project project, Featurestore featurestore, FeatureView featureView,
-      Integer trainingDatasetVersion) throws FeaturestoreException {
+      Integer trainingDatasetVersion) throws FeaturestoreException, JobException {
     TrainingDataset trainingDataset = getTrainingDatasetByFeatureViewAndVersion(featureView, trainingDatasetVersion);
     String trainingDatasetName = delete(user, project, featurestore, trainingDataset);
     activityFacade.persistActivity(ActivityFacade.DELETED_TRAINING_DATASET + trainingDatasetName
@@ -821,7 +826,7 @@ public class TrainingDatasetController {
   }
 
   public void delete(Users user, Project project, Featurestore featurestore, FeatureView featureView)
-      throws FeaturestoreException {
+      throws FeaturestoreException, JobException {
     List<TrainingDataset> trainingDatasets = getTrainingDatasetByFeatureView(featureView);
 
     // Delete all only if user has the right to delete all versions of training dataset.
@@ -837,7 +842,7 @@ public class TrainingDatasetController {
   }
 
   public String delete(Users user, Project project, Featurestore featurestore, TrainingDataset trainingDataset)
-      throws FeaturestoreException {
+      throws FeaturestoreException, JobException {
     featurestoreUtils.verifyTrainingDatasetDataOwnerOrSelf(user, project, trainingDataset,
         FeaturestoreUtils.ActionMessage.DELETE_TRAINING_DATASET);
 
@@ -845,6 +850,8 @@ public class TrainingDatasetController {
 
     trainingDatasetFacade.removeTrainingDataset(trainingDataset);
     deleteHopsfsTrainingData(user, project, trainingDataset, false);
+    //Delete associated jobs
+    fsJobManagerController.deleteJobs(project, user, trainingDataset);
     return trainingDataset.getName();
   }
 
