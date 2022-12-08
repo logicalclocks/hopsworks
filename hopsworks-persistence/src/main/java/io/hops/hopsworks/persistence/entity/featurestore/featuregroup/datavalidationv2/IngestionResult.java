@@ -22,4 +22,7 @@ import javax.xml.bind.annotation.XmlEnum;
 public enum IngestionResult {
   INGESTED,
   REJECTED,
+  UNKNOWN,
+  EXPERIMENT,
+  FG_DATA
 }

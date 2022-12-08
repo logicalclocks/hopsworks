@@ -59,15 +59,17 @@ public class ValidationResultController {
   public CollectionInfo<ValidationResult> getAllValidationResultByExpectationId (Integer offset, Integer limit,
     Set<? extends SortBy> sorts, Set<? extends FilterBy> filters, Integer expectationId) throws FeaturestoreException {
     Optional<Expectation> optExpectation = expectationFacade.findById(expectationId);
+    Expectation expectation;
 
-    if (!optExpectation.isPresent()) {
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.EXPECTATION_NOT_FOUND, 
-        Level.WARNING, 
-        "Expectation with id %d does not exist.");
+    if (optExpectation.isPresent()) {
+      expectation = optExpectation.get();
+    } else {
+      // fake it, we just need the id
+      expectation = new Expectation();
+      expectation.setId(expectationId);
     }
 
-    return validationResultFacade.findByExpectation(offset, limit, sorts, filters, optExpectation.get());
+    return validationResultFacade.findByExpectation(offset, limit, sorts, filters, expectation);
   }
 
   public ValidationResult convertResultDTOToPersistent(ValidationReport report, ValidationResultDTO dto)
