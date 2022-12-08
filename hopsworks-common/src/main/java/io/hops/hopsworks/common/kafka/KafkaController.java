@@ -40,6 +40,7 @@
 package io.hops.hopsworks.common.kafka;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
 import io.hops.hopsworks.common.dao.kafka.AclUser;
 import io.hops.hopsworks.common.dao.kafka.HopsKafkaAdminClient;
@@ -101,7 +102,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Stateless
-@TransactionAttribute(TransactionAttributeType.NEVER)
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class KafkaController {
 
   private final static Logger LOGGER = Logger.getLogger(KafkaController.class.getName());
@@ -159,10 +160,8 @@ public class KafkaController {
     }
     
     createTopicInProject(project, topicDto);
-  
-    //By default, all members of the project are granted full permissions
-    //on the topic
-    addFullPermissionAclsToTopic(project.getName(), topicDto.getName(), project.getId());
+
+    addPermissionAclsToTopic(project, topicDto.getName(), project.getId());
   }
   
   public void removeTopicFromProject(Project project, String topicName) throws KafkaException {
@@ -346,7 +345,7 @@ public class KafkaController {
         ", project: " + project.getName());
     }
     
-    addFullPermissionAclsToTopic(project.getName(), topicName, pt.getProject().getId());
+    addPermissionAclsToTopic(project, topicName, pt.getProject().getId());
     
     sharedTopicsFacade.acceptSharedTopic(pt.getProject().getId(), topicName, project.getId());
   }
@@ -360,29 +359,7 @@ public class KafkaController {
     
     return topicAclsFacade.getTopicAcls(topicName, dto, principalName);
   }
-  
-  private void addFullPermissionAclsToTopic(String aclProjectName, String topicName, Integer projectId)
-    throws ProjectException, KafkaException, UserException {
-    
-    Project p = projectFacade.findByName(aclProjectName);
-    
-    if (p == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE,
-        "Could not find project: " + aclProjectName);
-    }
-    
-    List<AclDTO> acls = p.getProjectTeamCollection()
-      .stream()
-      .map(member -> member.getUser().getEmail())
-      .map(email -> new AclDTO(p.getName(), email, "allow",
-        Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD))
-      .collect(Collectors.toList());
-    
-    for (AclDTO acl : acls) {
-      addAclsToTopic(topicName, projectId, acl);
-    }
-  }
-  
+
   public List<AclUser> getTopicAclUsers(Project project, String topicName) {
     if (project == null || Strings.isNullOrEmpty(topicName)) {
       throw new IllegalArgumentException("ProjectId must be non-null, topic must be provided");
@@ -417,60 +394,6 @@ public class KafkaController {
       aclUsers.add(new AclUser(user.getKey(), new HashSet<>(user.getValue())));
     }
     return aclUsers;
-  }
-  
-  public Pair<TopicAcls, Response.Status> addAclsToTopic(String topicName, Integer projectId, AclDTO dto) throws
-    ProjectException,
-    KafkaException, UserException {
-    return addAclsToTopic(topicName, projectId,
-      dto.getProjectName(),
-      dto.getUserEmail(), dto.getPermissionType(),
-      dto.getOperationType(), dto.getHost(), dto.getRole());
-  }
-  
-  private Pair<TopicAcls, Response.Status> addAclsToTopic(String topicName, Integer projectId,
-    String selectedProjectName, String userEmail, String permissionType,
-    String operationType, String host, String role) throws ProjectException, KafkaException, UserException {
-  
-    if(Strings.isNullOrEmpty(topicName) || userEmail == null){
-      throw new IllegalArgumentException("Topic and userEmail must be provided.");
-    }
-  
-    //get the project id
-    Project topicOwnerProject = Optional.ofNullable(projectFacade.find(projectId)).orElseThrow(() ->
-      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));
-    
-    if (!topicOwnerProject.getName().equals(selectedProjectName)) {
-      if (projectFacade.findByName(selectedProjectName) == null) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "The specified project " +
-          "for the topic" + topicName + " was not found");
-      }
-    }
-    
-    ProjectTopics pt = projectTopicsFacade.findTopicByNameAndProject(topicOwnerProject, topicName)
-      .orElseThrow(() ->
-        new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "Topic: " + topicName));
-      
-    //should not be able to create multiple ACLs at the same time
-    if (userEmail.equals("*")) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.ACL_FOR_ANY_USER, Level.FINE, "topic: " + topicName);
-    }
-    
-    //fetch the user name from database
-    Users user = Optional.ofNullable(userFacade.findByEmail(userEmail))
-      .orElseThrow(() ->
-        new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "user: " + userEmail));
-    String principalName = KafkaConst.buildPrincipalName(selectedProjectName, user.getUsername());
-    
-    Optional<TopicAcls> optionalAcl = topicAclsFacade.getTopicAcls(topicName, principalName, permissionType,
-      operationType, host, role);
-    if (optionalAcl.isPresent()) {
-      return Pair.of(optionalAcl.get(), Response.Status.OK);
-    }
-    
-    TopicAcls acl = topicAclsFacade.addAclsToTopic(pt, user, permissionType, operationType, host, role,
-      principalName);
-    return Pair.of(acl, Response.Status.CREATED);
   }
   
   public TopicDefaultValueDTO topicDefaultValues() throws KafkaException {
@@ -542,33 +465,104 @@ public class KafkaController {
     }
   }
 
+  public Pair<TopicAcls, Response.Status> addAclsToTopic(String topicName, Integer projectId, AclDTO dto)
+      throws ProjectException, KafkaException, UserException {
+    return addAclsToTopic(topicName, projectId,
+        dto.getProjectName(),
+        dto.getUserEmail(), dto.getPermissionType(),
+        dto.getOperationType(), dto.getHost(), dto.getRole());
+  }
+
+  private Pair<TopicAcls, Response.Status> addAclsToTopic(String topicName, Integer projectId,
+      String selectedProjectName, String userEmail, String permissionType,
+      String operationType, String host, String role) throws ProjectException, KafkaException, UserException {
+
+    if(Strings.isNullOrEmpty(topicName) || userEmail == null){
+      throw new IllegalArgumentException("Topic and userEmail must be provided.");
+    }
+
+    //get the project id
+    Project topicOwnerProject = Optional.ofNullable(projectFacade.find(projectId)).orElseThrow(() ->
+        new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));
+
+    if (!topicOwnerProject.getName().equals(selectedProjectName)) {
+      if (projectFacade.findByName(selectedProjectName) == null) {
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "The specified project " +
+            "for the topic" + topicName + " was not found");
+      }
+    }
+
+    ProjectTopics pt = projectTopicsFacade.findTopicByNameAndProject(topicOwnerProject, topicName)
+        .orElseThrow(() ->
+            new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "Topic: " + topicName));
+
+    //should not be able to create multiple ACLs at the same time
+    if (userEmail.equals("*")) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.ACL_FOR_ANY_USER, Level.FINE, "topic: " + topicName);
+    }
+
+    //fetch the user name from database
+    Users user = Optional.ofNullable(userFacade.findByEmail(userEmail))
+        .orElseThrow(() ->
+            new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "user: " + userEmail));
+    String principalName = KafkaConst.buildPrincipalName(selectedProjectName, user.getUsername());
+
+    Optional<TopicAcls> optionalAcl = topicAclsFacade.getTopicAcls(topicName, principalName, permissionType,
+        operationType, host, role);
+    if (optionalAcl.isPresent()) {
+      return Pair.of(optionalAcl.get(), Response.Status.OK);
+    }
+
+    TopicAcls acl = topicAclsFacade.addAclsToTopic(pt, user, permissionType, operationType, host, role,
+        principalName);
+    return Pair.of(acl, Response.Status.CREATED);
+  }
+
+  private void addMemberPermissionAclToTopic(ProjectTeam member, String topicName, Integer projectId)
+      throws ProjectException, KafkaException, UserException {
+    if (AllowedRoles.DATA_OWNER.equalsIgnoreCase(member.getTeamRole())) {
+      addAclsToTopic(topicName, projectId, new AclDTO(member.getProject().getName(), member.getUser().getEmail(),
+          "allow", Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD));
+    } else {
+      addAclsToTopic(topicName, projectId, new AclDTO(member.getProject().getName(), member.getUser().getEmail(),
+          "allow", Settings.KAFKA_ACL_OPERATION_TYPE_READ, Settings.KAFKA_ACL_WILDCARD,
+          Settings.KAFKA_ACL_WILDCARD));
+      addAclsToTopic(topicName, projectId, new AclDTO(member.getProject().getName(), member.getUser().getEmail(),
+          "allow", Settings.KAFKA_ACL_OPERATION_TYPE_DETAILS, Settings.KAFKA_ACL_WILDCARD,
+          Settings.KAFKA_ACL_WILDCARD));
+    }
+  }
+
+  public void addPermissionAclsToTopic(Project project, String topicName, Integer projectId)
+      throws ProjectException, KafkaException, UserException {
+    for (ProjectTeam member: project.getProjectTeamCollection()) {
+      addMemberPermissionAclToTopic(member, topicName, projectId);
+    }
+  }
+
   /**
    * Add a new project member to all project's Kafka topics.
    *
-   * @param project
    * @param member
    */
-  public void addProjectMemberToTopics(Project project, String member)
+  public void addProjectMemberToTopics(ProjectTeam member)
     throws KafkaException, ProjectException, UserException {
     //Get all topics (shared with project as well)
-    List<TopicDTO> topics = findTopicsByProject(project);
-    List<SharedTopics> sharedTopics = sharedTopicsFacade.findSharedTopicsByProject(project.getId());
+    List<TopicDTO> topics = findTopicsByProject(member.getProject());
+    List<SharedTopics> sharedTopics = sharedTopicsFacade.findSharedTopicsByProject(member.getProject().getId());
     //For every topic that has been shared with the current project, add the new member to its ACLs
     for (SharedTopics sharedTopic : sharedTopics) {
-      addAclsToTopic(sharedTopic.getSharedTopicsPK().getTopicName(), sharedTopic.getProjectId(),
-          new AclDTO(project.getName(), member, "allow",
-              Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD));
+      addMemberPermissionAclToTopic(member, sharedTopic.getSharedTopicsPK().getTopicName(), sharedTopic.getProjectId());
     }
 
     //Iterate over topics and add user to ACLs 
     for (TopicDTO topic : topics) {
-      addAclsToTopic(topic.getName(), project.getId(), new AclDTO(project.getName(), member, "allow",
-          Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD));
+      addMemberPermissionAclToTopic(member, topic.getName(), member.getProject().getId());
     }
   }
-  
-  public void removeProjectMemberFromTopics(Project project, Users user) throws ProjectException {
-    sharedTopicsFacade.findSharedTopicsByProject(project.getId())
+
+  public void removeProjectMemberFromTopics(ProjectTeam member) {
+    sharedTopicsFacade.findSharedTopicsByProject(member.getProject().getId())
       .stream()
       .map(st -> {
         try {
@@ -578,8 +572,13 @@ public class KafkaController {
         }
       })
       .map(Project::getName)
-      .forEach(name -> topicAclsFacade.removeAclsForUserAndPrincipalProject(user, name));
-    topicAclsFacade.removeAclsForUser(user, project);
+      .forEach(name -> topicAclsFacade.removeAclsForUserAndPrincipalProject(member.getUser(), name));
+    topicAclsFacade.removeAclsForUser(member.getUser(), member.getProject());
+  }
+
+  public void updateProjectMemberTopics(ProjectTeam member) throws ProjectException, KafkaException, UserException {
+    removeProjectMemberFromTopics(member);
+    addProjectMemberToTopics(member);
   }
   
   /**

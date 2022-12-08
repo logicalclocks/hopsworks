@@ -141,7 +141,7 @@ public class HdfsUsersController {
 
     //add every member to the new ds group
     addMembersToGroups(datasetGroup, datasetAclGroup, dfso, project.getProjectTeamCollection(),
-      dataset.getPermission());
+        dataset.getPermission());
   }
 
   private List<AclEntry> getDatasetAcl(String aclGroup) {
@@ -629,7 +629,7 @@ public class HdfsUsersController {
    * @throws IOException
    */
   public void addNewMember(Dataset dataset, DatasetAccessPermission permission, ProjectTeam teamMember,
-    DistributedFileSystemOps dfso) throws IOException {
+                           DistributedFileSystemOps dfso) throws IOException {
     String datasetGroup = getHdfsGroupName(dataset.getProject(), dataset);
     String datasetAclGroup = getHdfsAclGroupName(dataset.getProject(), dataset);
     String hdfsUserName = getHdfsUserName(teamMember.getProject(), teamMember.getUser());
@@ -637,7 +637,7 @@ public class HdfsUsersController {
   }
 
   private void addNewMember(String datasetGroup, String datasetAclGroup, String hdfsUserName,
-    DatasetAccessPermission permission, ProjectTeam teamMember, DistributedFileSystemOps dfso) throws IOException {
+      DatasetAccessPermission permission, ProjectTeam teamMember, DistributedFileSystemOps dfso) throws IOException {
     switch (permission) {
       case EDITABLE:
         addToGroup(hdfsUserName, datasetGroup, dfso);
@@ -667,7 +667,7 @@ public class HdfsUsersController {
    * @throws IOException
    */
   public void addMembersToGroups(String datasetGroup, String datasetAclGroup, DistributedFileSystemOps dfso,
-    Collection<ProjectTeam> projectTeamMembers, DatasetAccessPermission permission) throws IOException {
+      Collection<ProjectTeam> projectTeamMembers, DatasetAccessPermission permission) throws IOException {
     if (projectTeamMembers == null || projectTeamMembers.isEmpty()) {
       return;
     }

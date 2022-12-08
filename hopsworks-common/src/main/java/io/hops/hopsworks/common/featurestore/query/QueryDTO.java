@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.query;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterLogicDTO;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Objects;
 
 @XmlRootElement
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class QueryDTO {
   private Integer featureStoreId;
   private String featureStoreName;

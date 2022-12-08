@@ -557,5 +557,450 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
+
+    describe "permissions" do
+      before :all do
+        # Create users
+        @user1_params = {email: "user1_#{random_id}@email.com", first_name: "User", last_name: "1", password: "Pass123"}
+        @user1 = create_user(@user1_params)
+        pp "user email: #{@user1[:email]}" if defined?(@debugOpt) && @debugOpt
+        @user_data_scientist_params = {email: "data_scientist_#{random_id}@email.com", first_name: "User", last_name: "data_scientist", password: "Pass123"}
+        @user_data_scientist = create_user(@user_data_scientist_params)
+        pp "user email: #{@user_data_scientist[:email]}" if defined?(@debugOpt) && @debugOpt
+        @user_data_owner_params = {email: "data_owner_#{random_id}@email.com", first_name: "User", last_name: "data_owner", password: "Pass123"}
+        @user_data_owner = create_user(@user_data_owner_params)
+        pp "user email: #{@user_data_owner[:email]}" if defined?(@debugOpt) && @debugOpt
+
+        # Create base project
+        create_session(@user1[:email], @user1_params[:password])
+        @project1 = create_project
+        pp @project1[:projectname] if defined?(@debugOpt) && @debugOpt
+
+        # Add members to projects
+        add_member_to_project(@project1, @user_data_owner_params[:email], "Data owner")
+        add_member_to_project(@project1, @user_data_scientist_params[:email], "Data scientist")
+      end
+
+      context "feature view permissions" do
+
+        # create
+
+        it 'data owner should be able to create fv' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_owner[:email], @user_data_owner_params[:password])
+          json_result = create_feature_view_from_feature_group(@project1[:id], fs["featurestoreId"], parsed_json)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+        end
+
+        it 'data scientist should be able to create fv' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_scientist[:email], @user_data_scientist_params[:password])
+          json_result = create_feature_view_from_feature_group(@project1[:id], fs["featurestoreId"], parsed_json)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+        end
+
+        # get
+
+        it 'data owner should be able to get fv' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          json_result = create_feature_view_from_feature_group(@project1[:id], fs["featurestoreId"], parsed_json)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_owner[:email], @user_data_owner_params[:password])
+          json_result = get_feature_view_by_name_and_version(@project1[:id], fs["featurestoreId"], parsed_json["name"], parsed_json["version"])
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(200)
+        end
+
+        it 'data scientist should be able to get fv' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          json_result = create_feature_view_from_feature_group(@project1[:id], fs["featurestoreId"], parsed_json)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_scientist[:email], @user_data_scientist_params[:password])
+          json_result = get_feature_view_by_name_and_version(@project1[:id], fs["featurestoreId"], parsed_json["name"], parsed_json["version"])
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(200)
+        end
+
+        # update
+
+        it 'data owner should be able to update fv' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          json_result = create_feature_view_from_feature_group(@project1[:id], fs["featurestoreId"], parsed_json)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_owner[:email], @user_data_owner_params[:password])
+
+          json_data = {
+            name: "new_testfeatureviewname",
+			      version: parsed_json["version"],
+            type: "featureViewDTO",
+            description: "temp desc"
+          }
+          json_result = update_feature_view(@project1[:id], fs["featurestoreId"], json_data, parsed_json["name"], parsed_json["version"])
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(200)
+          
+          json_result = get_feature_view_by_name_and_version(@project1[:id], fs["featurestoreId"], parsed_json["name"], parsed_json["version"])
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(200)
+          expect(parsed_json["description"]).to eql(json_data[:description])
+        end
+
+        it 'data scientist should not be able to update fv' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          json_result = create_feature_view_from_feature_group(@project1[:id], fs["featurestoreId"], parsed_json)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_scientist[:email], @user_data_scientist_params[:password])
+          description = parsed_json["description"]
+
+          json_data = {
+            name: "new_testfeatureviewname",
+			      version: parsed_json["version"],
+            type: "featureViewDTO",
+            description: "temp desc"
+          }
+          json_result = update_feature_view(@project1[:id], fs["featurestoreId"], json_data, parsed_json["name"], parsed_json["version"])
+          expect_status_details(403)
+          
+          json_result = get_feature_view_by_name_and_version(@project1[:id], fs["featurestoreId"], parsed_json["name"], parsed_json["version"])
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(200)
+          expect(parsed_json["description"]).to eql(description)
+        end
+        
+        it 'data scientist should be able to update self made fv' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_scientist[:email], @user_data_scientist_params[:password])
+          json_result = create_feature_view_from_feature_group(@project1[:id], fs["featurestoreId"], parsed_json)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          json_data = {
+            name: "new_testfeatureviewname",
+			      version: parsed_json["version"],
+            type: "featureViewDTO",
+            description: "temp desc"
+          }
+          json_result = update_feature_view(@project1[:id], fs["featurestoreId"], json_data, parsed_json["name"], parsed_json["version"])
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(200)
+          
+          json_result = get_feature_view_by_name_and_version(@project1[:id], fs["featurestoreId"], parsed_json["name"], parsed_json["version"])
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(200)
+          expect(parsed_json["description"]).to eql(json_data[:description])
+        end
+
+        # delete
+
+        it 'data owner should be able to delete fv' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          json_result = create_feature_view_from_feature_group(@project1[:id], fs["featurestoreId"], parsed_json)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_owner[:email], @user_data_owner_params[:password])
+          delete_feature_view(@project1["id"], parsed_json["name"], feature_store_id: fs["featurestoreId"])
+          
+          json_result = get_feature_view_by_name_and_version(@project1[:id], fs["featurestoreId"], parsed_json["name"], parsed_json["version"])
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(404)
+        end
+
+        it 'data scientist should not be able to delete fv' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          json_result = create_feature_view_from_feature_group(@project1[:id], fs["featurestoreId"], parsed_json)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_scientist[:email], @user_data_scientist_params[:password])
+          delete_feature_view(@project1["id"], parsed_json["name"], feature_store_id: fs["featurestoreId"], expected_status: 403)
+          
+          json_result = get_feature_view_by_name_and_version(@project1[:id], fs["featurestoreId"], parsed_json["name"], parsed_json["version"])
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(200)
+        end
+        
+        it 'data scientist should be able to delete self made fv' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_scientist[:email], @user_data_scientist_params[:password])
+          json_result = create_feature_view_from_feature_group(@project1[:id], fs["featurestoreId"], parsed_json)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          delete_feature_view(@project1["id"], parsed_json["name"], feature_store_id: fs["featurestoreId"])
+          
+          json_result = get_feature_view_by_name_and_version(@project1[:id], fs["featurestoreId"], parsed_json["name"], parsed_json["version"])
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(404)
+        end
+      end
+    end
+
+    describe "shared permissions" do
+      before :all do
+        # Create users
+        @user1_params = {email: "user1_#{random_id}@email.com", first_name: "User", last_name: "1", password: "Pass123"}
+        @user1 = create_user(@user1_params)
+        pp "user email: #{@user1[:email]}" if defined?(@debugOpt) && @debugOpt
+        @user2_params = {email: "user2_#{random_id}@email.com", first_name: "User", last_name: "2", password: "Pass123"}
+        @user2 = create_user(@user2_params)
+        pp "user email: #{@user2[:email]}" if defined?(@debugOpt) && @debugOpt
+        @user_data_scientist_params = {email: "data_scientist_#{random_id}@email.com", first_name: "User", last_name: "data_scientist", password: "Pass123"}
+        @user_data_scientist = create_user(@user_data_scientist_params)
+        pp "user email: #{@user_data_scientist[:email]}" if defined?(@debugOpt) && @debugOpt
+        @user_data_owner_params = {email: "data_owner_#{random_id}@email.com", first_name: "User", last_name: "data_owner", password: "Pass123"}
+        @user_data_owner = create_user(@user_data_owner_params)
+        pp "user email: #{@user_data_owner[:email]}" if defined?(@debugOpt) && @debugOpt
+
+        # Create base project
+        create_session(@user1[:email], @user1_params[:password])
+        @project1 = create_project
+        pp @project1[:projectname] if defined?(@debugOpt) && @debugOpt
+
+        # Create shared with projects
+        create_session(@user2[:email], @user2_params[:password])
+        @project_read_only = create_project
+        pp @project_read_only[:projectname] if defined?(@debugOpt) && @debugOpt
+
+        # Add members to projects
+        add_member_to_project(@project_read_only, @user_data_owner_params[:email], "Data owner")
+        add_member_to_project(@project_read_only, @user_data_scientist_params[:email], "Data scientist")
+
+        # Share projects
+        create_session(@user1[:email], @user1_params[:password])
+        share_dataset_checked(@project1, "#{@project1[:projectname].downcase}_featurestore.db", @project_read_only[:projectname], permission: "READ_ONLY", datasetType: "FEATURESTORE")
+
+        # Accept shared projects
+        create_session(@user2[:email], @user2_params[:password])
+        accept_dataset_checked(@project_read_only, "#{@project1[:projectname]}::#{@project1[:projectname].downcase}_featurestore.db", datasetType: "FEATURESTORE")
+      end
+
+      context "shared feature view permissions" do
+
+        # create
+
+        it 'data owner should not be able to create fv with read only permission' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_owner[:email], @user_data_owner_params[:password])
+          create_feature_view_from_feature_group(@project_read_only[:id], fs["featurestoreId"], parsed_json)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(403)
+        end
+
+        it 'data scientist should not be able to create fv with read only permission' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_scientist[:email], @user_data_scientist_params[:password])
+          create_feature_view_from_feature_group(@project_read_only[:id], fs["featurestoreId"], parsed_json)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(403)
+        end
+
+        # get
+
+        it 'data owner should be able to get fv with read only permission' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          json_result = create_feature_view_from_feature_group(@project1[:id], fs["featurestoreId"], parsed_json)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_owner[:email], @user_data_owner_params[:password])
+          json_result = get_feature_view_by_name_and_version(@project_read_only[:id], fs["featurestoreId"], parsed_json["name"], parsed_json["version"])
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(200)
+        end
+
+        it 'data scientist should be able to get fv with read only permission' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          json_result = create_feature_view_from_feature_group(@project1[:id], fs["featurestoreId"], parsed_json)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_scientist[:email], @user_data_scientist_params[:password])
+          json_result = get_feature_view_by_name_and_version(@project_read_only[:id], fs["featurestoreId"], parsed_json["name"], parsed_json["version"])
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(200)
+        end
+
+        # update
+
+        it 'data owner should not be able to update fv with read only permission' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          json_result = create_feature_view_from_feature_group(@project1[:id], fs["featurestoreId"], parsed_json)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_owner[:email], @user_data_owner_params[:password])
+          description = parsed_json["description"]
+
+          json_data = {
+            name: "new_testfeatureviewname",
+			      version: parsed_json["version"],
+            type: "featureViewDTO",
+            description: "temp desc"
+          }
+          json_result = update_feature_view(@project_read_only[:id], fs["featurestoreId"], json_data, parsed_json["name"], parsed_json["version"])
+          expect_status_details(403)
+          
+          json_result = get_feature_view_by_name_and_version(@project_read_only[:id], fs["featurestoreId"], parsed_json["name"], parsed_json["version"])
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(200)
+          expect(parsed_json["description"]).to eql(description)
+        end
+
+        it 'data scientist should not be able to update fv with read only permission' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          json_result = create_feature_view_from_feature_group(@project1[:id], fs["featurestoreId"], parsed_json)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_scientist[:email], @user_data_scientist_params[:password])
+          description = parsed_json["description"]
+
+          json_data = {
+            name: "new_testfeatureviewname",
+			      version: parsed_json["version"],
+            type: "featureViewDTO",
+            description: "temp desc"
+          }
+          json_result = update_feature_view(@project_read_only[:id], fs["featurestoreId"], json_data, parsed_json["name"], parsed_json["version"])
+          expect_status_details(403)
+          
+          json_result = get_feature_view_by_name_and_version(@project_read_only[:id], fs["featurestoreId"], parsed_json["name"], parsed_json["version"])
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(200)
+          expect(parsed_json["description"]).to eql(description)
+        end
+
+        # delete
+
+        it 'data owner should not be able to delete fv with read only permission' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          json_result = create_feature_view_from_feature_group(@project1[:id], fs["featurestoreId"], parsed_json)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_owner[:email], @user_data_owner_params[:password])
+          delete_feature_view(@project_read_only["id"], parsed_json["name"], feature_store_id: fs["featurestoreId"], expected_status: 403)
+          
+          json_result = get_feature_view_by_name_and_version(@project_read_only[:id], fs["featurestoreId"], parsed_json["name"], parsed_json["version"])
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(200)
+        end
+
+        it 'data scientist should not be able to delete fv with read only permission' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          json_result = create_feature_view_from_feature_group(@project1[:id], fs["featurestoreId"], parsed_json)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_scientist[:email], @user_data_scientist_params[:password])
+          delete_feature_view(@project_read_only["id"], parsed_json["name"], feature_store_id: fs["featurestoreId"], expected_status: 403)
+          
+          json_result = get_feature_view_by_name_and_version(@project_read_only[:id], fs["featurestoreId"], parsed_json["name"], parsed_json["version"])
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(200)
+        end
+      end
+    end
   end
 end

@@ -169,6 +169,10 @@ public class FeaturegroupController {
   public FeaturegroupDTO clearFeaturegroup(Featuregroup featuregroup, Project project, Users user)
     throws FeaturestoreException, SQLException, ProvenanceException, IOException, ServiceException,
     KafkaException, SchemaException, ProjectException, UserException, HopsSecurityException, JobException {
+
+    featurestoreUtils.verifyUserProjectEqualsFsProjectAndDataOwner(user, project, featuregroup.getFeaturestore(),
+        FeaturestoreUtils.ActionMessage.CLEAR_FEATURE_GROUP);
+
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
       case STREAM_FEATURE_GROUP:
@@ -204,6 +208,9 @@ public class FeaturegroupController {
                                             Project project, Users user)
     throws FeaturestoreException, ServiceException, SQLException, ProvenanceException, IOException,
     KafkaException, SchemaException, ProjectException, UserException, HopsSecurityException, JobException {
+
+    featurestoreUtils.verifyUserProjectEqualsFsProjectAndDataOwner(user, project, featurestore,
+        FeaturestoreUtils.ActionMessage.CREATE_FEATURE_GROUP);
 
     enforceFeaturegroupQuotas(featurestore, featuregroupDTO);
     featureGroupInputValidation.verifySchemaProvided(featuregroupDTO);
@@ -402,6 +409,10 @@ public class FeaturegroupController {
       throws FeaturestoreException, SQLException, ProvenanceException, ServiceException, SchemaException,
       KafkaException {
     Featuregroup featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
+
+    featurestoreUtils.verifyUserProjectEqualsFsProjectAndDataOwner(user, project, featuregroup.getFeaturestore(),
+        FeaturestoreUtils.ActionMessage.UPDATE_FEATURE_GROUP_METADATA);
+
     // currently supports updating:
     // adding new features
     // feature group description
@@ -456,6 +467,8 @@ public class FeaturegroupController {
       throws FeaturestoreException, SQLException, ServiceException, KafkaException,
       SchemaException, ProjectException, UserException, IOException, HopsSecurityException {
     Featuregroup featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
+    featurestoreUtils.verifyUserProjectEqualsFsProjectAndDataOwner(user, project, featuregroup.getFeaturestore(),
+        FeaturestoreUtils.ActionMessage.ENABLE_FEATURE_GROUP_ONLINE);
     if(featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP){
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.ONLINE_FEATURE_SERVING_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS, Level.FINE,
@@ -481,6 +494,8 @@ public class FeaturegroupController {
    */
   public FeaturegroupDTO disableFeaturegroupOnline(Featuregroup featuregroup, Project project, Users user)
       throws FeaturestoreException, SQLException, ServiceException, SchemaException, KafkaException {
+    featurestoreUtils.verifyUserProjectEqualsFsProjectAndDataOwner(user, project, featuregroup.getFeaturestore(),
+        FeaturestoreUtils.ActionMessage.DISABLE_FEATURE_GROUP_ONLINE);
     if(featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.ONLINE_FEATURE_SERVING_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS, Level.FINE,
@@ -507,6 +522,8 @@ public class FeaturegroupController {
   public FeaturegroupDTO updateFeatureGroupStatsConfig(Featurestore featurestore, FeaturegroupDTO featureGroupDTO,
     Project project, Users user) throws FeaturestoreException, ServiceException {
     Featuregroup featuregroup = getFeaturegroupById(featurestore, featureGroupDTO.getId());
+    featurestoreUtils.verifyUserProjectEqualsFsProjectAndDataOwner(user, project, featuregroup.getFeaturestore(),
+        FeaturestoreUtils.ActionMessage.UPDATE_FEATURE_GROUP_STATS_CONFIG);
     if (featureGroupDTO.getStatisticsConfig().getEnabled() != null) {
       featuregroup.getStatisticsConfig().setDescriptive(featureGroupDTO.getStatisticsConfig().getEnabled());
     }
@@ -558,6 +575,8 @@ public class FeaturegroupController {
   public void deleteFeaturegroup(Featuregroup featuregroup, Project project, Users user)
     throws SQLException, FeaturestoreException, ServiceException, IOException, SchemaException, KafkaException,
     JobException {
+    featurestoreUtils.verifyUserProjectEqualsFsProjectAndDataOwner(user, project, featuregroup.getFeaturestore(),
+        FeaturestoreUtils.ActionMessage.DELETE_FEATURE_GROUP);
     // In some cases, fg metadata was not deleted. https://hopsworks.atlassian.net/browse/FSTORE-377
     // This enables users to delete a corrupted fg using the hsfs client.
     if (featuregroup.getOnDemandFeaturegroup() == null
