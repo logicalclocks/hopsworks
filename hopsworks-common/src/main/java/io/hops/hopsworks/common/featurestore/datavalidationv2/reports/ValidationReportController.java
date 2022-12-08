@@ -43,7 +43,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregro
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.FeatureGroupAlert;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.ValidationRuleAlertStatus;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.IngestionResult;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationIngestionPolicy;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationReport;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationResult;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
@@ -257,10 +256,7 @@ public class ValidationReportController {
     report.setSuccess(reportDTO.getSuccess());
     report.setStatistics(reportDTO.getStatistics());
     report.setEvaluationParameters(reportDTO.getEvaluationParameters());
-    
-    // infer ingestion result
-    report.setIngestionResult(inferIngestionResult(reportDTO.getSuccess(), featuregroup.getExpectationSuite()
-      .getValidationIngestionPolicy()));
+    report.setIngestionResult(reportDTO.getIngestionResult());
 
     // Parse the report to get validation time, just create the date 
     Date validationTime;
@@ -287,21 +283,6 @@ public class ValidationReportController {
     report.setValidationResults(results);
 
     return report;
-  }
-  
-  public IngestionResult inferIngestionResult(Boolean success, ValidationIngestionPolicy validationIngestionPolicy)
-      throws FeaturestoreException {
-    if (validationIngestionPolicy == ValidationIngestionPolicy.ALWAYS) {
-      return IngestionResult.INGESTED;
-    } else if (validationIngestionPolicy == ValidationIngestionPolicy.STRICT) {
-      if (success) {
-        return IngestionResult.INGESTED;
-      } else {
-        return IngestionResult.REJECTED;
-      }
-    }
-    throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_INFERRING_INGESTION_RESULT, Level.SEVERE,
-      String.format("Validation Ingestion Policy: %s, Success: %s", validationIngestionPolicy, success));
   }
 
   private Inode registerValidationReportToDisk(Users user, Featuregroup featuregroup,

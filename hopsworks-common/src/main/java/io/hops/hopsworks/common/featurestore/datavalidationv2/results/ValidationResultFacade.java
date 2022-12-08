@@ -31,6 +31,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.validation.ConstraintViolationException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
@@ -109,22 +110,39 @@ public class ValidationResultFacade extends AbstractFacade<ValidationResult> {
     if (filter == null || filter.isEmpty()) {
       return;
     }
+
+    ArrayList<Object> ingestionResultFilterValues = new ArrayList<>();
+
     for (FilterBy aFilter : filter) {
       if ("INGESTION_RESULT_EQ".equals(aFilter.getValue())) {
         switch (aFilter.getParam().toUpperCase()) {
           case "INGESTED":
-            q.setParameter(aFilter.getField(), IngestionResult.INGESTED);
+            ingestionResultFilterValues.add(IngestionResult.INGESTED);
             break;
           case "REJECTED":
-            q.setParameter(aFilter.getField(), IngestionResult.REJECTED);
+            ingestionResultFilterValues.add(IngestionResult.REJECTED);
+            break;
+          case "FG_DATA":
+            ingestionResultFilterValues.add(IngestionResult.FG_DATA);
+            break;
+          case "EXPERIMENT":
+            ingestionResultFilterValues.add(IngestionResult.EXPERIMENT);
+            break;
+          case "UNKNOWN":
+            ingestionResultFilterValues.add(IngestionResult.UNKNOWN);
             break;
           default:
             break;
         }
+        
       }
       if (aFilter.getValue().contains("VALIDATION_TIME")) {
         q.setParameter(aFilter.getField(), new Timestamp(Long.parseLong(aFilter.getParam())));
       }
+    }
+
+    if (ingestionResultFilterValues.size() > 0) {
+      q.setParameter("ingestionResult", ingestionResultFilterValues);
     }
   }
 
@@ -168,7 +186,7 @@ public class ValidationResultFacade extends AbstractFacade<ValidationResult> {
     VALIDATION_TIME_GTE("VALIDATION_TIME_GTE", "vr.validationTime >= :validationTime ", "validationTime", ""),
     VALIDATION_TIME_LTE("VALIDATION_TIME_LTE", "vr.validationTime <= :validationTime ", "validationTime", ""),
     VALIDATION_TIME_EQ("VALIDATION_TIME_EQ", "vr.validationTime = :validationTime ", "validationTime", ""),
-    INGESTION_RESULT_EQ("INGESTION_RESULT_EQ", "vr.ingestionResult = :ingestionResult ", "ingestionResult", "");
+    INGESTION_RESULT_EQ("INGESTION_RESULT_EQ", "vr.ingestionResult IN :ingestionResult ", "ingestionResult", "");
 
     private final String value;
     private final String sql;
