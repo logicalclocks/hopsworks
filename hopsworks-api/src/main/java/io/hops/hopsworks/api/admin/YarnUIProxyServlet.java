@@ -41,12 +41,15 @@ package io.hops.hopsworks.api.admin;
 import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.proxy.ProxyServlet;
+import io.hops.hopsworks.api.util.CustomSSLProtocolSocketFactory;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
+import io.hops.hopsworks.common.security.BaseHadoopClientsService;
+import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.jobs.history.YarnApplicationstate;
@@ -61,6 +64,8 @@ import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.params.HttpClientParams;
+import org.apache.commons.httpclient.protocol.Protocol;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
@@ -73,6 +78,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -84,6 +90,7 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -119,6 +126,10 @@ public class YarnUIProxyServlet extends ProxyServlet {
   private JWTHelper jwtHelper;
   @EJB
   private UsersController userController;
+  @EJB
+  private BaseHadoopClientsService baseHadoopClientsService;
+  @EJB
+  private CertificateMaterializer certificateMaterializer;
 
   private String isRemoving = null;
   private Service httpsResourceManager;
@@ -135,7 +146,57 @@ public class YarnUIProxyServlet extends ProxyServlet {
     }
     targetHost = URIUtils.extractHost(targetUriObj);
   }
-  
+
+  private static final Pattern APPLICATION_PATTERN = Pattern.compile("(application_.*?_.\\d*)");
+  private static final Pattern APPLICATION_ATTEMPT_PATTERN = Pattern.compile("(appattempt_.*?_.\\d*)");
+  private static final Pattern CONTAINER_PATTERN = Pattern.compile("(container_e.*?_.*?_.\\d*)");
+
+  private Optional<Pair<Pattern, Type>> applicationProjectPreparation(HttpServletRequest request) {
+    if (request.getRequestURI().contains("/application")) {
+      return Optional.of(Pair.of(APPLICATION_PATTERN, Type.application));
+    }
+    if (request.getRequestURI().contains("appattempt/appattempt")) {
+      return Optional.of(Pair.of(APPLICATION_ATTEMPT_PATTERN, Type.appAttempt));
+    }
+    if (request.getRequestURI().contains("container/container")
+        || request.getRequestURI().contains("containerlogs/container")) {
+      return Optional.of(Pair.of(CONTAINER_PATTERN, Type.container));
+    }
+    return Optional.empty();
+  }
+
+  private String replaceApplicationId(Type type, String applicationId) {
+    if (type.equals(Type.appAttempt)) {
+      applicationId = applicationId.replace("appattempt_", "application_");
+    } else if (type.equals(Type.container)) {
+      applicationId = applicationId.replaceAll("container_e.*?_", "application_");
+    }
+    return applicationId;
+  }
+
+  private Optional<Project> getApplicationProject(HttpServletRequest request) {
+    Optional<Pair<Pattern, Type>> prepMaybe = applicationProjectPreparation(request);
+    if (!prepMaybe.isPresent()) {
+      return Optional.empty();
+    }
+    Pair<Pattern, Type> prep = prepMaybe.get();
+    Pattern pattern = prep.getLeft();
+    Type type = prep.getRight();
+    Matcher matcher = pattern.matcher(request.getRequestURI());
+    if (matcher.find()) {
+      String applicationId = replaceApplicationId(type, matcher.group(1));
+      YarnApplicationstate appState = yarnApplicationstateFacade.findByAppId(applicationId);
+      if (appState != null) {
+        String projectName = hdfsUsersBean.getProjectName(appState.getAppuser());
+        Project project = projectFacade.findByName(projectName);
+        if (project != null) {
+          return Optional.of(project);
+        }
+      }
+    }
+    return Optional.empty();
+  }
+
   @Override
   protected void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
     throws ServletException, IOException {
@@ -145,53 +206,33 @@ public class YarnUIProxyServlet extends ProxyServlet {
       return;
     }
 
+    Optional<Project> maybeProject = getApplicationProject(servletRequest);
+    boolean isAdmin = false;
+    boolean materializedCertificates = false;
+
     if (!userController.isUserInRole(user, "HOPS_ADMIN")) {
       if (servletRequest.getRequestURI().contains("proxy/application")
-        || servletRequest.getRequestURI().contains("app/application")
-        || servletRequest.getRequestURI().contains("appattempt/appattempt")
-        || servletRequest.getRequestURI().contains("container/container")
-        || servletRequest.getRequestURI().contains("containerlogs/container")
-        || servletRequest.getRequestURI().contains("history/application")
-        || servletRequest.getRequestURI().contains("applications/application")) {
-        
-        Pattern pattern = Pattern.compile("(application_.*?_.\\d*)");
-        Type type = Type.application;
-        if (servletRequest.getRequestURI().contains("appattempt/appattempt")) {
-          pattern = Pattern.compile("(appattempt_.*?_.\\d*)");
-          type = Type.appAttempt;
-        } else if (servletRequest.getRequestURI().contains("container/container") || servletRequest.getRequestURI().
-          contains("containerlogs/container")) {
-          pattern = Pattern.compile("(container_e.*?_.*?_.\\d*)");
-          type = Type.container;
-        }
-        Matcher matcher = pattern.matcher(servletRequest.getRequestURI());
-        if (matcher.find()) {
-          String appId = matcher.group(1);
-          if (type.equals(Type.appAttempt)) {
-            appId = appId.replace("appattempt_", "application_");
-          } else if (type.equals(Type.container)) {
-            appId = appId.replaceAll("container_e.*?_", "application_");
-          }
-          YarnApplicationstate appState = yarnApplicationstateFacade.findByAppId(
-            appId);
-          if (appState == null) {
-            servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
-              "You don't have the access right for this application");
-            return;
-          }
-          String projectName = hdfsUsersBean.getProjectName(appState.getAppuser());
-          Project project = projectFacade.findByName(projectName);
-          if (project == null) {
-            servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(), "Project does not exists");
-            return;
-          }
+          || servletRequest.getRequestURI().contains("app/application")
+          || servletRequest.getRequestURI().contains("appattempt/appattempt")
+          || servletRequest.getRequestURI().contains("container/container")
+          || servletRequest.getRequestURI().contains("containerlogs/container")
+          || servletRequest.getRequestURI().contains("history/application")
+          || servletRequest.getRequestURI().contains("applications/application")) {
 
-          if (!projectTeamFacade.isUserMemberOfProject(project, user)) {
-            servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
-                "You don't have the access right for this application");
-            return;
-          }
+        if (!maybeProject.isPresent()) {
+          servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(), "Application not found or project " +
+              "does not exists");
+          return;
         }
+        Project project = maybeProject.get();
+
+        if (!projectTeamFacade.isUserMemberOfProject(project, user)) {
+          servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
+              "You don't have the access right for this application");
+          return;
+        }
+        certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
+        materializedCertificates = true;
       } else {
         if (!servletRequest.getRequestURI().contains("/static/")) {
           servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -199,6 +240,8 @@ public class YarnUIProxyServlet extends ProxyServlet {
           return;
         }
       }
+    } else {
+      isAdmin = true;
     }
     
     if (servletRequest.getAttribute(ATTR_TARGET_URI) == null) {
@@ -215,6 +258,30 @@ public class YarnUIProxyServlet extends ProxyServlet {
 
     HttpMethod m = null;
     try {
+      File keystore, truststore;
+      String keystorePassphrase, truststorePassphrase;
+      if (!isAdmin && maybeProject.isPresent()) {
+        Project project = maybeProject.get();
+        CertificateMaterializer.CryptoMaterial material = certificateMaterializer.getUserMaterial(user.getUsername(),
+            project.getName());
+        keystore = new File(certificateMaterializer.getUserTransientKeystorePath(project, user));
+        truststore = new File(certificateMaterializer.getUserTransientTruststorePath(project, user));
+        keystorePassphrase = new String(material.getPassword());
+        truststorePassphrase = new String(material.getPassword());
+      } else {
+        // We end-up here if the user is Admin or if the page we are trying to get is served from /static/
+        // Any other case would result in authentication error above so it is safe to use 'else' without
+        // a condition
+        keystore = new File(baseHadoopClientsService.getSuperKeystorePath());
+        truststore = new File(baseHadoopClientsService.getSuperTrustStorePath());
+        keystorePassphrase = baseHadoopClientsService.getSuperKeystorePassword();
+        truststorePassphrase = baseHadoopClientsService.getSuperTrustStorePassword();
+      }
+
+      // Assume that KeyStore password and Key password are the same
+      Protocol httpsProto = new Protocol("https", new CustomSSLProtocolSocketFactory(keystore,
+          keystorePassphrase, keystorePassphrase, truststore, truststorePassphrase), targetUriObj.getPort());
+      Protocol.registerProtocol("https", httpsProto);
       // Execute the request
       HttpClientParams params = new HttpClientParams();
       params.setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
@@ -250,7 +317,6 @@ public class YarnUIProxyServlet extends ProxyServlet {
         }
       }
       m.setRequestHeader("Cookie", "proxy-user" + "=" + URLEncoder.encode(user.getEmail(), "ASCII"));
-      
       client.executeMethod(config, m);
       
       // Process the response
@@ -283,6 +349,12 @@ public class YarnUIProxyServlet extends ProxyServlet {
       if (m != null) {
         m.releaseConnection();
       }
+      if (materializedCertificates) {
+        maybeProject.ifPresent(project -> certificateMaterializer.removeCertificatesLocal(user.getUsername(),
+            project.getName()));
+      }
+      // Do not use the same protocol with same certificate material for following requests
+      Protocol.unregisterProtocol("https");
     }
   }
   
@@ -299,6 +371,10 @@ public class YarnUIProxyServlet extends ProxyServlet {
         try {
           int contentSize = 0;
           String source = "http://" + method.getURI().getHost() + ":" + method.getURI().getPort();
+          // In some cases where the port is -1 replace the link with ResourceManager's (targetUri)
+          if (method.getURI().getPort() == -1) {
+            source = targetUri;
+          }
           String path = method.getPath();
           while ((inputLine = br.readLine()) != null) {
             String outputLine = hopify(inputLine, source, isAdmin, path) + "\n";

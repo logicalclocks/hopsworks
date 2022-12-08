@@ -29,17 +29,9 @@ import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
-import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.socket.PlainConnectionSocketFactory;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
 
 import javax.annotation.PostConstruct;
@@ -50,10 +42,8 @@ import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 
@@ -82,7 +72,11 @@ public class HttpClient {
     this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
     try {
-      connectionManager = createConnectionManager();
+      HttpConnectionManagerBuilder connectionManagerBuilder = new HttpConnectionManagerBuilder()
+          .withTrustStore(
+              Paths.get(settings.getHopsworksDomainDir(), "config", "cacerts.jks"),
+              settings.getHopsworksMasterPasswordSsl().toCharArray());
+      connectionManager = createConnectionManager(connectionManagerBuilder);
       client = HttpClients.custom()
           .setConnectionManager(connectionManager)
           .setKeepAliveStrategy((httpResponse, httpContext) -> settings.getConnectionKeepAliveTimeout() * 1000)
@@ -169,28 +163,17 @@ public class HttpClient {
     }
   }
   
-  private Registry<ConnectionSocketFactory> createConnectionFactory() throws IOException, GeneralSecurityException {
-    Path trustStore = Paths.get(settings.getHopsworksDomainDir(), "config", "cacerts.jks");
-    char[] trustStorePassword = settings.getHopsworksMasterPasswordSsl().toCharArray();
-    SSLContext sslCtx = SSLContexts.custom()
-        .loadTrustMaterial(trustStore.toFile(), trustStorePassword,
-            new TrustSelfSignedStrategy())
-        .build();
-    SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslCtx, NoopHostnameVerifier.INSTANCE);
-    return RegistryBuilder.<ConnectionSocketFactory>create()
-        .register("https", sslsf)
-        .register("http", PlainConnectionSocketFactory.getSocketFactory())
-        .build();
-  }
-  
-  private PoolingHttpClientConnectionManager createConnectionManager() throws IOException, GeneralSecurityException {
+  private PoolingHttpClientConnectionManager createConnectionManager(
+      HttpConnectionManagerBuilder connectionManagerBuilder)
+      throws IOException,
+      GeneralSecurityException {
     PoolingHttpClientConnectionManager connectionManager =
-        new PoolingHttpClientConnectionManager(createConnectionFactory());
+        new PoolingHttpClientConnectionManager(connectionManagerBuilder.build());
     connectionManager.setMaxTotal(10);
     connectionManager.setDefaultMaxPerRoute(10);
     return connectionManager;
   }
-  
+
   public void setAuthorizationHeader(HttpRequest httpRequest) {
     httpRequest.setHeader(HttpHeaders.AUTHORIZATION,
         String.format(AUTH_HEADER_CONTENT, settings.getServiceMasterJWT()));

@@ -48,7 +48,9 @@ import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.proxies.client.HttpClient;
+import io.hops.hopsworks.common.proxies.client.HttpConnectionManagerBuilder;
 import io.hops.hopsworks.common.pythonresources.PythonResourcesController;
+import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
@@ -56,18 +58,26 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import org.apache.http.HttpHost;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -84,19 +94,60 @@ public class ClusterUtilisationService {
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
   @EJB
-  private HttpClient httpClient;
-  @EJB
   private HostsFacade hostsFacade;
   @EJB
   private PythonResourcesController pythonResourcesController;
+  @EJB
+  private BaseHadoopClientsService baseHadoopClientsService;
 
   private static final String METRICS_ENDPOINT = "/ws/v1/cluster/metrics";
+
+  private CloseableHttpClient httpClient = null;
+  private PoolingHttpClientConnectionManager connectionManager = null;
+
+  @Logged(logLevel = LogLevel.OFF)
+  @PostConstruct
+  public void init() throws RuntimeException {
+    try {
+      HttpConnectionManagerBuilder connectionBuilder = new HttpConnectionManagerBuilder()
+          .withKeyStore(Paths.get(baseHadoopClientsService.getSuperKeystorePath()),
+              baseHadoopClientsService.getSuperKeystorePassword().toCharArray(),
+              baseHadoopClientsService.getSuperKeystorePassword().toCharArray())
+          .withTrustStore(Paths.get(baseHadoopClientsService.getSuperTrustStorePath()),
+              baseHadoopClientsService.getSuperTrustStorePassword().toCharArray());
+
+      connectionManager =
+          new PoolingHttpClientConnectionManager(connectionBuilder.build());
+      connectionManager.setMaxTotal(10);
+      connectionManager.setDefaultMaxPerRoute(10);
+      httpClient = HttpClients.custom()
+          .setConnectionManager(connectionManager)
+          .build();
+    } catch (Exception ex) {
+      LOGGER.log(Level.SEVERE, "Failed to create HTTP client with superuser client certificate", ex);
+      throw new RuntimeException(ex);
+    }
+  }
+
+  @Logged(logLevel = LogLevel.OFF)
+  @PreDestroy
+  public void destroy() {
+    if (httpClient != null) {
+      try {
+        httpClient.close();
+      } catch (Exception e) {
+      }
+    }
+    if (connectionManager != null) {
+      connectionManager.close();
+    }
+  }
 
   @GET
   @Path("/metrics")
   @Logged(logLevel = LogLevel.OFF)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response metrics() throws ServiceException {
+  public Response metrics(@Context HttpServletRequest request) throws ServiceException {
     Service rm = null;
     try {
       rm = serviceDiscoveryController
