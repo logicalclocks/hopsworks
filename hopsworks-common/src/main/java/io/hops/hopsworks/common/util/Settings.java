@@ -370,6 +370,7 @@ public class Settings implements Serializable {
 
   //Git
   private static final String VARIABLE_GIT_COMMAND_TIMEOUT_MINUTES_DEFAULT = "git_command_timeout_minutes";
+  private static final String VARIABLE_ENABLE_GIT_READ_ONLY_REPOSITORIES = "enable_read_only_git_repositories";
 
 
   /*
@@ -868,6 +869,8 @@ public class Settings implements Serializable {
       //Git
       GIT_MAX_COMMAND_TIMEOUT_MINUTES = setIntVar(VARIABLE_GIT_COMMAND_TIMEOUT_MINUTES_DEFAULT,
           GIT_MAX_COMMAND_TIMEOUT_MINUTES);
+      ENABLE_GIT_READ_ONLY_REPOSITORIES = setBoolVar(VARIABLE_ENABLE_GIT_READ_ONLY_REPOSITORIES,
+              ENABLE_GIT_READ_ONLY_REPOSITORIES);
 
       DOCKER_CGROUP_ENABLED = setBoolVar(VARIABLE_DOCKER_CGROUP_ENABLED, DOCKER_CGROUP_ENABLED);
       DOCKER_CGROUP_MEMORY_LIMIT = setStrVar(VARIABLE_DOCKER_CGROUP_HARD_LIMIT_MEMORY,
@@ -1807,6 +1810,12 @@ public class Settings implements Serializable {
   public synchronized long getGitJwtExpMs() {
     checkCache();
     return GIT_MAX_COMMAND_TIMEOUT_MINUTES * 60 * 1000;
+  }
+
+  private Boolean ENABLE_GIT_READ_ONLY_REPOSITORIES = false;
+  public synchronized Boolean getEnableGitReadOnlyRepositories() {
+    checkCache();
+    return ENABLE_GIT_READ_ONLY_REPOSITORIES;
   }
 
   private String GIT_IMAGE_NAME = "git:0.2.0";

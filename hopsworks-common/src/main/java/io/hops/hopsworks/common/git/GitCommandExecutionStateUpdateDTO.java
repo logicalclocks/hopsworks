@@ -15,8 +15,9 @@
  */
 package io.hops.hopsworks.common.git;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.hops.hopsworks.persistence.entity.git.config.GitOpExecutionState;
-
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class GitCommandExecutionStateUpdateDTO {
   private GitOpExecutionState executionState;
   private String message;

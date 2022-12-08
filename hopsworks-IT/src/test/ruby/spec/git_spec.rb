@@ -390,6 +390,69 @@ describe "On #{ENV['OS']}" do
         expect(added).to be true
       end
     end
+    describe 'Read only repositories' do
+      before(:all) do
+        setVar("enable_read_only_git_repositories", "true")
+        create_session(@project[:username], "Pass123")
+      end
+      after(:all) do
+        setVar("enable_read_only_git_repositories", "false")
+        create_session(@project[:username], "Pass123")
+      end
+      describe "Read only enabled at cluster level" do
+        it 'should create a read only repository by default' do
+          dir_name = "/Projects/#{@project[:projectname]}/Jupyter/testDir#{short_random_id}"
+          create_dir(@project, dir_name, query: "&type=DATASET")
+          expect_status_details(201)
+          clone_config = get_clone_config("GitHub", @project[:projectname], url="", branch="", dir_name)
+          repo_id, repo_path = clone_repo(@project[:id], clone_config)
+          expect(repo_id).not_to be_nil
+          expect(repo_path).not_to be_nil
+          get_repository(@project[:id], repo_id)
+          expect_status_details(200)
+          expect(json_body[:readOnly]).to be == true
+          delete_dataset(@project, dir_name)
+        end
+      end
+      describe "Operation on read only repositories" do
+        it 'should fail to commit in a read only repository' do
+          dir_name = "/Projects/#{@project[:projectname]}/Jupyter/testDir#{short_random_id}"
+          create_dir(@project, dir_name, query: "&type=DATASET")
+          expect_status_details(201)
+          clone_config = get_clone_config("GitHub", @project[:projectname], url="", branch="", dir_name)
+          repo_id, repo_path = clone_repo(@project[:id], clone_config)
+          expect(repo_id).not_to be_nil
+          expect(repo_path).not_to be_nil
+          #make commit
+          commit_message = "Rspec Test commit"
+          commit_config = {
+            type: "commitCommandConfiguration",
+            all:true,
+            message: commit_message,
+            files: []
+          }
+          git_commit(@project[:id], repo_id, commit_config.to_json)
+          expect_status_details(400, error_code: 500036)
+          delete_dataset(@project, dir_name)
+        end
+        it 'should fail to checkout a file in a read only repository' do
+          dir_name = "/Projects/#{@project[:projectname]}/Jupyter/testDir#{short_random_id}"
+          create_dir(@project, dir_name, query: "&type=DATASET")
+          expect_status_details(201)
+          clone_config = get_clone_config("GitHub", @project[:projectname], url="", branch="", dir_name)
+          repo_id, repo_path = clone_repo(@project[:id], clone_config)
+          expect(repo_id).not_to be_nil
+          expect(repo_path).not_to be_nil
+          #do git checkout filename
+          checkout_command_config = {
+            files:["test.txt"]
+          }
+          checkout_files(@project[:id], repo_id, checkout_command_config.to_json)
+          expect_status_details(400, error_code: 500036)
+          delete_dataset(@project, dir_name)
+        end
+      end
+    end
     describe "Operation on big repositories" do
       it "should be able to clone big repositories" do
         clone_config = get_clone_config("GitHub", @project[:projectname], url="https://github.com/logicalclocks/hops-examples.git")

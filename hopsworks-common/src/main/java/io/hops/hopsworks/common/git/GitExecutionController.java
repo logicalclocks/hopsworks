@@ -97,6 +97,8 @@ public class GitExecutionController {
   public GitOpExecution createExecution(GitCommandConfiguration gitCommandConfiguration, Project project,
                                         Users hopsworksUser, GitRepository repository)
       throws HopsSecurityException, GitOpException {
+    commandConfigurationValidator.verifyReadOnly(gitCommandConfiguration.getCommandType(), repository);
+    gitCommandConfiguration.setReadOnly(settings.getEnableGitReadOnlyRepositories());
     String hdfsUsername = hdfsUsersController.getHdfsUserName(project, hopsworksUser);
     //set the provider to validate secrets for some commands
     gitCommandConfiguration.setProvider(repository.getGitProvider());
