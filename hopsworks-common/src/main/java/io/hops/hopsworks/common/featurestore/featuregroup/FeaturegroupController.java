@@ -604,8 +604,6 @@ public class FeaturegroupController {
           // only topics need to be deleted, but no RonDB table
           streamFeatureGroupController.deleteOfflineStreamFeatureGroupTopic(project, featuregroup);
         }
-        //Delete associated delta streamer job
-        fsJobManagerController.deleteDeltaStreamerJob(project,user, featuregroup);
         break;
       case ON_DEMAND_FEATURE_GROUP:
         //Delete on_demand_feature_group will cascade will cascade to feature_group table
@@ -618,6 +616,9 @@ public class FeaturegroupController {
             FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
             + featuregroup.getFeaturegroupType());
     }
+
+    //Delete associated jobs
+    fsJobManagerController.deleteJobs(project, user, featuregroup);
 
     // Statistics adn validation files need to be deleted explicitly
     validationReportController.deleteFeaturegroupDataValidationDir(user, featuregroup);

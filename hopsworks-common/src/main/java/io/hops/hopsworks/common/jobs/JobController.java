@@ -238,6 +238,13 @@ public class JobController {
     }
     return jobFacade.findByProjectAndName(project, name);
   }
+
+  public List<Jobs> getJobsWithJobNameRegex(Project project, String jobNameRegex) {
+    if(Strings.isNullOrEmpty(jobNameRegex)) {
+      throw new IllegalArgumentException("job name regex was not provided or it was not set.");
+    }
+    return jobFacade.findByProjectAndJobNameRegex(project, jobNameRegex);
+  }
   
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public JobConfiguration inspectProgram(String path, Project project, Users user, JobType jobType)

@@ -43,6 +43,7 @@ import com.google.common.base.CharMatcher;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -139,6 +140,10 @@ public final class Utils {
 
   public static String getTrainingDatasetName(TrainingDataset trainingDataset) {
     return getFeatureStoreEntityName(trainingDataset.getName(), trainingDataset.getVersion());
+  }
+
+  public static String getFeatureViewName(FeatureView featureView) {
+    return getFeatureStoreEntityName(featureView.getName(), featureView.getVersion());
   }
   
   public static String getFeatureStoreEntityName(String entityName, Integer version) {
