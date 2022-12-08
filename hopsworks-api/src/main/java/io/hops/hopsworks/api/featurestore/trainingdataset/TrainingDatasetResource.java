@@ -211,7 +211,7 @@ public class TrainingDatasetResource {
           SecurityContext sc,
       @Context
           HttpServletRequest req
-  ) throws FeaturestoreException {
+  ) throws FeaturestoreException, JobException {
     Users user = jWTHelper.getUserPrincipal(sc);
     trainingDatasetController.delete(user, project, featurestore, featureView);
     return Response.ok().build();
@@ -234,7 +234,7 @@ public class TrainingDatasetResource {
       @ApiParam(value = "training dataset version")
       @PathParam("version")
           Integer version
-  ) throws FeaturestoreException {
+  ) throws FeaturestoreException, JobException {
     Users user = jWTHelper.getUserPrincipal(sc);
     trainingDatasetController.delete(user, project, featurestore, featureView, version);
     return Response.ok().build();

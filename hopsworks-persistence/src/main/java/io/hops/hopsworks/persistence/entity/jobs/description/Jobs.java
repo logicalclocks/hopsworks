@@ -106,7 +106,7 @@ import java.util.Date;
           = "SELECT j FROM Jobs j WHERE j.name = :name AND j.project = :project"),
   @NamedQuery(name = "Jobs.updateConfig",
           query
-          = "UPDATE Jobs j SET j.jobConfig = :jobconfig  WHERE j.id = :id"),
+          = "UPDATE Jobs j SET j.jobConfig = :jobconfig WHERE j.id = :id"),
   @NamedQuery(name = "Jobs.findByProjectAndType",
           query
           = "SELECT j FROM Jobs j WHERE j.project = :project AND j.type in :typeList ORDER BY j.id ASC")})

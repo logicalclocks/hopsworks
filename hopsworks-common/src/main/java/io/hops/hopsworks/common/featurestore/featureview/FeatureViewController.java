@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.featurestore.featureview;
 import io.hops.hopsworks.common.dao.QueryParam;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
+import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetFacade;
@@ -30,6 +31,7 @@ import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
@@ -50,6 +52,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -85,6 +88,8 @@ public class FeatureViewController {
   private TrainingDatasetController trainingDatasetController;
   @EJB
   private ActivityFacade activityFacade;
+  @Inject
+  private FsJobManagerController fsJobManagerController;
 
   public FeatureView createFeatureView(Project project, Users user, FeatureView featureView, Featurestore featurestore)
       throws FeaturestoreException, ProvenanceException, IOException {
@@ -191,19 +196,19 @@ public class FeatureViewController {
   }
 
   public void delete(Users user, Project project, Featurestore featurestore, String name)
-      throws FeaturestoreException {
+      throws FeaturestoreException, JobException {
     List<FeatureView> featureViews = featureViewFacade.findByNameAndFeaturestore(name, featurestore);
     delete(user, project, featurestore, featureViews);
   }
 
   public void delete(Users user, Project project, Featurestore featurestore, String name, Integer version)
-      throws FeaturestoreException {
+      throws FeaturestoreException, JobException {
     List<FeatureView> featureViews = featureViewFacade.findByNameVersionAndFeaturestore(name, version, featurestore);
     delete(user, project, featurestore, featureViews);
   }
 
   private void delete(Users user, Project project, Featurestore featurestore, List<FeatureView> featureViews)
-      throws FeaturestoreException {
+      throws FeaturestoreException, JobException {
     if (featureViews == null || featureViews.isEmpty()) {
       throw new FeaturestoreException(FEATURE_VIEW_NOT_FOUND, Level.FINE, "Provided feature view name or version " +
           "does not exist.");
@@ -217,6 +222,8 @@ public class FeatureViewController {
       trainingDatasetController.delete(user, project, featurestore, fv);
       featureViewFacade.remove(fv);
       removeFeatureViewDir(username, fv);
+      //Delete associated jobs
+      fsJobManagerController.deleteJobs(project, user, fv);
       activityFacade.persistActivity(ActivityFacade.DELETED_FEATURE_VIEW + fv.getName(),
           project, user, ActivityFlag.SERVICE);
     }

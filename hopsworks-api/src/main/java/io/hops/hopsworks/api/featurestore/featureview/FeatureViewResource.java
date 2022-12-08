@@ -29,6 +29,7 @@ import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
@@ -235,7 +236,7 @@ public class FeatureViewResource {
       @ApiParam(value = "Name of the feature view", required = true)
       @PathParam("name")
           String name
-  ) throws FeaturestoreException {
+  ) throws FeaturestoreException, JobException {
     Users user = jWTHelper.getUserPrincipal(sc);
     featureViewController.delete(user, project, featurestore, name);
 
@@ -261,7 +262,7 @@ public class FeatureViewResource {
       @ApiParam(value = "Version of the feature view", required = true)
       @PathParam("version")
           Integer version
-  ) throws FeaturestoreException {
+  ) throws FeaturestoreException, JobException {
     Users user = jWTHelper.getUserPrincipal(sc);
     featureViewController.delete(user, project, featurestore, name, version);
 
