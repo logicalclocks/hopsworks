@@ -2487,5 +2487,447 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
+
+    describe "permissions" do
+      before :all do
+        # Create users
+        @user1_params = {email: "user1_#{random_id}@email.com", first_name: "User", last_name: "1", password: "Pass123"}
+        @user1 = create_user(@user1_params)
+        pp "user email: #{@user1[:email]}" if defined?(@debugOpt) && @debugOpt
+        @user_data_scientist_params = {email: "data_scientist_#{random_id}@email.com", first_name: "User", last_name: "data_scientist", password: "Pass123"}
+        @user_data_scientist = create_user(@user_data_scientist_params)
+        pp "user email: #{@user_data_scientist[:email]}" if defined?(@debugOpt) && @debugOpt
+        @user_data_owner_params = {email: "data_owner_#{random_id}@email.com", first_name: "User", last_name: "data_owner", password: "Pass123"}
+        @user_data_owner = create_user(@user_data_owner_params)
+        pp "user email: #{@user_data_owner[:email]}" if defined?(@debugOpt) && @debugOpt
+
+        # Create base project
+        create_session(@user1[:email], @user1_params[:password])
+        @project1 = create_project
+        pp @project1[:projectname] if defined?(@debugOpt) && @debugOpt
+
+        # Add members to projects
+        add_member_to_project(@project1, @user_data_owner_params[:email], "Data owner")
+        add_member_to_project(@project1, @user_data_scientist_params[:email], "Data scientist")
+      end
+
+      context "training dataset permissions" do
+
+        # create
+
+        it 'data owner should be able to create td' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          
+          connector = get_hopsfs_training_datasets_connector(@project1[:projectname])
+
+          create_session(@user_data_owner[:email], @user_data_owner_params[:password])
+          json_result, training_dataset_name = create_hopsfs_training_dataset(@project1[:id], fs["featurestoreId"], connector)
+          expect_status_details(201)
+        end
+
+        it 'data scientist should be able to create td' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          
+          connector = get_hopsfs_training_datasets_connector(@project1[:projectname])
+
+          create_session(@user_data_scientist[:email], @user_data_scientist_params[:password])
+          json_result, training_dataset_name = create_hopsfs_training_dataset(@project1[:id], fs["featurestoreId"], connector)
+          expect_status_details(201)
+        end
+
+        # get
+
+        it 'data owner should be able to get td' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          
+          connector = get_hopsfs_training_datasets_connector(@project1[:projectname])
+
+          json_result, training_dataset_name = create_hopsfs_training_dataset(@project1[:id], fs["featurestoreId"], connector)
+          expect_status_details(201)
+
+          create_session(@user_data_owner[:email], @user_data_owner_params[:password])
+          get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project1[:id]}/featurestores/#{fs["featurestoreId"]}/trainingdatasets/#{training_dataset_name}"
+          get get_training_datasets_endpoint
+          parsed_json = JSON.parse(response.body)
+          expect_status_details(200)
+          expect(parsed_json.size).to eq 1
+        end
+
+        it 'data scientist should be able to get td' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          
+          connector = get_hopsfs_training_datasets_connector(@project1[:projectname])
+
+          json_result, training_dataset_name = create_hopsfs_training_dataset(@project1[:id], fs["featurestoreId"], connector)
+          expect_status_details(201)
+
+          create_session(@user_data_scientist[:email], @user_data_scientist_params[:password])
+          get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project1[:id]}/featurestores/#{fs["featurestoreId"]}/trainingdatasets/#{training_dataset_name}"
+          get get_training_datasets_endpoint
+          parsed_json = JSON.parse(response.body)
+          expect_status_details(200)
+          expect(parsed_json.size).to eq 1
+        end
+
+        # update
+
+        it 'data owner should be able to update td' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          
+          connector = get_hopsfs_training_datasets_connector(@project1[:projectname])
+
+          json_result, training_dataset_name = create_hopsfs_training_dataset(@project1[:id], fs["featurestoreId"], connector)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_owner[:email], @user_data_owner_params[:password])
+          json_result2 = update_hopsfs_training_dataset_metadata(@project1[:id], fs["featurestoreId"], parsed_json["id"], "tfrecords", connector)
+          parsed_json2 = JSON.parse(json_result2)
+          expect_status_details(200)
+
+          expect(parsed_json2["description"]).to eql("new_testtrainingdatasetdescription")
+          # make sure the name didn't change
+          expect(parsed_json2["name"]).to eql(training_dataset_name)
+        end
+
+        it 'data scientist should not be able to update td' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          
+          connector = get_hopsfs_training_datasets_connector(@project1[:projectname])
+
+          json_result, training_dataset_name = create_hopsfs_training_dataset(@project1[:id], fs["featurestoreId"], connector)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_scientist[:email], @user_data_scientist_params[:password])
+          json_result2 = update_hopsfs_training_dataset_metadata(@project1[:id], fs["featurestoreId"], parsed_json["id"], "tfrecords", connector)
+          expect_status_details(403)
+        end
+        
+        it 'data scientist should not be able to update self made td' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          
+          connector = get_hopsfs_training_datasets_connector(@project1[:projectname])
+
+          create_session(@user_data_scientist[:email], @user_data_scientist_params[:password])
+          json_result, training_dataset_name = create_hopsfs_training_dataset(@project1[:id], fs["featurestoreId"], connector)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          json_result2 = update_hopsfs_training_dataset_metadata(@project1[:id], fs["featurestoreId"], parsed_json["id"], "tfrecords", connector)
+          parsed_json2 = JSON.parse(json_result2)
+          expect_status_details(200)
+
+          expect(parsed_json2["description"]).to eql("new_testtrainingdatasetdescription")
+          # make sure the name didn't change
+          expect(parsed_json2["name"]).to eql(training_dataset_name)
+        end
+
+        # delete
+
+        it 'data owner should be able to delete td' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          
+          connector = get_hopsfs_training_datasets_connector(@project1[:projectname])
+
+          json_result, training_dataset_name = create_hopsfs_training_dataset(@project1[:id], fs["featurestoreId"], connector)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_owner[:email], @user_data_owner_params[:password])
+          delete_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + @project1["id"].to_s +
+              "/featurestores/" + fs["featurestoreId"].to_s + "/trainingdatasets/" + parsed_json["id"].to_s
+          delete delete_training_dataset_endpoint
+          expect_status_details(200)
+
+          # make sure inode is deleted
+          path = "/Projects/#{@project1['projectname']}/#{@project1['projectname']}_Training_Datasets/#{training_dataset_name}_1"
+          expect(test_dir(path)).to be false
+        end
+
+        it 'data scientist should not be able to delete td' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          
+          connector = get_hopsfs_training_datasets_connector(@project1[:projectname])
+
+          json_result, training_dataset_name = create_hopsfs_training_dataset(@project1[:id], fs["featurestoreId"], connector)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_scientist[:email], @user_data_scientist_params[:password])
+          delete_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + @project1["id"].to_s +
+              "/featurestores/" + fs["featurestoreId"].to_s + "/trainingdatasets/" + parsed_json["id"].to_s
+          delete delete_training_dataset_endpoint
+          expect_status_details(403)
+
+          # make sure inode is deleted
+          path = "/Projects/#{@project1['projectname']}/#{@project1['projectname']}_Training_Datasets/#{training_dataset_name}_1"
+          expect(test_dir(path)).to be true
+        end
+        
+        it 'data scientist should not be able to delete self made td' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          
+          connector = get_hopsfs_training_datasets_connector(@project1[:projectname])
+
+          create_session(@user_data_scientist[:email], @user_data_scientist_params[:password])
+          json_result, training_dataset_name = create_hopsfs_training_dataset(@project1[:id], fs["featurestoreId"], connector)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          delete_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + @project1["id"].to_s +
+              "/featurestores/" + fs["featurestoreId"].to_s + "/trainingdatasets/" + parsed_json["id"].to_s
+          delete delete_training_dataset_endpoint
+          expect_status_details(200)
+
+          # make sure inode is deleted
+          path = "/Projects/#{@project1['projectname']}/#{@project1['projectname']}_Training_Datasets/#{training_dataset_name}_1"
+          expect(test_dir(path)).to be false
+        end
+      end
+    end
+    
+    describe "shared permissions" do
+      before :all do
+        # Create users
+        @user1_params = {email: "user1_#{random_id}@email.com", first_name: "User", last_name: "1", password: "Pass123"}
+        @user1 = create_user(@user1_params)
+        pp "user email: #{@user1[:email]}" if defined?(@debugOpt) && @debugOpt
+        @user2_params = {email: "user2_#{random_id}@email.com", first_name: "User", last_name: "2", password: "Pass123"}
+        @user2 = create_user(@user2_params)
+        pp "user email: #{@user2[:email]}" if defined?(@debugOpt) && @debugOpt
+        @user_data_scientist_params = {email: "data_scientist_#{random_id}@email.com", first_name: "User", last_name: "data_scientist", password: "Pass123"}
+        @user_data_scientist = create_user(@user_data_scientist_params)
+        pp "user email: #{@user_data_scientist[:email]}" if defined?(@debugOpt) && @debugOpt
+        @user_data_owner_params = {email: "data_owner_#{random_id}@email.com", first_name: "User", last_name: "data_owner", password: "Pass123"}
+        @user_data_owner = create_user(@user_data_owner_params)
+        pp "user email: #{@user_data_owner[:email]}" if defined?(@debugOpt) && @debugOpt
+
+        # Create base project
+        create_session(@user1[:email], @user1_params[:password])
+        @project1 = create_project
+        pp @project1[:projectname] if defined?(@debugOpt) && @debugOpt
+
+        # Create shared with projects
+        create_session(@user2[:email], @user2_params[:password])
+        @project_read_only = create_project
+        pp @project_read_only[:projectname] if defined?(@debugOpt) && @debugOpt
+
+        # Add members to projects
+        add_member_to_project(@project_read_only, @user_data_owner_params[:email], "Data owner")
+        add_member_to_project(@project_read_only, @user_data_scientist_params[:email], "Data scientist")
+
+        # Share projects
+        create_session(@user1[:email], @user1_params[:password])
+        share_dataset_checked(@project1, "#{@project1[:projectname].downcase}_featurestore.db", @project_read_only[:projectname], permission: "READ_ONLY", datasetType: "FEATURESTORE")
+
+        # Accept shared projects
+        create_session(@user2[:email], @user2_params[:password])
+        accept_dataset_checked(@project_read_only, "#{@project1[:projectname]}::#{@project1[:projectname].downcase}_featurestore.db", datasetType: "FEATURESTORE")
+      end
+
+      context "shared training dataset permissions" do
+
+        # create
+
+        it 'data owner should not be able to create td with read only permission' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          
+          connector = get_hopsfs_training_datasets_connector(@project1[:projectname])
+
+          create_session(@user_data_owner[:email], @user_data_owner_params[:password])
+          json_result, training_dataset_name = create_hopsfs_training_dataset(@project_read_only[:id], fs["featurestoreId"], connector)
+          expect_status_details(403)
+        end
+
+        it 'data scientist should not be able to create td with read only permission' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          
+          connector = get_hopsfs_training_datasets_connector(@project1[:projectname])
+
+          create_session(@user_data_scientist[:email], @user_data_scientist_params[:password])
+          json_result, training_dataset_name = create_hopsfs_training_dataset(@project_read_only[:id], fs["featurestoreId"], connector)
+          expect_status_details(403)
+        end
+
+        # get
+
+        it 'data owner should be able to get td with read only permission' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          
+          connector = get_hopsfs_training_datasets_connector(@project1[:projectname])
+
+          json_result, training_dataset_name = create_hopsfs_training_dataset(@project1[:id], fs["featurestoreId"], connector)
+          expect_status_details(201)
+
+          create_session(@user_data_owner[:email], @user_data_owner_params[:password])
+          get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project_read_only[:id]}/featurestores/#{fs["featurestoreId"]}/trainingdatasets/#{training_dataset_name}"
+          get get_training_datasets_endpoint
+          parsed_json = JSON.parse(response.body)
+          expect_status_details(200)
+          expect(parsed_json.size).to eq 1
+        end
+
+        it 'data scientist should be able to get td with read only permission' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          
+          connector = get_hopsfs_training_datasets_connector(@project1[:projectname])
+
+          json_result, training_dataset_name = create_hopsfs_training_dataset(@project1[:id], fs["featurestoreId"], connector)
+          expect_status_details(201)
+
+          create_session(@user_data_scientist[:email], @user_data_scientist_params[:password])
+          get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project_read_only[:id]}/featurestores/#{fs["featurestoreId"]}/trainingdatasets/#{training_dataset_name}"
+          get get_training_datasets_endpoint
+          parsed_json = JSON.parse(response.body)
+          expect_status_details(200)
+          expect(parsed_json.size).to eq 1
+        end
+
+        # update
+
+        it 'data owner should not be able to update td with read only permission' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          
+          connector = get_hopsfs_training_datasets_connector(@project1[:projectname])
+
+          json_result, training_dataset_name = create_hopsfs_training_dataset(@project1[:id], fs["featurestoreId"], connector)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_owner[:email], @user_data_owner_params[:password])
+          json_result2 = update_hopsfs_training_dataset_metadata(@project_read_only[:id], fs["featurestoreId"], parsed_json["id"], "tfrecords", connector)
+          expect_status_details(403)
+        end
+
+        it 'data scientist should not be able to update td with read only permission' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          
+          connector = get_hopsfs_training_datasets_connector(@project1[:projectname])
+
+          json_result, training_dataset_name = create_hopsfs_training_dataset(@project1[:id], fs["featurestoreId"], connector)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_scientist[:email], @user_data_scientist_params[:password])
+          json_result2 = update_hopsfs_training_dataset_metadata(@project_read_only[:id], fs["featurestoreId"], parsed_json["id"], "tfrecords", connector)
+          expect_status_details(403)
+        end
+
+        # delete
+
+        it 'data owner should not be able to delete td with read only permission' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          
+          connector = get_hopsfs_training_datasets_connector(@project1[:projectname])
+
+          json_result, training_dataset_name = create_hopsfs_training_dataset(@project1[:id], fs["featurestoreId"], connector)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_owner[:email], @user_data_owner_params[:password])
+          delete_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + @project_read_only["id"].to_s +
+              "/featurestores/" + fs["featurestoreId"].to_s + "/trainingdatasets/" + parsed_json["id"].to_s
+          delete delete_training_dataset_endpoint
+          expect_status_details(403)
+
+          # make sure inode is deleted
+          path = "/Projects/#{@project1['projectname']}/#{@project1['projectname']}_Training_Datasets/#{training_dataset_name}_1"
+          expect(test_dir(path)).to be true
+        end
+
+        it 'data scientist should not be able to delete td with read only permission' do
+          create_session(@user1[:email], @user1_params[:password])
+          fs = get_featurestore(@project1[:id])
+          json_result, fg_name = create_cached_featuregroup(@project1[:id], fs["featurestoreId"], online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          
+          connector = get_hopsfs_training_datasets_connector(@project1[:projectname])
+
+          json_result, training_dataset_name = create_hopsfs_training_dataset(@project1[:id], fs["featurestoreId"], connector)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          create_session(@user_data_scientist[:email], @user_data_scientist_params[:password])
+          delete_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + @project_read_only["id"].to_s +
+              "/featurestores/" + fs["featurestoreId"].to_s + "/trainingdatasets/" + parsed_json["id"].to_s
+          delete delete_training_dataset_endpoint
+          expect_status_details(403)
+
+          # make sure inode is deleted
+          path = "/Projects/#{@project1['projectname']}/#{@project1['projectname']}_Training_Datasets/#{training_dataset_name}_1"
+          expect(test_dir(path)).to be true
+        end
+      end
+    end
   end
 end

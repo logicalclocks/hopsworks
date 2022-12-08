@@ -904,10 +904,14 @@ module FeaturestoreHelper
     parsed_result[0]
   end
 
-  def delete_featuregroup_checked(project_id, featurestore_id, fg_id)
+  def delete_featuregroup(project_id, featurestore_id, fg_id)
     delete_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups/#{fg_id}"
     pp "delete #{delete_featuregroup_endpoint}" if defined?(@debugOpt) && @debugOpt
     delete delete_featuregroup_endpoint
+  end
+
+  def delete_featuregroup_checked(project_id, featurestore_id, fg_id)
+    delete_featuregroup(project_id, featurestore_id, fg_id)
     expect_status_details(200)
   end
 

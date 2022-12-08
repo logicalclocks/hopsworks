@@ -88,6 +88,9 @@ public class FeatureViewController {
 
   public FeatureView createFeatureView(Project project, Users user, FeatureView featureView, Featurestore featurestore)
       throws FeaturestoreException, ProvenanceException, IOException {
+    featurestoreUtils.verifyUserProjectEqualsFsProject(user, project, featurestore,
+        FeaturestoreUtils.ActionMessage.CREATE_FEATURE_VIEW);
+
     // if version not provided, get latest and increment
     if (featureView.getVersion() == null) {
       // returns ordered list by desc version
@@ -206,7 +209,8 @@ public class FeatureViewController {
           "does not exist.");
     }
     for (FeatureView fv: featureViews) {
-      featurestoreUtils.verifyUserRole(fv, featurestore, user, project);
+      featurestoreUtils.verifyFeatureViewDataOwnerOrSelf(user, project, fv,
+          FeaturestoreUtils.ActionMessage.DELETE_FEATURE_VIEW);
     }
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     for (FeatureView fv: featureViews) {
@@ -237,7 +241,8 @@ public class FeatureViewController {
       throws FeaturestoreException {
     FeatureView featureView = getByNameVersionAndFeatureStore(name, version, featurestore);
 
-    featurestoreUtils.verifyUserRole(featureView, featurestore, user, project);
+    featurestoreUtils.verifyFeatureViewDataOwnerOrSelf(user, project, featureView,
+        FeaturestoreUtils.ActionMessage.UPDATE_FEATURE_VIEW);
 
     // Update metadata
     featureView.setDescription(description);

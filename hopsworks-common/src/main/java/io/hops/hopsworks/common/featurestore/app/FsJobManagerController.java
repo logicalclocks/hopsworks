@@ -32,6 +32,7 @@ import io.hops.hopsworks.common.featurestore.query.QueryController;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
+import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -104,6 +105,8 @@ public class FsJobManagerController {
   private QueryBuilder queryBuilder;
   @EJB
   private FeaturegroupFacade featuregroupFacade;
+  @EJB
+  private FeaturestoreUtils featurestoreUtils;
 
   private ObjectMapper objectMapper = new ObjectMapper();
   private SimpleDateFormat formatter = new SimpleDateFormat("ddMMyyyyHHmmss");
@@ -247,10 +250,8 @@ public class FsJobManagerController {
    * @throws ServiceException
    */
   private Jobs setupAndStartJob(Project project, Users user, Featurestore featurestore, String entityName,
-    Integer entityVersion, JobEntityType type, String op, String configPrefix,
-                                Map<String, String> jobConfiguration)
+    Integer entityVersion, JobEntityType type, String op, String configPrefix, Map<String, String> jobConfiguration)
           throws FeaturestoreException, JobException, GenericException, ProjectException, ServiceException {
-    
     DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
     try {
       String jobName = getJobName(op, type, Utils.getFeatureStoreEntityName(entityName, entityVersion), false);
@@ -324,10 +325,14 @@ public class FsJobManagerController {
                                       QueryDTO queryDTO, Boolean overwrite, Map<String, String> writeOptions,
                                       SparkJobConfiguration sparkJobConfiguration, String jobType)
       throws FeaturestoreException, JobException, GenericException, ProjectException, ServiceException {
+    // verifyTrainingDatasetDataOwnerOrSelf is needed to avoid Data Scientist changing Training Dataset
+    // not belonging to him. ex: td.insert(fg.select_all(), True)
+    featurestoreUtils.verifyTrainingDatasetDataOwnerOrSelf(user, project, trainingDataset,
+        FeaturestoreUtils.ActionMessage.SETUP_TRAINING_DATASET_JOB);
+
     DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
 
     try {
-
       String jobConfigurationPath;
       Map<String, Object> jobConfiguration = new HashMap<>();
       String jobName = null;
@@ -471,7 +476,6 @@ public class FsJobManagerController {
 
   public Jobs setupImportFgJob(Project project, Users user, Featurestore featurestore, ImportFgJobConf importFgJobConf)
           throws FeaturestoreException, JobException, GenericException, ProjectException, ServiceException {
-
     Map jobConfiguration =new HashMap<>();
     FeaturestoreStorageConnectorDTO storageConnector = importFgJobConf.getStorageConnectorDTO();
     FeaturestoreConnectorType connectorType = storageConnector.getStorageConnectorType();

@@ -29,8 +29,11 @@ import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
+import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -39,7 +42,9 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.logging.Level;
 
 @Stateless
@@ -50,39 +55,164 @@ public class FeaturestoreUtils {
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
 
-  /**
-   * Verify that the user is allowed to execute the requested operation based on his/hers project role
-   * <p>
-   * Only data owners are allowed to update/delete feature groups/training datasets
-   * created by someone else in the project
-   *
-   * @param trainingDataset the training dataset the operation concerns
-   * @param featurestore the featurestore that the operation concerns
-   * @param project the project of the featurestore
-   * @param user the user requesting the operation
-   * @throws FeaturestoreException
-   */
-  public void verifyUserRole(TrainingDataset trainingDataset, Featurestore featurestore, Users user, Project project)
-      throws FeaturestoreException {
-    String userRole = projectTeamFacade.findCurrentRole(project, user);
-    if (!trainingDataset.getCreator().equals(user) &&
-        !userRole.equalsIgnoreCase(AllowedRoles.DATA_OWNER)) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.UNAUTHORIZED_FEATURESTORE_OPERATION, Level.FINE,
-          "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
-              ", Training dataset: " + trainingDataset.getName() + ", userRole:" + userRole +
-              ", creator of the featuregroup: " + trainingDataset.getCreator().getEmail());
+  public enum ActionMessage {
+    // Feature Group
+    CREATE_FEATURE_GROUP("Creating feature group"),
+    CLEAR_FEATURE_GROUP("Clear feature group"),
+    UPDATE_FEATURE_GROUP_METADATA("Update feature group metadata"),
+    ENABLE_FEATURE_GROUP_ONLINE("Enable feature group online"),
+    DISABLE_FEATURE_GROUP_ONLINE("Disable feature group online"),
+    UPDATE_FEATURE_GROUP_STATS_CONFIG("Update feature group stats config"),
+    DELETE_FEATURE_GROUP("Delete feature group"),
+    // Feature View
+    CREATE_FEATURE_VIEW("Creating feature view"),
+    DELETE_FEATURE_VIEW("Delete feature view"),
+    UPDATE_FEATURE_VIEW("Update feature view"),
+    // Training Dataset
+    CREATE_TRAINING_DATASET("Creating training dataset"),
+    DELETE_TRAINING_DATASET("Delete training dataset"),
+    DELETE_TRAINING_DATASET_DATA_ONLY("Delete training dataset data only"),
+    DELETE_HOPSFS_TRAINING_DATASET("Delete hopsfs training data"),
+    UPDATE_TRAINING_DATASET_METADATA("Update training dataset metadata"),
+    UPDATE_TRAINING_DATASET_STATS_CONFIG("Update training dataset stats config"),
+    // Job
+    SETUP_STATISTICS_JOB("Setup statistics job"),
+    SETUP_VALIDATION_JOB("Setup validation job"),
+    IMPORT_FEATURE_GROUP_JOB("Import feature group job"),
+    SETUP_INGESTION_JOB("Setup ingestion job"),
+    SETUP_TRAINING_DATASET_JOB("Setup training dataset job"),
+    SETUP_HUDI_DELTA_STREAMER_JOB("Setup HUDI delta streamer job"),
+    // Storage Connector
+    CREATE_STORAGE_CONNECTOR("Creating storage connector"),
+    UPDATE_STORAGE_CONNECTOR("Update storage connector"),
+    DELETE_STORAGE_CONNECTOR("Delete storage connector");
+
+    private String message;
+
+    ActionMessage(String message) {
+      this.message = message;
+    }
+
+    public String getMessage() {
+      return message;
     }
   }
 
-  public void verifyUserRole(FeatureView featureView, Featurestore featurestore, Users user, Project project)
+  private void throwForbiddenOperation(Featurestore featureStore, String userRole, Project project, Object object,
+                                       ActionMessage actionMessage) throws FeaturestoreException {
+    List<String> messageContent = new ArrayList<>();
+    if (project != null) {
+      messageContent.add(String.format("project: %s", project.getName()));
+    }
+    if (featureStore != null) {
+      messageContent.add(String.format("featurestoreId: %s", featureStore.getId()));
+    }
+    if (userRole != null) {
+      messageContent.add(String.format("userRole: %s", userRole));
+    }
+    if (object != null) {
+      if (object instanceof Featuregroup) {
+        Featuregroup featuregroup = ((Featuregroup) object);
+        messageContent.add(String.format("feature group: %s, version: %s",
+            featuregroup.getName(), featuregroup.getVersion()));
+      } else if (object instanceof TrainingDataset) {
+        TrainingDataset trainingDataset = ((TrainingDataset) object);
+        messageContent.add(String.format("training dataset: %s, version: %s",
+            trainingDataset.getName(), trainingDataset.getName()));
+      } else if (object instanceof FeatureView) {
+        FeatureView featureView = ((FeatureView) object);
+        messageContent.add(String.format("feature view: %s, version: %s",
+            featureView.getName(), featureView.getVersion()));
+      } else if (object instanceof FeaturestoreConnector) {
+        FeaturestoreConnector featurestoreConnector = ((FeaturestoreConnector) object);
+        messageContent.add(String.format("storage connector: %s", featurestoreConnector.getName()));
+      } else if (object instanceof Jobs) {
+        Jobs job = ((Jobs) object);
+        messageContent.add(String.format("jobs: %s", job.getName()));
+      }
+    }
+    if (actionMessage != null) {
+      messageContent.add(String.format("actionMessage: %s", actionMessage.getMessage()));
+    }
+    throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FORBIDDEN_FEATURESTORE_OPERATION, Level.FINE,
+        String.join(", ", messageContent));
+  }
+
+  /**
+   * Verify that the action is allowed to be executed
+   *
+   * @param user the user requesting the operation
+   * @param project the project of the featurestore
+   * @param featureStore the featurestore that the operation concerns
+   * @param actionMessage the message describing action taking place
+   * @throws FeaturestoreException
+   */
+  public void verifyUserProjectEqualsFsProject(Users user, Project project, Featurestore featureStore,
+                                               ActionMessage actionMessage)
+      throws FeaturestoreException {
+    if (!featureStore.getProject().equals(project)) {
+      String userRole = projectTeamFacade.findCurrentRole(project, user);
+      throwForbiddenOperation(featureStore, userRole, project, null, actionMessage);
+    }
+  }
+
+  /**
+   * Verify that the action is allowed to be executed based on his/hers project role being DATA_OWNER
+   *
+   * @param user the user requesting the operation
+   * @param project the project of the featurestore
+   * @param featureStore the featurestore that the operation concerns
+   * @param actionMessage the message describing action taking place
+   * @throws FeaturestoreException
+   */
+  public void verifyUserProjectEqualsFsProjectAndDataOwner(Users user, Project project, Featurestore featureStore,
+                                                           ActionMessage actionMessage)
       throws FeaturestoreException {
     String userRole = projectTeamFacade.findCurrentRole(project, user);
-    if (!featureView.getCreator().equals(user) &&
-        !userRole.equalsIgnoreCase(AllowedRoles.DATA_OWNER)) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.UNAUTHORIZED_FEATURESTORE_OPERATION, Level.FINE,
-          "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
-              ", FeatureView: " + featureView.getName() + ", userRole:" + userRole +
-              ", creator of the FeatureView: " + featureView.getCreator().getEmail());
+    if (!featureStore.getProject().equals(project) || !AllowedRoles.DATA_OWNER.equalsIgnoreCase(userRole)) {
+      throwForbiddenOperation(featureStore, userRole, project, null, actionMessage);
+    }
+  }
+
+  /**
+   * Verify that the action is allowed to be executed on the training dataset
+   * <p>
+   * Only data owners are allowed to update/delete training datasets created by someone else in the project
+   *
+   * @param user the user requesting the operation
+   * @param project the project of the featurestore
+   * @param trainingDataset the training dataset the operation concerns
+   * @param actionMessage the message describing action taking place
+   * @throws FeaturestoreException
+   */
+  public void verifyTrainingDatasetDataOwnerOrSelf(Users user, Project project, TrainingDataset trainingDataset,
+                                                   ActionMessage actionMessage)
+      throws FeaturestoreException {
+    String userRole = projectTeamFacade.findCurrentRole(project, user);
+    if (!trainingDataset.getFeaturestore().getProject().equals(project) ||
+        (!AllowedRoles.DATA_OWNER.equalsIgnoreCase(userRole) && !trainingDataset.getCreator().equals(user))) {
+      throwForbiddenOperation(trainingDataset.getFeaturestore(), userRole, project, trainingDataset, actionMessage);
+    }
+  }
+
+  /**
+   * Verify that the action is allowed to be executed on the feature view
+   * <p>
+   * Only data owners are allowed to update/delete feature view created by someone else in the project
+   *
+   * @param user the user requesting the operation
+   * @param project the project of the featurestore
+   * @param featureView the feature view the operation concerns
+   * @param actionMessage the message describing action taking place
+   * @throws FeaturestoreException
+   */
+  public void verifyFeatureViewDataOwnerOrSelf(Users user, Project project, FeatureView featureView,
+                                               ActionMessage actionMessage)
+      throws FeaturestoreException {
+    String userRole = projectTeamFacade.findCurrentRole(project, user);
+    if (!featureView.getFeaturestore().getProject().equals(project) ||
+        (!AllowedRoles.DATA_OWNER.equalsIgnoreCase(userRole) && !featureView.getCreator().equals(user))) {
+      throwForbiddenOperation(featureView.getFeaturestore(), userRole, project, featureView, actionMessage);
     }
   }
 
