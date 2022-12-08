@@ -60,6 +60,7 @@ import java.util.Objects;
 @NamedQueries({
     @NamedQuery(name = "TrainingDataset.findAll", query = "SELECT td FROM TrainingDataset td"),
     @NamedQuery(name = "TrainingDataset.findById", query = "SELECT td FROM TrainingDataset td WHERE td.id = :id"),
+    @NamedQuery(name = "TrainingDataset.findByIds", query = "SELECT td FROM TrainingDataset td WHERE td.id IN :ids"),
     @NamedQuery(name = "TrainingDataset.findByFeaturestore", query = "SELECT td FROM TrainingDataset td " +
         "WHERE td.featurestore = :featurestore"),
     @NamedQuery(name = "TrainingDataset.countByFeaturestore", query = "SELECT count(td.id) FROM TrainingDataset td " +
@@ -81,7 +82,10 @@ import java.util.Objects;
     @NamedQuery(name = "TrainingDataset.findByFeatureView", query = "SELECT td FROM TrainingDataset td " +
         "WHERE td.featureView = :featureView"),
     @NamedQuery(name = "TrainingDataset.findByFeatureViewOrderedByDescVersion", query = "SELECT td FROM " +
-        "TrainingDataset td WHERE td.featureView = :featureView ORDER BY td.version DESC")})
+        "TrainingDataset td WHERE td.featureView = :featureView ORDER BY td.version DESC"),
+    @NamedQuery(name = "TrainingDataset.findByFeatureViewsOrderedByDescVersion",
+                query = "SELECT td FROM TrainingDataset td WHERE td.featureView IN :featureViews " +
+                  "ORDER BY td.version DESC")})
 public class TrainingDataset implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id

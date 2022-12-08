@@ -47,8 +47,10 @@ import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.security.QuotasEnforcement;
 import io.hops.hopsworks.common.security.QuotaEnforcementException;
+import io.hops.hopsworks.common.provenance.explicit.FeatureGroupLinkController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.KafkaException;
@@ -138,6 +140,8 @@ public class FeaturegroupController {
   private QuotasEnforcement quotasEnforcement;
   @Inject
   private FsJobManagerController fsJobManagerController;
+  @EJB
+  private FeatureGroupLinkController featureGroupLinkController;
 
   /**
    * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
@@ -168,7 +172,8 @@ public class FeaturegroupController {
    */
   public FeaturegroupDTO clearFeaturegroup(Featuregroup featuregroup, Project project, Users user)
     throws FeaturestoreException, SQLException, ProvenanceException, IOException, ServiceException,
-    KafkaException, SchemaException, ProjectException, UserException, HopsSecurityException, JobException {
+           KafkaException, SchemaException, ProjectException, UserException, HopsSecurityException, JobException,
+           GenericException {
 
     featurestoreUtils.verifyUserProjectEqualsFsProjectAndDataOwner(user, project, featuregroup.getFeaturestore(),
         FeaturestoreUtils.ActionMessage.CLEAR_FEATURE_GROUP);
@@ -207,7 +212,8 @@ public class FeaturegroupController {
   public FeaturegroupDTO createFeaturegroup(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
                                             Project project, Users user)
     throws FeaturestoreException, ServiceException, SQLException, ProvenanceException, IOException,
-    KafkaException, SchemaException, ProjectException, UserException, HopsSecurityException, JobException {
+           KafkaException, SchemaException, ProjectException, UserException, HopsSecurityException, JobException,
+           GenericException {
 
     featurestoreUtils.verifyUserProjectEqualsFsProjectAndDataOwner(user, project, featurestore,
         FeaturestoreUtils.ActionMessage.CREATE_FEATURE_GROUP);
@@ -240,7 +246,8 @@ public class FeaturegroupController {
   public FeaturegroupDTO createFeaturegroupNoValidation(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
                                                       Project project, Users user)
     throws FeaturestoreException, SQLException, ProvenanceException, ServiceException, KafkaException,
-    SchemaException, ProjectException, UserException, IOException, HopsSecurityException, JobException {
+           SchemaException, ProjectException, UserException, IOException, HopsSecurityException, JobException,
+           GenericException {
 
     //Persist specific feature group metadata (cached fg or on-demand fg)
     OnDemandFeaturegroup onDemandFeaturegroup = null;
@@ -723,7 +730,7 @@ public class FeaturegroupController {
                                                    CachedFeaturegroup cachedFeaturegroup,
                                                    StreamFeatureGroup streamFeatureGroup,
                                                    OnDemandFeaturegroup onDemandFeaturegroup)
-    throws FeaturestoreException, JobException {
+    throws FeaturestoreException, JobException, GenericException {
     Featuregroup featuregroup = new Featuregroup();
     featuregroup.setName(featuregroupDTO.getName());
     featuregroup.setFeaturestore(featurestore);
@@ -762,6 +769,11 @@ public class FeaturegroupController {
     }
     
     featuregroupFacade.persist(featuregroup);
+    if(cachedFeaturegroup != null) {
+      featureGroupLinkController.createParentLinks(featurestore, (CachedFeaturegroupDTO)featuregroupDTO, featuregroup);
+    } else if(streamFeatureGroup != null) {
+      featureGroupLinkController.createParentLinks(featurestore, (StreamFeatureGroupDTO)featuregroupDTO, featuregroup);
+    }
     return featuregroup;
   }
 

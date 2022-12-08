@@ -890,6 +890,8 @@ public class Settings implements Serializable {
           QUOTAS_MAX_PARALLEL_EXECUTIONS);
       QUOTAS_MAX_PARALLEL_EXECUTIONS = setLongVar(VARIABLE_QUOTAS_MAX_PARALLEL_EXECUTIONS,
           QUOTAS_MAX_PARALLEL_EXECUTIONS);
+      
+      SQL_MAX_SELECT_IN = setIntVar(VARIABLE_SQL_MAX_SELECT_IN, SQL_MAX_SELECT_IN);
 
       ENABLE_JUPYTER_PYTHON_KERNEL_NON_KUBERNETES = setBoolVar(VARIABLE_ENABLE_JUPYTER_PYTHON_KERNEL_NON_KUBERNETES,
         ENABLE_JUPYTER_PYTHON_KERNEL_NON_KUBERNETES);
@@ -2217,7 +2219,7 @@ public class Settings implements Serializable {
   
   public Settings() {
   }
-
+  
   /**
    * Get the variable value with the given name.
    *
@@ -3654,7 +3656,7 @@ public class Settings implements Serializable {
   private String PROVENANCE_TYPE_S = PROVENANCE_TYPE.name();
   private Integer PROVENANCE_CLEANUP_SIZE = 5;
   private Integer PROVENANCE_ARCHIVE_SIZE = 100;
-  private Integer PROVENANCE_GRAPH_MAX_SIZE = 10000;
+  private Integer PROVENANCE_GRAPH_MAX_SIZE = 50;
   private Long PROVENANCE_CLEANER_PERIOD = 3600L; //1h in s
   private Long PROVENANCE_ARCHIVE_DELAY = 0l;
   private Integer PROVENANCE_OPENSEARCH_ARCHIVAL_PAGE_SIZE = 50;
@@ -3964,5 +3966,15 @@ public class Settings implements Serializable {
   public synchronized long getQuotasMaxParallelExecutions() {
     checkCache();
     return QUOTAS_MAX_PARALLEL_EXECUTIONS;
+  }
+
+  private static final String VARIABLE_SQL_MAX_SELECT_IN = "sql_max_select_in";
+  private Integer SQL_MAX_SELECT_IN = 100;
+  /**
+   * For performance reasons SELECT ... WHERE col_name IN (.. , ..) queries should not have an unbounded in array.
+   */
+  public synchronized Integer getSQLMaxSelectIn() {
+    checkCache();
+    return SQL_MAX_SELECT_IN;
   }
 }

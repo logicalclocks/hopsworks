@@ -37,6 +37,12 @@ public class DatasetPath {
   private DatasetSharedWith datasetSharedWith;
   private Inode inode;
   
+  public DatasetPath(Path fullPath, Path datasetFullPath, Path relativePath) {
+    this.fullPath = fullPath;
+    this.datasetFullPath = datasetFullPath;
+    this.relativePath = relativePath;
+  }
+  
   public DatasetPath(Project project, String path, String root) throws UnsupportedEncodingException {
     String p = Utils.prepPath(path);
     String pathStr = Utils.pathStripSlash(p);

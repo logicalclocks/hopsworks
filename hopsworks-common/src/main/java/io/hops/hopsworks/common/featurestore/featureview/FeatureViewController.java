@@ -29,6 +29,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
+import io.hops.hopsworks.common.provenance.explicit.FeatureViewLinkController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.JobException;
@@ -90,6 +91,8 @@ public class FeatureViewController {
   private ActivityFacade activityFacade;
   @Inject
   private FsJobManagerController fsJobManagerController;
+  @EJB
+  private FeatureViewLinkController featureViewLinkController;
 
   public FeatureView createFeatureView(Project project, Users user, FeatureView featureView, Featurestore featurestore)
       throws FeaturestoreException, ProvenanceException, IOException {
@@ -154,6 +157,7 @@ public class FeatureViewController {
           ActivityFlag.SERVICE);
 
       fsProvenanceController.featureViewAttachXAttr(path.toString(), featureView, udfso);
+      featureViewLinkController.createParentLinks(featureView);
       return featureView;
     } finally {
       if (udfso != null) {
