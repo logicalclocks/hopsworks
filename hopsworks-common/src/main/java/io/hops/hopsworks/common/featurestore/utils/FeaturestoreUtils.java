@@ -22,6 +22,7 @@ import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryExcept
 import com.logicalclocks.servicediscoverclient.resolvers.Type;
 import com.logicalclocks.servicediscoverclient.service.Service;
 import com.logicalclocks.servicediscoverclient.service.ServiceQuery;
+import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -40,6 +41,7 @@ import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -248,5 +250,34 @@ public class FeaturestoreUtils {
     Service namenode = serviceDiscoveryController
             .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.RPC_NAMENODE);
     return DistributedFsService.HOPSFS_SCHEME + namenode.getName() + ":" + namenode.getPort() + hdfsPath;
+  }
+  
+  public UriBuilder featureGroupByIdURI(UriBuilder uriBuilder, Project accessProject, Featuregroup featureGroup) {
+    return uriBuilder
+      .path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
+      .path(Integer.toString(accessProject.getId()))
+      .path(ResourceRequest.Name.FEATURESTORES.toString().toLowerCase())
+      .path(Integer.toString(featureGroup.getFeaturestore().getId()))
+      .path(ResourceRequest.Name.FEATUREGROUPS.toString().toLowerCase())
+      .path(Integer.toString(featureGroup.getId()));
+  }
+  
+  public UriBuilder featureViewURI(UriBuilder uriBuilder, Project accessProject, FeatureView featureView) {
+    return uriBuilder
+      .path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
+      .path(Integer.toString(accessProject.getId()))
+      .path(ResourceRequest.Name.FEATURESTORES.toString().toLowerCase())
+      .path(Integer.toString(featureView.getFeaturestore().getId()))
+      .path(ResourceRequest.Name.FEATUREVIEW.toString().toLowerCase())
+      .path(featureView.getName())
+      .path(ResourceRequest.Name.VERSION.toString().toLowerCase())
+      .path(Integer.toString(featureView.getVersion()));
+  }
+  
+  public UriBuilder trainingDatasetURI(UriBuilder uriBuilder, Project accessProject, TrainingDataset trainingDataset) {
+    return featureViewURI(uriBuilder, accessProject, trainingDataset.getFeatureView())
+      .path(ResourceRequest.Name.TRAININGDATASETS.toString().toLowerCase())
+      .path(ResourceRequest.Name.VERSION.toString().toLowerCase())
+      .path(Integer.toString(trainingDataset.getVersion()));
   }
 }

@@ -28,18 +28,16 @@ import io.hops.hopsworks.api.featurestore.datavalidationv2.suites.ExpectationSui
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.jobs.JobDTO;
 import io.hops.hopsworks.api.jobs.JobsBuilder;
+import io.hops.hopsworks.api.provenance.FeatureGroupProvenanceResource;
 import io.hops.hopsworks.common.featurestore.featuregroup.stream.DeltaStreamerJobConf;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.api.provenance.ProvArtifactResource;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dataset.util.DatasetHelper;
-import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
@@ -49,8 +47,8 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.IngestionJob;
 import io.hops.hopsworks.exceptions.DatasetException;
-import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.KafkaException;
@@ -60,7 +58,6 @@ import io.hops.hopsworks.exceptions.SchemaException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
@@ -134,8 +131,6 @@ public class FeaturegroupService {
   @Inject
   private CommitResource commitResource;
   @Inject
-  private ProvArtifactResource provenanceResource;
-  @Inject
   private FsJobManagerController fsJobManagerController;
   @Inject
   private IngestionJobBuilder ingestionJobBuilder;
@@ -152,11 +147,11 @@ public class FeaturegroupService {
   @Inject
   private ValidationResultResource validationResultResource;
   @EJB
-  private DatasetHelper datasetHelper;
-  @EJB
   private JobsBuilder jobsBuilder;
   @Inject
   private FeatureGroupTagResource tagResource;
+  @Inject
+  private FeatureGroupProvenanceResource provenanceResource;
 
   private Project project;
   private Featurestore featurestore;
@@ -253,7 +248,8 @@ public class FeaturegroupService {
   public Response createFeaturegroup(@Context SecurityContext sc,
                                      @Context HttpServletRequest req,
                                      FeaturegroupDTO featuregroupDTO)
-      throws FeaturestoreException, ServiceException, KafkaException, SchemaException, ProjectException, UserException {
+    throws FeaturestoreException, ServiceException, KafkaException, SchemaException, ProjectException, UserException,
+           GenericException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if(featuregroupDTO == null) {
       throw new IllegalArgumentException("Input JSON for creating a new Feature Group cannot be null");
@@ -407,7 +403,8 @@ public class FeaturegroupService {
                                              @Context HttpServletRequest req,
                                              @ApiParam(value = "Id of the featuregroup", required = true)
                                                @PathParam("featuregroupId") Integer featuregroupId)
-      throws FeaturestoreException, ServiceException, KafkaException, SchemaException, ProjectException, UserException {
+    throws FeaturestoreException, ServiceException, KafkaException, SchemaException, ProjectException, UserException,
+           GenericException {
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
     //Verify that the user has the data-owner role or is the creator of the featuregroup
@@ -584,19 +581,10 @@ public class FeaturegroupService {
 
   @Path("/{featureGroupId}/provenance")
   @Logged(logLevel = LogLevel.OFF)
-  public ProvArtifactResource provenance(@PathParam("featureGroupId") Integer featureGroupId)
-      throws FeaturestoreException, GenericException {
-    DatasetPath targetEndpointPath;
-    try {
-      Dataset targetEndpoint = featurestoreController.getProjectFeaturestoreDataset(featurestore.getProject());
-      targetEndpointPath = datasetHelper.getTopLevelDatasetPath(project, targetEndpoint);
-    } catch (DatasetException ex) {
-      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "training dataset not found");
-    }
-  
-    this.provenanceResource.setContext(project, targetEndpointPath);
-    Featuregroup fg = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
-    this.provenanceResource.setArtifactId(fg.getName(), fg.getVersion());
+  public FeatureGroupProvenanceResource provenance(@PathParam("featureGroupId") Integer featureGroupId) {
+    this.provenanceResource.setProject(project);
+    this.provenanceResource.setFeatureStore(featurestore);
+    this.provenanceResource.setFeatureGroupId(featureGroupId);
     return provenanceResource;
   }
   

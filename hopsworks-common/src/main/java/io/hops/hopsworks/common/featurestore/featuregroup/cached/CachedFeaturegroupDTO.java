@@ -24,6 +24,9 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 
+import java.util.List;
+import java.util.Objects;
+
 /**
  * DTO containing the human-readable information of a cached feature group in the Hopsworks feature store,
  * can be converted to JSON or XML representation using jaxb.
@@ -36,6 +39,8 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
   private Boolean onlineEnabled = false;
   @JsonSetter(nulls = Nulls.SKIP)
   private TimeTravelFormat timeTravelFormat = TimeTravelFormat.NONE;
+  
+  private List<FeaturegroupDTO> parents;
 
   public CachedFeaturegroupDTO() {
     super();
@@ -52,16 +57,29 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
   public void setOnlineEnabled(Boolean onlineEnabled) {
     this.onlineEnabled = onlineEnabled;
   }
-
+  
   public TimeTravelFormat getTimeTravelFormat () { return timeTravelFormat; }
+  
+  @JsonSetter(nulls = Nulls.SKIP)
+  public void setTimeTravelFormat (TimeTravelFormat timeTravelFormat ) {
+    this.timeTravelFormat = timeTravelFormat;
+  }
 
-  public void setTimeTravelFormat (TimeTravelFormat timeTravelFormat ) { this.timeTravelFormat = timeTravelFormat; }
-
+  public List<FeaturegroupDTO> getParents() {
+    return parents;
+  }
+  
+  public void setParents(
+    List<FeaturegroupDTO> parents) {
+    this.parents = parents;
+  }
+  
   @Override
   public String toString() {
     return "CachedFeaturegroupDTO{" +
       ", onlineEnabled=" + onlineEnabled +
       ", timeTravelFormat =" + timeTravelFormat +
+      ", parentFeatureGroups =" + Objects.toString(parents) +
       '}';
   }
 }

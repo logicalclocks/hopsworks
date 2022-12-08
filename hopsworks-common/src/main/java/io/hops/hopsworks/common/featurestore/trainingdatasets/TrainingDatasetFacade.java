@@ -16,9 +16,11 @@
 
 package io.hops.hopsworks.common.featurestore.trainingdatasets;
 
+import com.google.common.collect.Lists;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.external.ExternalTrainingDatasetFacade;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs.HopsfsTrainingDatasetFacade;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
@@ -31,6 +33,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -46,7 +49,9 @@ public class TrainingDatasetFacade extends AbstractFacade<TrainingDataset> {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
-
+  
+  @EJB
+  private Settings settings;
   @EJB
   private HopsfsTrainingDatasetFacade hopsfsTrainingDatasetFacade;
   @EJB
@@ -70,7 +75,25 @@ public class TrainingDatasetFacade extends AbstractFacade<TrainingDataset> {
       return null;
     }
   }
-
+  
+  public List<TrainingDataset> findByIds(List<Integer> ids) {
+    if (ids.size() > settings.getSQLMaxSelectIn()) {
+      List<TrainingDataset> result = new ArrayList<>();
+      for(List<Integer> partition : Lists.partition(ids, settings.getSQLMaxSelectIn())) {
+        TypedQuery<TrainingDataset> query =
+          em.createNamedQuery("TrainingDataset.findByIds", TrainingDataset.class);
+        query.setParameter("ids", partition);
+        result.addAll(query.getResultList());
+      }
+      return result;
+    } else {
+      TypedQuery<TrainingDataset> query =
+        em.createNamedQuery("TrainingDataset.findByIds", TrainingDataset.class);
+      query.setParameter("ids", ids);
+      return query.getResultList();
+    }
+  }
+  
   /**
    * Retrieves a particular trainingDataset given its Id and featurestore from the database
    *
@@ -224,6 +247,24 @@ public class TrainingDatasetFacade extends AbstractFacade<TrainingDataset> {
     TypedQuery<TrainingDataset> query = em.createNamedQuery("TrainingDataset.findByFeatureView", TrainingDataset.class)
         .setParameter("featureView", featureView);
     return query.getResultList();
+  }
+  
+  public List<TrainingDataset> findByFeatureViews(List<FeatureView> featureViews) {
+    if (featureViews.size() > settings.getSQLMaxSelectIn()) {
+      List<TrainingDataset> result = new ArrayList<>();
+      for(List<FeatureView> partition : Lists.partition(featureViews, settings.getSQLMaxSelectIn())) {
+        TypedQuery<TrainingDataset> query =
+          em.createNamedQuery("TrainingDataset.findByFeatureViewsOrderedByDescVersion", TrainingDataset.class);
+        query.setParameter("featureViews", partition);
+        result.addAll(query.getResultList());
+      }
+      return result;
+    } else {
+      TypedQuery<TrainingDataset> query =
+        em.createNamedQuery("TrainingDataset.findByFeatureViewsOrderedByDescVersion", TrainingDataset.class);
+      query.setParameter("featureViews", featureViews);
+      return query.getResultList();
+    }
   }
 
   /**

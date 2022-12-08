@@ -235,7 +235,10 @@ public class ResourceRequest {
     GREATEXPECTATIONS,
     TDDATA,
     TUTORIALS,
-    EXTRAFILTER;
+    EXTRAFILTER,
+    PROVENANCE,
+    LINKS,
+    PROVENANCE_ARTIFACTS;
 
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());
