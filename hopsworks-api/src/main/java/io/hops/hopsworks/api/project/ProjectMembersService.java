@@ -196,7 +196,7 @@ public class ProjectMembersService {
   public Response updateRoleByEmail(@PathParam("email") String email, @FormParam("role") String role,
                                     @Context HttpServletRequest req,
                                     @Context SecurityContext sc)
-      throws ProjectException, UserException, FeaturestoreException, IOException {
+      throws ProjectException, UserException, FeaturestoreException, IOException, KafkaException {
     Project project = projectController.findProjectById(this.projectId);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = jWTHelper.getUserPrincipal(sc);

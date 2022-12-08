@@ -314,6 +314,10 @@ public class DatasetResource {
       case SHARE:
         checkIfDataOwner(project, user);
         datasetPath = datasetHelper.getDatasetPathIfFileExist(project, path, datasetType);
+        if (!permission.equals(DatasetAccessPermission.READ_ONLY) && datasetType.equals(DatasetType.FEATURESTORE)) {
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FORBIDDEN_FEATURESTORE_OPERATION, Level.FINE,
+              "Feature store dataset can be shared only using: " + DatasetAccessPermission.READ_ONLY.getValue());
+        }
         datasetController.share(targetProjectName, datasetPath.getFullPath().toString(), permission, project, user);
         break;
       case ACCEPT:
@@ -403,6 +407,11 @@ public class DatasetResource {
         break;
       case SHARE_PERMISSION:
         checkIfDataOwner(project, user);
+        if (!datasetPermissions.equals(DatasetAccessPermission.READ_ONLY) &&
+            datasetType.equals(DatasetType.FEATURESTORE)) {
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FORBIDDEN_FEATURESTORE_OPERATION, Level.FINE,
+              "Feature store dataset can be shared only using: " + DatasetAccessPermission.READ_ONLY.getValue());
+        }
         datasetController.updateSharePermission(datasetPath.getDataset(), datasetPermissions, project, targetProjectName
             , user);
         dto = datasetBuilder.build(uriInfo, resourceRequest, user, datasetPath, null, null, false);

@@ -288,6 +288,8 @@ public class TrainingDatasetController {
   private TrainingDatasetDTO createTrainingDataset(Users user, Project project, Featurestore featurestore,
       FeatureView featureView, TrainingDatasetDTO trainingDatasetDTO, Query query, Boolean skipFeature)
       throws FeaturestoreException, ProvenanceException, IOException, ServiceException, CloudException {
+    featurestoreUtils.verifyUserProjectEqualsFsProject(user, project, featurestore,
+        FeaturestoreUtils.ActionMessage.CREATE_TRAINING_DATASET);
 
     try {
       quotasEnforcement.enforceTrainingDatasetsQuota(featurestore);
@@ -825,7 +827,8 @@ public class TrainingDatasetController {
 
     // Delete all only if user has the right to delete all versions of training dataset.
     for (TrainingDataset trainingDataset: trainingDatasets) {
-      featurestoreUtils.verifyUserRole(trainingDataset, featurestore, user, project);
+      featurestoreUtils.verifyTrainingDatasetDataOwnerOrSelf(user, project, trainingDataset,
+          FeaturestoreUtils.ActionMessage.DELETE_TRAINING_DATASET);
     }
 
     for (TrainingDataset trainingDataset: trainingDatasets) {
@@ -836,23 +839,22 @@ public class TrainingDatasetController {
 
   public String delete(Users user, Project project, Featurestore featurestore, TrainingDataset trainingDataset)
       throws FeaturestoreException {
-    featurestoreUtils.verifyUserRole(trainingDataset, featurestore, user, project);
+    featurestoreUtils.verifyTrainingDatasetDataOwnerOrSelf(user, project, trainingDataset,
+        FeaturestoreUtils.ActionMessage.DELETE_TRAINING_DATASET);
 
     statisticsController.deleteStatistics(project, user, trainingDataset);
 
     trainingDatasetFacade.removeTrainingDataset(trainingDataset);
-    deleteHopsfsTrainingData(user, project, featurestore, trainingDataset, false, false);
+    deleteHopsfsTrainingData(user, project, trainingDataset, false);
     return trainingDataset.getName();
   }
 
   public void deleteDataOnly(Users user, Project project, Featurestore featurestore, FeatureView featureView,
       Integer trainingDatasetVersion) throws FeaturestoreException {
     TrainingDataset trainingDataset = getTrainingDatasetByFeatureViewAndVersion(featureView, trainingDatasetVersion);
-    checkDeleteDataOnly(trainingDataset);
-    deleteHopsfsTrainingData(user, project, featurestore, trainingDataset, true, true);
-    activityFacade.persistActivity(ActivityFacade.DELETED_TRAINING_DATASET_DATA_ONLY + trainingDataset.getName()
-            + " and version " + trainingDataset.getVersion(),
-        project, user, ActivityFlag.SERVICE);
+    featurestoreUtils.verifyTrainingDatasetDataOwnerOrSelf(user, project, trainingDataset,
+        FeaturestoreUtils.ActionMessage.DELETE_TRAINING_DATASET_DATA_ONLY);
+    deleteDataOnly(user, project, trainingDataset);
   }
 
   public void deleteDataOnly(Users user, Project project, Featurestore featurestore, FeatureView featureView)
@@ -861,12 +863,13 @@ public class TrainingDatasetController {
 
     // Delete all only if user has the right to delete all versions of training dataset.
     for (TrainingDataset trainingDataset: trainingDatasets) {
-      featurestoreUtils.verifyUserRole(trainingDataset, featurestore, user, project);
+      featurestoreUtils.verifyTrainingDatasetDataOwnerOrSelf(user, project, trainingDataset,
+          FeaturestoreUtils.ActionMessage.DELETE_TRAINING_DATASET_DATA_ONLY);
     }
     List<Integer> failedTd = Lists.newArrayList();
     for (TrainingDataset trainingDataset: trainingDatasets) {
       try {
-        deleteDataOnly(user, project, featurestore, featureView, trainingDataset.getVersion());
+        deleteDataOnly(user, project, trainingDataset);
       } catch (FeaturestoreException e) {
         if (FAILED_TO_DELETE_TD_DATA.equals(e.getErrorCode())) {
           failedTd.add(trainingDataset.getVersion());
@@ -885,6 +888,15 @@ public class TrainingDatasetController {
     }
   }
 
+  private void deleteDataOnly(Users user, Project project, TrainingDataset trainingDataset)
+      throws FeaturestoreException {
+    checkDeleteDataOnly(trainingDataset);
+    deleteHopsfsTrainingData(user, project, trainingDataset, true);
+    activityFacade.persistActivity(ActivityFacade.DELETED_TRAINING_DATASET_DATA_ONLY + trainingDataset.getName()
+            + " and version " + trainingDataset.getVersion(),
+        project, user, ActivityFlag.SERVICE);
+  }
+
   private void checkDeleteDataOnly(TrainingDataset trainingDataset) throws FeaturestoreException {
     if (!HOPSFS_TRAINING_DATASET.equals(trainingDataset.getTrainingDatasetType())) {
       throw new FeaturestoreException(
@@ -896,12 +908,8 @@ public class TrainingDatasetController {
     }
   }
 
-  public void deleteHopsfsTrainingData(Users user, Project project, Featurestore featurestore,
-      TrainingDataset trainingDataset, Boolean verifyRole, Boolean keepMetadata)
-      throws FeaturestoreException {
-    if (verifyRole) {
-      featurestoreUtils.verifyUserRole(trainingDataset, featurestore, user, project);
-    }
+  public void deleteHopsfsTrainingData(Users user, Project project, TrainingDataset trainingDataset,
+                                       Boolean keepMetadata) {
     String dsPath = getTrainingDatasetInodePath(trainingDataset);
     String username = hdfsUsersBean.getHdfsUserName(project, user);
 
@@ -953,6 +961,9 @@ public class TrainingDatasetController {
             .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
             Level.FINE, "training dataset id: " + trainingDatasetDTO.getId()));
 
+    featurestoreUtils.verifyTrainingDatasetDataOwnerOrSelf(user, project, trainingDataset,
+        FeaturestoreUtils.ActionMessage.UPDATE_TRAINING_DATASET_METADATA);
+
     // Verify general entity related information
     trainingDatasetInputValidation.verifyUserInput(trainingDatasetDTO);
 
@@ -973,6 +984,9 @@ public class TrainingDatasetController {
                                                              TrainingDatasetDTO trainingDatasetDTO)
       throws FeaturestoreException, ServiceException, CloudException {
     TrainingDataset trainingDataset = getTrainingDatasetById(featurestore, trainingDatasetDTO.getId());
+    featurestoreUtils.verifyTrainingDatasetDataOwnerOrSelf(user, project, trainingDataset,
+        FeaturestoreUtils.ActionMessage.UPDATE_TRAINING_DATASET_STATS_CONFIG);
+
     if (trainingDatasetDTO.getStatisticsConfig().getEnabled() != null) {
       trainingDataset.getStatisticsConfig().setDescriptive(trainingDatasetDTO.getStatisticsConfig().getEnabled());
     }

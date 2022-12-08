@@ -177,13 +177,13 @@ public class KafkaServingHelper {
         servingWrapper.getKafkaTopicDTO().getNumOfPartitions(), Settings.INFERENCE_SCHEMANAME, schemaVersion);
 
     ProjectTopics pt = kafkaController.createTopicInProject(project, topicDTO);
-  
+
     // Add the ACLs for this topic. By default all users should be able to do everything
     for (ProjectTeam projectTeam : project.getProjectTeamCollection()) {
       AclDTO aclDto = new AclDTO(project.getName(),
-        projectTeam.getUser().getEmail(),
-        "allow", Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD,
-        Settings.KAFKA_ACL_WILDCARD);
+          projectTeam.getUser().getEmail(),
+          "allow", Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD,
+          Settings.KAFKA_ACL_WILDCARD);
       kafkaController.addAclsToTopic(topicDTO.getName(), project.getId(), aclDto);
     }
 

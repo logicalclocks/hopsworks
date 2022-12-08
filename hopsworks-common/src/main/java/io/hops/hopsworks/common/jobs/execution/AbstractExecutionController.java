@@ -122,7 +122,7 @@ public abstract class AbstractExecutionController implements ExecutionController
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public Execution start(Jobs job, String args, Users user)
-    throws JobException, GenericException, ServiceException, ProjectException {
+      throws JobException, GenericException, ServiceException, ProjectException {
 
     enforceParallelExecutionsQuota(job.getProject());
 

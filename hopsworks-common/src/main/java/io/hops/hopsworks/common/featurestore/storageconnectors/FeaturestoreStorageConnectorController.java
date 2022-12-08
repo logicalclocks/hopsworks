@@ -17,7 +17,6 @@
 package io.hops.hopsworks.common.featurestore.storageconnectors;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
@@ -40,6 +39,7 @@ import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3
 import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3ConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.snowflake.FeaturestoreSnowflakeConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.snowflake.FeaturestoreSnowflakeConnectorDTO;
+import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ProjectException;
@@ -97,6 +97,8 @@ public class FeaturestoreStorageConnectorController {
   private FeatureStoreGcsConnectorController gcsConnectorController;
   @EJB
   private  InodeController inodeController;
+  @EJB
+  private FeaturestoreUtils featurestoreUtils;
   @EJB
   private StorageConnectorUtil storageConnectorUtil;
 
@@ -187,7 +189,8 @@ public class FeaturestoreStorageConnectorController {
   public FeaturestoreStorageConnectorDTO createStorageConnector(Users user, Project project, Featurestore featurestore,
          FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO)
       throws FeaturestoreException, UserException, ProjectException {
-    validateUser(user, featurestore);
+    featurestoreUtils.verifyUserProjectEqualsFsProjectAndDataOwner(user, project, featurestore,
+        FeaturestoreUtils.ActionMessage.CREATE_STORAGE_CONNECTOR);
 
     if (!storageConnectorUtil.isStorageConnectorTypeEnabled(featurestoreStorageConnectorDTO.getStorageConnectorType())){
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_TYPE_NOT_ENABLED, Level.FINE,
@@ -273,7 +276,6 @@ public class FeaturestoreStorageConnectorController {
   public void updateStorageConnector(Users user, Project project, Featurestore featurestore,
       FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO, String connectorName)
       throws FeaturestoreException, UserException, ProjectException {
-    validateUser(user, featurestore);
 
     if (!storageConnectorUtil.isStorageConnectorTypeEnabled(featurestoreStorageConnectorDTO.getStorageConnectorType())){
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_TYPE_NOT_ENABLED, Level.FINE,
@@ -290,6 +292,9 @@ public class FeaturestoreStorageConnectorController {
         .orElseThrow(() ->
             new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CONNECTOR_NOT_FOUND, Level.FINE,
                 "Cannot find storage connector with name: " + connectorName));
+
+    featurestoreUtils.verifyUserProjectEqualsFsProjectAndDataOwner(user, project,
+        featurestoreConnector.getFeaturestore(), FeaturestoreUtils.ActionMessage.UPDATE_STORAGE_CONNECTOR);
 
     verifyDescription(featurestoreStorageConnectorDTO);
     featurestoreConnector.setDescription(featurestoreStorageConnectorDTO.getDescription());
@@ -352,19 +357,20 @@ public class FeaturestoreStorageConnectorController {
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
   public void deleteConnectorWithName(Users user, Project project, String connectorName, Featurestore featurestore)
     throws UserException, FeaturestoreException {
-    validateUser(user, featurestore);
-
     Optional<FeaturestoreConnector> featurestoreConnectorOptional =
         featurestoreConnectorFacade.findByFeaturestoreName(featurestore, connectorName);
     if (!featurestoreConnectorOptional.isPresent()) {
       return;
     }
     FeaturestoreConnector featurestoreConnector = featurestoreConnectorOptional.get();
-
+    
     if (!storageConnectorUtil.isStorageConnectorTypeEnabled(featurestoreConnector.getConnectorType())){
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_TYPE_NOT_ENABLED, Level.FINE,
               "Storage connector type '" + featurestoreConnector.getConnectorType() + "' is not enabled");
     }
+
+    featurestoreUtils.verifyUserProjectEqualsFsProjectAndDataOwner(user, project,
+        featurestoreConnector.getFeaturestore(), FeaturestoreUtils.ActionMessage.DELETE_STORAGE_CONNECTOR);
 
     // delete key files for KAKFA,GCS,BIGQUERY
     cleanKeyFile(project, user, featurestoreConnector);
@@ -387,20 +393,6 @@ public class FeaturestoreStorageConnectorController {
       return convertToConnectorDTO(user, project, featurestoreConnector.get());
     } else {
       return null;
-    }
-  }
-  
-  /**
-   * Checks if the user is a data owner of the feature store project to add, edit, and delete a connector
-   * @param user the user making the request
-   * @param featurestore
-   * @throws UserException
-   */
-  private void validateUser(Users user, Featurestore featurestore) throws UserException {
-    String userRole = projectTeamFacade.findCurrentRole(featurestore.getProject(), user);
-    if (userRole == null || !userRole.equalsIgnoreCase(AllowedRoles.DATA_OWNER)) {
-      throw new UserException(RESTCodes.UserErrorCode.ACCESS_CONTROL, Level.FINE,
-          "Action not allowed. User " + user.getUsername() + " is" + " not member of project ");
     }
   }
 

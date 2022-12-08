@@ -53,7 +53,7 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import java.util.List;
 
 public interface ExecutionController {
-  
+
   Execution start(Jobs job, String args, Users user) throws JobException, GenericException, ServiceException,
     ProjectException;
   

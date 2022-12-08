@@ -145,7 +145,7 @@ public class RemoteUserGroupMapper {
             try {
               projectController
                 .updateMemberRole(projectTeam.getProject(), user, remoteGroupProjectMapping.getProjectRole());
-            } catch (ProjectException | FeaturestoreException | IOException e) {
+            } catch (ProjectException | FeaturestoreException | KafkaException | UserException | IOException e) {
               LOGGER.log(Level.WARNING, "Failed to update role for user: {0} in project: {1} for GroupProjectMapping:" +
                 " {2}. Error: {3}", new Object[]{user.getUsername(), remoteGroupProjectMapping.getProject(),
                 remoteGroupProjectMapping.getId(), e.getMessage()});

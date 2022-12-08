@@ -2549,6 +2549,8 @@ public class Settings implements Serializable {
   //************************************************KAFKA********************************************************
 
   public static final String KAFKA_ACL_WILDCARD = "*";
+  public static final String KAFKA_ACL_OPERATION_TYPE_READ = "read";
+  public static final String KAFKA_ACL_OPERATION_TYPE_DETAILS = "details";
 
   //Kafka END
 

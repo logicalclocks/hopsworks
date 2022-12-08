@@ -1994,7 +1994,7 @@ public class ProjectController {
   
       //Add user to kafka topics ACLs by default
       if (projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.KAFKA)) {
-        kafkaController.addProjectMemberToTopics(project, newMember.getEmail());
+        kafkaController.addProjectMemberToTopics(projectTeam);
       }
   
       //if online-featurestore service is enabled in the project, give new member access to it
@@ -2316,7 +2316,7 @@ public class ProjectController {
       onlineFeaturestoreController.removeOnlineFeaturestoreUser(featurestore, userToBeRemoved);
     }
 
-    kafkaController.removeProjectMemberFromTopics(project, userToBeRemoved);
+    kafkaController.removeProjectMemberFromTopics(projectTeam);
 
     certificateMaterializer.forceRemoveLocalMaterial(userToBeRemoved.getUsername(), project.getName(), null, false);
     try {
@@ -2349,7 +2349,7 @@ public class ProjectController {
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void updateMemberRole(Project project, Users opsOwner, String toUpdateEmail, String newRole)
-    throws UserException, ProjectException, FeaturestoreException, IOException {
+      throws UserException, ProjectException, FeaturestoreException, IOException, KafkaException {
     Users user = userFacade.findByEmail(toUpdateEmail);
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "user: " + toUpdateEmail);
@@ -2369,7 +2369,7 @@ public class ProjectController {
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void updateMemberRole(Project project, Users user, String newRole) throws ProjectException,
-    FeaturestoreException, IOException {
+      FeaturestoreException, IOException, KafkaException, UserException {
     if (project.getOwner().equals(user)) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_ROLE_NOT_ALLOWED, Level.FINE,
         "project: " + project.getName());
@@ -2393,7 +2393,12 @@ public class ProjectController {
     projectTeamFacade.update(projectTeam);
   
     hdfsUsersController.changeMemberRole(projectTeam);
-  
+
+    //sets project member to kafka topics ACLs
+    if (projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.KAFKA)) {
+      kafkaController.updateProjectMemberTopics(projectTeam);
+    }
+
     // trigger project team role update handlers
     ProjectTeamRoleHandler.runProjectTeamRoleUpdateMembersHandlers(projectTeamRoleHandlers, project,
       Collections.singletonList(user), ProjectRoleTypes.fromString(newRole));
