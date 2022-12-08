@@ -740,6 +740,7 @@ describe "On #{ENV['OS']}" do
           # Set success to false to infer insertion was rejected
           validation_report[:success] = false
           validation_report[:results].pop()
+          validation_report[:ingestionResult] = "REJECTED"
           meta_json = JSON.parse(validation_report[:meta])
           meta_json["age"] = "youngest"
           meta_json["validation_time"] = "20220301T140624.481059Z"
@@ -796,6 +797,20 @@ describe "On #{ENV['OS']}" do
           lagom_meta = JSON.parse(validation_history_json["items"][0]["meta"])
           expect(lagom_meta["age"]).to eq("lågom")
           oldest_meta = JSON.parse(validation_history_json["items"][1]["meta"])
+          expect(oldest_meta["age"]).to eq("oldest")
+        end
+
+        it "should be able to retrieve both ingested and rejected " do
+          validation_history_dto = get_validation_history(@project[:id], @featurestore_id, @fg_json["id"], @suite_json["expectations"][0]["id"],\
+          sort_by:"validation_time:desc", filter_by:"ingestion_result_eq:INGESTED&filter_by=ingestion_result_eq:REJECTED")
+          expect_status_details(200)
+          validation_history_json = JSON.parse(validation_history_dto)
+          expect(validation_history_json["count"]).to eq(3)
+          youngest_meta = JSON.parse(validation_history_json["items"][0]["meta"])
+          expect(youngest_meta["age"]).to eq("youngest")
+          lagom_meta = JSON.parse(validation_history_json["items"][1]["meta"])
+          expect(lagom_meta["age"]).to eq("lågom")
+          oldest_meta = JSON.parse(validation_history_json["items"][2]["meta"])
           expect(oldest_meta["age"]).to eq("oldest")
         end
 
