@@ -318,6 +318,15 @@ public class Settings implements Serializable {
   private static final String VARIABLE_FS_JAVA_JOB_UTIL_PATH = "fs_java_job_util";
   private static final String VARIABLE_FS_STORAGE_CONNECTOR_SESSION_DURATION = "fs_storage_connector_session_duration";
 
+  // Storage connectors
+
+  private final static String VARIABLE_ENABLE_REDSHIFT_STORAGE_CONNECTORS = "enable_redshift_storage_connectors";
+  private final static String VARIABLE_ENABLE_ADLS_STORAGE_CONNECTORS = "enable_adls_storage_connectors";
+  private final static String VARIABLE_ENABLE_SNOWFLAKE_STORAGE_CONNECTORS = "enable_snowflake_storage_connectors";
+  private final static String VARIABLE_ENABLE_KAFKA_STORAGE_CONNECTORS = "enable_kafka_storage_connectors";
+  private final static String VARIABLE_ENABLE_GCS_STORAGE_CONNECTORS = "enable_gcs_storage_connectors";
+  private final static String VARIABLE_ENABLE_BIGQUERY_STORAGE_CONNECTORS = "enable_bigquery_storage_connectors";
+
   //OpenSearch Security
   private static final String VARIABLE_OPENSEARCH_SECURITY_ENABLED = "elastic_opendistro_security_enabled";
   private static final String VARIABLE_OPENSEARCH_HTTPS_ENABLED = "elastic_https_enabled";
@@ -810,6 +819,19 @@ public class Settings implements Serializable {
       FS_JAVA_JOB_UTIL_PATH  = setStrVar(VARIABLE_FS_JAVA_JOB_UTIL_PATH, FS_JAVA_JOB_UTIL_PATH);
       FS_STORAGE_CONNECTOR_SESSION_DURATION  = setIntVar(VARIABLE_FS_STORAGE_CONNECTOR_SESSION_DURATION,
         FS_STORAGE_CONNECTOR_SESSION_DURATION);
+
+      ENABLE_REDSHIFT_STORAGE_CONNECTORS = setBoolVar(VARIABLE_ENABLE_REDSHIFT_STORAGE_CONNECTORS,
+              ENABLE_REDSHIFT_STORAGE_CONNECTORS);
+      ENABLE_ADLS_STORAGE_CONNECTORS = setBoolVar(VARIABLE_ENABLE_ADLS_STORAGE_CONNECTORS,
+              ENABLE_ADLS_STORAGE_CONNECTORS);
+      ENABLE_SNOWFLAKE_STORAGE_CONNECTORS = setBoolVar(VARIABLE_ENABLE_SNOWFLAKE_STORAGE_CONNECTORS,
+              ENABLE_SNOWFLAKE_STORAGE_CONNECTORS);
+      ENABLE_KAFKA_STORAGE_CONNECTORS = setBoolVar(VARIABLE_ENABLE_KAFKA_STORAGE_CONNECTORS,
+              ENABLE_KAFKA_STORAGE_CONNECTORS);
+      ENABLE_GCS_STORAGE_CONNECTORS = setBoolVar(VARIABLE_ENABLE_GCS_STORAGE_CONNECTORS,
+              ENABLE_GCS_STORAGE_CONNECTORS);
+      ENABLE_BIGQUERY_STORAGE_CONNECTORS = setBoolVar(VARIABLE_ENABLE_BIGQUERY_STORAGE_CONNECTORS,
+              ENABLE_BIGQUERY_STORAGE_CONNECTORS);
   
       YARN_RUNTIME = setStrVar(VARIABLE_YARN_RUNTIME, YARN_RUNTIME);
       DOCKER_MOUNTS = setStrVar(VARIABLE_DOCKER_MOUNTS, DOCKER_MOUNTS);
@@ -3514,6 +3536,46 @@ public class Settings implements Serializable {
     checkCache();
     return FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT;
   }
+
+  // Storage connectors
+
+  private boolean ENABLE_REDSHIFT_STORAGE_CONNECTORS = true;
+  public synchronized boolean isRedshiftStorageConnectorsEnabled() {
+    checkCache();
+    return ENABLE_REDSHIFT_STORAGE_CONNECTORS;
+  }
+
+  private boolean ENABLE_ADLS_STORAGE_CONNECTORS = false;
+  public synchronized boolean isAdlsStorageConnectorsEnabled() {
+    checkCache();
+    return ENABLE_ADLS_STORAGE_CONNECTORS;
+  }
+
+  private boolean ENABLE_SNOWFLAKE_STORAGE_CONNECTORS = true;
+  public synchronized boolean isSnowflakeStorageConnectorsEnabled() {
+    checkCache();
+    return ENABLE_SNOWFLAKE_STORAGE_CONNECTORS;
+  }
+
+  private boolean ENABLE_KAFKA_STORAGE_CONNECTORS = false;
+  public synchronized boolean isKafkaStorageConnectorsEnabled() {
+    checkCache();
+    return ENABLE_KAFKA_STORAGE_CONNECTORS;
+  }
+
+  private boolean ENABLE_GCS_STORAGE_CONNECTORS = false;
+  public synchronized boolean isGcsStorageConnectorsEnabled() {
+    checkCache();
+    return ENABLE_GCS_STORAGE_CONNECTORS;
+  }
+
+  private boolean ENABLE_BIGQUERY_STORAGE_CONNECTORS = false;
+  public synchronized boolean isBigqueryStorageConnectorsEnabled() {
+    checkCache();
+    return ENABLE_BIGQUERY_STORAGE_CONNECTORS;
+  }
+
+  // End - Storage connectors
 
   private Boolean LOCALHOST = false;
 

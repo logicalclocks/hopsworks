@@ -60,6 +60,7 @@ import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Level;
 
 /**
@@ -99,11 +100,11 @@ public class FeaturestoreStorageConnectorController {
   @EJB
   private StorageConnectorUtil storageConnectorUtil;
 
-
   /**
    * Returns a list with DTOs of all storage connectors for a featurestore
    *
    * @param user the user making the request
+   * @param project the project to query
    * @param featurestore the featurestore to query
    * @param user the user making the request
    * @return List of JSON/XML DTOs of the storage connectors
@@ -111,14 +112,9 @@ public class FeaturestoreStorageConnectorController {
   public List<FeaturestoreStorageConnectorDTO> getConnectorsForFeaturestore(Users user, Project project,
                                                                             Featurestore featurestore)
       throws FeaturestoreException {
-    List<FeaturestoreConnector> featurestoreConnectors = featurestoreConnectorFacade.findByFeaturestore(featurestore);
-    List<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOS = new ArrayList<>();
-
-    for (FeaturestoreConnector featurestoreConnector : featurestoreConnectors) {
-      featurestoreStorageConnectorDTOS.add(convertToConnectorDTO(user, project, featurestoreConnector));
-    }
-
-    return featurestoreStorageConnectorDTOS;
+    Set<FeaturestoreConnectorType> enabledScTypes = storageConnectorUtil.getEnabledStorageConnectorTypes();
+    List<FeaturestoreConnector> connectors = featurestoreConnectorFacade.findByType(featurestore, enabledScTypes);
+    return convertToConnectorDTOs(user, project, connectors);
   }
 
   public FeaturestoreStorageConnectorDTO getConnectorWithName(Users user, Project project,
@@ -131,7 +127,24 @@ public class FeaturestoreStorageConnectorController {
             new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CONNECTOR_NOT_FOUND, Level.FINE,
                 "Cannot find storage connector with name: " + connectorName));
 
+    if (!storageConnectorUtil.isStorageConnectorTypeEnabled(featurestoreConnector.getConnectorType())) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_TYPE_NOT_ENABLED, Level.FINE,
+              "Storage connector type '" + featurestoreConnector.getConnectorType() + "' is not enabled");
+    }
+
     return convertToConnectorDTO(user, project, featurestoreConnector);
+  }
+
+  public List<FeaturestoreStorageConnectorDTO> convertToConnectorDTOs(Users user, Project project,
+                                                                     List<FeaturestoreConnector> featurestoreConnectors)
+          throws FeaturestoreException {
+    List<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOS = new ArrayList<>();
+
+    for (FeaturestoreConnector featurestoreConnector : featurestoreConnectors) {
+      featurestoreStorageConnectorDTOS.add(convertToConnectorDTO(user, project, featurestoreConnector));
+    }
+
+    return featurestoreStorageConnectorDTOS;
   }
 
   public FeaturestoreStorageConnectorDTO convertToConnectorDTO(Users user, Project project,
@@ -175,6 +188,11 @@ public class FeaturestoreStorageConnectorController {
          FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO)
       throws FeaturestoreException, UserException, ProjectException {
     validateUser(user, featurestore);
+
+    if (!storageConnectorUtil.isStorageConnectorTypeEnabled(featurestoreStorageConnectorDTO.getStorageConnectorType())){
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_TYPE_NOT_ENABLED, Level.FINE,
+              "Storage connector type '"+featurestoreStorageConnectorDTO.getStorageConnectorType()+"' is not enabled");
+    }
 
     if (featurestoreConnectorFacade.findByFeaturestoreName(featurestore, featurestoreStorageConnectorDTO.getName())
         .isPresent()) {
@@ -257,6 +275,11 @@ public class FeaturestoreStorageConnectorController {
       throws FeaturestoreException, UserException, ProjectException {
     validateUser(user, featurestore);
 
+    if (!storageConnectorUtil.isStorageConnectorTypeEnabled(featurestoreStorageConnectorDTO.getStorageConnectorType())){
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_TYPE_NOT_ENABLED, Level.FINE,
+              "Storage connector type '"+featurestoreStorageConnectorDTO.getStorageConnectorType()+"' is not enabled");
+    }
+
     if (!connectorName.equalsIgnoreCase(featurestoreStorageConnectorDTO.getName())) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG,
           Level.FINE, "Can not update connector name.");
@@ -330,12 +353,19 @@ public class FeaturestoreStorageConnectorController {
   public void deleteConnectorWithName(Users user, Project project, String connectorName, Featurestore featurestore)
     throws UserException, FeaturestoreException {
     validateUser(user, featurestore);
+
     Optional<FeaturestoreConnector> featurestoreConnectorOptional =
         featurestoreConnectorFacade.findByFeaturestoreName(featurestore, connectorName);
     if (!featurestoreConnectorOptional.isPresent()) {
       return;
     }
     FeaturestoreConnector featurestoreConnector = featurestoreConnectorOptional.get();
+
+    if (!storageConnectorUtil.isStorageConnectorTypeEnabled(featurestoreConnector.getConnectorType())){
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_TYPE_NOT_ENABLED, Level.FINE,
+              "Storage connector type '" + featurestoreConnector.getConnectorType() + "' is not enabled");
+    }
+
     // delete key files for KAKFA,GCS,BIGQUERY
     cleanKeyFile(project, user, featurestoreConnector);
     
@@ -374,7 +404,7 @@ public class FeaturestoreStorageConnectorController {
     }
   }
 
-  public void verifyName(FeaturestoreStorageConnectorDTO connectorDTO) throws FeaturestoreException {
+  private void verifyName(FeaturestoreStorageConnectorDTO connectorDTO) throws FeaturestoreException {
     if (Strings.isNullOrEmpty(connectorDTO.getName())) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
           RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME + ", the storage connector name cannot be empty");
@@ -387,7 +417,7 @@ public class FeaturestoreStorageConnectorController {
     }
   }
 
-  public void verifyDescription(FeaturestoreStorageConnectorDTO connectorDTO) throws FeaturestoreException {
+  private void verifyDescription(FeaturestoreStorageConnectorDTO connectorDTO) throws FeaturestoreException {
     if (connectorDTO.getDescription() != null &&
         connectorDTO.getDescription().length() > FeaturestoreConstants.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
@@ -396,7 +426,7 @@ public class FeaturestoreStorageConnectorController {
     }
   }
   
-  public void cleanKeyFile(Project project, Users user, FeaturestoreConnector featurestoreConnector)
+  private void cleanKeyFile(Project project, Users user, FeaturestoreConnector featurestoreConnector)
     throws FeaturestoreException {
     switch (featurestoreConnector.getConnectorType()) {
       case GCS:

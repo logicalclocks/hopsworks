@@ -15,8 +15,6 @@
 =end
 
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects(spec: "gcs_storage_connector") if defined?(@cleanup) && @cleanup}
-
   before :all do
     @cleanup = true
     @debugOpt = false
@@ -24,6 +22,15 @@ describe "On #{ENV['OS']}" do
 
     # create dummy truststore/keystore files in hopsfs
     create_test_files
+
+    # ensure gcs storage connectors are enabled
+    @enable_gcs_storage_connector = getVar('enable_gcs_storage_connectors')
+    setVar('enable_gcs_storage_connectors', true)   
+  end
+
+  after :all do
+    clean_all_test_projects(spec: "gcs_storage_connector") if defined?(@cleanup) && @cleanup
+    setVar('enable_gcs_storage_connectors', @enable_gcs_storage_connector)
   end
 
   after :each do

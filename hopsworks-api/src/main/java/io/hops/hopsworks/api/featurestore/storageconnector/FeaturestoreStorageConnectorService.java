@@ -30,6 +30,7 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
+import io.hops.hopsworks.common.featurestore.storageconnectors.StorageConnectorUtil;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.CloudException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -37,6 +38,7 @@ import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
@@ -66,6 +68,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 
 /**
@@ -92,6 +95,8 @@ public class FeaturestoreStorageConnectorService {
   private OnlineFeaturestoreController onlineFeaturestoreController;
   @EJB
   private TemporaryCredentialsHelper temporaryCredentialsHelper;
+  @EJB
+  private StorageConnectorUtil storageConnectorUtil;
 
   private Project project;
   private Featurestore featurestore;
@@ -136,10 +141,12 @@ public class FeaturestoreStorageConnectorService {
   @ApiOperation(value = "Get all storage connectors of a feature store",
     response = FeaturestoreStorageConnectorDTO.class, responseContainer = "List")
   public Response getStorageConnectors(@Context SecurityContext sc,
-                                       @Context HttpServletRequest req) throws FeaturestoreException {
+                                       @Context HttpServletRequest req)
+      throws FeaturestoreException {
     Users user = jWTHelper.getUserPrincipal(sc);
     List<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOS =
-      storageConnectorController.getConnectorsForFeaturestore(user, project, featurestore);
+            storageConnectorController.getConnectorsForFeaturestore(user, project, featurestore);
+
     GenericEntity<List<FeaturestoreStorageConnectorDTO>> featurestoreStorageConnectorsGeneric =
       new GenericEntity<List<FeaturestoreStorageConnectorDTO>>(featurestoreStorageConnectorDTOS) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featurestoreStorageConnectorsGeneric)
@@ -316,6 +323,30 @@ public class FeaturestoreStorageConnectorService {
             new GenericEntity<FeaturestoreStorageConnectorDTO>(featurestoreJdbcConnectorDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
             .entity(featurestoreStorageConnectorDTOGenericEntity).build();
+  }
+
+  /**
+   * Endpoint for getting all enabled storage connector types in a featurestore
+   *
+   * @return a JSON representation of all the storage connector types in the feature store
+   */
+  @GET
+  @Path("/types")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+          allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
+          allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiOperation(value = "Get storage connector types enabled",
+          response = FeaturestoreConnectorType.class, responseContainer = "List")
+  public Response getStorageConnectorTypes(@Context SecurityContext sc, @Context HttpServletRequest req) {
+    Set<FeaturestoreConnectorType> enabledStorageConnectorTypes =
+            storageConnectorUtil.getEnabledStorageConnectorTypes();
+    GenericEntity<Set<FeaturestoreConnectorType>> storageConnectorTypesGeneric =
+            new GenericEntity<Set<FeaturestoreConnectorType>>(enabledStorageConnectorTypes) {};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(storageConnectorTypesGeneric)
+            .build();
   }
 
   /**

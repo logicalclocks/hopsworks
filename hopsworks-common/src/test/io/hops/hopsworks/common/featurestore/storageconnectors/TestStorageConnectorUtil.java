@@ -17,33 +17,39 @@
 package io.hops.hopsworks.common.featurestore.storageconnectors;
 
 import io.hops.hopsworks.common.featurestore.OptionDTO;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.Mockito;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 public class TestStorageConnectorUtil {
-  
+
+  private Settings settings;
+
   private StorageConnectorUtil storageConnectorUtil;
-  
+
   @Rule
   public ExpectedException thrown = ExpectedException.none();
-  
+
   @Before
   public void setup() {
-    storageConnectorUtil = new StorageConnectorUtil();
+    settings = Mockito.mock(Settings.class);
+    storageConnectorUtil = new StorageConnectorUtil(settings);
   }
-  
+
   @Test
   public void testToOptions() throws Exception {
     String testString = "[{\"name\":\"option1\",\"value\":\"value1\"},{\"name\":\"option2\"},{\"name\":\"option3\",\"value\":\"null\"},{\"name\":\"option4\",\"value\":\"\"}]";
     List<OptionDTO> result = storageConnectorUtil.toOptions(testString);
-  
+
     Assert.assertEquals("option1", result.get(0).getName());
     Assert.assertEquals("option2", result.get(1).getName());
     Assert.assertEquals("option3", result.get(2).getName());
@@ -53,35 +59,35 @@ public class TestStorageConnectorUtil {
     Assert.assertEquals("null", result.get(2).getValue());
     Assert.assertEquals("", result.get(3).getValue());
   }
-  
+
   @Test
   public void testFromOptions() throws Exception {
     List<OptionDTO> optionList = Arrays.asList(new OptionDTO("option1", "value1"), new OptionDTO("option2", null),
       new OptionDTO("option3", "null"), new OptionDTO("option4", ""));
     String result = storageConnectorUtil.fromOptions(optionList);
-    
+
     Assert.assertEquals("[{\"name\":\"option1\",\"value\":\"value1\"},{\"name\":\"option2\"},{\"name\":\"option3\",\"value\":\"null\"},{\"name\":\"option4\",\"value\":\"\"}]", result);
   }
-  
+
   @Test
   public void testCreateSecretName() throws Exception {
     String result = storageConnectorUtil.createSecretName(1, "connector name", FeaturestoreConnectorType.REDSHIFT);
     Assert.assertEquals("redshift_connector_name_1", result);
   }
-  
+
   @Test
   public void testShouldUpdateString() throws Exception {
     boolean result;
-    
+
     result = storageConnectorUtil.shouldUpdate("old", "new");
     Assert.assertTrue(result);
-  
+
     result = storageConnectorUtil.shouldUpdate("old", "old");
     Assert.assertFalse(result);
-  
+
     result = storageConnectorUtil.shouldUpdate(null, "new");
     Assert.assertTrue(result);
-  
+
     result = storageConnectorUtil.shouldUpdate(null, (String) null);
     Assert.assertFalse(result);
   }
@@ -89,17 +95,70 @@ public class TestStorageConnectorUtil {
   @Test
   public void testShouldUpdateInteger() throws Exception {
     boolean result;
-    
+
     result = storageConnectorUtil.shouldUpdate(1, 2);
     Assert.assertTrue(result);
-    
+
     result = storageConnectorUtil.shouldUpdate(1, 1);
     Assert.assertFalse(result);
-    
+
     result = storageConnectorUtil.shouldUpdate(null, 1);
     Assert.assertTrue(result);
-    
+
     result = storageConnectorUtil.shouldUpdate(null, (Integer) null);
     Assert.assertFalse(result);
+  }
+
+  @Test
+  public void testNumberOfStorageConnectorTypes() {
+    // If a new feature store connector type is introduced, make sure the following methods are updated accordingly,
+    // as well as their corresponding tests:
+    // StorageConnectorUtil.getEnabledStorageConnectorTypes() -> testGetEnabledStorageConnectorTypes
+    // StorageConnectorUtil.isStorageConnectorTypeEnabled() -> testIsStorageConnectorTypeEnabled
+    Assert.assertEquals(FeaturestoreConnectorType.values().length, 9);
+  }
+
+  @Test
+  public void testGetEnabledStorageConnectorTypes() {
+    Mockito.when(settings.isSnowflakeStorageConnectorsEnabled()).thenReturn(true);
+    Mockito.when(settings.isRedshiftStorageConnectorsEnabled()).thenReturn(true);
+    Mockito.when(settings.isAdlsStorageConnectorsEnabled()).thenReturn(false);
+    Mockito.when(settings.isKafkaStorageConnectorsEnabled()).thenReturn(false);
+    Mockito.when(settings.isGcsStorageConnectorsEnabled()).thenReturn(false);
+    Mockito.when(settings.isBigqueryStorageConnectorsEnabled()).thenReturn(false);
+
+    Set<FeaturestoreConnectorType> enabledScTypes = storageConnectorUtil.getEnabledStorageConnectorTypes();
+
+    FeaturestoreConnectorType[] expectedScTypes = new FeaturestoreConnectorType[]{
+            FeaturestoreConnectorType.JDBC, FeaturestoreConnectorType.HOPSFS, FeaturestoreConnectorType.S3,
+            FeaturestoreConnectorType.SNOWFLAKE, FeaturestoreConnectorType.REDSHIFT
+    };
+
+    Assert.assertArrayEquals(
+            enabledScTypes.stream().sorted().toArray(),
+            Arrays.stream(expectedScTypes).sorted().toArray());
+  }
+
+  @Test
+  public void testIsEnabledStorageConnectorTypes() {
+    Mockito.when(settings.isSnowflakeStorageConnectorsEnabled()).thenReturn(true);
+    Mockito.when(settings.isRedshiftStorageConnectorsEnabled()).thenReturn(true);
+    Mockito.when(settings.isAdlsStorageConnectorsEnabled()).thenReturn(false);
+    Mockito.when(settings.isKafkaStorageConnectorsEnabled()).thenReturn(false);
+    Mockito.when(settings.isGcsStorageConnectorsEnabled()).thenReturn(false);
+    Mockito.when(settings.isBigqueryStorageConnectorsEnabled()).thenReturn(false);
+
+    // Always enabled
+    Assert.assertTrue(storageConnectorUtil.isStorageConnectorTypeEnabled(FeaturestoreConnectorType.JDBC));
+    Assert.assertTrue(storageConnectorUtil.isStorageConnectorTypeEnabled(FeaturestoreConnectorType.HOPSFS));
+    Assert.assertTrue(storageConnectorUtil.isStorageConnectorTypeEnabled(FeaturestoreConnectorType.S3));
+
+    // Configurable through Hopsworks variables
+    Assert.assertTrue(storageConnectorUtil.isStorageConnectorTypeEnabled(FeaturestoreConnectorType.SNOWFLAKE));
+    Assert.assertTrue(storageConnectorUtil.isStorageConnectorTypeEnabled(FeaturestoreConnectorType.REDSHIFT));
+    Assert.assertFalse(storageConnectorUtil.isStorageConnectorTypeEnabled(FeaturestoreConnectorType.ADLS));
+    Assert.assertFalse(storageConnectorUtil.isStorageConnectorTypeEnabled(FeaturestoreConnectorType.KAFKA));
+    Assert.assertFalse(storageConnectorUtil.isStorageConnectorTypeEnabled(FeaturestoreConnectorType.GCS));
+    Assert.assertFalse(storageConnectorUtil.isStorageConnectorTypeEnabled(FeaturestoreConnectorType.BIGQUERY));
   }
 }

@@ -1642,7 +1642,8 @@ public class RESTCodes {
     VALIDATION_RESULT_IS_NOT_VALID_JSON(211, "The validation result is not a valid json.", 
       Response.Status.BAD_REQUEST),
     FEATURE_OFFLINE_TYPE_NOT_PROVIDED(212, "Feature offline type cannot be null or empty.",
-      Response.Status.BAD_REQUEST);
+      Response.Status.BAD_REQUEST),
+    STORAGE_CONNECTOR_TYPE_NOT_ENABLED(213, "Storage connector type not enabled", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

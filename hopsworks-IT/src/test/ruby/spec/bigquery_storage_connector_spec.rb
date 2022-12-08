@@ -15,20 +15,25 @@
 =end
 
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects(spec: "bigquery_storage_connector") if defined?(@cleanup) && @cleanup}
-
   before :all do
     @cleanup = true
     with_valid_project
     # create dummy truststore/keystore files in hopsfs
     create_test_files
+
+    # ensure bigquery storage connectors are enabled
+    @enable_bigquery_storage_connector = getVar('enable_bigquery_storage_connectors')
+    setVar('enable_bigquery_storage_connectors', true)
+  end
+
+  after :all do
+    clean_all_test_projects(spec: "bigquery_storage_connector") if defined?(@cleanup) && @cleanup
+    setVar('enable_bigquery_storage_connectors', @enable_bigquery_storage_connector)
   end
 
   after :each do
     create_session(@project[:username], "Pass123")
   end
-
-
 
   def create_connector_materializationDataset
     project = get_project
