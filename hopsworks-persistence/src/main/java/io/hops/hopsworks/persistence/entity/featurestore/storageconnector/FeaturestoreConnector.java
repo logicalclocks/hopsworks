@@ -68,7 +68,10 @@ import java.io.Serializable;
             "WHERE fsConn.featurestore = :featurestore AND fsConn.id = :id"),
     @NamedQuery(name = "FeaturestoreConnector.findByFeaturestoreName",
         query = "SELECT fsConn FROM FeaturestoreConnector fsConn " +
-            "WHERE fsConn.featurestore = :featurestore AND fsConn.name = :name")})
+            "WHERE fsConn.featurestore = :featurestore AND fsConn.name = :name"),
+    @NamedQuery(name = "FeaturestoreConnector.findByType",
+        query = "SELECT fsConn FROM FeaturestoreConnector fsConn " +
+                "WHERE fsConn.featurestore = :featurestore AND fsConn.connectorType IN :types")})
 public class FeaturestoreConnector implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id

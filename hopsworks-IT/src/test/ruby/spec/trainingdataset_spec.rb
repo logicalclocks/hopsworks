@@ -1172,6 +1172,24 @@ describe "On #{ENV['OS']}" do
         before :all do
           with_valid_project
           with_s3_connector(@project[:id])
+
+          # ensure storage connectors are enabled for testing
+          @enable_snowflake_storage_connector = getVar('enable_snowflake_storage_connectors')
+          setVar('enable_snowflake_storage_connectors', true)
+          @enable_redshift_storage_connector = getVar('enable_redshift_storage_connectors')
+          setVar('enable_redshift_storage_connectors', true)
+          @enable_adls_storage_connector = getVar('enable_adls_storage_connectors')
+          setVar('enable_adls_storage_connectors', true)
+          @enable_gcs_storage_connector = getVar('enable_gcs_storage_connectors')
+          setVar('enable_gcs_storage_connectors', true)
+        end
+
+        after :all do
+          # revert storage connectors states
+          setVar('enable_snowflake_storage_connectors', @enable_snowflake_storage_connector)
+          setVar('enable_redshift_storage_connectors', @enable_redshift_storage_connector)
+          setVar('enable_adls_storage_connectors', @enable_adls_storage_connector)
+          setVar('enable_gcs_storage_connectors', @enable_gcs_storage_connector)
         end
 
         it "should be able to add an external training dataset to the featurestore" do

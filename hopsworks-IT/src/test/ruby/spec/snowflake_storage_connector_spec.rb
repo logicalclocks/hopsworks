@@ -15,10 +15,13 @@
 =end
 
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects(spec: "snowflake_storage_connector")}
-
   before :all do
     with_valid_project
+    
+    # ensure snowflake storage connectors are enabled
+    @enable_snowflake_storage_connector = getVar('enable_snowflake_storage_connectors')
+    setVar('enable_snowflake_storage_connectors', true)
+
     featurestore_id = get_featurestore_id(@project[:id])
     @connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/storageconnectors"
     type = "featurestoreSnowflakeConnectorDTO"
@@ -38,6 +41,11 @@ describe "On #{ENV['OS']}" do
                    warehouse: "warehouse",
                    application: "Hopsworks"
                  }
+  end
+
+  after :all do
+    clean_all_test_projects(spec: "snowflake_storage_connector")
+    setVar('enable_snowflake_storage_connectors', @enable_snowflake_storage_connector)
   end
 
   it "should create a connector" do

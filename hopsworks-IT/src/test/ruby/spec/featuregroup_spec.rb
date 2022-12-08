@@ -1804,6 +1804,24 @@ describe "On #{ENV['OS']}" do
         with_valid_project
         with_jdbc_connector(@project[:id])
         create_test_files
+
+        # ensure storage connectors are enabled for testing
+        @enable_snowflake_storage_connector = getVar('enable_snowflake_storage_connectors')
+        setVar('enable_snowflake_storage_connectors', true)
+        @enable_redshift_storage_connector = getVar('enable_redshift_storage_connectors')
+        setVar('enable_redshift_storage_connectors', true)
+        @enable_gcs_storage_connector = getVar('enable_gcs_storage_connectors')
+        setVar('enable_gcs_storage_connectors', true)
+        @enable_bigquery_storage_connector = getVar('enable_bigquery_storage_connectors')
+        setVar('enable_bigquery_storage_connectors', true)
+      end
+
+      after :all do
+        # revert storage connectors flags
+        setVar('enable_snowflake_storage_connectors', @enable_snowflake_storage_connector)
+        setVar('enable_redshift_storage_connectors', @enable_redshift_storage_connector)
+        setVar('enable_gcs_storage_connectors', @enable_gcs_storage_connector)
+        setVar('enable_bigquery_storage_connectors', @enable_bigquery_storage_connector)
       end
 
       it "should be able to add an on-demand featuregroup to the featurestore" do
