@@ -174,6 +174,21 @@ describe "On #{ENV['OS']}" do
           expect_json(errorCode: 110011)
           reset_session
         end
+
+        it "should fail to upload file to a project if path contains ../" do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email], "Pass123")
+          project1 = create_project
+          file = URI.encode_www_form({flowChunkNumber: 1, flowChunkSize: 1048576,
+                                      flowCurrentChunkSize: 3195, flowTotalSize: 3195,
+                                      flowIdentifier: "3195-someFiletxt", flowFilename: "someFile.txt",
+                                      flowRelativePath: "someFile.txt", flowTotalChunks: 1})
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/upload/Logs/../../../Projects/#{project[:projectname]}/Logs/?#{file}", {content_type: "multipart/form-data"}
+          expect_status_details(400)
+          expect_json(errorCode: 110011)
+          reset_session
+        end
         it "should fail to return dataset list from Projects if path contains .." do
           project = get_project
           newUser = create_user
@@ -226,6 +241,78 @@ describe "On #{ENV['OS']}" do
                              datasetType: "&type=DATASET")
           expect_status_details(400)
           expect_json(errorCode: 110011)
+          reset_session
+        end
+      end
+    end
+    describe "#upload" do
+      context 'without authentication' do
+        before :all do
+          with_valid_project
+          reset_session
+        end
+        it "should fail to upload" do
+          project = get_project
+          uploadFile(project, "Logs", "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
+          expect_json(errorCode: 200003)
+          expect_status_details(401)
+        end
+      end
+      context 'with authentication but insufficient privilege' do
+        before :all do
+          with_valid_project
+        end
+        it "should fail to upload to a dataset with permission owner only if Data scientist" do
+          dsname = "dataset_#{short_random_id}"
+          ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
+          member = create_user
+          add_member_to_project(@project, member[:email], "Data scientist")
+          create_session(member[:email], "Pass123")
+          uploadFile(@project, dsname, "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
+          expect_json(errorCode: 200002)
+          expect_status_details(403)
+          reset_session
+        end
+        it "should fail to upload to a shared dataset with permission read only" do
+          with_valid_project
+          project = create_project
+          dsname = "dataset_#{short_random_id}"
+          ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
+          request_access(@project, ds, project)
+          share_dataset(@project, dsname, project[:projectname], permission: "READ_ONLY")
+          uploadFile(project, "#{@project[:projectname]}::#{dsname}", "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
+          expect_json(errorCode: 200002)
+          expect_status_details(403)
+        end
+      end
+      context 'with authentication and sufficient privilege' do
+        before :all do
+          with_valid_project
+        end
+        it "should upload file" do
+          dsname = "dataset_#{short_random_id}"
+          ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
+          uploadFile(@project, dsname, "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
+          expect_status_details(204)
+        end
+        it "should upload to a shared dataset with permission group writable." do
+          project = create_project
+          dsname = "dataset_#{short_random_id}"
+          ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
+          request_access(@project, ds, project)
+          share_dataset(@project, dsname, project[:projectname], permission: "EDITABLE")
+          update_dataset_permissions(@project, dsname, "EDITABLE", datasetType: "&type=DATASET")
+          uploadFile(project, "#{@project[:projectname]}::#{dsname}", "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
+          expect_status_details(204)
+        end
+        it "should upload to a dataset with permission owner only if Data owner" do
+          dsname = "dataset_#{short_random_id}"
+          ds = create_dataset_by_name_checked(@project, dsname, permission: "EDITABLE")
+          member = create_user
+          add_member_to_project(@project, member[:email], "Data owner")
+          create_session(member[:email], "Pass123")
+          uploadFile(@project, dsname, "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
+          expect_status_details(204)
           reset_session
         end
       end
@@ -735,6 +822,7 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
+
     describe "operations in shared dataset" do
       before :all do
         @project1 = create_project
@@ -751,11 +839,6 @@ describe "On #{ENV['OS']}" do
         it "should fail to upload to a shared dataset with permission read only" do
           uploadFile(@project2, "#{@project1[:projectname]}::#{@dsname}", "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
           expect_status_details(403, error_code: 200002)
-        end
-        it "should fail to upload stream to a shared dataset with permission read only" do
-          uploadFileStream(@project2, "#{@project1[:projectname]}::#{@dsname}",
-                      "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
-          expect_status_details(403, error_code: 110050)
         end
 
         it "should fail to delete - absolute path" do
@@ -783,11 +866,6 @@ describe "On #{ENV['OS']}" do
         it "should upload to a shared dataset with permission group writable." do
           uploadFile(@project2, "#{@project1[:projectname]}::#{@dsname}", "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
           expect_status_details(204)
-        end
-        it "should upload stream to a shared dataset with permission group writable." do
-          uploadFileStream(@project2, "#{@project1[:projectname]}::#{@dsname}",
-                      "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
-          expect_status_details(201)
         end
 
         it "should delete - absolute path" do
@@ -1069,6 +1147,7 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
+
     describe "#zip_unzip" do
       context 'with authentication and sufficient privileges' do
         before :all do
@@ -1232,6 +1311,7 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
+
     describe "#Download" do
       context 'without authentication' do
         before :all do
