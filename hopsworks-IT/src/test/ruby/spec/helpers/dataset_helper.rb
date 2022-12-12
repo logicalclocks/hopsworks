@@ -67,15 +67,6 @@ module DatasetHelper
                                 flowRelativePath: "#{file_name}", flowTotalChunks: 1})
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/upload/#{dsname}?#{file}", {content_type: "multipart/form-data"}
   end
-
-  def uploadFileStream(project, dsname, filePath)
-    file = File.new(filePath, 'rb')
-    file_size = File.size(filePath)
-    file_name = File.basename(filePath)
-    data = {file: file, fileSize: file_size, fileName: file_name}
-    multipart = RestClient::Payload::Multipart.new(data)
-    post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/v2/upload/#{dsname}", multipart.read, multipart.headers
-  end
   
   def create_dataset_checked
     with_valid_project

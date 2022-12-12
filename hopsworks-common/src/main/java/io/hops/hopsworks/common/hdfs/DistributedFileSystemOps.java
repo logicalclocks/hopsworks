@@ -379,18 +379,16 @@ public class DistributedFileSystemOps {
    */
   public FSDataOutputStream create(String path) throws IOException {
     Path dstPath = new Path(path);
-    return create(dstPath);
+    String dirs = Utils.getDirectoryPart(path);
+    Path dirsPath = new Path(dirs);
+    if (!exists(dirs)) {
+      dfs.mkdirs(dirsPath);
+    }
+    return dfs.create(dstPath);
   }
   
-  /**
-   * Creates a file and all parent dirs that does not exist and returns
-   * an FSDataOutputStream
-   * @param path
-   * @return
-   * @throws IOException
-   */
   public FSDataOutputStream create(Path path) throws IOException {
-    return dfs.create(path);
+    return create(path.toString());
   }
   
   /**

@@ -25,7 +25,6 @@ import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.DownloadService;
 import io.hops.hopsworks.api.util.Pagination;
-import io.hops.hopsworks.api.util.UploadResource;
 import io.hops.hopsworks.api.util.UploadService;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
@@ -113,8 +112,6 @@ public class DatasetResource {
   private DownloadService downloadService;
   @Inject
   private UploadService uploader;
-  @Inject
-  private UploadResource uploadResource;
   @EJB
   private HopsFSProvenanceController fsProvenanceController;
   @Inject
@@ -473,20 +470,13 @@ public class DatasetResource {
     this.downloadService.setProjectId(this.projectId);
     return this.downloadService;
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @Path("upload/{path: .+}")
   public UploadService upload(@PathParam("path") String path,
-    @QueryParam("type") DatasetType datasetType) {
+                              @QueryParam("type") DatasetType datasetType) {
     this.uploader.setParams(this.projectId, path, datasetType);
     return this.uploader;
-  }
-  
-  @Logged(logLevel = LogLevel.OFF)
-  @Path("v2/upload/{path: .+}")
-  public UploadResource uploadStream(@PathParam("path") String path, @QueryParam("type") DatasetType datasetType) {
-    this.uploadResource.setParams(this.projectId, path, datasetType);
-    return this.uploadResource;
   }
 
   @Logged(logLevel = LogLevel.OFF)
