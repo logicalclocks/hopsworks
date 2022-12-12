@@ -59,35 +59,29 @@ public class FeaturestoreUtils {
 
   public enum ActionMessage {
     // Feature Group
-    CREATE_FEATURE_GROUP("Creating feature group"),
-    CLEAR_FEATURE_GROUP("Clear feature group"),
-    UPDATE_FEATURE_GROUP_METADATA("Update feature group metadata"),
-    ENABLE_FEATURE_GROUP_ONLINE("Enable feature group online"),
-    DISABLE_FEATURE_GROUP_ONLINE("Disable feature group online"),
-    UPDATE_FEATURE_GROUP_STATS_CONFIG("Update feature group stats config"),
-    DELETE_FEATURE_GROUP("Delete feature group"),
+    CREATE_FEATURE_GROUP("create feature group"),
+    CLEAR_FEATURE_GROUP("clear feature group"),
+    UPDATE_FEATURE_GROUP_METADATA("update feature group metadata"),
+    ENABLE_FEATURE_GROUP_ONLINE("enable online feature group"),
+    DISABLE_FEATURE_GROUP_ONLINE("disable online feature group"),
+    UPDATE_FEATURE_GROUP_STATS_CONFIG("update feature group stats config"),
+    DELETE_FEATURE_GROUP("delete feature group"),
     // Feature View
-    CREATE_FEATURE_VIEW("Creating feature view"),
-    DELETE_FEATURE_VIEW("Delete feature view"),
-    UPDATE_FEATURE_VIEW("Update feature view"),
+    CREATE_FEATURE_VIEW("create feature view"),
+    DELETE_FEATURE_VIEW("delete feature view"),
+    UPDATE_FEATURE_VIEW("update feature view"),
     // Training Dataset
-    CREATE_TRAINING_DATASET("Creating training dataset"),
-    DELETE_TRAINING_DATASET("Delete training dataset"),
-    DELETE_TRAINING_DATASET_DATA_ONLY("Delete training dataset data only"),
-    DELETE_HOPSFS_TRAINING_DATASET("Delete hopsfs training data"),
-    UPDATE_TRAINING_DATASET_METADATA("Update training dataset metadata"),
-    UPDATE_TRAINING_DATASET_STATS_CONFIG("Update training dataset stats config"),
+    CREATE_TRAINING_DATASET("create training dataset"),
+    DELETE_TRAINING_DATASET("delete training dataset"),
+    DELETE_TRAINING_DATASET_DATA_ONLY("delete training dataset data only"),
+    UPDATE_TRAINING_DATASET_METADATA("update training dataset metadata"),
+    UPDATE_TRAINING_DATASET_STATS_CONFIG("update training dataset stats config"),
     // Job
-    SETUP_STATISTICS_JOB("Setup statistics job"),
-    SETUP_VALIDATION_JOB("Setup validation job"),
-    IMPORT_FEATURE_GROUP_JOB("Import feature group job"),
-    SETUP_INGESTION_JOB("Setup ingestion job"),
-    SETUP_TRAINING_DATASET_JOB("Setup training dataset job"),
-    SETUP_HUDI_DELTA_STREAMER_JOB("Setup HUDI delta streamer job"),
+    SETUP_TRAINING_DATASET_JOB("setup training dataset job"),
     // Storage Connector
-    CREATE_STORAGE_CONNECTOR("Creating storage connector"),
-    UPDATE_STORAGE_CONNECTOR("Update storage connector"),
-    DELETE_STORAGE_CONNECTOR("Delete storage connector");
+    CREATE_STORAGE_CONNECTOR("create storage connector"),
+    UPDATE_STORAGE_CONNECTOR("update storage connector"),
+    DELETE_STORAGE_CONNECTOR("delete storage connector");
 
     private String message;
 
@@ -134,7 +128,7 @@ public class FeaturestoreUtils {
       }
     }
     if (actionMessage != null) {
-      messageContent.add(String.format("actionMessage: %s", actionMessage.getMessage()));
+      messageContent.add(String.format("actionMessage: Forbidden to %s", actionMessage.getMessage()));
     }
     throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FORBIDDEN_FEATURESTORE_OPERATION, Level.FINE,
         String.join(", ", messageContent));
