@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.common.featurestore.storageconnectors.redshift;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Strings;
@@ -155,7 +156,8 @@ public class FeaturestoreRedshiftConnectorDTO extends FeaturestoreStorageConnect
   public void setExpiration(Instant expiration) {
     this.expiration = expiration;
   }
-  
+
+  @JsonIgnore
   public String[] getDatabaseGroups() {
     if (!Strings.isNullOrEmpty(this.databaseGroup)) {
       return this.databaseGroup.split(":");
