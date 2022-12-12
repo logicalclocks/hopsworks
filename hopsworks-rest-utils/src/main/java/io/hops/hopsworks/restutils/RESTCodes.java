@@ -2288,8 +2288,8 @@ public class RESTCodes {
     INVALID_GIT_COMMAND_CONFIGURATION(34, "Invalid git command operation",
         Response.Status.INTERNAL_SERVER_ERROR),
     USER_IS_NOT_REPOSITORY_OWNER(35, "User not allowed to perform operation in repository",
-            Response.Status.FORBIDDEN);
-
+            Response.Status.FORBIDDEN),
+    READ_ONLY_REPOSITORY(36, "Repository is read only", Response.Status.BAD_REQUEST);
     private Integer code;
     private String message;
     private Response.Status respStatus;
