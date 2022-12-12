@@ -121,6 +121,9 @@ public class RemoteUserGroupMapper {
   }
   
   public void mapRemoteGroupToProject(Users user, List<String> remoteGroups) {
+    if (!settings.isLdapGroupMappingSyncEnabled()) {
+      return;
+    }
     Collection<RemoteGroupProjectMapping> remoteGroupProjectMappings = getUnique(remoteGroups);
     for (RemoteGroupProjectMapping remoteGroupProjectMapping : remoteGroupProjectMappings) {
       try {
@@ -135,6 +138,9 @@ public class RemoteUserGroupMapper {
   }
   
   public void cleanRemoteGroupToProjectMapping(Users user, List<String> remoteGroups) {
+    if (!settings.isLdapGroupMappingSyncEnabled()) {
+      return;
+    }
     List<ProjectTeam> projectTeams = projectController.findProjectByUser(user.getEmail());
     Collection<RemoteGroupProjectMapping> remoteGroupProjectMappings = getUnique(remoteGroups);
     for (ProjectTeam projectTeam : projectTeams) {
@@ -162,6 +168,9 @@ public class RemoteUserGroupMapper {
   }
   
   public void removeFromAllProjects(Users user) {
+    if (!settings.isLdapGroupMappingSyncEnabled()) {
+      return;
+    }
     List<ProjectTeam> projectTeams = projectController.findProjectByUser(user.getEmail());
     for (ProjectTeam projectTeam : projectTeams) {
       removeFromProject(projectTeam);

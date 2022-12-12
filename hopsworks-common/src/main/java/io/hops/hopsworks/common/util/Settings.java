@@ -2585,6 +2585,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_DISABLE_PASSWORD_LOGIN = "disable_password_login";
   private static final String VARIABLE_DISABLE_REGISTRATION = "disable_registration";
   private static final String VARIABLE_DISABLE_REGISTRATION_UI = "disable_registration_ui";
+  private static final String VARIABLE_LDAP_GROUP_MAPPING_SYNC_ENABLED = "ldap_group_mapping_sync_enabled";
   private static final String VARIABLE_LDAP_GROUP_MAPPING_SYNC_INTERVAL = "ldap_group_mapping_sync_interval";
   
   private static final String VARIABLE_VALIDATE_REMOTE_USER_EMAIL_VERIFIED = "validate_email_verified";
@@ -2623,6 +2624,7 @@ public class Settings implements Serializable {
   private String OAUTH_REDIRECT_URI = OAUTH_REDIRECT_URI_PATH;
   private String OAUTH_LOGOUT_REDIRECT_URI = OAUTH_LOGOUT_REDIRECT_URI_PATH;
   private int OAUTH_ACCOUNT_STATUS = 1;
+  private boolean LDAP_GROUP_MAPPING_SYNC_ENABLED = false;
   private String LDAP_GROUP_MAPPING_SYNC_INTERVAL = "0";
   
   private boolean REMOTE_AUTH_NEED_CONSENT = true;
@@ -2672,7 +2674,10 @@ public class Settings implements Serializable {
   
     LDAP_GROUP_MAPPING_SYNC_INTERVAL = setStrVar(VARIABLE_LDAP_GROUP_MAPPING_SYNC_INTERVAL,
       LDAP_GROUP_MAPPING_SYNC_INTERVAL);
-  
+
+    LDAP_GROUP_MAPPING_SYNC_ENABLED= setBoolVar(VARIABLE_LDAP_GROUP_MAPPING_SYNC_ENABLED,
+        LDAP_GROUP_MAPPING_SYNC_ENABLED);
+
     VALIDATE_REMOTE_USER_EMAIL_VERIFIED =
       setBoolVar(VARIABLE_VALIDATE_REMOTE_USER_EMAIL_VERIFIED, VALIDATE_REMOTE_USER_EMAIL_VERIFIED);
     
@@ -2954,6 +2959,10 @@ public class Settings implements Serializable {
   public synchronized boolean isRegistrationUIDisabled() {
     checkCache();
     return isRegistrationDisabled() || DISABLE_REGISTRATION_UI;
+  }
+
+  public synchronized boolean isLdapGroupMappingSyncEnabled() {
+    return LDAP_GROUP_MAPPING_SYNC_ENABLED;
   }
 
   public synchronized String ldapGroupMappingSyncInterval() {

@@ -41,7 +41,7 @@ public class RemoteGroupToProjectMappingSync {
   @PostConstruct
   public void init() {
     String intervalRaw = settings.ldapGroupMappingSyncInterval();
-    if (intervalRaw.equals("0")) {
+    if (intervalRaw.equals("0") || !settings.isLdapGroupMappingSyncEnabled()) {
       LOGGER.log(Level.INFO, "Remote Group To Project Member Mapping Timer NOT created.");
       return;
     }

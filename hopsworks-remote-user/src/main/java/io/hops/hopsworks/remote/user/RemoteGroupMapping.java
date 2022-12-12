@@ -5,6 +5,7 @@ package io.hops.hopsworks.remote.user;
 
 import io.hops.hopsworks.common.dao.remote.user.RemoteUserFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.remote.user.RemoteUser;
 import io.hops.hopsworks.persistence.entity.remote.user.RemoteUserStatus;
@@ -38,6 +39,8 @@ public class RemoteGroupMapping {
   private RemoteUserGroupMapper remoteUserGroupMapper;
   @EJB
   private UserFacade userFacade;
+  @EJB
+  private Settings settings;
   
   public void syncMapping() {
     List<RemoteUser> remoteUsers = remoteUserFacade.findAll();
@@ -72,6 +75,9 @@ public class RemoteGroupMapping {
   }
   
   public void syncMapping(RemoteUser remoteUser, List<String> groups) throws UserException {
+    if (!settings.isLdapGroupMappingSyncEnabled()) {
+      return;
+    }
     if (remoteUser == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "Remote user not found");
     }
