@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.common.featurestore.storageconnectors.redshift;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Strings;
@@ -48,10 +49,10 @@ public class FeaturestoreRedshiftConnectorDTO extends FeaturestoreStorageConnect
   private List<OptionDTO> arguments;
   
   private Instant expiration;
-
+  
   public FeaturestoreRedshiftConnectorDTO() {
   }
-
+  
   public FeaturestoreRedshiftConnectorDTO(FeaturestoreConnector featurestoreConnector) {
     super(featurestoreConnector);
     this.clusterIdentifier = featurestoreConnector.getRedshiftConnector().getClusterIdentifier();
@@ -65,97 +66,98 @@ public class FeaturestoreRedshiftConnectorDTO extends FeaturestoreStorageConnect
     this.databaseGroup = featurestoreConnector.getRedshiftConnector().getDatabaseGroup();
     this.iamRole = featurestoreConnector.getRedshiftConnector().getIamRole();
   }
-
+  
   @XmlElement
   public String getClusterIdentifier() {
     return clusterIdentifier;
   }
-
+  
   public void setClusterIdentifier(String clusterIdentifier) {
     this.clusterIdentifier = clusterIdentifier;
   }
-
+  
   @XmlElement
   public String getDatabaseDriver() {
     return databaseDriver;
   }
-
+  
   public void setDatabaseDriver(String databaseDriver) {
     this.databaseDriver = databaseDriver;
   }
-
+  
   @XmlElement
   public String getDatabaseEndpoint() {
     return databaseEndpoint;
   }
-
+  
   public void setDatabaseEndpoint(String databaseEndpoint) {
     this.databaseEndpoint = databaseEndpoint;
   }
-
+  
   @XmlElement
   public String getDatabaseName() {
     return databaseName;
   }
-
+  
   public void setDatabaseName(String databaseName) {
     this.databaseName = databaseName;
   }
-
+  
   @XmlElement
   public Integer getDatabasePort() {
     return databasePort;
   }
-
+  
   public void setDatabasePort(Integer databasePort) {
     this.databasePort = databasePort;
   }
-
+  
   @XmlElement
   public String getTableName() {
     return tableName;
   }
-
+  
   public void setTableName(String tableName) {
     this.tableName = tableName;
   }
-
+  
   @XmlElement
   public String getDatabaseUserName() {
     return databaseUserName;
   }
-
+  
   public void setDatabaseUserName(String databaseUserName) {
     this.databaseUserName = databaseUserName;
   }
-
+  
   @XmlElement
   public Boolean getAutoCreate() {
     return autoCreate;
   }
-
+  
   public void setAutoCreate(Boolean autoCreate) {
     this.autoCreate = autoCreate;
   }
-
+  
   @XmlElement
   public String getDatabaseGroup() {
     return databaseGroup;
   }
-
+  
   public void setDatabaseGroup(String databaseGroup) {
     this.databaseGroup = databaseGroup;
   }
-
+  
   @XmlElement
   public Instant getExpiration() {
     return expiration;
   }
-
+  
   public void setExpiration(Instant expiration) {
     this.expiration = expiration;
   }
 
+  @JsonIgnore
   public String[] getDatabaseGroups() {
     if (!Strings.isNullOrEmpty(this.databaseGroup)) {
       return this.databaseGroup.split(":");
@@ -163,34 +165,34 @@ public class FeaturestoreRedshiftConnectorDTO extends FeaturestoreStorageConnect
       return new String[]{};
     }
   }
-
+  
   @XmlElement
   public String getDatabasePassword() {
     return databasePassword;
   }
-
+  
   public void setDatabasePassword(String databasePassword) {
     this.databasePassword = databasePassword;
   }
-
+  
   @XmlElement
   public String getIamRole() {
     return iamRole;
   }
-
+  
   public void setIamRole(String iamRole) {
     this.iamRole = iamRole;
   }
-
+  
   @XmlElement
   public List<OptionDTO> getArguments() {
     return arguments;
   }
-
+  
   public void setArguments(List<OptionDTO> arguments) {
     this.arguments = arguments;
   }
-
+  
   @Override
   public String toString() {
     return "FeaturestoreRedshiftConnectorDTO{clusterIdentifier='" + clusterIdentifier + '}';
