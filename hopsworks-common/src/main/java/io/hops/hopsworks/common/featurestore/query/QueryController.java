@@ -494,13 +494,6 @@ public class QueryController {
         filteredRightFeatures.add(rightFeature);
       }
 
-      // drop event time from right side if PIT join
-      if (pitEnabled) {
-        filteredRightFeatures = filteredRightFeatures.stream()
-            .filter(f -> !f.getName().equals(join.getRightQuery().getFeaturegroup().getEventTime()))
-            .collect(Collectors.toList());
-      }
-
       // replace the features for the right query
       join.getRightQuery().setFeatures(filteredRightFeatures);
     }

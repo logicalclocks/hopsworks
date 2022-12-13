@@ -274,9 +274,10 @@ public class TestQueryController {
     leftQuery.setJoins(Arrays.asList(join));
 
     target.removeDuplicateColumns(leftQuery, true);
-    Assert.assertEquals(2, rightQuery.getFeatures().size());
+    Assert.assertEquals(3, rightQuery.getFeatures().size());
     Assert.assertEquals("ft1", rightQuery.getFeatures().get(0).getName());
     Assert.assertEquals("ft2", rightQuery.getFeatures().get(1).getName());
+    Assert.assertEquals("ft3", rightQuery.getFeatures().get(2).getName());
   }
 
   @Test
