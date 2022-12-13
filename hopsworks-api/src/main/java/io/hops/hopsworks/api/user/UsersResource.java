@@ -395,7 +395,7 @@ public class UsersResource {
   @GET
   @Path("/git/provider")
   @Produces(MediaType.APPLICATION_JSON)
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response gitProviders(@Context SecurityContext sc, @Context UriInfo uriInfo) {
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -407,7 +407,7 @@ public class UsersResource {
   @POST
   @Path("/git/provider")
   @Produces(MediaType.APPLICATION_JSON)
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response setGitProvider(@Context SecurityContext sc, @Context UriInfo uriInfo,
                                  GitProviderSecretsDTO gitProviderSecretsDTO) throws UserException {
