@@ -14,29 +14,64 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 describe "On #{ENV['OS']}" do
+  
   before :all do
     @debugOpt = false
     @cleanup = true
+    
+    # ensure data science profile is enabled
+    @enable_data_science_profile = getVar('enable_data_science_profile')
+    setVar('enable_data_science_profile', "true")
   end
-  after(:all) {clean_all_test_projects(spec: "model") if @cleanup}
+
+  after :all do
+    clean_all_test_projects(spec: "model") if @cleanup
+    setVar('enable_data_science_profile', @enable_data_science_profile[:value])
+  end
+
   experiment_1 = "experiment_1"
   experiment_2 = "experiment_2"
+
   describe 'model' do
+
+    context 'with data science profile not enabled' do
+      before :all do
+        # disable data science profile
+        setVar('enable_data_science_profile', "false")
+
+        with_valid_project
+      end
+
+      after :all do
+        setVar('enable_data_science_profile', "true")
+      end
+
+      it "should fail to get models" do
+        get_models(@project[:id], nil)
+        expect_status_details(400, error_code: 120012)
+        get_model(@project[:id], "mnist_1")
+        expect_status_details(400, error_code: 120012)
+      end
+    end
+
     context 'without authentication' do
       before :all do
         with_valid_project
         reset_session
       end
+
       it "should fail" do
         get_model(@project[:id], "mnist_1")
         expect_json(errorCode: 200003)
         expect_status_details(401)
       end
     end
+
     context 'with authentication create, get' do
       before :all do
         with_valid_tour_project("ml")
       end
+
       it "should not find any models" do
         get_models(@project[:id], nil)
         expect_status_details(200)
@@ -96,6 +131,7 @@ describe "On #{ENV['OS']}" do
       end
     end
   end
+
   describe 'models sort, filter, offset and limit' do
     context 'with authentication' do
       before :all do
@@ -323,6 +359,7 @@ describe "On #{ENV['OS']}" do
       expect(model_exists(@project1, @model_name_1)).to be(true)
     end
   end
+
   describe 'model export' do
     def setup_user(email, password)
       if email.nil? || password.nil?

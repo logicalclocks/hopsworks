@@ -21,6 +21,8 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.filter.featureFlags.FeatureFlagRequired;
+import io.hops.hopsworks.api.filter.featureFlags.FeatureFlags;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.security.QuotaEnforcementException;
@@ -110,6 +112,7 @@ public class ServingService {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.SERVING},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @FeatureFlagRequired(requiredFeatureFlags = {FeatureFlags.DATA_SCIENCE_PROFILE})
   @ApiOperation(value = "Get the list of serving instances for the project",
       response = ServingView.class,
       responseContainer = "List")
@@ -127,19 +130,19 @@ public class ServingService {
       if (servingWrapper == null) {
         throw new ServingException(RESTCodes.ServingErrorCode.INSTANCE_NOT_FOUND, Level.FINE);
       }
-      
+
       ServingView servingView = new ServingView(servingWrapper);
       GenericEntity<ServingView> servingEntity = new GenericEntity<ServingView>(servingView){};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
         .entity(servingEntity)
         .build();
     }
-    
+
     // if filter by model version, without a model name
     if (Strings.isNullOrEmpty(modelName) && modelVersion != null) {
       throw new IllegalArgumentException("Cannot filter by model version without a model name");
     }
-    
+
     List<ServingWrapper> servingDAOList = servingController.getAll(project, modelName, modelVersion, status);
     ArrayList<ServingView> servingViewList = new ArrayList<>();
     for (ServingWrapper servingWrapper : servingDAOList) {
@@ -162,13 +165,14 @@ public class ServingService {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.SERVING},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @FeatureFlagRequired(requiredFeatureFlags = {FeatureFlags.DATA_SCIENCE_PROFILE})
   @ApiOperation(value = "Get info about a serving instance for the project", response = ServingView.class)
   public Response get(
     @Context SecurityContext sc,
     @ApiParam(value = "Id of the Serving instance", required = true)
     @PathParam("servingId") Integer servingId)
     throws ServingException, KafkaException, CryptoPasswordNotFoundException {
-    
+
     if (servingId == null) {
       throw new IllegalArgumentException("servingId was not provided");
     }
@@ -176,7 +180,7 @@ public class ServingService {
     if (servingWrapper == null) {
       throw new ServingException(RESTCodes.ServingErrorCode.INSTANCE_NOT_FOUND, Level.FINE);
     }
-    
+
     ServingView servingView = new ServingView(servingWrapper);
     GenericEntity<ServingView> servingEntity = new GenericEntity<ServingView>(servingView){};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
@@ -191,13 +195,14 @@ public class ServingService {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.SERVING},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @FeatureFlagRequired(requiredFeatureFlags = {FeatureFlags.DATA_SCIENCE_PROFILE})
   @ApiOperation(value = "Delete a serving instance")
   public Response delete(
     @Context HttpServletRequest req,
     @Context SecurityContext sc,
     @ApiParam(value = "Id of the serving instance", required = true) @PathParam("servingId") Integer servingId)
     throws ServingException {
-    
+
     if (servingId == null) {
       throw new IllegalArgumentException("servingId was not provided");
     }
@@ -213,6 +218,7 @@ public class ServingService {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.SERVING},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @FeatureFlagRequired(requiredFeatureFlags = {FeatureFlags.DATA_SCIENCE_PROFILE})
   @ApiOperation(value = "Create or update a serving instance")
   public Response put(
     @Context HttpServletRequest req,
@@ -221,7 +227,7 @@ public class ServingService {
     @ApiParam(value = "serving specification", required = true) ServingView serving)
     throws ServingException, ServiceException, KafkaException, ProjectException, UserException,
            InterruptedException, ExecutionException, UnsupportedEncodingException {
-    
+
     Users user = jWTHelper.getUserPrincipal(sc);
     if (serving == null) {
       throw new IllegalArgumentException("serving was not provided");
@@ -238,7 +244,7 @@ public class ServingService {
     }
     servingUtil.validateUserInput(servingWrapper, project);
     servingController.put(project, user, servingWrapper);
-  
+
     ServingView servingView = new ServingView(servingWrapper);
     UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(String.valueOf(servingView.getId()));
     GenericEntity<ServingView> servingEntity = new GenericEntity<ServingView>(servingView){};
@@ -254,6 +260,7 @@ public class ServingService {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.SERVING},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @FeatureFlagRequired(requiredFeatureFlags = {FeatureFlags.DATA_SCIENCE_PROFILE})
   @ApiOperation(value = "Start or stop a Serving instance")
   public Response startOrStop(
     @Context SecurityContext sc,
@@ -261,12 +268,12 @@ public class ServingService {
       @PathParam("servingId") Integer servingId,
     @ApiParam(value = "Action", required = true) @QueryParam("action") ServingCommands servingCommand)
     throws ServingException {
-    
+
     Users user = jWTHelper.getUserPrincipal(sc);
     if (servingId == null) {
       throw new IllegalArgumentException("servingId was not provided");
     }
-  
+
     if (servingCommand == null) {
       throw new IllegalArgumentException(RESTCodes.ServingErrorCode.COMMAND_NOT_PROVIDED.getMessage());
     }
@@ -279,13 +286,13 @@ public class ServingService {
                 ex.getMessage(), ex.getMessage());
       }
     }
-    
+
     servingController.startOrStop(project, user, servingId, servingCommand);
 
     return Response.ok().build();
   }
-  
-  
+
+
   @GET
   @Path("/{servingId}/logs")
   @Produces(MediaType.APPLICATION_JSON)
@@ -294,6 +301,7 @@ public class ServingService {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.SERVING},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @FeatureFlagRequired(requiredFeatureFlags = {FeatureFlags.DATA_SCIENCE_PROFILE})
   @ApiOperation(value = "Get logs of a serving instance of the project", response = ServingLogs.class,
     responseContainer = "List")
   public Response get(
@@ -304,14 +312,14 @@ public class ServingService {
     @ApiParam(value = "Id of the Serving instance", required = true)
     @PathParam("servingId") Integer servingId)
     throws ServingException, KafkaException, CryptoPasswordNotFoundException {
-    
+
     if (servingId == null) {
       throw new IllegalArgumentException("servingId was not provided");
     }
     if (!component.equals("predictor") && !component.equals("transformer")) {
       throw new IllegalArgumentException("component not valid, possible values are predictor or transformer");
     }
-    
+
     List<ServingLogs> logs = servingController.getLogs(project, servingId, component, tailingLines);
     GenericEntity<List<ServingLogs>> logsEntity = new GenericEntity<List<ServingLogs>>(logs){};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)

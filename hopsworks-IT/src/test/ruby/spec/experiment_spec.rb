@@ -14,13 +14,42 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 describe "On #{ENV['OS']}" do
+
   before :all do
     @debugOpt = false
+    
+    # ensure data science profile is enabled
+    @enable_data_science_profile = getVar('enable_data_science_profile')
+    setVar('enable_data_science_profile', "true")
   end
-  after(:all) {clean_all_test_projects(spec: "experiment")}
+
+  after :all do
+    clean_all_test_projects(spec: "experiment")
+    setVar('enable_data_science_profile', @enable_data_science_profile[:value])
+  end
+
   experiment_1 = "experiment_1"
   experiment_2 = "experiment_2"
+
   describe 'experiment' do
+
+    context 'with data science profile not enabled' do
+      before :all do
+        # disable data science profile
+        setVar('enable_data_science_profile', "false")
+        with_valid_project
+      end
+
+      after :all do
+        setVar('enable_data_science_profile', "true")
+      end
+
+      it "should fail to get experiments" do
+        get_experiment(@project[:id], "app_id_4252123_1", nil)
+        expect_status_details(400, error_code: 120012)
+      end
+    end
+
     context 'without authentication' do
       before :all do
         with_valid_project
@@ -32,11 +61,12 @@ describe "On #{ENV['OS']}" do
         expect_status_details(401)
       end
     end
+
     context 'with authentication create, delete, get' do
       before :all do
         with_valid_project
-
       end
+
       it "should not find any experiments" do
         get_experiments(@project[:id], nil)
         expect_status_details(200)
@@ -116,6 +146,7 @@ describe "On #{ENV['OS']}" do
       end
     end
   end
+
   describe 'experiments sort, filter, offset and limit' do
     context 'with authentication' do
       before :all do
@@ -307,6 +338,7 @@ describe "On #{ENV['OS']}" do
       end
     end
   end
+  
   describe 'fake experiment' do
     def experiment_internal(project_id, app_id, run_id, type, body)
       exp_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/experiments/#{app_id}_#{run_id}?type=#{type}"

@@ -61,6 +61,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.filter.AuthFilter.class);
     register(io.hops.hopsworks.api.filter.apiKey.ApiKeyFilter.class);
     register(io.hops.hopsworks.api.filter.JWTAutoRenewFilter.class);
+    register(io.hops.hopsworks.api.filter.featureFlags.FeatureFlagFilter.class);
     register(io.hops.hopsworks.api.jwt.JWTResource.class);
     register(io.hops.hopsworks.api.jobs.executions.ExecutionsResource.class);
     register(io.hops.hopsworks.api.jobs.JobsResource.class);

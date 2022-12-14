@@ -19,6 +19,8 @@ package io.hops.hopsworks.api.experiments.tensorboard;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.featureFlags.FeatureFlagRequired;
+import io.hops.hopsworks.api.filter.featureFlags.FeatureFlags;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.project.util.DsPath;
 import io.hops.hopsworks.api.project.util.PathValidator;
@@ -86,6 +88,7 @@ public class TensorBoardResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @FeatureFlagRequired(requiredFeatureFlags = {FeatureFlags.DATA_SCIENCE_PROFILE})
   public Response getTensorBoard(@Context SecurityContext sc) throws TensorBoardException {
     try {
       Users user = jWTHelper.getUserPrincipal(sc);
@@ -105,6 +108,7 @@ public class TensorBoardResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @FeatureFlagRequired(requiredFeatureFlags = {FeatureFlags.DATA_SCIENCE_PROFILE})
   public Response startTensorBoard(@Context SecurityContext sc, @Context UriInfo uriInfo) throws DatasetException,
       ProjectException, TensorBoardException, UnsupportedEncodingException, ServiceDiscoveryException {
 
@@ -122,6 +126,7 @@ public class TensorBoardResource {
   @DELETE
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @FeatureFlagRequired(requiredFeatureFlags = {FeatureFlags.DATA_SCIENCE_PROFILE})
   public Response stopTensorBoard(@Context SecurityContext sc) throws TensorBoardException {
     Users user = jWTHelper.getUserPrincipal(sc);
     TensorBoardDTO tbDTO = tensorBoardController.getTensorBoard(project, user);
