@@ -46,6 +46,8 @@ import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.restutils.RESTException;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -57,6 +59,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Optional;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -201,6 +204,7 @@ public class ProvExplicitLinksBuilder {
       ProvArtifact artifact = (ProvArtifact) links.getNode();
       artifactDTO = new ProvArtifactDTO(artifact.getId(), artifact.getProject(),
         artifact.getName(), artifact.getVersion());
+      linksDTO.setNode(buildNodeDTO(links, artifactDTO));
     } else {
       FeatureView featureView = (FeatureView) links.getNode();
       linksDTO.setHref(featureViewURI(uriInfo, accessProject, featureView).build());
@@ -209,16 +213,28 @@ public class ProvExplicitLinksBuilder {
         resourceRequest.setExpansions(new HashSet<>(Arrays.asList(
           new ResourceRequest(ResourceRequest.Name.QUERY),
           new ResourceRequest(ResourceRequest.Name.FEATURES))));
-        artifactDTO = featureViewBuilder.build(featureView, resourceRequest, accessProject, user, uriInfo);
+        try {
+          artifactDTO = featureViewBuilder.build(featureView, resourceRequest, accessProject, user, uriInfo);
+          linksDTO.setNode(buildNodeDTO(links, artifactDTO));
+        } catch (FeaturestoreException e) {
+          if (e.getErrorCode().equals(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND)) {
+            artifactDTO = new ProvArtifactDTO(featureView.getId().toString(),
+              featureView.getFeaturestore().getProject().getName(),
+              featureView.getName(), featureView.getVersion());
+            linksDTO.setNode(buildNodeDTO(links, artifactDTO, Optional.of(e)));
+          } else {
+            throw e;
+          }
+        }
       } else {
         ProvArtifact artifact = ProvArtifact.fromFeatureView(featureView);
         artifactDTO = new ProvArtifactDTO(artifact.getId(), artifact.getProject(),
           artifact.getName(), artifact.getVersion());
+        linksDTO.setNode(buildNodeDTO(links, artifactDTO));
       }
       artifactDTO.setHref(
         featurestoreUtils.featureViewURI(uriInfo.getBaseUriBuilder(), accessProject, featureView).build());
     }
-    linksDTO.setNode(buildNodeDTO(links, artifactDTO));
     traverseLinks(uriInfo, accessProject, user, linksDTO, expandArtifact, links);
     return linksDTO;
   }
@@ -288,8 +304,11 @@ public class ProvExplicitLinksBuilder {
         return null;
     }
   }
-  
   private  ProvNodeDTO buildNodeDTO(ProvExplicitLink links, RestDTO artifactDTO) {
+    return buildNodeDTO(links, artifactDTO, Optional.empty());
+  }
+  
+  private  ProvNodeDTO buildNodeDTO(ProvExplicitLink links, RestDTO artifactDTO, Optional<RESTException> exception) {
     ProvNodeDTO nodeDTO;
     if(artifactDTO instanceof CachedFeaturegroupDTO) {
       nodeDTO = new ProvCachedFeatureGroupDTO();
@@ -306,6 +325,9 @@ public class ProvExplicitLinksBuilder {
     nodeDTO.setAccessible(links.isAccessible());
     nodeDTO.setDeleted(links.isDeleted());
     nodeDTO.setArtifact(artifactDTO);
+    if(exception.isPresent()) {
+      nodeDTO.setExceptionCause(exception.get().getUsrMsg());
+    }
     return nodeDTO;
   }
 }
