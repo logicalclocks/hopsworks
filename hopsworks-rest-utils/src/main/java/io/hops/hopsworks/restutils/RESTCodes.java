@@ -1640,7 +1640,11 @@ public class RESTCodes {
     FEATURE_NAME_NOT_FOUND(210, "The Feature Name was not found in this version of the Feature Group.",
         Response.Status.BAD_REQUEST),
     VALIDATION_RESULT_IS_NOT_VALID_JSON(211, "The validation result is not a valid json.", 
-      Response.Status.BAD_REQUEST);
+      Response.Status.BAD_REQUEST),
+    FEATURE_OFFLINE_TYPE_NOT_PROVIDED(212, "Feature offline type cannot be null or empty.",
+      Response.Status.BAD_REQUEST),
+    AMBIGUOUS_FEATURE_ERROR(213, "Feature name is ambiguous.", Response.Status.BAD_REQUEST),
+    STORAGE_CONNECTOR_TYPE_NOT_ENABLED(214, "Storage connector type not enabled", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;
