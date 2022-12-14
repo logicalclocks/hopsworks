@@ -34,6 +34,8 @@ public class ProvNodeDTO<A extends RestDTO> {
   private boolean shared;
   private boolean accessible;
   private boolean traversed;
+  @XmlElement(name = "exception_cause")
+  private String exceptionCause;
  
   public ProvNodeDTO() {
   }
@@ -84,5 +86,13 @@ public class ProvNodeDTO<A extends RestDTO> {
   
   public void setTraversed(boolean traversed) {
     this.traversed = traversed;
+  }
+  
+  public String getExceptionCause() {
+    return exceptionCause;
+  }
+  
+  public void setExceptionCause(String exceptionCause) {
+    this.exceptionCause = exceptionCause;
   }
 }
