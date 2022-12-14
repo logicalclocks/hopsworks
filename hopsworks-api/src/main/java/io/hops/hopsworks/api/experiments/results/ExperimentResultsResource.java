@@ -18,6 +18,8 @@ package io.hops.hopsworks.api.experiments.results;
 import io.hops.hopsworks.api.experiments.dto.results.ExperimentResultSummaryDTO;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.featureFlags.FeatureFlagRequired;
+import io.hops.hopsworks.api.filter.featureFlags.FeatureFlags;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.exceptions.ExperimentsException;
@@ -65,6 +67,7 @@ public class ExperimentResultsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @FeatureFlagRequired(requiredFeatureFlags = {FeatureFlags.DATA_SCIENCE_PROFILE})
   public Response getResults(@Context UriInfo uriInfo,
                              @BeanParam Pagination pagination,
                              @BeanParam ExperimentResultsBeanParam experimentResultsBeanParam,

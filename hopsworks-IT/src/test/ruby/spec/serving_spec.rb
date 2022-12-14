@@ -16,9 +16,17 @@
 require 'json'
 
 describe "On #{ENV['OS']}" do
-  after (:all) do
+  
+  before :all do
+    # ensure data science profile is enabled
+    @enable_data_science_profile = getVar('enable_data_science_profile')
+    setVar('enable_data_science_profile', "true")
+  end
+
+  after :all do
     clean_all_test_projects(spec: "serving")
     purge_all_tf_serving_instances
+    setVar('enable_data_science_profile', @enable_data_science_profile[:value])
   end
 
   describe "#create" do
@@ -1105,6 +1113,26 @@ describe "On #{ENV['OS']}" do
   end
 
   describe "#filter" do
+
+    context 'with data science profile not enabled' do
+      before :all do
+        # ensure data science profile is enabled
+        @enable_data_science_profile = getVar('enable_data_science_profile')
+        setVar('enable_data_science_profile', "false")
+        
+        with_valid_project
+      end
+
+      after :all do
+        setVar('enable_data_science_profile', @enable_data_science_profile[:value])
+      end
+
+      it "should fail to get servings" do
+        get_servings(@project, nil)
+        expect_status_details(400, error_code: 120012)
+      end
+    end
+
     context 'without authentication' do
       before :all do
         with_valid_project
@@ -1173,6 +1201,7 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
+
     describe "without valid project role" do
       before :all do
         with_valid_project

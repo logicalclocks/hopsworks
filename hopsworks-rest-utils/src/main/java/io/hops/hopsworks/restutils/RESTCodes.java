@@ -801,7 +801,8 @@ public class RESTCodes {
     ENDPOINT_ANNOTATION_MISSING(9, "The requested endpoint did not have any project role annotation",
         Response.Status.SERVICE_UNAVAILABLE),
     ENTERPRISE_FEATURE(10, "This feature is only available in the enterprise edition", Response.Status.BAD_REQUEST),
-    NOT_AUTHORIZED_TO_ACCESS(11, "Project not accessible to user", Response.Status.BAD_REQUEST);
+    NOT_AUTHORIZED_TO_ACCESS(11, "Project not accessible to user", Response.Status.BAD_REQUEST),
+    FEATURE_FLAG_NOT_ENABLED(12, "Platform feature not enabled", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;
