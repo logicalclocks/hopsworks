@@ -14,8 +14,37 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects(spec: "model_registry")}
+  
+  before :all do
+    # ensure data science profile is enabled
+    @enable_data_science_profile = getVar('enable_data_science_profile')
+    setVar('enable_data_science_profile', "true")
+  end
+
+  after :all do
+    clean_all_test_projects(spec: "model_registry")
+    setVar('enable_data_science_profile', @enable_data_science_profile[:value])
+  end
+
   describe 'model registry' do
+
+    context 'with data science profile not enabled' do
+      before :all do
+        # disable data science profile
+        setVar('enable_data_science_profile', "false")
+        with_valid_project
+      end
+
+      after :all do
+        setVar('enable_data_science_profile', "true")
+      end
+
+      it "should fail to get model registries" do
+        get_model_registries(@project[:id], nil)
+        expect_status_details(400, error_code: 120012)
+      end
+    end
+
     context 'without authentication' do
       before :all do
         with_valid_project
@@ -26,12 +55,14 @@ describe "On #{ENV['OS']}" do
         expect_status_details(401)
       end
     end
+
     context 'with authentication' do
       before :all do
         setup_initial_project
         setup_shared_project
         setup_private_project
       end
+
       def setup_initial_project()
         @user1_params = {email: "user1_#{random_id}@email.com", first_name: "User", last_name: "1", password: "Pass123"}
         @user1 = create_user_with_role(@user1_params, "HOPS_ADMIN")
@@ -39,6 +70,7 @@ describe "On #{ENV['OS']}" do
         create_session(@user1[:email], @user1_params[:password])
         @project1 = create_project
       end
+
       def setup_shared_project()
         @user2_params = {email: "user2_#{random_id}@email.com", first_name: "User", last_name: "2", password: "Pass123"}
         @user2 = create_user_with_role(@user2_params, "HOPS_ADMIN")
@@ -51,6 +83,7 @@ describe "On #{ENV['OS']}" do
         create_session(@user1_params[:email], @user1_params[:password])
         accept_dataset_checked(@project1, "#{@project2[:projectname]}::Models", datasetType: "DATASET")
       end
+      
       def setup_private_project()
         @user3_params = {email: "user3_#{random_id}@email.com", first_name: "User", last_name: "3", password: "Pass123"}
         @user3 = create_user_with_role(@user3_params, "HOPS_ADMIN")

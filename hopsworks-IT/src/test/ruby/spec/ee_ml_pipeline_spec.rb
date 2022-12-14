@@ -453,7 +453,15 @@ describe "On #{ENV['OS']}" do
   end
   context 'mnist' do
     before :all do
+      # ensure data science profile is enabled
+      @enable_data_science_profile = getVar('enable_data_science_profile')
+      setVar('enable_data_science_profile', "true")
+
       define_ids
+    end
+    
+    after :all do
+      setVar('enable_data_science_profile', @enable_data_science_profile[:value])
     end
 
     def define_ids()

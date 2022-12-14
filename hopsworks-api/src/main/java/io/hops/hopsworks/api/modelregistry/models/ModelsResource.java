@@ -18,6 +18,8 @@ package io.hops.hopsworks.api.modelregistry.models;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.api.filter.featureFlags.FeatureFlagRequired;
+import io.hops.hopsworks.api.filter.featureFlags.FeatureFlags;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.modelregistry.models.dto.ModelDTO;
 import io.hops.hopsworks.api.modelregistry.models.tags.ModelTagResource;
@@ -122,6 +124,7 @@ public class ModelsResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.MODELREGISTRY},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @FeatureFlagRequired(requiredFeatureFlags = {FeatureFlags.DATA_SCIENCE_PROFILE})
   public Response getAll(
     @BeanParam Pagination pagination,
     @BeanParam ModelsBeanParam modelsBeanParam,
@@ -149,6 +152,7 @@ public class ModelsResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.MODELREGISTRY},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @FeatureFlagRequired(requiredFeatureFlags = {FeatureFlags.DATA_SCIENCE_PROFILE})
   public Response get (
     @PathParam("id") String id,
     @BeanParam ModelsBeanParam modelsBeanParam,
@@ -183,6 +187,7 @@ public class ModelsResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.MODELREGISTRY},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @FeatureFlagRequired(requiredFeatureFlags = {FeatureFlags.DATA_SCIENCE_PROFILE})
   public Response delete (
     @PathParam("id") String id,
     @Context HttpServletRequest req,
@@ -208,6 +213,7 @@ public class ModelsResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.MODELREGISTRY},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @FeatureFlagRequired(requiredFeatureFlags = {FeatureFlags.DATA_SCIENCE_PROFILE})
   public Response put(@PathParam("id") String id,
                       ModelDTO modelDTO,
                       @QueryParam("jobName") String jobName,

@@ -19,6 +19,8 @@ package io.hops.hopsworks.api.modelregistry;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.api.filter.featureFlags.FeatureFlagRequired;
+import io.hops.hopsworks.api.filter.featureFlags.FeatureFlags;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.modelregistry.dto.ModelRegistryDTO;
 import io.hops.hopsworks.api.modelregistry.models.ModelsController;
@@ -89,6 +91,7 @@ public class ModelRegistryResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.MODELREGISTRY},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @FeatureFlagRequired(requiredFeatureFlags = {FeatureFlags.DATA_SCIENCE_PROFILE})
   public Response getAll(
     @BeanParam ModelRegistryBeanParam modelRegistryBeanParam,
     @BeanParam Pagination pagination,
@@ -114,6 +117,7 @@ public class ModelRegistryResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.MODELREGISTRY},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @FeatureFlagRequired(requiredFeatureFlags = {FeatureFlags.DATA_SCIENCE_PROFILE})
   public Response get (
           @PathParam("modelRegistryId") Integer modelRegistryId,
           @BeanParam ModelRegistryBeanParam modelRegistryBeanParam,

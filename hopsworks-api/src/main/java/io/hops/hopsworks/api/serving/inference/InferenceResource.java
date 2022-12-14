@@ -20,6 +20,8 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.api.filter.featureFlags.FeatureFlagRequired;
+import io.hops.hopsworks.api.filter.featureFlags.FeatureFlags;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -90,6 +92,7 @@ public class InferenceResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.SERVING},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @FeatureFlagRequired(requiredFeatureFlags = {FeatureFlags.DATA_SCIENCE_PROFILE})
   public Response infer(
       @ApiParam(value = "Name of the model to query", required = true) @PathParam("modelName") String modelName,
       @ApiParam(value = "Version of the model to query") @PathParam("version") String modelVersion,
@@ -115,6 +118,7 @@ public class InferenceResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.SERVING},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @FeatureFlagRequired(requiredFeatureFlags = {FeatureFlags.DATA_SCIENCE_PROFILE})
   @ApiOperation(value = "Get inference endpoints for model serving", response = InferenceEndpoint.class,
     responseContainer = "List")
   public Response getEndpoints(@Context SecurityContext sc, @Context HttpServletRequest req) throws ServingException {

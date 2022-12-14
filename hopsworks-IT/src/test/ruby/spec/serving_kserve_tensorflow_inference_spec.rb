@@ -10,6 +10,11 @@ describe "On #{ENV['OS']}" do
     if !kserve_installed
       skip "This test only runs with KServe installed"
     end
+
+    # ensure data science profile is enabled
+    @enable_data_science_profile = getVar('enable_data_science_profile')
+    setVar('enable_data_science_profile', "true")
+
     with_admin_session()
     with_valid_project
     admin_update_user(@user[:uid], {status: "ACTIVATED_ACCOUNT"})
@@ -18,9 +23,10 @@ describe "On #{ENV['OS']}" do
     with_kserve_tensorflow(@project[:id], @project[:projectname], @user[:username])
   end
 
-  after (:all) do
+  after :all do
     clean_all_test_projects(spec: "serving_kserve_tensorflow_inference")
     purge_all_kserve_instances
+    setVar('enable_data_science_profile', @enable_data_science_profile[:value])
   end
 
   describe 'inference' do

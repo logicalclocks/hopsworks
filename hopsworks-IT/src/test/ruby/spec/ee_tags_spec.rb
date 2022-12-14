@@ -813,6 +813,10 @@ describe "On #{ENV['OS']}" do
   end
   describe "Model registry tag" do
     before :all do
+      # ensure data science profile is enabled
+      @enable_data_science_profile = getVar('enable_data_science_profile')
+      setVar('enable_data_science_profile', "true")
+
       with_admin_session
       @pre_tags.each do |tag|
         create_tag(tag, string_schema)
@@ -822,6 +826,7 @@ describe "On #{ENV['OS']}" do
       end
       reset_session
     end
+
     after :all do
       clean_all_test_projects(spec: "ee_tags")
 
@@ -833,6 +838,8 @@ describe "On #{ENV['OS']}" do
         delete_tag_checked(tag)
       end
       reset_session
+
+      setVar('enable_data_science_profile', @enable_data_science_profile[:value])
     end
 
     context "tagging - same project" do
