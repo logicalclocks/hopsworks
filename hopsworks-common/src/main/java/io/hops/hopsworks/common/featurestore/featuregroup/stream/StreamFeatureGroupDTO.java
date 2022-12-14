@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 import java.util.Objects;
@@ -33,7 +32,6 @@ public class StreamFeatureGroupDTO extends FeaturegroupDTO {
   private DeltaStreamerJobConf deltaStreamerJobConf;
   private Boolean onlineEnabled = true;
   
-  @XmlElement
   private List<FeaturegroupDTO> parents;
   
   public StreamFeatureGroupDTO() {
