@@ -16,19 +16,19 @@
 
 describe "On #{ENV['OS']}" do
   before :all do
-    with_valid_project
-    
     # ensure adls storage connectors are enabled
     @enable_adls_storage_connector = getVar('enable_adls_storage_connectors')
-    setVar('enable_adls_storage_connectors', true)
+    setVar('enable_adls_storage_connectors', "true")
 
+    with_valid_project
+    
     featurestore_id = get_featurestore_id(@project[:id])
     @connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/storageconnectors"
   end
 
   after :all do
     clean_all_test_projects(spec: "adls_storage_connector")
-    setVar('enable_adls_storage_connectors', @enable_adls_storage_connector)
+    setVar('enable_adls_storage_connectors', @enable_adls_storage_connector[:value])
   end
 
   type = "featurestoreADLSConnectorDTO"

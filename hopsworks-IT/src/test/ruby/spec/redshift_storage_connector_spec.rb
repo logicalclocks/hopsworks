@@ -18,7 +18,7 @@ describe "On #{ENV['OS']}" do
   before :all do
     # ensure redshift storage connectors are enabled
     @enable_redshift_storage_connector = getVar('enable_redshift_storage_connectors')
-    setVar('enable_redshift_storage_connectors', true)
+    setVar('enable_redshift_storage_connectors', "true")
 
     @p1, @p2 = with_redshift_connectors
     @featurestore1 = get_featurestores_checked(@p1[:id])[0]
@@ -29,7 +29,7 @@ describe "On #{ENV['OS']}" do
 
   after :all do
     clean_all_test_projects(spec: "redshift_storage_connector")
-    setVar('enable_redshift_storage_connectors', @enable_redshift_storage_connector)
+    setVar('enable_redshift_storage_connectors', @enable_redshift_storage_connector[:value])
   end
 
   describe "get" do

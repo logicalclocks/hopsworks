@@ -660,23 +660,23 @@ describe "On #{ENV['OS']}" do
     describe "external" do
       context 'with valid project, s3 connector, and featurestore service enabled' do
         before :all do
-          with_valid_project
-          with_s3_connector(@project[:id])
-
           # ensure storage connectors are enabled for testing
           @enable_snowflake_storage_connector = getVar('enable_snowflake_storage_connectors')
-          setVar('enable_snowflake_storage_connectors', true)
+          setVar('enable_snowflake_storage_connectors', "true")
           @enable_redshift_storage_connector = getVar('enable_redshift_storage_connectors')
-          setVar('enable_redshift_storage_connectors', true)
+          setVar('enable_redshift_storage_connectors', "true")
           @enable_adls_storage_connector = getVar('enable_adls_storage_connectors')
-          setVar('enable_adls_storage_connectors', true)
+          setVar('enable_adls_storage_connectors', "true")
+
+          with_valid_project
+          with_s3_connector(@project[:id])
         end
 
         after :all do
           # revert storage connectors states
-          setVar('enable_snowflake_storage_connectors', @enable_snowflake_storage_connector)
-          setVar('enable_redshift_storage_connectors', @enable_redshift_storage_connector)
-          setVar('enable_adls_storage_connectors', @enable_adls_storage_connector)
+          setVar('enable_snowflake_storage_connectors', @enable_snowflake_storage_connector[:value])
+          setVar('enable_redshift_storage_connectors', @enable_redshift_storage_connector[:value])
+          setVar('enable_adls_storage_connectors', @enable_adls_storage_connector[:value])
         end
 
         it "should be able to add an external training dataset to the featurestore" do
