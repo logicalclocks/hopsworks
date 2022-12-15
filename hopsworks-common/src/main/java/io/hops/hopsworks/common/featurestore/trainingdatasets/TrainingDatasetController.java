@@ -1325,15 +1325,25 @@ public class TrainingDatasetController {
 
   private TransformationFunction getTransformationFunction(
       Feature feature, List<TrainingDatasetFeatureDTO> featureDTOs) throws FeaturestoreException {
-    TrainingDatasetFeatureDTO featureDTO = featureDTOs.stream().filter(dto ->
-        feature.getName().equals(dto.getFeatureGroupFeatureName())).findFirst().orElse(null);
+  
+    List<TrainingDatasetFeatureDTO> trainingDatasetFeatureDTOS = featureDTOs.stream().filter(dto ->
+      feature.getName().equals(dto.getFeatureGroupFeatureName()) && (dto.getFeaturegroup() == null ||
+        feature.getFeatureGroup().getId().equals(dto.getFeaturegroup().getId()))).collect(Collectors.toList());
+  
     TransformationFunction transformationFunction = null;
-    if (featureDTO != null && featureDTO.getTransformationFunction() != null){
-      transformationFunction = transformationFunctionFacade.findById(featureDTO.getTransformationFunction().getId())
-          .orElseThrow(() ->
-              new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRANSFORMATION_FUNCTION_DOES_NOT_EXIST,
-                  Level.FINE, "Could not find transformation function with ID" +
-                  featureDTO.getTransformationFunction().getId()));
+    if (trainingDatasetFeatureDTOS.size() > 1) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.AMBIGUOUS_FEATURE_ERROR, Level.FINE,
+        String.format("Failed to attach transformation function because provided feature %s exists in " +
+          "multiple feature groups.", feature.getName()));
+    } else if (trainingDatasetFeatureDTOS.size() == 1) {
+      TrainingDatasetFeatureDTO featureDTO = trainingDatasetFeatureDTOS.get(0);
+      if (featureDTO.getTransformationFunction() != null){
+        transformationFunction = transformationFunctionFacade.findById(featureDTO.getTransformationFunction().getId())
+            .orElseThrow(() ->
+                new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRANSFORMATION_FUNCTION_DOES_NOT_EXIST,
+                    Level.FINE, "Could not find transformation function with ID" +
+                    featureDTO.getTransformationFunction().getId()));
+      }
     }
     return transformationFunction;
   }
