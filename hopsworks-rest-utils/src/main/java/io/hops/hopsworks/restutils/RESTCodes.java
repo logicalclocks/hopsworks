@@ -1644,7 +1644,7 @@ public class RESTCodes {
     FEATURE_OFFLINE_TYPE_NOT_PROVIDED(212, "Feature offline type cannot be null or empty.",
       Response.Status.BAD_REQUEST),
     AMBIGUOUS_FEATURE_ERROR(213, "Feature name is ambiguous.", Response.Status.BAD_REQUEST),
-    STORAGE_CONNECTOR_TYPE_NOT_ENABLED(213, "Storage connector type not enabled", Response.Status.BAD_REQUEST);
+    STORAGE_CONNECTOR_TYPE_NOT_ENABLED(214, "Storage connector type not enabled", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;
