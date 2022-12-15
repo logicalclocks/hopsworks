@@ -16,19 +16,19 @@
 
 describe "On #{ENV['OS']}" do
   before :all do
+    # ensure bigquery storage connectors are enabled
+    @enable_bigquery_storage_connector = getVar('enable_bigquery_storage_connectors')
+    setVar('enable_bigquery_storage_connectors', "true")
+
     @cleanup = true
     with_valid_project
     # create dummy truststore/keystore files in hopsfs
     create_test_files
-
-    # ensure bigquery storage connectors are enabled
-    @enable_bigquery_storage_connector = getVar('enable_bigquery_storage_connectors')
-    setVar('enable_bigquery_storage_connectors', true)
   end
 
   after :all do
     clean_all_test_projects(spec: "bigquery_storage_connector") if defined?(@cleanup) && @cleanup
-    setVar('enable_bigquery_storage_connectors', @enable_bigquery_storage_connector)
+    setVar('enable_bigquery_storage_connectors', @enable_bigquery_storage_connector[:value])
   end
 
   after :each do

@@ -17,16 +17,17 @@ describe "On #{ENV['OS']}" do
   after(:all) {clean_all_test_projects(spec: "storage_connector") if defined?(@cleanup) && @cleanup}
 
   describe "Create, delete and update operations on storage connectors in a specific featurestore" do
+    
     describe 'with valid project, featurestore service enabled' do
-      before :all do
-        with_valid_project
-      end
-
-      after :each do
-        create_session(@project[:username], "Pass123")
-      end
 
       context "with storage connector flags enabled" do
+        before :all do
+          with_valid_project
+        end
+
+        after :each do
+          create_session(@project[:username], "Pass123")
+        end
 
         it "should be able to add hopsfs connector to the featurestore" do
           project = get_project
@@ -467,7 +468,13 @@ describe "On #{ENV['OS']}" do
 
         before :all do
           # enable kafka storage connectors temporarily
-          setVar('enable_kafka_storage_connectors', true)
+          @enable_kafka_storage_connectors = getVar('enable_kafka_storage_connectors')
+          setVar('enable_kafka_storage_connectors', "true")
+
+          with_valid_project
+
+          # create dummy truststore/keystore files in hopsfs
+          create_test_files
 
           # create new kafka connector for testing
           project = get_project
@@ -490,12 +497,17 @@ describe "On #{ENV['OS']}" do
           @connector_name = parsed_json["name"]
 
           # disable kafka storage connectors
-          setVar('enable_kafka_storage_connectors', false)
+          setVar('enable_kafka_storage_connectors', @enable_kafka_storage_connectors[:value])
+
+          create_session(@project[:username], "Pass123")
         end
   
         after :all do
           # enable kafka storage connectors temporarily
-          setVar('enable_kafka_storage_connectors', true)
+          @enable_kafka_storage_connectors = getVar('enable_kafka_storage_connectors')
+          setVar('enable_kafka_storage_connectors', "true")
+
+          create_session(@project[:username], "Pass123")
 
           # remove kafka connector for testing
           project = get_project
@@ -504,7 +516,9 @@ describe "On #{ENV['OS']}" do
           expect_status_details(200)
 
           # disable kafka storage connectors
-          setVar('enable_kafka_storage_connectors', false) # default value
+          setVar('enable_kafka_storage_connectors', @enable_kafka_storage_connectors[:value])
+
+          create_session(@project[:username], "Pass123")
         end
 
         it "should not be able to add a connector to the featurestore" do
@@ -522,14 +536,14 @@ describe "On #{ENV['OS']}" do
             ]
           }
           json_result, _ = create_kafka_connector(project.id, featurestore_id, additional_data)
-          expect_status_details(400, error_code: 270213)
+          expect_status_details(400, error_code: 270214)
         end
 
         it "should not be able to get a connector from the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           json_result = get "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/storageconnectors/" + @connector_name
-          expect_status_details(400, error_code: 270213)
+          expect_status_details(400, error_code: 270214)
         end
 
         it "should not be able to update a connector in the featurestore" do
@@ -548,14 +562,14 @@ describe "On #{ENV['OS']}" do
             options: [{name: "option2", value: "value2"}, {name: "option3", value: "value3"}]
           }
           json_result, _ = update_kafka_connector(project.id, featurestore_id, @connector_name, updated_data)
-          expect_status_details(400, error_code: 270213)
+          expect_status_details(400, error_code: 270214)
         end
 
         it "should not be able to delete a connector in the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           delete_connector(project.id, featurestore_id, @connector_name)
-          expect_status_details(400, error_code: 270213)
+          expect_status_details(400, error_code: 270214)
         end
       end
     end
@@ -564,16 +578,16 @@ describe "On #{ENV['OS']}" do
   describe "Create, delete and update operations for kafka connectors" do
     context 'with valid project, featurestore service enabled' do
       before :all do
+        # ensure kafka storage connectors are enabled
+        @enable_kafka_storage_connectors = getVar('enable_kafka_storage_connectors')
+        setVar('enable_kafka_storage_connectors', "true")
+
         @cleanup = true
         @debugOpt = false
         with_valid_project
 
         # create dummy truststore/keystore files in hopsfs
         create_test_files
-
-        # ensure kafka storage connectors are enabled
-        @enable_kafka_storage_connectors = getVar('enable_kafka_storage_connectors')
-        setVar('enable_kafka_storage_connectors', true)
       end
 
       after :each do
@@ -581,7 +595,7 @@ describe "On #{ENV['OS']}" do
       end
 
       after :all do
-        setVar('enable_kafka_storage_connectors', @enable_kafka_storage_connectors)
+        setVar('enable_kafka_storage_connectors', @enable_kafka_storage_connectors[:value])
       end
 
       it "should create ssl authenticated kafka connector" do
