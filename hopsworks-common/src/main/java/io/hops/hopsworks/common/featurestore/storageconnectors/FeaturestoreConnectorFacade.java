@@ -29,6 +29,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -94,6 +95,13 @@ public class FeaturestoreConnectorFacade extends AbstractFacade<FeaturestoreConn
     } catch (NoResultException e) {
       return Optional.empty();
     }
+  }
+
+  public List<FeaturestoreConnector> findByType(Featurestore featurestore, Set<FeaturestoreConnectorType> types) {
+    return em.createNamedQuery("FeaturestoreConnector.findByType", FeaturestoreConnector.class)
+            .setParameter("featurestore", featurestore)
+            .setParameter("types", types)
+            .getResultList();
   }
 
   public void deleteByFeaturestoreName(Featurestore featurestore, String name) {

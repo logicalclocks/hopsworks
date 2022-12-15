@@ -26,6 +26,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -44,7 +45,9 @@ import javax.ejb.Stateless;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 
 @Stateless
@@ -57,9 +60,18 @@ public class StorageConnectorUtil {
   private DistributedFsService dfs;
   @EJB
   private HdfsUsersController hdfsUsersController;
+  @EJB
+  private Settings settings;
   
   private ObjectMapper objectMapper = new ObjectMapper();
-  
+
+  public StorageConnectorUtil() { }
+
+  // For testing
+  protected StorageConnectorUtil(Settings settings) {
+    this.settings = settings;
+  }
+
   /**
    * Creates the secret name as a concatenation of type name and feature store id
    * @param featurestoreId
@@ -182,6 +194,57 @@ public class StorageConnectorUtil {
         "Error deleting file", e.getMessage());
     } finally {
       dfs.closeDfsClient(udfso);
+    }
+  }
+
+  public Set<FeaturestoreConnectorType> getEnabledStorageConnectorTypes() {
+    Set<FeaturestoreConnectorType> types = new HashSet<>();
+    // jdbc and hopsfs connectors are always enabled
+    types.add(FeaturestoreConnectorType.JDBC);
+    types.add(FeaturestoreConnectorType.HOPSFS);
+    types.add(FeaturestoreConnectorType.S3);
+
+    if (settings.isSnowflakeStorageConnectorsEnabled()) {
+      types.add(FeaturestoreConnectorType.SNOWFLAKE);
+    }
+    if (settings.isRedshiftStorageConnectorsEnabled()) {
+      types.add(FeaturestoreConnectorType.REDSHIFT);
+    }
+    if (settings.isAdlsStorageConnectorsEnabled()) {
+      types.add(FeaturestoreConnectorType.ADLS);
+    }
+    if (settings.isKafkaStorageConnectorsEnabled()) {
+      types.add(FeaturestoreConnectorType.KAFKA);
+    }
+    if (settings.isGcsStorageConnectorsEnabled()) {
+      types.add(FeaturestoreConnectorType.GCS);
+    }
+    if (settings.isBigqueryStorageConnectorsEnabled()) {
+      types.add(FeaturestoreConnectorType.BIGQUERY);
+    }
+    return types;
+  }
+
+  public boolean isStorageConnectorTypeEnabled(FeaturestoreConnectorType storageConnectorType) {
+    switch (storageConnectorType) {
+      case JDBC:
+      case HOPSFS:
+      case S3:
+        return true;  // always enabled
+      case REDSHIFT:
+        return settings.isRedshiftStorageConnectorsEnabled();
+      case ADLS:
+        return settings.isAdlsStorageConnectorsEnabled();
+      case SNOWFLAKE:
+        return settings.isSnowflakeStorageConnectorsEnabled();
+      case KAFKA:
+        return settings.isKafkaStorageConnectorsEnabled();
+      case GCS:
+        return settings.isGcsStorageConnectorsEnabled();
+      case BIGQUERY:
+        return settings.isBigqueryStorageConnectorsEnabled();
+      default:
+        throw new IllegalArgumentException("Unknown storage connector type: " + storageConnectorType);
     }
   }
 }
