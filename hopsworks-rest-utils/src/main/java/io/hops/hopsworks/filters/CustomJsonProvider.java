@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 
@@ -47,6 +48,7 @@ public class CustomJsonProvider extends JacksonJaxbJsonProvider {
     mapper.setAnnotationIntrospector(
       AnnotationIntrospector.pair(new JaxbAnnotationIntrospector(TypeFactory.defaultInstance()),
         new JacksonAnnotationIntrospector()));
+    mapper.registerModule(new JavaTimeModule());
   }
 
   public CustomJsonProvider() {
