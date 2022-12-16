@@ -54,8 +54,11 @@ public class TemporaryCredentialsHelper {
     FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO)
     throws CloudException {
     String roleARN = featurestoreRedshiftConnectorDTO.getIamRole();
-    CloudRoleMapping cloudRoleMapping = getCloudRoleMapping(roleARN, user, project);
-    return awsClusterCredentialsService.getClusterCredential(cloudRoleMapping.getCloudRole(), null, 0,
+    String cloudRole = null;
+    if (!Strings.isNullOrEmpty(roleARN)) {
+      cloudRole = getCloudRoleMapping(roleARN, user, project).getCloudRole();
+    }
+    return awsClusterCredentialsService.getClusterCredential(cloudRole, null, 0,
       featurestoreRedshiftConnectorDTO.getClusterIdentifier(), featurestoreRedshiftConnectorDTO.getAutoCreate(),
       featurestoreRedshiftConnectorDTO.getDatabaseName(), featurestoreRedshiftConnectorDTO.getDatabaseUserName(),
       featurestoreRedshiftConnectorDTO.getDatabaseGroups(), durationSeconds);
@@ -92,7 +95,8 @@ public class TemporaryCredentialsHelper {
         case REDSHIFT:
           FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO =
             (FeaturestoreRedshiftConnectorDTO) featurestoreStorageConnectorDTO;
-          if (!Strings.isNullOrEmpty(featurestoreRedshiftConnectorDTO.getIamRole())) {
+          if (!Strings.isNullOrEmpty(featurestoreRedshiftConnectorDTO.getIamRole())
+              || featurestoreRedshiftConnectorDTO.getDatabasePassword() == null) {
             AWSClusterCredentials credentials =
               getTemporaryClusterCredentials(user, project, durationSeconds, featurestoreRedshiftConnectorDTO);
             featurestoreRedshiftConnectorDTO.setDatabasePassword(credentials.getDbPassword());

@@ -46,12 +46,17 @@ public class AWSClusterCredentialsServiceImpl implements AWSClusterCredentialsSe
     int dbDurationSeconds) throws CloudException {
     GetClusterCredentialsResponse getClusterCredentialsResponse;
     if (isAWSCloud()) {
-      AwsSessionCredentials awsSessionCredentials = assumeRoleService.assumeRole(roleARN,
-        roleSessionName, durationSeconds);
-      AwsCredentialsProvider awsCredentialsProvider = () -> awsSessionCredentials;
       RedshiftClient client = null;
       try {
-        client = RedshiftClient.builder().credentialsProvider(awsCredentialsProvider).build();
+        if (!Strings.isNullOrEmpty(roleARN)) {
+          AwsSessionCredentials awsSessionCredentials = assumeRoleService.assumeRole(roleARN,
+            roleSessionName, durationSeconds);
+          AwsCredentialsProvider awsCredentialsProvider = () -> awsSessionCredentials;
+          client = RedshiftClient.builder().credentialsProvider(awsCredentialsProvider).build();
+        } else {
+          // use instance role
+          client = RedshiftClient.create();
+        }
         GetClusterCredentialsRequest getClusterCredentialsRequest = buildClusterCredentialsRequest(clusterIdentifier,
           autoCreate, dbName, dbUser, dbGroups, dbDurationSeconds);
         getClusterCredentialsResponse = client.getClusterCredentials(getClusterCredentialsRequest);
