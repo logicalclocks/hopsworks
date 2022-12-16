@@ -1,4 +1,5 @@
 agent_spec.rb
+audit_spec.rb
 conda_spec.rb
 experiment_spec.rb
 execution_spec.rb

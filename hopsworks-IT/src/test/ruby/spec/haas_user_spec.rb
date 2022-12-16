@@ -188,8 +188,8 @@ describe "On #{ENV['OS']}" do
           start_execution(@project[:id], @job[:name])
         end
 
-        it "should not allow stopping executions" do
-          stop_execution(@project[:id], @job[:name], 1, expected_status: 403)
+        it "should allow stopping executions" do
+          stop_execution(@project[:id], @job[:name], 1, expected_status: 404)
         end
 
         it "should get all alerts" do
