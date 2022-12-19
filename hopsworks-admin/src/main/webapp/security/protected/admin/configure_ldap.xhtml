@@ -347,31 +347,13 @@
                           filterBy="#{mapping.remoteGroup}"
                           filterMatchMode="contains"
                           sortBy="#{mapping.remoteGroup}">
-                    <p:cellEditor>
-                        <f:facet name="output"><h:outputText value="#{mapping.remoteGroup}"/></f:facet>
-                        <f:facet name="input">
-                            <h:selectOneMenu value="#{mapping.remoteGroup}" style="width:100%">
-                                <f:selectItems value="#{configureLdap.ldapGroups.source}" var="groups"
-                                               itemLabel="#{groups}"
-                                               itemValue="#{groups}"/>
-                            </h:selectOneMenu>
-                        </f:facet>
-                    </p:cellEditor>
+                    <h:outputText value="#{mapping.remoteGroup}" />
                 </p:column>
                 <p:column headerText="Project"
                           filterBy="#{mapping.project.name}"
                           filterMatchMode="contains"
                           sortBy="#{mapping.project.name}">
-                    <p:cellEditor>
-                        <f:facet name="output"><h:outputText value="#{mapping.project.name}"/></f:facet>
-                        <f:facet name="input">
-                            <h:selectOneMenu value="#{mapping.project.name}" style="width:100%">
-                                <f:selectItems value="#{configureLdap.allProjects}" var="project"
-                                               itemLabel="#{project}"
-                                               itemValue="#{project}"/>
-                            </h:selectOneMenu>
-                        </f:facet>
-                    </p:cellEditor>
+                    <h:outputText value="#{mapping.project.name}" />
                 </p:column>
 
                 <p:column headerText="Role" sortBy="#{mapping.projectRole}">
