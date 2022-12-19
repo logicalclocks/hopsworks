@@ -917,9 +917,12 @@ describe "On #{ENV['OS']}" do
                                         "INNER JOIN `#{featurestore_name}`.`#{fg_b_name}_1` `fg1` " +
                                             "ON CASE WHEN `fg0`.`a_testfeature_appended` IS NULL THEN 10.0 ELSE `fg0`.`a_testfeature_appended` END = `fg1`.`a_testfeature`")
 
-          expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature1` `a_testfeature1`, `fg0`.`a_testfeature_appended` `a_testfeature_appended`, `fg1`.`a_testfeature` `a_testfeature`, `fg1`.`b_testfeature1` `b_testfeature1`\n" +
-                                                  "FROM `#{project_name.downcase}`.`#{fg_a_name}_1` `fg0`\n" +
-                                                  "INNER JOIN `#{project_name.downcase}`.`#{fg_b_name}_1` `fg1` ON `fg0`.`a_testfeature_appended` = `fg1`.`a_testfeature`")
+          expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature1` `a_testfeature1`, "+
+                                                "CASE WHEN `fg0`.`a_testfeature_appended` IS NULL THEN 10.0 ELSE `fg0`.`a_testfeature_appended` END `a_testfeature_appended`, " +
+                                                "`fg1`.`a_testfeature` `a_testfeature`, `fg1`.`b_testfeature1` `b_testfeature1`\n" +
+                                                "FROM `#{project_name.downcase}`.`#{fg_a_name}_1` `fg0`\n" +
+                                                "INNER JOIN `#{project_name.downcase}`.`#{fg_b_name}_1` `fg1` " +
+                                                "ON CASE WHEN `fg0`.`a_testfeature_appended` IS NULL THEN 10.0 ELSE `fg0`.`a_testfeature_appended` END = `fg1`.`a_testfeature`")
         end
 
         it "should be able to replay a query for a dataset with a feature group joined with itself" do
