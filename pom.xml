@@ -117,6 +117,7 @@
     <hops.version>3.2.0.8-EE-SNAPSHOT</hops.version>
     <jackson-core-asl.version>1.9.13</jackson-core-asl.version>
     <jackson.version>2.12.4</jackson.version>
+    <jackson-datatype-jsr310.version>2.12.1</jackson-datatype-jsr310.version>
     <javaee-api.version>7.0</javaee-api.version>
     <javaee-web-api.version>7.0</javaee-web-api.version>
     <javatuples.version>1.2</javatuples.version>
@@ -202,6 +203,11 @@
         <groupId>com.fasterxml.jackson.datatype</groupId>
         <artifactId>jackson-datatype-jdk8</artifactId>
         <version>${jackson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.datatype</groupId>
+        <artifactId>jackson-datatype-jsr310</artifactId>
+        <version>${jackson-datatype-jsr310.version}</version>
       </dependency>
       <dependency>
         <groupId>com.github.ben-manes.caffeine</groupId>

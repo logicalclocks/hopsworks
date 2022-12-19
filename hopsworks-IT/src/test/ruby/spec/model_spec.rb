@@ -438,7 +438,7 @@ describe "On #{ENV['OS']}" do
         end
       end
       it 'base' do
-        job_name = "export_model_python"
+        job_name = "export_model_py"
         file_type = "py"
         job_type = "PYTHON"
         run_job_check_partials(@user1_params, @project1, job_name, job_type, file_type,

@@ -650,7 +650,7 @@ describe "On #{ENV['OS']}" do
           get_dataset_stat(@project, featurestore,  datasetType: "&type=FEATURESTORE")
           ds = json_body
           request_dataset_access(project, ds[:attributes][:id])
-          share_dataset(@project, featurestore, project[:projectname], permission: "EDITABLE", datasetType:
+          share_dataset(@project, featurestore, project[:projectname], permission: "READ_ONLY", datasetType:
               "&type=FEATURESTORE")
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
           expect_status_details(200)
@@ -662,7 +662,7 @@ describe "On #{ENV['OS']}" do
           featurestore = "#{@project[:projectname].downcase}_featurestore.db"
           trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
           statisticsDataset =  "Statistics"
-          share_dataset(@project, featurestore, project[:projectname], permission: "EDITABLE", datasetType:
+          share_dataset(@project, featurestore, project[:projectname], permission: "READ_ONLY", datasetType:
               "&type=FEATURESTORE")
           accept_dataset(project, "#{@project[:projectname]}::#{featurestore}", datasetType: "&type=FEATURESTORE")
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
@@ -675,7 +675,7 @@ describe "On #{ENV['OS']}" do
           featurestore = "#{@project[:projectname].downcase}_featurestore.db"
           trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
           statisticsDataset =  "Statistics"
-          share_dataset(@project, featurestore, project[:projectname], permission: "EDITABLE", datasetType:
+          share_dataset(@project, featurestore, project[:projectname], permission: "READ_ONLY", datasetType:
               "&type=FEATURESTORE")
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
           expect_status_details(400)
@@ -691,7 +691,7 @@ describe "On #{ENV['OS']}" do
               "&type=DATASET")
           share_dataset(@project, statisticsDataset, project[:projectname], permission: "EDITABLE", datasetType:
               "&type=DATASET")
-          share_dataset(@project, featurestore, project[:projectname], permission: "EDITABLE", datasetType:
+          share_dataset(@project, featurestore, project[:projectname], permission: "READ_ONLY", datasetType:
               "&type=FEATURESTORE")
           accept_dataset(project, "#{@project[:projectname]}::#{featurestore}", datasetType: "&type=FEATURESTORE")
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
@@ -714,7 +714,7 @@ describe "On #{ENV['OS']}" do
           accept_dataset(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
           get_dataset_stat(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
           expect_status_details(200)
-          share_dataset(@project, featurestore, project[:projectname], permission: "EDITABLE", datasetType:
+          share_dataset(@project, featurestore, project[:projectname], permission: "READ_ONLY", datasetType:
               "&type=FEATURESTORE")
           accept_dataset(project, "#{@project[:projectname]}::#{featurestore}", datasetType: "&type=FEATURESTORE")
           expect_status_details(204)
@@ -728,7 +728,7 @@ describe "On #{ENV['OS']}" do
           featurestore = "#{@project[:projectname].downcase}_featurestore.db"
           trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
           statisticsDataset =  "Statistics"
-          share_dataset(@project, featurestore, project[:projectname], permission: "EDITABLE", datasetType:
+          share_dataset(@project, featurestore, project[:projectname], permission: "READ_ONLY", datasetType:
               "&type=FEATURESTORE")
           accept_dataset(project, "#{@project[:projectname]}::#{featurestore}", datasetType: "&type=FEATURESTORE")
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
@@ -747,7 +747,7 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
           featurestore = "#{@project[:projectname].downcase}_featurestore.db"
-          share_dataset(@project, featurestore, project[:projectname], permission: "EDITABLE", datasetType:
+          share_dataset(@project, featurestore, project[:projectname], permission: "READ_ONLY", datasetType:
             "&type=FEATURESTORE")
           unshare_from(@project, featurestore, project[:projectname], datasetType: "&type=FEATURESTORE")
           expect_status_details(204)
@@ -757,7 +757,7 @@ describe "On #{ENV['OS']}" do
           featurestore = "#{@project[:projectname].downcase}_featurestore.db"
           trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
           statisticsDataset =  "Statistics"
-          share_dataset(@project, featurestore, project[:projectname], permission: "EDITABLE", datasetType:
+          share_dataset(@project, featurestore, project[:projectname], permission: "READ_ONLY", datasetType:
               "&type=FEATURESTORE")
           accept_dataset(project, "#{@project[:projectname]}::#{featurestore}", datasetType: "&type=FEATURESTORE")
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
@@ -1772,7 +1772,7 @@ describe "On #{ENV['OS']}" do
         end
         it 'should get 0 result if offset >= len.' do
           get_datasets_in_path(@project, "", query: "&sort_by=id:asc&limit=10&offset=2500")
-          expect(json_body[:items]).to be nil
+          expect(json_body[:items]).to be_empty
         end
       end
       context 'dataset content' do
