@@ -40,7 +40,7 @@ import java.util.Date;
 @ApiModel(value = "Represents a Serving model")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ServingView implements Serializable {
-
+  
   private static final long serialVersionUID = 1L;
   
   private Integer id;
@@ -183,8 +183,24 @@ public class ServingView implements Serializable {
   public Integer getArtifactVersion() {
     return artifactVersion;
   }
-  public void setArtifactVersion(Integer artifactVersion) {
-    this.artifactVersion = artifactVersion;
+  public void setArtifactVersion(Object artifactVersion) {
+    if (artifactVersion == null) {
+      this.artifactVersion = null;
+      return;
+    }
+    String artifactVersionStr = artifactVersion.toString();
+    if (artifactVersionStr.equalsIgnoreCase("CREATE")) {
+      this.artifactVersion = -1;
+    } else if (artifactVersionStr.equalsIgnoreCase("MODEL-ONLY")) {
+      this.artifactVersion = 0;
+    } else {
+      try {
+        this.artifactVersion = Integer.parseInt(artifactVersionStr);
+      } catch (NumberFormatException e) {
+        throw new IllegalArgumentException("Artifact version is invalid. Possible values are versions numbers, " +
+          "'CREATE' or 'MODEL-ONLY'");
+      }
+    }
   }
 
   @ApiModelProperty(value = "Number of serving instances to use for serving")
