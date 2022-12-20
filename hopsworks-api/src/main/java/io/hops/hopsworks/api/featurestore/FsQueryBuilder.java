@@ -84,7 +84,7 @@ public class FsQueryBuilder {
 
   public FsQueryDTO build(UriInfo uriInfo, Project project, Users user, FeatureView featureView)
       throws FeaturestoreException, ServiceException {
-    Query query = queryController.makeQuery(featureView, project, user, false, false);
+    Query query = queryController.makeQuery(featureView, project, user, true, false);
     FsQueryDTO dto = constructorController.construct(query, pitJoinController.isPitEnabled(query), true, project,
         user);
     dto.setHref(uri(uriInfo, project));
