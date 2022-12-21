@@ -145,7 +145,11 @@ public class ServingUtil {
   
   private void validateModelFramework(Serving serving) {
     if (serving.getModelFramework() == null) {
-      throw new IllegalArgumentException("Model framework not provided");
+      serving.setModelFramework(serving.getModelServer() == ModelServer.TENSORFLOW_SERVING ?
+        ModelFramework.TENSORFLOW : ModelFramework.SKLEARN);
+      // backward compatibility with hsml 3.0 (which does not send model framework value)
+      // greater versions hsml and UI should not send null values
+      return;
     }
     if (serving.getModelFramework() == ModelFramework.TENSORFLOW
       && serving.getModelServer() != ModelServer.TENSORFLOW_SERVING) {
