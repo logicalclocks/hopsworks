@@ -16,10 +16,13 @@
 
 package io.hops.hopsworks.common.featurestore.trainingdatasets;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
 import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
 import io.hops.hopsworks.common.featurestore.keyword.KeywordDTO;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
+import io.hops.hopsworks.common.featurestore.query.filter.FilterLogicDTO;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsConfigDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.split.TrainingDatasetSplitDTO;
@@ -40,6 +43,8 @@ import java.util.stream.Collectors;
  * using jaxb.
  */
 @XmlRootElement
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeName("trainingDatasetDTO")
 public class TrainingDatasetDTO extends FeaturestoreEntityDTO<TrainingDatasetDTO> {
   
   private String dataFormat;
@@ -60,6 +65,7 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO<TrainingDatasetDTO
 
   private Boolean fromQuery;
   private List<TrainingDatasetFeatureDTO> features;
+  private FilterLogicDTO extraFilter;
 
   private Double sampleRatio;
   @XmlJavaTypeAdapter(DateAdapter.class)
@@ -235,7 +241,15 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO<TrainingDatasetDTO
   public void setDataAvailable(Boolean dataAvailable) {
     this.dataAvailable = dataAvailable;
   }
-
+  
+  public FilterLogicDTO getExtraFilter() {
+    return extraFilter;
+  }
+  
+  public void setExtraFilter(FilterLogicDTO extraFilter) {
+    this.extraFilter = extraFilter;
+  }
+  
   @Override
   public String toString() {
     return "TrainingDatasetDTO{" +
