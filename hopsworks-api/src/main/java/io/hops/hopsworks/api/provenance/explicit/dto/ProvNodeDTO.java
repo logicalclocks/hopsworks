@@ -20,7 +20,6 @@ import io.hops.hopsworks.persistence.entity.provenance.ProvExplicitNode;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
@@ -28,13 +27,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class ProvNodeDTO<A extends RestDTO> {
   private A artifact;
   
-  @XmlElement(name = "artifact_type")
   private ProvExplicitNode.Type artifactType;
   private boolean deleted;
   private boolean shared;
   private boolean accessible;
   private boolean traversed;
-  @XmlElement(name = "exception_cause")
   private String exceptionCause;
  
   public ProvNodeDTO() {
