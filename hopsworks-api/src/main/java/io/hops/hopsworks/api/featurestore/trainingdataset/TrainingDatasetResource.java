@@ -24,6 +24,7 @@ import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jobs.JobDTO;
 import io.hops.hopsworks.api.jobs.JobsBuilder;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.provenance.TrainingDatasetProvenanceResource;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
@@ -99,6 +100,8 @@ public class TrainingDatasetResource {
   private TrainingDatasetController trainingDatasetController;
   @EJB
   private TrainingDatasetDTOBuilder trainingDatasetDTOBuilder;
+  @Inject
+  private TrainingDatasetProvenanceResource provenanceResource;
 
   private Featurestore featurestore;
   private FeatureView featureView;
@@ -409,5 +412,14 @@ public class TrainingDatasetResource {
   public void setFeaturestore(Featurestore featurestore) {
     this.featurestore = featurestore;
   }
-
+  
+  @Path("/version/{version: [0-9]+}/provenance")
+  public TrainingDatasetProvenanceResource provenance(@ApiParam(value = "Id of the training dataset")
+                                                      @PathParam("version") Integer trainingDatasetVersion) {
+    this.provenanceResource.setProject(project);
+    this.provenanceResource.setFeatureStore(featurestore);
+    this.provenanceResource.setFeatureView(featureView);
+    this.provenanceResource.setTrainingDatasetVersion(trainingDatasetVersion);
+    return this.provenanceResource;
+  }
 }

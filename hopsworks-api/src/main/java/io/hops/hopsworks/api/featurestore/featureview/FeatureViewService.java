@@ -22,9 +22,9 @@ import io.hops.hopsworks.api.featurestore.preparestatement.PreparedStatementReso
 import io.hops.hopsworks.api.featurestore.query.QueryResource;
 import io.hops.hopsworks.api.featurestore.trainingdataset.TrainingDatasetResource;
 import io.hops.hopsworks.api.featurestore.transformation.TransformationResource;
+import io.hops.hopsworks.api.provenance.FeatureViewProvenanceResource;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
-import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -60,10 +60,10 @@ public class FeatureViewService {
   private FeaturestoreKeywordResource featurestoreKeywordResource;
   @EJB
   private FeaturestoreController featurestoreController;
-  @EJB
-  private FeatureViewController featureViewController;
   @Inject
   private ActivityResource activityResource;
+  @Inject
+  private FeatureViewProvenanceResource provenanceResource;
 
   private Project project;
   private Featurestore featurestore;
@@ -172,5 +172,16 @@ public class FeatureViewService {
   public void setFeaturestore(Integer id) throws FeaturestoreException {
     FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithId(project, id);
     this.featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
+  }
+  
+  @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/provenance")
+  public FeatureViewProvenanceResource provenance(
+    @PathParam("name") String name,
+    @PathParam("version") Integer version) {
+    this.provenanceResource.setProject(project);
+    this.provenanceResource.setFeatureStore(featurestore);
+    this.provenanceResource.setFeatureViewName(name);
+    this.provenanceResource.setFeatureViewVersion(version);
+    return provenanceResource;
   }
 }

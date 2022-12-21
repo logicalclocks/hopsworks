@@ -20,8 +20,11 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
-
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.List;
+import java.util.Objects;
+
 
 @XmlRootElement
 @JsonTypeName("streamFeatureGroupDTO")
@@ -29,6 +32,9 @@ public class StreamFeatureGroupDTO extends FeaturegroupDTO {
   private TimeTravelFormat timeTravelFormat = TimeTravelFormat.HUDI;
   private DeltaStreamerJobConf deltaStreamerJobConf;
   private Boolean onlineEnabled = true;
+  
+  @XmlElement
+  private List<FeaturegroupDTO> parents;
   
   public StreamFeatureGroupDTO() {
     super();
@@ -63,13 +69,22 @@ public class StreamFeatureGroupDTO extends FeaturegroupDTO {
     TimeTravelFormat timeTravelFormat) {
     this.timeTravelFormat = timeTravelFormat;
   }
-
+  
+  public List<FeaturegroupDTO> getParents() {
+    return parents;
+  }
+  
+  public void setParents(List<FeaturegroupDTO> parents) {
+    this.parents = parents;
+  }
+  
   @Override
   public String toString() {
     return "StreamFeatureGroupDTO{" +
       "timeTravelFormat=" + timeTravelFormat +
       ", deltaStreamerJobConf=" + deltaStreamerJobConf +
       ", onlineEnabled=" + onlineEnabled +
+      ", parentFeatureGroups =" + Objects.toString(parents) +
       '}';
   }
 }

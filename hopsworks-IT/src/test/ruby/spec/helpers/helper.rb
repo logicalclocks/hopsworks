@@ -92,4 +92,10 @@ module Helper
       query + "&#{value}"
     end
   end
+
+  def get_checked(endpoint)
+    result = get endpoint
+    expect_status_details(200)
+    JSON.parse(result)
+  end
 end

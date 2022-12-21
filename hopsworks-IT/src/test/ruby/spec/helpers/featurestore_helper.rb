@@ -48,12 +48,21 @@ module FeaturestoreHelper
     parsed_json[0]["featurestoreName"]
   end
 
+  def create_cached_featuregroup_checked2(project_id, featurestore_id: nil, featuregroup_name: nil, features: nil,
+                                          featuregroup_description: nil, event_time: nil, parents: nil)
+    featurestore_id = get_featurestore_id(project_id) if featurestore_id.nil?
+    result,_ = create_cached_featuregroup(project_id, featurestore_id, featuregroup_name: featuregroup_name,
+                                                features: features, featuregroup_description: featuregroup_description,
+                                                event_time: event_time, parents: parents)
+    expect_status_details(201)
+    JSON.parse(result)
+  end
   def create_cached_featuregroup_checked(project_id, featurestore_id, featuregroup_name, features: nil,
-                                         featuregroup_description: nil, event_time: nil)
+                                         featuregroup_description: nil, event_time: nil, parents: nil)
     pp "create featuregroup:#{featuregroup_name}" if defined?(@debugOpt) && @debugOpt == true
     json_result, _ = create_cached_featuregroup(project_id, featurestore_id, featuregroup_name: featuregroup_name,
                                                 features: features, featuregroup_description: featuregroup_description,
-                                                event_time: event_time)
+                                                event_time: event_time, parents: parents)
     expect_status_details(201)
     parsed_json = JSON.parse(json_result, :symbolize_names => true)
     parsed_json[:id]
@@ -72,12 +81,12 @@ module FeaturestoreHelper
 
   def create_cached_featuregroup_checked2(project_id,  name: nil, version: 1, features: nil, description: nil, event_time: nil,
                                           featurestore_id: nil, featurestore_project_id: nil,
-                                          expected_status: 201)
+                                          expected_status: 201, parents: nil)
     featurestore_project_id = project_id if featurestore_project_id.nil?
     featurestore_id = get_featurestore_id(featurestore_project_id) if featurestore_id.nil?
     result,_ = create_cached_featuregroup(project_id, featurestore_id,
                                           featuregroup_name: name, version: version, featuregroup_description: description,
-                                          features: features, event_time: event_time)
+                                          features: features, event_time: event_time, parents: parents)
     expect_status_details(expected_status)
     result = JSON.parse(result) if expected_status == 201
     result
@@ -85,7 +94,7 @@ module FeaturestoreHelper
 
   def create_cached_featuregroup(project_id, featurestore_id, features: nil, featuregroup_name: nil, online:false,
                                  version: 1, featuregroup_description: nil, statistics_config: nil, time_travel_format:
-                                 "NONE", event_time: nil, expectation_suite: nil)
+                                 "NONE", event_time: nil, expectation_suite: nil, parents: nil)
     type = "cachedFeaturegroupDTO"
     features = features == nil ? [{type: "INT", name: "testfeature", description: "testfeaturedescription",
                                    primary: true, onlineType: "INT", partition: false}] : features
@@ -101,6 +110,7 @@ module FeaturestoreHelper
         onlineEnabled: online,
         timeTravelFormat: time_travel_format,
         eventTime: event_time,
+        parents: parents
     }
     unless statistics_config == nil
       json_data[:statisticsConfig] = statistics_config
@@ -497,6 +507,38 @@ module FeaturestoreHelper
     [json_result, name]
   end
 
+  def get_feature_view(project_id, name, version: 1, feature_store_id: nil,
+                       feature_store_project_id: nil, expected_status: 200)
+    feature_store_project_id = project_id if feature_store_project_id.nil?
+    feature_store_id = get_featurestore_id(feature_store_project_id) if feature_store_id.nil?
+    endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{feature_store_id}/featureview/#{name}/version/#{version}"
+    pp endpoint if defined?(@debugOpt) && @debugOpt
+    result = get endpoint
+    expect_status_details(expected_status)
+    pp "#{expected_status} #{expected_status == 200}"
+    result = JSON.parse(result) if expected_status == 200
+    result
+  end
+
+  def create_feature_view_checked(project_id, name: nil, featurestore_id: nil, query: nil, fg: nil,
+                                  version: 1, features:nil, description: nil)
+    featurestore_id = get_featurestore_id(project_id) if featurestore_id.nil?
+    if (query.nil? && fg.nil?) || !(query.nil? || fg.nil?)
+      raise "exactly one of query and fg params has to be defined"
+    end
+    if query.nil?
+      query = {
+          leftFeatureGroup: {
+              id: fg["id"]
+          },
+          leftFeatures: fg["features"],
+          joins: []
+      }
+    end
+    result,_ = create_feature_view(project_id, featurestore_id, query, name: name, version: version, features: features, description: description)
+    expect_status_details(201)
+    JSON.parse(result)
+  end
   def create_feature_view(project_id, featurestore_id, query, name: nil,
                           version: 1, features: nil, description: nil)
     type = "featureViewDTO"
@@ -623,6 +665,18 @@ module FeaturestoreHelper
     end
 
     {"response" => parsed_json, "connector" => connector, "featureView" => featureview}
+  end
+
+  def create_featureview_training_dataset_checked(project, featureview, hopsfs_connector: nil, data_format: "tfrecords",
+                                                  version: 1, splits: [], description: "testtrainingdatasetdescription",
+                                                  statistics_config: nil, train_split: nil, query_param: nil, is_internal: true, location: nil)
+    hopsfs_connector = get_hopsfs_training_datasets_connector(project[:projectname]) if hopsfs_connector == nil
+    result = create_featureview_training_dataset(
+        project.id, featureview, hopsfs_connector, version: version, splits: splits, description: description,
+        statistics_config: statistics_config, train_split: train_split, data_format: data_format,
+        is_internal: is_internal, location: location)
+    expect_status_details(201)
+    JSON.parse(result)
   end
 
   def create_featureview_training_dataset(project_id, featureview, hopsfs_connector, data_format: "tfrecords",
@@ -1040,5 +1094,39 @@ module FeaturestoreHelper
       }
     }
     query
+  end
+
+  def get_feature_group_links(project_id, id, feature_store_id: nil, feature_store_project_id: nil,
+                              upstreamLvls: 1, downstreamLvls: 1, expected_status: 200)
+    feature_store_project_id = project_id if feature_store_project_id.nil?
+    feature_store_id = get_featurestore(project_id, fs_project_id: feature_store_project_id)["featurestoreId"] if feature_store_id.nil?
+    artifactPath = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{feature_store_id}/featuregroups/#{id}"
+    get_featurestore_provenance_explicit_links(artifactPath, upstreamLvls: upstreamLvls, downstreamLvls: downstreamLvls, expected_status: expected_status)
+  end
+
+  def get_feature_view_links(project_id, name, version: 1, feature_store_id: nil, feature_store_project_id: nil,
+                             upstreamLvls: 1, downstreamLvls: 1, expected_status: 200)
+    feature_store_project_id = project_id if feature_store_project_id.nil?
+    feature_store_id = get_featurestore(project_id, fs_project_id: feature_store_project_id)["featurestoreId"] if feature_store_id.nil?
+    artifactPath = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{feature_store_id}/featureview/#{name}/version/#{version}"
+    get_featurestore_provenance_explicit_links(artifactPath, upstreamLvls: upstreamLvls, downstreamLvls: downstreamLvls, expected_status: expected_status)
+  end
+
+  def get_training_dataset_links(project_id, feature_view_name, feature_view_version, version: 1,
+                                 feature_store_id: nil, feature_store_project_id: nil,
+                                 upstreamLvls: 1, downstreamLvls: 1, expected_status: 200)
+    feature_store_project_id = project_id if feature_store_project_id.nil?
+    feature_store_id = get_featurestore(project_id, fs_project_id: feature_store_project_id)["featurestoreId"] if feature_store_id.nil?
+    artifactPath = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{feature_store_id}/featureview/#{feature_view_name}/version/#{feature_view_version}/trainingdatasets/version/#{version}"
+    get_featurestore_provenance_explicit_links(artifactPath, upstreamLvls: upstreamLvls, downstreamLvls: downstreamLvls, expected_status: expected_status)
+  end
+
+  def get_featurestore_provenance_explicit_links(artifactPath, upstreamLvls: 1, downstreamLvls: 1, expected_status: 200)
+    endpoint = "#{artifactPath}/provenance/links?upstreamLvls=#{upstreamLvls}&downstreamLvls=#{downstreamLvls}"
+    pp endpoint if defined?(@debugOpt) && @debugOpt
+    result = get endpoint
+    expect_status_details(expected_status)
+    result = JSON.parse(result) if expected_status == 200
+    result
   end
 end
