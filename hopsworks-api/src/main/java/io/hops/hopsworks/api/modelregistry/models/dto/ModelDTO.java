@@ -76,6 +76,8 @@ public class ModelDTO extends RestDTO<ModelDTO> {
   private Integer modelRegistryId;
 
   private TagsDTO tags;
+  
+  private String type = "modelDTO";
 
   public String getName() {
     return name;
@@ -216,11 +218,13 @@ public class ModelDTO extends RestDTO<ModelDTO> {
   public TagsDTO getTags() {
     return tags;
   }
-
+  
   public void setTags(TagsDTO tags) {
     this.tags = tags;
   }
-
+  
+  public String getType() { return type; }
+  
   @Override
   public String toString() {
     return "ModelDTO{" +
