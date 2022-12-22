@@ -85,13 +85,13 @@ public class KubeProjectConfigMaps {
   
   private void createHadoopConfigMap(Project project) throws IOException {
     List<String> confFiles = Arrays.asList("core-site.xml", "hdfs-site.xml",
-        "log4j.properties", "hadoop-env.sh");
+        "log4j2.properties", "hadoop-env.sh");
     createConfigMap(project, settings.getHadoopConfDir(), confFiles,
         HADOOP_CONF_SUFFIX);
   }
   
   private void createSparkConfigMap(Project project) throws IOException {
-    List<String> confFiles = Arrays.asList("hive-site.xml", "log4j.properties",
+    List<String> confFiles = Arrays.asList("hive-site.xml", "log4j2.properties",
         "metrics.properties", "spark-blacklisted-properties.txt", "spark-defaults.conf",
         "spark-env.sh");
     createConfigMap(project, settings.getSparkConfDir(), confFiles,

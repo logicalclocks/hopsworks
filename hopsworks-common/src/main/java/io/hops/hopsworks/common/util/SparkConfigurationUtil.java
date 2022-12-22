@@ -507,7 +507,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
       }
     }
 
-    extraJavaOptions.put(Settings.JOB_LOG4J_CONFIG, Settings.JOB_LOG4J_PROPERTIES);
+    extraJavaOptions.put(Settings.JOB_LOG4J_CONFIG, settings.getSparkLog4j2FilePath());
     extraJavaOptions.put(Settings.HOPSWORKS_REST_ENDPOINT_PROPERTY, hopsworksRestEndpoint);
     extraJavaOptions.put(Settings.HOPSUTIL_INSECURE_PROPERTY, String.valueOf(settings.isHopsUtilInsecure()));
     extraJavaOptions.put(Settings.SERVER_TRUSTSTORE_PROPERTY, Settings.SERVER_TRUSTSTORE_PROPERTY);
@@ -567,8 +567,10 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
   private void addLibHdfsOpts(String userSparkProperties, Settings settings, Map<String, ConfigProperty> sparkProps,
                               SparkJobConfiguration sparkJobConfiguration) {
 
-    String defaultLibHdfsOpts = "-Dlog4j.configuration=" +
-        settings.getHadoopSymbolicLinkDir() +"/etc/hadoop/log4j.properties -Dhadoop.root.logger=ERROR,RFA";
+    String defaultLibHdfsOpts = "-Dlog4j.configurationFile=" +
+        settings.getHadoopSymbolicLinkDir() +"/etc/hadoop/log4j2.properties " +
+        "-Dhadoop.log.dir=/tmp " +
+        "-Dhadoop.root.logger=ERROR,console";
     Map<String, String> userProperties = HopsUtils.parseUserProperties(userSparkProperties);
 
     if(userProperties.containsKey(Settings.SPARK_YARN_APPMASTER_LIBHDFS_OPTS)) {
