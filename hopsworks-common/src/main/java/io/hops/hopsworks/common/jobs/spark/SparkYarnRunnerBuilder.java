@@ -52,10 +52,8 @@ import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.yarn.LocalResourceDTO;
 import io.hops.hopsworks.common.jobs.yarn.YarnRunner;
-import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SparkConfigurationUtil;
-import io.hops.hopsworks.common.util.templates.ConfigProperty;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
@@ -66,7 +64,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -126,7 +123,6 @@ public class SparkYarnRunnerBuilder {
                                   ServiceDiscoveryController serviceDiscoveryController)
     throws IOException, ServiceDiscoveryException, JobException, ApiKeyException {
 
-    Map<String, ConfigProperty> jobHopsworksProps = new HashMap<>();
     JobType jobType = job.getJobConfig().getJobType();
     String appPath = ((SparkJobConfiguration) job.getJobConfig()).getAppPath();
     //Create a builder
@@ -169,19 +165,6 @@ public class SparkYarnRunnerBuilder {
 
     //Set executor extraJavaOptions to make parameters available to executors
     Map<String, String> extraJavaOptions = new HashMap<>();
-
-    //These properties are set so that spark history server picks them up
-    jobHopsworksProps.put(Settings.SPARK_DRIVER_STAGINGDIR_ENV,
-          new ConfigProperty(
-                  Settings.SPARK_DRIVER_STAGINGDIR_ENV,
-                  HopsUtils.IGNORE,
-                  stagingPath));
-    jobHopsworksProps.put(Settings.HOPSWORKS_APPID_PROPERTY,
-          new ConfigProperty(
-                  Settings.HOPSWORKS_APPID_PROPERTY,
-                  HopsUtils.IGNORE,
-                  YarnRunner.APPID_PLACEHOLDER));
-
     extraJavaOptions.put(Settings.HOPSWORKS_APPID_PROPERTY, YarnRunner.APPID_PLACEHOLDER);
     extraJavaOptions.put(Settings.LOGSTASH_JOB_INFO,
             project.getName().toLowerCase() + "," + jobName + "," + job.getId() + ","
@@ -290,11 +273,6 @@ public class SparkYarnRunnerBuilder {
 
   public SparkYarnRunnerBuilder setJobName(String jobName) {
     this.jobName = jobName;
-    return this;
-  }
-
-  public SparkYarnRunnerBuilder addAllJobArgs(String[] jobArgs) {
-    this.jobArgs.addAll(Arrays.asList(jobArgs));
     return this;
   }
 

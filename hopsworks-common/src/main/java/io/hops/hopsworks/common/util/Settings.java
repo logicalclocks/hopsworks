@@ -1059,8 +1059,8 @@ public class Settings implements Serializable {
   public static final String SPARK_PYSPARK_PYTHON_OPTION = "spark.pyspark.python";
 
   //Spark log4j and metrics properties
-  public static final String JOB_LOG4J_CONFIG = "log4j.configuration";
-  public static final String JOB_LOG4J_PROPERTIES = "log4j.properties";
+  public static final String JOB_LOG4J_CONFIG = "log4j.configurationFile";
+  public static final String JOB_LOG4J_PROPERTIES = "log4j2.properties";
   //If the value of this property changes, it must be changed in spark-chef log4j.properties as well
   public static final String LOGSTASH_JOB_INFO = "hopsworks.logstash.job.info";
 
@@ -1113,9 +1113,6 @@ public class Settings implements Serializable {
   //nccl
   public static final String NCCL_SOCKET_NTHREADS = "NCCL_SOCKET_NTHREADS";
   public static final String NCCL_NSOCKS_PERTHREAD = "NCCL_NSOCKS_PERTHREAD";
-  
-  //Hive config
-  public static final String HIVE_SITE = "hive-site.xml";
 
   public synchronized String getSparkDir() {
     checkCache();
@@ -1124,6 +1121,10 @@ public class Settings implements Serializable {
 
   public synchronized String getSparkConfDir() {
     return getSparkDir() + "/conf";
+  }
+
+  public synchronized String getSparkLog4j2FilePath() {
+    return getSparkConfDir() + "/log4j2.properties";
   }
 
   // "/tmp" by default
@@ -1265,6 +1266,10 @@ public class Settings implements Serializable {
     return SPARK_USER;
   }
 
+  public String getSparkLog4JPath() {
+    return "hdfs:///user/" + getSparkUser() + "/log4j2.properties";
+  }
+
   private String FLINK_USER = "flink";
 
   public synchronized String getFlinkUser() {
@@ -1379,7 +1384,6 @@ public class Settings implements Serializable {
   public static final String DEFAULT_YARN_CONFFILE_NAME = "yarn-site.xml";
   public static final String DEFAULT_HADOOP_CONFFILE_NAME = "core-site.xml";
   private static final String DEFAULT_HDFS_CONFFILE_NAME = "hdfs-site.xml";
-  public static final String DEFAULT_SPARK_CONFFILE_NAME = "spark-defaults.conf";
 
   //Environment variable keys
   //TODO: Check if ENV_KEY_YARN_CONF_DIR should be replaced with ENV_KEY_YARN_CONF
@@ -1420,33 +1424,19 @@ public class Settings implements Serializable {
   public static final String SPARK_CONFIG_FILE = "conf/spark-defaults.conf";
   public static final String SPARK_BLACKLISTED_PROPS
       = "conf/spark-blacklisted-properties.txt";
-  public static final int SPARK_MIN_EXECS = 1;
-  public static final int SPARK_MAX_EXECS = 2;
   public static final String SPARK_HADOOP_FS_PERMISSIONS_UMASK_DEFAULT = "0007";
   // Spark executor min memory
   private int SPARK_EXECUTOR_MIN_MEMORY = 1024;
 
   //Flink constants
-  public static final String FLINK_LOCRSC_FLINK_JAR = "flink.jar";
-  public static final int FLINK_APP_MASTER_MEMORY = 768;
-
   public static final String HOPS_DEEP_LEARNING_TOUR_DATA = "tensorflow_demo/data";
   public static final String HOPS_DEEP_LEARNING_TOUR_NOTEBOOKS = "tensorflow_demo/notebooks";
   public static final String FLINK_AM_MAIN = "org.apache.flink.yarn.ApplicationMaster";
   public static final String FLINK_ENV_JAVA_OPTS = "env.java.opts";
-  public static final String FLINK_ENV_JAVA_OPTS_JOBMANAGER = "env.java.opts.jobmanager";
-  public static final String FLINK_ENV_JAVA_OPTS_TASKMANAGER = "env.java.opts.taskmanager";
   public static final String FLINK_STATE_CHECKPOINTS_DIR = "state.checkpoints.dir";
-  public static final String FLINK_WEB_UPLOAD_DIR = "web.upload.dir";
-  
-  
 
   //Featurestore constants
-  public static final String HOPS_FEATURESTORE_TOUR_JOB_CLASS = "io.hops.examples.featurestore_tour.Main";
-  public static final String HOPS_FEATURESTORE_TOUR_JOB_NAME = "featurestore_tour_job";
-  public static final String HOPS_FEATURESTORE_TOUR_JOB_INPUT_PARAM = "--input ";
   public static final String HSFS_UTIL_MAIN_CLASS = "com.logicalclocks.utils.MainClass";
-
 
   //Serving constants
   public static final String INFERENCE_SCHEMANAME = "inferenceschema";
@@ -1460,38 +1450,6 @@ public class Settings implements Serializable {
 
   public synchronized String getLocalFlinkJarPath() {
     return getFlinkDir() + "/flink.jar";
-  }
-
-  public synchronized String getFlinkJarPath() {
-    return hdfsFlinkJarPath(getFlinkUser());
-  }
-
-  private String hdfsFlinkJarPath(String flinkUser) {
-    return "hdfs:///user/" + flinkUser + "/flink.jar";
-  }
-
-  public synchronized String getFlinkDefaultClasspath() {
-    return flinkDefaultClasspath(getFlinkDir());
-  }
-
-  private String flinkDefaultClasspath(String flinkDir) {
-    return flinkDir + "/lib/*";
-  }
-
-  public String getFlinkDefaultClasspath(String flinkDir) {
-    return flinkDefaultClasspath(flinkDir);
-  }
-
-  public String getSparkLog4JPath() {
-    return "hdfs:///user/" + getSparkUser() + "/log4j.properties";
-  }
-
-  public synchronized String getSparkDefaultClasspath() {
-    return sparkDefaultClasspath(getSparkDir());
-  }
-
-  private String sparkDefaultClasspath(String sparkDir) {
-    return sparkDir + "/lib/*";
   }
 
   private static final String HADOOP_GLASSPATH_GLOB_ENV_VAR_KEY = "HADOOP_GLOB";
@@ -2298,8 +2256,7 @@ public class Settings implements Serializable {
         throw new IllegalStateException("No Hadoop conf file");
       }
 
-      File hdfsConf = new File(confPath + "/"
-          + Settings.DEFAULT_HDFS_CONFFILE_NAME);
+      File hdfsConf = new File(confPath + "/" + Settings.DEFAULT_HDFS_CONFFILE_NAME);
       if (!hdfsConf.exists()) {
         throw new IllegalStateException("No HDFS conf file");
       }
