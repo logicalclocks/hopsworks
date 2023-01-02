@@ -71,7 +71,9 @@ public class CAConf {
     JWT_ISSUER("jwt_issuer", "hopsworks@logicalclocks.com"),
     SUDOERS_DIR("sudoers_dir", "/srv/hops/sbin"),
     CLOUD_EVENTS_ENDPOINT("cloud_events_endpoint", ""),
-    CA_CONFIGURATION("pki_ca_configuration", "");
+    CA_CONFIGURATION("pki_ca_configuration", ""),
+    // This property is duplicated in Settings.java
+    KUBERNETES("kubernetes_installed", "false");
 
     private String key;
     private String defaultValue;

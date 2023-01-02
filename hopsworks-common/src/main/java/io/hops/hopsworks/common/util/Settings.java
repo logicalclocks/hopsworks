@@ -267,6 +267,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_DOCKER_MAX_MEMORY_ALLOCATION = "kube_docker_max_memory_allocation";
   private static final String VARIABLE_KUBE_DOCKER_MAX_GPUS_ALLOCATION = "kube_docker_max_gpus_allocation";
   private static final String VARIABLE_KUBE_DOCKER_MAX_CORES_ALLOCATION = "kube_docker_max_cores_allocation";
+  // This property is duplicated in CAConf.java
   private static final String VARIABLE_KUBE_INSTALLED = "kubernetes_installed";
   private static final String VARIABLE_KUBE_KSERVE_INSTALLED = "kube_kserve_installed";
   private static final String VARIABLE_KUBE_KNATIVE_DOMAIN_NAME = "kube_knative_domain_name";

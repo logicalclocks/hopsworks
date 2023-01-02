@@ -64,6 +64,7 @@ public class TestPKIKeypair {
     PKI pki = new PKI();
     PKI pkiSpy = Mockito.spy(pki);
     Mockito.doReturn(EMPTY_CONFIGURATION).when(pkiSpy).loadConfiguration();
+    Mockito.doReturn(false).when(pkiSpy).loadFromFile();
     pkiSpy.init();
 
     KeyPair mockKeypairForOwner1 = pkiSpy.generateKeyPair();

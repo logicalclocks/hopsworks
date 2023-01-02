@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.ca.controllers;
 
+import io.hops.hopsworks.ca.configuration.CAConf;
 import io.hops.hopsworks.ca.persistence.CRLFacade;
 import io.hops.hopsworks.ca.persistence.KeyFacade;
 import io.hops.hopsworks.ca.persistence.PKICertificateFacade;
@@ -55,6 +56,8 @@ public class PKIMocking {
     realPKI = new PKI();
     pki = Mockito.spy(realPKI);
 
+    Mockito.doReturn(false).when(pki).loadFromFile();
+
     serialNumberFacade = Mockito.mock(SerialNumberFacade.class);
     Mockito.when(serialNumberFacade.nextSerialNumber(Mockito.any()))
         .thenAnswer(new Answer<Long>() {
@@ -86,6 +89,10 @@ public class PKIMocking {
 
     pkiUtils = new PKIUtils();
     pki.setPKIUtils(pkiUtils);
+
+    CAConf conf = Mockito.mock(CAConf.class);
+    Mockito.when(conf.getBoolean(CAConf.CAConfKeys.KUBERNETES)).thenReturn(true);
+    pki.setCaConf(conf);
   }
 
   protected String stringifyCSR(PKCS10CertificationRequest csr) throws IOException {
