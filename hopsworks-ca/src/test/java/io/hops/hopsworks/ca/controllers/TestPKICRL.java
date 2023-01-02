@@ -54,6 +54,7 @@ public class TestPKICRL {
 
     PKI realPKI = new PKI();
     PKI pki = Mockito.spy(realPKI);
+    Mockito.doReturn(false).when(pki).loadFromFile();
     Mockito.doReturn(EMPTY_CONFIGURATION).when(pki).loadConfiguration();
     pki.setCRLFacade(crlFacade);
     pki.setSerialNumberFacade(snFacadeMock);
@@ -81,6 +82,7 @@ public class TestPKICRL {
 
     PKI realPKI = new PKI();
     PKI pki = Mockito.spy(realPKI);
+    Mockito.doReturn(false).when(pki).loadFromFile();
     Mockito.doReturn(EMPTY_CONFIGURATION).when(pki).loadConfiguration();
     pki.setCRLFacade(crlFacade);
     pki.setSerialNumberFacade(snFacadeMock);

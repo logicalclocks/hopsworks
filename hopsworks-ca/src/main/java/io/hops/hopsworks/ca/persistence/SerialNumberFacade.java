@@ -43,6 +43,13 @@ public class SerialNumberFacade {
     em.flush();
   }
 
+  public void initializeWithNumber(CAType type, Long number) {
+    LOGGER.log(Level.INFO, "Initializing serial number for CA " + type + " with number " + number);
+    SerialNumber sn = new SerialNumber(type, number);
+    em.persist(sn);
+    em.flush();
+  }
+
   public boolean isInitialized(CAType type) {
     try {
       em.createNamedQuery("SerialNumber.forCAType", SerialNumber.class)

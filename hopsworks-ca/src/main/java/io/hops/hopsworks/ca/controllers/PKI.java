@@ -55,6 +55,7 @@ import io.hops.hopsworks.persistence.entity.pki.PKICrl;
 import io.hops.hopsworks.persistence.entity.pki.PKIKey;
 import io.hops.hopsworks.persistence.entity.pki.KeyIdentifier;
 import io.hops.hopsworks.persistence.entity.pki.PKICertificate;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
@@ -81,7 +82,12 @@ import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.cert.jcajce.JcaX509v2CRLBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMDecryptorProvider;
+import org.bouncycastle.openssl.PEMEncryptedKeyPair;
+import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
@@ -94,9 +100,14 @@ import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.naming.InvalidNameException;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.KeyException;
@@ -164,6 +175,7 @@ public class PKI {
   private KeyFactory keyFactory;
   private JcaX509CertificateConverter converter;
   private JcaX509CRLConverter crlConverter;
+  private JcaPEMKeyConverter pemKeyConverter;
   private CAsConfiguration conf;
   private static final Map<CAType, X500Name> CA_SUBJECT_NAME = new HashMap<>(3);
 
@@ -206,6 +218,7 @@ public class PKI {
       keyFactory = KeyFactory.getInstance("RSA");
       converter = new JcaX509CertificateConverter().setProvider(new BouncyCastleProvider());
       crlConverter = new JcaX509CRLConverter().setProvider(new BouncyCastleProvider());
+      pemKeyConverter = new JcaPEMKeyConverter().setProvider(new BouncyCastleProvider());
       configure();
     } catch (GeneralSecurityException ex) {
       throw new RuntimeException("Failed to initialize PKI", ex);
@@ -240,11 +253,15 @@ public class PKI {
   protected void maybeInitializeCA() throws GeneralSecurityException, IOException, OperatorCreationException {
     if (!CA_INITIALIZED.getAndSet(true)) {
       try {
+        LOGGER.log(Level.INFO, "Initializing CAs");
         initializeCertificateAuthorities();
       } catch (Exception ex) {
         CA_INITIALIZED.set(false);
+        LOGGER.log(Level.SEVERE, "Error initializing CAs", ex);
         throw ex;
       }
+    } else {
+      LOGGER.log(Level.FINE, "CAs already initialized");
     }
   }
 
@@ -279,6 +296,9 @@ public class PKI {
   protected void initializeCertificateAuthorities() throws GeneralSecurityException, IOException,
       OperatorCreationException {
     for (CAType ca : CAType.values()) {
+      if (ca.equals(CAType.KUBECA) && !caConf.getBoolean(CAConf.CAConfKeys.KUBERNETES)) {
+        continue;
+      }
       initializeCertificateAuthority(ca);
     }
   }
@@ -294,13 +314,62 @@ public class PKI {
     caInitializeCRL(caType);
   }
 
-  protected void caInitializeSerialNumber(CAType type) {
+  protected void caInitializeSerialNumber(CAType type) throws IOException {
     if (!serialNumberFacade.isInitialized(type)) {
+      if (loadFromFile()) {
+        LOGGER.log(Level.INFO, "Loading serial number from file for: " + type);
+        try {
+          Path path = getPathToSerialNumber(type);
+          migrateSerialNumber(type, path);
+          return;
+        } catch (FileNotFoundException ex) {
+          throw new IOException("Bootstrapping serial number of " + type + " but openssl file could not be found", ex);
+        }
+      }
       serialNumberFacade.initialize(type);
     }
   }
 
-  protected void caInitializeKeys(CAType type) throws InvalidKeySpecException {
+  @VisibleForTesting
+  protected Path getPathToSerialNumber(CAType type) throws FileNotFoundException {
+    Path path;
+    switch (type) {
+      case ROOT:
+        path = Paths.get(caConf.getString(CAConf.CAConfKeys.CERTS_DIR), "serial");
+        break;
+      case INTERMEDIATE:
+        path = Paths.get(caConf.getString(CAConf.CAConfKeys.CERTS_DIR), "intermediate/serial");
+        break;
+      case KUBECA:
+        path = Paths.get(caConf.getString(CAConf.CAConfKeys.CERTS_DIR), "kube/serial");
+        break;
+      default:
+        throw new IllegalArgumentException("Unknown CA type: " + type);
+    }
+    if (!path.toFile().exists()) {
+      throw new FileNotFoundException("File " + path.toFile() + " does not exist");
+    }
+    return path;
+  }
+
+  @VisibleForTesting
+  protected void migrateSerialNumber(CAType type, Path path) throws IOException {
+    Long sn = getSerialNumber(path);
+    serialNumberFacade.initializeWithNumber(type, sn);
+    LOGGER.log(Level.INFO, "Migrated Serial Number for " + type + " with next number " + sn);
+  }
+
+  private Long getSerialNumber(Path path) throws IOException {
+    String hex = FileUtils.readFileToString(path.toFile(), Charset.defaultCharset());
+    return Long.parseUnsignedLong(hex.trim(), 16);
+  }
+
+  @VisibleForTesting
+  protected boolean loadFromFile() {
+    return Paths.get(caConf.getString(CAConf.CAConfKeys.CERTS_DIR), "private/ca.key.pem").toFile().exists();
+  }
+
+  protected void caInitializeKeys(CAType type) throws InvalidKeySpecException, IOException {
     Pair<Boolean, KeyPair> kp = loadOrGenerateKeypair(type.name());
     if (!kp.getLeft()) {
       LOGGER.log(Level.INFO, "Saving key pair for " + type.name());
@@ -324,11 +393,23 @@ public class PKI {
     caCertificates.put(type, certificate);
   }
 
-  protected void caInitializeCRL(CAType type) throws GeneralSecurityException, CertIOException {
+  protected void caInitializeCRL(CAType type) throws GeneralSecurityException, CertIOException, IOException {
     LOGGER.log(Level.INFO, "Initializing Certificate Revocation List for " + type);
     if (crlFacade.exist(type)) {
       LOGGER.log(Level.INFO, "Skip CRL initialization for " + type + " as it already exists");
       return;
+    }
+
+    if (loadFromFile() && type.equals(CAType.INTERMEDIATE)) {
+      LOGGER.log(Level.INFO, "Loading CRL of " + type + " from file");
+      X509CRL crl = loadCRL(Paths.get(caConf.getString(CAConf.CAConfKeys.CERTS_DIR), "intermediate/crl/intermediate" +
+          ".crl.pem"));
+      if (crl != null) {
+        initCRL(type, crl);
+        return;
+      } else {
+        LOGGER.log(Level.WARNING, "CRL loaded from file for " + type + " is empty, continue generating new one");
+      }
     }
     KeyPair keyPair = getCAKeyPair(type);
     X509Certificate certificate = getCACertificate(type);
@@ -374,15 +455,72 @@ public class PKI {
     pkiCertificateFacade.saveCertificate(certificateToSave);
   }
 
-  protected Pair<Boolean, KeyPair> loadOrGenerateKeypair(String owner) throws InvalidKeySpecException {
+  protected Pair<Boolean, KeyPair> loadOrGenerateKeypair(String owner) throws InvalidKeySpecException, IOException {
     LOGGER.log(Level.INFO, "Loading key pair for " + owner);
     Optional<KeyPair> kp = loadKeypair(owner);
     if (kp.isPresent()) {
       LOGGER.log(Level.INFO, "Loaded key pair for " + owner);
       return Pair.of(true, kp.get());
     }
+    if (loadFromFile()) {
+      LOGGER.log(Level.INFO, "Key pair for " + owner + " does NOT exist but will load from file");
+      try {
+        return Pair.of(false, loadKeyPairFromFile(owner));
+      } catch (FileNotFoundException ex) {
+        throw new InvalidKeySpecException("Bootstrapping private key of " + owner + " but openssl file could not be" +
+            " found", ex);
+      }
+    }
     LOGGER.log(Level.INFO, "Key pair for " + owner + " does NOT exist, generating new");
     return Pair.of(false, generateKeyPair());
+  }
+
+  protected KeyPair loadKeyPairFromFile(String owner) throws IOException {
+    Path keyPath = getPathToPrivateKey(owner);
+    return loadKeyPair(keyPath, getPrivateFileKeyPassword(owner));
+  }
+
+  private String getPrivateFileKeyPassword(String owner) {
+    if (owner.toUpperCase().equals(CAType.KUBECA.toString())) {
+      return caConf.getString(CAConf.CAConfKeys.KUBE_CA_PASSWORD);
+    }
+    return caConf.getString(CAConf.CAConfKeys.HOPSWORKS_SSL_MASTER_PASSWORD);
+  }
+
+  private Path getPathToPrivateKey(String owner) throws FileNotFoundException {
+    Path path;
+    switch (CAType.valueOf(owner)) {
+      case ROOT:
+        path = Paths.get(caConf.getString(CAConf.CAConfKeys.CERTS_DIR), "private/ca.key.pem");
+        break;
+      case INTERMEDIATE:
+        path = Paths.get(caConf.getString(CAConf.CAConfKeys.CERTS_DIR), "intermediate/private/intermediate.key.pem");
+        break;
+      case KUBECA:
+        path = Paths.get(caConf.getString(CAConf.CAConfKeys.CERTS_DIR), "kube/private/kube-ca.key.pem");
+        break;
+      default:
+        throw new IllegalArgumentException("Unknown private key owner: " + owner);
+    }
+    if (!path.toFile().exists()) {
+      throw new FileNotFoundException("File " + path.toFile() + " does not exist");
+    }
+    return path;
+  }
+
+  private KeyPair loadKeyPair(Path path, String password) throws IOException  {
+    PEMParser pemParser = new PEMParser(new FileReader(path.toFile()));
+    Object object = pemParser.readObject();
+    KeyPair kp;
+    if (object instanceof PEMEncryptedKeyPair) {
+      PEMEncryptedKeyPair ekp = (PEMEncryptedKeyPair) object;
+      PEMDecryptorProvider decryptorProvider = new JcePEMDecryptorProviderBuilder().build(password.toCharArray());
+      kp = pemKeyConverter.getKeyPair(ekp.decryptKeyPair(decryptorProvider));
+    } else {
+      PEMKeyPair ukp = (PEMKeyPair) object;
+      kp = pemKeyConverter.getKeyPair(ukp);
+    }
+    return kp;
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -422,6 +560,16 @@ public class PKI {
       return Pair.of(true, cert.get());
     }
 
+    if (loadFromFile()) {
+      LOGGER.log(Level.INFO, "Loading certificate of " + type + " CA from file");
+      try {
+        return Pair.of(false, loadCACertificate(type));
+      } catch (FileNotFoundException ex) {
+        throw new CertificateException("Bootstrapping certificate of " + type + " CA but openssl file could not be " +
+            "found", ex);
+      }
+    }
+
     switch (type) {
       case ROOT:
         LOGGER.log(Level.INFO, "Root CA certificate does not exist, generating...");
@@ -435,6 +583,42 @@ public class PKI {
       default:
         throw new RuntimeException("Unknown CA type " + type);
     }
+  }
+
+  @VisibleForTesting
+  protected X509Certificate loadCACertificate(CAType type) throws IOException, CertificateException {
+    Path certPath = getCACertificatePath(type);
+    return loadCertificate(certPath);
+  }
+
+  private Path getCACertificatePath(CAType type) throws FileNotFoundException {
+    Path path;
+    switch (type) {
+      case ROOT:
+        path = Paths.get(caConf.getString(CAConf.CAConfKeys.CERTS_DIR), "certs/ca.cert.pem");
+        break;
+      case INTERMEDIATE:
+        path = Paths.get(caConf.getString(CAConf.CAConfKeys.CERTS_DIR), "intermediate/certs/intermediate.cert.pem");
+        break;
+      case KUBECA:
+        path = Paths.get(caConf.getString(CAConf.CAConfKeys.CERTS_DIR), "kube/certs/kube-ca.cert.pem");
+        break;
+      default:
+        throw new IllegalArgumentException("Unknown CA type: " + type);
+    }
+    if (!path.toFile().exists()) {
+      throw new FileNotFoundException("File " + path.toFile() + " does not exist");
+    }
+    return path;
+  }
+
+  private X509Certificate loadCertificate(Path path) throws IOException, CertificateException {
+    PEMParser pemParser = new PEMParser(new FileReader(path.toFile()));
+    Object object = pemParser.readObject();
+    if (object instanceof X509CertificateHolder) {
+      return converter.getCertificate((X509CertificateHolder) object);
+    }
+    return null;
   }
 
   protected Optional<X509Certificate> loadCertificate(String subject) throws IOException, CertificateException {
@@ -868,6 +1052,15 @@ public class PKI {
       throw new CRLException("CRL for " + type + " is not present");
     }
     return crlConverter.getCRL(new X509CRLHolder(maybeCrl.get().getCrl()));
+  }
+
+  private X509CRL loadCRL(Path path) throws IOException, CRLException {
+    PEMParser pemParser = new PEMParser(new FileReader(path.toFile()));
+    Object object = pemParser.readObject();
+    if (object instanceof X509CRLHolder) {
+      return crlConverter.getCRL((X509CRLHolder) object);
+    }
+    return null;
   }
 
   protected X509CRL addRevocationToCRL(CAType caType, X509Certificate certificate)

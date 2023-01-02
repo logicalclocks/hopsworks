@@ -20,7 +20,6 @@ import io.hops.hopsworks.ca.configuration.CAConf;
 import io.hops.hopsworks.ca.configuration.CAConfiguration;
 import io.hops.hopsworks.ca.configuration.CAsConfiguration;
 import io.hops.hopsworks.ca.configuration.KubeCAConfiguration;
-import io.hops.hopsworks.ca.configuration.SubjectAlternativeName;
 import io.hops.hopsworks.persistence.entity.pki.CAType;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -35,9 +34,6 @@ import org.mockito.Mockito;
 
 import java.security.KeyPair;
 import java.security.cert.CertificateException;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 
 import static io.hops.hopsworks.ca.controllers.PKI.EMPTY_CONFIGURATION;
 
@@ -104,6 +100,7 @@ public class TestPKI extends PKIMocking {
     PKI realPki = new PKI();
     PKI pki = Mockito.spy(realPki);
 
+    Mockito.doReturn(false).when(pki).loadFromFile();
     Mockito.doNothing().when(pki).initializeCertificateAuthorities();
     pki.maybeInitializeCA();
     pki.maybeInitializeCA();
@@ -126,6 +123,9 @@ public class TestPKI extends PKIMocking {
   public void testInitializeCertificateAuthorities() throws Exception {
     PKI realPKI = new PKI();
     PKI pki = Mockito.spy(realPKI);
+    CAConf conf = Mockito.mock(CAConf.class);
+    Mockito.when(conf.getBoolean(CAConf.CAConfKeys.KUBERNETES)).thenReturn(true);
+    pki.setCaConf(conf);
     Mockito.doNothing().when(pki).caInitializeSerialNumber(Mockito.any());
     Mockito.doNothing().when(pki).caInitializeKeys(Mockito.any());
     Mockito.doNothing().when(pki).caInitializeCertificate(Mockito.any());
@@ -137,6 +137,45 @@ public class TestPKI extends PKIMocking {
     Mockito.verify(pki, Mockito.times(CAType.values().length)).caInitializeKeys(Mockito.any());
     Mockito.verify(pki, Mockito.times(CAType.values().length)).caInitializeCertificate(Mockito.any());
     Mockito.verify(pki, Mockito.times(CAType.values().length)).caInitializeCRL(Mockito.any());
+  }
+
+  @Test
+  public void testInitializeCertificateAuthoritiesNoKubernetes() throws Exception {
+    PKI realPKI = new PKI();
+    PKI pki = Mockito.spy(realPKI);
+    CAConf conf = Mockito.mock(CAConf.class);
+    Mockito.when(conf.getBoolean(CAConf.CAConfKeys.KUBERNETES)).thenReturn(false);
+    pki.setCaConf(conf);
+    Mockito.doNothing().when(pki).caInitializeSerialNumber(Mockito.any());
+    Mockito.doNothing().when(pki).caInitializeKeys(Mockito.any());
+    Mockito.doNothing().when(pki).caInitializeCertificate(Mockito.any());
+    Mockito.doNothing().when(pki).caInitializeCRL(Mockito.any());
+
+    pki.initializeCertificateAuthorities();
+
+    Mockito.verify(pki, Mockito.times(CAType.values().length - 1))
+        .caInitializeSerialNumber(Mockito.any());
+    Mockito.verify(pki, Mockito.times(CAType.values().length - 1))
+        .caInitializeKeys(Mockito.any());
+    Mockito.verify(pki, Mockito.times(CAType.values().length - 1))
+        .caInitializeCertificate(Mockito.any());
+    Mockito.verify(pki, Mockito.times(CAType.values().length - 1))
+        .caInitializeCRL(Mockito.any());
+
+    Mockito.verify(pki).caInitializeCertificate(Mockito.eq(CAType.ROOT));
+    Mockito.verify(pki).caInitializeKeys(Mockito.eq(CAType.ROOT));
+    Mockito.verify(pki).caInitializeCertificate(Mockito.eq(CAType.ROOT));
+    Mockito.verify(pki).caInitializeCRL(Mockito.eq(CAType.ROOT));
+
+    Mockito.verify(pki).caInitializeCertificate(Mockito.eq(CAType.INTERMEDIATE));
+    Mockito.verify(pki).caInitializeKeys(Mockito.eq(CAType.INTERMEDIATE));
+    Mockito.verify(pki).caInitializeCertificate(Mockito.eq(CAType.INTERMEDIATE));
+    Mockito.verify(pki).caInitializeCRL(Mockito.eq(CAType.INTERMEDIATE));
+
+    Mockito.verify(pki, Mockito.never()).caInitializeCertificate(Mockito.eq(CAType.KUBECA));
+    Mockito.verify(pki, Mockito.never()).caInitializeKeys(Mockito.eq(CAType.KUBECA));
+    Mockito.verify(pki, Mockito.never()).caInitializeCertificate(Mockito.eq(CAType.KUBECA));
+    Mockito.verify(pki, Mockito.never()).caInitializeCRL(Mockito.eq(CAType.KUBECA));
   }
 
   @Test

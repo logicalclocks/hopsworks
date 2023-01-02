@@ -149,6 +149,7 @@ public class TestPKICertificate {
     PKI realPki = new PKI();
     PKI pki = Mockito.spy(realPki);
     Mockito.doReturn(EMPTY_CONFIGURATION).when(pki).loadConfiguration();
+    Mockito.doReturn(false).when(pki).loadFromFile();
     pki.setSerialNumberFacade(snFacadeMock);
     pki.init();
 
@@ -196,6 +197,7 @@ public class TestPKICertificate {
         .thenReturn(1L);
     PKI pki = Mockito.spy(realPKI);
     pki.setSerialNumberFacade(snFacadeMock);
+    Mockito.doReturn(false).when(pki).loadFromFile();
     Mockito.doReturn(EMPTY_CONFIGURATION).when(pki).loadConfiguration();
     pki.init();
 
