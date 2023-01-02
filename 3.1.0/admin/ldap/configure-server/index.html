@@ -1267,16 +1267,16 @@ cluster definition used to deploy your hopsworks cluster.</p>
 <h2 id="server-configuration-for-ldap">Server Configuration for LDAP<a class="headerlink" href="#server-configuration-for-ldap" title="Permanent link">#</a></h2>
 <p>The LDAP attributes below are used to configure JNDI external resource in Payara. The JNDI resource will communicate 
 with your LDAP server to perform the authentication.</p>
-<div class="highlight"><pre><span></span><code><span class="nt">ldap</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
-<span class="w">    </span><span class="nt">jndilookupname</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;dc=hopsworks,dc=ai&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">provider_url</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ldap://193.10.66.104:1389&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">attr_binary_val</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;entryUUID&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">security_auth</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;none&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">security_principal</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">security_credentials</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">referral</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ignore&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">additional_props</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="nt">ldap</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">jndilookupname</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;dc=hopsworks,dc=ai&quot;</span>
+<span class="w">    </span><span class="nt">provider_url</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ldap://193.10.66.104:1389&quot;</span>
+<span class="w">    </span><span class="nt">attr_binary_val</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;entryUUID&quot;</span>
+<span class="w">    </span><span class="nt">security_auth</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;none&quot;</span>
+<span class="w">    </span><span class="nt">security_principal</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+<span class="w">    </span><span class="nt">security_credentials</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+<span class="w">    </span><span class="nt">referral</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ignore&quot;</span>
+<span class="w">    </span><span class="nt">additional_props</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
 </code></pre></div>
 <ul>
 <li>jndilookupname: should contain the LDAP domain.</li>
@@ -1290,21 +1290,21 @@ with your LDAP server to perform the authentication.</p>
 <p>The Kerberos attributes are used to configure <a href="http://spnego.sourceforge.net/">SPNEGO</a>.
 SPNEGO is used to establish a secure context between the requester and the application server when using Kerberos 
 authentication.  </p>
-<div class="highlight"><pre><span></span><code><span class="nt">kerberos</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
-<span class="w">    </span><span class="nt">krb_conf_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/etc/krb5.conf&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">krb_server_key_tab_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/etc/security/keytabs/service.keytab&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">krb_server_key_tab_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;service.keytab&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">spnego_server_conf</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;\nuseKeyTab=true\nprincipal=\&quot;HTTP/server.hopsworks.ai@HOPSWORKS.AI\&quot;\nstoreKey=true\nisInitiator=false&#39;</span><span class="w"></span>
-<span class="nt">ldap</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">jndilookupname</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;dc=hopsworks,dc=ai&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">provider_url</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ldap://193.10.66.104:1389&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">attr_binary_val</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;objectGUID&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">security_auth</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;none&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">security_principal</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">security_credentials</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">referral</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ignore&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">additional_props</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="nt">kerberos</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">krb_conf_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/etc/krb5.conf&quot;</span>
+<span class="w">    </span><span class="nt">krb_server_key_tab_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/etc/security/keytabs/service.keytab&quot;</span>
+<span class="w">    </span><span class="nt">krb_server_key_tab_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;service.keytab&quot;</span>
+<span class="w">    </span><span class="nt">spnego_server_conf</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;\nuseKeyTab=true\nprincipal=\&quot;HTTP/server.hopsworks.ai@HOPSWORKS.AI\&quot;\nstoreKey=true\nisInitiator=false&#39;</span>
+<span class="nt">ldap</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">jndilookupname</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;dc=hopsworks,dc=ai&quot;</span>
+<span class="w">    </span><span class="nt">provider_url</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ldap://193.10.66.104:1389&quot;</span>
+<span class="w">    </span><span class="nt">attr_binary_val</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;objectGUID&quot;</span>
+<span class="w">    </span><span class="nt">security_auth</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;none&quot;</span>
+<span class="w">    </span><span class="nt">security_principal</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+<span class="w">    </span><span class="nt">security_credentials</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+<span class="w">    </span><span class="nt">referral</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ignore&quot;</span>
+<span class="w">    </span><span class="nt">additional_props</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
 </code></pre></div>
 <p>Both Kerberos and LDAP attributes need to be specified to configure Kerberos. The LDAP attributes are explained above.</p>
 <ul>

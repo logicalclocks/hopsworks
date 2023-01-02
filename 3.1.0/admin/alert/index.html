@@ -1363,13 +1363,13 @@ you can also configure alerts by editing the <em>yaml/json</em> file directly.  
 
 <p><em>Example:</em> Adding the yaml snippet shown below in the global section of the alert manager configuration will
 have the same effect as creating the SMTP configuration as shown in <a href="#1-email-alerts">section 1</a> above.</p>
-<div class="highlight"><pre><span></span><code><span class="nt">global</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">smtp_smarthost</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smtp.gmail.com:587</span><span class="w"></span>
-<span class="w">    </span><span class="nt">smtp_from</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hopsworks@gmail.com</span><span class="w"></span>
-<span class="w">    </span><span class="nt">smtp_auth_username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hopsworks@gmail.com</span><span class="w"></span>
-<span class="w">    </span><span class="nt">smtp_auth_password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">XXXXXXXXX</span><span class="w"></span>
-<span class="w">    </span><span class="nt">smtp_auth_identity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hopsworks@gmail.com</span><span class="w"></span>
-<span class="w w-Error"> </span><span class="l l-Scalar l-Scalar-Plain">...</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="nt">global</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">smtp_smarthost</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smtp.gmail.com:587</span>
+<span class="w">    </span><span class="nt">smtp_from</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hopsworks@gmail.com</span>
+<span class="w">    </span><span class="nt">smtp_auth_username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hopsworks@gmail.com</span>
+<span class="w">    </span><span class="nt">smtp_auth_password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">XXXXXXXXX</span>
+<span class="w">    </span><span class="nt">smtp_auth_identity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hopsworks@gmail.com</span>
+<span class="w w-Error"> </span><span class="l l-Scalar l-Scalar-Plain">...</span>
 </code></pre></div>
 <p>To test the alerts by creating triggers from Jobs and Feature group validations see <a href="../../compute/alerts/">Alerts</a>.</p>
 
