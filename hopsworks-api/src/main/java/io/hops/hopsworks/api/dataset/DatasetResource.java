@@ -40,6 +40,8 @@ import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
+import io.hops.hopsworks.common.util.LongRunningHttpRequests;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -118,6 +120,10 @@ public class DatasetResource {
   private DatasetTagsResource tagsResource;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private LongRunningHttpRequests longRunningHttpRequests;
+  @EJB
+  private Settings settings;
 
   private Integer projectId;
   private String projectName;
@@ -297,16 +303,40 @@ public class DatasetResource {
           return Response.created(dto.getHref()).entity(dto).build();
         }
       case COPY:
-        datasetPath = datasetHelper.getDatasetPathIfFileExist(project, path, datasetType);
-        distDatasetPath = datasetHelper.getDatasetPath(project, destPath, destDatasetType);
-        datasetController.copy(project, user, datasetPath.getFullPath(), distDatasetPath.getFullPath(),
+        // Until copy is made async
+        if (longRunningHttpRequests.get() >= settings.getMaxLongRunningHttpRequests()) {
+          LOGGER.log(Level.INFO, "The maximum number of allowed copy operations exceeded. {0}",
+            longRunningHttpRequests.get());
+          throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_INVALID, Level.FINE,
+            "The maximum number of allowed copy operations exceeded. Please try again later.");
+        }
+        try {
+          longRunningHttpRequests.increment();
+          datasetPath = datasetHelper.getDatasetPathIfFileExist(project, path, datasetType);
+          distDatasetPath = datasetHelper.getDatasetPath(project, destPath, destDatasetType);
+          datasetController.copy(project, user, datasetPath.getFullPath(), distDatasetPath.getFullPath(),
             datasetPath.getDataset(), distDatasetPath.getDataset());
+        } finally {
+          longRunningHttpRequests.decrement();
+        }
         break;
       case MOVE:
-        datasetPath = datasetHelper.getDatasetPathIfFileExist(project, path, datasetType);
-        distDatasetPath = datasetHelper.getDatasetPath(project, destPath, destDatasetType);
-        datasetController.move(project, user, datasetPath.getFullPath(), distDatasetPath.getFullPath(),
+        // Until move is made async
+        if (longRunningHttpRequests.get() >= settings.getMaxLongRunningHttpRequests()) {
+          LOGGER.log(Level.INFO, "The maximum number of allowed move operations exceeded. {0}",
+            longRunningHttpRequests.get());
+          throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_INVALID, Level.FINE,
+            "The maximum number of allowed move operations exceeded. Please try again later.");
+        }
+        longRunningHttpRequests.increment();
+        try {
+          datasetPath = datasetHelper.getDatasetPathIfFileExist(project, path, datasetType);
+          distDatasetPath = datasetHelper.getDatasetPath(project, destPath, destDatasetType);
+          datasetController.move(project, user, datasetPath.getFullPath(), distDatasetPath.getFullPath(),
             datasetPath.getDataset(), distDatasetPath.getDataset());
+        } finally {
+          longRunningHttpRequests.decrement();
+        }
         break;
       case SHARE:
         checkIfDataOwner(project, user);

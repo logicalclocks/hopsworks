@@ -373,6 +373,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_GIT_COMMAND_TIMEOUT_MINUTES_DEFAULT = "git_command_timeout_minutes";
   private static final String VARIABLE_ENABLE_GIT_READ_ONLY_REPOSITORIES = "enable_read_only_git_repositories";
 
+  private static final String VARIABLE_MAX_LONG_RUNNING_HTTP_REQUESTS = "max_allowed_long_running_http_requests";
 
   /*
    * ------------------ QUOTAS ------------------
@@ -908,6 +909,9 @@ public class Settings implements Serializable {
 
       ENABLE_JUPYTER_PYTHON_KERNEL_NON_KUBERNETES = setBoolVar(VARIABLE_ENABLE_JUPYTER_PYTHON_KERNEL_NON_KUBERNETES,
         ENABLE_JUPYTER_PYTHON_KERNEL_NON_KUBERNETES);
+  
+      MAX_LONG_RUNNING_HTTP_REQUESTS =
+        setIntVar(VARIABLE_MAX_LONG_RUNNING_HTTP_REQUESTS, MAX_LONG_RUNNING_HTTP_REQUESTS);
 
       cached = true;
     }
@@ -3980,5 +3984,13 @@ public class Settings implements Serializable {
   public synchronized Integer getSQLMaxSelectIn() {
     checkCache();
     return SQL_MAX_SELECT_IN;
+  }
+  
+  // The maximum number of http threads in the thread pool is set to 200 by default
+  private int MAX_LONG_RUNNING_HTTP_REQUESTS = 50;
+  
+  public synchronized int getMaxLongRunningHttpRequests() {
+    checkCache();
+    return MAX_LONG_RUNNING_HTTP_REQUESTS;
   }
 }
