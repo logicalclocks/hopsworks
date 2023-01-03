@@ -54,6 +54,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.project.ProjectController;
+import io.hops.hopsworks.common.util.LongRunningHttpRequests;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ProjectException;
@@ -80,14 +81,12 @@ import javax.ws.rs.GET;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -115,6 +114,8 @@ public class DownloadService {
   private DatasetController datasetController;
   @EJB
   private DatasetHelper datasetHelper;
+  @EJB
+  private LongRunningHttpRequests longRunningHttpRequests;
 
   public DownloadService() {
   }
@@ -148,9 +149,7 @@ public class DownloadService {
                                    @QueryParam("type") DatasetType datasetType,
                                    @Context HttpServletRequest req,
                                    @Context SecurityContext sc) throws DatasetException, ProjectException {
-    if(!settings.isDownloadAllowed()){
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_NOT_ALLOWED, Level.FINEST);
-    }
+    doCheck();
     Users user = jWTHelper.getUserPrincipal(sc);
     DatasetPath datasetPath = datasetHelper.getDatasetPathIfFileExist(this.getProject(), path, datasetType);
     Project owningProject = datasetController.getOwningProject(datasetPath.getDataset());
@@ -168,6 +167,7 @@ public class DownloadService {
       }
     }
     response.setErrorMsg(ResponseMessages.DOWNLOAD_PERMISSION_ERROR);
+
     return Response.status(Response.Status.FORBIDDEN).entity(response).build();
   }
 
@@ -176,23 +176,18 @@ public class DownloadService {
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
   @JWTNotRequired
   @ApiOperation(value = "Download file.", response = StreamingOutput.class)
-  public Response downloadFromHDFS(@PathParam("path") String path, @QueryParam("token") String token,
-    @QueryParam("type") DatasetType datasetType, @Context SecurityContext sc) throws DatasetException,
+  public Response downloadFromHDFS(@PathParam("path") String path,
+                                   @QueryParam("token") String token,
+                                   @QueryParam("type") DatasetType datasetType,
+                                   @Context HttpServletRequest req,
+                                   @Context SecurityContext sc) throws DatasetException,
     SigningKeyNotFoundException, VerificationException, ProjectException {
-    if(!settings.isDownloadAllowed()){
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_NOT_ALLOWED, Level.FINEST);
-    }
     Project project = this.getProject();
     DatasetPath datasetPath = datasetHelper.getDatasetPathIfFileExist(project, path, datasetType);
     String fullPath = datasetPath.getFullPath().toString();
     DecodedJWT djwt = jWTHelper.verifyOneTimeToken(token, fullPath);
     Users user = userFacade.findByUsername(djwt.getSubject());
-
-    Pair<Path, StreamingOutput> pathStreamPair = downloadFromHDFS(project, datasetPath, user);
-
-    Response.ResponseBuilder response = Response.ok(pathStreamPair.getValue1());
-    response.header("Content-disposition", "attachment; filename=\"" + pathStreamPair.getValue0().getName() + "\"");
-    return response.build();
+    return download(project, datasetPath, user);
   }
 
   @GET
@@ -208,18 +203,30 @@ public class DownloadService {
                                    @QueryParam("type") DatasetType datasetType,
                                    @Context HttpServletRequest req,
                                    @Context SecurityContext sc) throws DatasetException, ProjectException {
-    if (!settings.isDownloadAllowed()) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_NOT_ALLOWED, Level.FINEST);
-    }
     Project project = this.getProject();
     DatasetPath datasetPath = datasetHelper.getDatasetPathIfFileExist(project, path, datasetType);
     Users user = jWTHelper.getUserPrincipal(sc);
+    return download(project, datasetPath, user);
+  }
 
+  private Response download(Project project, DatasetPath datasetPath, Users user) throws DatasetException {
+    doCheck();
     Pair<Path, StreamingOutput> pathStreamPair = downloadFromHDFS(project, datasetPath, user);
-
     Response.ResponseBuilder response = Response.ok(pathStreamPair.getValue1());
     response.header("Content-disposition", "attachment; filename=\"" + pathStreamPair.getValue0().getName() + "\"");
     return response.build();
+  }
+
+  private void doCheck() throws DatasetException {
+    if (!settings.isDownloadAllowed()) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_NOT_ALLOWED, Level.FINEST);
+    }
+    if (longRunningHttpRequests.get() >= settings.getMaxLongRunningHttpRequests()) {
+      LOGGER.log(Level.INFO, "The maximum number of allowed download operations exceeded. {0}",
+        longRunningHttpRequests.get());
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_INVALID, Level.FINE,
+        "The maximum number of allowed download operations exceeded. Please try again later.");
+    }
   }
 
   /**
@@ -246,7 +253,7 @@ public class DownloadService {
         udfso = dfs.getDfsOps(projectUsername);
         Path p = new Path(fullPath);
         stream = udfso.open(p);
-        return new Pair(p, buildOutputStream(stream, udfso));
+        return new Pair<>(p, buildOutputStream(stream, udfso));
 
       } else {
         throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.WARNING);
@@ -263,27 +270,22 @@ public class DownloadService {
    * @param stream
    * @return
    */
-  private StreamingOutput buildOutputStream(final FSDataInputStream stream,
-      final DistributedFileSystemOps udfso) {
-    StreamingOutput output = new StreamingOutput() {
-      @Override
-      public void write(OutputStream out) throws IOException,
-          WebApplicationException {
-        try {
-          int length;
-          byte[] buffer = new byte[1024];
-          while ((length = stream.read(buffer)) != -1) {
-            out.write(buffer, 0, length);
-          }
-          out.flush();
-          stream.close();
-        } finally {
-          dfs.closeDfsClient(udfso);
+  private StreamingOutput buildOutputStream(final FSDataInputStream stream, final DistributedFileSystemOps udfso) {
+    return out -> {
+      longRunningHttpRequests.increment();
+      try {
+        int length;
+        byte[] buffer = new byte[1024];
+        while ((length = stream.read(buffer)) != -1) {
+          out.write(buffer, 0, length);
         }
+        out.flush();
+        stream.close();
+      } finally {
+        longRunningHttpRequests.decrement();
+        dfs.closeDfsClient(udfso);
       }
     };
-
-    return output;
   }
 
 }
