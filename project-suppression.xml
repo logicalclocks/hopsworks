@@ -201,4 +201,14 @@
     <packageUrl regex="true">^pkg:maven/org\.yaml/snakeyaml@1\.27$</packageUrl>
     <cve>CVE-2022-1471</cve>
   </suppress>
+  <suppress>
+    <notes><![CDATA[file name: flatbuffers-1.2.0-3f79e055.jar]]></notes>
+    <packageUrl regex="true">^pkg:maven/com\.vlkan/flatbuffers@.*$</packageUrl>
+    <cve>CVE-2020-36632</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[file name: flatbuffers-java-1.9.0.jar]]></notes>
+    <packageUrl regex="true">^pkg:maven/com\.google\.flatbuffers/flatbuffers-java@.*$</packageUrl>
+    <cve>CVE-2020-36632</cve>
+  </suppress>
 </suppressions>
