@@ -86,9 +86,9 @@ module TagHelper
   end
 
 
-  def add_featuregroup_tag_checked(project_id, featuregroup_id, name, value, featurestore_id: nil)
+  def add_featuregroup_tag_checked(project_id, featuregroup_id, name, value, featurestore_id: nil, status: 201)
     add_featuregroup_tag(project_id, featuregroup_id, name, value, featurestore_id: featurestore_id)
-    expect_status_details(201)
+    expect_status_details(status)
   end
 
   def update_featuregroup_tag_checked(project_id, featuregroup_id, name, value, featurestore_id: nil)
@@ -150,9 +150,9 @@ module TagHelper
     expect_status_details(200)
   end
 
-  def add_training_dataset_tag_checked(project_id, training_dataset_id, name, value, featurestore_id: nil)
+  def add_training_dataset_tag_checked(project_id, training_dataset_id, name, value, featurestore_id: nil, status: 201)
     add_training_dataset_tag(project_id, training_dataset_id, name, value, featurestore_id: featurestore_id)
-    expect_status_details(201)
+    expect_status_details(status)
   end
 
   def update_training_dataset_tag_checked(project_id, training_dataset_id, name, value, featurestore_id: nil)
@@ -215,10 +215,10 @@ module TagHelper
   end
 
   def add_featureview_tag_checked(project_id, featureview_name, featureview_version, name, value,
-                                  featurestore_id: nil, featurestore_project_id: nil)
+                                  featurestore_id: nil, featurestore_project_id: nil, status: 201)
     add_featureview_tag(project_id, featureview_name, featureview_version, name, value,
                         featurestore_id: featurestore_id, featurestore_project_id: featurestore_project_id)
-    expect_status_details(201)
+    expect_status_details(status)
   end
 
   def add_featureview_tag(project_id, featureview_name, featureview_version, name,
@@ -279,9 +279,9 @@ module TagHelper
     expect_status_details(200)
   end
 
-  def add_featureview_training_dataset_tag_checked(project_id, featureview_name, featureview_version, training_dataset_version, name, value, featurestore_id: nil)
+  def add_featureview_training_dataset_tag_checked(project_id, featureview_name, featureview_version, training_dataset_version, name, value, featurestore_id: nil, status: 201)
     add_featureview_training_dataset_tag(project_id, featureview_name, featureview_version, training_dataset_version, name, value, featurestore_id: featurestore_id)
-    expect_status_details(201)
+    expect_status_details(status)
   end
 
   def update_featureview_training_dataset_tag_checked(project_id, featureview_name, featureview_version, training_dataset_version, name, value, featurestore_id: nil)
@@ -343,9 +343,9 @@ module TagHelper
     put path, value
   end
 
-  def add_model_tag_checked(project_id, registry_id, model_id, name, value)
+  def add_model_tag_checked(project_id, registry_id, model_id, name, value, status: 201)
     add_model_tag(project_id, registry_id, model_id, name, value)
-    expect_status_details(201)
+    expect_status_details(status)
   end
 
   def delete_model_tag(project_id, registry_id, model_id, tag)

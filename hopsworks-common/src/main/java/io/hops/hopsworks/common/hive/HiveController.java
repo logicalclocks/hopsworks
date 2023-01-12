@@ -189,7 +189,7 @@ public class HiveController {
     Inode dbInode = inodeController.getInodeAtPath(dbPath.toString());
 
     // Persist Hive db as dataset in the Hopsworks database
-    // Make the dataset editable by default
+    // Make the dataset editable by owners by default
     Dataset dbDataset = new Dataset(dbInode, project, DatasetAccessPermission.EDITABLE_BY_OWNERS);
     dbDataset.setDsType(datasetType);
     dbDataset.setSearchable(true);

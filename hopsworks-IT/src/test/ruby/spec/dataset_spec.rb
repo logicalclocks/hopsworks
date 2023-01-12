@@ -859,7 +859,7 @@ describe "On #{ENV['OS']}" do
         before :all do
           @dsname = "dataset_#{short_random_id}"
           create_dataset_by_name_checked(@project1, @dsname)
-          share_dataset_checked(@project1, @dsname, @project2[:projectname], datasetType: "DATASET")
+          share_dataset_checked(@project1, @dsname, @project2[:projectname], permission: "EDITABLE", datasetType: "DATASET")
           accept_dataset_checked(@project2, "#{@project1[:projectname]}::#{@dsname}", datasetType: "DATASET")
           update_dataset_permissions_checked(@project1, @dsname, "EDITABLE")
         end

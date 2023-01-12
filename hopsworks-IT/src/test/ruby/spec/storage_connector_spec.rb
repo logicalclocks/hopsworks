@@ -189,7 +189,7 @@ describe "On #{ENV['OS']}" do
           # logi with user for project and share dataset
           create_session(project[:username], "Pass123")
           featurestore = "#{@project[:projectname].downcase}_featurestore.db"
-          share_dataset(@project, featurestore, project1[:projectname], permission: "EDITABLE", datasetType: "&type=FEATURESTORE")
+          share_dataset(@project, featurestore, project1[:projectname], datasetType: "&type=FEATURESTORE")
           reset_session
           #login with user for project 1 and accept dataset
           create_session(project1[:username],"Pass123")
@@ -823,7 +823,7 @@ describe "On #{ENV['OS']}" do
         # login with user for project and share dataset
         create_session(project[:username], "Pass123")
         featurestore = "#{@project[:projectname].downcase}_featurestore.db"
-        share_dataset(@project, featurestore, project1[:projectname], permission: "EDITABLE", datasetType: "&type=FEATURESTORE")
+        share_dataset(@project, featurestore, project1[:projectname], datasetType: "&type=FEATURESTORE")
         reset_session
         #login with user for project 1 and accept dataset
         create_session(project1[:username],"Pass123")

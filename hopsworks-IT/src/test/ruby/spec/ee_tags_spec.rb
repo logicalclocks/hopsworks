@@ -701,7 +701,7 @@ describe "On #{ENV['OS']}" do
       end
 
       context 'featuregroup' do
-        it "should be able to attach/read schematized tag to shared featuregroup" do
+        it "should not be able to attach schematized tag to shared featuregroup" do
           create_session(@user1[:email], @user1_params[:password])
           fs_id = get_featurestores_checked(@project1[:id])[0]["featurestoreId"]
           json_result, _ = create_cached_featuregroup(@project1[:id], fs_id)
@@ -709,13 +709,23 @@ describe "On #{ENV['OS']}" do
           tag_val = schematized_tag_val
 
           create_session(@user2[:email], @user2_params[:password])
-          add_featuregroup_tag_checked(@project2[:id], fg["id"], @pre_schematized_tags[0], tag_val, featurestore_id: fs_id)
+          add_featuregroup_tag_checked(@project2[:id], fg["id"], @pre_schematized_tags[0], tag_val, featurestore_id: fs_id, status: 500)
+        end
+        it "should be able to read schematized tag to shared featuregroup" do
+          create_session(@user1[:email], @user1_params[:password])
+          fs_id = get_featurestores_checked(@project1[:id])[0]["featurestoreId"]
+          json_result, _ = create_cached_featuregroup(@project1[:id], fs_id)
+          fg = JSON.parse(json_result)
+          tag_val = schematized_tag_val
+          add_featuregroup_tag_checked(@project1[:id], fg["id"], @pre_schematized_tags[0], tag_val, featurestore_id: fs_id)
+
+          create_session(@user2[:email], @user2_params[:password])
           get_featuregroup_tags_checked(@project2[:id], fg["id"], fs_id: fs_id)
           tags = json_body
           expect(tags[:count]).to eq(1)
           tag = tags[:items].select do |item| item[:name] == @pre_schematized_tags[0] end
           expect(tag.length).to eq(1)
-
+          
           create_session(@user1[:email], @user1_params[:password])
           get_featuregroup_tags_checked(@project1[:id], fg["id"])
           tags = json_body
@@ -725,7 +735,7 @@ describe "On #{ENV['OS']}" do
         end
       end
       context 'training dataset' do
-        it "should be able to attach/read schematized tag to shared training dataset" do
+        it "should not be able to attach schematized tag to shared training dataset" do
           create_session(@user1[:email], @user1_params[:password])
           fs_id = get_featurestores_checked(@project1[:id])[0]["featurestoreId"]
           connector = get_hopsfs_training_datasets_connector(@project1[:projectname])
@@ -734,13 +744,24 @@ describe "On #{ENV['OS']}" do
           tag_val = schematized_tag_val
 
           create_session(@user2[:email], @user2_params[:password])
-          add_training_dataset_tag_checked(@project2[:id], td["id"], @pre_schematized_tags[0], tag_val, featurestore_id: fs_id)
+          add_training_dataset_tag_checked(@project2[:id], td["id"], @pre_schematized_tags[0], tag_val, featurestore_id: fs_id, status: 500)
+        end
+        it "should be read to attach schematized tag to shared training dataset" do
+          create_session(@user1[:email], @user1_params[:password])
+          fs_id = get_featurestores_checked(@project1[:id])[0]["featurestoreId"]
+          connector = get_hopsfs_training_datasets_connector(@project1[:projectname])
+          json_result, _ = create_hopsfs_training_dataset(@project1[:id], fs_id, connector)
+          td = JSON.parse(json_result)
+          tag_val = schematized_tag_val
+          add_training_dataset_tag_checked(@project1[:id], td["id"], @pre_schematized_tags[0], tag_val, featurestore_id: fs_id)
+
+          create_session(@user2[:email], @user2_params[:password])
           get_training_dataset_tags_checked(@project2[:id], td["id"], fs_id: fs_id)
           tags = json_body
           expect(tags[:count]).to eq(1)
           tag = tags[:items].select do |item| item[:name] == @pre_schematized_tags[0] end
           expect(tag.length).to eq(1)
-
+          
           create_session(@user1[:email], @user1_params[:password])
           get_training_dataset_tags_checked(@project1[:id], td["id"])
           tags = json_body
@@ -750,7 +771,7 @@ describe "On #{ENV['OS']}" do
         end
       end
       context 'featureview' do
-        it "should be able to attach/read schematized tag to shared featureview" do
+        it "should not be able to attach schematized tag to shared featureview" do
           create_session(@user1[:email], @user1_params[:password])
           
           featurestore_id = get_featurestore_id(@project1.id)
@@ -766,7 +787,25 @@ describe "On #{ENV['OS']}" do
           tag_val = schematized_tag_val
 
           create_session(@user2[:email], @user2_params[:password])
-          add_featureview_tag_checked(@project2[:id], featureview_name, featureview_version, @pre_schematized_tags[0], tag_val, featurestore_id: featurestore_id)
+          add_featureview_tag_checked(@project2[:id], featureview_name, featureview_version, @pre_schematized_tags[0], tag_val, featurestore_id: featurestore_id, status: 500)
+        end
+        it "should be able to read schematized tag to shared featureview" do
+          create_session(@user1[:email], @user1_params[:password])
+          
+          featurestore_id = get_featurestore_id(@project1.id)
+          
+          json_result, fg_name = create_cached_featuregroup(@project1.id, featurestore_id, online:true)
+          parsed_json = JSON.parse(json_result)
+          
+          json_result = create_feature_view_from_feature_group(@project1.id, featurestore_id, parsed_json)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          featureview_name = parsed_json["name"]
+          featureview_version = parsed_json["version"]
+          tag_val = schematized_tag_val
+          add_featureview_tag_checked(@project1[:id], featureview_name, featureview_version, @pre_schematized_tags[0], tag_val, featurestore_id: featurestore_id)
+
+          create_session(@user2[:email], @user2_params[:password])
           get_featureview_tags_checked(@project2[:id], featureview_name, featureview_version, fs_id: featurestore_id)
           tags = json_body
           expect(tags[:count]).to eq(1)
@@ -782,7 +821,7 @@ describe "On #{ENV['OS']}" do
         end
       end
       context 'featureview training dataset' do
-        it "should be able to attach/read schematized tag to shared featureview training dataset" do
+        it "should not be able to attach schematized tag to shared featureview training dataset" do
           create_session(@user1[:email], @user1_params[:password])
 
           featurestore_id = get_featurestore_id(@project1.id)
@@ -794,7 +833,21 @@ describe "On #{ENV['OS']}" do
           tag_val = schematized_tag_val
 
           create_session(@user2[:email], @user2_params[:password])
-          add_featureview_training_dataset_tag_checked(@project2[:id], featureview["name"], featureview["version"], parsed_json["version"], @pre_schematized_tags[0], tag_val, featurestore_id: featurestore_id)
+          add_featureview_training_dataset_tag_checked(@project2[:id], featureview["name"], featureview["version"], parsed_json["version"], @pre_schematized_tags[0], tag_val, featurestore_id: featurestore_id, status: 500)
+        end
+        it "should be able to read schematized tag to shared featureview training dataset" do
+          create_session(@user1[:email], @user1_params[:password])
+
+          featurestore_id = get_featurestore_id(@project1.id)
+
+          all_metadata = create_featureview_training_dataset_from_project(@project1)
+          parsed_json = all_metadata["response"]
+          featureview = all_metadata["featureView"]
+          expect_status_details(201)
+          tag_val = schematized_tag_val
+          add_featureview_training_dataset_tag_checked(@project1[:id], featureview["name"], featureview["version"], parsed_json["version"], @pre_schematized_tags[0], tag_val, featurestore_id: featurestore_id)
+
+          create_session(@user2[:email], @user2_params[:password])
           get_featureview_training_dataset_tags_checked(@project2[:id], featureview["name"], featureview["version"], parsed_json["version"], featurestore_id: featurestore_id)
           tags = json_body
           expect(tags[:count]).to eq(1)
@@ -950,14 +1003,23 @@ describe "On #{ENV['OS']}" do
         delete_project(@project2)
       end
       context 'model' do
-        it "should be able to attach/read schematized tag to shared model" do
+        it "should not be able to attach schematized tag to shared model" do
           create_session(@user1[:email], @user1_params[:password])
           json_result = create_model(@project1, @project1[:projectname], @project1[:id], "model", 1)
           model = JSON.parse(json_result)
           tag_val = schematized_tag_val
 
           create_session(@user2[:email], @user2_params[:password])
-          add_model_tag_checked(@project2[:id], @project1[:id], model["id"], @pre_schematized_tags[0], tag_val)
+          add_model_tag_checked(@project2[:id], @project1[:id], model["id"], @pre_schematized_tags[0], tag_val, status: 500)
+        end
+        it "should be able to read schematized tag to shared model" do
+          create_session(@user1[:email], @user1_params[:password])
+          json_result = create_model(@project1, @project1[:projectname], @project1[:id], "model", 2)
+          model = JSON.parse(json_result)
+          tag_val = schematized_tag_val
+          add_model_tag_checked(@project1[:id], @project1[:id], model["id"], @pre_schematized_tags[0], tag_val)
+
+          create_session(@user2[:email], @user2_params[:password])
           get_model_tags_checked(@project2[:id], @project1[:id], model["id"])
           tags = json_body
           expect(tags[:count]).to eq(1)
@@ -1312,14 +1374,24 @@ describe "On #{ENV['OS']}" do
         delete_project(@project2)
       end
 
-      it "should be able to attach/read schematized tags to datasets" do
+      it "should not be able to attach schematized tags to datasets" do
         path="#{@dataset1[:inode_name]}"
         shared_path="#{@project1[:projectname]}::#{@dataset1[:inode_name]}"
 
         create_session(@user1[:email], @user1_params[:password])
         tag_val = schematized_tag_val
         create_session(@user2[:email], @user2_params[:password])
-        add_dataset_tag_checked(@project2[:id], shared_path, @pre_schematized_tags[0], tag_val)
+        add_dataset_tag_checked(@project2[:id], shared_path, @pre_schematized_tags[0], tag_val, status: 500)
+      end
+      it "should be able to read schematized tags to datasets" do
+        path="#{@dataset1[:inode_name]}"
+        shared_path="#{@project1[:projectname]}::#{@dataset1[:inode_name]}"
+
+        create_session(@user1[:email], @user1_params[:password])
+        tag_val = schematized_tag_val
+        add_dataset_tag_checked(@project1[:id], shared_path, @pre_schematized_tags[0], tag_val)
+
+        create_session(@user2[:email], @user2_params[:password])
         get_dataset_tags_checked(@project2[:id], shared_path)
         tags = JSON.parse(json_body.to_json)
         expect(tags["href"]).to eq(get_dataset_tags_full_query(@project2[:id], shared_path))
@@ -1337,14 +1409,24 @@ describe "On #{ENV['OS']}" do
         expect(tag.length).to eq(1)
         expect(tag[0]["href"]).to eq(get_dataset_tag_full_query(@project1[:id], path, @pre_schematized_tags[0]))
       end
-      it "should be able to attach/read schematized tags to files" do
+      it "should not be able to attach schematized tags to files" do
         dir_path = "#{@dataset1[:inode_name]}/#{@dir_name}"
         shared_dir_path = "#{@project1[:projectname]}::#{@dataset1[:inode_name]}/#{@dir_name}"
 
         create_session(@user1[:email], @user1_params[:password])
         tag_val = schematized_tag_val
         create_session(@user2[:email], @user2_params[:password])
-        add_dataset_tag_checked(@project2[:id], shared_dir_path, @pre_schematized_tags[0], tag_val)
+        add_dataset_tag_checked(@project2[:id], shared_dir_path, @pre_schematized_tags[0], tag_val, status: 500)
+      end
+      it "should be able to read schematized tags to files" do
+        dir_path = "#{@dataset1[:inode_name]}/#{@dir_name}"
+        shared_dir_path = "#{@project1[:projectname]}::#{@dataset1[:inode_name]}/#{@dir_name}"
+
+        create_session(@user1[:email], @user1_params[:password])
+        tag_val = schematized_tag_val
+        add_dataset_tag_checked(@project1[:id], shared_dir_path, @pre_schematized_tags[0], tag_val)
+
+        create_session(@user2[:email], @user2_params[:password])
         get_dataset_tags_checked(@project2[:id], shared_dir_path)
         tags = JSON.parse(json_body.to_json)
         expect(tags["href"]).to eq(get_dataset_tags_full_query(@project2[:id], shared_dir_path))

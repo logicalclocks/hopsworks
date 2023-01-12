@@ -168,7 +168,7 @@ module DatasetHelper
         if accepted
           request_access_by_name(project, dsname, @project)
         end
-        share_dataset(project, dsname, @project[:projectname], permission: "EDITABLE", datasetType: "")
+        share_dataset(project, dsname, @project[:projectname], datasetType: "")
       end
     end
 
@@ -249,12 +249,12 @@ module DatasetHelper
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=move&destination_path=#{destination_path}#{datasetType}"
   end
 
-  def share_dataset(project, path, target_project, permission: "EDITABLE", datasetType: "", expected_status: nil)
+  def share_dataset(project, path, target_project, permission: "READ_ONLY", datasetType: "", expected_status: nil)
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=share&target_project=#{target_project}&permission=#{permission}#{datasetType}"
     expect_status_details(expected_status) unless expected_status.nil?
   end
 
-  def share_dataset_checked(project, path, target_project, permission: "EDITABLE", datasetType: "DATASET")
+  def share_dataset_checked(project, path, target_project, permission: "READ_ONLY", datasetType: "DATASET")
     query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=share&target_project=#{target_project}&permission=#{permission}&type=#{datasetType}"
     pp "#{query}" if defined?(@debugOpt) && @debugOpt == true
     post "#{query}"

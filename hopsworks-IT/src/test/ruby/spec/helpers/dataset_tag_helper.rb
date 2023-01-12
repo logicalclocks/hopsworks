@@ -61,9 +61,9 @@ module DatasetTagHelper
     put path, value
   end
 
-  def add_dataset_tag_checked(project_id, path, key, value, dataset_type: "DATASET")
+  def add_dataset_tag_checked(project_id, path, key, value, dataset_type: "DATASET", status: 201)
     add_dataset_tag(project_id, path, key, value, dataset_type: dataset_type)
-    expect_status_details(201)
+    expect_status_details(status)
   end
 
   def update_dataset_tag_checked(project_id, path, key, value)

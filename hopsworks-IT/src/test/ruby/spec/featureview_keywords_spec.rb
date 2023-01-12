@@ -252,14 +252,12 @@ describe "On #{ENV['OS']}" do
       # User2 should be able to set keywords for the feature group in the shared feature store
       post "#{ENV['HOPSWORKS_API']}/project/#{@project2.id}/featurestores/#{featurestore_id}/featureview/#{feature_view_name}/version/#{feature_view_version}/keywords",
           {keywords: ['hello', 'this', 'keyword123']}.to_json
-      expect_status_details(200)
+      expect_status_details(500)
 
       json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project2.id}/featurestores/#{featurestore_id}/featureview/#{feature_view_name}/version/#{feature_view_version}/keywords"
       expect_status_details(200)
       parsed_json = JSON.parse(json_result)
-      expect(parsed_json['keywords']).to include('hello')
-      expect(parsed_json['keywords']).to include('this')
-      expect(parsed_json['keywords']).to include('keyword123')
+      expect(parsed_json['keywords'].length == 0).to be true
     end
   end
 end
