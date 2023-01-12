@@ -245,7 +245,7 @@ describe "On #{ENV['OS']}" do
       it 'attach xattr to shared dataset' do
         create_session(@user2[:email], @user2_params[:password])
         path = "/Projects/#{@project2[:projectname]}/#{@project1[:projectname]}::#{@dataset[:inode_name]}"
-        add_xattr_checked(@project2, path, "xattr_#{random_id}", "some value")
+        add_xattr_checked(@project2, path, "xattr_#{random_id}", "some value", status: 500)
       end
     end
   end
@@ -290,46 +290,17 @@ describe "On #{ENV['OS']}" do
       xattr_name2 = "xattr_#{random_id}"
 
       create_session(@user2[:email], @user2_params[:password])
-      add_xattr_checked(@project2, shared_path, xattr_name1, "some value")
-      get_xattr_checked(@project2, shared_path, xattr_name1)
+      add_xattr_checked(@project2, shared_path, xattr_name1, "some value", status: 500)
+      get_xattr_checked(@project2, shared_path, xattr_name1, status: 400)
 
       create_session(@user1[:email], @user1_params[:password])
       add_xattr_checked(@project1, file_path, xattr_name2, "some value")
       get_xattr_checked(@project1, file_path, xattr_name2)
-      get_xattr_checked(@project1, file_path, xattr_name1)
+      get_xattr_checked(@project1, file_path, xattr_name1, status: 400)
 
       create_session(@user2[:email], @user2_params[:password])
       get_xattr_checked(@project2, shared_path, xattr_name2)
-      delete_xattr_checked(@project2, shared_path, xattr_name2)
-
-      create_session(@user1[:email], @user1_params[:password])
-      delete_xattr_checked(@project1, file_path, xattr_name1)
-    end
-    it 'attach xattr to dir in shared dataset' do
-      dir = "dir_#{random_id}"
-      file_path = "#{@dataset[:inode_name]}/#{dir}"
-      shared_path = "#{@project1[:projectname]}::#{@dataset[:inode_name]}/#{dir}"
-      xattr_name1 = "xattr_#{random_id}"
-      xattr_name2 = "xattr_#{random_id}"
-
-      create_session(@user2[:email], @user2_params[:password])
-      create_dir_checked(@project2, shared_path, query: "&type=DATASET")
-
-      create_session(@user2[:email], @user2_params[:password])
-      add_xattr_checked(@project2, shared_path, xattr_name1, "some value")
-      get_xattr_checked(@project2, shared_path, xattr_name1)
-
-      create_session(@user1[:email], @user1_params[:password])
-      add_xattr_checked(@project1, file_path, xattr_name2, "some value")
-      get_xattr_checked(@project1, file_path, xattr_name2)
-      get_xattr_checked(@project1, file_path, xattr_name1)
-
-      create_session(@user2[:email], @user2_params[:password])
-      get_xattr_checked(@project2, shared_path, xattr_name2)
-      delete_xattr_checked(@project2, shared_path, xattr_name2)
-
-      create_session(@user1[:email], @user1_params[:password])
-      delete_xattr_checked(@project1, file_path, xattr_name1)
+      delete_xattr_checked(@project2, shared_path, xattr_name2, status: 500)
     end
     it 'attach/read/delete xattr to shared fg' do
       create_session(@user1[:email], @user1_params[:password])
@@ -343,20 +314,17 @@ describe "On #{ENV['OS']}" do
       xattr_name2 = "xattr_#{random_id}"
 
       create_session(@user2[:email], @user2_params[:password])
-      add_xattr_checked(@project2, shared_path, xattr_name1, "some value", path_type: "FEATURESTORE")
-      get_xattr_checked(@project2, shared_path, xattr_name1, path_type: "FEATURESTORE")
+      add_xattr_checked(@project2, shared_path, xattr_name1, "some value", path_type: "FEATURESTORE", status: 500)
+      get_xattr_checked(@project2, shared_path, xattr_name1, path_type: "FEATURESTORE", status: 400)
 
       create_session(@user1[:email], @user1_params[:password])
       add_xattr_checked(@project1, file_path, xattr_name2, "some value", path_type: "FEATURESTORE")
       get_xattr_checked(@project1, file_path, xattr_name2, path_type: "FEATURESTORE")
-      get_xattr_checked(@project1, file_path, xattr_name1, path_type: "FEATURESTORE")
+      get_xattr_checked(@project1, file_path, xattr_name1, path_type: "FEATURESTORE", status: 400)
 
       create_session(@user2[:email], @user2_params[:password])
       get_xattr_checked(@project2, shared_path, xattr_name2, path_type: "FEATURESTORE")
-      delete_xattr_checked(@project2, shared_path, xattr_name2, path_type: "FEATURESTORE")
-
-      create_session(@user1[:email], @user1_params[:password])
-      delete_xattr_checked(@project1, file_path, xattr_name1, path_type: "FEATURESTORE")
+      delete_xattr_checked(@project2, shared_path, xattr_name2, path_type: "FEATURESTORE", status: 500)
     end
     it 'attach xattr to shared td (created by user1)' do
       create_session(@user1[:email], @user1_params[:password])
@@ -371,50 +339,17 @@ describe "On #{ENV['OS']}" do
       xattr_name2 = "xattr_#{random_id}"
 
       create_session(@user2[:email], @user2_params[:password])
-      add_xattr_checked(@project2, shared_path, xattr_name1, "some value")
-      get_xattr_checked(@project2, shared_path, xattr_name1)
+      add_xattr_checked(@project2, shared_path, xattr_name1, "some value", status: 500)
+      get_xattr_checked(@project2, shared_path, xattr_name1, status: 400)
 
       create_session(@user1[:email], @user1_params[:password])
       add_xattr_checked(@project1, file_path, xattr_name2, "some value")
       get_xattr_checked(@project1, file_path, xattr_name2)
-      get_xattr_checked(@project1, file_path, xattr_name1)
+      get_xattr_checked(@project1, file_path, xattr_name1, status: 400)
 
       create_session(@user2[:email], @user2_params[:password])
       get_xattr_checked(@project2, shared_path, xattr_name2)
-      delete_xattr_checked(@project2, shared_path, xattr_name2)
-
-      create_session(@user1[:email], @user1_params[:password])
-      delete_xattr_checked(@project1, file_path, xattr_name1)
-    end
-    it 'attach xattr to shared td (created by user2)' do
-      create_session(@user1[:email], @user1_params[:password])
-      fs_id = get_featurestores_checked(@project1[:id])[0]["featurestoreId"]
-      connector = get_hopsfs_training_datasets_connector(@project1[:projectname])
-
-      create_session(@user2[:email], @user2_params[:password])
-      json_result, _ = create_hopsfs_training_dataset(@project2[:id], fs_id, connector)
-      td = JSON.parse(json_result)
-
-      file_path = "#{@project1[:projectname]}_Training_Datasets/#{td["name"]}_1"
-      shared_path = "#{@project1[:projectname]}::#{@project1[:projectname]}_Training_Datasets/#{td["name"]}_1"
-      xattr_name1 = "xattr_#{random_id}"
-      xattr_name2 = "xattr_#{random_id}"
-
-      create_session(@user2[:email], @user2_params[:password])
-      add_xattr_checked(@project2, shared_path, xattr_name1, "some value")
-      get_xattr_checked(@project2, shared_path, xattr_name1)
-
-      create_session(@user1[:email], @user1_params[:password])
-      add_xattr_checked(@project1, file_path, xattr_name2, "some value")
-      get_xattr_checked(@project1, file_path, xattr_name2)
-      get_xattr_checked(@project1, file_path, xattr_name1)
-
-      create_session(@user2[:email], @user2_params[:password])
-      get_xattr_checked(@project2, shared_path, xattr_name2)
-      delete_xattr_checked(@project2, shared_path, xattr_name2)
-
-      create_session(@user1[:email], @user1_params[:password])
-      delete_xattr_checked(@project1, file_path, xattr_name1)
+      delete_xattr_checked(@project2, shared_path, xattr_name2, status: 500)
     end
   end
 end

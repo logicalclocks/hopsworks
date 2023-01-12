@@ -2780,7 +2780,7 @@ describe "On #{ENV['OS']}" do
 
         # Share projects
         create_session(@user1[:email], @user1_params[:password])
-        share_dataset_checked(@project1, "#{@project1[:projectname].downcase}_featurestore.db", @project_read_only[:projectname], permission: "READ_ONLY", datasetType: "FEATURESTORE")
+        share_dataset_checked(@project1, "#{@project1[:projectname].downcase}_featurestore.db", @project_read_only[:projectname], datasetType: "FEATURESTORE")
 
         # Accept shared projects
         create_session(@user2[:email], @user2_params[:password])

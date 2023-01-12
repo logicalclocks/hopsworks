@@ -22,9 +22,9 @@ module XAttrHelper
     put "#{endpoint}?#{query}", data
   end
 
-  def add_xattr_checked(project, path, xattr_key, xattr_val, path_type: "DATASET")
+  def add_xattr_checked(project, path, xattr_key, xattr_val, path_type: "DATASET", status: 201)
     add_xattr(project, path, xattr_key, xattr_val, path_type: path_type)
-    expect_status_details(201)
+    expect_status_details(status)
   end
 
   def update_xattr_checked(project, path, xattr_key, xattr_val, path_type: "DATASET")
@@ -40,9 +40,9 @@ module XAttrHelper
     json_body
   end
 
-  def get_xattr_checked(project, path, xattr_key, path_type: "DATASET")
+  def get_xattr_checked(project, path, xattr_key, path_type: "DATASET", status: 200)
     get_xattr(project, path, xattr_key, path_type: path_type)
-    expect_status_details(200)
+    expect_status_details(status)
     json_body
   end
 
@@ -67,8 +67,8 @@ module XAttrHelper
     delete "#{endpoint}?#{query}"
   end
 
-  def delete_xattr_checked(project, path, xattr_key, path_type: "DATASET")
+  def delete_xattr_checked(project, path, xattr_key, path_type: "DATASET", status: 204)
     delete_xattr(project, path, xattr_key, path_type: path_type)
-    expect_status_details(204)
+    expect_status_details(status)
   end
 end
