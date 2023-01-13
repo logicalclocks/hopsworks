@@ -73,7 +73,9 @@ public class CAConf {
     CLOUD_EVENTS_ENDPOINT("cloud_events_endpoint", ""),
     CA_CONFIGURATION("pki_ca_configuration", ""),
     // This property is duplicated in Settings.java
-    KUBERNETES("kubernetes_installed", "false");
+    KUBERNETES("kubernetes_installed", "false"),
+    // This property is duplicated in Settings.java
+    KUBERNETES_TYPE("kube_type", "local");
 
     private String key;
     private String defaultValue;

@@ -425,6 +425,7 @@ public class Settings implements Serializable {
       return Local;
     }
   }
+  // This property is duplicated in CAConf.java
   private static final String VARIABLE_KUBE_TYPE = "kube_type";
   private static final String VARIABLE_DOCKER_NAMESPACE = "docker_namespace";
   private static final String VARIABLE_MANAGED_DOCKER_REGISTRY =

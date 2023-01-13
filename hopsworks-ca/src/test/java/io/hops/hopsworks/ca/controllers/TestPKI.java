@@ -125,6 +125,7 @@ public class TestPKI extends PKIMocking {
     PKI pki = Mockito.spy(realPKI);
     CAConf conf = Mockito.mock(CAConf.class);
     Mockito.when(conf.getBoolean(CAConf.CAConfKeys.KUBERNETES)).thenReturn(true);
+    Mockito.when(conf.getString(CAConf.CAConfKeys.KUBERNETES_TYPE)).thenReturn("local");
     pki.setCaConf(conf);
     Mockito.doNothing().when(pki).caInitializeSerialNumber(Mockito.any());
     Mockito.doNothing().when(pki).caInitializeKeys(Mockito.any());
@@ -145,6 +146,47 @@ public class TestPKI extends PKIMocking {
     PKI pki = Mockito.spy(realPKI);
     CAConf conf = Mockito.mock(CAConf.class);
     Mockito.when(conf.getBoolean(CAConf.CAConfKeys.KUBERNETES)).thenReturn(false);
+    Mockito.when(conf.getString(CAConf.CAConfKeys.KUBERNETES_TYPE)).thenReturn("local");
+    pki.setCaConf(conf);
+    Mockito.doNothing().when(pki).caInitializeSerialNumber(Mockito.any());
+    Mockito.doNothing().when(pki).caInitializeKeys(Mockito.any());
+    Mockito.doNothing().when(pki).caInitializeCertificate(Mockito.any());
+    Mockito.doNothing().when(pki).caInitializeCRL(Mockito.any());
+
+    pki.initializeCertificateAuthorities();
+
+    Mockito.verify(pki, Mockito.times(CAType.values().length - 1))
+        .caInitializeSerialNumber(Mockito.any());
+    Mockito.verify(pki, Mockito.times(CAType.values().length - 1))
+        .caInitializeKeys(Mockito.any());
+    Mockito.verify(pki, Mockito.times(CAType.values().length - 1))
+        .caInitializeCertificate(Mockito.any());
+    Mockito.verify(pki, Mockito.times(CAType.values().length - 1))
+        .caInitializeCRL(Mockito.any());
+
+    Mockito.verify(pki).caInitializeCertificate(Mockito.eq(CAType.ROOT));
+    Mockito.verify(pki).caInitializeKeys(Mockito.eq(CAType.ROOT));
+    Mockito.verify(pki).caInitializeCertificate(Mockito.eq(CAType.ROOT));
+    Mockito.verify(pki).caInitializeCRL(Mockito.eq(CAType.ROOT));
+
+    Mockito.verify(pki).caInitializeCertificate(Mockito.eq(CAType.INTERMEDIATE));
+    Mockito.verify(pki).caInitializeKeys(Mockito.eq(CAType.INTERMEDIATE));
+    Mockito.verify(pki).caInitializeCertificate(Mockito.eq(CAType.INTERMEDIATE));
+    Mockito.verify(pki).caInitializeCRL(Mockito.eq(CAType.INTERMEDIATE));
+
+    Mockito.verify(pki, Mockito.never()).caInitializeCertificate(Mockito.eq(CAType.KUBECA));
+    Mockito.verify(pki, Mockito.never()).caInitializeKeys(Mockito.eq(CAType.KUBECA));
+    Mockito.verify(pki, Mockito.never()).caInitializeCertificate(Mockito.eq(CAType.KUBECA));
+    Mockito.verify(pki, Mockito.never()).caInitializeCRL(Mockito.eq(CAType.KUBECA));
+  }
+
+  @Test
+  public void testInitializeCertificateAuthoritiesManagedKubernetes() throws Exception {
+    PKI realPKI = new PKI();
+    PKI pki = Mockito.spy(realPKI);
+    CAConf conf = Mockito.mock(CAConf.class);
+    Mockito.when(conf.getBoolean(CAConf.CAConfKeys.KUBERNETES)).thenReturn(true);
+    Mockito.when(conf.getString(CAConf.CAConfKeys.KUBERNETES_TYPE)).thenReturn("eks");
     pki.setCaConf(conf);
     Mockito.doNothing().when(pki).caInitializeSerialNumber(Mockito.any());
     Mockito.doNothing().when(pki).caInitializeKeys(Mockito.any());
