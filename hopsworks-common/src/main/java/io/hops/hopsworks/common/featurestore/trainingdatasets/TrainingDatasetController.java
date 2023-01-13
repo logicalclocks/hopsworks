@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.trainingdatasets;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.logicalclocks.shaded.com.google.common.collect.Streams;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
@@ -665,7 +666,7 @@ public class TrainingDatasetController {
                 && (dto.getFeaturegroup() == null || f.getFeatureGroup().getId().equals(dto.getFeaturegroup().getId()))
         );
         // get transformation function for this feature
-        transformationFunction = getTransformationFunction(f, featureDTOs);
+        transformationFunction = getTransformationFunction(f, featureDTOs, tdJoins.get(joinIndex).getPrefix());
       }
       features.add(trainingDataset != null ?
           new TrainingDatasetFeature(trainingDataset, tdJoins.get(joinIndex), query.getFeaturegroup(),
@@ -1325,11 +1326,17 @@ public class TrainingDatasetController {
   }
 
   private TransformationFunction getTransformationFunction(
-      Feature feature, List<TrainingDatasetFeatureDTO> featureDTOs) throws FeaturestoreException {
-  
+      Feature feature, List<TrainingDatasetFeatureDTO> featureDTOs, String prefix) throws FeaturestoreException {
+    if (Strings.isNullOrEmpty(prefix)) {
+      prefix = "";
+    }
+    String finalPrefix = prefix;
     List<TrainingDatasetFeatureDTO> trainingDatasetFeatureDTOS = featureDTOs.stream().filter(dto ->
-      feature.getName().equals(dto.getFeatureGroupFeatureName()) && (dto.getFeaturegroup() == null ||
-        feature.getFeatureGroup().getId().equals(dto.getFeaturegroup().getId()))).collect(Collectors.toList());
+      feature.getName().equals(dto.getFeatureGroupFeatureName())
+          && (dto.getFeaturegroup() == null || feature.getFeatureGroup().getId().equals(dto.getFeaturegroup().getId()))
+          // prefix has to be matched in the case of self-join of fg
+          && dto.getName().equals(finalPrefix + feature.getName())
+        ).collect(Collectors.toList());
   
     TransformationFunction transformationFunction = null;
     if (trainingDatasetFeatureDTOS.size() > 1) {
@@ -1338,15 +1345,18 @@ public class TrainingDatasetController {
           "multiple feature groups.", feature.getName()));
     } else if (trainingDatasetFeatureDTOS.size() == 1) {
       TrainingDatasetFeatureDTO featureDTO = trainingDatasetFeatureDTOS.get(0);
-      if (featureDTO.getTransformationFunction() != null){
-        transformationFunction = transformationFunctionFacade.findById(featureDTO.getTransformationFunction().getId())
-            .orElseThrow(() ->
-                new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRANSFORMATION_FUNCTION_DOES_NOT_EXIST,
-                    Level.FINE, "Could not find transformation function with ID" +
-                    featureDTO.getTransformationFunction().getId()));
+      if (featureDTO.getTransformationFunction() != null) {
+        transformationFunction = getTransformationFunctionById(featureDTO.getTransformationFunction().getId());
       }
     }
     return transformationFunction;
+  }
+
+  TransformationFunction getTransformationFunctionById(Integer id) throws FeaturestoreException {
+    return transformationFunctionFacade.findById(id)
+        .orElseThrow(() ->
+            new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRANSFORMATION_FUNCTION_DOES_NOT_EXIST,
+                Level.FINE, "Could not find transformation function with ID" + id));
   }
 
   public String checkPrefix(TrainingDatasetFeature feature) {

@@ -44,6 +44,18 @@ public class TrainingDatasetFeatureDTO {
     this.label = label;
   }
 
+  public TrainingDatasetFeatureDTO(String name, String type,
+      FeaturegroupDTO featuregroup, String featureGroupFeatureName, Integer index, Boolean label,
+      TransformationFunctionDTO transformationFunction) {
+    this.name = name;
+    this.type = type;
+    this.featuregroup = featuregroup;
+    this.featureGroupFeatureName = featureGroupFeatureName;
+    this.index = index;
+    this.label = label;
+    this.transformationFunction = transformationFunction;
+  }
+
   public String getName() {
     return name;
   }
