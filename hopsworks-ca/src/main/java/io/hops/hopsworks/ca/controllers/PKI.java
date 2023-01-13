@@ -296,8 +296,11 @@ public class PKI {
   protected void initializeCertificateAuthorities() throws GeneralSecurityException, IOException,
       OperatorCreationException {
     for (CAType ca : CAType.values()) {
-      if (ca.equals(CAType.KUBECA) && !caConf.getBoolean(CAConf.CAConfKeys.KUBERNETES)) {
-        continue;
+      if (ca.equals(CAType.KUBECA)) {
+        if (!caConf.getBoolean(CAConf.CAConfKeys.KUBERNETES)
+            || !caConf.getString(CAConf.CAConfKeys.KUBERNETES_TYPE).equals("local")) {
+          continue;
+        }
       }
       initializeCertificateAuthority(ca);
     }

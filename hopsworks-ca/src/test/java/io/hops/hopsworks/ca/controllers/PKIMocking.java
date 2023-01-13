@@ -92,6 +92,7 @@ public class PKIMocking {
 
     CAConf conf = Mockito.mock(CAConf.class);
     Mockito.when(conf.getBoolean(CAConf.CAConfKeys.KUBERNETES)).thenReturn(true);
+    Mockito.when(conf.getString(CAConf.CAConfKeys.KUBERNETES_TYPE)).thenReturn("local");
     pki.setCaConf(conf);
   }
 
