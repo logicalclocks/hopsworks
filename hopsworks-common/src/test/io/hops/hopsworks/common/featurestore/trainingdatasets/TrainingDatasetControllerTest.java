@@ -15,9 +15,15 @@
  */
 package io.hops.hopsworks.common.featurestore.trainingdatasets;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.query.Feature;
 import io.hops.hopsworks.common.featurestore.query.Query;
+import io.hops.hopsworks.common.featurestore.query.join.Join;
+import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionDTO;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlCondition;
 import io.hops.hopsworks.common.featurestore.query.filter.Filter;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterLogic;
@@ -28,10 +34,12 @@ import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.Trainin
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFeature;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFilter;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFilterCondition;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetJoin;
+import io.hops.hopsworks.persistence.entity.featurestore.transformationFunction.TransformationFunction;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import junit.framework.TestCase;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -44,10 +52,22 @@ import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.
 import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic.AND;
 import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic.OR;
 import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic.SINGLE;
+import static org.mockito.Mockito.doReturn;
 
-public class TrainingDatasetControllerTest extends TestCase {
+public class TrainingDatasetControllerTest {
 
-  TrainingDatasetController target = new TrainingDatasetController();
+  private TrainingDatasetController target;
+
+  @Before
+  public void before() throws Exception {
+    target = Mockito.spy(new TrainingDatasetController());
+    TransformationFunction tf1 = new TransformationFunction();
+    tf1.setId(1);
+    TransformationFunction tf2 = new TransformationFunction();
+    tf2.setId(2);
+    doReturn(tf1).when(target).getTransformationFunctionById(1);
+    doReturn(tf2).when(target).getTransformationFunctionById(2);
+  }
 
   @Test
   public void testconvertToFilterEntities_leftFilterRightLogic() throws Exception {
@@ -431,5 +451,65 @@ public class TrainingDatasetControllerTest extends TestCase {
     Assert.assertFalse(result.getDeletedFeatureGroups().isEmpty());
     Assert.assertEquals(1, result.getDeletedFeatureGroups().size());
     Assert.assertEquals("feature_missing", result.getDeletedFeatureGroups().get(0));
+  }
+
+  @Test
+  public void testCollectFeatures() throws Exception {
+    // prepare TransformationFunctionDTO
+    TransformationFunctionDTO tfDto1 = new TransformationFunctionDTO();
+    tfDto1.setId(1);
+    TransformationFunctionDTO tfDto2 = new TransformationFunctionDTO();
+    tfDto2.setId(2);
+    // prepare TrainingDatasetJoin
+    List<TrainingDatasetJoin> tdJoins = new ArrayList<>();
+    tdJoins.add(new TrainingDatasetJoin(1));
+    TrainingDatasetJoin tdJoin2 = new TrainingDatasetJoin(2);
+    tdJoin2.setPrefix("fg1_");
+    tdJoins.add(tdJoin2);
+    // prepare TrainingDatasetFeatureDTO
+    FeaturegroupDTO fgDto = new FeaturegroupDTO();
+    fgDto.setId(1);
+    List<TrainingDatasetFeatureDTO> tdFeatureDtos = new ArrayList<>();
+    tdFeatureDtos.add(new TrainingDatasetFeatureDTO("f1", "double", fgDto, "f1", 0, false, tfDto1));
+    tdFeatureDtos.add(new TrainingDatasetFeatureDTO("fg1_f1", "double", fgDto, "f1", 1, false, tfDto2));
+    // prepare Query
+    Query query = new Query();
+    Feature feature1 = new Feature("f1", false);
+    feature1.setFeatureGroup(new Featuregroup(1));
+    query.setFeatures(Lists.newArrayList(feature1));
+    query.setFeaturegroup(new Featuregroup(1));
+    Query joinQuery = new Query();
+    Feature feature2 = new Feature("f1", false);
+    feature2.setFeatureGroup(new Featuregroup(1));
+    feature2.setPrefix("fg1_");
+    joinQuery.setFeatures(Lists.newArrayList(feature2));
+    joinQuery.setFeaturegroup(new Featuregroup(1));
+    query.setJoins(Lists.newArrayList(
+        new Join(null, joinQuery, null, null, null, "fg1_", null))
+    );
+
+    // execute
+    List<TrainingDatasetFeature> tdFeatures = target.collectFeatures(
+        query,
+        tdFeatureDtos,
+        Mockito.mock(TrainingDataset.class),
+        Mockito.mock(FeatureView.class),
+        0,
+        tdJoins,
+        0
+    );
+
+    Assert.assertEquals(tdFeatures.size(), 2);
+    TrainingDatasetFeature f1 = tdFeatures.get(0);
+    Assert.assertEquals("f1", f1.getName());
+    Assert.assertEquals(1, f1.getFeatureGroup().getId().intValue());
+    Assert.assertNull(f1.getTrainingDatasetJoin().getPrefix());
+    Assert.assertEquals(f1.getTransformationFunction().getId(), tfDto1.getId());
+    TrainingDatasetFeature f2 = tdFeatures.get(1);
+    Assert.assertEquals("f1", f2.getName());
+    Assert.assertEquals(1, f2.getFeatureGroup().getId().intValue());
+    Assert.assertEquals("fg1_", f2.getTrainingDatasetJoin().getPrefix());
+    Assert.assertEquals(f2.getTransformationFunction().getId(), tfDto2.getId());
+
   }
 }
