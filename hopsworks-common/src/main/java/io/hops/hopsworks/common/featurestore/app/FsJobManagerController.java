@@ -51,6 +51,7 @@ import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
@@ -284,7 +285,12 @@ public class FsJobManagerController {
       throws FeaturestoreException, JobException, GenericException, ProjectException, ServiceException {
     String entityName;
     Integer entityVersion;
-    JobEntityType type = JobEntityType.FG;
+    JobEntityType type;
+    if (featureGroup.getFeaturegroupType().equals(FeaturegroupType.ON_DEMAND_FEATURE_GROUP)) {
+      type = JobEntityType.EXTERNAL_FG;
+    } else {
+      type = JobEntityType.FG;
+    }
     if (featureGroup != null) {
       entityName = featureGroup.getName();
       entityVersion = featureGroup.getVersion();

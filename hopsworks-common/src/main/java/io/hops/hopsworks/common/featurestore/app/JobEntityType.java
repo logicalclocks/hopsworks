@@ -20,7 +20,8 @@ public enum JobEntityType {
   
   TD("td"),
   FG("fg"),
-  FV("fv");
+  FV("fv"),
+  EXTERNAL_FG("external_fg");
   
   public final String label;
   
