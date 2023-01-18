@@ -6,7 +6,7 @@ gem "rspec", "3.4.0"
 gem 'hops-airborne', '0.2.17'
 gem 'safe_attributes'
 gem 'minitest', '5.15' # > 5.15 requires ruby >= 2.6
-gem 'activerecord', '6.0.3.3'
+gem 'activerecord', '6.0.6.1'
 gem 'mysql2', '0.5.3'
 gem 'net-ssh', '~> 5.2.0'
 gem 'session', '3.2.0'
