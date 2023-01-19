@@ -286,12 +286,14 @@ public class FsJobManagerController {
     String entityName;
     Integer entityVersion;
     JobEntityType type;
-    if (featureGroup.getFeaturegroupType().equals(FeaturegroupType.ON_DEMAND_FEATURE_GROUP)) {
-      type = JobEntityType.EXTERNAL_FG;
-    } else {
-      type = JobEntityType.FG;
-    }
+
     if (featureGroup != null) {
+      // check feature group type
+      if (featureGroup.getFeaturegroupType().equals(FeaturegroupType.ON_DEMAND_FEATURE_GROUP)) {
+        type = JobEntityType.EXTERNAL_FG;
+      } else {
+        type = JobEntityType.FG;
+      }
       entityName = featureGroup.getName();
       entityVersion = featureGroup.getVersion();
     } else {
