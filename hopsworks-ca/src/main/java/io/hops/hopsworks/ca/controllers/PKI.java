@@ -512,18 +512,19 @@ public class PKI {
   }
 
   private KeyPair loadKeyPair(Path path, String password) throws IOException  {
-    PEMParser pemParser = new PEMParser(new FileReader(path.toFile()));
-    Object object = pemParser.readObject();
-    KeyPair kp;
-    if (object instanceof PEMEncryptedKeyPair) {
-      PEMEncryptedKeyPair ekp = (PEMEncryptedKeyPair) object;
-      PEMDecryptorProvider decryptorProvider = new JcePEMDecryptorProviderBuilder().build(password.toCharArray());
-      kp = pemKeyConverter.getKeyPair(ekp.decryptKeyPair(decryptorProvider));
-    } else {
-      PEMKeyPair ukp = (PEMKeyPair) object;
-      kp = pemKeyConverter.getKeyPair(ukp);
+    try (PEMParser pemParser = new PEMParser(new FileReader(path.toFile()))) {
+      Object object = pemParser.readObject();
+      KeyPair kp;
+      if (object instanceof PEMEncryptedKeyPair) {
+        PEMEncryptedKeyPair ekp = (PEMEncryptedKeyPair) object;
+        PEMDecryptorProvider decryptorProvider = new JcePEMDecryptorProviderBuilder().build(password.toCharArray());
+        kp = pemKeyConverter.getKeyPair(ekp.decryptKeyPair(decryptorProvider));
+      } else {
+        PEMKeyPair ukp = (PEMKeyPair) object;
+        kp = pemKeyConverter.getKeyPair(ukp);
+      }
+      return kp;
     }
-    return kp;
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -616,12 +617,13 @@ public class PKI {
   }
 
   private X509Certificate loadCertificate(Path path) throws IOException, CertificateException {
-    PEMParser pemParser = new PEMParser(new FileReader(path.toFile()));
-    Object object = pemParser.readObject();
-    if (object instanceof X509CertificateHolder) {
-      return converter.getCertificate((X509CertificateHolder) object);
+    try (PEMParser pemParser = new PEMParser(new FileReader(path.toFile()))) {
+      Object object = pemParser.readObject();
+      if (object instanceof X509CertificateHolder) {
+        return converter.getCertificate((X509CertificateHolder) object);
+      }
+      return null;
     }
-    return null;
   }
 
   protected Optional<X509Certificate> loadCertificate(String subject) throws IOException, CertificateException {
@@ -1058,12 +1060,13 @@ public class PKI {
   }
 
   private X509CRL loadCRL(Path path) throws IOException, CRLException {
-    PEMParser pemParser = new PEMParser(new FileReader(path.toFile()));
-    Object object = pemParser.readObject();
-    if (object instanceof X509CRLHolder) {
-      return crlConverter.getCRL((X509CRLHolder) object);
+    try (PEMParser pemParser = new PEMParser(new FileReader(path.toFile()))) {
+      Object object = pemParser.readObject();
+      if (object instanceof X509CRLHolder) {
+        return crlConverter.getCRL((X509CRLHolder) object);
+      }
+      return null;
     }
-    return null;
   }
 
   protected X509CRL addRevocationToCRL(CAType caType, X509Certificate certificate)
