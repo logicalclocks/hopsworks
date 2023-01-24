@@ -268,23 +268,25 @@ describe "On #{ENV['OS']}" do
       end
 
       # model framework
+      # backward compatibility with hsml 3.0 (which does not send model framework value)
+      # greater versions hsml and UI should not send null values
 
-      it "should fail to create a serving with an invalid model framework" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
-            {name: "testmodel5",
-             modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-             modelVersion: 1,
-             batchingConfiguration: {
-               batchingEnabled: false
-             },
-             modelServer: "TENSORFLOW_SERVING",
-             modelFramework: "INVALID",
-             servingTool: "DEFAULT",
-             requestedInstances: 1
-            })
-        expect_json(usrMsg: "Model framework not provided or unsupported")
-        expect_status_details(422, error_code: 120001)
-      end
+#       it "should fail to create a serving with an invalid model framework" do
+#         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
+#             {name: "testmodel5",
+#              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
+#              modelVersion: 1,
+#              batchingConfiguration: {
+#                batchingEnabled: false
+#              },
+#              modelServer: "TENSORFLOW_SERVING",
+#              modelFramework: "INVALID",
+#              servingTool: "DEFAULT",
+#              requestedInstances: 1
+#             })
+#         expect_json(usrMsg: "Model framework not provided or unsupported")
+#         expect_status_details(422, error_code: 120001)
+#       end
 
       # serving tool
 
