@@ -22,6 +22,7 @@ import io.hops.hopsworks.common.dao.kafka.PartitionDetailsDTO;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.SharedProjectDTO;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
+import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -52,6 +53,13 @@ public class TopicsBuilder extends CollectionsBuilder<TopicDTO> {
   
   @EJB
   private KafkaController kafkaController;
+
+  public TopicsBuilder() {};
+
+  // for testing
+  protected TopicsBuilder(KafkaController kafkaController) {
+    this.kafkaController = kafkaController;
+  }
   
   @Override
   protected List<TopicDTO> getAll(Project project) {
@@ -128,8 +136,16 @@ public class TopicsBuilder extends CollectionsBuilder<TopicDTO> {
       list.forEach(dto::addItem);
       return dto;
     } catch (InterruptedException | ExecutionException | TimeoutException e){
+      String usrMsg;
+      if (FeaturestoreConstants.FEATURE_GROUP_KAFKA_TOPIC_REGEX.matcher(topicName).matches()
+          || FeaturestoreConstants.ONLINE_FEATURE_GROUP_KAFKA_TOPIC_REGEX.matcher(topicName).matches()) {
+        usrMsg = "Details for Feature Group Topic `" + topicName + "` can currently not be shown. Write to the " +
+          "corresponding Feature Group to auto create the topic.";
+      } else {
+        usrMsg = "Topic name: " + topicName;
+      }
       throw new KafkaException(
-        RESTCodes.KafkaErrorCode.TOPIC_FETCH_FAILED, Level.WARNING, "Topic name: " + topicName, e.getMessage(), e);
+        RESTCodes.KafkaErrorCode.TOPIC_FETCH_FAILED, Level.WARNING, usrMsg, e.getMessage(), e);
     }
   }
   
