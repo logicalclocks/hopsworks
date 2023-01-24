@@ -33,6 +33,10 @@ public class FeaturestoreConstants {
 
   public static final Pattern FEATURESTORE_REGEX = Pattern.compile("^(?=.{1,63}$)([a-z]{1}[a-z0-9_]*)$");
   public static final Pattern KEYWORDS_REGEX = Pattern.compile("^[a-zA-Z0-9_]{1,63}$");
+  public static final Pattern ONLINE_FEATURE_GROUP_KAFKA_TOPIC_REGEX = Pattern.compile(
+      "(?<projectid>[0-9]+)_(?<fgid>[0-9]+)_(?<fgname>[a-z0-9_]+)_(?<fgversion>[0-9]+)_onlinefs$");
+  public static final Pattern FEATURE_GROUP_KAFKA_TOPIC_REGEX = Pattern.compile(
+    "(?<projectid>[0-9]+)_(?<fgid>[0-9]+)_(?<fgname>[a-z0-9_]+)_(?<fgversion>[0-9]+)$");
   public static final int FEATURESTORE_ENTITY_NAME_MAX_LENGTH = 63; // limited by NDB due to online fg
   public static final int FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH = 256; // can possibly 1000, but the one for
   // features is limited to 256
