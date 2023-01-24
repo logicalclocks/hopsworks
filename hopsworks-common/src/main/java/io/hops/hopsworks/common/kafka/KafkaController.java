@@ -218,8 +218,8 @@ public class KafkaController {
       }
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new KafkaException(
-        RESTCodes.KafkaErrorCode.TOPIC_FETCH_FAILED, Level.WARNING, "Topic name: " + topicDto.getName(), e.getMessage(),
-        e);
+        RESTCodes.KafkaErrorCode.TOPIC_CREATION_FAILED, Level.WARNING, "Topic name: " + topicDto.getName(),
+        e.getMessage(), e);
     }
   
     /*
