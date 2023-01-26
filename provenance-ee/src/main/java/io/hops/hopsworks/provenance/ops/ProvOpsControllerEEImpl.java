@@ -462,7 +462,9 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
         provLinksDTO.setAppId("none");
         provLinksDTO.setOut(in);
 
-        map.put(in.entrySet().stream().findFirst().get().getValue().getMlId(), provLinksDTO);
+        if (!in.isEmpty()) {
+          map.put(in.entrySet().stream().findFirst().get().getValue().getMlId(), provLinksDTO);
+        }
       }
       //endregion
     }
