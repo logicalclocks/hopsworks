@@ -309,7 +309,7 @@ public class FeaturegroupService {
    */
   @GET
   // Anything else that is not just number should use this endpoint
-  @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}")
+  @Path("/{name: [a-zA-Z0-9_]*(?=[a-zA-Z])[a-zA-Z0-9_]+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
