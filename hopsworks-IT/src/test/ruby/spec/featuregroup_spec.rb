@@ -311,7 +311,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json.size).to eq 2
       end
 
-      it "should fail to get a feature store by name that does not exists" do
+      it "should fail to get a feature group by name that does not exists" do
         # Get the first version
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
@@ -333,6 +333,18 @@ describe "On #{ENV['OS']}" do
         parsed_json = JSON.parse(response.body)
         expect_status_details(200)
         expect(parsed_json.key?("schema")).to be true
+      end
+
+      it "should fail to get a feature group by name with capital letters and return feature store error not web application error" do
+        # Get the first version
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/CAPITAL_FG?version=1"
+        get get_featuregroup_endpoint
+        parsed_json = JSON.parse(response.body)
+        expect_status_details(404)
+        expect(parsed_json["errorCode"]).to eql(270009)
+        expect(parsed_json["errorMsg"]).to eql("Featuregroup wasn't found.")
       end
 
       it "should be able to delete a cached featuregroup from the featurestore" do
