@@ -1153,26 +1153,36 @@ describe "On #{ENV['OS']}" do
         before :all do
           with_valid_project
           with_valid_dataset
-        end
 
-        it 'create directory to zip' do
           ds1name = @dataset[:inode_name]
 
           ds2name = ds1name + "/testDir"
           create_dir(@project, ds2name)
           expect_status_details(201)
+          # empty dir can not be unzipped
+          uploadFile(@project, ds2name, "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
+          expect_status_details(204)
 
           ds3name = ds2name + "/subDir"
           create_dir(@project, ds3name)
           expect_status_details(201)
+          # empty dir can not be unzipped
+          uploadFile(@project, ds3name, "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
+          expect_status_details(204)
 
           ds4name = ds1name + "/test%20Dir"
           create_dir(@project, ds4name)
           expect_status_details(201)
+          # empty dir can not be unzipped
+          uploadFile(@project, ds4name, "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
+          expect_status_details(204)
 
           ds5name = ds4name + "/sub%20Dir"
           create_dir(@project, ds5name)
           expect_status_details(201)
+          # empty dir can not be unzipped
+          uploadFile(@project, ds5name, "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
+          expect_status_details(204)
 
           get_dataset_stat(@project, ds1name, datasetType: "&type=DATASET")
           ds = json_body
@@ -1193,7 +1203,6 @@ describe "On #{ENV['OS']}" do
           get_dataset_stat(@project, ds5name, datasetType: "&type=DATASET")
           ds = json_body
           expect(ds).to be_present
-
         end
 
         it 'zip directory' do
@@ -1201,10 +1210,12 @@ describe "On #{ENV['OS']}" do
           expect_status_details(204)
 
           wait_for do
-            get_datasets_in_path(@project, @dataset[:inode_name], query: "&type=DATASET")
-            ds = json_body[:items].detect { |d| d[:attributes][:name] == "testDir.zip" }
-            !ds.nil?
+            get_dataset_stat(@project, "#{@dataset[:inode_name]}/testDir")
+            %w[FINISHED FAILED].include? json_body[:hdfsCommand][:status]
           end
+          get_datasets_in_path(@project, @dataset[:inode_name], query: "&type=DATASET")
+          ds = json_body[:items].detect { |d| d[:attributes][:name] == "testDir.zip" }
+          expect(ds).not_to be_nil
         end
 
         it 'unzip directory' do
@@ -1215,10 +1226,12 @@ describe "On #{ENV['OS']}" do
           expect_status_details(204)
 
           wait_for do
-            get_datasets_in_path(@project, @dataset[:inode_name], query: "&type=DATASET")
-            ds = json_body[:items].detect { |d| d[:attributes][:name] == "testDir" }
-            !ds.nil?
+            get_dataset_stat(@project, "#{@dataset[:inode_name]}/testDir.zip")
+            %w[FINISHED FAILED].include? json_body[:hdfsCommand][:status]
           end
+          get_datasets_in_path(@project, @dataset[:inode_name], query: "&type=DATASET")
+          ds = json_body[:items].detect { |d| d[:attributes][:name] == "testDir" }
+          expect(ds).not_to be_nil
         end
 
         it 'zip directory with spaces' do
@@ -1226,10 +1239,12 @@ describe "On #{ENV['OS']}" do
           expect_status_details(204)
 
           wait_for do
-            get_datasets_in_path(@project, "#{@dataset[:inode_name]}/test%20Dir", query: "&type=DATASET")
-            ds = json_body[:items].detect { |d| d[:attributes][:name] == "sub Dir.zip" }
-            !ds.nil?
+            get_dataset_stat(@project, "#{@dataset[:inode_name]}/test%20Dir/sub%20Dir")
+            %w[FINISHED FAILED].include? json_body[:hdfsCommand][:status]
           end
+          get_datasets_in_path(@project, "#{@dataset[:inode_name]}/test%20Dir", query: "&type=DATASET")
+          ds = json_body[:items].detect { |d| d[:attributes][:name] == "sub Dir.zip" }
+          expect(ds).not_to be_nil
         end
 
         it 'unzip directory with spaces' do
@@ -1241,10 +1256,12 @@ describe "On #{ENV['OS']}" do
           expect_status_details(204)
 
           wait_for do
-            get_datasets_in_path(@project, "#{@dataset[:inode_name]}/test%20Dir", query: "&type=DATASET")
-            ds = json_body[:items].detect { |d| d[:attributes][:name] == "sub Dir" }
-            !ds.nil?
+            get_dataset_stat(@project, "#{@dataset[:inode_name]}/test%20Dir/sub%20Dir.zip")
+            %w[FINISHED FAILED].include? json_body[:hdfsCommand][:status]
           end
+          get_datasets_in_path(@project, "#{@dataset[:inode_name]}/test%20Dir", query: "&type=DATASET")
+          ds = json_body[:items].detect { |d| d[:attributes][:name] == "sub Dir" }
+          expect(ds).not_to be_nil
         end
 
         it "should fail to zip a dataset from other projects if path contains ../" do
@@ -1283,14 +1300,19 @@ describe "On #{ENV['OS']}" do
             get_datasets_in_path(@project, topDataset, query: "&type=DATASET")
             expect_status_details(200)
 
+            # empty dir can not be unzipped
+            uploadFile(@project, subDataset, "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
+
             zip_dataset(@project, subDataset, datasetType: "&type=DATASET")
             expect_status_details(204)
 
             wait_for do
-              get_datasets_in_path(@project, topDataset, query: "&type=DATASET")
-              ds = json_body[:items].detect { |d| d[:attributes][:name] == "sub%20Dir.zip" }
-              !ds.nil?
+              get_dataset_stat(@project, subDataset)
+              %w[FINISHED FAILED].include? json_body[:hdfsCommand][:status]
             end
+            get_datasets_in_path(@project, topDataset, query: "&type=DATASET")
+            ds = json_body[:items].detect { |d| d[:attributes][:name] == "sub%20Dir.zip" }
+            expect(ds).not_to be_nil
           end
 
           it 'unzip directory with url encoded char' do
@@ -1303,10 +1325,12 @@ describe "On #{ENV['OS']}" do
             expect_status_details(204)
 
             wait_for do
-              get_datasets_in_path(@project, topDataset, query: "&type=DATASET")
-              ds = json_body[:items].detect { |d| d[:attributes][:name] == "sub%20Dir" }
-              !ds.nil?
+              get_dataset_stat(@project, "#{subDataset}.zip")
+              %w[FINISHED FAILED].include? json_body[:hdfsCommand][:status]
             end
+            get_datasets_in_path(@project, topDataset, query: "&type=DATASET")
+            ds = json_body[:items].detect { |d| d[:attributes][:name] == "sub%20Dir" }
+            expect(ds).not_to be_nil
           end
         end
       end
