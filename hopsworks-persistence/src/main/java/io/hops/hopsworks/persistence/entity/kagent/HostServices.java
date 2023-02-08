@@ -39,7 +39,6 @@
 
 package io.hops.hopsworks.persistence.entity.kagent;
 
-import io.hops.hopsworks.persistence.entity.host.Health;
 import io.hops.hopsworks.persistence.entity.host.Hosts;
 import io.hops.hopsworks.persistence.entity.host.ServiceStatus;
 
@@ -224,12 +223,5 @@ public class HostServices implements Serializable {
   @Override
   public String toString() {
     return "Services[ id=" + id + " ]";
-  }
-
-  public Health getHealth() {
-    if (status == ServiceStatus.Failed || status == ServiceStatus.Stopped) {
-      return Health.Bad;
-    }
-    return Health.Good;
   }
 }

@@ -35,23 +35,6 @@ describe "On #{ENV['OS']}" do
         expect(row[:outcome]).to eq("SUCCESS")
       end
     end
-    context 'account ' do
-      it 'should add row to table' do
-        params = {}
-        params[:email] = "#{random_id}@email.com"
-        register_user(params)
-        newUser = User.find_by(email: params[:email])
-
-        row = getLatestAccountAudit(newUser[:uid], newUser[:uid], "REGISTRATION")
-        expect(row[:outcome]).to eq("SUCCESS")
-
-        key = newUser.username + newUser.validation_key
-        get "#{ENV['HOPSWORKS_ADMIN']}/security/validate_account.xhtml", {params: {key: key}}
-
-        row = getLatestAccountAudit(newUser[:uid], newUser[:uid], "VERIFIED ACCOUNT")
-        expect(row[:outcome]).to eq("SUCCESS")
-      end
-    end
   end
   describe "Log" do
     context 'user login' do
@@ -69,21 +52,6 @@ describe "On #{ENV['OS']}" do
         admin_accept_user(newUser[:uid], user = {})
 
         testLog("acceptUser", "200", email: adminUser[:email])
-      end
-    end
-    context 'account ' do
-      it 'should add row to log file' do
-        params = {}
-        params[:email] = "#{random_id}@email.com"
-        register_user(params)
-        newUser = User.find_by(email: params[:email])
-
-        testLog("register", "200", email: newUser[:email])
-
-        key = newUser.username + newUser.validation_key
-        get "#{ENV['HOPSWORKS_ADMIN']}/security/validate_account.xhtml", {params: {key: key}}
-
-        testLog("validateKey", "void", username: newUser[:username])
       end
     end
   end

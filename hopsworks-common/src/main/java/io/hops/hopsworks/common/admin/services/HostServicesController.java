@@ -120,7 +120,7 @@ public class HostServicesController {
     for (HostServices service : services) {
       Hosts h = service.getHost();
       if (h != null) {
-        String ip = h.getPublicOrPrivateIp();
+        String ip = h.getHostIp();
         String agentPassword = h.getAgentPassword();
         try {
           result.append(service.toString()).append(" ").append(web.serviceOp(operation.value(), ip, agentPassword,

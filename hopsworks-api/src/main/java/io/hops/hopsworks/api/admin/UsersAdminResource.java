@@ -256,7 +256,7 @@ public class UsersAdminResource {
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.CHANGED_STATUS, message = "Resend confirmation email")
   public Response pendingUser(@Context HttpServletRequest req, @Context SecurityContext sc,
     @AuditTarget(UserIdentifier.ID) @PathParam("id") Integer id) throws UserException, ServiceException {
-    String linkUrl = FormatUtils.getUserURL(req) + settings.getEmailVerificationEndpoint();
+    String linkUrl = FormatUtils.getUserURL(req) + Settings.VERIFICATION_PATH;
     UserProfileDTO userProfileDTO = userProfileBuilder.pendUser(linkUrl, id);
     return Response.ok(userProfileDTO).build();
   }

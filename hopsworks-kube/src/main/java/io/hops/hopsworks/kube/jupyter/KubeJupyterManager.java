@@ -503,18 +503,6 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   }
 
   @Override
-  public void stopOrphanedJupyterServer(String cid, Integer port) throws ServiceException {
-    Service orphan = kubeClientService.getServices(JUPYTER)
-      .stream()
-      .filter(s -> port.equals(jupyterPort(s.getSpec()).get()))
-      .findAny()
-      .orElseThrow(() -> new ServiceException(JUPYTER_STOP_ERROR, SEVERE, "Could find service for port " + port));
-
-    deleteKubeResources(orphan.getMetadata().getNamespace(),
-      orphan.getMetadata().getName().replaceFirst(JUPYTER_PREFIX, ""));
-  }
-  
-  @Override
   public void stopJupyterServer(Project project, Users user, String hdfsUsername, String jupyterHomePath, String cid,
       Integer port) throws ServiceException {
     
