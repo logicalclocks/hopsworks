@@ -176,14 +176,6 @@ public class JupyterController {
     }
   }
 
-  public void shutdownOrphan(String cid, Integer port) throws ServiceException {
-    try {
-      jupyterManager.stopOrphanedJupyterServer(cid, port);
-    } finally {
-      jupyterJWTManager.cleanJWT(cid, port);
-    }
-  }
-
   public void shutdownQuietly(Project project, String hdfsUser, Users user, String secret,
       String cid, int port) {
     try {

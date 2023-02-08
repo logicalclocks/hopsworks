@@ -78,7 +78,7 @@ angular.module('hopsWorksApp')
             };
 
             self.goToAdminPage = function () {
-              $window.location.href = '/hopsworks-admin/security/protected/admin/adminIndex.xhtml';
+              $window.location.href = '/settings';
             };
 
             self.getEmailHash = function (email) {

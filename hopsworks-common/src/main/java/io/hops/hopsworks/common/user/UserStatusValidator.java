@@ -39,7 +39,6 @@
 
 package io.hops.hopsworks.common.user;
 
-import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.UserException;
@@ -72,8 +71,8 @@ public class UserStatusValidator {
   public void checkNewUserStatus(UserAccountStatus status) throws UserException {
     switch (status) {
       case NEW_MOBILE_ACCOUNT:
-      case VERIFIED_ACCOUNT:
         return;
+      case VERIFIED_ACCOUNT:
       case ACTIVATED_ACCOUNT:
         throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_ALREADY_VERIFIED, Level.FINE);
       case LOST_MOBILE:
@@ -83,27 +82,5 @@ public class UserStatusValidator {
       default:
         throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_BLOCKED, Level.FINE);
     }
-  }
-
-  public boolean isNewAccount(Users user) {
-    if (user == null) {
-      return false;
-    }
-    return user.getStatus().equals(UserAccountStatus.NEW_MOBILE_ACCOUNT);
-  }
-
-  public boolean isBlockedAccount(Users user) {
-    if (user == null) {
-      return false;
-    }
-    return user.getStatus().equals(UserAccountStatus.DEACTIVATED_ACCOUNT) || user.getStatus().equals(
-        UserAccountStatus.BLOCKED_ACCOUNT) || user.getStatus().equals(UserAccountStatus.SPAM_ACCOUNT);
-  }
-
-  public boolean isLostDeviceAccount(Users user) {
-    if (user == null) {
-      return false;
-    }
-    return user.getStatus().equals(UserAccountStatus.LOST_MOBILE);
   }
 }

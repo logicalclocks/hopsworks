@@ -44,7 +44,6 @@ import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.persistence.entity.command.Operation;
 import io.hops.hopsworks.persistence.entity.command.SystemCommand;
 import io.hops.hopsworks.common.dao.command.SystemCommandFacade;
-import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificateFacade;
 import io.hops.hopsworks.persistence.entity.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
@@ -96,8 +95,6 @@ public class CertificatesMgmService {
   private UserFacade userFacade;
   @EJB
   private CertsFacade certsFacade;
-  @EJB
-  private ClusterCertificateFacade clusterCertificateFacade;
   @EJB
   private MessageController messageController;
   @EJB

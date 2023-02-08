@@ -297,7 +297,7 @@ public abstract class AbstractExecutionController implements ExecutionController
         String stdDirPath = stdPath.substring(0, fileIndex);
         dto.setPath(Settings.DIR_ROOT + File.separator + project.getName() + stdDirPath + File.separator +  "std" +
           dto.getType().getName().toLowerCase() + ".log");
-        if (dfso.listStatus(new org.apache.hadoop.fs.Path(hdfsPath))[0].getLen() > settings.getJobLogsDisplaySize()) {
+        if (dfso.listStatus(new org.apache.hadoop.fs.Path(hdfsPath))[0].getLen() > Settings.JOB_LOGS_DISPLAY_SIZE) {
           dto.setLog("Log is too big to display in browser. Click on the download button to get the log file.");
         } else {
           try (InputStream input = dfso.open(hdfsPath)) {

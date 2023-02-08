@@ -165,7 +165,7 @@ describe "On #{ENV['OS']}" do
         password = "Pass123"
         post "#{ENV['HOPSWORKS_API']}/auth/register", { email: email, chosenPassword: password,
                                                         repeatedPassword: password, firstName: first_name,
-                                                        lastName: last_name, tos: true, authType: "Mobile",
+                                                        lastName: last_name, tos: true,
                                                         twoFactor: false, testUser: true }
         expect_json(errorMsg: ->(value) {expect(value).to be_nil})
         expect_json(successMessage: ->(value) {expect(value).to include("We registered your account request")})
@@ -180,7 +180,7 @@ describe "On #{ENV['OS']}" do
         register_user(email: email)
         post "#{ENV['HOPSWORKS_API']}/auth/register", {email: email, chosenPassword: password,
                                                        repeatedPassword: password, firstName: first_name,
-                                                       lastName: last_name, tos: true, authType: "Mobile", testUser: true}
+                                                       lastName: last_name, tos: true, testUser: true}
         expect_json(successMessage: ->(value) {expect(value).to be_nil})
         expect_json(errorCode: 160003)
         expect_status_details(409)
@@ -193,10 +193,10 @@ describe "On #{ENV['OS']}" do
         key = user.username + user.validation_key
         type = user.validation_key_type
         expect(type).to eq("EMAIL")
-        get "#{ENV['HOPSWORKS_ADMIN']}/security/validate_account.xhtml", {params: {key: key}}
+        post "#{ENV['HOPSWORKS_API']}/auth/validate/email", URI.encode_www_form({ key: key }), { content_type: 'application/x-www-form-urlencoded'}
         #check html content 200 is always returned
-        expect(response).to include("You have successfully validated your email address")
         expect_status_details(200)
+        expect(response.body).to include("Your email has been verified. An administrator needs to activate your account before you can login.")
       end
 
       it "should fail to validate a validated user" do
@@ -206,13 +206,13 @@ describe "On #{ENV['OS']}" do
         key = user.username + user.validation_key
         type = user.validation_key_type
         expect(type).to eq("EMAIL")
-        get "#{ENV['HOPSWORKS_ADMIN']}/security/validate_account.xhtml", {params: {key: key}}
+        post "#{ENV['HOPSWORKS_API']}/auth/validate/email", URI.encode_www_form({ key: key }), { content_type: 'application/x-www-form-urlencoded'}
         #check html content 200 is always returned
-        expect(response).to include("You have successfully validated your email address")
+        expect(response.body).to include("Your email has been verified. An administrator needs to activate your account before you can login.")
         expect_status_details(200)
-        get "#{ENV['HOPSWORKS_ADMIN']}/security/validate_account.xhtml", {params: {key: key}}
-        expect(response).to include("Your email address has already been validated.")
-        expect_status_details(200)
+        post "#{ENV['HOPSWORKS_API']}/auth/validate/email", URI.encode_www_form({ key: key }), { content_type: 'application/x-www-form-urlencoded'}
+        expect(response.body).to include("User is already verified")
+        expect_status_details(409)
       end
 
       it "should fail to validate already activated user" do
@@ -222,15 +222,15 @@ describe "On #{ENV['OS']}" do
         key = user.username + user.validation_key
         type = user.validation_key_type
         expect(type).to eq("EMAIL")
-        get "#{ENV['HOPSWORKS_ADMIN']}/security/validate_account.xhtml", {params: {key: key}}
+        post "#{ENV['HOPSWORKS_API']}/auth/validate/email", URI.encode_www_form({ key: key }), { content_type: 'application/x-www-form-urlencoded'}
         #check html content 200 is always returned
-        expect(response).to include("You have successfully validated your email address")
+        expect(response.body).to include("Your email has been verified. An administrator needs to activate your account before you can login.")
         expect_status_details(200)
         user.status = 2
         user.save
-        get "#{ENV['HOPSWORKS_ADMIN']}/security/validate_account.xhtml", {params: {key: key}}
-        expect(response).to include("Your account has already been approved!")
-        expect_status_details(200)
+        post "#{ENV['HOPSWORKS_API']}/auth/validate/email", URI.encode_www_form({ key: key }), { content_type: 'application/x-www-form-urlencoded'}
+        expect(response.body).to include("User is already verified")
+        expect_status_details(409)
       end
 
       it "should fail to validate user email with wrong verification key" do
@@ -241,10 +241,10 @@ describe "On #{ENV['OS']}" do
         key = user.username + user.validation_key + "1"
         type = user.validation_key_type
         expect(type).to eq("EMAIL")
-        get "#{ENV['HOPSWORKS_ADMIN']}/security/validate_account.xhtml", {params: {key: key}}
+        post "#{ENV['HOPSWORKS_API']}/auth/validate/email", URI.encode_www_form({ key: key }), { content_type: 'application/x-www-form-urlencoded'}
         #check html content 200 is always returned
-        expect(response).to include("The email address you are trying to validate does not exist in the system.")
-        expect_status_details(200)
+        expect(response.body).to include("Incorrect validation key")
+        expect_status_details(400)
         user = User.find_by(email: email)
         expect(user.false_login).to eq(false_logins + 1)
       end

@@ -203,10 +203,6 @@ public class LocalHostJupyterProcessMgr extends JupyterManagerImpl implements Ju
     // Nothing to do as the start is blocking
   }
 
-  public void stopOrphanedJupyterServer(String cid, Integer port) throws ServiceException {
-    stopJupyterServer(null, null, "Orphaned", "", cid, port);
-  }
-
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void stopJupyterServer(Project project, Users user, String hdfsUsername, String jupyterHomePath, String cid,

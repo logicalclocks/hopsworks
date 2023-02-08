@@ -64,19 +64,7 @@
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
-      <artifactId>hopsworks-kmon</artifactId>
-      <version>${project.version}</version>
-      <classifier>classes</classifier>
-    </dependency>
-    <dependency>
-      <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-api</artifactId>
-      <version>${project.version}</version>
-      <classifier>classes</classifier>
-    </dependency>
-    <dependency>
-      <groupId>io.hops.hopsworks</groupId>
-      <artifactId>hopsworks-admin</artifactId>
       <version>${project.version}</version>
       <classifier>classes</classifier>
     </dependency>

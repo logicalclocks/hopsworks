@@ -332,7 +332,7 @@ public class AuthService {
         "allowed.");
     }
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    String linkUrl = FormatUtils.getUserURL(req) + settings.getEmailVerificationEndpoint();
+    String linkUrl = FormatUtils.getUserURL(req) + Settings.VERIFICATION_PATH;
     QrCode qrCode = userController.registerUser(newUser, linkUrl);
     if (authController.isTwoFactorEnabled(newUser.isTwoFactor())) {
       return Response.ok(qrCode).build();

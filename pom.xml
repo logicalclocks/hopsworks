@@ -46,18 +46,15 @@
   <packaging>pom</packaging>
   <name>hopsworks</name>
   <description>Hopsworks parent project</description>
-  <url>http://www.hops.io</url>
+  <url>https://hopsworks.ai</url>
 
   <modules>
     <module>hopsworks-common</module>
-    <module>hopsworks-kmon</module>
-    <module>hopsworks-admin</module>
     <module>hopsworks-api</module>
     <module>hopsworks-ear</module>
     <module>hopsworks-ca</module>
     <module>hopsworks-jwt</module>
     <module>hopsworks-persistence</module>
-    <module>hopsworks-IT</module>
     <module>hopsworks-rest-utils</module>
     <module>hopsworks-UT</module>
     <module>alerting</module>
@@ -138,14 +135,10 @@
     <oauth-java-jwt.version>3.18.1</oauth-java-jwt.version>
     <org-json.version>20190722</org-json.version>
     <persistence.version>2.5.2</persistence.version>
-    <primefaces-extensions.version>6.1.1</primefaces-extensions.version>
-    <primefaces-resources-codemirror.version>6.1.1</primefaces-resources-codemirror.version>
-    <primefaces.version>6.1</primefaces.version>
     <projectlombok.version>1.18.6</projectlombok.version>
     <protobuf-java.version>3.9.1</protobuf-java.version>
     <reflections.version>0.9.12</reflections.version>
     <resilience4j-retry.version>0.16.0</resilience4j-retry.version>
-    <selenium.version>3.141.59</selenium.version>
     <service-discovery-client.version>0.6-SNAPSHOT</service-discovery-client.version>
     <service-proxy.version>4.6.3</service-proxy.version>
     <slf4j-api.version>1.7.21</slf4j-api.version>
@@ -844,22 +837,6 @@
         <version>${mockito.version}</version>
         <scope>test</scope>
       </dependency>
-      <!-- Primefaces -->
-      <dependency>
-        <groupId>org.primefaces</groupId>
-        <artifactId>primefaces</artifactId>
-        <version>${primefaces.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.primefaces.extensions</groupId>
-        <artifactId>primefaces-extensions</artifactId>
-        <version>${primefaces-extensions.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.primefaces.extensions</groupId>
-        <artifactId>resources-codemirror</artifactId>
-        <version>${primefaces-resources-codemirror.version}</version>
-      </dependency>
       <dependency>
         <groupId>org.projectlombok</groupId>
         <artifactId>lombok</artifactId>
@@ -869,12 +846,6 @@
         <groupId>org.reflections</groupId>
         <artifactId>reflections</artifactId>
         <version>${reflections.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.seleniumhq.selenium</groupId>
-        <artifactId>selenium-java</artifactId>
-        <version>${selenium.version}</version>
-        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>

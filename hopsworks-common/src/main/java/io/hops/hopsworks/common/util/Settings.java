@@ -69,8 +69,6 @@ import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -145,7 +143,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_JUPYTER_WS_PING_INTERVAL = "jupyter_ws_ping_interval";
   private static final String VARIABLE_SPARK_DIR = "spark_dir";
   private static final String VARIABLE_FLINK_DIR = "flink_dir";
-  private static final String VARIABLE_FLINK_USER = "flink_user";
   private static final String VARIABLE_HADOOP_DIR = "hadoop_dir";
   private static final String VARIABLE_HOPSWORKS_DIR = "hopsworks_dir";
   private static final String VARIABLE_SUDOERS_DIR = "sudoers_dir";
@@ -199,9 +196,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_MAX_STATUS_POLL_RETRY = "max_status_poll_retry";
   private static final String VARIABLE_CERT_MATER_DELAY = "cert_mater_delay";
   private static final String VARIABLE_WHITELIST_USERS_LOGIN = "whitelist_users";
-  private static final String VARIABLE_VERIFICATION_PATH = "verification_endpoint";
   private static final String VARIABLE_FIRST_TIME_LOGIN = "first_time_login";
-  private static final String VARIABLE_CERTIFICATE_USER_VALID_DAYS = "certificate_user_valid_days";
   private static final String VARIABLE_SERVICE_DISCOVERY_DOMAIN = "service_discovery_domain";
 
   private static final String VARIABLE_ZOOKEEPER_VERSION = "zookeeper_version";
@@ -311,7 +306,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ONLINE_FEATURESTORE = "featurestore_online_enabled";
   private static final String VARIABLE_FG_PREVIEW_LIMIT = "fg_preview_limit";
   private static final String VARIABLE_ONLINE_FEATURESTORE_TS = "featurestore_online_tablespace";
-  private static final String VARIABLE_FS_JOB_ACTIVITY_TIME = "fs_job_activity_time";
   private static final String VARIABLE_ONLINEFS_THREAD_NUMBER = "onlinefs_service_thread_number";
 
   private static final String VARIABLE_HIVE_CONF_PATH = "hive_conf_path";
@@ -594,7 +588,6 @@ public class Settings implements Serializable {
       HDFS_SUPERUSER = setVar(VARIABLE_HDFS_SUPERUSER, HDFS_SUPERUSER);
       SPARK_USER = setVar(VARIABLE_SPARK_USER, SPARK_USER);
       SPARK_DIR = setDirVar(VARIABLE_SPARK_DIR, SPARK_DIR);
-      FLINK_USER = setVar(VARIABLE_FLINK_USER, FLINK_USER);
       FLINK_DIR = setDirVar(VARIABLE_FLINK_DIR, FLINK_DIR);
       STAGING_DIR = setDirVar(VARIABLE_STAGING_DIR, STAGING_DIR);
       HOPS_EXAMPLES_VERSION = setVar(VARIABLE_HOPSEXAMPLES_VERSION, HOPS_EXAMPLES_VERSION);
@@ -612,7 +605,6 @@ public class Settings implements Serializable {
       HOPSWORKS_INSTALL_DIR = setDirVar(VARIABLE_HOPSWORKS_DIR, HOPSWORKS_INSTALL_DIR);
       CERTS_DIR = setDirVar(VARIABLE_CERTS_DIRS, CERTS_DIR);
       SUDOERS_DIR = setDirVar(VARIABLE_SUDOERS_DIR, SUDOERS_DIR);
-      CERTIFICATE_USER_VALID_DAYS = setStrVar(VARIABLE_CERTIFICATE_USER_VALID_DAYS, CERTIFICATE_USER_VALID_DAYS);
       SERVICE_DISCOVERY_DOMAIN = setStrVar(VARIABLE_SERVICE_DISCOVERY_DOMAIN, SERVICE_DISCOVERY_DOMAIN);
       AIRFLOW_DIR = setDirVar(VARIABLE_AIRFLOW_DIR, AIRFLOW_DIR);
       String openSearchIps = setStrVar(VARIABLE_OPENSEARCH_IP,
@@ -657,7 +649,6 @@ public class Settings implements Serializable {
       HDFS_BASE_STORAGE_POLICY = setHdfsStoragePolicy(VARIABLE_HDFS_BASE_STORAGE_POLICY, HDFS_BASE_STORAGE_POLICY);
       HDFS_LOG_STORAGE_POLICY = setHdfsStoragePolicy(VARIABLE_HDFS_LOG_STORAGE_POLICY, HDFS_LOG_STORAGE_POLICY);
       MAX_NUM_PROJ_PER_USER = setIntVar(VARIABLE_MAX_NUM_PROJ_PER_USER, MAX_NUM_PROJ_PER_USER);
-      CLUSTER_CERT = setVar(VARIABLE_CLUSTER_CERT, CLUSTER_CERT);
       FILE_PREVIEW_IMAGE_SIZE = setIntVar(VARIABLE_FILE_PREVIEW_IMAGE_SIZE, 10000000);
       FILE_PREVIEW_TXT_SIZE = setIntVar(VARIABLE_FILE_PREVIEW_TXT_SIZE, 100);
       ANACONDA_DIR = setDirVar(VARIABLE_ANACONDA_DIR, ANACONDA_DIR);
@@ -677,7 +668,6 @@ public class Settings implements Serializable {
       WHITELIST_USERS_LOGIN = setStrVar(VARIABLE_WHITELIST_USERS_LOGIN,
           WHITELIST_USERS_LOGIN);
       FIRST_TIME_LOGIN = setStrVar(VARIABLE_FIRST_TIME_LOGIN, FIRST_TIME_LOGIN);
-      VERIFICATION_PATH = setStrVar(VARIABLE_VERIFICATION_PATH, VERIFICATION_PATH);
       serviceKeyRotationEnabled = setBoolVar(SERVICE_KEY_ROTATION_ENABLED_KEY, serviceKeyRotationEnabled);
       serviceKeyRotationInterval = setStrVar(SERVICE_KEY_ROTATION_INTERVAL_KEY, serviceKeyRotationInterval);
       tensorBoardMaxLastAccessed = setIntVar(TENSORBOARD_MAX_LAST_ACCESSED, tensorBoardMaxLastAccessed);
@@ -791,7 +781,6 @@ public class Settings implements Serializable {
       FEATURESTORE_JDBC_URL = setStrVar(VARIABLE_FEATURESTORE_JDBC_URL, FEATURESTORE_JDBC_URL);
       ONLINE_FEATURESTORE = setBoolVar(VARIABLE_ONLINE_FEATURESTORE, ONLINE_FEATURESTORE);
       ONLINE_FEATURESTORE_TS = setStrVar(VARIABLE_ONLINE_FEATURESTORE_TS, ONLINE_FEATURESTORE_TS);
-      FS_JOB_ACTIVITY_TIME = setStrVar(VARIABLE_FS_JOB_ACTIVITY_TIME, FS_JOB_ACTIVITY_TIME);
       ONLINEFS_THREAD_NUMBER = setIntVar(VARIABLE_ONLINEFS_THREAD_NUMBER, ONLINEFS_THREAD_NUMBER);
 
       KIBANA_HTTPS_ENABELED = setBoolVar(VARIABLE_KIBANA_HTTPS_ENABLED,
@@ -991,6 +980,8 @@ public class Settings implements Serializable {
     return SPARK_EXECUTOR_MIN_MEMORY;
   }
 
+  public static final String VERIFICATION_PATH = "/validate";
+
   /**
    * Default Directory locations
    */
@@ -1175,11 +1166,6 @@ public class Settings implements Serializable {
     return HADOOP_DIR;
   }
 
-  public synchronized String getHadoopVersionedDir() {
-    checkCache();
-    return HADOOP_DIR + "-" + getHadoopVersion();
-  }
-
   private String HIVE_SUPERUSER = "hive";
 
   public synchronized String getHiveSuperUser() {
@@ -1276,13 +1262,6 @@ public class Settings implements Serializable {
     return "hdfs:///user/" + getSparkUser() + "/log4j2.properties";
   }
 
-  private String FLINK_USER = "flink";
-
-  public synchronized String getFlinkUser() {
-    checkCache();
-    return FLINK_USER;
-  }
-
   private Integer YARN_DEFAULT_QUOTA = 60000;
   public synchronized Integer getYarnDefaultQuota() {
     checkCache();
@@ -1340,14 +1319,6 @@ public class Settings implements Serializable {
     return HDFS_LOG_STORAGE_POLICY;
   }
 
-  private String AIRFLOW_WEB_UI_IP = "127.0.0.1";
-  private int AIRFLOW_WEB_UI_PORT = 12358;
-
-  public synchronized String getAirflowWebUIAddress() {
-    checkCache();
-    return AIRFLOW_WEB_UI_IP + ":" + AIRFLOW_WEB_UI_PORT + "/hopsworks-api/airflow";
-  }
-
   private Integer MAX_NUM_PROJ_PER_USER = 5;
   public synchronized Integer getMaxNumProjPerUser() {
     checkCache();
@@ -1374,16 +1345,8 @@ public class Settings implements Serializable {
     return hadoopConfDir(hadoopDir);
   }
 
-  public synchronized String getYarnConfDir() {
-    return getHadoopConfDir();
-  }
-
   public String getYarnConfDir(String hadoopDir) {
     return hadoopConfDir(hadoopDir);
-  }
-
-  public String getHopsLeaderElectionJarPath() {
-    return getHadoopSymbolicLinkDir() + "/share/hadoop/hdfs/lib/hops-leader-election-" + getHadoopVersion() + ".jar";
   }
 
   //Default configuration file names
@@ -1406,14 +1369,9 @@ public class Settings implements Serializable {
   public static final String HADOOP_CONF_DIR_KEY = "HADOOP_CONF_DIR";
 
   private static final String HADOOP_CONF_RELATIVE_DIR = "etc/hadoop";
-  public static final String SPARK_CONF_RELATIVE_DIR = "conf";
-  public static final String YARN_CONF_RELATIVE_DIR = HADOOP_CONF_RELATIVE_DIR;
 
   //Spark constants
   // Subdirectory where Spark libraries will be placed.
-  public static final String SPARK_LOCALIZED_LIB_DIR = "__spark_libs__";
-  public static final String SPARK_LOCALIZED_CONF_DIR = "__spark_conf__";
-  public static final String SPARK_LOCALIZED_PYTHON_DIR = "__pyfiles__";
   public static final String SPARK_LOCRSC_APP_JAR = "__app__.jar";
 
   public static final String HOPS_EXPERIMENTS_DATASET = "Experiments";
@@ -1629,28 +1587,7 @@ public class Settings implements Serializable {
     return OpenSearch_LOGS_INDEX_EXPIRATION;
   }
 
-  private static final int JOB_LOGS_EXPIRATION = 604800;
-
-  /**
-   * TTL for job logs in opensearch, in seconds.
-   *
-   * @return
-   */
-  public int getJobLogsExpiration() {
-    return JOB_LOGS_EXPIRATION;
-  }
-
-  private static final long JOB_LOGS_DISPLAY_SIZE = 1000000;
-
-  public long getJobLogsDisplaySize() {
-    return JOB_LOGS_DISPLAY_SIZE;
-  }
-
-  private static final String JOB_LOGS_ID_FIELD = "jobid";
-
-  public String getJobLogsIdField() {
-    return JOB_LOGS_ID_FIELD;
-  }
+  public static final long JOB_LOGS_DISPLAY_SIZE = 1000000;
 
   // CertificateMaterializer service. Delay for deleting crypto material from
   // the local filesystem. The lower the value the more frequent we reach DB
@@ -1668,14 +1605,6 @@ public class Settings implements Serializable {
     return CERTIFICATE_MATERIALIZER_DELAY;
   }
 
-  private String CERTIFICATE_USER_VALID_DAYS = "12";
-
-  public synchronized String getCertificateUserValidDays() {
-    checkCache();
-    return CERTIFICATE_USER_VALID_DAYS;
-  }
-
-  
   private String SERVICE_DISCOVERY_DOMAIN = "consul";
   public synchronized String getServiceDiscoveryDomain() {
     checkCache();
@@ -1942,12 +1871,6 @@ public class Settings implements Serializable {
     return KAFKA_DEFAULT_NUM_REPLICAS;
   }
 
-  private String CLUSTER_CERT = "asdasxasx8as6dx8a7sx7asdta8dtasxa8";
-
-  public synchronized String getCLUSTER_CERT() {
-    checkCache();
-    return CLUSTER_CERT;
-  }
   // HOPSWORKS-3158
   private String HOPSWORKS_PUBLIC_HOST = "";
   
@@ -1957,14 +1880,9 @@ public class Settings implements Serializable {
   }  
 
   // Hopsworks
-  public static final Charset ENCODING = StandardCharsets.UTF_8;
-  public static final String HOPS_USERS_HOMEDIR = "/home/";
   public static final String HOPS_USERNAME_SEPARATOR = "__";
 
-  public static final String UNZIP_FILES_SCRIPTNAME = "unzip-hdfs-files.sh";
   public static final int USERNAME_LEN = 8;
-  public static final int MAX_USERNAME_SUFFIX = 99;
-  public static final int MAX_RETRIES = 500;
   public static final String META_NAME_FIELD = "name";
   public static final String META_USAGE_TIME = "usage_time";
   public static final String META_DESCRIPTION_FIELD = "description";
@@ -1990,10 +1908,6 @@ public class Settings implements Serializable {
   // POSIX compliant usernake length
   public static final int USERNAME_LENGTH = 8;
 
-  // Strating user id from 1000 to create a POSIX compliant username: meb1000
-  public static final int STARTING_USER = 1000;
-  public static final int PASSWORD_MIN_LENGTH = 6;
-  public static final int DEFAULT_SECURITY_ANSWER_LEN = 16;
   public static final String DEFAULT_ROLE = "HOPS_USER";
 
   // POSIX compliant usernake length
@@ -2016,9 +1930,6 @@ public class Settings implements Serializable {
   public static final int ALLOWED_FALSE_LOGINS = 5;
   public static final int ALLOWED_AGENT_FALSE_LOGINS = 20;
 
-  //hopsworks user prefix username prefix
-  public static final String USERNAME_PREFIX = "meb";
-
   public static final String KEYSTORE_SUFFIX = "__kstore.jks";
   public static final String TRUSTSTORE_SUFFIX = "__tstore.jks";
   public static final String CERT_PASS_SUFFIX = "__cert.key";
@@ -2036,9 +1947,7 @@ public class Settings implements Serializable {
   public static final String HOPSWORKS_JOBTYPE_PROPERTY = "hopsworks.job.type";
   public static final String HOPSWORKS_APPID_PROPERTY = "hopsworks.job.appid";
   public static final String KAFKA_BROKERADDR_PROPERTY = "hopsworks.kafka.brokeraddress";
-  public static final String KAFKA_JOB_TOPICS_PROPERTY = "hopsworks.kafka.job.topics";
   public static final String SERVER_TRUSTSTORE_PROPERTY = "server.truststore";
-  public static final String KAFKA_CONSUMER_GROUPS = "hopsworks.kafka.consumergroups";
   public static final String HOPSWORKS_REST_ENDPOINT_PROPERTY = "hopsworks.restendpoint";
   public static final String HOPSUTIL_INSECURE_PROPERTY = "hopsutil.insecure";
   public static final String HOPSWORKS_OPENSEARCH_ENDPOINT_PROPERTY = "hopsworks.opensearch.endpoint";
@@ -2056,7 +1965,6 @@ public class Settings implements Serializable {
   public static final String FILE_PREVIEW_TEXT_TYPE = "text";
   public static final String FILE_PREVIEW_HTML_TYPE = "html";
   public static final String FILE_PREVIEW_IMAGE_TYPE = "image";
-  public static final String FILE_PREVIEW_MODE_TAIL = "tail";
 
   //OpenSearch
   // log index pattern
@@ -2085,10 +1993,6 @@ public class Settings implements Serializable {
 
   public String getHdfsTmpCertDir() {
     return "/user/" + getHdfsSuperUser() + "/" + "kafkacerts";
-  }
-
-  public String getHopsworksTrueTempCertDir() {
-    return "/tmp/usercerts/";
   }
 
   //Dataset request subject
@@ -2175,12 +2079,6 @@ public class Settings implements Serializable {
     return RESOURCE_DIRS;
   }
 
-  private String FS_JOB_ACTIVITY_TIME = "5m";
-  public synchronized String getFsJobActivityTime() {
-    checkCache();
-    return FS_JOB_ACTIVITY_TIME;
-  }
-  
   public Settings() {
   }
   
@@ -2198,15 +2096,6 @@ public class Settings implements Serializable {
     } catch (NoResultException e) {
       return Optional.empty();
     }
-  }
-
-  /**
-   * Get all variables from the database.
-   *
-   * @return List with all the variables
-   */
-  public List<Variables> getAllVariables() {
-    return em.createNamedQuery("Variables.findAll", Variables.class).getResultList();
   }
 
   /**
@@ -2462,15 +2351,8 @@ public class Settings implements Serializable {
     return "hops-examples-spark-" + HOPS_EXAMPLES_VERSION + ".jar";
   }
 
-  private String VERIFICATION_PATH = "/validate";
-
-  public synchronized String getEmailVerificationEndpoint() {
-    checkCache();
-    return VERIFICATION_PATH;
-  }
 
   //Dela START
-  private static final String VARIABLE_CLUSTER_CERT = "hopsworks_certificate";
   private static final String VARIABLE_HOPSWORKS_PUBLIC_HOST = "hopsworks_public_host";
 
   private Boolean DELA_ENABLED = false; // set to false if not found in variables table
@@ -2494,7 +2376,6 @@ public class Settings implements Serializable {
   
   //************************************************ZOOKEEPER********************************************************
   public static final int ZOOKEEPER_SESSION_TIMEOUT_MS = 30 * 1000;//30 seconds
-  public static final int ZOOKEEPER_CONNECTION_TIMEOUT_MS = 30 * 1000;// 30 seconds
   //Zookeeper END
 
   //************************************************KAFKA********************************************************
@@ -2734,11 +2615,6 @@ public class Settings implements Serializable {
   public synchronized String getLdapGroupMembersFilter() {
     checkCache();
     return LDAP_GROUP_MEMBERS_SEARCH_FILTER;
-  }
-
-  public synchronized String getOAuthEnabled() {
-    checkCache();
-    return OAUTH_ENABLED;
   }
 
   public synchronized  boolean isOAuthEnabled() {
@@ -3608,9 +3484,7 @@ public class Settings implements Serializable {
 
   //-------------------------------- PROVENANCE ----------------------------------------------//
   private static final String VARIABLE_PROVENANCE_TYPE = "provenance_type"; //disabled/meta/min/full
-  private static final String VARIABLE_PROVENANCE_ARCHIVE_SIZE = "provenance_archive_size";
   private static final String VARIABLE_PROVENANCE_GRAPH_MAX_SIZE = "provenance_graph_max_size";
-  private static final String VARIABLE_PROVENANCE_ARCHIVE_DELAY = "provenance_archive_delay";
   private static final String VARIABLE_PROVENANCE_CLEANUP_SIZE = "provenance_cleanup_size";
   private static final String VARIABLE_PROVENANCE_CLEANER_PERIOD = "provenance_cleaner_period";
   
@@ -3618,11 +3492,8 @@ public class Settings implements Serializable {
   private Provenance.Type PROVENANCE_TYPE = Provenance.Type.MIN;
   private String PROVENANCE_TYPE_S = PROVENANCE_TYPE.name();
   private Integer PROVENANCE_CLEANUP_SIZE = 5;
-  private Integer PROVENANCE_ARCHIVE_SIZE = 100;
   private Integer PROVENANCE_GRAPH_MAX_SIZE = 50;
   private Long PROVENANCE_CLEANER_PERIOD = 3600L; //1h in s
-  private Long PROVENANCE_ARCHIVE_DELAY = 0l;
-  private Integer PROVENANCE_OPENSEARCH_ARCHIVAL_PAGE_SIZE = 50;
   public static final Integer PROVENANCE_OPENSEARCH_PAGE_DEFAULT_SIZE = 1000;
   
   public String getProvFileIndex(Long projectIId) {
@@ -3638,9 +3509,7 @@ public class Settings implements Serializable {
       PROVENANCE_TYPE = Provenance.Type.MIN;
       PROVENANCE_TYPE_S = PROVENANCE_TYPE.name();
     }
-    PROVENANCE_ARCHIVE_SIZE = setIntVar(VARIABLE_PROVENANCE_ARCHIVE_SIZE, PROVENANCE_ARCHIVE_SIZE);
     PROVENANCE_GRAPH_MAX_SIZE = setIntVar(VARIABLE_PROVENANCE_GRAPH_MAX_SIZE, PROVENANCE_GRAPH_MAX_SIZE);
-    PROVENANCE_ARCHIVE_DELAY = setLongVar(VARIABLE_PROVENANCE_ARCHIVE_DELAY, PROVENANCE_ARCHIVE_DELAY);
     PROVENANCE_CLEANUP_SIZE = setIntVar(VARIABLE_PROVENANCE_CLEANUP_SIZE, PROVENANCE_CLEANUP_SIZE);
     PROVENANCE_CLEANER_PERIOD = setLongVar(VARIABLE_PROVENANCE_CLEANER_PERIOD, PROVENANCE_CLEANER_PERIOD);
   }
@@ -3649,64 +3518,22 @@ public class Settings implements Serializable {
     checkCache();
     return PROVENANCE_TYPE;
   }
-  
-  public synchronized Integer getProvArchiveSize() {
-    checkCache();
-    return PROVENANCE_ARCHIVE_SIZE;
-  }
-  
-  public synchronized void setProvArchiveSize(Integer size) {
-    if(!PROVENANCE_ARCHIVE_SIZE.equals(size)) {
-      em.merge(new Variables(VARIABLE_PROVENANCE_ARCHIVE_SIZE, size.toString()));
-      PROVENANCE_ARCHIVE_SIZE = size;
-    }
-  }
 
   public synchronized Integer getProvenanceGraphMaxSize() {
     checkCache();
     return PROVENANCE_GRAPH_MAX_SIZE;
   }
 
-  public synchronized void setProvenanceGraphMaxSize(Integer size) {
-    if(!PROVENANCE_GRAPH_MAX_SIZE.equals(size)) {
-      em.merge(new Variables(VARIABLE_PROVENANCE_GRAPH_MAX_SIZE, size.toString()));
-      PROVENANCE_GRAPH_MAX_SIZE = size;
-    }
-  }
-  
-  public synchronized Long getProvArchiveDelay() {
-    checkCache();
-    return PROVENANCE_ARCHIVE_DELAY;
-  }
-  
-  public synchronized void setProvArchiveDelay(Long delay) {
-    if(!PROVENANCE_ARCHIVE_DELAY.equals(delay)) {
-      em.merge(new Variables(VARIABLE_PROVENANCE_ARCHIVE_DELAY, delay.toString()));
-      PROVENANCE_ARCHIVE_DELAY = delay;
-    }
-  }
-  
   public synchronized Integer getProvCleanupSize() {
     checkCache();
     return PROVENANCE_CLEANUP_SIZE;
   }
-  
-  public synchronized Integer getProvOpenSearchArchivalPageSize() {
-    checkCache();
-    return PROVENANCE_OPENSEARCH_ARCHIVAL_PAGE_SIZE;
-  }
-  
+
   public synchronized Long getProvCleanerPeriod() {
     checkCache();
     return PROVENANCE_CLEANER_PERIOD;
   }
-  
-  public synchronized void setProvCleanerPeriod(Long period) {
-    if(!PROVENANCE_CLEANER_PERIOD.equals(period)) {
-      em.merge(new Variables(VARIABLE_PROVENANCE_CLEANER_PERIOD, period.toString()));
-      PROVENANCE_CLEANER_PERIOD = period;
-    }
-  }
+
   //------------------------------ END PROVENANCE --------------------------------------------//
   
   private String CLIENT_PATH = "/srv/hops/client.tar.gz";

@@ -41,7 +41,6 @@ package io.hops.hopsworks.persistence.entity.host;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -56,7 +55,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import io.hops.hopsworks.persistence.entity.kagent.HostServices;
-import io.hops.hopsworks.persistence.entity.util.FormatUtils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
@@ -223,40 +221,6 @@ public class Hosts implements Serializable {
   
   public void setHostServices(Collection<HostServices> hostServices) {
     this.hostServices = hostServices;
-  }
-  
-  // hosts.xhtml
-  @JsonIgnore
-  public String getPublicOrPrivateIp() {
-    // Prefer private IP, but return a public IP if the private IP is null
-    if (publicIp == null || publicIp.isEmpty()
-        || (publicIp != null && privateIp != null)) {
-      return privateIp;
-    }
-    return publicIp;
-  }
-  
-  // hosts.xhtml
-  @JsonIgnore
-  public Health getHealth() {
-    int hostTimeout = HEARTBEAT_INTERVAL * 2 + 1;
-    if (lastHeartbeat == null) {
-      return Health.Bad;
-    }
-    long deltaInSec = ((new Date()).getTime() - lastHeartbeat) / 1000;
-    if (deltaInSec < hostTimeout) {
-      return Health.Good;
-    }
-    return Health.Bad;
-  }
-
-  // hosts.xhtml
-  @JsonIgnore
-  public String getLastHeartbeatFormatted() {
-    if (lastHeartbeat == null) {
-      return "";
-    }
-    return FormatUtils.time(((new Date()).getTime() - lastHeartbeat));
   }
 
   @Override

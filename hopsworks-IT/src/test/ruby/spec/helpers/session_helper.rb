@@ -120,7 +120,7 @@ module SessionHelper
     register_user(params)
     user = User.find_by(email: params[:email])
     key = user.username + user.validation_key
-    get "#{ENV['HOPSWORKS_ADMIN']}/security/validate_account.xhtml", {params: {key: key}}
+    post "#{ENV['HOPSWORKS_API']}/auth/validate/email", URI.encode_www_form({ key: key }), { content_type: 'application/x-www-form-urlencoded'}
     user
   end
 
@@ -458,10 +458,6 @@ module SessionHelper
   def validate_user_rest(key)
     post "#{ENV['HOPSWORKS_API']}/auth/validate/email", URI.encode_www_form({key: key}),
          {content_type: 'application/x-www-form-urlencoded'}
-  end
-
-  def validate_user_jsf(key)
-    get "#{ENV['HOPSWORKS_ADMIN']}/security/validate_account.xhtml", {params: {key: key}}
   end
 
   def start_password_reset(email)
