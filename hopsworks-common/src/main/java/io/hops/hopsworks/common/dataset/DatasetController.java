@@ -49,7 +49,6 @@ import io.hops.hopsworks.common.dao.log.operation.OperationsLogFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.dataset.util.CompressionInfo;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -57,18 +56,20 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.FsPermissions;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.hdfs.command.ArchiveFormat;
+import io.hops.hopsworks.common.hdfs.command.HdfsCommandExecutionController;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
-import io.hops.hopsworks.common.util.ProcessDescriptor;
-import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
@@ -78,6 +79,7 @@ import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.dataset.PermissionTransition;
 import io.hops.hopsworks.persistence.entity.dataset.SharedState;
+import io.hops.hopsworks.persistence.entity.hdfs.command.Command;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.log.operation.OperationType;
 import io.hops.hopsworks.persistence.entity.log.operation.OperationsLog;
@@ -151,6 +153,8 @@ public class DatasetController {
   private JupyterController jupyterController;
   @EJB
   private OnlineFeaturestoreController onlineFeaturestoreController;
+  @EJB
+  private HdfsCommandExecutionController hdfsCommandExecutionController;
 
   /**
    * Create a new DataSet. This is, a folder right under the project home
@@ -715,80 +719,28 @@ public class DatasetController {
   public void unzip(Project project, Users user, Path path, Path destPath) throws DatasetException {
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
     checkFileExists(path, hdfsUser);
-    CompressionInfo compressionInfo = new CompressionInfo(path, destPath);
-    String stagingDir = settings.getStagingDir() + File.separator + compressionInfo.getStagingDirectory();
-    
-    File unzipDir = new File(stagingDir);
-    unzipDir.mkdirs();
-    settings.addUnzippingState(compressionInfo);
-    
-    ProcessDescriptor.Builder processDescriptorBuilder = new ProcessDescriptor.Builder()
-      .addCommand(settings.getHopsworksDomainDir() + "/bin/unzip-background.sh")
-      .addCommand(stagingDir)
-      .addCommand(path.toString())
-      .addCommand(hdfsUser);
-
-    if (destPath != null) {
-      processDescriptorBuilder.addCommand(destPath.toString());
-    }
-
-    ProcessDescriptor processDescriptor = processDescriptorBuilder
-      .ignoreOutErrStreams(true)
-      .build();
-
+    Inode srcInode = inodeController.getInodeAtPath(path.toString());
     try {
-      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
-      int result = processResult.getExitCode();
-      if (result == 2) {
-        throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_SIZE_ERROR, Level.WARNING);
-      }
-      if (result != 0) {
-        throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_ERROR, Level.WARNING,
-          "path: " + path.toString() + ", result: " + result);
-      }
-    } catch (IOException ex) {
+      hdfsCommandExecutionController.setupAndStartJob(user, project, Command.EXTRACT, srcInode, path, destPath,
+        null, false); // set format to null, so it can be inferred from file name extension
+    } catch (JobException | GenericException | ServiceException | ProjectException e) {
+      String userMsg = e.getUsrMsg() != null ? e.getUsrMsg() : "";
       throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_ERROR, Level.SEVERE,
-        "path: " + path.toString(), ex.getMessage(), ex);
+        "Error extracting file at path: " + path + ". " + userMsg, e.getMessage(), e);
     }
   }
   
   public void zip(Project project, Users user, Path path, Path destPath) throws DatasetException {
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
     checkFileExists(path, hdfsUser);
-    CompressionInfo compressionInfo = new CompressionInfo(path, destPath);
-    String stagingDir = settings.getStagingDir() + File.separator + compressionInfo.getStagingDirectory();
-    
-    File zipDir = new File(stagingDir);
-    zipDir.mkdirs();
-    settings.addZippingState(compressionInfo);
-    
-    ProcessDescriptor.Builder processDescriptorBuilder = new ProcessDescriptor.Builder()
-      .addCommand(settings.getHopsworksDomainDir() + "/bin/zip-background.sh")
-      .addCommand(stagingDir)
-      .addCommand(path.toString())
-      .addCommand(hdfsUser);
-
-    if (destPath != null) {
-      processDescriptorBuilder.addCommand(destPath.toString());
-    }
-
-    ProcessDescriptor processDescriptor = processDescriptorBuilder
-      .ignoreOutErrStreams(true)
-      .build();
-
+    Inode srcInode = inodeController.getInodeAtPath(path.toString());
     try {
-      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
-      int result = processResult.getExitCode();
-      if (result == 2) {
-        throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_SIZE_ERROR, Level.WARNING);
-      }
-      if (result != 0) {
-        throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_ERROR, Level.WARNING,
-          "path: " + path.toString() + ", result: " + result);
-      }
-    } catch (IOException ex) {
+      hdfsCommandExecutionController.setupAndStartJob(user, project, Command.COMPRESS, srcInode, path, destPath,
+        ArchiveFormat.ZIP, false);
+    } catch (JobException | GenericException | ServiceException | ProjectException e) {
+      String userMsg = e.getUsrMsg() != null ? e.getUsrMsg() : "";
       throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_ERROR, Level.SEVERE,
-        "path: " + path.toString(), ex.getMessage(), ex);
+        "Error compressing file at path: " + path + ". " + userMsg, e.getMessage(), e);
     }
   }
 

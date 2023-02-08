@@ -900,7 +900,7 @@ describe "On #{ENV['OS']}" do
           serving = Serving.find(@serving[:id])
           expect(serving[:artifact_version]).to be > 0
 
-          wait_result = wait_for_me_time(30) do
+          wait_result = wait_for_me_time(60) do
             get_datasets_in_path(@project, "#{serving[:model_path]}/#{serving[:model_version]}/Artifacts/#{serving[:artifact_version]}", query: "&type=DATASET")
             ds = json_body[:items].detect { |d| d[:attributes][:name] == "irisflowerclassifier_#{serving[:model_version]}_#{serving[:artifact_version]}.zip" }
             { "success" => ds.present?, "ds" => ds }
@@ -976,7 +976,7 @@ describe "On #{ENV['OS']}" do
           serving = Serving.find(@serving[:id])
           expect(serving[:artifact_version]).to be > 0
 
-          wait_result = wait_for_me_time(30) do
+          wait_result = wait_for_me_time(60) do
             get_datasets_in_path(@project, "#{serving[:model_path]}/#{serving[:model_version]}/Artifacts/#{serving[:artifact_version]}", query: "&type=DATASET")
             ds = json_body[:items].detect { |d| d[:attributes][:name] == "irisflowerclassifier_#{serving[:model_version]}_#{serving[:artifact_version]}.zip" }
             pr = json_body[:items].detect { |d| d[:attributes][:name] == SKLEARN_SCRIPT_FILE_NAME }
@@ -1007,7 +1007,7 @@ describe "On #{ENV['OS']}" do
           serving = Serving.find(@serving[:id])
           expect(serving[:artifact_version]).to be > 0
 
-          wait_result = wait_for_me_time(30) do
+          wait_result = wait_for_me_time(60) do
             get_datasets_in_path(@project, "#{serving[:model_path]}/#{serving[:model_version]}/Artifacts/#{serving[:artifact_version]}", query: "&type=DATASET")
             ds = json_body[:items].detect { |d| d[:attributes][:name] == "irisflowerclassifier_#{serving[:model_version]}_#{serving[:artifact_version]}.zip" }
             { "success" => ds.present?, "ds" => ds }
@@ -1072,7 +1072,7 @@ describe "On #{ENV['OS']}" do
           serving = Serving.find(@serving[:id])
           expect(serving[:artifact_version]).to be > 0
 
-          wait_result = wait_for_me_time(30) do
+          wait_result = wait_for_me_time(60) do
             get_datasets_in_path(@project, "#{serving[:model_path]}/#{serving[:model_version]}/Artifacts/#{serving[:artifact_version]}", query: "&type=DATASET")
             ds = json_body[:items].detect { |d| d[:attributes][:name] == "irisflowerclassifier_#{serving[:model_version]}_#{serving[:artifact_version]}.zip" }
             tr = json_body[:items].detect { |d| d[:attributes][:name] == "transformer.py" }

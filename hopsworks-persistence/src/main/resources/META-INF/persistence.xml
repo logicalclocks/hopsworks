@@ -99,6 +99,7 @@
     <class>io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers</class>
     <class>io.hops.hopsworks.persistence.entity.hdfs.inode.Inode</class>
     <class>io.hops.hopsworks.persistence.entity.hdfs.inode.InodeOps</class>
+    <class>io.hops.hopsworks.persistence.entity.hdfs.command.HdfsCommandExecution</class>
     <class>io.hops.hopsworks.persistence.entity.host.Hosts</class>
     <class>io.hops.hopsworks.persistence.entity.jobs.history.Execution</class>
     <class>io.hops.hopsworks.persistence.entity.jobs.history.YarnApplicationattemptstate</class>

@@ -795,7 +795,7 @@ describe "On #{ENV['OS']}" do
         serving = Serving.find(@serving[:id])
         expect(serving[:model_path]).to eql "/Projects/#{@project[:projectname]}/Models/newMnist"
 
-        wait_result = wait_for_me_time(30, 3) do
+        wait_result = wait_for_me_time(60, 3) do
           get_datasets_in_path(@project, "Models/newMnist/#{serving[:model_version]}/Artifacts/#{serving[:artifact_version]}", query: "&type=DATASET")
           ds = json_body[:items].detect { |d| d[:attributes][:name] == "newMnist_#{serving[:model_version]}_#{serving[:artifact_version]}.zip" }
           { "success" => ds.present?, "ds" => ds }

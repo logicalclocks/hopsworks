@@ -29,6 +29,7 @@ public class InodeDTO extends RestDTO<InodeDTO> {
   private FilePreviewDTO preview;
   private String zipState = "NONE";
   private TagsDTO tags;
+  private HdfsCommandDTO hdfsCommand;
   
   public InodeDTO() {
   }
@@ -63,6 +64,14 @@ public class InodeDTO extends RestDTO<InodeDTO> {
   
   public void setTags(TagsDTO tags) {
     this.tags = tags;
+  }
+  
+  public HdfsCommandDTO getHdfsCommand() {
+    return hdfsCommand;
+  }
+  
+  public void setHdfsCommand(HdfsCommandDTO hdfsCommand) {
+    this.hdfsCommand = hdfsCommand;
   }
   
   @Override
