@@ -56,6 +56,7 @@
     <servlet-name>KibanaProxyServlet</servlet-name>
     <servlet-class>io.hops.hopsworks.api.kibana.KibanaProxyServlet</servlet-class>
     <init-param>
+      <!-- targetUri overwritten in the proxy -->
       <param-name>targetUri</param-name>
       <param-value>http://localhost:5601/</param-value>
     </init-param>
@@ -77,6 +78,7 @@
     <servlet-name>jupyter</servlet-name>
     <servlet-class>com.predic8.membrane.servlet.embedded.MembraneServlet</servlet-class>
     <init-param>
+      <!-- targetUri overwritten in the proxy -->
       <param-name>targetUri</param-name>
       <param-value>http://localhost:{_port}/hopsworks-api/jupyter</param-value>
     </init-param>
@@ -121,6 +123,7 @@
     <servlet-name>GrafanaProxyServlet</servlet-name>
     <servlet-class>io.hops.hopsworks.api.kibana.GrafanaProxyServlet</servlet-class>
     <init-param>
+      <!-- targetUri overwritten in the proxy -->
       <param-name>targetUri</param-name>
       <param-value>http://localhost:3000/</param-value>
     </init-param>
@@ -142,6 +145,7 @@
     <servlet-name>YarnUIProxyServlet</servlet-name>
     <servlet-class>io.hops.hopsworks.api.admin.YarnUIProxyServlet</servlet-class>
     <init-param>
+      <!-- targetUri overwritten in the proxy -->
       <param-name>targetUri</param-name>
       <param-value>http://localhost:8088/</param-value>
     </init-param>
@@ -163,6 +167,7 @@
     <servlet-name>HDFSUIProxyServlet</servlet-name>
     <servlet-class>io.hops.hopsworks.api.admin.HDFSUIProxyServlet</servlet-class>
     <init-param>
+      <!-- targetUri overwritten in the proxy -->
       <param-name>targetUri</param-name>
       <param-value>http://localhost:50070/</param-value>
     </init-param>
@@ -184,6 +189,7 @@
     <servlet-name>TensorBoardProxyServlet</servlet-name>
     <servlet-class>io.hops.hopsworks.api.experiments.tensorboard.TensorBoardProxyServlet</servlet-class>
     <init-param>
+      <!-- targetUri overwritten in the proxy -->
       <param-name>targetUri</param-name>
       <param-value>http://localhost:80/</param-value>
     </init-param>
@@ -206,6 +212,7 @@
     <servlet-name>AirflowProxyServlet</servlet-name>
     <servlet-class>io.hops.hopsworks.api.airflow.AirflowProxyServlet</servlet-class>
     <init-param>
+      <!-- targetUri overwritten in the proxy -->
       <param-name>targetUri</param-name>
       <param-value>http://localhost:12358/hopsworks-api/airflow</param-value>
     </init-param>
@@ -232,6 +239,7 @@
     <servlet-name>FlinkProxyServlet</servlet-name>
     <servlet-class>io.hops.hopsworks.api.jobs.FlinkProxyServlet</servlet-class>
     <init-param>
+      <!-- targetUri overwritten in the proxy -->
       <param-name>targetUri</param-name>
       <param-value>http://localhost:80/</param-value>
     </init-param>
@@ -254,6 +262,7 @@
     <servlet-name>FlinkHistoryServerProxyServlet</servlet-name>
     <servlet-class>io.hops.hopsworks.api.jobs.FlinkHistoryServerProxyServlet</servlet-class>
     <init-param>
+      <!-- targetUri overwritten in the proxy -->
       <param-name>targetUri</param-name>
       <param-value>http://localhost:29183/</param-value>
     </init-param>

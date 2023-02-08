@@ -18,9 +18,24 @@ package io.hops.hopsworks.api.airflow;
 import io.hops.hopsworks.api.proxy.ProxyServlet;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.project.ProjectController;
-import io.hops.hopsworks.common.util.Settings;
+import org.apache.http.Header;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URIUtils;
+import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.message.BasicNameValuePair;
+
+import javax.ejb.EJB;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,18 +47,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.ejb.EJB;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.apache.http.Header;
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.message.BasicNameValuePair;
 
 public class AirflowProxyServlet extends ProxyServlet {
   
@@ -55,15 +58,14 @@ public class AirflowProxyServlet extends ProxyServlet {
   private ProjectController projectController;
   @EJB
   private ProjectFacade projectFacade;
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
 
   private AtomicInteger barrier = new AtomicInteger(1);
 
   private final static Logger LOGGER = Logger.getLogger(AirflowProxyServlet.class.getName());
 
   private HashMap<String, String> currentProjects = new HashMap<>();
-
-  @EJB
-  private Settings settings;
 
   private static final HashSet<String> PASS_THROUGH_HEADERS
       = new HashSet<String>(
@@ -75,7 +77,14 @@ public class AirflowProxyServlet extends ProxyServlet {
                   "Accept-Charset", "accept-charset"));
 
   protected void initTarget() throws ServletException {
-    super.initTarget();
+    try {
+      targetUri = "http://" + serviceDiscoveryController.constructServiceFQDNWithPort(
+        ServiceDiscoveryController.HopsworksService.AIRFLOW_UI) + "/hopsworks-api/airflow";
+      targetUriObj = new URI(targetUri);
+    } catch (Exception e) {
+      throw new ServletException("Trying to process targetUri init parameter: " + e, e);
+    }
+    targetHost = URIUtils.extractHost(targetUriObj);
   }
 
   /**
