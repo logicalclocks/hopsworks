@@ -48,8 +48,8 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.user.UsersController;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.jobs.history.YarnApplicationstate;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -57,6 +57,7 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import joptsimple.internal.Strings;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.client.utils.URIUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -65,6 +66,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
@@ -94,9 +96,9 @@ public class GrafanaProxyServlet extends ProxyServlet {
   @EJB
   private JWTHelper jwtHelper;
   @EJB
-  private Settings settings;
-  @EJB
   private UsersController userController;
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
   
   private final String YARN_APP_PATTERN_KEY = "yarnApp";
   private final String FG_KAFKA_TOPIC_KEY = "fgKafkaTopic";
@@ -114,6 +116,17 @@ public class GrafanaProxyServlet extends ProxyServlet {
   };
   
   private final List<String> openQueries = Collections.singletonList("onlinefs_clusterj_success_write_counter_total");
+  
+  protected void initTarget() throws ServletException {
+    try {
+      targetUri = "http://" + serviceDiscoveryController.constructServiceFQDNWithPort(
+        ServiceDiscoveryController.HopsworksService.GRAFANA);
+      targetUriObj = new URI(targetUri);
+    } catch (Exception e) {
+      throw new ServletException("Trying to process targetUri init parameter: " + e, e);
+    }
+    targetHost = URIUtils.extractHost(targetUriObj);
+  }
   
   @Override
   protected void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse)

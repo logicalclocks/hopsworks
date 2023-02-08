@@ -70,7 +70,10 @@ public class ServiceDiscoveryController {
     RESOURCEMANAGER("resourcemanager"),
     PUSHGATEWAY("pushgateway.prometheus"),
     PROMETHEUS("prometheus"),
-    NODE_EXPORTER("node_exporter");
+    NODE_EXPORTER("node_exporter"),
+    GRAFANA("grafana"),
+    AIRFLOW_UI("ui.airflow"),
+    FLINK_HISTORY_SERVER("historyserver.flink"),;
 
     private String name;
     HopsworksService(String name) {
