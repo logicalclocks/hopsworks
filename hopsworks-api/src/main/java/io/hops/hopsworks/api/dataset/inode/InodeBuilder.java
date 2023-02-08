@@ -19,6 +19,7 @@ import io.hops.hopsworks.api.dataset.inode.attribute.InodeAttributeBuilder;
 import io.hops.hopsworks.api.dataset.inode.attribute.InodeAttributeDTO;
 import io.hops.hopsworks.api.dataset.tags.InodeTagUri;
 import io.hops.hopsworks.api.tags.TagBuilder;
+import io.hops.hopsworks.common.dao.hdfs.command.HdfsCommandExecutionFacade;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.api.util.FilePreviewImageTypes;
@@ -32,6 +33,7 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.persistence.entity.hdfs.command.HdfsCommandExecution;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -44,6 +46,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriInfo;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -69,6 +72,8 @@ public class InodeBuilder {
   private Settings settings;
   @EJB
   private TagBuilder tagsBuilder;
+  @EJB
+  private HdfsCommandExecutionFacade hdfsCommandExecutionFacade;
   
   private InodeDTO uri(InodeDTO dto, UriInfo uriInfo) {
     dto.setHref(uriInfo.getAbsolutePathBuilder().build());
@@ -110,6 +115,7 @@ public class InodeBuilder {
       dto.setAttributes(inodeAttributeBuilder.build(new InodeAttributeDTO(), resourceRequest, inode, parentPath,
         dirOwner));
       dto.setTags(tagsBuilder.build(new InodeTagUri(uriInfo), resourceRequest, user, datasetPath));
+      setZipState(dto, inode);
     }
     return dto;
   }
@@ -136,8 +142,8 @@ public class InodeBuilder {
     expand(dto, resourceRequest);
     if (dto.isExpand()) {
       dto.setAttributes(inodeAttributeBuilder.build(new InodeAttributeDTO(), resourceRequest, inode, null, null));
-      dto.setZipState(settings.getZipState(dto.getAttributes().getPath()));
       dto.setTags(tagsBuilder.build(new InodeTagUri(uriInfo), resourceRequest, user, datasetPath));
+      setZipState(dto, inode);
     }
     return dto;
   }
@@ -254,4 +260,15 @@ public class InodeBuilder {
     return dto;
   }
   
+  private void setZipState(InodeDTO dto, Inode inode) {
+    Optional<HdfsCommandExecution> hdfsCommandExecution = hdfsCommandExecutionFacade.findBySrc(inode);
+    ZipState zipState = ZipState.NONE;
+    if (hdfsCommandExecution.isPresent()) {
+      dto.setHdfsCommand(new HdfsCommandDTO(hdfsCommandExecution.get(), dto.getAttributes().getPath()));
+      zipState = ZipState.fromCommandStatus(dto.getHdfsCommand().getStatus(),
+        dto.getHdfsCommand().getCommand());
+    }
+    dto.setZipState(String.valueOf(zipState));
+  }
+
 }

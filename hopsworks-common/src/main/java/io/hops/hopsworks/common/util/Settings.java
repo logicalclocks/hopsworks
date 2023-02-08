@@ -41,7 +41,6 @@ package io.hops.hopsworks.common.util;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dataset.util.CompressionInfo;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
@@ -311,7 +310,9 @@ public class Settings implements Serializable {
   private static final String VARIABLE_HIVE_CONF_PATH = "hive_conf_path";
   private static final String VARIABLE_FS_PY_JOB_UTIL_PATH = "fs_py_job_util";
   private static final String VARIABLE_FS_JAVA_JOB_UTIL_PATH = "fs_java_job_util";
-
+  private static final String VARIABLE_HDFS_FILE_OP_JOB_UTIL = "hdfs_file_op_job_util";
+  private static final String VARIABLE_HDFS_FILE_OP_JOB_DRIVER_MEM = "hdfs_file_op_job_driver_mem";
+  
   // Storage connectors
 
   private final static String VARIABLE_ENABLE_REDSHIFT_STORAGE_CONNECTORS = "enable_redshift_storage_connectors";
@@ -802,7 +803,9 @@ public class Settings implements Serializable {
       HIVE_CONF_PATH = setStrVar(VARIABLE_HIVE_CONF_PATH, HIVE_CONF_PATH);
       FS_PY_JOB_UTIL_PATH = setStrVar(VARIABLE_FS_PY_JOB_UTIL_PATH, FS_PY_JOB_UTIL_PATH);
       FS_JAVA_JOB_UTIL_PATH  = setStrVar(VARIABLE_FS_JAVA_JOB_UTIL_PATH, FS_JAVA_JOB_UTIL_PATH);
-      
+      HDFS_FILE_OP_JOB_UTIL  = setStrVar(VARIABLE_HDFS_FILE_OP_JOB_UTIL, HDFS_FILE_OP_JOB_UTIL);
+      HDFS_FILE_OP_JOB_DRIVER_MEM  = setIntVar(VARIABLE_HDFS_FILE_OP_JOB_DRIVER_MEM, HDFS_FILE_OP_JOB_DRIVER_MEM);
+
       ENABLE_REDSHIFT_STORAGE_CONNECTORS = setBoolVar(VARIABLE_ENABLE_REDSHIFT_STORAGE_CONNECTORS,
               ENABLE_REDSHIFT_STORAGE_CONNECTORS);
       ENABLE_ADLS_STORAGE_CONNECTORS = setBoolVar(VARIABLE_ENABLE_ADLS_STORAGE_CONNECTORS,
@@ -2232,83 +2235,6 @@ public class Settings implements Serializable {
     return aggregatedLogPath;
   }
 
-  // For performance reasons, we have an in-memory cache of files being unzipped
-  // Lazily remove them from the cache, when we check the FS and they aren't there.
-  private Set<CompressionInfo> zippingFiles = new HashSet<>();
-
-  public synchronized void addZippingState(CompressionInfo compressionInfo) {
-    zippingFiles.add(compressionInfo);
-  }
-  private Set<CompressionInfo> unzippingFiles = new HashSet<>();
-
-  public synchronized void addUnzippingState(CompressionInfo compressionInfo) {
-    unzippingFiles.add(compressionInfo);
-  }
-
-  public synchronized String getZipState(String hdfsPath) {
-
-    boolean zipOperation = false;
-    boolean unzipOperation = false;
-
-    CompressionInfo zipInfo = zippingFiles.stream()
-      .filter(zinfo -> zinfo.getHdfsPath().toString().equals(hdfsPath))
-      .findAny()
-      .orElse(null);
-
-    CompressionInfo unzipInfo = unzippingFiles.stream()
-      .filter(uzinfo -> uzinfo.getHdfsPath().toString().equals(hdfsPath))
-      .findAny()
-      .orElse(null);
-
-    String compressionDir = null;
-    String fsmPath = null;
-    if(zipInfo != null) {
-      compressionDir = getStagingDir() + File.separator + zipInfo.getStagingDirectory();
-      fsmPath = compressionDir + "/fsm.txt";
-      zipOperation = true;
-    } else if(unzipInfo != null) {
-      compressionDir = getStagingDir() + File.separator + unzipInfo.getStagingDirectory();
-      fsmPath = compressionDir + "/fsm.txt";
-      unzipOperation = true;
-    } else {
-      return "NONE";
-    }
-
-    String state = "NOT_FOUND";
-    try {
-      state = new String(java.nio.file.Files.readAllBytes(Paths.get(fsmPath)));
-      state = state.trim();
-    } catch (IOException ex) {
-      if (!java.nio.file.Files.exists(Paths.get(compressionDir))) {
-        state = "NONE";
-        // lazily remove the file, probably because it has finished zipping/unzipping
-        if (zipOperation) {
-          zippingFiles.remove(zipInfo);
-        } else if (unzipOperation) {
-          unzippingFiles.remove(unzipInfo);
-        }
-      }
-    }
-    // If a terminal state has been reached, removed the entry and the file.
-    if (state.isEmpty() || state.compareTo("FAILED") == 0 || state.compareTo("SUCCESS") == 0) {
-      try {
-        if (zipOperation) {
-          zippingFiles.remove(zipInfo);
-        } else if (unzipOperation) {
-          unzippingFiles.remove(unzipInfo);
-        }
-        java.nio.file.Files.deleteIfExists(Paths.get(fsmPath));
-      } catch (IOException ex) {
-        Logger.getLogger(Settings.class.getName()).log(Level.SEVERE, null, ex);
-      }
-    }
-    if (state.isEmpty()) {
-      state = "NOT_FOUND";
-    }
-
-    return state;
-  }
-
   private String PYPI_REST_ENDPOINT = "https://pypi.org/pypi/{package}/json";
 
   public synchronized String getPyPiRESTEndpoint() {
@@ -3355,7 +3281,19 @@ public class Settings implements Serializable {
     checkCache();
     return FS_JAVA_JOB_UTIL_PATH;
   }
+  
+  private String HDFS_FILE_OP_JOB_UTIL = "hdfs:///user/spark/hdfs_file_operations-0.1.0.py";
+  public synchronized String getHdfsFileOpJobUtil() {
+    checkCache();
+    return HDFS_FILE_OP_JOB_UTIL;
+  }
 
+  private int HDFS_FILE_OP_JOB_DRIVER_MEM = 2048;
+  public synchronized int getHdfsFileOpJobDriverMemory() {
+    checkCache();
+    return HDFS_FILE_OP_JOB_DRIVER_MEM;
+  }
+  
   private long FEATURESTORE_DB_DEFAULT_QUOTA = -1;
   public synchronized long getFeaturestoreDbDefaultQuota() {
     checkCache();

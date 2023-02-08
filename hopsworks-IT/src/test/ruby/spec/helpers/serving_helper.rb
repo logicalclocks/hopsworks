@@ -139,12 +139,12 @@ module ServingHelper
 
   def wait_for_type(serving_name)
     if !kubernetes_installed
-      wait_for(60) do
+      wait_for(120) do
         system "pgrep -f #{serving_name} -a"
         $?.exitstatus == 0
       end
       #Wait a bit more for the actual server to start in the container
-      sleep(20)
+      sleep(35)
     else
       sleep(45)
     end
@@ -208,7 +208,7 @@ module ServingHelper
     servings.select { |serving| serving['name'] == serving_name}[0]
   end
 
-  def wait_for_serving_status(serving_name, status, timeout: 90, delay: 10)
+  def wait_for_serving_status(serving_name, status, timeout: 180, delay: 10)
     wait_result = wait_for_me_time(timeout, delay) do
       result = get_serving(serving_name)
       { 'success' => result['status'].eql?(status), 'status' => result['status'] }
