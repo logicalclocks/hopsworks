@@ -21,6 +21,7 @@ import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.kibana.MyRequestWrapper;
 import io.hops.hopsworks.api.proxy.ProxyServlet;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.jobs.flink.FlinkCompletedJobsCache;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.commons.io.IOUtils;
@@ -30,6 +31,7 @@ import org.apache.http.HttpHeaders;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.AbortableHttpRequest;
+import org.apache.http.client.utils.URIUtils;
 import org.apache.http.entity.BasicHttpEntity;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.message.BasicHttpEntityEnclosingRequest;
@@ -48,6 +50,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.logging.Level;
@@ -66,6 +69,19 @@ public class FlinkHistoryServerProxyServlet extends ProxyServlet {
   private UserFacade userFacade;
   @EJB
   private JWTHelper jwtHelper;
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
+
+  protected void initTarget() throws ServletException {
+    try {
+      targetUri = "http://" + serviceDiscoveryController.constructServiceFQDNWithPort(
+        ServiceDiscoveryController.HopsworksService.FLINK_HISTORY_SERVER);
+      targetUriObj = new URI(targetUri);
+    } catch (Exception e) {
+      throw new ServletException("Trying to process targetUri init parameter: " + e, e);
+    }
+    targetHost = URIUtils.extractHost(targetUriObj);
+  }
   
   @Override
   protected void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
