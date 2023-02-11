@@ -47,7 +47,7 @@ describe "On #{ENV['OS']}" do
           reset_session
         end
         it "should fail" do
-          post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}", description: "", services: ["JOBS","HIVE"], projectTeam:[], retentionPeriod: ""}
+          post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}", description: "", services: ["JOBS","HIVE"], projectTeam:[]}
           expect_status_details(401, error_code: 200003)
         end
       end
@@ -61,7 +61,7 @@ describe "On #{ENV['OS']}" do
         end
         it 'should work with valid params' do
           projectname = "project_#{Time.now.to_i}"
-          post "#{ENV['HOPSWORKS_API']}/project", {projectName: "#{projectname}", description: "", services: ["JOBS","HIVE"], projectTeam:[], retentionPeriod: ""}
+          post "#{ENV['HOPSWORKS_API']}/project", {projectName: "#{projectname}", description: "", services: ["JOBS","HIVE"], projectTeam:[]}
           expect_json(successMessage: regex("Project created successfully.*"))
           expect_status_details(201)
           get "#{ENV['HOPSWORKS_API']}/project/getProjectInfo/#{projectname}"
@@ -71,7 +71,7 @@ describe "On #{ENV['OS']}" do
         end
         it 'should create resources and logs datasets with right permissions and owner' do
           projectname = "project_#{Time.now.to_i}"
-          post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectname, description: "", services: ["JOBS","HIVE"], projectTeam:[], retentionPeriod: ""}
+          post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectname, description: "", services: ["JOBS","HIVE"], projectTeam:[]}
           expect_json(successMessage: regex("Project created successfully.*"))
           expect_status_details(201)
           get "#{ENV['HOPSWORKS_API']}/project/getProjectInfo/#{projectname}"
@@ -90,7 +90,7 @@ describe "On #{ENV['OS']}" do
 
         it 'should create JUPYTER dataset with right permissions and owner' do
           projectname = "project_#{Time.now.to_i}"
-          post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectname, description: "", services: ["JOBS","HIVE", "JUPYTER"], projectTeam:[], retentionPeriod: ""}
+          post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectname, description: "", services: ["JOBS","HIVE", "JUPYTER"], projectTeam:[]}
           expect_json(successMessage: regex("Project created successfully.*"))
           expect_status_details(201)
           get "#{ENV['HOPSWORKS_API']}/project/getProjectInfo/#{projectname}"
@@ -106,36 +106,36 @@ describe "On #{ENV['OS']}" do
         it 'should fail to create a project with an existing name' do
           with_valid_project
           projectname = "#{@project[:projectname]}"
-          post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectname, description: "", services: ["JOBS","HIVE"], projectTeam:[], retentionPeriod: ""}
+          post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectname, description: "", services: ["JOBS","HIVE"], projectTeam:[]}
           expect_status_details(409, error_code: 150001)
         end
 
         it 'should fail to create a project named the same as preinstalled python docker image' do
           with_valid_project
           docker_base_image_name = getVar('docker_base_image_python_name').value
-          post "#{ENV['HOPSWORKS_API']}/project", {projectName: docker_base_image_name, description: "", services: ["JOBS","HIVE"], projectTeam:[], retentionPeriod: ""}
+          post "#{ENV['HOPSWORKS_API']}/project", {projectName: docker_base_image_name, description: "", services: ["JOBS","HIVE"], projectTeam:[]}
           expect_status_details(400, error_code: 150073)
         end
 
         it 'Should fail to create two projects with the same name but different capitalization - HOPSWORKS-256' do
           check_project_limit(2)
           projectName = "HOPSWORKS256#{short_random_id}"
-          post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectName, description: "", services: [], projectTeam:[], retentionPeriod: ""}
+          post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectName, description: "", services: [], projectTeam:[]}
           expect_status_details(201)
           expect_json(successMessage: regex("Project created successfully.*"))
 
-          post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectName.downcase, description: "", services: [], projectTeam:[], retentionPeriod: ""}
+          post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectName.downcase, description: "", services: [], projectTeam:[]}
           expect_status_details(409, error_code: 150001)
         end
 
         it 'Should fail to create two projects with the same name but different capitalization - HOPSWORKS-256' do
           check_project_limit(2)
           projectName = "hopsworks256#{short_random_id}"
-          post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectName, description: "", services: [], projectTeam:[], retentionPeriod: ""}
+          post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectName, description: "", services: [], projectTeam:[]}
           expect_status_details(201)
           expect_json(successMessage: regex("Project created successfully.*"))
 
-          post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectName.upcase, description: "", services: [], projectTeam:[], retentionPeriod: ""}
+          post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectName.upcase, description: "", services: [], projectTeam:[]}
           expect_status_details(409, error_code: 150001)
         end
 

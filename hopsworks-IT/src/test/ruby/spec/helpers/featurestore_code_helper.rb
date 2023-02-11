@@ -89,7 +89,7 @@ module FeatureStoreCodeHelper
   def save_job(application_id, dataset_type)
 		#update tour project by adding services
 		new_project = {description:"", status: 0, services: ["JOBS","JUPYTER","HIVE","KAFKA","SERVING", "FEATURESTORE"],
-			   projectTeam:[], retentionPeriod: ""}
+			   projectTeam:[] }
 		put "#{ENV['HOPSWORKS_API']}/project/#{@project.id}", new_project
 
 		#create featuregroup/training dataset

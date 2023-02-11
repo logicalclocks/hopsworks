@@ -42,7 +42,6 @@ package io.hops.hopsworks.common.hive;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
@@ -78,7 +77,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -98,8 +96,6 @@ public class HiveController {
   private DatasetFacade datasetFacade;
   @EJB
   private BaseHadoopClientsService bhcs;
-  @EJB
-  private ProjectFacade projectFacade;
   @EJB
   private DatasetController datasetController;
   @EJB
@@ -208,17 +204,12 @@ public class HiveController {
       // Set the default quota
       switch (datasetType) {
         case HIVEDB:
-          if (settings.getHiveDbDefaultQuota() > -1) {
-            dfso.setHdfsSpaceQuotaInMBs(dbPath, settings.getHiveDbDefaultQuota());
-          }
+          dfso.setHdfsSpaceQuota(dbPath, settings.getHiveDbDefaultQuota());
           break;
         case FEATURESTORE:
-          if (settings.getFeaturestoreDbDefaultQuota() > -1) {
-            dfso.setHdfsSpaceQuotaInMBs(dbPath, settings.getFeaturestoreDbDefaultQuota());
-          }
+          dfso.setHdfsSpaceQuota(dbPath, settings.getFeaturestoreDbDefaultQuota());
           break;
       }
-      projectFacade.setTimestampQuotaUpdate(project, new Date());
     } catch (IOException | ProvenanceException e) {
       logger.log(Level.SEVERE, "Cannot assign Hive database directory " + dbPath.toString() +
           " to correct user/group. Trace: " + e);

@@ -221,16 +221,6 @@ public class ProjectFacade extends AbstractFacade<Project> {
   }
 
   /**
-   * Mark the project <i>project</i> as deleted.
-   * <p/>
-   * @param project
-   */
-  public void removeProject(Project project) {
-    project.setDeleted(Boolean.TRUE);
-    em.merge(project);
-  }
-
-  /**
    * Check if a project with this name already exists.
    * <p/>
    * @param name
@@ -266,46 +256,11 @@ public class ProjectFacade extends AbstractFacade<Project> {
     em.merge(newProject);
   }
 
-  public void archiveProject(Project project) {
-    project.setArchived(true);
-    em.merge(project);
-  }
-
-  public void enableLogs(Project project) {
-    if (project != null) {
-      project.setLogs(true);
-    }
-    em.merge(project);
-  }
-
   public void setDockerImage(Project project, String dockerImage) {
     project.setDockerImage(dockerImage);
     em.merge(project);
   }
 
-  public void unarchiveProject(Project project) {
-    project.setArchived(false);
-    em.merge(project);
-  }
-
-  public boolean updateRetentionPeriod(String name, Date date) {
-    Project project = findByName(name);
-    if (project != null) {
-      project.setRetentionPeriod(date);
-      em.merge(project);
-      return true;
-    }
-    return false;
-  }
-
-  public Date getRetentionPeriod(String name) {
-    Project project = findByName(name);
-    if (project != null) {
-      return project.getRetentionPeriod();
-    }
-    return null;
-  }
-  
   public Optional<Project> findById(Integer id) {
     try {
       return Optional.ofNullable(em.createNamedQuery("Project.findById", Project.class)

@@ -51,7 +51,6 @@ import io.hops.hopsworks.common.alert.AlertController;
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetSharedWithFacade;
-import io.hops.hopsworks.common.dao.hdfs.HdfsDirectoryWithQuotaFeatureFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
@@ -126,7 +125,6 @@ import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
-import io.hops.hopsworks.persistence.entity.hdfs.HdfsDirectoryWithQuotaFeature;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.InodeView;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsGroups;
@@ -142,7 +140,6 @@ import io.hops.hopsworks.persistence.entity.kafka.schemas.SchemaCompatibility;
 import io.hops.hopsworks.persistence.entity.log.operation.OperationType;
 import io.hops.hopsworks.persistence.entity.log.operation.OperationsLog;
 import io.hops.hopsworks.persistence.entity.project.CreationStatus;
-import io.hops.hopsworks.persistence.entity.project.PaymentType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.jobs.DefaultJobConfiguration;
 import io.hops.hopsworks.persistence.entity.project.service.ProjectServiceEnum;
@@ -189,7 +186,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -274,8 +270,6 @@ public class ProjectController {
   @EJB
   private MessageController messageController;
   @EJB
-  private HdfsDirectoryWithQuotaFeatureFacade hdfsDirectoryWithQuotaFeatureFacade;
-  @EJB
   private FeaturestoreController featurestoreController;
   @EJB
   private OnlineFeaturestoreController onlineFeaturestoreController;
@@ -296,6 +290,8 @@ public class ProjectController {
   private AirflowManager airflowManager;
   @EJB
   private ProjectServiceFacade projectServiceFacade;
+  @EJB
+  private ProjectQuotasController projectQuotasController;
   @EJB
   private HopsKafkaAdminClient hopsKafkaAdminClient;
   @EJB
@@ -326,10 +322,9 @@ public class ProjectController {
    *
    * @param projectDTO
    * @param owner
-   * @param sessionId
    * @return
    */
-  public Project createProject(ProjectDTO projectDTO, Users owner, String sessionId) throws DatasetException,
+  public Project createProject(ProjectDTO projectDTO, Users owner) throws DatasetException,
     GenericException, KafkaException, ProjectException, UserException, HopsSecurityException, ServiceException,
     FeaturestoreException, OpenSearchException, SchemaException, IOException {
 
@@ -375,7 +370,7 @@ public class ProjectController {
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 2 (hdfs): {0}", System.currentTimeMillis() - startTime);
 
-      verifyProject(project, dfso, sessionId);
+      verifyProject(project, dfso);
 
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 3 (verify): {0}", System.currentTimeMillis() - startTime);
 
@@ -385,7 +380,7 @@ public class ProjectController {
       try {
         UserAccountHandler.runUserAccountUpdateHandlers(userAccountHandlers, owner);
       } catch (UserException ex) {
-        cleanup(project, sessionId, null, true, owner);
+        cleanup(project, null, true, owner);
         throw ex;
       }
       
@@ -393,7 +388,7 @@ public class ProjectController {
       try {
         ProjectHandler.runProjectPreCreateHandlers(projectHandlers, project);
       } catch (ProjectException ex) {
-        cleanup(project, sessionId, null, true, owner);
+        cleanup(project, null, true, owner);
         throw ex;
       }
 
@@ -408,7 +403,7 @@ public class ProjectController {
         certsResultFuture = certificatesController.generateCertificates(project, owner);
         projectCreationFutures.add(certsResultFuture);
       } catch (Exception ex) {
-        cleanup(project, sessionId, projectCreationFutures, true, owner);
+        cleanup(project, projectCreationFutures, true, owner);
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_CREATION_ERROR, Level.SEVERE,
           "project: " + project.getName() +
             "owner: " + owner.getUsername(), ex.getMessage(), ex);
@@ -416,7 +411,7 @@ public class ProjectController {
 
       String username = hdfsUsersController.getHdfsUserName(project, owner);
       if (username == null || username.isEmpty()) {
-        cleanup(project, sessionId, projectCreationFutures, true, owner);
+        cleanup(project, projectCreationFutures, true, owner);
         throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.SEVERE,
           "project: " + project.getName() + "owner: " + owner.getUsername());
       }
@@ -430,7 +425,7 @@ public class ProjectController {
         mkProjectDIR(projectName, dfso);
         fsProvController.updateProjectProvType(project, provType, dfso);
       } catch (IOException | EJBException | ProvenanceException ex) {
-        cleanup(project, sessionId, projectCreationFutures, true, owner);
+        cleanup(project, projectCreationFutures, true, owner);
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_FOLDER_NOT_CREATED, Level.SEVERE,
           "project: " + projectName, ex.getMessage(), ex);
       }
@@ -439,7 +434,7 @@ public class ProjectController {
       try {
         setProjectInode(project, dfso);
       } catch (IOException | EJBException ex) {
-        cleanup(project, sessionId, projectCreationFutures, true, owner);
+        cleanup(project, projectCreationFutures, true, owner);
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_INODE_CREATION_ERROR, Level.SEVERE,
           "project: " + projectName, ex.getMessage(), ex);
       }
@@ -449,7 +444,7 @@ public class ProjectController {
       try {
         setProjectOwnerAndQuotas(project, dfso, owner);
       } catch (IOException | EJBException ex) {
-        cleanup(project, sessionId, projectCreationFutures, true, owner);
+        cleanup(project, projectCreationFutures, true, owner);
         throw new ProjectException(RESTCodes.ProjectErrorCode.QUOTA_ERROR, Level.SEVERE, "project: " + project.getName()
           , ex.getMessage(), ex);
       }
@@ -459,7 +454,7 @@ public class ProjectController {
         hdfsUsersController.addProjectFolderOwner(project, dfso);
         createProjectLogResources(owner, project, dfso);
       } catch (IOException | EJBException ex) {
-        cleanup(project, sessionId, projectCreationFutures);
+        cleanup(project, projectCreationFutures);
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_SET_PERMISSIONS_ERROR, Level.SEVERE,
           "project: " + projectName, ex.getMessage(), ex);
       }
@@ -486,7 +481,7 @@ public class ProjectController {
       } catch (InterruptedException | ExecutionException ex) {
         LOGGER.log(Level.SEVERE, "Error while waiting for the certificate generation thread to finish. Will try to " +
           "cleanup...", ex);
-        cleanup(project, sessionId, projectCreationFutures);
+        cleanup(project, projectCreationFutures);
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_CREATION_ERROR, Level.SEVERE, "Error while " +
           "generating certificates.", ex.getMessage(), ex);
       }
@@ -497,7 +492,7 @@ public class ProjectController {
         } catch (RESTException | IOException ex) {
           LOGGER.log(Level.SEVERE, "Error enabling service {0}: {1}. Will try to cleanup...", new Object[]{service,
             ex.getMessage()});
-          cleanup(project, sessionId, projectCreationFutures);
+          cleanup(project, projectCreationFutures);
           throw ex;
         }
       }
@@ -511,7 +506,7 @@ public class ProjectController {
       } catch (InterruptedException | ExecutionException ex) {
         LOGGER.log(Level.SEVERE, "Error while waiting for project creation future thread to finish. Will try to " +
           "cleanup...", ex);
-        cleanup(project, sessionId, projectCreationFutures);
+        cleanup(project, projectCreationFutures);
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_SERVICE_ADD_FAILURE, Level.SEVERE,
           "Error while adding services.", ex.getMessage(), ex);
       }
@@ -522,7 +517,7 @@ public class ProjectController {
       } catch (ProjectException ex) {
         LOGGER.log(Level.SEVERE, "Error running Project Post Create Handlers {0}. Will try to cleanup...",
           ex.getMessage());
-        cleanup(project, sessionId, projectCreationFutures);
+        cleanup(project, projectCreationFutures);
         throw ex;
       }
 
@@ -530,7 +525,7 @@ public class ProjectController {
         project = environmentController.createEnv(project, owner);
       } catch (PythonException | EJBException ex) {
         LOGGER.log(Level.SEVERE, "Error creating environment {0}. Will try to cleanup...", ex.getMessage());
-        cleanup(project, sessionId, projectCreationFutures);
+        cleanup(project, projectCreationFutures);
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_ANACONDA_ENABLE_ERROR, Level.SEVERE,
           "project: " + projectName, ex.getMessage(), ex);
       }
@@ -553,9 +548,7 @@ public class ProjectController {
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private void verifyProject(Project project, DistributedFileSystemOps dfso,
-    String sessionId)
-    throws ProjectException, GenericException {
+  private void verifyProject(Project project, DistributedFileSystemOps dfso) throws ProjectException, GenericException {
     //proceed to all the verifications and set up local variable
     //  verify that the project folder does not exist
     //  verify that users and groups corresponding to this project name does not already exist in HDFS
@@ -574,16 +567,16 @@ public class ProjectController {
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_GROUP_EXISTS, Level.INFO, severity,
           project.getName());
       } else if (!verifyQuota(project.getName())) {
-        cleanup(project, sessionId, true);
+        cleanup(project, true);
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_EXISTS, Level.INFO, project.getName());
       } else if (!verifyLogs(dfso, project.getName())) {
-        cleanup(project, sessionId, true);
+        cleanup(project, true);
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_LOGS_EXIST, Level.INFO, severity,
           project.getName());
       }
     } catch (IOException | EJBException ex) {
       LOGGER.log(Level.SEVERE, RESTCodes.ProjectErrorCode.PROJECT_VERIFICATIONS_FAILED.toString(), ex);
-      cleanup(project, sessionId, true);
+      cleanup(project, true);
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_VERIFICATIONS_FAILED, Level.SEVERE);
     }
   }
@@ -607,12 +600,6 @@ public class ProjectController {
     project.setKafkaMaxNumTopics(settings.getKafkaMaxNumTopics());
     project.setDescription(projectDescription);
     project.setCreationStatus(CreationStatus.ONGOING);
-
-    // set retention period to next 10 years by default
-    Calendar cal = Calendar.getInstance();
-    cal.setTime(now);
-    cal.add(Calendar.YEAR, 10);
-    project.setRetentionPeriod(cal.getTime());
 
     //set a dumy node in the project until the creation of the project folder
     Path dummy = new Path("/tmp/" + projectName);
@@ -675,9 +662,9 @@ public class ProjectController {
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private boolean verifyQuota(String projectName) {
-    YarnProjectsQuota projectsQuota = yarnProjectsQuotaFacade.findByProjectName(
-      projectName);
-    if (projectsQuota != null) {
+    Optional<YarnProjectsQuota> projectsQuota =
+        yarnProjectsQuotaFacade.findByProjectName(projectName);
+    if (projectsQuota.isPresent()) {
       LOGGER.log(Level.WARNING, "quota existing for project {0}", projectName);
       return false;
     }
@@ -1043,28 +1030,6 @@ public class ProjectController {
     return false;
   }
 
-  /**
-   * Change, if necessary, the project retention period
-   * <p/>
-   *
-   * @param project the project to change
-   * @param projectRetention the retention period
-   * @param user the user making the change
-   * @return
-   */
-  public boolean updateProjectRetention(Project project, Date projectRetention,
-    Users user) {
-    if (project.getRetentionPeriod() == null || !project.getRetentionPeriod().equals(projectRetention)) {
-      project.setRetentionPeriod(projectRetention);
-      projectFacade.mergeProject(project);
-      logProject(project, OperationType.Update);
-      logActivity(ActivityFacade.PROJECT_RETENTION_CHANGED + projectRetention, user, project,
-        ActivityFlag.PROJECT);
-      return true;
-    }
-    return false;
-  }
-
   //Set the project owner as project master in ProjectTeam table
   private void addProjectOwner(Project project, Users user) {
     ProjectTeamPK stp = new ProjectTeamPK(project.getId(), user.getEmail());
@@ -1122,11 +1087,8 @@ public class ProjectController {
    *
    * @param userMail
    * @param projectId
-   * @param sessionId
    */
-  public void removeProject(String userMail, int projectId, String sessionId) throws ProjectException,
-    GenericException {
-
+  public void removeProject(String userMail, int projectId) throws ProjectException, GenericException {
     Project project = projectFacade.find(projectId);
     if (project == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
@@ -1139,10 +1101,10 @@ public class ProjectController {
 
     topicAclsFacade.removeAclForProject(project);
 
-    cleanup(project, sessionId);
+    cleanup(project);
   }
 
-  public String[] forceCleanup(String projectName, String userEmail, String sessionId) {
+  public String[] forceCleanup(String projectName, String userEmail) {
     CleanupLogger cleanupLogger = new CleanupLogger(projectName);
     DistributedFileSystemOps dfso = null;
     YarnClientWrapper yarnClientWrapper = null;
@@ -1281,7 +1243,7 @@ public class ProjectController {
 
         // Remove quotas
         try {
-          removeQuotas(project);
+          yarnProjectsQuotaFacade.removeQuota(project.getName());
           cleanupLogger.logSuccess("Removed quotas");
         } catch (Exception ex) {
           cleanupLogger.logError("Error when removing quota during project cleanup");
@@ -1475,7 +1437,7 @@ public class ProjectController {
 
         // Remove Yarn project quota
         try {
-          removeQuotas(toDeleteProject);
+          yarnProjectsQuotaFacade.removeQuota(toDeleteProject.getName());
           cleanupLogger.logSuccess("Removed project quota");
         } catch (Exception ex) {
           cleanupLogger.logError(ex.getMessage());
@@ -1641,27 +1603,25 @@ public class ProjectController {
     return projectNames;
   }
 
-  public void cleanup(Project project, String sessionId) throws GenericException {
-    cleanup(project, sessionId, false);
+  public void cleanup(Project project) throws GenericException {
+    cleanup(project,true);
   }
 
-  public void cleanup(Project project, String sessionId, boolean decreaseCreatedProj) throws GenericException {
-    cleanup(project, sessionId, null, decreaseCreatedProj);
+  public void cleanup(Project project, boolean decreaseCreatedProj) throws GenericException {
+    cleanup(project, null, decreaseCreatedProj);
   }
 
-  public void cleanup(Project project, String sessionId,
-    List<Future<?>> projectCreationFutures) throws GenericException {
-    cleanup(project, sessionId, projectCreationFutures, true);
+  public void cleanup(Project project, List<Future<?>> projectCreationFutures) throws GenericException {
+    cleanup(project, projectCreationFutures, true);
   }
 
-  public void cleanup(Project project, String sessionId,
-      List<Future<?>> projectCreationFutures, boolean decreaseCreatedProj) throws GenericException {
-    cleanup(project, sessionId, projectCreationFutures, true, null);
+  public void cleanup(Project project, List<Future<?>> projectCreationFutures,
+                      boolean decreaseCreatedProj) throws GenericException {
+    cleanup(project, projectCreationFutures, decreaseCreatedProj, null);
   }
 
-  public void cleanup(Project project, String sessionId,
-      List<Future<?>> projectCreationFutures, boolean decreaseCreatedProj, Users owner)
-    throws GenericException {
+  public void cleanup(Project project, List<Future<?>> projectCreationFutures,
+                      boolean decreaseCreatedProj, Users owner) throws GenericException {
 
     if (project == null) {
       return;
@@ -1792,7 +1752,7 @@ public class ProjectController {
       removeProjectRelatedFiles(usersToClean, dfso);
 
       //remove quota
-      removeQuotas(project);
+      yarnProjectsQuotaFacade.removeQuota(project.getName());
 
       //change owner for files in shared datasets
       fixSharedDatasets(project, dfso);
@@ -1883,12 +1843,6 @@ public class ProjectController {
       .collect(Collectors.toList());
   
     hopsKafkaAdminClient.deleteTopics(topicNameList);
-  }
-
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private void removeQuotas(Project project) {
-    YarnProjectsQuota yarnProjectsQuota = yarnProjectsQuotaFacade.findByProjectName(project.getName());
-    yarnProjectsQuotaFacade.remove(yarnProjectsQuota);
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -2099,7 +2053,7 @@ public class ProjectController {
       services.add(s.toString());
     }
 
-    QuotasDTO quotas = getQuotasInternal(project);
+    Quotas quotas = projectQuotasController.getQuotas(project);
 
     return new ProjectDTO(project, inode.getId(), services, projectTeam, quotas,
       settings.getHopsExamplesSparkFilename(), projectUtils.dockerImageIsPreinstalled(project.getDockerImage()),
@@ -2156,10 +2110,7 @@ public class ProjectController {
     this.yarnProjectsQuotaFacade.flushEm();
 
     // Here we set only the project quota. The HiveDB and Feature Store quotas are set in the HiveController
-    if (settings.getHdfsDefaultQuotaInMBs() > -1) {
-      dfso.setHdfsSpaceQuotaInMBs(
-          new Path(Utils.getProjectPath(project.getName())), settings.getHdfsDefaultQuotaInMBs());
-    }
+    dfso.setHdfsSpaceQuota(new Path(Utils.getProjectPath(project.getName())), settings.getHdfsDefaultQuotaInMBs());
 
     projectFacade.setTimestampQuotaUpdate(project, new Date());
     //Add the activity information
@@ -2167,69 +2118,6 @@ public class ProjectController {
     //update role information in project
     addProjectOwner(project, user);
     LOGGER.log(Level.FINE, "{0} - project created successfully.", project.getName());
-  }
-
-  public void setPaymentType(Project project, PaymentType paymentType) {
-    project.setPaymentType(paymentType);
-    this.projectFacade.mergeProject(project);
-    this.projectFacade.flushEm();
-  }
-
-  public QuotasDTO getQuotasInternal(Project project) {
-    long hdfsQuota = -1L, hdfsUsage = -1L, hdfsNsQuota = -1L, hdfsNsCount = -1L,
-      dbhdfsQuota = -1L, dbhdfsUsage = -1L, dbhdfsNsQuota = -1L, dbhdfsNsCount = -1L,
-      fshdfsQuota = -1L, fshdfsUsage = -1L, fshdfsNsQuota = -1L, fshdfsNsCount = -1L;
-    float yarnRemainingQuota = 0f, yarnTotalQuota = 0f;
-
-    // Yarn Quota
-    YarnProjectsQuota yarnQuota = yarnProjectsQuotaFacade.
-      findByProjectName(project.getName());
-    if (yarnQuota == null) {
-      LOGGER.log(Level.SEVERE, "Cannot find YARN quota information for project: " + project.getName());
-    } else {
-      yarnRemainingQuota = yarnQuota.getQuotaRemaining();
-      yarnTotalQuota = yarnQuota.getTotal();
-    }
-
-    // HDFS project directory quota
-    Optional<HdfsDirectoryWithQuotaFeature> projectInodeAttrsOptional =
-        hdfsDirectoryWithQuotaFeatureFacade.getByInodeId(project.getInode().getId());
-    if (projectInodeAttrsOptional.isPresent()) {
-      hdfsQuota = projectInodeAttrsOptional.get().getSsquota().longValue();
-      hdfsUsage = projectInodeAttrsOptional.get().getStorageSpace().longValue();
-      hdfsNsQuota = projectInodeAttrsOptional.get().getNsquota().longValue();
-      hdfsNsCount = projectInodeAttrsOptional.get().getNscount().longValue();
-    }
-
-    // If the Hive service is enabled, get the quota information for the db directory
-    List<Dataset> datasets = (List<Dataset>) project.getDatasetCollection();
-    for (Dataset ds : datasets) {
-      if (ds.getDsType() == DatasetType.HIVEDB) {
-        Optional<HdfsDirectoryWithQuotaFeature> dbInodeAttrsOptional =
-            hdfsDirectoryWithQuotaFeatureFacade.getByInodeId(ds.getInodeId());
-        if (dbInodeAttrsOptional.isPresent()) {
-          dbhdfsQuota = dbInodeAttrsOptional.get().getSsquota().longValue();
-          dbhdfsUsage = dbInodeAttrsOptional.get().getStorageSpace().longValue();
-          dbhdfsNsQuota = dbInodeAttrsOptional.get().getNsquota().longValue();
-          dbhdfsNsCount = dbInodeAttrsOptional.get().getNscount().longValue();
-        }
-      } else if (ds.getDsType() == DatasetType.FEATURESTORE) {
-        Optional<HdfsDirectoryWithQuotaFeature> fsInodeAttrsOptional =
-            hdfsDirectoryWithQuotaFeatureFacade.getByInodeId(ds.getInodeId());
-        if (fsInodeAttrsOptional.isPresent()) {
-          fshdfsQuota = fsInodeAttrsOptional.get().getSsquota().longValue();
-          fshdfsUsage = fsInodeAttrsOptional.get().getStorageSpace().longValue();
-          fshdfsNsQuota = fsInodeAttrsOptional.get().getNsquota().longValue();
-          fshdfsNsCount = fsInodeAttrsOptional.get().getNscount().longValue();
-        }
-      }
-    }
-
-    Integer kafkaQuota = project.getKafkaMaxNumTopics();
-
-    return new QuotasDTO(yarnRemainingQuota, yarnTotalQuota, hdfsQuota, hdfsUsage, hdfsNsQuota, hdfsNsCount,
-      dbhdfsQuota, dbhdfsUsage, dbhdfsNsQuota, dbhdfsNsCount, fshdfsQuota, fshdfsUsage, fshdfsNsQuota,
-      fshdfsNsCount, kafkaQuota);
   }
 
   public void removeMemberFromTeam(Project project, Users user, String toRemoveEmail) throws UserException,
@@ -2472,7 +2360,7 @@ public class ProjectController {
   
   public String addTourFilesToProject(String username, Project project, DistributedFileSystemOps dfso,
     DistributedFileSystemOps udfso, TourProjectType projectType, ProvTypeDTO projectProvCore) throws DatasetException,
-    HopsSecurityException, ProjectException, JobException, GenericException, ServiceException {
+    HopsSecurityException, ProjectException {
     String tourFilesDataset = Settings.HOPS_TOUR_DATASET;
     Users user = userFacade.findByEmail(username);
     if (null != projectType) {
@@ -2702,12 +2590,7 @@ public class ProjectController {
       .append(WordUtils.wrap(Base64.encodeBase64String(derBytes), 64, null, true)).append("\n")
       .append("-----END ").append(pemType).append("-----\n");
   }
-  
-  /**
-   * Helper class to log force cleanup operations
-   *
-   * @see ProjectController#forceCleanup(String, String, String)
-   */
+
   private class CleanupLogger {
 
     private final String projectName;
@@ -2743,102 +2626,6 @@ public class ProjectController {
 
     private StringBuilder getErrorLog() {
       return errorLog;
-    }
-  }
-
-  /**
-   * For HOPSFS quotas, both the namespace and the space quotas should be not null
-   * at the same time.
-   *
-   * @param newProjectState
-   * @param quotas
-   * @throws IOException
-   */
-  public void adminProjectUpdate(Project newProjectState, QuotasDTO quotas) throws ProjectException {
-    Project currentProject = projectFacade.findByName(newProjectState.getName());
-    if (currentProject == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE);
-    }
-
-    // Set (un)archived status only if changed
-    if (newProjectState.getArchived() != null && (currentProject.getArchived() != newProjectState.getArchived())) {
-      if (newProjectState.getArchived()) {
-        projectFacade.archiveProject(currentProject);
-      } else {
-        projectFacade.unarchiveProject(currentProject);
-      }
-    }
-
-    // Set payment type information
-    if (newProjectState.getPaymentType() != null
-      && (newProjectState.getPaymentType() != currentProject.getPaymentType())) {
-      setPaymentType(currentProject, newProjectState.getPaymentType());
-    }
-
-    // Set the quotas information
-    if (quotas != null) {
-      QuotasDTO currentQuotas = getQuotasInternal(currentProject);
-
-      DistributedFileSystemOps dfso = dfs.getDfsOps();
-      boolean quotaChanged = false;
-      try {
-        // If Hdfs quotas has changed, persist the changes in the database.
-        if (quotas.getHdfsQuotaInBytes() != null && quotas.getHdfsNsQuota() != null && (!quotas.getHdfsQuotaInBytes().
-          equals(currentQuotas.getHdfsQuotaInBytes()) || !quotas.getHdfsNsQuota().equals(currentQuotas.
-          getHdfsNsQuota()))) {
-
-          dfso.setHdfsQuotaBytes(new Path(Utils.getProjectPath(currentProject.getName())),
-            quotas.getHdfsNsQuota(), quotas.getHdfsQuotaInBytes());
-          quotaChanged = true;
-
-        }
-
-        // If Hive quota has changed and the Hive service is enabled, persist the changes in the database.
-        if (quotas.getHiveHdfsQuotaInBytes() != null && quotas.getHiveHdfsNsQuota() != null && projectServicesFacade.
-          isServiceEnabledForProject(currentProject, ProjectServiceEnum.HIVE) && (!quotas.getHiveHdfsQuotaInBytes().
-          equals(currentQuotas.getHiveHdfsQuotaInBytes()) || !quotas.getHiveHdfsNsQuota().equals(currentQuotas.
-          getHiveHdfsNsQuota()))) {
-
-          dfso.setHdfsQuotaBytes(hiveController.getDbPath(currentProject.getName()),
-            quotas.getHiveHdfsNsQuota(), quotas.getHiveHdfsQuotaInBytes());
-          quotaChanged = true;
-        }
-
-        // If Featurestore quota has changed and the Featurestore service is enabled, persist the changes in the db.
-        if (quotas.getFeaturestoreHdfsQuotaInBytes() != null && quotas.getFeaturestoreHdfsNsQuota() != null
-          && projectServicesFacade.isServiceEnabledForProject(currentProject, ProjectServiceEnum.FEATURESTORE) &&
-          (!quotas.getFeaturestoreHdfsQuotaInBytes().equals(currentQuotas.getFeaturestoreHdfsQuotaInBytes()) ||
-            !quotas.getFeaturestoreHdfsNsQuota().equals(currentQuotas.getFeaturestoreHdfsNsQuota()))) {
-
-          dfso.setHdfsQuotaBytes(hiveController.getDbPath(
-            featurestoreController.getOfflineFeaturestoreDbName(newProjectState))
-            , quotas.getFeaturestoreHdfsNsQuota(), quotas.getFeaturestoreHdfsQuotaInBytes());
-          quotaChanged = true;
-        }
-      } catch (IOException e) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.QUOTA_ERROR,
-          Level.SEVERE, "project: " + currentProject.getName(), e.getMessage(), e);
-      } finally {
-        if (dfso != null) {
-          dfso.close();
-        }
-      }
-
-      // If the yarn quota has changed, persist the change in the database
-      if (quotas.getYarnQuotaInSecs() != null &&
-        !quotas.getYarnQuotaInSecs().equals(currentQuotas.getYarnQuotaInSecs())) {
-        yarnProjectsQuotaFacade.changeYarnQuota(currentProject.getName(), quotas.getYarnQuotaInSecs());
-        quotaChanged = true;
-      }
-      if (quotas.getKafkaMaxNumTopics() != null) {
-        projectFacade.changeKafkaQuota(currentProject, quotas.getKafkaMaxNumTopics());
-        quotaChanged = true;
-      }
-
-      // Register time of last quota change in the project entry
-      if (quotaChanged) {
-        projectFacade.setTimestampQuotaUpdate(currentProject, new Date());
-      }
     }
   }
 

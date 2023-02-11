@@ -102,8 +102,6 @@ import java.util.Map;
       query = "SELECT t FROM Project t WHERE t.owner = :owner"),
   @NamedQuery(name = "Project.findByCreated",
       query = "SELECT t FROM Project t WHERE t.created = :created"),
-  @NamedQuery(name = "Project.findByRetentionPeriod",
-      query = "SELECT t FROM Project t WHERE t.retentionPeriod = :retentionPeriod"),
   @NamedQuery(name = "Project.countProjectByOwner",
       query = "SELECT count(t) FROM Project t WHERE t.owner = :owner"),
   @NamedQuery(name = "Project.findByOwnerAndName",
@@ -115,10 +113,6 @@ import java.util.Map;
       query = "SELECT t FROM Project t where LOWER(t.name) = LOWER(:name)")})
 public class Project implements Serializable {
 
-  @Column(name = "archived")
-  private Boolean archived = false;
-  @Column(name = "logs")
-  private Boolean logs = false;
   @OneToMany(cascade = CascadeType.ALL,
       mappedBy = "project")
   private Collection<ProjectTeam> projectTeamCollection;
@@ -180,13 +174,6 @@ public class Project implements Serializable {
   @Column(name = "created")
   @Temporal(TemporalType.TIMESTAMP)
   private Date created;
-
-  @Column(name = "retention_period")
-  @Temporal(TemporalType.DATE)
-  private Date retentionPeriod;
-
-  @Column(name = "deleted")
-  private Boolean deleted;
 
   @NotNull
   @Column(name = "payment_type")
@@ -254,7 +241,6 @@ public class Project implements Serializable {
 
   public Project(String name) {
     this.name = name;
-    this.archived = false;
   }
 
   public Project(String name, Inode inode) {
@@ -266,7 +252,6 @@ public class Project implements Serializable {
     this.name = name;
     this.owner = owner;
     this.created = timestamp;
-    this.archived = false;
     this.paymentType = paymentType;
     this.lastQuotaUpdate = timestamp;
   }
@@ -303,14 +288,6 @@ public class Project implements Serializable {
     this.owner = owner;
   }
 
-  public Date getRetentionPeriod() {
-    return retentionPeriod;
-  }
-
-  public void setRetentionPeriod(Date retentionPeriod) {
-    this.retentionPeriod = retentionPeriod;
-  }
-
   public String getDescription() {
     return description;
   }
@@ -334,14 +311,6 @@ public class Project implements Serializable {
 
   public void setId(Integer id) {
     this.id = id;
-  }
-
-  public Boolean getDeleted() {
-    return deleted;
-  }
-
-  public void setDeleted(Boolean deleted) {
-    this.deleted = deleted;
   }
 
   public PaymentType getPaymentType() {
@@ -383,22 +352,6 @@ public class Project implements Serializable {
       return false;
     }
     return true;
-  }
-
-  public Boolean getArchived() {
-    return archived;
-  }
-
-  public void setArchived(Boolean archived) {
-    this.archived = archived;
-  }
-  
-  public Boolean getLogs() {
-    return logs;
-  }
-
-  public void setLogs(Boolean logs) {
-    this.logs = logs;
   }
 
   @XmlTransient

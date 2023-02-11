@@ -68,10 +68,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 
 public class DistributedFileSystemOps {
 
-  private static final Logger logger = Logger.getLogger(
-          DistributedFileSystemOps.class.getName());
-
-  private static final long MB = 1024l * 1024l;
+  private static final Logger logger = Logger.getLogger(DistributedFileSystemOps.class.getName());
 
   public static final String HOPSFS_SCHEME = "hopsfs";
 
@@ -472,14 +469,8 @@ public class DistributedFileSystemOps {
     dfs.setOwner(path, username, groupname);
   }
 
-  /**
-   *
-   * @param src Path to directory we are setting the quota for
-   * @param diskspaceQuotaInMB hdfs quota size for disk space
-   * @throws IOException
-   */
-  public void setHdfsSpaceQuotaInMBs(Path src, long diskspaceQuotaInMB) throws IOException {
-    setHdfsQuotaBytes(src, HdfsConstants.QUOTA_DONT_SET, DistributedFileSystemOps.MB * diskspaceQuotaInMB);
+  public void setHdfsSpaceQuota(Path src, long diskspaceQuota) throws IOException {
+    setHdfsQuotaBytes(src, HdfsConstants.QUOTA_RESET, diskspaceQuota);
   }
 
   /**

@@ -54,7 +54,6 @@ import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobCon
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.jobs.history.YarnApplicationstate;
-import io.hops.hopsworks.persistence.entity.jobs.quota.YarnProjectsQuota;
 import io.hops.hopsworks.persistence.entity.project.PaymentType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -131,10 +130,9 @@ public abstract class AbstractExecutionController implements ExecutionController
 
     // A user should not be able to start a job if the project is prepaid and it doesn't have quota.
     if(job.getProject().getPaymentType().equals(PaymentType.PREPAID)){
-      YarnProjectsQuota projectQuota = yarnProjectsQuotaFacade.findByProjectName(job.getProject().getName());
-      if(projectQuota == null || projectQuota.getQuotaRemaining() <= 0){
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_ERROR, Level.FINE);
-      }
+      yarnProjectsQuotaFacade.findByProjectName(job.getProject().getName())
+          .filter(q -> q.getQuotaRemaining() > 0)
+          .orElseThrow(() -> new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_ERROR, Level.FINE));
     }
 
 

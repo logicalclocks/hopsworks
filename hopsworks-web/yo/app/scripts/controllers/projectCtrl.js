@@ -188,7 +188,6 @@ angular.module('hopsWorksApp')
                         self.projectFile.parentId = self.currentProject.projectTeam[0].project.inode.inodePK.parentId;
                         self.projectFile.path = "/Projects/" + self.currentProject.projectName;
                         self.projectFile.description = self.currentProject.description;
-                        self.projectFile.retentionPeriod = self.currentProject.retentionPeriod;
                         self.projectFile.quotas = self.currentProject.quotas;
                         if (angular.equals(self.currentProject.projectName.substr(0, 5), 'demo_')) {
                           self.initTour();
@@ -296,7 +295,6 @@ angular.module('hopsWorksApp')
                 'projectName': self.currentProject.projectName,
                 'description': self.currentProject.description,
                 'services': self.selectionProjectTypes,
-                'retentionPeriod': self.currentProject.retentionPeriod,
               };
 
               ProjectService.update({id: self.currentProject.projectId}, $scope.newProject)

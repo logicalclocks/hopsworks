@@ -72,7 +72,7 @@ module ProjectHelper
       with_valid_session
     end  
     pName = projectName == nil ? "project_#{getProjectId}_#{short_random_id}" : projectName
-    new_project = {projectName: pName, description:"", services: services, projectTeam:[], retentionPeriod: ""}
+    new_project = {projectName: pName, description:"", services: services, projectTeam:[]}
     post "#{ENV['HOPSWORKS_API']}/project", new_project
     expect_status_details(201)
     expect_json(successMessage: regex("Project created successfully.*"))
@@ -95,8 +95,9 @@ module ProjectHelper
   end
 
   def create_project_by_name_existing_user(projectname)
-    new_project = {projectName: projectname, description:"", services: ["JOBS","JUPYTER", "HIVE", "KAFKA","SERVING", "FEATURESTORE"],
-                   projectTeam:[], retentionPeriod: ""}
+    new_project = {projectName: projectname, description:"",
+                   services: ["JOBS","JUPYTER", "HIVE", "KAFKA","SERVING", "FEATURESTORE"],
+                   projectTeam:[]}
     post "#{ENV['HOPSWORKS_API']}/project", new_project
     project_expect_status(201)
     expect_json(successMessage: regex("Project created successfully.*"))
@@ -181,7 +182,7 @@ module ProjectHelper
 
   def force_remove(project)
     with_admin_session
-    delete "#{ENV['HOPSWORKS_API']}/admin/projects/#{project[:projectname]}/force"
+    delete "#{ENV['HOPSWORKS_API']}/admin/projects/#{project[:projectname]}?force=true"
     pp "Force removed project:#{project[:projectname]}. Response: #{response.code}"
   end
 

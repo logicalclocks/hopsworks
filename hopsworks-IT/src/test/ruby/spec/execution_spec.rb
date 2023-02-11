@@ -186,7 +186,7 @@ describe "On #{ENV['OS']}" do
       end
     end
   end
-  describe 'execution extended', if: false do
+  describe 'execution extended', if: ENV['FAST'].eql?("false") do
     context 'create' do
       job_types = ['jar', 'py', 'ipynb']
       job_types.each do |type|
@@ -616,32 +616,27 @@ describe "On #{ENV['OS']}" do
       end
 
       it 'should not be able to run jobs with 0 quota and payment type PREPAID' do
-        set_yarn_quota(@project, 0)
-        set_payment_type(@project, "PREPAID")
+        set_yarn_quota(@project, 0, "PREPAID")
         create_sparktour_job(@project, "quota1", 'jar')
         start_execution(@project[:id], "quota1", expected_status: 412)
       end
       it 'should not be able to run jobs with negative quota and payment type PREPAID' do
-        set_yarn_quota(@project, -10)
-        set_payment_type(@project, "PREPAID")
+        set_yarn_quota(@project, -10, "PREPAID")
         create_sparktour_job(@project, "quota2", 'jar')
         start_execution(@project[:id], "quota2", expected_status: 412)
       end
       it 'should not kill the running job if the quota goes negative' do
-        set_yarn_quota(@project, 1)
-        set_payment_type(@project, "PREPAID")
+        set_yarn_quota(@project, 1, "PREPAID")
         create_sparktour_job(@project, "quota3", 'jar')
         run_execution(@project[:id], "quota3")
       end
       it 'should be able to run jobs with 0 quota and payment type NOLIMIT' do
-        set_yarn_quota(@project, 0)
-        set_payment_type(@project, "NOLIMIT")
+        set_yarn_quota(@project, 0, "NOLIMIT")
         create_sparktour_job(@project, "quota4", 'jar')
         run_execution(@project[:id], "quota4")
       end
       it 'should be able to run jobs with negative quota and payment type NOLIMIT' do
-        set_yarn_quota(@project, -10)
-        set_payment_type(@project, "NOLIMIT")
+        set_yarn_quota(@project, -10, "NOLIMIT")
         create_sparktour_job(@project, "quota5", 'jar')
         run_execution(@project[:id], "quota5")
       end

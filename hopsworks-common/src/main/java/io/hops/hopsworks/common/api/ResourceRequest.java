@@ -156,6 +156,7 @@ public class ResourceRequest {
     USER, //user as it appears in ExecutionDTO
     CREATOR,//user as it appears in JobDTO
     PROJECT,
+    PROJECTS,
     JOBS,
     KAFKA,
     CLUSTERINFO,
@@ -227,6 +228,8 @@ public class ResourceRequest {
     EXECUTION,
     FEATURES,
     FEATUREVIEW,
+    PROJECT_ADMIN,
+    QUOTAS,
     VERSION,
     TRANSFORMATION,
     EXPECTATIONSUITE,

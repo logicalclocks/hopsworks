@@ -50,6 +50,13 @@ public class ProjectTopicsFacade extends AbstractFacade<ProjectTopics> {
       .setParameter("project", project)
       .getResultList();
   }
+
+  public int countTopicsByProject(Project project) {
+    return em.createNamedQuery("ProjectTopics.countByProject", Long.class)
+        .setParameter("project", project)
+        .getSingleResult()
+        .intValue();
+  }
   
   public Optional<ProjectTopics> findTopicByNameAndProject(Project project, String topicName) {
     try {

@@ -109,7 +109,6 @@ public class RESTCodes {
     //project success messages
     PROJECT_CREATED(30, "Project created successfully.", Response.Status.CREATED),
     PROJECT_DESCRIPTION_CHANGED(31, "Project description changed.", Response.Status.OK),
-    PROJECT_RETENTON_CHANGED(32, "Project retention period changed.", Response.Status.OK),
 
     PROJECT_SERVICE_ADDED(33, "Project service added", Response.Status.OK),
     PROJECT_SERVICE_ADD_FAILURE(34, "Failure adding service", Response.Status.INTERNAL_SERVER_ERROR),

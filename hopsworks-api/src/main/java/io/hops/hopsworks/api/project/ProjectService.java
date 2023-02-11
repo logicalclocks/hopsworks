@@ -85,7 +85,8 @@ import io.hops.hopsworks.common.project.AccessCredentialsDTO;
 import io.hops.hopsworks.common.project.MoreInfoDTO;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
-import io.hops.hopsworks.common.project.QuotasDTO;
+import io.hops.hopsworks.common.project.ProjectQuotasController;
+import io.hops.hopsworks.common.project.Quotas;
 import io.hops.hopsworks.common.project.TourProjectType;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
@@ -170,6 +171,8 @@ public class ProjectService {
   private ProjectFacade projectFacade;
   @EJB
   private ProjectController projectController;
+  @EJB
+  private ProjectQuotasController projectQuotasController;
   @EJB
   private NoCacheResponse noCacheResponse;
   @Inject
@@ -526,12 +529,6 @@ public class ProjectService {
       updated = true;
     }
 
-    if (projectController.updateProjectRetention(project,
-        projectDTO.getRetentionPeriod(), user)) {
-      json.setSuccessMessage(json.getSuccessMessage() + "\n" + ResponseMessages.PROJECT_RETENTON_CHANGED);
-      updated = true;
-    }
-
     if (!projectDTO.getServices().isEmpty()) {
       // Create dfso here and pass them to the different controllers
       DistributedFileSystemOps dfso = dfs.getDfsOps();
@@ -636,7 +633,7 @@ public class ProjectService {
     DistributedFileSystemOps dfso = null;
     DistributedFileSystemOps udfso = null;
     try {
-      project = projectController.createProject(projectDTO, user, req.getSession().getId());
+      project = projectController.createProject(projectDTO, user);
       dfso = dfs.getDfsOps();
       username = hdfsUsersBean.getHdfsUserName(project, user);
       udfso = dfs.getDfsOps(username);
@@ -646,7 +643,7 @@ public class ProjectService {
       //TestJob dataset
       datasetController.generateReadme(udfso, tourFilesDataset, readMeMessage, project.getName());
     } catch (Exception ex) {
-      projectController.cleanup(project, req.getSession().getId());
+      projectController.cleanup(project);
       throw ex;
     } finally {
       if (dfso != null) {
@@ -667,7 +664,7 @@ public class ProjectService {
     HopsSecurityException, FeaturestoreException, OpenSearchException, SchemaException, IOException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
-    projectController.createProject(projectDTO, user, req.getSession().getId());
+    projectController.createProject(projectDTO, user);
 
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     StringBuilder message = new StringBuilder();
@@ -689,7 +686,7 @@ public class ProjectService {
 
     Users user = jWTHelper.getUserPrincipal(sc);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    projectController.removeProject(user.getEmail(), id, req.getSession().getId());
+    projectController.removeProject(user.getEmail(), id);
     json.setSuccessMessage(ResponseMessages.PROJECT_REMOVED);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
 
@@ -722,7 +719,7 @@ public class ProjectService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response quotasByProjectID(@PathParam("projectId") Integer id) throws ProjectException {
     Project project = projectController.findProjectById(id);
-    QuotasDTO quotas = projectController.getQuotasInternal(project);
+    Quotas quotas = projectQuotasController.getQuotas(project);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(quotas).build();
   }
 
