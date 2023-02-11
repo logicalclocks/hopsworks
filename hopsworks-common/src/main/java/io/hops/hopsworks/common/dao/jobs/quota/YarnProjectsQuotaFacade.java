@@ -48,6 +48,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Stateless
 public class YarnProjectsQuotaFacade extends
@@ -69,15 +70,15 @@ public class YarnProjectsQuotaFacade extends
     super(YarnProjectsQuota.class);
   }
 
-  public YarnProjectsQuota findByProjectName(String projectname) {
-    TypedQuery<YarnProjectsQuota> query = em.
-            createNamedQuery("YarnProjectsQuota.findByProjectname",
-                    YarnProjectsQuota.class).setParameter("projectname",
-                    projectname);
+  public Optional<YarnProjectsQuota> findByProjectName(String projectname) {
     try {
-      return query.getSingleResult();
+      return Optional.of(
+          em.createNamedQuery("YarnProjectsQuota.findByProjectname", YarnProjectsQuota.class)
+              .setParameter("projectname", projectname)
+              .getSingleResult()
+      );
     } catch (NoResultException e) {
-      return null;
+      return Optional.empty();
     }
   }
 
@@ -94,11 +95,14 @@ public class YarnProjectsQuotaFacade extends
   }
 
   public void changeYarnQuota(String projectName, float quota) {
-    YarnProjectsQuota project = findByProjectName(projectName);
-    if (project != null) {
-      project.setQuotaRemaining(quota);
-      em.merge(project);
-    }
+    YarnProjectsQuota projectQuota = findByProjectName(projectName)
+        .orElse(new YarnProjectsQuota(projectName));
+    projectQuota.setQuotaRemaining(quota);
+    em.merge(projectQuota);
+  }
+
+  public void removeQuota(String projectName) {
+    findByProjectName(projectName).ifPresent(this::remove);
   }
 
   public List<YarnPriceMultiplicator> getMultiplicators() {

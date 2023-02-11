@@ -74,7 +74,6 @@ import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
-import io.hops.hopsworks.persistence.entity.jobs.quota.YarnProjectsQuota;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterMode;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
@@ -306,10 +305,9 @@ public class JupyterService {
       jupyterSettings.setUsers(hopsworksUser);
     }
     if (project.getPaymentType().equals(PaymentType.PREPAID)) {
-      YarnProjectsQuota projectQuota = yarnProjectsQuotaFacade.findByProjectName(project.getName());
-      if (projectQuota == null || projectQuota.getQuotaRemaining() <= 0) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_ERROR, Level.FINE);
-      }
+      yarnProjectsQuotaFacade.findByProjectName(project.getName())
+          .filter(q -> q.getQuotaRemaining() > 0)
+          .orElseThrow(() -> new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_ERROR, Level.FINE));
     }
     if (project.getPythonEnvironment() == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.ANACONDA_NOT_ENABLED, Level.FINE);
@@ -457,7 +455,7 @@ public class JupyterService {
   @Path("recent")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response recent(@QueryParam("count") @DefaultValue("5") @Min(0) @Max(100) int count,
                          @Context UriInfo uriInfo, @Context SecurityContext sc, @Context HttpServletRequest req)
       throws OpenSearchException {

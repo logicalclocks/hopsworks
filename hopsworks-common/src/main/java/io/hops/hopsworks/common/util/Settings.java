@@ -52,6 +52,7 @@ import io.hops.hopsworks.persistence.entity.util.VariablesVisibility;
 import io.hops.hopsworks.restutils.RESTLogLevel;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 
 import javax.ejb.ConcurrencyManagement;
@@ -1211,7 +1212,7 @@ public class Settings implements Serializable {
     return HIVE_SCRATCHDIR_CLEANER_INTERVAL;
   }
 
-  private long HIVE_DB_DEFAULT_QUOTA = -1;
+  private long HIVE_DB_DEFAULT_QUOTA = HdfsConstants.QUOTA_DONT_SET;
   public synchronized long getHiveDbDefaultQuota() {
     checkCache();
     return HIVE_DB_DEFAULT_QUOTA;
@@ -1277,7 +1278,7 @@ public class Settings implements Serializable {
     return DEFAULT_PAYMENT_TYPE;
   }
 
-  private long HDFS_DEFAULT_QUOTA_MBs = -1;
+  private long HDFS_DEFAULT_QUOTA_MBs = HdfsConstants.QUOTA_DONT_SET;
   public synchronized long getHdfsDefaultQuotaInMBs() {
     checkCache();
     return HDFS_DEFAULT_QUOTA_MBs;
@@ -3293,8 +3294,7 @@ public class Settings implements Serializable {
     checkCache();
     return HDFS_FILE_OP_JOB_DRIVER_MEM;
   }
-  
-  private long FEATURESTORE_DB_DEFAULT_QUOTA = -1;
+  private long FEATURESTORE_DB_DEFAULT_QUOTA = HdfsConstants.QUOTA_DONT_SET;
   public synchronized long getFeaturestoreDbDefaultQuota() {
     checkCache();
     return FEATURESTORE_DB_DEFAULT_QUOTA;

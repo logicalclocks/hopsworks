@@ -140,10 +140,7 @@ public class UsersAdminResource {
   public Response updateUser(@Context HttpServletRequest req, @Context SecurityContext sc, @PathParam("id") Integer id,
     Users user) throws UserException {
     
-    UserProfileDTO  userProfileDTO = userProfileBuilder.updateUser(
-      id,
-      user);
-    
+    UserProfileDTO  userProfileDTO = userProfileBuilder.updateUser(id, user);
     return Response.ok(userProfileDTO).build();
   }
   
@@ -154,14 +151,11 @@ public class UsersAdminResource {
   public Response changeRole(@Context HttpServletRequest req, @Context SecurityContext sc, @PathParam("id") Integer id,
     String role) throws UserException {
     Users user = jwtHelper.getUserPrincipal(sc);
-    if (user.getUid() == id) {
+    if (user.getUid().equals(id)) {
       throw new UserException(RESTCodes.UserErrorCode.OPERATION_NOT_ALLOWED, Level.FINE,
         "Can not change your own role.");
     }
-    UserProfileDTO  userProfileDTO = userProfileBuilder.changeRole(
-      id,
-      role);
-
+    UserProfileDTO  userProfileDTO = userProfileBuilder.changeRole(id, role);
     return Response.ok(userProfileDTO).build();
   }
 
@@ -171,11 +165,8 @@ public class UsersAdminResource {
   @Produces(MediaType.APPLICATION_JSON)
   public Response acceptUser(@Context HttpServletRequest req, @Context SecurityContext sc, @PathParam("id") Integer id,
     Users user) throws UserException, ServiceException {
-    
-    UserProfileDTO  userProfileDTO = userProfileBuilder.acceptUser(
-      id,
-      user);
-    
+
+    UserProfileDTO  userProfileDTO = userProfileBuilder.acceptUser(id, user);
     return Response.ok(userProfileDTO).build();
   }
   
@@ -186,7 +177,6 @@ public class UsersAdminResource {
     throws UserException, ServiceException {
 
     UserProfileDTO userProfileDTO = userProfileBuilder.rejectUser(id);
-    
     return Response.ok(userProfileDTO).build();
   }
 

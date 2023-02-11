@@ -24,23 +24,14 @@ module QuotaHelper
   #     "yarnQuotaInSecs": 10
   #   }
   #}
-  def set_yarn_quota(project, quota_sec)
-    put "#{ENV['HOPSWORKS_API']}/admin/projects",
-        {
-          projectName: project[:projectname],
-          projectQuotas: {
-              yarnQuotaInSecs: quota_sec
-          }
-        }
-    expect(200)
-  end
+  def set_yarn_quota(project, quota_sec, payment_type)
+    get "#{ENV['HOPSWORKS_API']}/admin/projects/#{project[:id]}?expand=quotas"
+    parsed_json = JSON.parse(response.body)
 
-  def set_payment_type(project, payment_type)
-    put "#{ENV['HOPSWORKS_API']}/admin/projects",
-        {
-          projectName: project[:projectname],
-          paymentType: payment_type
-        }
-    expect(200)
+    parsed_json["paymentType"] = payment_type
+    parsed_json["projectQuotas"]["yarnQuotaInSecs"] = quota_sec
+
+    put "#{ENV['HOPSWORKS_API']}/admin/projects/#{project[:id]}", parsed_json
+    expect_status_details(200)
   end
 end

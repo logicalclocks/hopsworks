@@ -214,7 +214,7 @@ describe "On #{ENV['OS']}" do
     end
   end
 
-  describe "Jupyter extended", if: false do
+  describe "Jupyter extended", if: ENV['FAST'].eql?("false") do
     python_versions = [ENV['PYTHON_VERSION']]
     python_versions.each do |version|
 
@@ -387,27 +387,23 @@ describe "On #{ENV['OS']}" do
       end
 
       it 'it should not be able to start Jupyter with 0 quota and payment type PREPAID' do
-        set_yarn_quota(@project, 0)
-        set_payment_type(@project, "PREPAID")
+        set_yarn_quota(@project, 0, "PREPAID")
         start_jupyter(@project, expected_status: 412)
       end
 
       it 'should not be able to start Jupyter with negative quota and payment type PREPAID' do
-        set_yarn_quota(@project, -10)
-        set_payment_type(@project, "PREPAID")
+        set_yarn_quota(@project, -10, "PREPAID")
         start_jupyter(@project, expected_status: 412)
       end
 
       it 'should be able to start Jupyter with 0 quota and payment type NOLIMIT' do
-        set_yarn_quota(@project, 0)
-        set_payment_type(@project, "NOLIMIT")
+        set_yarn_quota(@project, 0, "NOLIMIT")
         start_jupyter(@project)
         stop_jupyter(@project)
       end
 
       it 'should be able to start Jupyter with negative quota and payment type NOLIMIT' do
-        set_yarn_quota(@project, -10)
-        set_payment_type(@project, "NOLIMIT")
+        set_yarn_quota(@project, -10, "NOLIMIT")
         start_jupyter(@project)
         stop_jupyter(@project)
       end

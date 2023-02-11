@@ -75,6 +75,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
           query = "SELECT p FROM ProjectTopics p WHERE p.topicName = :topicName"),
   @NamedQuery(name = "ProjectTopics.findByProject",
           query = "SELECT p FROM ProjectTopics p WHERE p.project = :project"),
+  @NamedQuery(name = "ProjectTopics.countByProject",
+        query = "SELECT count(p.topicName) FROM ProjectTopics p WHERE p.project = :project"),
   @NamedQuery(name = "ProjectTopics.findByProjectAndTopicName",
           query = "SELECT p FROM ProjectTopics p WHERE p.project = :project " +
               "AND p.topicName = :topicName"),

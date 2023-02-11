@@ -39,83 +39,89 @@
 
 package io.hops.hopsworks.api.admin.dto;
 
-import io.hops.hopsworks.common.project.QuotasDTO;
+import io.hops.hopsworks.api.user.UserDTO;
+import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.common.project.Quotas;
 import io.hops.hopsworks.persistence.entity.project.PaymentType;
-import io.hops.hopsworks.persistence.entity.project.Project;
-
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.io.Serializable;
 import java.util.Date;
 
 @XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
-public class ProjectAdminInfoDTO implements Serializable {
+public class ProjectAdminInfoDTO extends RestDTO<ProjectAdminInfoDTO> {
 
-  private static final long serialVersionUID = -1L;
-
-  private String projectName = "";
-  private String projectOwner = "";
-  private Boolean archived = null;
-  private PaymentType paymentType = PaymentType.PREPAID;
-  private Date lastQuotaUpdate = new Date();
-
-  @XmlElement
-  private QuotasDTO projectQuotas = null;
+  private Integer id;
+  private String name;
+  private UserDTO creator;
+  private Date created;
+  private PaymentType paymentType;
+  private Date lastQuotaUpdate;
+  private Quotas projectQuotas;
 
   public ProjectAdminInfoDTO() { }
 
-  public ProjectAdminInfoDTO(Project project, QuotasDTO projectQuotas) {
-    this.projectName = project.getName();
-    this.projectOwner = project.getOwner().getUsername();
-    this.archived = project.getArchived();
-    this.paymentType = project.getPaymentType();
-    this.lastQuotaUpdate = project.getLastQuotaUpdate();
-    this.projectQuotas = projectQuotas;
+  public Integer getId() {
+    return id;
   }
 
-  public String getProjectName() { return projectName; }
-
-  public void setProjectName(String projectName) {
-    this.projectName = projectName;
+  public void setId(Integer id) {
+    this.id = id;
   }
 
-  public String getProjectOwner() { return projectOwner; }
-
-  public void setProjectOwner(String projectOwner) {
-    this.projectOwner = projectOwner;
+  public String getName() {
+    return name;
   }
 
-  public Boolean getArchived() { return archived; }
+  public void setName(String name) {
+    this.name = name;
+  }
 
-  public PaymentType getPaymentType() { return paymentType; }
+  public UserDTO getCreator() {
+    return creator;
+  }
 
-  public Date getLastQuotaUpdate() { return lastQuotaUpdate; }
+  public void setCreator(UserDTO creator) {
+    this.creator = creator;
+  }
+
+  public Date getCreated() {
+    return created;
+  }
+
+  public void setCreated(Date created) {
+    this.created = created;
+  }
+
+  public PaymentType getPaymentType() {
+    return paymentType;
+  }
 
   public void setPaymentType(PaymentType paymentType) {
     this.paymentType = paymentType;
+  }
+
+  public Date getLastQuotaUpdate() {
+    return lastQuotaUpdate;
   }
 
   public void setLastQuotaUpdate(Date lastQuotaUpdate) {
     this.lastQuotaUpdate = lastQuotaUpdate;
   }
 
-  public QuotasDTO getProjectQuotas() { return projectQuotas; }
+  public Quotas getProjectQuotas() {
+    return projectQuotas;
+  }
 
-  public void setProjectQuotas(QuotasDTO projectQuotas) { this.projectQuotas = projectQuotas; }
-
-  public void setArchived(Boolean archived) {
-    this.archived = archived;
+  public void setProjectQuotas(Quotas projectQuotas) {
+    this.projectQuotas = projectQuotas;
   }
 
   @Override
   public String toString() {
     return "ProjectAdminInfoDTO{" +
-        ", projectName='" + projectName + '\'' +
-        ", projectOwner='" + projectOwner + '\'' +
-        ", archived=" + archived +
+        "id=" + id +
+        ", name='" + name + '\'' +
+        ", creator=" + creator +
+        ", created=" + created +
         ", paymentType=" + paymentType +
         ", lastQuotaUpdate=" + lastQuotaUpdate +
         ", projectQuotas=" + projectQuotas +

@@ -56,14 +56,12 @@ public class ProjectDTO {
   private String owner;
   private String description;
   private String dockerImage;
-  private Date retentionPeriod;
   private Date created;
-  private boolean archived;
   private List<String> services;
   private List<ProjectTeam> projectTeam;
   private List<InodeView> datasets;
   private Long inodeid;
-  private QuotasDTO quotas;
+  private Quotas quotas;
   private String hopsExamples;
   private boolean isPreinstalledDockerImage;
   private boolean isOldDockerImage;
@@ -79,15 +77,13 @@ public class ProjectDTO {
   }
 
   public ProjectDTO(Project project, Long inodeid, List<String> services,
-      List<ProjectTeam> projectTeam, QuotasDTO quotas, String hopsExamples, boolean isPreinstalledDockerImage,
-                    boolean isOldDockerImage) {
+                    List<ProjectTeam> projectTeam, Quotas quotas, String hopsExamples,
+                    boolean isPreinstalledDockerImage, boolean isOldDockerImage) {
     this.projectId = project.getId();
     this.inodeid = inodeid;
     this.projectName = project.getName();
     this.owner = project.getOwner().getEmail();
-    this.retentionPeriod = project.getRetentionPeriod();
     this.created = project.getCreated();
-    this.archived = project.getArchived();
     this.description = project.getDescription();
     this.dockerImage = project.getDockerImage();
     this.services = services;
@@ -107,9 +103,7 @@ public class ProjectDTO {
     this.inodeid = inodeid;
     this.projectName = project.getName();
     this.owner = project.getOwner().getEmail();
-    this.retentionPeriod = project.getRetentionPeriod();
     this.created = project.getCreated();
-    this.archived = project.getArchived();
     this.description = project.getDescription();
     this.dockerImage = project.getDockerImage();
     this.services = services;
@@ -121,14 +115,12 @@ public class ProjectDTO {
   }
 
   public ProjectDTO(Integer projectId, String projectName, String owner,
-      Date retentionPeriod, Date created, boolean archived, String description, boolean isPreinstalledDockerImage,
-      boolean isOldDockerImage, List<String> services, List<ProjectTeam> projectTeam) {
+                    Date created, String description, boolean isPreinstalledDockerImage,
+                    boolean isOldDockerImage, List<String> services, List<ProjectTeam> projectTeam) {
     this.projectId = projectId;
     this.projectName = projectName;
     this.owner = owner;
-    this.retentionPeriod = retentionPeriod;
     this.created = created;
-    this.archived = archived;
     this.description = description;
     this.isPreinstalledDockerImage = isPreinstalledDockerImage;
     this.isOldDockerImage = isOldDockerImage;
@@ -168,28 +160,12 @@ public class ProjectDTO {
     this.owner = owner;
   }
 
-  public Date getRetentionPeriod() {
-    return retentionPeriod;
-  }
-
-  public void setRetentionPeriod(Date retentionPeriod) {
-    this.retentionPeriod = retentionPeriod;
-  }
-
   public Date getCreated() {
     return created;
   }
 
   public void setCreated(Date created) {
     this.created = created;
-  }
-
-  public boolean isArchived() {
-    return archived;
-  }
-
-  public void setArchived(boolean archived) {
-    this.archived = archived;
   }
 
   public List<String> getServices() {
@@ -232,11 +208,11 @@ public class ProjectDTO {
     this.datasets = datasets;
   }
 
-  public QuotasDTO getQuotas() {
+  public Quotas getQuotas() {
     return quotas;
   }
 
-  public void setQuotas(QuotasDTO quotas) {
+  public void setQuotas(Quotas quotas) {
     this.quotas = quotas;
   }
 
@@ -275,9 +251,7 @@ public class ProjectDTO {
   @Override
   public String toString() {
     return "ProjectDTO{" + "projectName=" + projectName + ", owner=" + owner
-        + ", description=" + description + ", retentionPeriod="
-        + retentionPeriod + ", created=" + created + ", archived="
-        + archived + ", services="
+        + ", description=" + description + ", created=" + created + ", services="
         + services + ", projectTeam=" + projectTeam +
         ", isPreinstalledDockerImage=" + isPreinstalledDockerImage + '}';
   }
