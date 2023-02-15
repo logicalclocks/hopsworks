@@ -55,7 +55,7 @@ public class MaggyDriver implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
-      max = 30)
+      max = 45)
   @Column(name = "app_id")
   private String appId;
   @Basic(optional = false)

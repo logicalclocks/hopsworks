@@ -185,7 +185,7 @@ public class Execution implements Serializable {
   @Column(name = "stderr_path")
   private String stderrPath;
 
-  @Size(max = 30)
+  @Size(max = 45)
   @Column(name = "app_id")
   private String appId;
 
