@@ -28,7 +28,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriInfo;
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Stateless
@@ -61,9 +60,9 @@ public class GreatExpectationBuilder {
     uri(dtos, uriInfo, project, featurestore);
 
     CollectionInfo<GreatExpectation> greatExpectations = expectationSuiteController.getAllGreatExpectations();
-    dtos.setItems((List<GreatExpectationDTO>) greatExpectations.getItems().stream()
+    dtos.setItems(greatExpectations.getItems().stream()
           .map(greatExpectation -> build(
-            uriInfo, project, featurestore, (GreatExpectation) greatExpectation))
+            uriInfo, project, featurestore, greatExpectation))
           .collect(Collectors.toList()));
     dtos.setCount(greatExpectations.getCount());
 

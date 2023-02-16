@@ -64,7 +64,7 @@ public class ExpectationBuilder {
     return expectationDTO;
   }
 
-  public ExpectationDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project,
+  public ExpectationDTO build(UriInfo uriInfo, Project project,
     Featuregroup featuregroup, ExpectationSuite expectationSuite) throws FeaturestoreException {
 
     ExpectationDTO dtos = new ExpectationDTO();

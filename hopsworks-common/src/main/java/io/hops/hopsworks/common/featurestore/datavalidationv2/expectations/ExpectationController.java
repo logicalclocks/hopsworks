@@ -50,7 +50,7 @@ import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.MAX_CH
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ExpectationController {
 
-  private final static Logger LOGGER = Logger.getLogger(ExpectationController.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(ExpectationController.class.getName());
 
   @EJB
   ExpectationFacade expectationFacade;
@@ -59,7 +59,7 @@ public class ExpectationController {
   @EJB  
   FeaturegroupController featuregroupController;
 
-  public Expectation getExpectationById(Integer expectationId) throws FeaturestoreException {
+  public Expectation getExpectationById(Integer expectationId) {
     Optional<Expectation> expectation = expectationFacade.findById(expectationId);
 
     return expectation.orElse(null);
@@ -124,7 +124,7 @@ public class ExpectationController {
     return expectation;
   }
 
-  public void deleteExpectation(Users user, Integer expectationId, boolean logActivity) throws FeaturestoreException {
+  public void deleteExpectation(Users user, Integer expectationId, boolean logActivity) {
     Expectation expectation = expectationFacade.findById(expectationId).orElse(null);
     ExpectationSuite expectationSuite = null;
     String activityMessage = null;
@@ -135,6 +135,7 @@ public class ExpectationController {
     expectationFacade.remove(expectation);
     if (expectation != null && logActivity) {
       FeaturestoreActivityMeta activityMeta = FeaturestoreActivityMeta.EXPECTATION_SUITE_UPDATED;
+      // expectationSuite cannot be null pointer because fetched in if above.
       fsActivityFacade.logExpectationSuiteActivity(
         user, expectationSuite.getFeaturegroup(), expectationSuite, activityMeta, activityMessage);
     }
@@ -296,7 +297,7 @@ public class ExpectationController {
     for (String name : possibleFeatureNames) {
       if (!featureNames.contains(name)) {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_NAME_NOT_FOUND, Level.SEVERE,
-          String.format("Expectation Kwargs contains name %s which has not been found in this group's feature:\n%s.",
+          String.format("Expectation Kwargs contains name %s which has not been found in this group's feature:%n%s.",
             name, featureNames));
       }
     }
@@ -345,26 +346,24 @@ public class ExpectationController {
     }
 
     // Preserve column
-    if (oldKwargs.has("column") && newKwargs.has("column")) {
-      if (!oldKwargs.getString("column").equals(newKwargs.getString("column"))) {
-        throw new FeaturestoreException(
-          RESTCodes.FeaturestoreErrorCode.ILLEGAL_EXPECTATION_UPDATE,
-          Level.SEVERE,
-          String.format("The stored expectation has kwarg column %s but updated expectation has kwarg column %s.",
-            oldKwargs.getString("column"), newKwargs.getString("column")));
-      }
+    if (oldKwargs.has("column") && newKwargs.has("column") && 
+      !oldKwargs.getString("column").equals(newKwargs.getString("column"))) {
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.ILLEGAL_EXPECTATION_UPDATE,
+        Level.SEVERE,
+        String.format("The stored expectation has kwarg column %s but updated expectation has kwarg column %s.",
+          oldKwargs.getString("column"), newKwargs.getString("column")));
     }
 
     // Preserve dual column
-    if (oldKwargs.has("columnA") && newKwargs.has("columnA") && oldKwargs.has("columnB") && newKwargs.has("columnB")) {
-      if (!oldKwargs.getString("columnA").equals(newKwargs.getString("columnA")) &&
-        !oldKwargs.getString("columnB").equals(newKwargs.getString("columnB"))) {
-        throw new FeaturestoreException(
-          RESTCodes.FeaturestoreErrorCode.ILLEGAL_EXPECTATION_UPDATE,
-          Level.SEVERE,
-          String.format("The stored expectation has kwarg column %s but updated expectation has kwarg column %s.",
-            oldKwargs.getString("column"), newKwargs.getString("column")));
-      }
+    if (oldKwargs.has("columnA") && newKwargs.has("columnA") && oldKwargs.has("columnB") && 
+      newKwargs.has("columnB") && !oldKwargs.getString("columnA").equals(newKwargs.getString("columnA")) 
+      && !oldKwargs.getString("columnB").equals(newKwargs.getString("columnB"))) {
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.ILLEGAL_EXPECTATION_UPDATE,
+        Level.SEVERE,
+        String.format("The stored expectation has kwarg column %s but updated expectation has kwarg column %s.",
+          oldKwargs.getString("column"), newKwargs.getString("column")));
     }
 
   }
