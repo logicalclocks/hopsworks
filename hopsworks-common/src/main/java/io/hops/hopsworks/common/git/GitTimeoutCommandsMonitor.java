@@ -57,7 +57,7 @@ public class GitTimeoutCommandsMonitor {
       minute = "*/1",
       hour = "*")
   public void rotate(Timer timer) {
-    LOGGER.log(Level.INFO, "Running GitTimeoutCommandsMonitor");
+    LOGGER.log(Level.FINE, "Running GitTimeoutCommandsMonitor");
     Collection<GitRepository> repositories = gitRepositoryFacade.findAllWithOngoingOperations();
     for (GitRepository repository : repositories) {
       Optional<GitOpExecution> optional = gitOpExecutionFacade.findRunningInRepository(repository);
