@@ -54,7 +54,7 @@ import javax.ws.rs.core.UriInfo;
 @Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-@Api(value = "Expectation resource", description = "A service that manages a feature group's expectation")
+@Api(value = "Expectation resource")
 public class ValidationResultResource {
   @EJB
   private FeaturegroupController featuregroupController;

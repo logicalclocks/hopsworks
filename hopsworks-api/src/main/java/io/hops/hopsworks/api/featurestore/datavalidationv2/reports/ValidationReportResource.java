@@ -60,7 +60,7 @@ import javax.ws.rs.core.UriInfo;
 @Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-@Api(value = "Validation report resource", description = "A service that manages a feature group's expectation suite")
+@Api(value = "Validation report resource")
 public class ValidationReportResource {
 
   @EJB
@@ -148,7 +148,7 @@ public class ValidationReportResource {
     @Context
       HttpServletRequest req,
     @Context
-      UriInfo uriInfo) throws FeaturestoreException {
+      UriInfo uriInfo) {
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.VALIDATIONREPORT);
     resourceRequest.setOffset(pagination.getOffset());

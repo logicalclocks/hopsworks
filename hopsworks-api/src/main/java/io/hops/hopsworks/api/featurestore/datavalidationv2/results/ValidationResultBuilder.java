@@ -20,7 +20,6 @@ import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade.CollectionInfo;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.results.ValidationResultController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.results.ValidationResultDTO;
-import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationResult;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -63,7 +62,6 @@ public class ValidationResultBuilder {
     dto.setExpectationConfig(validationResult.getExpectationConfig());
     dto.setResult(validationResult.getResult());
     dto.setIngestionResult(validationResult.getIngestionResult());
-    // dto.setExpectationId(validationResult.getExpectation().getId());
 
     try {
       JSONObject metaJson = new JSONObject(validationResult.getMeta());
@@ -87,7 +85,7 @@ public class ValidationResultBuilder {
   }
 
   public ValidationResultDTO buildHistory(UriInfo uriInfo, ResourceRequest resourceRequest, Project project,
-    Featuregroup featuregroup, Integer expectationId) throws FeaturestoreException {
+    Featuregroup featuregroup, Integer expectationId) {
 
     ValidationResultDTO dtos = new ValidationResultDTO();
     uri(dtos, uriInfo, project, featuregroup);

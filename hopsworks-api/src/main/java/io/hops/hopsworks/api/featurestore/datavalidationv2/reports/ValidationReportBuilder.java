@@ -23,7 +23,6 @@ import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.Validation
 import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.ValidationReportDTO;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.results.ValidationResultDTO;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
-import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationReport;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationResult;
@@ -75,7 +74,7 @@ public class ValidationReportBuilder {
     dto.setFullReportPath(inodeController.getPath(validationReport.getInode()));
     dto.setIngestionResult(validationReport.getIngestionResult());
 
-    List<ValidationResultDTO> validationResultDTOs = new ArrayList<ValidationResultDTO>();
+    List<ValidationResultDTO> validationResultDTOs = new ArrayList<>();
 
     for (ValidationResult validationResult : validationReport.getValidationResults()) {
       validationResultDTOs.add(validationResultBuilder.build(uriInfo, project, featuregroup, validationResult));
@@ -85,7 +84,7 @@ public class ValidationReportBuilder {
   }
 
   public ValidationReportDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project,
-    Featuregroup featuregroup) throws FeaturestoreException {
+    Featuregroup featuregroup) {
 
     ValidationReportDTO dtos = new ValidationReportDTO();
     uri(dtos, uriInfo, project, featuregroup);
@@ -95,9 +94,9 @@ public class ValidationReportBuilder {
       resourceRequest.getOffset(), resourceRequest.getLimit(), resourceRequest.getSort(), resourceRequest.getFilter(),
       featuregroup);
 
-    dtos.setItems((List<ValidationReportDTO>) validationReports.getItems().stream()
+    dtos.setItems(validationReports.getItems().stream()
           .map(validationReport -> build(
-            uriInfo, project, featuregroup, (ValidationReport) validationReport))
+            uriInfo, project, featuregroup, validationReport))
           .collect(Collectors.toList()));
     dtos.setCount(validationReports.getCount());
     

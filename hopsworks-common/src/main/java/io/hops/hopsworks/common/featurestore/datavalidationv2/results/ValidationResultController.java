@@ -21,7 +21,6 @@ import io.hops.hopsworks.common.dao.AbstractFacade.FilterBy;
 import io.hops.hopsworks.common.dao.AbstractFacade.SortBy;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.expectations.ExpectationFacade;
-import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.Expectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationReport;
@@ -34,6 +33,8 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
@@ -43,11 +44,17 @@ import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.MAX_CH
 import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.MAX_CHARACTERS_IN_VALIDATION_RESULT_EXPECTATION_CONFIG;
 import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.MAX_CHARACTERS_IN_VALIDATION_RESULT_META;
 import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.MAX_CHARACTERS_IN_VALIDATION_RESULT_RESULT_FIELD;
+import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.UNEXPECTED_COUNT_KEY;
+import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.UNEXPECTED_PERCENT_KEY;
+import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.PARTIAL_UNEXPECTED_LIST_KEY;
+import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.UNEXPECTED_PERCENT_NONMISSING_KEY;
+import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.OBSERVED_VALUE_KEY;
+import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.EXCEPTION_MESSAGE_KEY;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ValidationResultController {
-  private static final Logger LOGGER = Logger.getLogger(ExpectationSuiteController.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(ValidationResultController.class.getName());
 
   @EJB
   private ValidationResultFacade validationResultFacade;
@@ -57,7 +64,7 @@ public class ValidationResultController {
   private FeaturestoreFacade featurestoreFacade;
 
   public CollectionInfo<ValidationResult> getAllValidationResultByExpectationId (Integer offset, Integer limit,
-    Set<? extends SortBy> sorts, Set<? extends FilterBy> filters, Integer expectationId) throws FeaturestoreException {
+    Set<? extends SortBy> sorts, Set<? extends FilterBy> filters, Integer expectationId) {
     Optional<Expectation> optExpectation = expectationFacade.findById(expectationId);
     Expectation expectation;
 
@@ -171,36 +178,39 @@ public class ValidationResultController {
       resultJson = new JSONObject(result);
     } catch (JSONException e) {
       LOGGER.warning(String.format(
-        "Parsing result field threw JSONException that should have been handled when verifying input.\n%s\n%s",
-        e.getMessage(), e.getStackTrace().toString()));
+        "Parsing result field threw JSONException that should have been handled when verifying input.%n%s%n%s",
+        e.getMessage(), Arrays.toString(e.getStackTrace())));
       resultJson = new JSONObject();
     }
 
+     
     JSONObject shortResultJson = new JSONObject();
     String userMessage =
       "Result field exceeded max available space in SQL table, " +
         "download validation report file to access the complete result.";
     shortResultJson.put("user_message", userMessage);
 
-    if (resultJson.has("observed_value")) {
-      shortResultJson.put("observed_value", resultJson.getString("observed_value"));
+    if (resultJson.has(OBSERVED_VALUE_KEY)) {
+      shortResultJson.put(OBSERVED_VALUE_KEY, resultJson.getString(OBSERVED_VALUE_KEY));
 
       if (shortResultJson.toString().length() > MAX_CHARACTERS_IN_VALIDATION_RESULT_RESULT_FIELD) {
-        shortResultJson.remove("observed_value");
+        shortResultJson.remove(OBSERVED_VALUE_KEY);
         return shortResultJson.toString();
       }
     }
 
-    if (resultJson.has("unexpected_count") && resultJson.has("partial_unexpected_list")
-      && resultJson.has("unexpected_percent") && resultJson.has("unexpected_percent_nonmissing")) {
+    
 
-      shortResultJson.put("unexpected_count", resultJson.getInt("unexpected_count"));
-      shortResultJson.put("unexpected_percent", resultJson.getFloat("unexpected_percent"));
-      shortResultJson.put("unexpected_percent_nonmissing", resultJson.getFloat("unexpected_percent_nonmissing"));
-      shortResultJson.put("partial_unexpected_list", resultJson.getString("partial_unexpected_list"));
+    if (resultJson.has(UNEXPECTED_COUNT_KEY) && resultJson.has(PARTIAL_UNEXPECTED_LIST_KEY)
+      && resultJson.has(UNEXPECTED_PERCENT_KEY) && resultJson.has(UNEXPECTED_PERCENT_NONMISSING_KEY)) {
+
+      shortResultJson.put(UNEXPECTED_COUNT_KEY, resultJson.getInt(UNEXPECTED_COUNT_KEY));
+      shortResultJson.put(UNEXPECTED_PERCENT_KEY, resultJson.getFloat(UNEXPECTED_PERCENT_KEY));
+      shortResultJson.put(UNEXPECTED_PERCENT_NONMISSING_KEY, resultJson.getFloat(UNEXPECTED_PERCENT_NONMISSING_KEY));
+      shortResultJson.put(PARTIAL_UNEXPECTED_LIST_KEY, resultJson.getString(PARTIAL_UNEXPECTED_LIST_KEY));
 
       if (shortResultJson.toString().length() > MAX_CHARACTERS_IN_VALIDATION_RESULT_RESULT_FIELD) {
-        shortResultJson.remove("partial_unexpected_list");
+        shortResultJson.remove(PARTIAL_UNEXPECTED_LIST_KEY);
         return shortResultJson.toString();
       }
     }
@@ -214,8 +224,8 @@ public class ValidationResultController {
       exceptionInfoJson = new JSONObject(exceptionInfo);
     } catch (JSONException e) {
       LOGGER.warning(String.format(
-        "Parsing exceptionInfo field threw JSONException that should have been handled when verifying input.\n%s\n%s",
-        e.getMessage(), e.getStackTrace().toString()));
+        "Parsing exceptionInfo field threw JSONException that should have been handled when verifying input.%n%s%n%s",
+        e.getMessage(), Arrays.toString(e.getStackTrace())));
       exceptionInfoJson = new JSONObject();
     }
 
@@ -226,9 +236,11 @@ public class ValidationResultController {
     shortExceptionInfoJson.put("user_message", userMessage);
     shortExceptionInfoJson.put("raised_exception", exceptionInfoJson.getBoolean("raised_exception"));
 
-    shortExceptionInfoJson.put("exception_message", exceptionInfoJson.getString("exception_message"));
+    
+
+    shortExceptionInfoJson.put(EXCEPTION_MESSAGE_KEY, exceptionInfoJson.getString(EXCEPTION_MESSAGE_KEY));
     if (shortExceptionInfoJson.toString().length() > MAX_CHARACTERS_IN_VALIDATION_RESULT_EXCEPTION_INFO) {
-      shortExceptionInfoJson.remove("exception_message");
+      shortExceptionInfoJson.remove(EXCEPTION_MESSAGE_KEY);
       return shortExceptionInfoJson.toString();
     }
 
@@ -245,7 +257,7 @@ public class ValidationResultController {
       LOGGER.warning(String.format(
         "Parsing expectationConfig field threw JSONException that should have " +
         " been handled when verifying input.\n%s\n%s",
-        e.getMessage(), e.getStackTrace().toString()));
+        e.getMessage(), Arrays.toString(e.getStackTrace())));
       expectationConfigJson = new JSONObject();
     }
 
@@ -287,10 +299,11 @@ public class ValidationResultController {
   ///////////////////////////////////////
 
   public void verifyValidationResultDTOFields(ValidationResultDTO dto) throws FeaturestoreException {
-    verifyValidationResultExceptionInfo(dto.getExceptionInfo());
     verifyValidationResultMeta(dto.getMeta());
     verifyValidationResultExpectationConfig(dto.getExpectationConfig());
-    verifyValidationResultResult(dto.getResult());
+    // override with default value if null
+    dto.setResult(verifyValidationResultResult(dto.getResult()));
+    dto.setExceptionInfo(verifyValidationResultExceptionInfo(dto.getExceptionInfo()));
   }
 
   public void verifyValidationResultMeta(String meta) throws FeaturestoreException {
@@ -346,10 +359,9 @@ public class ValidationResultController {
     }
   }
 
-  public void verifyValidationResultExceptionInfo(String exceptionInfo) throws FeaturestoreException {
+  public String verifyValidationResultExceptionInfo(String exceptionInfo) throws FeaturestoreException {
     if (exceptionInfo == null) {
-      exceptionInfo = "{}";
-      return;
+      return "{}";
     }
 
     try {
@@ -362,13 +374,14 @@ public class ValidationResultController {
         e.getMessage()
       );
     }
+
+    return exceptionInfo;
   }
 
-  public void verifyValidationResultResult(String result) throws FeaturestoreException {
+  public String verifyValidationResultResult(String result) throws FeaturestoreException {
     // For result_format = {"result_format": "BOOLEAN_ONLY"}, result field is null. Turned into empty JSON.
     if (result == null) {
-      result = "{}";
-      return;
+      return "{}";
     }
 
     // If not null it must be valid json object
@@ -382,5 +395,7 @@ public class ValidationResultController {
         e.getMessage()
       );
     }
+
+    return result;
   }
 }

@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2022, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Hopsworks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -14,27 +14,27 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.api.featurestore.datavalidationv2.reports;
+package io.hops.hopsworks.api.featurestore.datavalidationv2.results;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.ValidationReportFacade;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.results.ValidationResultFacade;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
-public class SortBy  implements AbstractFacade.SortBy {
-  private final ValidationReportFacade.Sorts sortBy;
+public class ValidationResultSortBy implements AbstractFacade.SortBy {
+  private final ValidationResultFacade.Sorts sortBy;
   private final AbstractFacade.OrderBy param;
 
-  public SortBy(String param) {
+  public ValidationResultSortBy(String param) {
     String[] sortByParams = param.split(":");
     String sort = "";
     try {
       sort = sortByParams[0].toUpperCase();
-      this.sortBy = ValidationReportFacade.Sorts.valueOf(sort);
+      this.sortBy = ValidationResultFacade.Sorts.valueOf(sort);
     } catch (IllegalArgumentException iae) {
       throw new WebApplicationException("Sort by needs to set a valid sort parameter, but found: " + sort,
-          Response.Status.NOT_FOUND);
+        Response.Status.NOT_FOUND);
     }
     String order = "";
     try {
@@ -42,7 +42,7 @@ public class SortBy  implements AbstractFacade.SortBy {
       this.param = AbstractFacade.OrderBy.valueOf(order);
     } catch (IllegalArgumentException iae) {
       throw new WebApplicationException("Sort by " + sort + " needs to set a valid order(asc|desc), but found: "
-          + order, Response.Status.NOT_FOUND);
+        + order, Response.Status.NOT_FOUND);
     }
   }
 
