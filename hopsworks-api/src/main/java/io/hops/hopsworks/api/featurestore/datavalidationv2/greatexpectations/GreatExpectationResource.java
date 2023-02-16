@@ -19,7 +19,6 @@ package io.hops.hopsworks.api.featurestore.datavalidationv2.greatexpectations;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
-import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -75,7 +74,7 @@ public class GreatExpectationResource {
     @Context
       HttpServletRequest req,
     @Context
-      UriInfo uriInfo) throws FeaturestoreException {
+      UriInfo uriInfo) {
 
     GreatExpectationDTO dtos = greatExpectationBuilder.build(uriInfo, project, featurestore);
 

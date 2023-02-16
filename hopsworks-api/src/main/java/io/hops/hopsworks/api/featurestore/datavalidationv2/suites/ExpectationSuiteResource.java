@@ -68,7 +68,7 @@ import java.util.logging.Level;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-@Api(value = "Expectation suite resource", description = "A service that manages a feature group's expectation suite")
+@Api(value = "Expectation suite resource")
 public class ExpectationSuiteResource {
 
   @EJB
@@ -159,7 +159,6 @@ public class ExpectationSuiteResource {
         RESTCodes.FeaturestoreErrorCode.EXPECTATION_SUITE_ALREADY_EXISTS,
         Level.WARNING);
     }
-
     Users user = jWTHelper.getUserPrincipal(sc); 
 
     ExpectationSuite expectationSuite = expectationSuiteController.createExpectationSuite(
@@ -202,7 +201,7 @@ public class ExpectationSuiteResource {
     
     Users user = jWTHelper.getUserPrincipal(sc); 
 
-    ExpectationSuite expectationSuite = expectationSuiteController.updateExpectationSuite(
+    ExpectationSuite expectationSuite = expectationSuiteController.createOrUpdateExpectationSuite(
       user, featuregroup, expectationSuiteDTO);
 
     ExpectationSuiteDTO dto = expectationSuiteBuilder.build(
@@ -276,7 +275,7 @@ public class ExpectationSuiteResource {
     @Context
       UriInfo uriInfo,
     @PathParam("expectationSuiteId")
-      Integer expectationSuiteId) throws FeaturestoreException {
+      Integer expectationSuiteId) {
 
     Users user = jWTHelper.getUserPrincipal(sc); 
 

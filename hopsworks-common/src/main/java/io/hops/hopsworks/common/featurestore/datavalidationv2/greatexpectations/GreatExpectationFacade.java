@@ -18,7 +18,6 @@
 package io.hops.hopsworks.common.featurestore.datavalidationv2.greatexpectations;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteFacade;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.GreatExpectation;
 
 import javax.ejb.Stateless;
@@ -37,7 +36,7 @@ import javax.persistence.NoResultException;
  */
 @Stateless
 public class GreatExpectationFacade extends AbstractFacade<GreatExpectation> {
-  private static final Logger LOGGER = Logger.getLogger(ExpectationSuiteFacade.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(GreatExpectationFacade.class.getName());
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
