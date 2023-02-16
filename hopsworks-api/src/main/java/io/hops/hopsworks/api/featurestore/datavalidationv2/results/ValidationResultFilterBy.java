@@ -19,12 +19,12 @@ package io.hops.hopsworks.api.featurestore.datavalidationv2.results;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.results.ValidationResultFacade;
 
-public class FilterBy implements AbstractFacade.FilterBy {
+public class ValidationResultFilterBy implements AbstractFacade.FilterBy {
 
   private final ValidationResultFacade.Filters filter;
   private final String param;
 
-  public FilterBy(String param) {
+  public ValidationResultFilterBy(String param) {
     if (param.contains(":")) {
       this.filter = ValidationResultFacade.Filters.valueOf(param.substring(0, param.indexOf(':')).toUpperCase());
       this.param = param.substring(param.indexOf(':') + 1);

@@ -27,7 +27,6 @@ import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade
 import io.hops.hopsworks.common.featurestore.datavalidationv2.expectations.ExpectationFacade;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.results.ValidationResultController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.results.ValidationResultDTO;
-import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -79,7 +78,7 @@ import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.MAX_CH
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ValidationReportController {
-  private static final Logger LOGGER = Logger.getLogger(ExpectationSuiteController.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(ValidationReportController.class.getName());
 
   @EJB
   private ValidationReportFacade validationReportFacade;

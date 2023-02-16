@@ -38,7 +38,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -80,13 +79,13 @@ public class ExpectationSuiteController {
   ////// Expectation Suite CRUD
   //////////////////////////////////////////////////////
 
-  public ExpectationSuite getExpectationSuite(Featuregroup featureGroup) throws FeaturestoreException {
+  public ExpectationSuite getExpectationSuite(Featuregroup featureGroup) {
     Optional<ExpectationSuite> e = expectationSuiteFacade.findByFeaturegroup(featureGroup);
 
     return e.orElse(null);
   }
 
-  public ExpectationSuite getExpectationSuiteById(Integer expectationSuiteId) throws FeaturestoreException {
+  public ExpectationSuite getExpectationSuiteById(Integer expectationSuiteId) {
     Optional<ExpectationSuite> e = expectationSuiteFacade.findById(expectationSuiteId);
 
     return e.orElse(null);
@@ -109,7 +108,7 @@ public class ExpectationSuiteController {
     return expectationSuite;
   }
 
-  public void deleteExpectationSuite(Users user, Featuregroup featureGroup) throws FeaturestoreException {
+  public void deleteExpectationSuite(Users user, Featuregroup featureGroup) {
     ExpectationSuite expectationSuite = getExpectationSuite(featureGroup);
     if (expectationSuite != null) {
       expectationSuiteFacade.remove(expectationSuite);
@@ -133,7 +132,7 @@ public class ExpectationSuiteController {
     ExpectationSuite expectationSuite =
       convertExpectationSuiteMetadataDTOToPersistent(featuregroup, expectationSuiteDTO);
 
-    List<Expectation> persistentExpectations = new ArrayList<Expectation>();
+    List<Expectation> persistentExpectations = new ArrayList<>();
     for (ExpectationDTO dto : expectationSuiteDTO.getExpectations()) {
       persistentExpectations.add(expectationController.convertExpectationDTOToPersistent(expectationSuite, dto));
     }
@@ -256,11 +255,10 @@ public class ExpectationSuiteController {
   ////////////////////////////////////////////////////////
   //// Smart update to preserve expectations and associated result
   ////////////////////////////////////////////////////////
-
-  public ExpectationSuite updateExpectationSuite(Users user, Featuregroup featuregroup,
+  public ExpectationSuite createOrUpdateExpectationSuite(Users user, Featuregroup featuregroup,
     ExpectationSuiteDTO expectationSuiteDTO) throws FeaturestoreException {
     verifyExpectationSuite(
-      expectationSuiteDTO, 
+      expectationSuiteDTO,
       featuregroupController.getFeatureNames(
         featuregroup, featuregroup.getFeaturestore().getProject(), user));
 
@@ -274,8 +272,6 @@ public class ExpectationSuiteController {
     }
   }
 
-  @TransactionAttribute(TransactionAttributeType.REQUIRED)
-  @Transactional(rollbackOn = {FeaturestoreException.class})
   public ExpectationSuite smartUpdateExpectationSuite(Users user, Featuregroup featuregroup,
     ExpectationSuiteDTO expectationSuiteDTO, ExpectationSuite oldExpectationSuite) throws FeaturestoreException {
     boolean logActivity = false;
@@ -336,7 +332,7 @@ public class ExpectationSuiteController {
   }
 
   private void deleteMissingExpectations(Users user, ArrayList<Expectation> newExpectations,
-    Collection<Expectation> oldExpectations) throws FeaturestoreException {
+    Collection<Expectation> oldExpectations) {
     List<Integer> newAndPreservedExpectationIds =
       newExpectations.stream().map(Expectation::getId).collect(Collectors.toList());
     ArrayList<Integer> missingExpectationIds = new ArrayList<>();

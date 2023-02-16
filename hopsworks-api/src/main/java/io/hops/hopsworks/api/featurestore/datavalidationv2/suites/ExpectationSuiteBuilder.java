@@ -70,7 +70,7 @@ public class ExpectationSuiteBuilder {
     dto.setFeatureGroupId(featureGroup.getId());
     dto.setFeatureStoreId(featureGroup.getFeaturestore().getId());
 
-    List<ExpectationDTO> expectationDTOs = new ArrayList<ExpectationDTO>();
+    List<ExpectationDTO> expectationDTOs = new ArrayList<>();
 
     for (Expectation expectation : expectationSuite.getExpectations()) {
       expectationDTOs.add(expectationBuilder.build(uriInfo, project, featureGroup, expectationSuite, expectation));

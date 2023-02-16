@@ -110,7 +110,7 @@ public class ValidationReportFacade extends AbstractFacade<ValidationReport> {
       ValidationReport.class).setParameter("featuregroup", featuregroup).getResultList();
     Optional<ValidationReport> latestReport;
 
-    if (validationReports.size() == 0) {
+    if (validationReports.isEmpty()) {
       latestReport = Optional.empty();
     } else {
       latestReport = Optional.of(validationReports.get(0));
