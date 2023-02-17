@@ -69,6 +69,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -264,7 +265,9 @@ public class ValidationReportController {
       JSONObject reportMeta = new JSONObject(reportDTO.getMeta());
       String validationTimeString = reportMeta.getString("validation_time");
       String formatDateString = "yyyyMMdd'T'HHmmss.SSS";
-      validationTime = new SimpleDateFormat(formatDateString).parse(
+      SimpleDateFormat isoFormat = new SimpleDateFormat(formatDateString);
+      isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+      validationTime = isoFormat.parse(
         validationTimeString.substring(0, validationTimeString.length() - 4));
     } catch (JSONException | ParseException exception) {
       validationTime = new Date();
@@ -312,6 +315,7 @@ public class ValidationReportController {
         udfso.mkdir(reportDirPath.toString());
       }
       SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HHmmss");
+      formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
       String fileName = String.format("validation_report_%s.json", formatter.format(validationTime));
       Path reportPath = new Path(reportDirPath, fileName);
       if (udfso.exists(reportPath)) {
@@ -319,9 +323,8 @@ public class ValidationReportController {
           Level.SEVERE, String.format("Validation report with file name %s already exists.", fileName));
       }
       udfso.create(reportPath, reportJSON.toString());
-      Inode inode = inodeController.getInodeAtPath(reportPath.toString());
-
-      return inode;
+      
+      return inodeController.getInodeAtPath(reportPath.toString());
     } catch (DatasetException | HopsSecurityException | IOException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_SAVING_ON_DISK_VALIDATION_REPORT,
         Level.WARNING, e.getMessage());
