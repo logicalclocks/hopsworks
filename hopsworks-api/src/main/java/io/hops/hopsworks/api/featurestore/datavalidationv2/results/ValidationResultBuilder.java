@@ -29,6 +29,8 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriInfo;
+
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 import java.text.SimpleDateFormat;
 import org.json.JSONObject;
@@ -70,7 +72,9 @@ public class ValidationResultBuilder {
       metaJson.put("ingestionResult", validationResult.getIngestionResult());
       // Same validation string as in validationController to parse time provided by GE
       String formatDateString = "yyyy-MM-dd'T'hh:mm:ss.SSSSSSX";
-      String validationTime = new SimpleDateFormat(formatDateString).format(validationResult.getValidationTime());
+      SimpleDateFormat isoFormat = new SimpleDateFormat(formatDateString);
+      isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+      String validationTime = isoFormat.format(validationResult.getValidationTime());
       metaJson.put("validationTime", validationTime);
       dto.setMeta(metaJson.toString());
       dto.setValidationTime(validationTime);
