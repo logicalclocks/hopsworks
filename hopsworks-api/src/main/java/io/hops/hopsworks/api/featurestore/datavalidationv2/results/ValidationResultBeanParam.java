@@ -27,34 +27,34 @@ public class ValidationResultBeanParam {
   @ApiParam(value = "ex. sort_by=created:desc",
     allowableValues = "created:asc,created:desc,")
   private String sortBy;
-  private final Set<SortBy> sortBySet;
+  private final Set<ValidationResultSortBy> sortBySet;
 
   @QueryParam("filter_by")
   @ApiParam(value = "ex. filter_by=created_lt:1610471222000",
     allowableValues = "filter_by=created_lt:1610471222000,filter_by=created_gt:1610471222000",
     allowMultiple = true)
-  private Set<FilterBy> filter;
+  private Set<ValidationResultFilterBy> filter;
 
   public ValidationResultBeanParam(
     @QueryParam("sort_by")
       String sortBy,
     @QueryParam("filter_by")
-      Set<FilterBy> filter) {
+      Set<ValidationResultFilterBy> filter) {
     this.sortBy = sortBy;
     this.sortBySet = getSortBy(sortBy);
     this.filter = filter;
   }
 
-  private Set<SortBy> getSortBy(String param) {
+  private Set<ValidationResultSortBy> getSortBy(String param) {
     if (param == null || param.isEmpty()) {
       return new LinkedHashSet<>();
     }
     String[] params = param.split(",");
     //Hash table and linked list implementation of the Set interface, with predictable iteration order
-    Set<SortBy> sortBys = new LinkedHashSet<>();//make ordered
-    SortBy sort;
+    Set<ValidationResultSortBy> sortBys = new LinkedHashSet<>();//make ordered
+    ValidationResultSortBy sort;
     for (String s : params) {
-      sort = new SortBy(s.trim());
+      sort = new ValidationResultSortBy(s.trim());
       sortBys.add(sort);
     }
     return sortBys;
@@ -68,15 +68,15 @@ public class ValidationResultBeanParam {
     this.sortBy = sortBy;
   }
 
-  public Set<SortBy> getSortBySet() {
+  public Set<ValidationResultSortBy> getSortBySet() {
     return sortBySet;
   }
 
-  public Set<FilterBy> getFilter() {
+  public Set<ValidationResultFilterBy> getFilter() {
     return filter;
   }
 
-  public void setFilter(Set<FilterBy> filter) {
+  public void setFilter(Set<ValidationResultFilterBy> filter) {
     this.filter = filter;
   }
 }

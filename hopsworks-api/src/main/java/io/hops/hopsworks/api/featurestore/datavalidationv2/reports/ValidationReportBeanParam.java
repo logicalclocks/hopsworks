@@ -26,31 +26,31 @@ public class ValidationReportBeanParam {
   @ApiParam(value = "ex. sort_by=created:desc",
       allowableValues = "created:asc,created:desc,")
   private String sortBy;
-  private final Set<SortBy> sortBySet;
+  private final Set<ValidationReportSortBy> sortBySet;
 
   @QueryParam("filter_by")
   @ApiParam(value = "ex. filter_by=created_lt:1610471222000",
       allowableValues = "filter_by=created_lt:1610471222000,filter_by=created_gt:1610471222000",
       allowMultiple = true)
-  private Set<FilterBy> filter;
+  private Set<ValidationReportFilterBy> filter;
 
   public ValidationReportBeanParam(@QueryParam("sort_by") String sortBy,
-                         @QueryParam("filter_by") Set<FilterBy> filter) {
+                         @QueryParam("filter_by") Set<ValidationReportFilterBy> filter) {
     this.sortBy = sortBy;
     this.sortBySet = getSortBy(sortBy);
     this.filter = filter;
   }
 
-  private Set<SortBy> getSortBy(String param) {
+  private Set<ValidationReportSortBy> getSortBy(String param) {
     if (param == null || param.isEmpty()) {
       return new LinkedHashSet<>();
     }
     String[] params = param.split(",");
     //Hash table and linked list implementation of the Set interface, with predictable iteration order
-    Set<SortBy> sortBys = new LinkedHashSet<>();//make ordered
-    SortBy sort;
+    Set<ValidationReportSortBy> sortBys = new LinkedHashSet<>();//make ordered
+    ValidationReportSortBy sort;
     for (String s : params) {
-      sort = new SortBy(s.trim());
+      sort = new ValidationReportSortBy(s.trim());
       sortBys.add(sort);
     }
     return sortBys;
@@ -64,15 +64,15 @@ public class ValidationReportBeanParam {
     this.sortBy = sortBy;
   }
 
-  public Set<SortBy> getSortBySet() {
+  public Set<ValidationReportSortBy> getSortBySet() {
     return sortBySet;
   }
 
-  public Set<FilterBy> getFilter() {
+  public Set<ValidationReportFilterBy> getFilter() {
     return filter;
   }
 
-  public void setFilter(Set<FilterBy> filter) {
+  public void setFilter(Set<ValidationReportFilterBy> filter) {
     this.filter = filter;
   }
 }

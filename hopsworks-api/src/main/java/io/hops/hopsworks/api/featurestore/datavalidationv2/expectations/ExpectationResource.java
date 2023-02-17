@@ -20,7 +20,6 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.expectations.ExpectationController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.expectations.ExpectationDTO;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteController;
@@ -58,7 +57,7 @@ import javax.ws.rs.core.UriInfo;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-@Api(value = "Expectation resource", description = "A service that manages a feature group's expectation")
+@Api(value = "Expectation resource")
 public class ExpectationResource {
 
   @EJB
@@ -89,7 +88,7 @@ public class ExpectationResource {
     this.featuregroup = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
   }
 
-  public void setExpectationSuite(Integer expectationSuiteId) throws FeaturestoreException {
+  public void setExpectationSuite(Integer expectationSuiteId) {
     this.expectationSuite = expectationSuiteController.getExpectationSuiteById(expectationSuiteId);
   }
 
@@ -223,7 +222,7 @@ public class ExpectationResource {
     @Context
       UriInfo uriInfo,
     @PathParam("expectationId")
-      Integer expectationId) throws FeaturestoreException {
+      Integer expectationId) {
     
     Users user = jWTHelper.getUserPrincipal(sc);
 
@@ -254,9 +253,7 @@ public class ExpectationResource {
     @Context
       UriInfo uriInfo) throws FeaturestoreException {
 
-    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXPECTATIONS);
-
-    ExpectationDTO dtos = expectationBuilder.build(uriInfo, resourceRequest, project, featuregroup, expectationSuite);
+    ExpectationDTO dtos = expectationBuilder.build(uriInfo, project, featuregroup, expectationSuite);
 
     return Response.ok().entity(dtos).build();
   }

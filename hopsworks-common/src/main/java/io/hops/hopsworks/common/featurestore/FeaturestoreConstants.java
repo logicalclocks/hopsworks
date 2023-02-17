@@ -142,6 +142,12 @@ public class FeaturestoreConstants {
   public static final int MAX_CHARACTERS_IN_VALIDATION_RESULT_EXCEPTION_INFO = 1000;
   public static final int MAX_CHARACTERS_IN_VALIDATION_RESULT_EXPECTATION_CONFIG = 2150;
   public static final int MAX_CHARACTERS_IN_VALIDATION_RESULT_RESULT_FIELD = 1000;
-  public static final  String TRAINING_DATASETS_FOLDER = "TRAINING_DATASETS";
-  public static final  String DEFAULT_REDSHIFT_DRIVER = "com.amazon.redshift.jdbc42.Driver";
+  public static final String TRAINING_DATASETS_FOLDER = "TRAINING_DATASETS";
+  public static final String DEFAULT_REDSHIFT_DRIVER = "com.amazon.redshift.jdbc42.Driver";
+  public static final String OBSERVED_VALUE_KEY = "observed_value";
+  public static final String EXCEPTION_MESSAGE_KEY = "exception_message";
+  public static final String UNEXPECTED_COUNT_KEY = "unexpected_count";
+  public static final String UNEXPECTED_PERCENT_KEY = "unexpected_percent";
+  public static final String PARTIAL_UNEXPECTED_LIST_KEY = "partial_unexpected_list";
+  public static final String UNEXPECTED_PERCENT_NONMISSING_KEY = "unexpected_percent_nonmissing";
 }
