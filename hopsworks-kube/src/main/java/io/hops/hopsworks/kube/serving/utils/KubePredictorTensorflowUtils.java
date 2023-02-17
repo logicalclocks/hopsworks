@@ -5,7 +5,6 @@
 package io.hops.hopsworks.kube.serving.utils;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
-import io.fabric8.kubernetes.api.model.ConfigMapVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
@@ -22,8 +21,6 @@ import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodSpecBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
-import io.fabric8.kubernetes.api.model.SecretVolumeSource;
-import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServicePort;
@@ -31,9 +28,7 @@ import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpec;
 import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
-import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
-import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
@@ -89,6 +84,8 @@ public class KubePredictorTensorflowUtils extends KubePredictorServerUtils {
   private KubeProjectConfigMaps kubeProjectConfigMaps;
   @EJB
   private KubeJsonUtils kubeJsonUtils;
+  @EJB
+  private KubePredictorUtils kubePredictorUtils;
   
   // Default
   
@@ -160,34 +157,9 @@ public class KubePredictorTensorflowUtils extends KubePredictorServerUtils {
     tfServingEnv.add(new EnvVarBuilder().withName("RESTPORT")
       .withValue("1234").build());
     
-    SecretVolumeSource secretVolume = new SecretVolumeSourceBuilder()
-      .withSecretName(kubeClientService.getKubeDeploymentName(project, user))
-      .build();
-    
-    Volume secretVol = new VolumeBuilder()
-      .withName("certs")
-      .withSecret(secretVolume)
-      .build();
-    
-    Volume hadoopConf = new VolumeBuilder()
-      .withName("hadoopconf")
-      .withConfigMap(
-        new ConfigMapVolumeSourceBuilder()
-          .withName(kubeProjectConfigMaps.getHadoopConfigMapName(project))
-          .build())
-      .build();
-    
-    VolumeMount secretMount = new VolumeMountBuilder()
-      .withName("certs")
-      .withReadOnly(true)
-      .withMountPath("/certs")
-      .build();
-    
-    VolumeMount hadoopConfMount = new VolumeMountBuilder()
-      .withName("hadoopconf")
-      .withReadOnly(true)
-      .withMountPath(hadoopConfDir)
-      .build();
+    List<Volume> volumes = kubePredictorUtils.buildVolumes(project, user);
+  
+    List<VolumeMount> volumeMounts = kubePredictorUtils.buildVolumeMounts();
     
     Container tfContainer = new ContainerBuilder()
       .withName("tf-serving")
@@ -196,7 +168,7 @@ public class KubePredictorTensorflowUtils extends KubePredictorServerUtils {
       .withEnv(tfServingEnv)
       .withSecurityContext(new SecurityContextBuilder().withRunAsUser(settings.getYarnAppUID()).build())
       .withCommand("tfserving-launcher.sh")
-      .withVolumeMounts(secretMount, hadoopConfMount)
+      .withVolumeMounts(volumeMounts)
       .withResources(resourceRequirements)
       .build();
     
@@ -215,7 +187,7 @@ public class KubePredictorTensorflowUtils extends KubePredictorServerUtils {
     
     PodSpec podSpec = new PodSpecBuilder()
       .withContainers(containerList)
-      .withVolumes(secretVol, hadoopConf)
+      .withVolumes(volumes)
       .build();
     
     PodTemplateSpec podTemplateSpec = new PodTemplateSpecBuilder()

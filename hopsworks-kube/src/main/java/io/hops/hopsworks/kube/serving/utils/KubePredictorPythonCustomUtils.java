@@ -5,20 +5,15 @@
 package io.hops.hopsworks.kube.serving.utils;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
-import io.fabric8.kubernetes.api.model.ConfigMapVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.EnvVarSourceBuilder;
-import io.fabric8.kubernetes.api.model.KeyToPathBuilder;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
-import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.Volume;
-import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
-import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
@@ -76,6 +71,8 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
   private KubePredictorPythonUtils kubePredictorPythonUtils;
   @EJB
   private KubeJsonUtils kubeJsonUtils;
+  @EJB
+  private KubePredictorUtils kubePredictorUtils;
   @Inject
   private ServingConfig servingConfig;
   
@@ -112,7 +109,7 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
     containers.add(buildPredictorContainer(project, user, serving));
     
     // Volumes
-    List<Volume> volumes = buildVolumes(project, user);
+    List<Volume> volumes = kubePredictorUtils.buildVolumes(project, user);
   
     // Inference logging
     InferenceLogging inferenceLogging = serving.getInferenceLogging();
@@ -138,7 +135,7 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
     throws ServiceDiscoveryException, ApiKeyException {
     
     List<EnvVar> envVars = buildEnvironmentVariables(project, user, serving);
-    List<VolumeMount> volumeMounts = buildVolumeMounts();
+    List<VolumeMount> volumeMounts = kubePredictorUtils.buildVolumeMounts();
   
     DeployableComponentResources predictorResources = serving.getPredictorResources();
     ResourceRequirements resourceRequirements = kubeClientService.
@@ -154,34 +151,6 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
       .withVolumeMounts(volumeMounts)
       .withResources(resourceRequirements)
       .build();
-  }
-  
-  private List<Volume> buildVolumes(Project project, Users user) {
-    List<Volume> volumes = new ArrayList<>();
-    volumes.add(new VolumeBuilder().withName("certs").withSecret(
-      new SecretVolumeSourceBuilder().withSecretName(kubeClientService.getKubeDeploymentName(project, user)).build())
-      .build());
-    volumes.add(new VolumeBuilder().withName("hadoopconf").withConfigMap(
-      new ConfigMapVolumeSourceBuilder().withName(kubeProjectConfigMaps.getHadoopConfigMapName(project)).build())
-      .build());
-    volumes.add(new VolumeBuilder().withName("keys").withSecret(
-      new SecretVolumeSourceBuilder()
-        .withSecretName(kubeApiKeyUtils.getProjectServingApiKeySecretName(user))
-        .withItems(new KeyToPathBuilder()
-          .withKey(kubeApiKeyUtils.getServingApiKeySecretKeyName())
-          .withPath("api.key").build())
-        .build())
-      .build());
-    return volumes;
-  }
-  
-  private List<VolumeMount> buildVolumeMounts() {
-    List<VolumeMount> volumeMounts = new ArrayList<>();
-    volumeMounts.add(new VolumeMountBuilder().withName("certs").withReadOnly(true).withMountPath("/certs").build());
-    volumeMounts.add(new VolumeMountBuilder().withName("hadoopconf").withReadOnly(true)
-      .withMountPath(settings.getHadoopSymbolicLinkDir() + "/etc/hadoop").build());
-    volumeMounts.add(new VolumeMountBuilder().withName("keys").withReadOnly(true).withMountPath("/keys").build());
-    return volumeMounts;
   }
   
   private List<EnvVar> buildEnvironmentVariables(Project project, Users user, Serving serving)

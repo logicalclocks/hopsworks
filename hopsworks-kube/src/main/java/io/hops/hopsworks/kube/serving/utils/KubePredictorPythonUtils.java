@@ -5,7 +5,6 @@
 package io.hops.hopsworks.kube.serving.utils;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
-import io.fabric8.kubernetes.api.model.ConfigMapVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
@@ -21,8 +20,6 @@ import io.fabric8.kubernetes.api.model.PodSpecBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
-import io.fabric8.kubernetes.api.model.SecretVolumeSource;
-import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
@@ -31,9 +28,7 @@ import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpec;
 import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
-import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
-import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
@@ -119,43 +114,15 @@ public class KubePredictorPythonUtils {
     Serving serving) throws ServiceDiscoveryException, ApiKeyException {
     
     String servingIdStr = String.valueOf(serving.getId());
-    String hadoopHome = settings.getHadoopSymbolicLinkDir();
-    String hadoopConfDir = hadoopHome + "/etc/hadoop";
-  
     DeployableComponentResources predictorResources = serving.getPredictorResources();
     ResourceRequirements resourceRequirements = kubeClientService.
       buildResourceRequirements(predictorResources.getLimits(), predictorResources.getRequests());
     
     List<EnvVar> envVars = buildEnvironmentVariables(project, user, serving);
 
-    SecretVolumeSource secretVolume = new SecretVolumeSourceBuilder()
-      .withSecretName(kubeClientService.getKubeDeploymentName(project, user))
-      .build();
+    List<Volume> volumes = kubePredictorUtils.buildVolumes(project, user);
     
-    Volume secretVol = new VolumeBuilder()
-      .withName("certs")
-      .withSecret(secretVolume)
-      .build();
-    
-    Volume pythonEnv = new VolumeBuilder()
-      .withName("hadoopconf")
-      .withConfigMap(
-        new ConfigMapVolumeSourceBuilder()
-          .withName(kubeProjectConfigMaps.getHadoopConfigMapName(project))
-          .build())
-      .build();
-    
-    VolumeMount secretMount = new VolumeMountBuilder()
-      .withName("certs")
-      .withReadOnly(true)
-      .withMountPath("/certs")
-      .build();
-    
-    VolumeMount hadoopConfEnvMount = new VolumeMountBuilder()
-      .withName("hadoopconf")
-      .withReadOnly(true)
-      .withMountPath(hadoopConfDir)
-      .build();
+    List<VolumeMount> volumeMounts = kubePredictorUtils.buildVolumeMounts();
     
     Container pythonServerContainer = new ContainerBuilder()
       .withName("python-server")
@@ -164,7 +131,7 @@ public class KubePredictorPythonUtils {
       .withEnv(envVars)
       .withSecurityContext(new SecurityContextBuilder().withRunAsUser(settings.getYarnAppUID()).build())
       .withCommand("python-server-launcher.sh")
-      .withVolumeMounts(secretMount, hadoopConfEnvMount)
+      .withVolumeMounts(volumeMounts)
       .withResources(resourceRequirements)
       .build();
     
@@ -183,7 +150,7 @@ public class KubePredictorPythonUtils {
     
     PodSpec podSpec = new PodSpecBuilder()
       .withContainers(containerList)
-      .withVolumes(secretVol, pythonEnv)
+      .withVolumes(volumes)
       .build();
     
     PodTemplateSpec podTemplateSpec = new PodTemplateSpecBuilder()
@@ -271,7 +238,8 @@ public class KubePredictorPythonUtils {
     envVars.add(new EnvVarBuilder().withName("IS_KUBE").withValue("true").build());
     
     // HSFS and HOPS
-    // if "HADOOP_USER_NAME" is added, downloading the artifact fails with impersonate user error
+    envVars.add(new EnvVarBuilder()
+      .withName("HADOOP_USER_NAME").withValue(hdfsUsersController.getHdfsUserName(project, user)).build());
     envVars.add(new EnvVarBuilder().withName("REST_ENDPOINT").withValue("https://" + serviceDiscoveryController
       .constructServiceFQDNWithPort(ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP)).build());
     envVars.add(new EnvVarBuilder()
