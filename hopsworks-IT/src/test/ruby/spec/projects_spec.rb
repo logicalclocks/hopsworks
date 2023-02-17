@@ -190,6 +190,25 @@ describe "On #{ENV['OS']}" do
           expect_status_details(400, error_code: 150003)
         end
       end
+      
+      context 'with allowed number of projects to 0' do
+        before :all do
+          reset_session
+          with_valid_session
+          @user.max_num_projects = 0
+          @user.save
+        end
+        after :all do
+          reset_session
+        end
+
+        it 'Should fail to create a project' do
+          p = "project_#{Time.now.to_i}"
+          puts "Creating project #{p}"
+          post "#{ENV['HOPSWORKS_API']}/project", {projectName: p}
+          expect_status_details(400, error_code: 150002)
+        end
+      end
 
       context "project creation failure" do
         before :all do

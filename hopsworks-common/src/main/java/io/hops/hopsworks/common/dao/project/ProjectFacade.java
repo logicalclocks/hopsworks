@@ -290,10 +290,8 @@ public class ProjectFacade extends AbstractFacade<Project> {
   }
     
   public boolean numProjectsLimitReached(Users user) {
-    if (user.getMaxNumProjects() > 0 && user.getNumCreatedProjects() >= user.getMaxNumProjects()) {
-      return true;
-    }
-    return false;
+    // Setting to -1 disables any limit
+    return user.getMaxNumProjects() >= 0 && user.getNumCreatedProjects() >= user.getMaxNumProjects();
   }
 
   public void setTimestampQuotaUpdate(Project project, Date timestamp) {
