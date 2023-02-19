@@ -109,20 +109,27 @@ public class FeaturestoreConstants {
     "min_max_scaler", "standard_scaler", "robust_scaler", "label_encoder"
   );
   public static final String BUILT_IN_TRANSFORMATION_FUNCTION_SOURCE_CODE_MIN_MAX_SCALER =
-    "{\"module_imports\": \"from datetime import datetime\", \"transformer_code\": " +
-      "\"def min_max_scaler(value, min_value,max_value):\\n    if value is None:\\n        " +
-      "return None\\n    else:\\n        try:\\n            return (value - min_value) / (max_value - min_value)\\n" +
-      "        except ZeroDivisionError:\\n            return 0\\n\"}";
+    "{\n" +
+      "  \"module_imports\": \"\",\n" +
+      "  \"transformer_code\": \"def min_max_scaler(value, min_value, max_value):\\n" +
+      "    if value is None:\\n        return None\\n    elif float(max_value - min_value) == float(0):\\n" +
+      "        return float(0)\\n    else:\\n        " +
+      "return float((value - min_value) / (max_value - min_value))\\n\"\n" +
+      "}";
   public static final String BUILT_IN_TRANSFORMATION_FUNCTION_SOURCE_CODE_STANDARD_SCALER =
-    "{\"module_imports\": \"from datetime import datetime\", \"transformer_code\": \"" +
-      "def standard_scaler(value, mean, std_dev):\\n    if value is None:\\n        return None\\n    " +
-      "else:\\n        try:\\n            return (value - mean) / std_dev\\n        except ZeroDivisionError:\\n" +
-      "            return 0\\n\"}";
+    "{\n" +
+      "  \"module_imports\": \"\",\n" +
+      "  \"transformer_code\": \"def standard_scaler(value, mean, std_dev):\\n    if value is None:\\n" +
+      "        return None\\n    elif float(std_dev) == float(0):\\n        return float(0)\\n" +
+      "    else:\\n        return float((value - mean) / std_dev)\\n\"\n" +
+      "}";
   public static final String BUILT_IN_TRANSFORMATION_FUNCTION_SOURCE_CODE_ROBUST_SCALER =
-    "{\"module_imports\": \"from datetime import datetime\", \"transformer_code\": \"" +
-      "def robust_scaler(value, p25, p50, p75):\\n    if value is None:\\n        " +
-      "return None\\n    else:\\n        try:\\n            return (value - p50) / (p75 - p25)\\n        " +
-      "except ZeroDivisionError:\\n            return 0\\n\"}\n";
+    "{\n" +
+      "  \"module_imports\": \"\",\n" +
+      "  \"transformer_code\": \"def robust_scaler(value, p25, p50, p75):\\n    if value is None:\\n        " +
+      "return None\\n    elif float(p75 - p25) == float(0):\\n        return float(0)\\n    else:\\n" +
+      "        return float((value - p50) / (p75 - p25))\\n\"\n" +
+      "}";
   public static final String BUILT_IN_TRANSFORMATION_FUNCTION_SOURCE_CODE_LABEL_ENCODER =
     "{\"module_imports\": \"\", \"transformer_code\": \"# label encoder\\n" +
       "def label_encoder(value, value_to_index):\\n" +
