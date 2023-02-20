@@ -27,6 +27,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriInfo;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -101,8 +102,8 @@ public class LibrarySearchBuilder {
     Collection<PythonDep> installedDeps = project.getPythonDepCollection();
     if (libVersions != null && !libVersions.isEmpty()) {
       libVersions.forEach((k, v) -> dto.addItem(build(uriInfo, v, k, installedDeps, url)));
+      libVersions.forEach((k, v) -> Collections.sort(v));
     }
     return dto;
   }
-  
 }

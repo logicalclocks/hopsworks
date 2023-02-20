@@ -20,7 +20,7 @@ import java.util.Date;
 import java.util.Objects;
 
 @XmlRootElement
-public class LibraryVersionDTO {
+public class LibraryVersionDTO implements Comparable {
   
   private String version;
   private Date uploadTime;
@@ -70,5 +70,14 @@ public class LibraryVersionDTO {
   @Override
   public int hashCode() {
     return Objects.hash(version);
+  }
+
+  @Override
+  public int compareTo(Object o) {
+    LibraryVersionDTO otherVersion = (LibraryVersionDTO)o;
+    if (otherVersion.getUploadTime() == null && this.getUploadTime() == null) return 0;
+    if (otherVersion.getUploadTime() == null) return -1;
+    if (this.getUploadTime() == null) return 1;
+    return this.getUploadTime().compareTo(otherVersion.getUploadTime());
   }
 }
