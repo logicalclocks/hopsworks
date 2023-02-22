@@ -16,7 +16,7 @@
         <img src="https://img.shields.io/badge/hopsworks-community-blueviolet" /></a>
     <a href="https://twitter.com/hopsworks" alt="Hopsworks Twitter">
         <img src="https://img.shields.io/badge/hopsworks-twitter-blue" /></a>
-    <a href="https://join.slack.com/t/public-hopsworks/shared_invite/zt-1e9czaq2o-nxNFcSMFN0p5_x4KTBpuUA" alt="Hopsworks Slack">
+    <a href="https://bit.ly/publichopsworks" alt="Hopsworks Slack">
         <img src="https://img.shields.io/static/v1?label=Hopsworks&message=Slack&color=36C5F0" /></a>
 </p>
 
@@ -101,7 +101,7 @@ We are building the most complete and modular ML platform available in the marke
 
 ### **Join the community**
 - Ask questions and give us feedback in the [Hopsworks Community](https://community.hopsworks.ai/)
-- Join our Public [Slack Channel](https://join.slack.com/t/public-hopsworks/shared_invite/zt-1e9czaq2o-nxNFcSMFN0p5_x4KTBpuUA)
+- Join our Public [Slack Channel](https://bit.ly/publichopsworks)
 - Follow us on [Twitter](https://twitter.com/hopsworks)
 - Check out all our latest [product releases](https://github.com/logicalclocks/hopsworks/releases)
 
