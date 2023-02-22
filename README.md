@@ -101,7 +101,7 @@ We are building the most complete and modular ML platform available in the marke
 
 ### **Join the community**
 - Ask questions and give us feedback in the [Hopsworks Community](https://community.hopsworks.ai/)
-- Join our Public [Slack Channel](https://join.slack.com/t/public-hopsworks/shared_invite/zt-1e9czaq2o-nxNFcSMFN0p5_x4KTBpuUA)
+- Join our Public [Slack Channel](https://bit.ly/publichopsworks)
 - Follow us on [Twitter](https://twitter.com/hopsworks)
 - Check out all our latest [product releases](https://github.com/logicalclocks/hopsworks/releases)
 
