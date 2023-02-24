@@ -365,6 +365,7 @@ public class Settings implements Serializable {
   private final static String VARIABLE_MAX_ENV_YML_BYTE_SIZE = "max_env_yml_byte_size";
 
   //Git
+  private static final String VARIABLE_GIT_IMAGE_VERSION = "git_image_version";
   private static final String VARIABLE_GIT_COMMAND_TIMEOUT_MINUTES_DEFAULT = "git_command_timeout_minutes";
   private static final String VARIABLE_ENABLE_GIT_READ_ONLY_REPOSITORIES = "enable_read_only_git_repositories";
 
@@ -853,6 +854,7 @@ public class Settings implements Serializable {
       REJECT_REMOTE_USER_NO_GROUP = setBoolVar(VARIABLE_REJECT_REMOTE_USER_NO_GROUP, REJECT_REMOTE_USER_NO_GROUP);
 
       //Git
+      GIT_IMAGE_VERSION = setStrVar(VARIABLE_GIT_IMAGE_VERSION, GIT_IMAGE_VERSION);
       GIT_MAX_COMMAND_TIMEOUT_MINUTES = setIntVar(VARIABLE_GIT_COMMAND_TIMEOUT_MINUTES_DEFAULT,
           GIT_MAX_COMMAND_TIMEOUT_MINUTES);
       ENABLE_GIT_READ_ONLY_REPOSITORIES = setBoolVar(VARIABLE_ENABLE_GIT_READ_ONLY_REPOSITORIES,
@@ -1703,9 +1705,10 @@ public class Settings implements Serializable {
     return ENABLE_GIT_READ_ONLY_REPOSITORIES;
   }
 
-  private String GIT_IMAGE_NAME = "git:0.2.0";
+  private String GIT_IMAGE_VERSION = "0.3.0";
   public synchronized String getGitImageName() {
-    return GIT_IMAGE_NAME;
+    checkCache();
+    return "git:" + GIT_IMAGE_VERSION;
   }
 
   private boolean DOCKER_CGROUP_ENABLED = false;
