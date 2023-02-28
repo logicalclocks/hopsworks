@@ -125,7 +125,7 @@
     <jersey.server.version>2.26</jersey.server.version>
     <jsch.version>0.1.54</jsch.version>
     <json-schema.version>1.12.1</json-schema.version>
-    <jsoup.version>1.14.2</jsoup.version>
+    <jsoup.version>1.15.3</jsoup.version>
     <junit.version>4.13.2</junit.version>
     <kafka-clients.version>2.3.0</kafka-clients.version>
     <kafka_2.11.version>2.3.0</kafka_2.11.version>
