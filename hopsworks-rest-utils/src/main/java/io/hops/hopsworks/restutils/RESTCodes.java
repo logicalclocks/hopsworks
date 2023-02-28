@@ -627,7 +627,9 @@ public class RESTCodes {
     RM_METRICS_ERROR(56, "Failed to fetch utilization metrics", Response.Status.INTERNAL_SERVER_ERROR),
     PROMETHEUS_QUERY_ERROR(57, "Failed to execute prometheus query",
         Response.Status.INTERNAL_SERVER_ERROR),
-    GRAFANA_PROXY_ERROR(58, "Unauthorized access to dashboard", Response.Status.INTERNAL_SERVER_ERROR);
+    GRAFANA_PROXY_ERROR(58, "Unauthorized access to dashboard", Response.Status.INTERNAL_SERVER_ERROR),
+    DOCKER_ERROR(59, "Failed to run docker command", Response.Status.INTERNAL_SERVER_ERROR),
+    LOCAL_FILESYSTEM_ERROR(60, "Failed to write to local filesystem", Response.Status.INTERNAL_SERVER_ERROR);
 
     private Integer code;
     private String message;

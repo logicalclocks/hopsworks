@@ -18,22 +18,13 @@ package io.hops.hopsworks.common.python.environment;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.command.SystemCommandFacade;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
-import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.proxies.client.HttpClient;
-import io.hops.hopsworks.common.python.commands.CommandsController;
-import io.hops.hopsworks.common.util.OSProcessExecutor;
-import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.ProjectUtils;
-import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.command.Operation;
 import io.hops.hopsworks.persistence.entity.command.SystemCommand;
 import io.hops.hopsworks.persistence.entity.host.Hosts;
-import io.hops.hopsworks.persistence.entity.python.CondaCommands;
-import io.hops.hopsworks.persistence.entity.python.CondaOp;
-import io.hops.hopsworks.persistence.entity.python.CondaStatus;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.client.methods.HttpGet;
@@ -48,8 +39,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
+import java.util.Map;
+import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -61,71 +52,29 @@ public abstract class DockerRegistryMngrImpl implements DockerRegistryMngr {
   @EJB
   private ProjectUtils projectUtils;
   @EJB
-  private CondaCommandFacade condaCommandFacade;
-  @EJB
-  private CommandsController commandsController;
-  @EJB
-  private Settings settings;
-  @EJB
-  private OSProcessExecutor osProcessExecutor;
-  @EJB
   private SystemCommandFacade systemCommandFacade;
   @EJB
   private HostsFacade hostsFacade;
   @EJB
   private HttpClient httpClient;
+  @EJB
+  private DockerImageController dockerImageController;
   
   @Override
-  public void gc() throws IOException, ServiceException, ProjectException {
-    // 1. Get all conda commands of type REMOVE. Should be only 1 REMOVE per project
-    final List<CondaCommands> condaCommandsRemove = condaCommandFacade.findByStatusAndCondaOp(CondaStatus.NEW,
-      CondaOp.REMOVE);
-    LOG.log(Level.FINE, "condaCommandsRemove: " + condaCommandsRemove);
-    try {
-      for (CondaCommands cc : condaCommandsRemove) {
-        // We do not want to remove the base image! Get arguments from command as project may have already been deleted.
-        String projectDockerImage = cc.getArg();
-        String projectDockerRepoName = projectUtils.getProjectDockerRepoName(projectDockerImage);
-        if (!projectUtils.dockerImageIsPreinstalled(projectDockerImage)) {
-          try {
-            // 1. Get and delete all the tags for each repository(project)
-            List<String> projectTags =
-                deleteProjectImagesOnRegistry(projectDockerImage);
-            for (String tag : projectTags) {
-              // Issue system command (kagent) to remove docker image from each host's docker daemon
-              dockerImagesGC(projectUtils.getRegistryURL() + "/" +
-                  projectDockerRepoName + ":" + tag);
-            }
-            
-          } catch (Exception ex) {
-            LOG.log(Level.WARNING,
-                "Could not complete docker registry cleanup for: " + cc, ex);
-            try {
-              commandsController
-                  .updateCondaCommandStatus(cc.getId(), CondaStatus.FAILED,
-                      cc.getArg(), cc.getOp(),
-                      "Could not complete docker registry cleanup: " +
-                          ex.getMessage());
-            } catch (ServiceException | ProjectException e) {
-              LOG.log(Level.WARNING,
-                  "Could not change conda command status to NEW.", e);
-            }
-          }
-        }
-        commandsController
-            .updateCondaCommandStatus(cc.getId(), CondaStatus.SUCCESS,
-                cc.getArg(), cc.getOp());
-      }
-    } finally {
-      // Run docker gc in cli
-      if (!condaCommandsRemove.isEmpty()) {
-        runRegistryGC();
-      }
+  public void deleteProjectDockerImage(String projectDockerImage)
+    throws ServiceException, IOException, ServiceDiscoveryException {
+    String projectDockerRepoName = projectUtils.getProjectDockerRepoName(projectDockerImage);
+    // 1. Get and delete all the tags for each repository(project)
+    List<String> projectTags =
+      deleteProjectImagesOnRegistry(projectDockerImage);
+    for (String tag : projectTags) {
+      // Issue system command (kagent) to remove docker image from each host's docker daemon
+      dockerImagesGC(projectUtils.getRegistryURL() + "/" +
+        projectDockerRepoName + ":" + tag);
     }
   }
-  
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public final void dockerImagesGC(String image) {
+  private final void dockerImagesGC(String image) {
     List<Hosts> allHosts = hostsFacade.findAll();
     for (Hosts host : allHosts) {
       SystemCommand condaGCCommand =
@@ -135,8 +84,8 @@ public abstract class DockerRegistryMngrImpl implements DockerRegistryMngr {
     }
   }
   
-  public List<String> deleteProjectImagesOnRegistry(String projectDockerImage)
-      throws ServiceDiscoveryException, IOException {
+  protected List<String> deleteProjectImagesOnRegistry(String projectDockerImage)
+    throws ServiceDiscoveryException, IOException, ServiceException {
     final String projectDockerImageNoTags =
         projectUtils.getProjectNameFromDockerImageName(projectDockerImage);
     
@@ -166,44 +115,32 @@ public abstract class DockerRegistryMngrImpl implements DockerRegistryMngr {
       for (int i = 0; i < tagsJSON.length(); i++) {
         String tag = tagsJSON.get(i).toString();
         projectImageTags.add(tag);
-        
-        String prog = settings.getSudoersDir() + "/dockerImage.sh";
-        ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-            .addCommand("/usr/bin/sudo")
-            .addCommand(prog)
-            .addCommand("delete")
-            .addCommand(projectDockerImageNoTags)
-            .redirectErrorStream(true)
-            .setWaitTimeout(1, TimeUnit.MINUTES)
-            .build();
-  
-        ProcessResult processResult =
-            osProcessExecutor.execute(processDescriptor);
-        if (processResult.getExitCode() != 0) {
-          throw new IOException("Could not delete the docker image. Exit code: " +
-              processResult.getExitCode() + " out: " + processResult.getStdout());
-        }
+        dockerImageController.deleteImage(projectDockerImageNoTags);
       }
     }
     return projectImageTags;
   }
   
-  public void runRegistryGC() throws IOException {
-    String prog = settings.getSudoersDir() + "/dockerImage.sh";
-    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-        .addCommand("/usr/bin/sudo")
-        .addCommand(prog)
-        .addCommand("gc")
-        .redirectErrorStream(true)
-        .setWaitTimeout(5, TimeUnit.MINUTES)
-        .build();
-    
-    ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
-    if (processResult.getExitCode() != 0) {
-      LOG.log(Level.WARNING, "Could not delete the docker image. Exit code: " +
-          processResult.getExitCode()
-          + " out: " + processResult.getStdout() + "\n err: " +
-          processResult.getStderr());
-    }
+  @Override
+  public void runRegistryGC() throws ServiceException {
+    dockerImageController.gcImages();
+  }
+  
+  @Override
+  public Map<String, Future<ProcessResult>> backupImages(String backupId)
+    throws IOException, ServiceDiscoveryException, ServiceException {
+    throw new UnsupportedOperationException("online backup only supported on cluster with managed repo");
+  }
+
+  @Override
+  public Map<String, Future<ProcessResult>> restoreImages(String backupId)
+    throws IOException, ServiceDiscoveryException, ServiceException {
+    throw new UnsupportedOperationException("online backup only supported on cluster with managed repo");
+  }
+  
+  @Override
+  public List<String> deleteBackup(String backupId)
+          throws ServiceDiscoveryException {
+    throw new UnsupportedOperationException("online backup only supported on cluster with managed repo");
   }
 }
