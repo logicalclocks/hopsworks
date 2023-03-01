@@ -219,4 +219,11 @@
     <packageUrl regex="true">^pkg:maven/org\.apache\.kafka/kafka\-clients@.*$</packageUrl>
     <cve>CVE-2023-25194</cve>
   </suppress>
+  <suppress>
+    <notes><![CDATA[
+    file name: kafka_2.11-2.3.0.jar
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.kafka/kafka_2\.11@.*$</packageUrl>
+    <cve>CVE-2023-25194</cve>
+  </suppress>
 </suppressions>
