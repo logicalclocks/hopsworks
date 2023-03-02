@@ -28,7 +28,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -68,68 +67,32 @@ public class AirflowDagFacade {
       throw new IOException("Airflow DAG owner cannot be null or empty");
     }
     List<AirflowDag> dags = new ArrayList<>();
-    PreparedStatement stmt = null;
-    ResultSet dagsRS = null;
-    Connection connection = null;
-    try {
-      connection = airflowDataSource.getConnection();
-      stmt = connection.prepareStatement(DAGS_STATUS_QUERY);
+    try (Connection connection = airflowDataSource.getConnection();
+         PreparedStatement stmt = connection.prepareStatement(DAGS_STATUS_QUERY)) {
       stmt.setString(1, owner);
-      dagsRS = stmt.executeQuery();
-      while (dagsRS.next()) {
-        AirflowDag dag = new AirflowDag(dagsRS.getString("dag_id"), dagsRS.getBoolean("is_paused"));
-        dags.add(dag);
-      }
-      return dags;
-    } finally {
-      try {
-        if (dagsRS != null) {
-          dagsRS.close();
+      try (ResultSet dagsRS = stmt.executeQuery()) {
+        while (dagsRS.next()) {
+          AirflowDag dag = new AirflowDag(dagsRS.getString("dag_id"),
+              dagsRS.getBoolean("is_paused"));
+          dags.add(dag);
         }
-        if (stmt != null) {
-          stmt.close();
-        }
-      } catch (SQLException ex) {
-        // Just log them, can't do much about them here
-        LOGGER.log(Level.WARNING, "Could not release resources", ex);
-      } finally {
-        if (connection != null) {
-          connection.close();
-        }
+        return dags;
       }
     }
   }
   
   public List<AirflowDag> getAllWithLimit(Integer limit) throws SQLException {
     List<AirflowDag> dags = new ArrayList<>();
-    PreparedStatement stmt = null;
-    ResultSet dagsRS = null;
-    Connection connection = null;
-    try {
-      connection = airflowDataSource.getConnection();
-      stmt = connection.prepareStatement(GET_ALL_DAGS_WITH_LIMIT_QUERY);
+    try (Connection connection = airflowDataSource.getConnection();
+         PreparedStatement stmt = connection.prepareStatement(GET_ALL_DAGS_WITH_LIMIT_QUERY)) {
       stmt.setInt(1, limit);
-      dagsRS = stmt.executeQuery();
-      while (dagsRS.next()) {
-        AirflowDag dag = new AirflowDag(dagsRS.getString("dag_id"), dagsRS.getBoolean("is_paused"));
-        dags.add(dag);
-      }
-      return dags;
-    } finally {
-      try {
-        if (dagsRS != null) {
-          dagsRS.close();
+      try (ResultSet dagsRS = stmt.executeQuery()) {
+        while (dagsRS.next()) {
+          AirflowDag dag = new AirflowDag(dagsRS.getString("dag_id"),
+              dagsRS.getBoolean("is_paused"));
+          dags.add(dag);
         }
-        if (stmt != null) {
-          stmt.close();
-        }
-      } catch (SQLException ex) {
-        // Just log them, can't do much about them here
-        LOGGER.log(Level.WARNING, "Could not release resources", ex);
-      } finally {
-        if (connection != null) {
-          connection.close();
-        }
+        return dags;
       }
     }
   }

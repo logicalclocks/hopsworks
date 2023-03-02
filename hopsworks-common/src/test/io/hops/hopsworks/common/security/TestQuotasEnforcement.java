@@ -32,6 +32,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.Trainin
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -130,40 +131,46 @@ public class TestQuotasEnforcement {
   }
 
   @Test
-  public void testQuotasIgnoreExternalFeaturegroups() throws Exception {
-    FeaturegroupFacade featuregroupFacade = Mockito.mock(FeaturegroupFacade.class);
-    List<Featuregroup> mockedOnlineDisabledFeaturegroups = new ArrayList<>();
-    CachedFeaturegroup offlineFG = new CachedFeaturegroup();
-    offlineFG.setOnlineEnabled(false);
-    OnDemandFeaturegroup ondemandFG = new OnDemandFeaturegroup();
+  public void testQuotasIgnoreExternalFeaturegroups() {
+    boolean noException = true;
+    try {
+      FeaturegroupFacade featuregroupFacade = Mockito.mock(FeaturegroupFacade.class);
+      List<Featuregroup> mockedOnlineDisabledFeaturegroups = new ArrayList<>();
+      CachedFeaturegroup offlineFG = new CachedFeaturegroup();
+      offlineFG.setOnlineEnabled(false);
+      OnDemandFeaturegroup ondemandFG = new OnDemandFeaturegroup();
 
-    Featuregroup fg0 = new Featuregroup();
-    fg0.setCachedFeaturegroup(offlineFG);
-    mockedOnlineDisabledFeaturegroups.add(fg0);
-    Featuregroup fg1 = new Featuregroup();
-    fg1.setOnDemandFeaturegroup(ondemandFG);
-    mockedOnlineDisabledFeaturegroups.add(fg1);
+      Featuregroup fg0 = new Featuregroup();
+      fg0.setCachedFeaturegroup(offlineFG);
+      mockedOnlineDisabledFeaturegroups.add(fg0);
+      Featuregroup fg1 = new Featuregroup();
+      fg1.setOnDemandFeaturegroup(ondemandFG);
+      mockedOnlineDisabledFeaturegroups.add(fg1);
 
-    Mockito.when(featuregroupFacade.findByFeaturestore(Mockito.any())).thenReturn(mockedOnlineDisabledFeaturegroups);
+      Mockito.when(featuregroupFacade.findByFeaturestore(Mockito.any())).thenReturn(mockedOnlineDisabledFeaturegroups);
 
-    Settings settings = Mockito.mock(Settings.class);
+      Settings settings = Mockito.mock(Settings.class);
 
-    QuotasEnforcement qe = new QuotasEnforcement();
-    qe.setFeaturegroupFacade(featuregroupFacade);
-    qe.setSettings(settings);
+      QuotasEnforcement qe = new QuotasEnforcement();
+      qe.setFeaturegroupFacade(featuregroupFacade);
+      qe.setSettings(settings);
 
-    Featurestore fs = new Featurestore();
-    Project project = new Project();
-    project.setName("ProjectName");
-    fs.setProject(project);
+      Featurestore fs = new Featurestore();
+      Project project = new Project();
+      project.setName("ProjectName");
+      fs.setProject(project);
+  
+      // Test Online disabled
+      Mockito.when(settings.getQuotasOnlineEnabledFeaturegroups()).thenReturn(100L);
 
-    // Test Online disabled
-    Mockito.when(settings.getQuotasOnlineEnabledFeaturegroups()).thenReturn(100L);
-
-    // Although quotas has been set to 2 and we do have 2 Feature Groups,
-    // it should go through because one is External and we should ignore it
-    Mockito.when(settings.getQuotasOnlineDisabledFeaturegroups()).thenReturn(2L);
-    qe.enforceFeaturegroupsQuota(fs, false);
+      // Although quotas has been set to 2 and we do have 2 Feature Groups,
+      // it should go through because one is External and we should ignore it
+      Mockito.when(settings.getQuotasOnlineDisabledFeaturegroups()).thenReturn(2L);
+      qe.enforceFeaturegroupsQuota(fs, false);
+    } catch (Exception e) {
+      noException = false;
+    }
+    Assert.assertTrue(noException);
   }
 
   @Test

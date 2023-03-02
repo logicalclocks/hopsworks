@@ -79,15 +79,21 @@ public class TestOpenSearchFeaturestoreItemBuilder {
   }
   
   @Test
-  public void testNoFeaturestoreXattr() throws GenericException {
-    OpenSearchFeaturestoreHit hit = baseHit();
-    hit.setDocType(FeaturestoreDocType.FEATUREGROUP.toString().toLowerCase());
-    itemBuilder.fromBaseArtifact(hit);
-    hit.setDocType(FeaturestoreDocType.FEATUREVIEW.toString().toLowerCase());
-    itemBuilder.fromBaseArtifact(hit);
-    hit.setDocType(FeaturestoreDocType.TRAININGDATASET.toString().toLowerCase());
-    itemBuilder.fromBaseArtifact(hit);
-    //just making sure no NPE exceptions
+  public void testNoFeaturestoreXattr() {
+    boolean noException = true;
+    try {
+      OpenSearchFeaturestoreHit hit = baseHit();
+      hit.setDocType(FeaturestoreDocType.FEATUREGROUP.toString().toLowerCase());
+      itemBuilder.fromBaseArtifact(hit);
+      hit.setDocType(FeaturestoreDocType.FEATUREVIEW.toString().toLowerCase());
+      itemBuilder.fromBaseArtifact(hit);
+      hit.setDocType(FeaturestoreDocType.TRAININGDATASET.toString().toLowerCase());
+      itemBuilder.fromBaseArtifact(hit);
+    } catch (Exception e) {
+      //just making sure no NPE exceptions
+      noException = false;
+    }
+    Assert.assertTrue(noException);
   }
   
   @Test

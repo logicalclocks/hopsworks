@@ -53,6 +53,7 @@ import io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlertSta
 import io.hops.hopsworks.persistence.entity.project.service.ProjectServiceEnum;
 import org.json.JSONObject;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -237,15 +238,15 @@ public class TestAlertManagerConfigTimer {
         AlertManagerConfig alertManagerConfig = fromJson(alertManagerConfigEntity.getContent());
         LOGGER.log(Level.INFO, "Update database routes={0}, receivers={1}.",
             new Object[] {alertManagerConfig.getRoute().getRoutes().size(), alertManagerConfig.getReceivers().size()});
-        assert alertManagerConfig.getRoute().getRoutes().size() == 15;
-        assert alertManagerConfig.getReceivers().size() == 9;
+        Assert.assertEquals(15, alertManagerConfig.getRoute().getRoutes().size());
+        Assert.assertEquals(9, alertManagerConfig.getReceivers().size());
       }
       return null;
     }).when(alertManagerConfigFacade).update(Mockito.any());
     alertManagerConfiguration.restoreFromBackup();
     AlertManagerConfig alertManagerConfig = alertManagerConfigController.read();
-    assert alertManagerConfig.getRoute().getRoutes().size() == 15;
-    assert alertManagerConfig.getReceivers().size() == 9;
+    Assert.assertEquals(15, alertManagerConfig.getRoute().getRoutes().size());
+    Assert.assertEquals(9, alertManagerConfig.getReceivers().size());
   }
   
   @Test
@@ -259,8 +260,8 @@ public class TestAlertManagerConfigTimer {
         AlertManagerConfig alertManagerConfig = fromJson(alertManagerConfigEntity.getContent());
         LOGGER.log(Level.INFO, "Save to database routes={0}, receivers={1}.",
             new Object[] {alertManagerConfig.getRoute().getRoutes().size(), alertManagerConfig.getReceivers().size()});
-        assert alertManagerConfig.getRoute().getRoutes().size() == 3;
-        assert alertManagerConfig.getReceivers().size() == 5;
+        Assert.assertEquals(3, alertManagerConfig.getRoute().getRoutes().size());
+        Assert.assertEquals(5, alertManagerConfig.getReceivers().size());
       }
       return null;
     }).when(alertManagerConfigFacade).save(Mockito.any());
@@ -281,8 +282,8 @@ public class TestAlertManagerConfigTimer {
     Mockito.when(alertManagerConfigFacade.getLatest()).thenReturn(Optional.of(alertManagerConfigEntity));
     alertManagerConfiguration.restoreFromBackup();
     AlertManagerConfig alertManagerConfig1 = alertManagerConfigController.read();
-    assert alertManagerConfig1.getGlobal().getSlackApiUrl()
-        .equals("https://hooks.slack.com/services/1234567/ASEDWRFDE/XXXXXXXXXXXXXX");
+    Assert.assertEquals("https://hooks.slack.com/services/1234567/ASEDWRFDE/XXXXXXXXXXXXXX",
+        alertManagerConfig1.getGlobal().getSlackApiUrl());
   }
   
   @Test
@@ -291,8 +292,8 @@ public class TestAlertManagerConfigTimer {
       IOException, AlertManagerConfigReadException, AlertManagerClientCreateException {
     alertManagerConfiguration.runFixConfig();
     AlertManagerConfig alertManagerConfig = alertManagerConfigController.read();
-    assert alertManagerConfig.getRoute().getRoutes().size() == 15;
-    assert alertManagerConfig.getReceivers().size() == 6;
+    Assert.assertEquals(15, alertManagerConfig.getRoute().getRoutes().size());
+    Assert.assertEquals(6, alertManagerConfig.getReceivers().size());
   }
   
   @After

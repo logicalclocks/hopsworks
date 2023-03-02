@@ -119,8 +119,6 @@ public class DatasetResource {
   @Inject
   private DatasetTagsResource tagsResource;
   @EJB
-  private JWTHelper jWTHelper;
-  @EJB
   private LongRunningHttpRequests longRunningHttpRequests;
   @EJB
   private Settings settings;
@@ -165,7 +163,7 @@ public class DatasetResource {
                       @Context HttpServletRequest req,
                       @Context UriInfo uriInfo, @Context SecurityContext sc)
       throws ProjectException, DatasetException, MetadataException, SchematizedTagException {
-    Users user = jWTHelper.getUserPrincipal(sc);
+    Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.DATASET);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());

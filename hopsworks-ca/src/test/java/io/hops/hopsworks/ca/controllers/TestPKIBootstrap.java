@@ -117,7 +117,7 @@ public class TestPKIBootstrap {
     PKI realPki = new PKI();
     PKI pki = Mockito.spy(realPki);
     Mockito.doReturn(EMPTY_CONFIGURATION).when(pki).loadConfiguration();
-    Mockito.doReturn(Optional.empty()).when(pki).loadKeypair(Mockito.any());
+    Mockito.doReturn(Optional.empty()).when(pki).loadKeyPair(Mockito.any());
     Mockito.doReturn(false).when(pki).loadFromFile();
     Mockito.doReturn(null).when(pki).generateKeyPair();
     Pair<Boolean, KeyPair> keyPair = pki.loadOrGenerateKeypair("ROOT");
@@ -131,7 +131,7 @@ public class TestPKIBootstrap {
     PKI realPki = new PKI();
     PKI pki = Mockito.spy(realPki);
     Mockito.doReturn(EMPTY_CONFIGURATION).when(pki).loadConfiguration();
-    Mockito.doReturn(Optional.empty()).when(pki).loadKeypair(Mockito.any());
+    Mockito.doReturn(Optional.empty()).when(pki).loadKeyPair(Mockito.any());
     Mockito.doReturn(true).when(pki).loadFromFile();
     Mockito.doReturn(null).when(pki).loadKeyPairFromFile(CAType.ROOT.name());
     Mockito.doReturn(null).when(pki).generateKeyPair();

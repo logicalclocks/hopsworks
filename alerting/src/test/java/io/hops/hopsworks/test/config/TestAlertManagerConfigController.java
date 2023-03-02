@@ -39,7 +39,6 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import javax.ws.rs.core.Response;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -92,7 +91,7 @@ public class TestAlertManagerConfigController {
     alertManagerConfigController.writeAndReload(config);
     
     AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
-    assert alertManagerConfig.getReceivers().contains(receiver);
+    Assert.assertTrue(alertManagerConfig.getReceivers().contains(receiver));
   }
   
   @Test
@@ -123,7 +122,7 @@ public class TestAlertManagerConfigController {
     alertManagerConfigController.writeAndReload(config);
     
     AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
-    assert alertManagerConfig.getReceivers().contains(receiver);
+    Assert.assertTrue(alertManagerConfig.getReceivers().contains(receiver));
   }
   
   @Test
@@ -149,7 +148,7 @@ public class TestAlertManagerConfigController {
     AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
     int index = alertManagerConfig.getReceivers().indexOf(receiver);
     Receiver updatedReceiver = alertManagerConfig.getReceivers().get(index);
-    assert updatedReceiver.getEmailConfigs().contains(emailConfig);
+    Assert.assertTrue(updatedReceiver.getEmailConfigs().contains(emailConfig));
   }
   
   @Test
@@ -162,7 +161,7 @@ public class TestAlertManagerConfigController {
     AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
     int index = alertManagerConfig.getReceivers().indexOf(receiver);
     Receiver updatedReceiver = alertManagerConfig.getReceivers().get(index);
-    assert updatedReceiver.getEmailConfigs().contains(emailConfig);
+    Assert.assertTrue(updatedReceiver.getEmailConfigs().contains(emailConfig));
   
     AlertManagerConfig config = alertManagerConfigController.removeEmailFromReceiver("team-X-mails", emailConfig);
     alertManagerConfigController.writeAndReload(config);
@@ -170,7 +169,7 @@ public class TestAlertManagerConfigController {
     alertManagerConfig = this.alertManagerConfigController.read();
     index = alertManagerConfig.getReceivers().indexOf(receiver);
     updatedReceiver = alertManagerConfig.getReceivers().get(index);
-    assert !updatedReceiver.getEmailConfigs().contains(emailConfig);
+    Assert.assertFalse(updatedReceiver.getEmailConfigs().contains(emailConfig));
   }
   
   @Test
@@ -220,7 +219,7 @@ public class TestAlertManagerConfigController {
     AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
     int index = alertManagerConfig.getReceivers().indexOf(receiver);
     Receiver updatedReceiver = alertManagerConfig.getReceivers().get(index);
-    assert updatedReceiver.getSlackConfigs().contains(slackConfig);
+    Assert.assertTrue(updatedReceiver.getSlackConfigs().contains(slackConfig));
   }
   
   @Test
@@ -234,7 +233,7 @@ public class TestAlertManagerConfigController {
     AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
     int index = alertManagerConfig.getReceivers().indexOf(receiver);
     Receiver updatedReceiver = alertManagerConfig.getReceivers().get(index);
-    assert updatedReceiver.getSlackConfigs().contains(slackConfig);
+    Assert.assertTrue(updatedReceiver.getSlackConfigs().contains(slackConfig));
   
     AlertManagerConfig config = alertManagerConfigController.removeSlackFromReceiver("slack_general", slackConfig);
     alertManagerConfigController.writeAndReload(config);
@@ -242,7 +241,7 @@ public class TestAlertManagerConfigController {
     alertManagerConfig = this.alertManagerConfigController.read();
     index = alertManagerConfig.getReceivers().indexOf(receiver);
     updatedReceiver = alertManagerConfig.getReceivers().get(index);
-    assert !updatedReceiver.getSlackConfigs().contains(slackConfig);
+    Assert.assertFalse(updatedReceiver.getSlackConfigs().contains(slackConfig));
   }
   
   @Test
@@ -274,7 +273,7 @@ public class TestAlertManagerConfigController {
     AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
     int index = alertManagerConfig.getReceivers().indexOf(receiver);
     Receiver updatedReceiver = alertManagerConfig.getReceivers().get(index);
-    assert updatedReceiver.getPagerdutyConfigs().contains(pagerdutyConfig);
+    Assert.assertTrue(updatedReceiver.getPagerdutyConfigs().contains(pagerdutyConfig));
   }
   
   @Test
@@ -288,7 +287,7 @@ public class TestAlertManagerConfigController {
     AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
     int index = alertManagerConfig.getReceivers().indexOf(receiver);
     Receiver updatedReceiver = alertManagerConfig.getReceivers().get(index);
-    assert updatedReceiver.getPagerdutyConfigs().contains(pagerdutyConfig);
+    Assert.assertTrue(updatedReceiver.getPagerdutyConfigs().contains(pagerdutyConfig));
   
     AlertManagerConfig config = alertManagerConfigController.removePagerdutyFromReceiver("team-DB-pager", pagerdutyConfig);
     alertManagerConfigController.writeAndReload(config);
@@ -296,7 +295,7 @@ public class TestAlertManagerConfigController {
     alertManagerConfig = this.alertManagerConfigController.read();
     index = alertManagerConfig.getReceivers().indexOf(receiver);
     updatedReceiver = alertManagerConfig.getReceivers().get(index);
-    assert !updatedReceiver.getPagerdutyConfigs().contains(pagerdutyConfig);
+    Assert.assertFalse(updatedReceiver.getPagerdutyConfigs().contains(pagerdutyConfig));
   }
   
   @Test
@@ -320,13 +319,13 @@ public class TestAlertManagerConfigController {
     Receiver receiver = new Receiver("team-Y-mails");
     
     AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
-    assert alertManagerConfig.getReceivers().contains(receiver);
+    Assert.assertTrue(alertManagerConfig.getReceivers().contains(receiver));
   
     AlertManagerConfig config = alertManagerConfigController.removeReceiver("team-Y-mails", true);
     alertManagerConfigController.writeAndReload(config);
     
     alertManagerConfig = this.alertManagerConfigController.read();
-    assert !alertManagerConfig.getReceivers().contains(receiver);
+    Assert.assertFalse(alertManagerConfig.getReceivers().contains(receiver));
   }
   
   @Test
@@ -344,9 +343,9 @@ public class TestAlertManagerConfigController {
     
     AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
     int index = alertManagerConfig.getReceivers().indexOf(receiver);
-    assert index > -1;
+    Assert.assertTrue(index > -1);
     Receiver updatedReceiver = alertManagerConfig.getReceivers().get(index);
-    assert updatedReceiver.getEmailConfigs().contains(emailConfig);
+    Assert.assertTrue(updatedReceiver.getEmailConfigs().contains(emailConfig));
   }
   
   @Test
@@ -376,7 +375,7 @@ public class TestAlertManagerConfigController {
     });
     
     AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
-    assert !alertManagerConfig.getReceivers().contains(receiver);
+    Assert.assertFalse(alertManagerConfig.getReceivers().contains(receiver));
   }
   
   @Test
@@ -393,7 +392,7 @@ public class TestAlertManagerConfigController {
     });
     
     AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
-    assert !alertManagerConfig.getReceivers().contains(receiver);
+    Assert.assertFalse(alertManagerConfig.getReceivers().contains(receiver));
   }
   
   @Test
@@ -423,7 +422,7 @@ public class TestAlertManagerConfigController {
     alertManagerConfigController.writeAndReload(config);
     
     AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
-    assert alertManagerConfig.getRoute().getRoutes().contains(route);
+    Assert.assertTrue(alertManagerConfig.getRoute().getRoutes().contains(route));
   }
   
   @Test
@@ -455,7 +454,7 @@ public class TestAlertManagerConfigController {
     alertManagerConfigController.writeAndReload(config);
     
     AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
-    assert alertManagerConfig.getRoute().getRoutes().contains(route);
+    Assert.assertTrue(alertManagerConfig.getRoute().getRoutes().contains(route));
   }
   
   @Test
@@ -484,13 +483,13 @@ public class TestAlertManagerConfigController {
     Route route = new Route("slack_general").withMatch(matches);
     
     AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
-    assert alertManagerConfig.getRoute().getRoutes().contains(route);
+    Assert.assertTrue(alertManagerConfig.getRoute().getRoutes().contains(route));
   
     AlertManagerConfig config = alertManagerConfigController.removeRoute(route);
     alertManagerConfigController.writeAndReload(config);
     
     alertManagerConfig = this.alertManagerConfigController.read();
-    assert !alertManagerConfig.getRoute().getRoutes().contains(route);
+    Assert.assertFalse(alertManagerConfig.getRoute().getRoutes().contains(route));
   }
   
   @After
