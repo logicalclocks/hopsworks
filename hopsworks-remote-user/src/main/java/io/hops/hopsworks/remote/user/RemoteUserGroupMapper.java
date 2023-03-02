@@ -12,7 +12,6 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.JobException;
-import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.TensorBoardException;
@@ -129,7 +128,7 @@ public class RemoteUserGroupMapper {
       try {
         projectController.addMember(user, remoteGroupProjectMapping.getProjectRole(),
           remoteGroupProjectMapping.getProject());
-      } catch (KafkaException | ProjectException | UserException | FeaturestoreException | IOException e) {
+      } catch (ProjectException | UserException | FeaturestoreException | IOException e) {
         LOGGER.log(Level.WARNING, "Failed to add user: {0} to project: {1} for GroupProjectMapping: {2}. Error: {3}",
           new Object[]{user.getUsername(), remoteGroupProjectMapping.getProject(), remoteGroupProjectMapping.getId(),
             e.getMessage()});
@@ -151,7 +150,7 @@ public class RemoteUserGroupMapper {
             try {
               projectController
                 .updateMemberRole(projectTeam.getProject(), user, remoteGroupProjectMapping.getProjectRole());
-            } catch (ProjectException | FeaturestoreException | KafkaException | UserException | IOException e) {
+            } catch (ProjectException | FeaturestoreException | IOException e) {
               LOGGER.log(Level.WARNING, "Failed to update role for user: {0} in project: {1} for GroupProjectMapping:" +
                 " {2}. Error: {3}", new Object[]{user.getUsername(), remoteGroupProjectMapping.getProject(),
                 remoteGroupProjectMapping.getId(), e.getMessage()});

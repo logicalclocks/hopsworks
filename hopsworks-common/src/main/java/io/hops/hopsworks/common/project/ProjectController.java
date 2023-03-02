@@ -58,7 +58,6 @@ import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.kafka.HopsKafkaAdminClient;
 import io.hops.hopsworks.common.dao.kafka.KafkaConst;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
-import io.hops.hopsworks.common.dao.kafka.TopicAclsFacade;
 import io.hops.hopsworks.common.dao.log.operation.OperationsLogFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.jobconfig.DefaultJobConfigurationFacade;
@@ -297,8 +296,6 @@ public class ProjectController {
   @EJB
   private ProjectTopicsFacade projectTopicsFacade;
   @EJB
-  private TopicAclsFacade topicAclsFacade;
-  @EJB
   private SubjectsController subjectsController;
   @EJB
   private HopsFSProvenanceController fsProvController;
@@ -396,7 +393,7 @@ public class ProjectController {
 
       //create certificate for this user
       // User's certificates should be created before making any call to
-      // Hadoop clients. Otherwise the client will fail if RPC TLS is enabled
+      // Hadoop clients. Otherwise, the client will fail if RPC TLS is enabled
       // This is an async call
       Future<CertificatesController.CertsResult> certsResultFuture;
       try {
@@ -915,7 +912,7 @@ public class ProjectController {
    */
   public Future<CertificatesController.CertsResult> addOnlineFsUser(Project project)
       throws HopsSecurityException, IOException, ProjectException {
-    return addServiceUser(project, OnlineFeaturestoreController.ONLINEFS_USERNAME);
+    return addServiceUser(project, OnlineFeaturestoreController.ONLINEFS_USERNAME, ProjectRoleTypes.DATA_SCIENTIST);
   }
 
   private Future<CertificatesController.CertsResult> addServiceServing(Project project, Users user,
@@ -935,21 +932,22 @@ public class ProjectController {
   }
 
   /**
-   * Add to the project the serving manager. The user responsible of writing the inference logs to kafka
+   * Add to the project the serving manager. The user responsible for writing the inference logs to kafka
    * @param project
    */
   private Future<CertificatesController.CertsResult> addServingManager(Project project)
       throws IOException, HopsSecurityException, ProjectException {
-    return addServiceUser(project, KafkaInferenceLogger.SERVING_MANAGER_USERNAME);
+    return addServiceUser(project, KafkaInferenceLogger.SERVING_MANAGER_USERNAME, ProjectRoleTypes.DATA_OWNER);
   }
   
-  private Future<CertificatesController.CertsResult> addServiceUser(Project project, String username)
+  private Future<CertificatesController.CertsResult> addServiceUser(Project project, String username,
+                                                                    ProjectRoleTypes roleType)
       throws IOException, HopsSecurityException, ProjectException {
     // Add the Serving Manager user to the project team
     Users serviceUser = userFacade.findByUsername(username);
     ProjectTeamPK stp = new ProjectTeamPK(project.getId(), serviceUser.getEmail());
     ProjectTeam st = new ProjectTeam(stp);
-    st.setTeamRole(ProjectRoleTypes.DATA_SCIENTIST.getRole());
+    st.setTeamRole(roleType.getRole());
     st.setTimestamp(new Date());
     st.setUser(serviceUser);
     st.setProject(project);//Not fetched by jpa from project id in PK
@@ -1098,8 +1096,6 @@ public class ProjectController {
     if (!project.getOwner().equals(user) && !usersController.isUserInRole(user, "HOPS_ADMIN")) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_REMOVAL_NOT_ALLOWED, Level.FINE);
     }
-
-    topicAclsFacade.removeAclForProject(project);
 
     cleanup(project);
   }
@@ -1882,15 +1878,14 @@ public class ProjectController {
    * @param project
    * @param owner
    * @param projectTeams
-   * @return a list of user names that could not be added to the project team
+   * @return a list of usernames that could not be added to the project team
    * list.
-   * @throws KafkaException
    * @throws ProjectException
-   * @throws UserException
+   * @throws FeaturestoreException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public List<String> addMembers(Project project, Users owner, List<ProjectTeam> projectTeams) throws KafkaException,
-    ProjectException, UserException, FeaturestoreException {
+  public List<String> addMembers(Project project, Users owner, List<ProjectTeam> projectTeams) throws
+    ProjectException, FeaturestoreException {
     List<String> failedList = new ArrayList<>();
     if (projectTeams == null) {
       return failedList;
@@ -1927,7 +1922,7 @@ public class ProjectController {
   }
   
   public boolean addMember(ProjectTeam projectTeam, Project project, Users newMember, Users owner,
-    DistributedFileSystemOps dfso) throws UserException, KafkaException, ProjectException, FeaturestoreException,
+    DistributedFileSystemOps dfso) throws ProjectException, FeaturestoreException,
     IOException {
     if (projectTeam.getTeamRole() == null ||
       (!projectTeam.getTeamRole().equals(ProjectRoleTypes.DATA_SCIENTIST.getRole()) &&
@@ -1945,11 +1940,6 @@ public class ProjectController {
       project.getProjectTeamCollection().add(projectTeam);
       projectFacade.update(project);
       hdfsUsersController.addNewProjectMember(projectTeam, dfso);
-  
-      //Add user to kafka topics ACLs by default
-      if (projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.KAFKA)) {
-        kafkaController.addProjectMemberToTopics(projectTeam);
-      }
   
       //if online-featurestore service is enabled in the project, give new member access to it
       if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE) &&
@@ -2009,7 +1999,7 @@ public class ProjectController {
     }
   }
   
-  public void addMember(Users user, String role, Project project) throws KafkaException, ProjectException,
+  public void addMember(Users user, String role, Project project) throws ProjectException,
     UserException, FeaturestoreException, IOException {
     if (user == null || project == null) {
       throw new IllegalArgumentException("User and project can not be null.");
@@ -2204,8 +2194,6 @@ public class ProjectController {
       onlineFeaturestoreController.removeOnlineFeaturestoreUser(featurestore, userToBeRemoved);
     }
 
-    kafkaController.removeProjectMemberFromTopics(projectTeam);
-
     certificateMaterializer.forceRemoveLocalMaterial(userToBeRemoved.getUsername(), project.getName(), null, false);
     try {
       certificatesController.revokeUserSpecificCertificates(project, userToBeRemoved);
@@ -2237,7 +2225,7 @@ public class ProjectController {
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void updateMemberRole(Project project, Users opsOwner, String toUpdateEmail, String newRole)
-      throws UserException, ProjectException, FeaturestoreException, IOException, KafkaException {
+      throws UserException, ProjectException, FeaturestoreException, IOException {
     Users user = userFacade.findByEmail(toUpdateEmail);
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "user: " + toUpdateEmail);
@@ -2257,7 +2245,7 @@ public class ProjectController {
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void updateMemberRole(Project project, Users user, String newRole) throws ProjectException,
-      FeaturestoreException, IOException, KafkaException, UserException {
+      FeaturestoreException, IOException {
     if (project.getOwner().equals(user)) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_ROLE_NOT_ALLOWED, Level.FINE,
         "project: " + project.getName());
@@ -2281,11 +2269,6 @@ public class ProjectController {
     projectTeamFacade.update(projectTeam);
   
     hdfsUsersController.changeMemberRole(projectTeam);
-
-    //sets project member to kafka topics ACLs
-    if (projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.KAFKA)) {
-      kafkaController.updateProjectMemberTopics(projectTeam);
-    }
 
     // trigger project team role update handlers
     ProjectTeamRoleHandler.runProjectTeamRoleUpdateMembersHandlers(projectTeamRoleHandlers, project,
@@ -2530,8 +2513,8 @@ public class ProjectController {
   }
 
   private AccessCredentialsDTO getAccessCredentials(Project project, Users user)
-    throws IOException, CryptoPasswordNotFoundException, CertificateException, NoSuchAlgorithmException,
-    KeyStoreException, UnrecoverableKeyException {
+      throws IOException, CryptoPasswordNotFoundException, CertificateException, NoSuchAlgorithmException,
+      KeyStoreException, UnrecoverableKeyException {
     //Read certs from database and stream them out
     certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
     CertificateMaterializer.CryptoMaterial material = certificateMaterializer.getUserMaterial(user.getUsername(),
