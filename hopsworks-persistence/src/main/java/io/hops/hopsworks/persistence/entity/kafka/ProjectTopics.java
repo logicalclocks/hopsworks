@@ -40,9 +40,7 @@
 package io.hops.hopsworks.persistence.entity.kafka;
 
 import java.io.Serializable;
-import java.util.Collection;
 import javax.persistence.Basic;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -52,16 +50,13 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 import io.hops.hopsworks.persistence.entity.kafka.schemas.Subjects;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "project_topics",
@@ -116,9 +111,6 @@ public class ProjectTopics implements Serializable {
     referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Project project;
-
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "projectTopics")
-  private Collection<TopicAcls> topicAclsCollection;
 
   @JoinColumn(name = "subject_id", referencedColumnName = "id")
   @ManyToOne(optional = false)
@@ -195,9 +187,6 @@ public class ProjectTopics implements Serializable {
     if (id != null ? !id.equals(topics.id) : topics.id != null) return false;
     if (!topicName.equals(topics.topicName)) return false;
     if (project != null ? !project.equals(topics.project) : topics.project != null) return false;
-    if (topicAclsCollection != null ?
-        !topicAclsCollection.equals(topics.topicAclsCollection) : topics.topicAclsCollection != null)
-      return false;
     return subjects != null ? subjects.equals(topics.subjects) : topics.subjects == null;
   }
 
@@ -208,18 +197,7 @@ public class ProjectTopics implements Serializable {
     result = 31 * result + (numOfPartitions != null ? numOfPartitions.hashCode() : 0);
     result = 31 * result + (numOfReplicas != null ? numOfReplicas.hashCode() : 0);
     result = 31 * result + (project != null ? project.hashCode() : 0);
-    result = 31 * result + (topicAclsCollection != null ? topicAclsCollection.hashCode() : 0);
     result = 31 * result + (subjects != null ? subjects.hashCode() : 0);
     return result;
-  }
-
-  @XmlTransient
-  @JsonIgnore
-  public Collection<TopicAcls> getTopicAclsCollection() {
-    return topicAclsCollection;
-  }
-
-  public void setTopicAclsCollection(Collection<TopicAcls> topicAclsCollection) {
-    this.topicAclsCollection = topicAclsCollection;
   }
 }

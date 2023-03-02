@@ -53,77 +53,6 @@ describe "On #{ENV['OS']}" do
           expect_status_details(405)
         end
 
-        it "should be able to share the topic with another project" do
-          org_project = @project
-          with_kafka_topic(@project[:id])
-
-          # create the target project
-          target_project = create_project
-          topic = get_topic
-          share_topic(org_project, topic, target_project)
-          expect_status_details(201)
-
-          # Check that the topic has been shared correctly
-          get_shared_topics(target_project.id)
-          expect(json_body[:items].count).to eq 1
-        end
-
-        it "should be able to share the topic with another project and then unshare" do
-          org_project = @project
-          with_kafka_topic(@project[:id])
-
-          # create the target project
-          target_project = create_project
-          topic = get_topic
-          share_topic(org_project, topic, target_project)
-          expect_status_details(201)
-
-          # Check that the topic has been shared correctly
-          get_shared_topics(target_project.id)
-          expect(json_body[:items].count).to eq 1
-
-          # Unshare topic with request issued from org(owner) project
-          unshare_topic_within_owner_project(org_project, topic, target_project)
-          expect_status_details(204)
-
-          share_topic(org_project, topic, target_project)
-          expect_status_details(201)
-
-          # Unshare topic with request issued from org(owner) project
-          unshare_topic_within_dest_project(target_project, topic)
-          expect_status_details(204)
-
-        end
-
-        it "accepts a shared topic" do
-          org_project = @project
-          with_kafka_topic(@project[:id])
-
-          # create the target project
-          target_project = create_project
-          topic = get_topic
-          share_topic(org_project, topic, target_project)
-          expect_status_details(201)
-
-          # Check that the topic has been shared correctly
-          get_shared_topics(target_project.id)
-          expect(json_body[:items].count).to eq 1
-          expect(json_body[:items].first[:accepted]).to eq false
-
-          # check kafka ACLs before accepting the topic
-          filter = "?filter_by=project_name:" + target_project[:inode_name]
-          get_kafka_acls(org_project, topic, filter)
-          expect(json_body[:count]).to eq 0
-
-          # accept the topic and check the ACLs
-          accept_shared_topic(target_project, topic)
-
-          # Check that the topic has been shared correctly
-          get_shared_topics(target_project.id)
-          expect(json_body[:items].count).to eq 1
-          expect(json_body[:items].first[:accepted]).to eq true
-        end
-
         it "should not be able to delete a kafka schema with a reserved name" do
           project = get_project
           delete_schema(project.id, "inferenceschema", 1)
@@ -154,24 +83,6 @@ describe "On #{ENV['OS']}" do
         expect_status_details(204)
       end
 
-      it "should be able to share the topic with another project and get the schema" do
-        with_kafka_topic(@project[:id])
-        org_project = get_project
-
-        # create the target project
-        target_project = create_project
-        topic = get_topic
-        share_topic(org_project, topic, target_project)
-        expect_status_details(201)
-
-        # Check that the topic has been shared correctly
-        get_shared_topics(target_project.id)
-        expect(json_body[:items].count).to eq 1
-
-        # Get the topic's schema from the target_project
-        get_topic_subject_details(target_project, topic)
-        expect_status_details(200)
-      end
       it "should not be able to get the schema of a non-shared topic" do
         with_kafka_topic(@project[:id])
 
@@ -193,27 +104,10 @@ describe "On #{ENV['OS']}" do
         schema = get_schema
         create_topics(project.id, 10, schema.subject, 1)
       end
-
       it "should return ten own topics" do
         project = get_project
         get_project_topics(project.id)
         expect(json_body[:items].count).to eq(10)
-      end
-
-      it "should return eleven topics after sharing" do
-        first_project = get_project
-
-        # create another project with one topic
-        second_project = create_project
-        topic_name = create_topic(second_project.id)
-
-        # share topic with the first_project
-        share_topic(second_project, topic_name, first_project)
-        expect_status_details(201)
-
-        # get all topics for the first project
-        get_all_topics(first_project.id)
-        expect(json_body[:items].count).to eq(11)
       end
     end
 
@@ -223,25 +117,6 @@ describe "On #{ENV['OS']}" do
           with_valid_project
           project = get_project
           @project_topics = create_topics(project.id)
-        end
-        describe "Kafka topics filter" do
-          it 'should filter shared and project topics' do
-            # create another project with one topic
-            project = get_project
-            second_project = create_project
-            topic_name = create_topic(second_project.id)
-
-            # share topic with the first_project
-            share_topic(second_project, topic_name, project)
-            expect_status_details(201)
-
-            # get all project topics for the first project
-            get_project_topics(project.id)
-            expect(json_body[:items].count).to eq(10)
-            # get all shared topics for the first project
-            get_shared_topics(project.id)
-            expect(json_body[:items].count).to eq(1)
-          end
         end
         describe "Kafka topics sort" do
           it 'should get project topics sorted by name ascending' do

@@ -16,13 +16,11 @@
 
 package io.hops.hopsworks.common.serving.util;
 
-import io.hops.hopsworks.common.dao.kafka.AclDTO;
 import io.hops.hopsworks.common.kafka.KafkaBrokers;
 import io.hops.hopsworks.persistence.entity.kafka.ProjectTopics;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.exceptions.ServingException;
@@ -41,7 +39,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 
 @Stateless
@@ -75,8 +72,7 @@ public class KafkaServingHelper {
    */
   public void setupKafkaServingTopic(Project project, ServingWrapper servingWrapper,
                                      Serving newDbServing, Serving oldDbServing)
-      throws KafkaException, ProjectException, UserException, ServingException,
-    InterruptedException, ExecutionException {
+      throws KafkaException, ServingException {
 
     if (servingWrapper.getKafkaTopicDTO() != null &&
         servingWrapper.getKafkaTopicDTO().getName() != null &&
@@ -105,7 +101,7 @@ public class KafkaServingHelper {
         // This is an update and the topic name hasn't changed.
         newDbServing.setKafkaTopic(oldDbServing.getKafkaTopic());
       } else {
-        // The user has selected a an already existing Kafka topic. Check that it matches the schema requirements
+        // The user has selected a already existing Kafka topic. Check that it matches the schema requirements
         ProjectTopics topic = checkSchemaRequirements(project, servingWrapper);
         newDbServing.setKafkaTopic(topic);
       }
@@ -131,9 +127,7 @@ public class KafkaServingHelper {
       topic.getSubjects().getSchema().getSchema());
   }
 
-  private ProjectTopics setupKafkaTopic(Project project, ServingWrapper servingWrapper) throws
-    KafkaException, UserException, ProjectException, InterruptedException, ExecutionException {
-
+  private ProjectTopics setupKafkaTopic(Project project, ServingWrapper servingWrapper) throws KafkaException {
     try {
       // Check that the user is not trying to create a topic with  more replicas than brokers.
       if (servingWrapper.getKafkaTopicDTO().getNumOfReplicas() != null &&
@@ -168,18 +162,7 @@ public class KafkaServingHelper {
         servingWrapper.getKafkaTopicDTO().getNumOfPartitions(), Settings.INFERENCE_SCHEMANAME,
       Settings.INFERENCE_SCHEMAVERSION);
 
-    ProjectTopics pt = kafkaController.createTopicInProject(project, topicDTO);
-
-    // Add the ACLs for this topic. By default all users should be able to do everything
-    for (ProjectTeam projectTeam : project.getProjectTeamCollection()) {
-      AclDTO aclDto = new AclDTO(project.getName(),
-          projectTeam.getUser().getEmail(),
-          "allow", Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD,
-          Settings.KAFKA_ACL_WILDCARD);
-      kafkaController.addAclsToTopic(topicDTO.getName(), project.getId(), aclDto);
-    }
-
-    return pt;
+    return kafkaController.createTopicInProject(project, topicDTO);
   }
 
   private ProjectTopics checkSchemaRequirements(Project project, ServingWrapper servingWrapper)

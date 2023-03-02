@@ -42,18 +42,12 @@ package io.hops.hopsworks.api.kafka;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
-import io.hops.hopsworks.api.kafka.acls.AclBuilder;
-import io.hops.hopsworks.api.kafka.acls.AclsBeanParam;
 import io.hops.hopsworks.api.kafka.topics.TopicsBeanParam;
 import io.hops.hopsworks.api.kafka.topics.TopicsBuilder;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.kafka.AclDTO;
 import io.hops.hopsworks.common.dao.kafka.KafkaClusterInfoDTO;
 import io.hops.hopsworks.common.dao.kafka.PartitionDetailsDTO;
-import io.hops.hopsworks.common.dao.kafka.SharedProjectDTO;
-import io.hops.hopsworks.common.dao.kafka.SharedTopicsDTO;
-import io.hops.hopsworks.common.dao.kafka.SharedTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.kafka.schemas.Compatibility;
 import io.hops.hopsworks.common.dao.kafka.schemas.CompatibilityCheck;
@@ -67,17 +61,12 @@ import io.hops.hopsworks.common.kafka.SchemasController;
 import io.hops.hopsworks.common.kafka.SubjectsCompatibilityController;
 import io.hops.hopsworks.common.kafka.SubjectsController;
 import io.hops.hopsworks.exceptions.KafkaException;
-import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.SchemaException;
-import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.kafka.SharedTopics;
-import io.hops.hopsworks.persistence.entity.kafka.TopicAcls;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.zookeeper.KeeperException;
 
 import javax.ejb.EJB;
@@ -107,7 +96,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.logging.Logger;
 
 @RequestScoped
@@ -122,10 +110,6 @@ public class KafkaResource {
   private KafkaController kafkaController;
   @EJB
   private TopicsBuilder topicsBuilder;
-  @EJB
-  private SharedTopicsFacade sharedTopicsFacade;
-  @EJB
-  private AclBuilder aclBuilder;
   @EJB
   private SubjectsController subjectsController;
   @EJB
@@ -167,8 +151,8 @@ public class KafkaResource {
       uriInfo, project, new ArrayList<>(kafkaBrokers.getBrokerEndpoints()));
     return Response.ok().entity(dto).build();
   }
-  
-  @ApiOperation(value = "Retrieve Kafka topics metadata .")
+
+  @ApiOperation(value = "Retrieve Kafka topics metadata.")
   @GET
   @Path("/topics")
   @Produces(MediaType.APPLICATION_JSON)
@@ -203,7 +187,7 @@ public class KafkaResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response createTopic(TopicDTO topicDto, @Context UriInfo uriInfo,
                               @Context HttpServletRequest req,
-                              @Context SecurityContext sc) throws KafkaException, ProjectException, UserException {
+                              @Context SecurityContext sc) throws KafkaException {
     kafkaController.createTopic(project, topicDto);
     URI uri = uriInfo.getAbsolutePathBuilder().path(topicDto.getName()).build();
     topicDto.setHref(uri);
@@ -241,188 +225,6 @@ public class KafkaResource {
                            @Context SecurityContext sc) throws KafkaException {
     PartitionDetailsDTO dto = topicsBuilder.buildTopicDetails(uriInfo, project, topicName);
     return Response.ok().entity(dto).build();
-  }
-  
-  @ApiOperation(value = "Share a Kafka topic with a project.")
-  @PUT
-  @Path("/topics/{topic}/shared/{destProjectName}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response shareTopic(@PathParam("topic") String topicName, @PathParam("destProjectName") String destProjectName,
-    @Context UriInfo uriInfo, @Context SecurityContext sc) throws KafkaException, ProjectException, UserException {
-    URI uri = topicsBuilder.sharedProjectUri(uriInfo, project, topicName).build();
-    Integer destProjectId = projectFacade.findByName(destProjectName).getId();
-    Optional<SharedTopics> st = sharedTopicsFacade.findSharedTopicByProjectAndTopic(destProjectId, topicName);
-    SharedTopicsDTO dto;
-    if (st.isPresent()) {
-      dto = new SharedTopicsDTO(st.get().getProjectId(), st.get().getSharedTopicsPK());
-      dto.setHref(uri);
-      return Response.ok(uri).entity(dto).build();
-    } else {
-      dto = kafkaController.shareTopicWithProject(project, topicName, destProjectId);
-      dto.setHref(uri);
-      return Response.created(uri).entity(dto).build();
-    }
-  }
-  
-  @ApiOperation(value = "Accept shared Kafka topic.")
-  @PUT
-  @Path("/topics/{topic}/shared")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response acceptSharedTopic(@PathParam("topic") String topicName, @Context UriInfo uriInfo)
-    throws KafkaException, ProjectException, UserException {
-    
-    kafkaController.acceptSharedTopic(project, topicName);
-    return Response.ok().build();
-  }
-
-  @ApiOperation(value = "Unshare Kafka topic from all projects if request is issued from the project owning the topic" +
-    ". Other unshare it from the requester project.")
-  @DELETE
-  @Path("/topics/{topic}/shared")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response unshareTopicFromProjects(@PathParam("topic") String topicName, @Context SecurityContext sc)
-    throws KafkaException, ProjectException {
-    
-    kafkaController.unshareTopic(project, topicName, null);
-    return Response.noContent().build();
-  }
-  
-  @ApiOperation(value = "Unshare Kafka topic from shared-with project (specified as destProjectId). Request must be " +
-    "issued from the owning project.")
-  @DELETE
-  @Path("/topics/{topic}/shared/{destProjectName}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response unshareTopicFromProject(@PathParam("topic") String topicName,
-    @PathParam("destProjectName") String destProjectName, @Context SecurityContext sc) throws KafkaException,
-    ProjectException {
-    
-    kafkaController.unshareTopic(project, topicName, destProjectName);
-    return Response.noContent().build();
-  }
-  
-  @ApiOperation(value = "Get list of projects that a topic has been shared with.")
-  @GET
-  @Path("/topics/{topic}/shared")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response topicIsSharedTo(@Context UriInfo uriInfo, @PathParam("topic") String topicName,
-    @Context SecurityContext sc) {
-    SharedProjectDTO dto = topicsBuilder.buildSharedProject(uriInfo, project, topicName);
-    return Response.ok().entity(dto).build();
-  }
-
-  @ApiOperation(value = "Get all ACLs for a specified topic.")
-  @GET
-  @Path("/topics/{topic}/acls")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
-    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
-    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
-  public Response getTopicAcls(@Context UriInfo uriInfo,
-                               @PathParam("topic") String topicName,
-                               @BeanParam Pagination pagination,
-                               @BeanParam AclsBeanParam aclsBeanParam,
-                               @Context HttpServletRequest req,
-                               @Context SecurityContext sc) {
-    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KAFKA);
-    resourceRequest.setOffset(pagination.getOffset());
-    resourceRequest.setLimit(pagination.getLimit());
-    resourceRequest.setSort(aclsBeanParam.getSortBySet());
-    resourceRequest.setFilter(aclsBeanParam.getFilter());
-    AclDTO dto = aclBuilder.build(uriInfo, project, topicName, resourceRequest);
-    return Response.ok().entity(dto).build();
-  }
-  
-  @ApiOperation(value = "Add a new ACL for a specified topic.")
-  @POST
-  @Path("/topics/{topic}/acls")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
-    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
-    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
-  public Response addAclsToTopic(@Context UriInfo uriInfo, @PathParam("topic") String topicName, AclDTO aclDto,
-                                 @Context HttpServletRequest req,
-                                 @Context SecurityContext sc) throws KafkaException, ProjectException, UserException {
-    Pair<TopicAcls, Response.Status> aclTuple = kafkaController.addAclsToTopic(topicName, project.getId(), aclDto);
-    AclDTO dto = aclBuilder.build(uriInfo, aclTuple.getLeft());
-    return Response.status(aclTuple.getRight()).entity(dto).build();
-  }
-
-  @ApiOperation(value = "Remove ACL specified by id.")
-  @DELETE
-  @Path("/topics/{topic}/acls/{id}")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
-    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
-    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
-  public Response removeAclsFromTopic(@PathParam("topic") String topicName, @PathParam("id") Integer aclId,
-                                      @Context HttpServletRequest req,
-                                      @Context SecurityContext sc) throws KafkaException {
-    kafkaController.removeAclFromTopic(topicName, aclId);
-    return Response.noContent().build();
-  }
-  
-  @ApiOperation(value = "Get ACL metadata specified by id.")
-  @GET
-  @Path("/topics/{topic}/acls/{id}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
-    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
-    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
-  public Response getTopicAcl(@Context UriInfo uriInfo,
-                              @PathParam("topic") String topicName,
-                              @PathParam("id") Integer aclId,
-                              @Context HttpServletRequest req,
-                              @Context SecurityContext sc) throws KafkaException {
-    AclDTO dto = aclBuilder.getAclByTopicAndId(uriInfo, project, topicName, aclId);
-    return Response.ok().entity(dto).build();
-  }
-
-  @ApiOperation(value = "Update ACL specified by id.")
-  @PUT
-  @Path("/topics/{topic}/acls/{id}")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
-    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
-    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
-  public Response updateTopicAcls(@Context UriInfo uriInfo, @PathParam("topic") String topicName,
-                                  @PathParam("id") Integer aclId, AclDTO aclDto,
-                                  @Context HttpServletRequest req,
-                                  @Context SecurityContext sc)
-      throws KafkaException, ProjectException, UserException {
-    
-    Integer updatedAclId = kafkaController.updateTopicAcl(project, topicName, aclId, aclDto);
-    aclDto.setId(updatedAclId);
-    URI uri = aclBuilder.getAclUri(uriInfo, project, topicName)
-      .path(Integer.toString(updatedAclId))
-      .build();
-    aclDto.setHref(uri);
-    return Response.ok(uri).entity(aclDto).build();
   }
 
   @ApiOperation(value = "Get schema by its id.")
@@ -751,7 +553,7 @@ public class KafkaResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "AGENT", "HOPS_SERVICE_USER"})
   public Response getTopicSubject(@PathParam("topic") String topic,
                                   @Context HttpServletRequest req,
-                                  @Context SecurityContext sc) throws KafkaException, ProjectException {
+                                  @Context SecurityContext sc) throws KafkaException {
     SubjectDTO subjectDTO = kafkaController.getSubjectForTopic(project, topic);
     return Response.ok().entity(subjectDTO).build();
   }

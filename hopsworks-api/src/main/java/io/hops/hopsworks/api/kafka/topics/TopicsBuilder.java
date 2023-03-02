@@ -20,7 +20,6 @@ import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.kafka.PartitionDetailsDTO;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
-import io.hops.hopsworks.common.dao.kafka.SharedProjectDTO;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.kafka.KafkaController;
@@ -60,12 +59,10 @@ public class TopicsBuilder extends CollectionsBuilder<TopicDTO> {
   protected TopicsBuilder(KafkaController kafkaController) {
     this.kafkaController = kafkaController;
   }
-  
+
   @Override
   protected List<TopicDTO> getAll(Project project) {
-    List<TopicDTO> allTopics = kafkaController.findTopicsByProject(project);
-    allTopics.addAll(kafkaController.findSharedTopicsByProject(project.getId()));
-    return allTopics;
+    return kafkaController.findAllTopicsByProject(project);
   }
   
   public TopicDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project) {
@@ -148,16 +145,7 @@ public class TopicsBuilder extends CollectionsBuilder<TopicDTO> {
         RESTCodes.KafkaErrorCode.TOPIC_FETCH_FAILED, Level.WARNING, usrMsg, e.getMessage(), e);
     }
   }
-  
-  public SharedProjectDTO buildSharedProject(UriInfo uriInfo, Project project, String topicName) {
-    SharedProjectDTO dto = new SharedProjectDTO();
-    dto.setHref(sharedProjectUri(uriInfo, project, topicName).build());
-    List<SharedProjectDTO> list = kafkaController.getTopicSharedProjects(topicName, project.getId());
-    dto.setCount(Integer.toUnsignedLong(list.size()));
-    list.forEach(dto::addItem);
-    return dto;
-  }
-  
+
   @Override
   protected List<TopicDTO> filterTopics(List<TopicDTO> list, AbstractFacade.FilterBy filterBy) {
     switch (TopicsFilters.valueOf(filterBy.getValue())) {
