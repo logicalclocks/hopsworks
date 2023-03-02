@@ -460,7 +460,7 @@ public class PKI {
 
   protected Pair<Boolean, KeyPair> loadOrGenerateKeypair(String owner) throws InvalidKeySpecException, IOException {
     LOGGER.log(Level.INFO, "Loading key pair for " + owner);
-    Optional<KeyPair> kp = loadKeypair(owner);
+    Optional<KeyPair> kp = loadKeyPair(owner);
     if (kp.isPresent()) {
       LOGGER.log(Level.INFO, "Loaded key pair for " + owner);
       return Pair.of(true, kp.get());
@@ -532,7 +532,7 @@ public class PKI {
     return keyPairGenerator.generateKeyPair();
   }
 
-  protected Optional<KeyPair> loadKeypair(String owner) throws InvalidKeySpecException {
+  protected Optional<KeyPair> loadKeyPair(String owner) throws InvalidKeySpecException {
     byte[] privateKey = keyFacade.getEncodedKey(owner, PKIKey.Type.PRIVATE);
     if (privateKey != null) {
       byte[] publicKey = keyFacade.getEncodedKey(owner, PKIKey.Type.PUBLIC);
