@@ -34,15 +34,21 @@ import static io.hops.hopsworks.ca.controllers.PKI.EMPTY_CONFIGURATION;
 public class TestPKICRL {
 
   @Test
-  public void testCAInitializeCRLAlreadyExists() throws Exception {
-    CRLFacade crlFacade = Mockito.mock(CRLFacade.class);
-    Mockito.when(crlFacade.exist(Mockito.eq(CAType.ROOT))).thenReturn(true);
-    PKI realPKI = new PKI();
-    PKI pki = Mockito.spy(realPKI);
-    Mockito.doReturn(EMPTY_CONFIGURATION).when(pki).loadConfiguration();
-    pki.setCRLFacade(crlFacade);
-    pki.init();
-    pki.caInitializeCRL(CAType.ROOT);
+  public void testCAInitializeCRLAlreadyExists() {
+    boolean noException = true;
+    try {
+      CRLFacade crlFacade = Mockito.mock(CRLFacade.class);
+      Mockito.when(crlFacade.exist(Mockito.eq(CAType.ROOT))).thenReturn(true);
+      PKI realPKI = new PKI();
+      PKI pki = Mockito.spy(realPKI);
+      Mockito.doReturn(EMPTY_CONFIGURATION).when(pki).loadConfiguration();
+      pki.setCRLFacade(crlFacade);
+      pki.init();
+      pki.caInitializeCRL(CAType.ROOT);
+    } catch (Exception e) {
+      noException = false;
+    }
+    Assert.assertTrue(noException);
   }
 
   @Test

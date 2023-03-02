@@ -45,7 +45,7 @@ public class TestPKIKeypair {
     pkiSpy.setKeyFacade(kf);
     pkiSpy.init();
 
-    Optional<KeyPair> mkp = pkiSpy.loadKeypair("owner_1");
+    Optional<KeyPair> mkp = pkiSpy.loadKeyPair("owner_1");
     Assert.assertFalse(mkp.isPresent());
 
     KeyPair kp = pkiSpy.generateKeyPair();
@@ -53,7 +53,7 @@ public class TestPKIKeypair {
         .thenReturn(kp.getPrivate().getEncoded());
     Mockito.when(kf.getEncodedKey(Mockito.eq("owner_2"), Mockito.eq(PKIKey.Type.PUBLIC)))
         .thenReturn(kp.getPublic().getEncoded());
-    mkp = pkiSpy.loadKeypair("owner_2");
+    mkp = pkiSpy.loadKeyPair("owner_2");
     Assert.assertTrue(mkp.isPresent());
     Assert.assertArrayEquals(kp.getPrivate().getEncoded(), mkp.get().getPrivate().getEncoded());
     Assert.assertArrayEquals(kp.getPublic().getEncoded(), mkp.get().getPublic().getEncoded());
@@ -68,8 +68,8 @@ public class TestPKIKeypair {
     pkiSpy.init();
 
     KeyPair mockKeypairForOwner1 = pkiSpy.generateKeyPair();
-    Mockito.doReturn(Optional.of(mockKeypairForOwner1)).when(pkiSpy).loadKeypair("owner_1");
-    Mockito.doReturn(Optional.empty()).when(pkiSpy).loadKeypair("owner_2");
+    Mockito.doReturn(Optional.of(mockKeypairForOwner1)).when(pkiSpy).loadKeyPair("owner_1");
+    Mockito.doReturn(Optional.empty()).when(pkiSpy).loadKeyPair("owner_2");
 
     Pair<Boolean, KeyPair> kp = pkiSpy.loadOrGenerateKeypair("owner_1");
     Assert.assertTrue(kp.getLeft());

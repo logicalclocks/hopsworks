@@ -712,6 +712,9 @@ public class ProxyServlet extends HttpServlet {
         formatter.format("%%%02X", (int) c);//TODO
       }
     }
+    if (formatter != null) {
+      formatter.close();
+    }
     return outBuf != null ? outBuf : in;
   }
 
