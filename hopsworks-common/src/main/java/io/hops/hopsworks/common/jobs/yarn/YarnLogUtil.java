@@ -160,14 +160,14 @@ public class YarnLogUtil {
 
     int not_startRetries = 0;
     while (!isFinal(logAggregationStatus)) {
-      TimeUnit.SECONDS.sleep(1);
+      TimeUnit.SECONDS.sleep(2);
       logAggregationStatus = yarnClient.getApplicationReport(appId).getLogAggregationStatus();
       // NOT_START LogAggregation status might happen in two cases:
       // (a) Application has failed very early and status didn't change to FAILED
       // (b) Application has succeeded but the moment we probe for status,
       // log aggregation hasn't started yet.
       if (logAggregationStatus.equals(LogAggregationStatus.NOT_START)) {
-        if (++not_startRetries > 5) {
+        if (++not_startRetries > 30) {
           break;
         }
       }
