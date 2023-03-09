@@ -1645,7 +1645,15 @@ public class RESTCodes {
       Response.Status.BAD_REQUEST),
     AMBIGUOUS_FEATURE_ERROR(213, "Feature name is ambiguous.", Response.Status.BAD_REQUEST),
     STORAGE_CONNECTOR_TYPE_NOT_ENABLED(214, "Storage connector type not enabled", Response.Status.BAD_REQUEST),
-    COULD_NOT_SHARE_PROJECT(215, "Could not share project", Response.Status.BAD_REQUEST);
+    COULD_NOT_SHARE_PROJECT(215, "Could not share project", Response.Status.BAD_REQUEST),
+    FILE_DELETION_ERROR(216, "Failed to delete file", Response.Status.BAD_REQUEST),
+    FILE_READ_ERROR(217, "Failed to read file", Response.Status.BAD_REQUEST),
+    DOCKER_FULLNAME_ERROR(218, "Failed to retrieve full docker image name", Response.Status.BAD_REQUEST),
+    CONNECTION_CHECKER_LAUNCH_ERROR(219, "Failed to launch process to start docker container for testing " +
+      "connection",
+      Response.Status.BAD_REQUEST),
+    CONNECTION_CHECKER_ERROR(220, "Failure in testing connection for storage connector",
+      Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

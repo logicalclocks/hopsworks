@@ -24,6 +24,7 @@ describe "On #{ENV['OS']}" do
 
     featurestore_id = get_featurestore_id(@project[:id])
     @connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/storageconnectors"
+    @check_connection_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/storageconnectors/testConnection"
     type = "featurestoreSnowflakeConnectorDTO"
     storageConnectorType = "SNOWFLAKE"
     @connector = { name: "snowflake_connector_#{random_id}",
@@ -184,5 +185,14 @@ describe "On #{ENV['OS']}" do
         post @connector_endpoint, connector.to_json
         expect_status_details(400)
     end
+
+  it "should launch a connection test-failure case" do
+    connector = @connector.clone
+    post @check_connection_endpoint, connector.to_json
+
+    expect_status_details(200)
+    expect(json_body[:statusCode]).not_to eql 0
+    check_snowflake_connector_update(json_body[:storageConnectorDTO], connector)
+  end
 
 end
