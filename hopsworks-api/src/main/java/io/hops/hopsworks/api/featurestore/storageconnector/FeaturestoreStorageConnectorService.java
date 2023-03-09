@@ -28,6 +28,8 @@ import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
+import io.hops.hopsworks.common.featurestore.storageconnectors.connectionChecker.ConnectionChecker;
+import io.hops.hopsworks.common.featurestore.storageconnectors.connectionChecker.ConnectionCheckerDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.StorageConnectorUtil;
@@ -97,6 +99,8 @@ public class FeaturestoreStorageConnectorService {
   private TemporaryCredentialsHelper temporaryCredentialsHelper;
   @EJB
   private StorageConnectorUtil storageConnectorUtil;
+  @EJB
+  private ConnectionChecker connectionChecker;
 
   private Project project;
   private Featurestore featurestore;
@@ -360,5 +364,42 @@ public class FeaturestoreStorageConnectorService {
       throw new IllegalArgumentException(
         RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_ID_NOT_PROVIDED.getMessage());
     }
+  }
+  
+  /**
+   * Test connection for storage connector
+   *
+   * @param sc
+   * @param req
+   * @param featurestoreStorageConnectorDTO
+   * @return ConnectionCheckerDTO Output of connection test
+   * @throws FeaturestoreException
+   * @throws UserException
+   * @throws ProjectException
+   */
+  @POST
+  @Path("/testConnection")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Consumes(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiOperation(value = "Test storage connector to data source")
+  public Response testConnection(@Context SecurityContext sc,
+    @Context HttpServletRequest req,
+    FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO)
+    throws FeaturestoreException {
+    if (featurestoreStorageConnectorDTO == null) {
+      throw new IllegalArgumentException("Input storage connector DTO cannot be null");
+    }
+    Users user = jWTHelper.getUserPrincipal(sc);
+  
+    ConnectionCheckerDTO resultDto =
+      connectionChecker.checkConnection(user, project, featurestore, featurestoreStorageConnectorDTO);
+    
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
+      .entity(resultDto).build();
   }
 }
