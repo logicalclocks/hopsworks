@@ -322,6 +322,7 @@ public class Settings implements Serializable {
   private final static String VARIABLE_ENABLE_KAFKA_STORAGE_CONNECTORS = "enable_kafka_storage_connectors";
   private final static String VARIABLE_ENABLE_GCS_STORAGE_CONNECTORS = "enable_gcs_storage_connectors";
   private final static String VARIABLE_ENABLE_BIGQUERY_STORAGE_CONNECTORS = "enable_bigquery_storage_connectors";
+  private final static String VARIABLE_CONNECTOR_IMAGE_VERSION = "testconnector_image_version";
 
   //OpenSearch Security
   private static final String VARIABLE_OPENSEARCH_SECURITY_ENABLED = "elastic_opendistro_security_enabled";
@@ -821,6 +822,7 @@ public class Settings implements Serializable {
       ENABLE_BIGQUERY_STORAGE_CONNECTORS = setBoolVar(VARIABLE_ENABLE_BIGQUERY_STORAGE_CONNECTORS,
               ENABLE_BIGQUERY_STORAGE_CONNECTORS);
   
+      TESTCONNECTOR_IMAGE_VERSION = setStrVar(VARIABLE_CONNECTOR_IMAGE_VERSION, "0.1");
       YARN_RUNTIME = setStrVar(VARIABLE_YARN_RUNTIME, YARN_RUNTIME);
       DOCKER_MOUNTS = setStrVar(VARIABLE_DOCKER_MOUNTS, DOCKER_MOUNTS);
       DOCKER_JOB_MOUNTS_LIST = setStrVar(VARIABLE_DOCKER_JOB_MOUNTS_LIST, DOCKER_JOB_MOUNTS_LIST);
@@ -1086,7 +1088,7 @@ public class Settings implements Serializable {
 
   public static final String SPARK_YARN_APPMASTER_SPARK_USER = SPARK_YARN_APPMASTER_ENV + "SPARK_USER";
   public static final String SPARK_YARN_APPMASTER_YARN_MODE = SPARK_YARN_APPMASTER_ENV + "SPARK_YARN_MODE";
-  public static final String SPARK_YARN_APPMASTER_YARN_STAGING_DIR = SPARK_YARN_APPMASTER_ENV 
+  public static final String SPARK_YARN_APPMASTER_YARN_STAGING_DIR = SPARK_YARN_APPMASTER_ENV
       + "SPARK_YARN_STAGING_DIR";
   public static final String SPARK_YARN_APPMASTER_CUDA_DEVICES = SPARK_YARN_APPMASTER_ENV + "CUDA_VISIBLE_DEVICES";
   public static final String SPARK_YARN_APPMASTER_HIP_DEVICES = SPARK_YARN_APPMASTER_ENV + "HIP_VISIBLE_DEVICES";
@@ -1884,7 +1886,7 @@ public class Settings implements Serializable {
   public String getHopsworksPublicHost() {
     checkCache();
     return HOPSWORKS_PUBLIC_HOST;
-  }  
+  }
 
   // Hopsworks
   public static final String HOPS_USERNAME_SEPARATOR = "__";
@@ -3347,9 +3349,21 @@ public class Settings implements Serializable {
     checkCache();
     return ENABLE_BIGQUERY_STORAGE_CONNECTORS;
   }
-
+  // test connectors docker
+  private String TESTCONNECTOR_IMAGE_VERSION = "0.1";
+  
+  public String getTestConnectorImage() {
+    checkCache();
+    return "testconnector:" + TESTCONNECTOR_IMAGE_VERSION;
+  }
+  
+  // launch script for test connectors
+  private String TEST_CONNECTOR_LAUNCHER = "testconnector-launch.sh";
+  
+  public String getTEST_CONNECTOR_LAUNCHER() {
+    return TEST_CONNECTOR_LAUNCHER;
+  }
   // End - Storage connectors
-
   private Boolean LOCALHOST = false;
 
   public synchronized Boolean isLocalHost() {
@@ -3522,7 +3536,7 @@ public class Settings implements Serializable {
     return checkNodemanagersStatus;
   }
 
-  private static String DOCKER_MOUNTS = 
+  private static String DOCKER_MOUNTS =
       "/srv/hops/hadoop/etc/hadoop,/srv/hops/spark,/srv/hops/flink";
   
   public synchronized String getDockerMounts() {
@@ -3716,4 +3730,5 @@ public class Settings implements Serializable {
     checkCache();
     return MAX_LONG_RUNNING_HTTP_REQUESTS;
   }
+  
 }
