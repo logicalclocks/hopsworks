@@ -355,7 +355,6 @@ public class FeaturestoreStorageConnectorService {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiOperation(value = "Test storage connector to data source")
   public Response testConnection(@Context SecurityContext sc,
-    @Context HttpServletRequest req,
     FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO)
     throws FeaturestoreException {
     if (featurestoreStorageConnectorDTO == null) {
