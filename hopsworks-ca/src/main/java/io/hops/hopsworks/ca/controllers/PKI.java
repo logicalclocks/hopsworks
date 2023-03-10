@@ -605,7 +605,7 @@ public class PKI {
         path = Paths.get(caConf.getString(CAConf.CAConfKeys.CERTS_DIR), "intermediate/certs/intermediate.cert.pem");
         break;
       case KUBECA:
-        path = Paths.get(caConf.getString(CAConf.CAConfKeys.CERTS_DIR), "kube/certs/kube-ca.cert.pem");
+        path = Paths.get(caConf.getString(CAConf.CAConfKeys.CERTS_DIR), "kube/hopsworks/kube-ca.cert.pem");
         break;
       default:
         throw new IllegalArgumentException("Unknown CA type: " + type);
