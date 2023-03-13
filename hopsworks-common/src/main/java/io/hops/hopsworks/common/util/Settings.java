@@ -40,6 +40,10 @@ package io.hops.hopsworks.common.util;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.topic.ITopic;
+import com.hazelcast.topic.Message;
+import com.hazelcast.topic.MessageListener;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.provenance.core.Provenance;
@@ -55,11 +59,14 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -79,6 +86,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -576,6 +584,38 @@ public class Settings implements Serializable {
   }
 
   private boolean cached = false;
+  private UUID myUUID;
+  private ITopic<String> settingUpdatedTopic;
+  
+  @Inject
+  private HazelcastInstance hazelcastInstance;
+  
+  @PostConstruct
+  public void init() {
+    // hazelcastInstance == null if Hazelcast is Disabled
+    if (hazelcastInstance != null) {
+      settingUpdatedTopic = hazelcastInstance.getTopic("setting_updated");
+      myUUID = settingUpdatedTopic.addMessageListener(new MessageListenerImpl());
+    }
+  }
+  
+  @PreDestroy
+  public void destroy() {
+    if (settingUpdatedTopic != null) {
+      //needed for redeploy to remove the listener
+      settingUpdatedTopic.removeMessageListener(myUUID);
+    }
+  }
+  
+  public class MessageListenerImpl implements MessageListener<String> {
+    
+    @Override
+    public void onMessage(Message<String> message) {
+      if (!message.getPublishingMember().localMember()) {
+        cached = false;
+      }
+    }
+  }
 
   private void populateCache() {
     if (!cached) {
@@ -910,6 +950,10 @@ public class Settings implements Serializable {
   public synchronized void refreshCache() {
     cached = false;
     populateCache();
+    //Notify other nodes if settingUpdatedTopic is created == Hazelcast is enabled
+    if (settingUpdatedTopic != null) {
+      settingUpdatedTopic.publish("Settings cache invalidated.");
+    }
   }
 
   public synchronized void updateVariable(String variableName, String variableValue, VariablesVisibility visibility) {
@@ -920,14 +964,6 @@ public class Settings implements Serializable {
   public synchronized void updateVariables(List<Variables> variablesToUpdate) {
     variablesToUpdate.forEach(v -> updateVariableInternal(v.getId(), v.getValue(), v.getVisibility()));
     refreshCache();
-  }
-
-  /**
-   * This method will invalidate the cache of variables. The next call to read a variable after invalidateCache() will
-   * trigger a read of all variables from the database.
-   */
-  public synchronized void invalidateCache() {
-    cached = false;
   }
 
   /**
