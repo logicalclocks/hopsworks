@@ -72,10 +72,12 @@ public class ManagedDockerRegistryMngr extends DockerRegistryMngrImpl implements
 
   private List<String> deleteImagesWithTagPrefix(String repoName, String projectNameTagPrefix) throws
           ServiceDiscoveryException {
-    if (settings.getKubeType() == Settings.KubeType.AKS) {
+    if (settings.getCloudType() == Settings.CLOUD_TYPES.AZURE) {
       return acrClient.deleteImagesWithTagPrefix(repoName, projectNameTagPrefix);
-    } else {
+    } else if (settings.getCloudType() == Settings.CLOUD_TYPES.AWS) {
       return ecrClient.deleteImagesWithTagPrefix(repoName, projectNameTagPrefix);
+    } else {
+      throw new UnsupportedOperationException("Unsupported operation on " + settings.getCloudType());
     }
   }
 
@@ -89,10 +91,12 @@ public class ManagedDockerRegistryMngr extends DockerRegistryMngrImpl implements
   }
 
   private List<String> getImageTags(String repoName, String filter) throws IOException, ServiceDiscoveryException {
-    if (settings.getKubeType() == Settings.KubeType.AKS) {
+    if (settings.getCloudType() == Settings.CLOUD_TYPES.AZURE) {
       return acrClient.getImageTags(repoName, filter);
-    } else {
+    } else if (settings.getCloudType() == Settings.CLOUD_TYPES.AWS) {
       return ecrClient.getImageTags(repoName, filter);
+    } else {
+      throw new UnsupportedOperationException("Unsupported operation on " + settings.getCloudType());
     }
   }
 
