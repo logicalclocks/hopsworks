@@ -71,7 +71,7 @@ module ProjectHelper
     if validate_session
       with_valid_session
     end  
-    pName = projectName == nil ? "project_#{getProjectId}_#{short_random_id}" : projectName
+    pName = projectName == nil ? "project_#{getProjectId}_#{random_id_len(2)}" : projectName
     new_project = {projectName: pName, description:"", services: services, projectTeam:[]}
     post "#{ENV['HOPSWORKS_API']}/project", new_project
     expect_status_details(201)
