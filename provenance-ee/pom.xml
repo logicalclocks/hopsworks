@@ -41,6 +41,16 @@
       <groupId>javax</groupId>
       <artifactId>javaee-api</artifactId>
     </dependency>
+    <dependency>
+      <groupId>fish.payara.extras</groupId>
+      <artifactId>payara-embedded-web</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>fish.payara.api</groupId>
+      <artifactId>payara-api</artifactId>
+      <scope>test</scope>
+    </dependency>
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.mockito</groupId>

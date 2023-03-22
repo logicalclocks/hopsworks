@@ -203,6 +203,17 @@
       <artifactId>javase</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>fish.payara.extras</groupId>
+      <artifactId>payara-embedded-web</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>fish.payara.api</groupId>
+      <artifactId>payara-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.mockito</groupId>

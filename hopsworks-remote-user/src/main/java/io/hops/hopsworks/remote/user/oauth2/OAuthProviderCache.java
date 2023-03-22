@@ -43,16 +43,18 @@ public class OAuthProviderCache {
   private final static Logger LOGGER = Logger.getLogger(OAuthProviderCache.class.getName());
   private final static int CONNECTION_TIMEOUT = 5000;
   
-  private CacheManager cacheManager = CacheManagerBuilder.newCacheManagerBuilder().build(true);
-  private Cache<String, OpenIdProviderConfig> providerConfigCache = cacheManager.createCache("providerConfigCache",
-    CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class, OpenIdProviderConfig.class,
-      ResourcePoolsBuilder.heap(10))
-      .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofDays(1l)))
-      .build());
-  private Cache<String, JSONObject> providerJWKCache = cacheManager.createCache("providerJWKCache",
+  //Each node in HA setup can have its own cache
+  private final CacheManager cacheManager = CacheManagerBuilder.newCacheManagerBuilder().build(true);
+  private final Cache<String, OpenIdProviderConfig> providerConfigCache =
+    cacheManager.createCache("providerConfigCache",
+      CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class, OpenIdProviderConfig.class,
+          ResourcePoolsBuilder.heap(10))
+        .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofDays(1L)))
+        .build());
+  private final Cache<String, JSONObject> providerJWKCache = cacheManager.createCache("providerJWKCache",
     CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class, JSONObject.class,
-      ResourcePoolsBuilder.heap(20))
-      .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofDays(1l)))
+        ResourcePoolsBuilder.heap(20))
+      .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofDays(1L)))
       .build());
   
   @PreDestroy

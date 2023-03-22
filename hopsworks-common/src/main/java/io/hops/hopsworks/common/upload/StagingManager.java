@@ -54,6 +54,7 @@ import com.google.common.io.Files;
  */
 @Singleton
 @DependsOn("Settings")
+//should be removed after upload is fixed
 public class StagingManager {
 
   private File stagingFolder;

@@ -42,6 +42,7 @@ public class OpenSearchCache {
   @EJB
   private OpenSearchClientController client;
   
+  //Each node in HA setup can have its own cached indexMappings
   private Cache<String, Map<String, String>> indexMappings;
   
   @PostConstruct

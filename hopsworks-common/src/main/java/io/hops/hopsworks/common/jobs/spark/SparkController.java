@@ -41,31 +41,30 @@ package io.hops.hopsworks.common.jobs.spark;
 
 import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.hdfs.UserGroupInformationService;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
+import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.kafka.KafkaBrokers;
 import io.hops.hopsworks.common.serving.ServingConfig;
 import io.hops.hopsworks.common.util.HopsUtils;
-import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
-import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
-import io.hops.hopsworks.persistence.entity.jobs.configuration.ExperimentType;
-import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
-import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
-import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
-import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
-import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.ExperimentType;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
+import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
+import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.hadoop.security.UserGroupInformation;
 
@@ -97,8 +96,6 @@ public class SparkController {
   private AsynchronousJobExecutor submitter;
   @EJB
   private ActivityFacade activityFacade;
-  @EJB
-  private UserGroupInformationService ugiService;
   @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
@@ -276,7 +273,8 @@ public class SparkController {
       String hopsworksRestEndpoint = "https://" + serviceDiscoveryController.
               constructServiceFQDNWithPort(ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
 
-      UserGroupInformation proxyUser = ugiService.getProxyUser(username);
+      UserGroupInformation proxyUser = UserGroupInformation.createProxyUser(username,
+        UserGroupInformation.getLoginUser());
       try {
         sparkjob = proxyUser.doAs((PrivilegedExceptionAction<SparkJob>) () ->
                 new SparkJob(job, submitter, user, settings.getHadoopSymbolicLinkDir(),

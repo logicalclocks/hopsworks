@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.agent;
 
+import com.hazelcast.core.HazelcastInstance;
 import io.hops.hopsworks.persistence.entity.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.util.RemoteCommand;
@@ -36,6 +37,7 @@ import javax.ejb.TimerService;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.concurrent.ManagedExecutorService;
+import javax.inject.Inject;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -43,6 +45,7 @@ import java.time.LocalTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -54,8 +57,8 @@ import java.util.logging.Logger;
 @DependsOn("Settings")
 public class AgentLivenessMonitor {
   private static final Logger LOGGER = Logger.getLogger(AgentLivenessMonitor.class.getName());
-  private final Map<String, LocalTime> agentsHeartbeat = new ConcurrentHashMap<>();
-  private final ArrayBlockingQueue<String> agentsToRestart = new ArrayBlockingQueue<>(200);
+  private Map<String, LocalTime> agentsHeartbeat;
+  private BlockingQueue<String> agentsToRestart;
   private final static String KAGENT_COMMAND_TEMPLATE = "sudo systemctl %s kagent";
   
   @EJB
@@ -68,6 +71,8 @@ public class AgentLivenessMonitor {
   private TimerService timerService;
   @Resource(lookup = "concurrent/hopsExecutorService")
   private ManagedExecutorService executorService;
+  @Inject
+  private HazelcastInstance hazelcastInstance;
   
   private long thresholdInSeconds;
   private String kagentUser;
@@ -85,6 +90,14 @@ public class AgentLivenessMonitor {
     restartCommand = String.format(KAGENT_COMMAND_TEMPLATE, "restart");
     stopCommand = String.format(KAGENT_COMMAND_TEMPLATE, "stop");
     startCommand = String.format(KAGENT_COMMAND_TEMPLATE, "start");
+  
+    if (hazelcastInstance != null) {
+      agentsHeartbeat = hazelcastInstance.getMap("heartbeats");
+      agentsToRestart = hazelcastInstance.getQueue("restartQueue");
+    } else {
+      agentsHeartbeat = new ConcurrentHashMap<>();
+      agentsToRestart = new ArrayBlockingQueue<>(200);
+    }
     
     if (settings.isKagentLivenessMonitorEnabled()) {
       Long time = settings.getConfTimeValue(settings.getKagentLivenessThreshold());
@@ -110,13 +123,19 @@ public class AgentLivenessMonitor {
   public void isAlive() {
     try {
       LocalTime now = getNow();
+      //Instead of looping over all entries of the local Map, you should create a Distributed Query within Hazelcast.
+      //https://blog.payara.fish/using-hazelcast-sql-with-payara-micro
       for (Map.Entry<String, LocalTime> entry : agentsHeartbeat.entrySet()) {
         String host = entry.getKey();
         LocalTime lastHeartbeat = entry.getValue();
         Duration duration = Duration.between(lastHeartbeat, now);
         if (!duration.minusSeconds(thresholdInSeconds).isNegative()) {
-          LOGGER.log(Level.WARNING, "kagent in " + host + " is not alive, restarting it");
-          agentsToRestart.offer(host, 5L, TimeUnit.SECONDS);
+          if (identityFile != null && identityFile.toFile().exists()) {
+            LOGGER.log(Level.WARNING, "kagent in " + host + " is not alive, restarting it");
+            agentsToRestart.offer(host, 5L, TimeUnit.SECONDS);
+          } else {
+            LOGGER.log(Level.WARNING, "kagent in " + host + " is not alive, can not restart it. No ssh key found.");
+          }
         }
       }
     } catch (Exception ex) {

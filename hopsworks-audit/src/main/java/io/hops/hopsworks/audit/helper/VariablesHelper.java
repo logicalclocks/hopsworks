@@ -9,13 +9,15 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Lock;
 import javax.ejb.Singleton;
-
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 import static javax.ejb.LockType.READ;
 
 @Singleton
 public class VariablesHelper {
+  private final static Logger LOGGER = Logger.getLogger(VariablesHelper.class.getName());
   private static final String AUDIT_LOG_FILE_VAR = "audit_log_dir";
   private static final String AUDIT_LOG_FILE_FORMAT = "audit_log_file_format";
   private static final String AUDIT_LOG_FILE_SIZE = "audit_log_size_limit";
@@ -30,7 +32,6 @@ public class VariablesHelper {
   private int auditLogFileCount;
   private String auditLogFileType;
   private String auditLogDateFormat;
-  
   
   @EJB
   private VariablesFacade variablesFacade;
@@ -108,7 +109,9 @@ public class VariablesHelper {
     }
     try {
       return Integer.parseInt(val);
-    } catch (NumberFormatException e) { }
+    } catch (NumberFormatException e) {
+      LOGGER.log(Level.WARNING, "Variable {0} is not an integer. Using default {1}", new Object[]{id, defaultVal});
+    }
     return defaultVal;
   }
   

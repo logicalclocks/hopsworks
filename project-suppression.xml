@@ -226,4 +226,19 @@
     <packageUrl regex="true">^pkg:maven/org\.apache\.kafka/kafka_2\.11@.*$</packageUrl>
     <cve>CVE-2023-25194</cve>
   </suppress>
+  <!-- SnakeYaml constructors are not used by any features or facilities, so this vulnerability does not affect Payara
+   Platform Community.
+   https://docs.payara.fish/community/docs/6.2023.1/Security/Security%20Fix%20List.html -->
+  <suppress>
+    <notes><![CDATA[file name: payara-embedded-web-5.2022.5.jar (shaded: org.yaml:snakeyaml:1.28)]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.yaml/snakeyaml@.*$</packageUrl>
+    <cve>CVE-2022-1471</cve>
+  </suppress>
+  <!-- No fix in Payara 5.2022.5 which is the final release of Payara 5 Community. -->
+  <suppress>
+    <notes><![CDATA[file name: payara-embedded-web-5.2022.5.jar (shaded: com.hazelcast:hazelcast:4.2.4)]]></notes>
+    <packageUrl regex="true">^pkg:maven/com\.hazelcast/hazelcast@.*$</packageUrl>
+    <cve>CVE-2022-0265</cve>
+    <cve>CVE-2022-36437</cve>
+  </suppress>
 </suppressions>

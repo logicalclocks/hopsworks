@@ -28,6 +28,7 @@ public class KeywordsUsedCache {
   private ProvStateControllerEE provStateControllerEE;
 
   private static final String KEY = "key";
+  //Each node in HA setup will have its own cache
   private LoadingCache<String, List<String>> cache;
 
   @PostConstruct
