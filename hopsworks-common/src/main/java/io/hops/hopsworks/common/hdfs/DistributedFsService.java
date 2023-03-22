@@ -62,7 +62,6 @@ import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.net.HopsSSLSocketFactory;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -82,8 +81,6 @@ public class DistributedFsService {
 
   @EJB
   private InodeController inodeController;
-  @EJB
-  private UserGroupInformationService ugiService;
   @EJB
   private HdfsUsersFacade hdfsUsersFacade;
   @EJB
@@ -278,28 +275,6 @@ public class DistributedFsService {
     }
 
     return new DistributedFileSystemOps(ugi, conf);
-  }
-
-  /**
-   * Removes the user group info and closes any file system created for this
-   * user.
-   * <p>
-   * @param username
-   */
-  public void removeDfsOps(String username) {
-    if (username == null || username.isEmpty()) {
-      return;
-    }
-    UserGroupInformation ugi = ugiService.remove(username);
-    if (ugi == null) {
-      return;
-    }
-    try {
-      FileSystem.closeAllForUGI(ugi);
-    } catch (IOException ex) {
-      logger.log(Level.SEVERE, "Could not close file system for user " + ugi.
-              getUserName(), ex);
-    }
   }
 
   /**

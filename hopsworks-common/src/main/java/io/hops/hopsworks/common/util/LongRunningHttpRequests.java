@@ -1,3 +1,5 @@
+
+
 /*
  * This file is part of Hopsworks
  * Copyright (C) 2022, Hopsworks AB. All rights reserved
@@ -21,17 +23,20 @@ import javax.ejb.Singleton;
 
 @Singleton
 public class LongRunningHttpRequests {
+  // In HA each node will have its own activeRequestCount. If one node exceeds maximum number of long-running http
+  // requests the user is prompted to try again. If the retry is served by a node with activeRequestCount < maximum
+  // number of long-running http requests, it will succeed.
   private int activeRequestCount = 0;
-
+  
   @Lock(LockType.READ)
   public int get() {
     return activeRequestCount;
   }
-
+  
   public void increment() {
     activeRequestCount++;
   }
-
+  
   public void decrement() {
     activeRequestCount--;
   }

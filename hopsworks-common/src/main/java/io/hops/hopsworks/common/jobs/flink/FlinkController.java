@@ -41,29 +41,28 @@ package io.hops.hopsworks.common.jobs.flink;
 
 import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
-import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
-import io.hops.hopsworks.common.serving.ServingConfig;
-import io.hops.hopsworks.exceptions.ServiceException;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
-import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
-import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
-import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
-import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.hdfs.UserGroupInformationService;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
-import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.common.kafka.KafkaBrokers;
+import io.hops.hopsworks.common.serving.ServingConfig;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
+import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
+import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.security.UserNotFoundException;
 import org.apache.flink.client.program.ClusterClient;
@@ -103,8 +102,6 @@ public class FlinkController {
   @EJB
   private ActivityFacade activityFacade;
   @EJB
-  private UserGroupInformationService ugiService;
-  @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
   private Settings settings;
@@ -141,7 +138,8 @@ public class FlinkController {
       String hopsworksRestEndpoint = "https://" + serviceDiscoveryController.
           constructServiceFQDNWithPort(ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
 
-      UserGroupInformation proxyUser = ugiService.getProxyUser(username);
+      UserGroupInformation proxyUser = UserGroupInformation.createProxyUser(username,
+        UserGroupInformation.getLoginUser());
       try {
         flinkjob = proxyUser.doAs((PrivilegedExceptionAction<FlinkJob>) () -> new FlinkJob(job, submitter, user,
             hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()), settings,
