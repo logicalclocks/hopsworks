@@ -259,8 +259,6 @@ public class LibraryInstaller {
           baseImage = baseImage.replace(settings.getBaseDockerImagePythonName(),
               settings.getBaseNonPythonDockerImage());
         }
-        writer.write("# syntax=docker/dockerfile:experimental");
-        writer.newLine();
         writer.write("FROM " + baseImage);
         writer.newLine();
         // If new image is created from an IMPORT (.yml or requirements.txt) file
@@ -359,8 +357,6 @@ public class LibraryInstaller {
       File dockerFile = new File(baseDir, "dockerFile_" + cc.getProjectId().getName());
       String apiToken = null;
       try (BufferedWriter writer = new BufferedWriter(new FileWriter(dockerFile))) {
-        writer.write("# syntax=docker/dockerfile:experimental");
-        writer.newLine();
         writer.write("FROM " + projectUtils.getFullDockerImageName(project, false));
         writer.newLine();
         writer.write(
@@ -505,8 +501,6 @@ public class LibraryInstaller {
       FileUtils.copyFileToDirectory(new File(home, ".condarc"), baseDir);
       FileUtils.copyDirectoryToDirectory(new File(home, ".pip"), baseDir);
       try (BufferedWriter writer = new BufferedWriter(new FileWriter(dockerFile))) {
-        writer.write("# syntax=docker/dockerfile:experimental");
-        writer.newLine();
         writer.write("FROM " + projectUtils.getFullDockerImageName(cc.getProjectId(), false) + "\n");
         writer.newLine();
         writer.write(
