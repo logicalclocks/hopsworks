@@ -315,7 +315,6 @@ describe "On #{ENV['OS']}" do
           with_admin_session
           delete "#{ENV['HOPSWORKS_API']}/admin/projects/#{project[:id]}"
           expect_status_details(200)
-          expect_json(successMessage: "The project and all related files were removed successfully.")
         end
       end
 

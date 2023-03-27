@@ -547,7 +547,7 @@ public class Users implements Serializable {
   }
 
   public Integer getNumActiveProjects() {
-    return numCreatedProjects;
+    return numActiveProjects;
   }
 
   public void setNumActiveProjects(Integer numActiveProjects) {

@@ -68,6 +68,8 @@ import io.hops.hopsworks.persistence.entity.user.Users;
           query = "SELECT r FROM RolesAudit r WHERE r.logId = :logId"),
   @NamedQuery(name = "RolesAudit.findByInitiator",
           query = "SELECT r FROM RolesAudit r WHERE r.initiator = :initiator"),
+  @NamedQuery(name = "RolesAudit.findByInitiatorNotTarget",
+          query = "SELECT r FROM RolesAudit r WHERE r.initiator = :initiator AND r.target <> :target"),
   @NamedQuery(name = "RolesAudit.findByTarget",
           query = "SELECT r FROM RolesAudit r WHERE r.target = :target"),
   @NamedQuery(name = "RolesAudit.findByAction",

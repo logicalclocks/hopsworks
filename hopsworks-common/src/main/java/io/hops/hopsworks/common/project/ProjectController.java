@@ -612,6 +612,7 @@ public class ProjectController {
     this.projectFacade.persistProject(project);
     this.projectFacade.flushEm();
     usersController.increaseNumCreatedProjects(user.getUid());
+    usersController.updateNumActiveProjects(project.getOwner().getUid());
     return project;
   }
 
@@ -1263,6 +1264,15 @@ public class ProjectController {
           cleanupLogger.logError("Error when removing hive db during project cleanup");
           cleanupLogger.logError(ex.getMessage());
         }
+  
+        // 17) Delete online featurestore database
+        try {
+          onlineFeaturestoreController.removeOnlineFeatureStore(project);
+          cleanupLogger.logSuccess("Removed featurestore db");
+        } catch (Exception ex) {
+          cleanupLogger.logError("Error when removing featurestore db during project cleanup");
+          cleanupLogger.logError(ex.getMessage());
+        }
 
         // Delete OpenSearch template for this project
         try {
@@ -1359,6 +1369,8 @@ public class ProjectController {
           cleanupLogger.logError("Error running handlers during project cleanup");
           cleanupLogger.logError(e.getMessage());
         }
+
+        usersController.updateNumActiveProjects(project.getOwner().getUid());
       } else {
         // Create /tmp/Project and add to database so we lock in case someone tries to create a Project
         // with the same name at the same time
@@ -1367,6 +1379,7 @@ public class ProjectController {
         Users user = userFacade.findByEmail(userEmail);
         Project toDeleteProject = new Project(projectName, user, now, settings.getDefaultPaymentType());
         toDeleteProject.setKafkaMaxNumTopics(settings.getKafkaMaxNumTopics());
+        toDeleteProject.setCreationStatus(CreationStatus.ONGOING);
         Path tmpInodePath = new Path(File.separator + "tmp" + File.separator + projectName);
         try {
           if (!dfso.exists(tmpInodePath.toString())) {
@@ -1610,7 +1623,7 @@ public class ProjectController {
   public void cleanup(Project project, List<Future<?>> projectCreationFutures) throws GenericException {
     cleanup(project, projectCreationFutures, true);
   }
-
+  
   public void cleanup(Project project, List<Future<?>> projectCreationFutures,
                       boolean decreaseCreatedProj) throws GenericException {
     cleanup(project, projectCreationFutures, decreaseCreatedProj, null);
@@ -1789,8 +1802,8 @@ public class ProjectController {
       if (decreaseCreatedProj) {
         usersController.decrementNumProjectsCreated(project.getOwner().getUid());
       }
-
-      usersController.decrementNumActiveProjects(project.getOwner().getUid());
+      
+      usersController.updateNumActiveProjects(project.getOwner().getUid());
 
       // Run custom handlers for project deletion
       ProjectHandler.runProjectPostDeleteHandlers(projectHandlers, project);

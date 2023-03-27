@@ -82,7 +82,6 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -621,7 +620,6 @@ public class UsersController {
   public void increaseNumCreatedProjects(int id) {
     Users u = userFacade.find(id);
     u.setNumCreatedProjects(u.getNumCreatedProjects() + 1);
-    u.setNumActiveProjects(u.getNumActiveProjects() + 1);
     userFacade.update(u);
   }
 
@@ -633,14 +631,12 @@ public class UsersController {
       userFacade.update(u);
     }
   }
-
-  public void decrementNumActiveProjects(int id) {
+  
+  public void updateNumActiveProjects(Integer id) {
     Users u = userFacade.find(id);
-    int n = u.getNumActiveProjects();
-    if (n > 0) {
-      u.setNumActiveProjects(n - 1);
-      userFacade.update(u);
-    }
+    List<Project> projects = projectFacade.findByUser(u);
+    u.setNumActiveProjects(projects != null ? projects.size() : 0);
+    userFacade.update(u);
   }
 
   public boolean isUsernameTaken(String username) {
@@ -681,19 +677,30 @@ public class UsersController {
   public void deleteUser(Users u) throws UserException {
     if (u != null) {
       //Should not delete user that is an Initiator in a RolesAudit
-      List<RolesAudit> results = rolesAuditFacade.findByTarget(u);
-      
-      for (Iterator<RolesAudit> iterator = results.iterator(); iterator.hasNext();) {
-        RolesAudit next = iterator.next();
-        rolesAuditFacade.remove(next);
+      List<RolesAudit> rolesAuditInitiator = rolesAuditFacade.findByInitiatorNotTarget(u);
+      if (rolesAuditInitiator != null && rolesAuditInitiator.size() > 0) {
+        throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_DELETION_ERROR, Level.FINE, "User that initiated " +
+          "roles audit log on another account can not be deleted.");
       }
-  
       //Should not delete user that is an Initiator in an AccountAudit
+      List<AccountAudit> accountAuditInitiator = accountAuditFacade.findByInitiatorNotTarget(u);
+      if (accountAuditInitiator != null && accountAuditInitiator.size() > 0) {
+        throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_DELETION_ERROR, Level.FINE, "User that initiated " +
+          "account audit log on another account can not be deleted.");
+      }
+      
+      List<RolesAudit> results = rolesAuditFacade.findByTarget(u);
+      if (results != null) {
+        for (RolesAudit next : results) {
+          rolesAuditFacade.remove(next);
+        }
+      }
+      
       List<AccountAudit> resultsAA = accountAuditFacade.findByTarget(u);
-
-      for (Iterator<AccountAudit> iterator = resultsAA.iterator(); iterator.hasNext();) {
-        AccountAudit next = iterator.next();
-        accountAuditFacade.remove(next);
+      if (resultsAA != null) {
+        for (AccountAudit next : resultsAA) {
+          accountAuditFacade.remove(next);
+        }
       }
   
       // run delete handlers

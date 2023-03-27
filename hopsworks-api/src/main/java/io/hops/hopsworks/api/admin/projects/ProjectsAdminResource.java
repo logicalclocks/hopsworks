@@ -52,6 +52,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -158,7 +159,8 @@ public class ProjectsAdminResource {
                                 @Context UriInfo uriInfo,
                                 @Context SecurityContext sc,
                                 @PathParam("id") Integer id,
-                                @QueryParam("force") Boolean force) throws ProjectException, GenericException {
+                                @QueryParam("force") @DefaultValue("false") Boolean force)
+      throws ProjectException, GenericException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if (force) {
       Project project = projectFacade.find(id);

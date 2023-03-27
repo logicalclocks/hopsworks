@@ -70,6 +70,14 @@ public class RolesAuditFacade extends AbstractFacade<RolesAudit> {
 
     return query.getResultList();
   }
+  
+  public List<RolesAudit> findByInitiatorNotTarget(Users user) {
+    TypedQuery<RolesAudit> query = em.createNamedQuery("RolesAudit.findByInitiatorNotTarget", RolesAudit.class);
+    query.setParameter("initiator", user);
+    query.setParameter("target", user);
+    
+    return query.getResultList();
+  }
 
   public List<RolesAudit> findByTarget(Users user) {
     TypedQuery<RolesAudit> query = em.createNamedQuery("RolesAudit.findByTarget", RolesAudit.class);
