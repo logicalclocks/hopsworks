@@ -119,7 +119,6 @@ public class TensorBoardController {
     newTensorBoard.setTensorBoardPK(tensorBoardPK);
     newTensorBoard.setCid(tensorBoardDTO.getCid());
     newTensorBoard.setEndpoint(tensorBoardDTO.getEndpoint());
-    newTensorBoard.setHdfsUserId(hdfsUser.getId());
     newTensorBoard.setMlId(mlId);
     newTensorBoard.setLastAccessed(lastAccessed);
     newTensorBoard.setHdfsLogdir(tensorBoardLogdir);
