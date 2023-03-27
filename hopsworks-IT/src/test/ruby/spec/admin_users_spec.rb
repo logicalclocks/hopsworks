@@ -413,6 +413,27 @@ describe "On #{ENV['OS']}" do
         admin_delete_user(newUser[:uid])
         expect_status_details(400)
       end
+      it "should delete a user with project after deleting project" do
+        newUser = create_user_with_role("HOPS_USER")
+        create_session(newUser[:email], "Pass123")
+        with_valid_project
+        delete_project(@project)
+        with_admin_session
+        admin_delete_user(newUser[:uid])
+        expect_status_details(204)
+      end
+      it "should fail to delete an admin that is an initiator of an account audit" do
+        adminUser = create_user_with_role("HOPS_ADMIN")
+
+        newUser = create_unapproved_user
+        create_session(adminUser[:email], "Pass123")
+
+        admin_update_user(newUser[:uid], {status: "ACTIVATED_ACCOUNT"})
+
+        with_admin_session
+        admin_delete_user(adminUser[:uid])
+        expect_status_details(400)
+      end
       it "should reset password" do
         newUser = create_user_with_role("HOPS_USER")
         admin_reset_password(newUser[:uid])

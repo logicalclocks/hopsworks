@@ -156,6 +156,14 @@ public class AccountAuditFacade extends AbstractFacade<AccountAudit> {
     return query.getResultList();
   }
 
+  public List<AccountAudit> findByInitiatorNotTarget(Users user) {
+    TypedQuery<AccountAudit> query = em.createNamedQuery("AccountAudit.findByInitiatorNotTarget", AccountAudit.class);
+    query.setParameter("initiator", user);
+    query.setParameter("target", user);
+
+    return query.getResultList();
+  }
+
   public List<AccountAudit> findByTarget(Users user) {
     TypedQuery<AccountAudit> query = em.createNamedQuery("AccountAudit.findByTarget", AccountAudit.class);
     query.setParameter("target", user);
