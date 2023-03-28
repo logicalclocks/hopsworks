@@ -229,8 +229,7 @@ public class Project implements Serializable {
   @ManyToMany(fetch = FetchType.LAZY)
   private Collection<PythonDep> pythonDepCollection;
 
-  @OneToMany(cascade = CascadeType.ALL,
-      mappedBy = "projectId")
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "project")
   private Collection<JupyterProject> jupyterProjectCollection;
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "project")

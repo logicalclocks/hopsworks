@@ -60,6 +60,8 @@ import javax.ejb.TransactionAttributeType;
 import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.Path;
@@ -83,6 +85,8 @@ public class DistributedFsService {
   private InodeController inodeController;
   @EJB
   private HdfsUsersFacade hdfsUsersFacade;
+  @EJB
+  private HdfsUsersController hdfsUsersController;
   @EJB
   private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
   @EJB
@@ -183,6 +187,10 @@ public class DistributedFsService {
     }
     
     return new DistributedFileSystemOps(UserGroupInformation.createRemoteUser(loginUser.getUserName()), conf, uri);
+  }
+
+  public DistributedFileSystemOps getDfsOps(Project project, Users user) {
+    return getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
   }
   
   /**

@@ -2144,13 +2144,13 @@ public class ProjectController {
         YarnApplicationState.RUNNING, YarnApplicationState.SUBMITTED));
       //kill jupyter for this user
       
-      JupyterProject jupyterProject = jupyterFacade.findByUser(hdfsUser);
-      if (jupyterProject != null) {
-        jupyterController
-          .shutdown(project, hdfsUser, userToBeRemoved, jupyterProject.getSecret(), jupyterProject.getCid(),
-            jupyterProject.getPort());
+      Optional<JupyterProject> jupyterProjectOptional = jupyterFacade.findByProjectUser(project, userToBeRemoved);
+      if (jupyterProjectOptional.isPresent()) {
+        JupyterProject jupyterProject = jupyterProjectOptional.get();
+        jupyterController.shutdown(project, userToBeRemoved, jupyterProject.getSecret(),
+            jupyterProject.getCid(), jupyterProject.getPort());
       }
-      
+
       //kill running TB if any
       tensorBoardController.cleanup(project, userToBeRemoved);
       

@@ -29,7 +29,6 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.DateUtils;
 import io.hops.hopsworks.common.util.Settings;
@@ -114,8 +113,6 @@ public class JupyterJWTManager {
   @EJB
   private UsersController usersController;
   @EJB
-  private HdfsUsersController hdfsUsersController;
-  @EJB
   private JupyterFacade jupyterFacade;
   @Inject
   private JupyterManager jupyterManager;
@@ -171,14 +168,14 @@ public class JupyterJWTManager {
       }
       
       // Get Jupyter configuration from db
-      String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
-      JupyterProject jupyterProject = jupyterFacade.findByUser(hdfsUsername);
-      if (jupyterProject == null) {
+      Optional<JupyterProject> jupyterProjectOptional = jupyterFacade.findByProjectUser(project, user);
+      if (!jupyterProjectOptional.isPresent()) {
         LOG.log(Level.FINEST, "There is no Jupyter configuration persisted for " + materializedJWT.getIdentifier());
         failed2recover.add(materializedJWT);
         continue;
       }
-      
+
+      JupyterProject jupyterProject = jupyterProjectOptional.get();
       // Check if Jupyter is still running
       if (!jupyterManager.ping(jupyterProject)) {
         LOG.log(Level.FINEST, "Jupyter server is not running for " + materializedJWT.getIdentifier()

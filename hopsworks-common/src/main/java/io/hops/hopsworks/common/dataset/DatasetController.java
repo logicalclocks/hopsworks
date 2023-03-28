@@ -63,7 +63,6 @@ import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.common.util.HopsUtils;
-import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -143,8 +142,6 @@ public class DatasetController {
   private Settings settings;
   @EJB
   private HdfsUsersController hdfsUsersController;
-  @EJB
-  private OSProcessExecutor osProcessExecutor;
   @EJB
   private DatasetRequestFacade datasetRequest;
   @EJB
@@ -618,14 +615,13 @@ public class DatasetController {
   }
 
   public FilePreviewDTO filePreview(Project project, Users user, Path fullPath, FilePreviewMode mode,
-    List<String> allowedImgExtension) throws DatasetException {
-    String username = hdfsUsersController.getHdfsUserName(project, user);
+                                    List<String> allowedImgExtension) throws DatasetException {
     DistributedFileSystemOps udfso = null;
     FSDataInputStream is = null;
     FilePreviewDTO filePreviewDTO = null;
     String fileName = fullPath.getName();
     try {
-      udfso = dfs.getDfsOps(username);
+      udfso = dfs.getDfsOps(project, user);
       //tests if the user have permission to access this path
       is = udfso.open(fullPath);
       //Get file type first. If it is not a known image type, display its
@@ -650,7 +646,7 @@ public class DatasetController {
           throw new DatasetException(RESTCodes.DatasetErrorCode.IMAGE_SIZE_INVALID, Level.FINE);
         }
       } else if(fileExtension.equalsIgnoreCase("ipynb")) {
-        String html = jupyterController.convertIPythonNotebook(username, fullPath.toString(), project, "''",
+        String html = jupyterController.convertIPythonNotebook(project, user, fullPath.toString(), "''",
             JupyterController.NotebookConversion.HTML);
         filePreviewDTO = new FilePreviewDTO(Settings.FILE_PREVIEW_HTML_TYPE, fileExtension.toLowerCase(),
             html);

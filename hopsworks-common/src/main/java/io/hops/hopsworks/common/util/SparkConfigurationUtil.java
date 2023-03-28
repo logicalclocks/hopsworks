@@ -42,10 +42,11 @@ import java.util.logging.Level;
 public class SparkConfigurationUtil extends ConfigurationUtil {
   
   public Map<String, String> setFrameworkProperties(Project project, JobConfiguration jobConfiguration,
-    Settings settings, String hdfsUser, Users hopsworksUser, Map<String, String> extraJavaOptions,
-    String kafkaBrokersString, String hopsworksRestEndpoint, ServingConfig servingConfig,
-    ServiceDiscoveryController serviceDiscoveryController)
-    throws IOException, ServiceDiscoveryException, JobException, ApiKeyException {
+                                                    Settings settings, String hdfsUser, Users hopsworksUser,
+                                                    Map<String, String> extraJavaOptions, String kafkaBrokersString,
+                                                    String hopsworksRestEndpoint, ServingConfig servingConfig,
+                                                    ServiceDiscoveryController serviceDiscoveryController)
+      throws IOException, ServiceDiscoveryException, JobException, ApiKeyException {
     SparkJobConfiguration sparkJobConfiguration = (SparkJobConfiguration) jobConfiguration;
 
     validateExecutorMemory(sparkJobConfiguration.getExecutorMemory(), settings);

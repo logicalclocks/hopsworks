@@ -142,8 +142,8 @@ public class SparkController {
       submitter.getExecutionFacade().updateState(exec, JobState.CONVERTING_NOTEBOOK);
       String pyAppPath = HopsUtils.prepJupyterNotebookConversion(exec, username, dfs);
       sparkConfig.setAppPath(pyAppPath);
-      jupyterController.convertIPythonNotebook(username, appPath, job.getProject(), pyAppPath,
-        JupyterController.NotebookConversion.PY);
+      jupyterController.convertIPythonNotebook(job.getProject(), user, appPath, pyAppPath,
+          JupyterController.NotebookConversion.PY);
     }
 
     submitter.startExecution(sparkjob, args);

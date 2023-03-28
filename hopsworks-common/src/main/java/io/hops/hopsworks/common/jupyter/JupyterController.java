@@ -20,10 +20,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -38,7 +36,6 @@ import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServiceException;
-import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -98,11 +95,7 @@ public class JupyterController {
   @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
-  private UserFacade userFacade;
-  @EJB
   private JupyterSettingsFacade jupyterSettingsFacade;
-  @EJB
-  private HdfsUsersFacade hdfsUsersFacade;
   @EJB
   private JupyterJWTManager jupyterJWTManager;
   @EJB
@@ -119,7 +112,7 @@ public class JupyterController {
   }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public String convertIPythonNotebook(String hdfsUsername, String notebookPath, Project project, String pyPath,
+  public String convertIPythonNotebook(Project project, Users user, String notebookPath, String pyPath,
                                      NotebookConversion notebookConversion)  throws ServiceException {
 
     File baseDir = new File(settings.getStagingDir() + settings.CONVERSION_DIR);
@@ -130,14 +123,14 @@ public class JupyterController {
         sha256Hex(Integer.toString(ThreadLocalRandom.current().nextInt())));
     conversionDir.mkdir();
 
-    HdfsUsers user = hdfsUsersFacade.findByName(hdfsUsername);
+    String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
     try{
       String prog = settings.getSudoersDir() + "/convert-ipython-notebook.sh";
       ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
           .addCommand("/usr/bin/sudo")
           .addCommand(prog)
           .addCommand(notebookPath)
-          .addCommand(hdfsUsername)
+          .addCommand(hdfsUser)
           .addCommand(settings.getAnacondaProjectDir())
           .addCommand(pyPath)
           .addCommand(conversionDir.getAbsolutePath())
@@ -176,35 +169,15 @@ public class JupyterController {
     }
   }
 
-  public void shutdownQuietly(Project project, String hdfsUser, Users user, String secret,
-      String cid, int port) {
-    try {
-      shutdown(project, hdfsUser, user, secret, cid, port, true);
-    } catch (Exception e) {
-      LOGGER.log(Level.INFO, "Encountered exception while cleaning up", e);
-    }
-    jupyterJWTManager.cleanJWT(cid, port);
-  }
-  
-  public void shutdown(Project project, String hdfsUser, Users user, String secret,
-      String cid, int port) throws ServiceException {
-    shutdown(project, hdfsUser, user, secret, cid, port, false);
-  }
-  
-  public void shutdown(Project project, String hdfsUser, Users user, String secret,
-                              String cid, int port, boolean quiet) throws ServiceException {
+  public void shutdown(Project project, Users user, String secret, String cid, int port) throws ServiceException {
     // We need to stop the jupyter notebook server with the PID
     // If we can't stop the server, delete the Entity bean anyway
-
-    List<LivyMsg.Session> sessions = livyController.
-      getLivySessionsForProjectUser(project, user);
-
     int retries = 3;
     while(retries > 0 &&
       livyController.getLivySessionsForProjectUser(project, user).size() > 0) {
       LOGGER.log(Level.SEVERE, "Failed previous attempt to delete livy sessions for project " + project.getName() +
-        " user " + hdfsUser + ", retrying...");
-      livyController.deleteAllLivySessions(hdfsUser);
+        " user " + user.getUsername() + ", retrying...");
+      livyController.deleteAllLivySessions(project, user);
 
       try {
         Thread.sleep(200);
@@ -213,23 +186,20 @@ public class JupyterController {
       }
       retries--;
     }
-    String jupyterHomePath = jupyterManager.getJupyterHome(hdfsUser, project, secret);
+    String jupyterHomePath = jupyterManager.getJupyterHome(project, user, secret);
 
     // stop the server, remove the user in this project's local dirs
     // This method also removes the corresponding row for the Notebook process in the JupyterProject table.
     try {
-      JupyterProject jupyterProject = jupyterFacade.findByUser(hdfsUser);
-      JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project, user.getEmail());
       // If we fail to start Jupyter server, then we call this shutdown to clean up
       // Do some sanity check before using jupyter settings
-      jupyterManager.stopJupyterServer(project, user, hdfsUser, jupyterHomePath, cid, port);
+      jupyterManager.stopJupyterServer(project, user, jupyterHomePath, cid, port);
     } finally {
-      String[] project_user = hdfsUser.split(HdfsUsersController.USER_NAME_DELIMITER);
       DistributedFileSystemOps dfso = dfsService.getDfsOps();
       try {
         String certificatesDir = Paths.get(jupyterHomePath, "certificates").toString();
-        HopsUtils.cleanupCertificatesForUserCustomDir(project_user[1], project
-            .getName(), settings.getHdfsTmpCertDir(), certificateMaterializer, certificatesDir, settings);
+        HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
+            settings.getHdfsTmpCertDir(), certificateMaterializer, certificatesDir, settings);
       } finally {
         if (dfso != null) {
           dfsService.closeDfsClient(dfso);
@@ -237,7 +207,6 @@ public class JupyterController {
       }
       FileUtils.deleteQuietly(new File(jupyterHomePath));
       jupyterJWTManager.cleanJWT(cid, port);
-      livyController.deleteAllLivySessions(hdfsUser);
     }
   }
 
@@ -254,31 +223,25 @@ public class JupyterController {
   }
 
   public void removeJupyter(Project project) throws ServiceException {
-
     for(JupyterProject jp: project.getJupyterProjectCollection()) {
-      HdfsUsers hdfsUser = hdfsUsersFacade.findById(jp.getHdfsUserId());
-      String username = hdfsUsersController.getUserName(hdfsUser.getName());
-      Users user = userFacade.findByUsername(username);
-      shutdown(project, hdfsUser.getName(), user,
-        jp.getSecret(), jp.getCid(), jp.getPort());
+      shutdown(project, jp.getUser(), jp.getSecret(), jp.getCid(), jp.getPort());
     }
     jupyterManager.projectCleanup(project);
   }
 
   public void updateExpirationDate(Project project, Users user, JupyterSettings jupyterSettings) {
     //Increase hours on expirationDate
-    String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
-    JupyterProject jupyterProject = jupyterFacade.findByUser(hdfsUser);
-    if (jupyterProject != null) {
-      Date expirationDate = jupyterProject.getExpires();
-      Calendar cal = Calendar.getInstance();
-      cal.setTime(expirationDate);
-      cal.add(Calendar.HOUR_OF_DAY, jupyterSettings.getShutdownLevel());
-      expirationDate = cal.getTime();
-      jupyterProject.setExpires(expirationDate);
-      jupyterProject.setNoLimit(jupyterSettings.isNoLimit());
-      jupyterFacade.update(jupyterProject);
-    }
+    jupyterFacade.findByProjectUser(project, user)
+        .ifPresent(jupyterProject -> {
+          Date expirationDate = jupyterProject.getExpires();
+          Calendar cal = Calendar.getInstance();
+          cal.setTime(expirationDate);
+          cal.add(Calendar.HOUR_OF_DAY, jupyterSettings.getShutdownLevel());
+          expirationDate = cal.getTime();
+          jupyterProject.setExpires(expirationDate);
+          jupyterProject.setNoLimit(jupyterSettings.isNoLimit());
+          jupyterFacade.update(jupyterProject);
+        });
   }
 
   public void versionProgram(Project project, Users user, String sessionKernelId, Path outputPath)
@@ -288,7 +251,7 @@ public class JupyterController {
     try {
       String username = hdfsUsersController.getHdfsUserName(project, user);
       udfso = dfs.getDfsOps(username);
-      versionProgram(username, sessionKernelId, outputPath, udfso);
+      versionProgram(project, user, sessionKernelId, outputPath, udfso);
     } finally {
       if (udfso != null) {
         dfs.closeDfsClient(udfso);
@@ -296,12 +259,13 @@ public class JupyterController {
     }
   }
 
-  public void versionProgram(String hdfsUser, String sessionKernelId, Path outputPath,
-    DistributedFileSystemOps udfso) throws ServiceException {
-    JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
-    String relativeNotebookPath = null;
+  public void versionProgram(Project project, Users user, String sessionKernelId, Path outputPath,
+                             DistributedFileSystemOps udfso) throws ServiceException {
+    JupyterProject jp = jupyterFacade.findByProjectUser(project, user)
+        .orElseThrow(() -> new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_RUNNING, Level.FINE));
+
     try {
-      relativeNotebookPath = getNotebookRelativeFilePath(hdfsUser, sessionKernelId, udfso);
+      String relativeNotebookPath = getNotebookRelativeFilePath(jp, sessionKernelId);
 
       //Get the content of the notebook should work in both spark and python kernels irregardless of contents manager
       if (!Strings.isNullOrEmpty(relativeNotebookPath)) {
@@ -326,13 +290,16 @@ public class JupyterController {
     }
   }
 
-  public void attachJupyterConfigurationToNotebook(Users user, String hdfsUsername, Project project, String kernelId)
+  public void attachJupyterConfigurationToNotebook(Project project, Users user, String kernelId)
       throws ServiceException {
+    JupyterProject jupyterProject = jupyterFacade.findByProjectUser(project, user)
+        .orElseThrow(() -> new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_RUNNING, Level.FINE));
+
     DistributedFileSystemOps udfso = null;
     try {
       JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project, user.getEmail());
-      udfso = dfs.getDfsOps(hdfsUsername);
-      String relativeNotebookPath = getNotebookRelativeFilePath(hdfsUsername, kernelId, udfso);
+      udfso = dfs.getDfsOps(project, user);
+      String relativeNotebookPath = getNotebookRelativeFilePath(jupyterProject, kernelId);
       JSONObject jupyterSettingsMetadataObj = new JSONObject();
       jupyterSettingsMetadataObj.put(Settings.META_NOTEBOOK_JUPYTER_CONFIG_XATTR_NAME,
           objectMapper.writeValueAsString(jupyterSettings));
@@ -349,10 +316,8 @@ public class JupyterController {
     }
   }
 
-  public String getNotebookRelativeFilePath(String hdfsUser, String sessionKernelId, DistributedFileSystemOps udfso)
-      throws ServiceException {
+  public String getNotebookRelativeFilePath(JupyterProject jp, String sessionKernelId) throws ServiceException {
     String relativeNotebookPath = null;
-    JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
     JSONArray sessionsArray = new JSONArray(ClientBuilder.newClient()
         .target("http://" + jupyterManager.getJupyterHost() + ":" + jp.getPort() + "/hopsworks-api/jupyter/" +
             jp.getPort() + "/api/sessions?token=" + jp.getToken())

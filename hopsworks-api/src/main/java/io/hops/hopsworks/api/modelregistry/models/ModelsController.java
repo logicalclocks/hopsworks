@@ -186,7 +186,7 @@ public class ModelsController {
       //model in jupyter
       String relativePath = Settings.HOPS_MODELS_DATASET + "/" + modelName + "/" + modelVersion + "/program.ipynb";
       Path path = new Path(Utils.getProjectPath(accessor.modelProject.getName()) + relativePath);
-      jupyterController.versionProgram(accessor.hdfsUser, kernelId, path, accessor.udfso);
+      jupyterController.versionProgram(accessor.userProject, accessor.user, kernelId, path, accessor.udfso);
       return relativePath;
     }
   }

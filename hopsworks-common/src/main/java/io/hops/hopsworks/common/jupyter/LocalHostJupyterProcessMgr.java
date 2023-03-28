@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.common.jupyter;
 
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.DockerJobConfiguration;
@@ -116,6 +117,8 @@ public class LocalHostJupyterProcessMgr extends JupyterManagerImpl implements Ju
   private HttpClient httpClient;
   @EJB
   private ProjectUtils projectUtils;
+  @EJB
+  private HdfsUsersController hdfsUsersController;
   
   private String jupyterHost;
   
@@ -130,14 +133,15 @@ public class LocalHostJupyterProcessMgr extends JupyterManagerImpl implements Ju
   
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public JupyterDTO startJupyterServer(Project project, String secretConfig, String hdfsUser, Users user,
-    JupyterSettings js, String allowOrigin) throws ServiceException, JobException {
+  public JupyterDTO startJupyterServer(Project project, Users user, String secretConfig,
+                                       JupyterSettings js, String allowOrigin) throws ServiceException, JobException {
     
     String prog = settings.getSudoersDir() + "/jupyter.sh";
     
     Integer port = ThreadLocalRandom.current().nextInt(40000, 59999);
-    JupyterPaths jp = jupyterConfigFilesGenerator.generateConfiguration(project, secretConfig, hdfsUser, user,
-        js, port, allowOrigin);
+    String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
+    JupyterPaths jp = jupyterConfigFilesGenerator
+        .generateConfiguration(project, secretConfig, user, hdfsUser, js, port, allowOrigin);
     String secretDir = settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret();
     DockerJobConfiguration dockerJobConfiguration = (DockerJobConfiguration)js.getDockerConfig();
 
@@ -205,14 +209,14 @@ public class LocalHostJupyterProcessMgr extends JupyterManagerImpl implements Ju
 
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public void stopJupyterServer(Project project, Users user, String hdfsUsername, String jupyterHomePath, String cid,
-      Integer port) throws ServiceException {
+  public void stopJupyterServer(Project project, Users user, String jupyterHomePath, String cid, Integer port)
+      throws ServiceException {
     if (jupyterHomePath == null || cid == null || port == null) {
       throw new IllegalArgumentException("Invalid arguments when stopping the Jupyter Server.");
     }
     // 1. Remove jupyter settings from the DB for this notebook first. If this fails, keep going to kill the notebook
     try {
-      jupyterFacade.remove(hdfsUsername, port);
+      jupyterFacade.remove(project, user);
     } catch (Exception e) {
       LOGGER.severe("Problem when removing jupyter notebook entry from jupyter_project table: " + jupyterHomePath);
     }
@@ -230,7 +234,7 @@ public class LocalHostJupyterProcessMgr extends JupyterManagerImpl implements Ju
         .addCommand("kill")
         .addCommand(jupyterHomePath)
         .addCommand(cid)
-        .addCommand(hdfsUsername)
+        .addCommand(hdfsUsersController.getHdfsUserName(project, user))
         .setWaitTimeout(10L, TimeUnit.SECONDS);
     
     if (!LOGGER.isLoggable(Level.FINE)) {
@@ -319,7 +323,6 @@ public class LocalHostJupyterProcessMgr extends JupyterManagerImpl implements Ju
       JupyterProject jp = new JupyterProject();
       jp.setCid(cid);
       jp.setPort(0);
-      jp.setHdfsUserId(-1);
       allNotebooks.add(jp);
     }
     file.deleteOnExit();
