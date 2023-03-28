@@ -24,29 +24,26 @@ import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
-import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 public interface JupyterManager {
   
-  JupyterDTO startJupyterServer(Project project, String secretConfig, String hdfsUser, Users user,
-    JupyterSettings js, String allowOrigin) throws ServiceException, JobException;
+  JupyterDTO startJupyterServer(Project project, Users user, String secretConfig,
+                                JupyterSettings js, String allowOrigin) throws ServiceException, JobException;
   
-  String getJupyterHome(String hdfsUser, Project project, String secret) throws ServiceException;
+  String getJupyterHome(Project project, Users user, String secret) throws ServiceException;
   
   void projectCleanup(Logger logger, Project project);
   
   void waitForStartup(Project project, Users user) throws TimeoutException;
   
-  void stopJupyterServer(Project project, Users user, String hdfsUsername, String jupyterHomePath, String cid,
-    Integer port) throws ServiceException;
+  void stopJupyterServer(Project project, Users user, String jupyterHomePath, String cid, Integer port)
+      throws ServiceException;
   
   void projectCleanup(Project project);
   
   boolean ping(JupyterProject jupyterProject);
-  
-  List<JupyterProject> getAllNotebooks();
-  
+
   String getJupyterHost();
 }

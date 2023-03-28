@@ -45,13 +45,8 @@ import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.persistence.entity.jobs.history.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.util.Settings;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -70,67 +65,11 @@ public class LivyController {
   private static final Logger LOGGER = Logger.getLogger(LivyController.class.getName());
 
   @EJB
-  private Settings settings;
-  @EJB
-  private ProjectTeamFacade teambean;
-  @EJB
-  private UserFacade userFacade;
-  @EJB
-  private ProjectFacade projectFacade;
-  @EJB
-  private HdfsUsersController hdfsUserBean;
-  @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
   private YarnApplicationstateFacade appStateBean;
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
-
-  /**
-   * Get Livy sessions for project, depending on service type.
-   *
-   * @param project
-   * @return
-   */
-  public List<LivyMsg.Session> getLivySessions(Project project) {
-    List<LivyMsg.Session> sessions = new ArrayList<>();
-    LivyMsg sessionList = getLivySessions();
-    if (sessionList == null || sessionList.getSessions() == null || sessionList.getSessions().length == 0) {
-      return sessions;
-    }
-
-    List<ProjectTeam> projectTeam = teambean.findMembersByProject(project);
-    for (ProjectTeam member : projectTeam) {
-      String hdfsUsername = hdfsUserBean.getHdfsUserName(project, member.getUser());
-      for (LivyMsg.Session s : sessionList.getSessions()) {
-        if (hdfsUsername.equals(s.getProxyUser())) {
-          YarnApplicationstate appStates = appStateBean.findByAppId(s.getAppId());
-          if (appStates == null) {
-            continue;
-          }
-          s.setOwner(member.getUser().getEmail());
-          sessions.add(s);
-        }
-      }
-    }
-
-    return sessions;
-  }
-
-  /**
-   * Deletes all livy sessions in the project
-   *
-   * @param project
-   */
-  public void deleteAllLivySessionsForProject(Project project) {
-    List<ProjectTeam> projectTeam;
-    projectTeam = teambean.findMembersByProject(project);
-    String hdfsUsername;
-    for (ProjectTeam member : projectTeam) {
-      hdfsUsername = hdfsUserBean.getHdfsUserName(project, member.getUser());
-      deleteAllLivySessions(hdfsUsername);
-    }
-  }
 
   /**
    * Get all Jupyter livy sessions for project and user
@@ -145,7 +84,7 @@ public class LivyController {
     if (sessionList == null || sessionList.getSessions() == null || sessionList.getSessions().length == 0) {
       return sessions;
     }
-    String hdfsUsername = hdfsUserBean.getHdfsUserName(project, user);
+    String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
 
     for (LivyMsg.Session s : sessionList.getSessions()) {
       if (hdfsUsername.equals(s.getProxyUser())) {
@@ -160,28 +99,6 @@ public class LivyController {
     return sessions;
   }
 
-  /**
-   * Get livy session by id
-   *
-   * @param sessionId
-   * @return
-   */
-  public LivyMsg.Session getLivySession(int sessionId) {
-    Client client = ClientBuilder.newClient();
-    LivyMsg.Session session = null;
-    try {
-      String livyUrl = getLivyURL();
-      WebTarget target = client.target(livyUrl).path("/sessions/" + sessionId);
-
-      session = target.request().get(LivyMsg.Session.class);
-    } catch (NotFoundException | ServiceDiscoveryException e) {
-      LOGGER.log(Level.WARNING, null, e);
-      return null;
-    } finally {
-      client.close();
-    }
-    return session;
-  }
 
   /**
    * Get all livy sessions
@@ -226,32 +143,10 @@ public class LivyController {
     return res.getStatus();
   }
 
-  /**
-   * Delete all Livy sessions.
-   *
-   * @param hdfsUser
-   */
-  public void deleteAllLivySessions(String hdfsUser) {
-    String username = hdfsUsersController.getUserName(hdfsUser);
-    String projectname = hdfsUsersController.getProjectName(hdfsUser);
-    Users user = userFacade.findByUsername(username);
-    Project project = projectFacade.findByName(projectname);
-    List<LivyMsg.Session> sessions;
-    sessions = getLivySessionsForProjectUser(project, user);
-    for (LivyMsg.Session session : sessions) {
+  public void deleteAllLivySessions(Project project, Users user) {
+    for (LivyMsg.Session session : getLivySessionsForProjectUser(project, user)) {
       deleteLivySession(session.getId());
     }
-  }
-
-  /**
-   * Check if livy session with the given id exists.
-   *
-   * @param sessionId
-   * @return
-   */
-  public boolean isLivySessionAlive(int sessionId) {
-    LivyMsg.Session session = getLivySession(sessionId);
-    return session != null;
   }
 
   private String getLivyURL() throws ServiceDiscoveryException {

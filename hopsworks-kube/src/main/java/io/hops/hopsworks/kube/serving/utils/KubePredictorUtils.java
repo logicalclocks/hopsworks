@@ -14,7 +14,6 @@ import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.jupyter.JupyterController;
@@ -51,8 +50,6 @@ public class KubePredictorUtils {
   @EJB
   private DatasetHelper datasetHelper;
   @EJB
-  private HdfsUsersController hdfsUsersController;
-  @EJB
   private InodeController inodeController;
   @EJB
   private JupyterController jupyterController;
@@ -81,9 +78,8 @@ public class KubePredictorUtils {
     String destFilePath = getPredictorFilePath(serving);
     if (serving.getPredictor().endsWith(IPYNB_EXTENSION)) {
       // If predictor file is ipynb, convert it to python script
-      String username = hdfsUsersController.getHdfsUserName(project, user);
-      jupyterController.convertIPythonNotebook(username, sourceFilePath, project, destFilePath,
-        JupyterController.NotebookConversion.PY_JOB);
+      jupyterController.convertIPythonNotebook(project, user, sourceFilePath, destFilePath,
+          JupyterController.NotebookConversion.PY_JOB);
     } else {
       // Otherwise, copy predictor file into model artifact
       DatasetPath destFileDatasetPath = datasetHelper.getDatasetPath(project, destFilePath, DatasetType.DATASET);

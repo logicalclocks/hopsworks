@@ -37,13 +37,10 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpecBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterConfigFilesGenerator;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterDTO;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterPaths;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.jobs.JobController;
@@ -123,12 +120,6 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   @EJB
   private Settings settings;
   @EJB
-  private ProjectFacade projectFacade;
-  @EJB
-  private UserFacade userFacade;
-  @EJB
-  private HdfsUsersFacade hdfsUsersFacade;
-  @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
   private JupyterFacade jupyterFacade;
@@ -151,9 +142,11 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public JupyterDTO startJupyterServer(Project project, String secretConfig, String hdfsUser, Users user,
-    JupyterSettings jupyterSettings, String allowOrigin) throws ServiceException, JobException {
+  public JupyterDTO startJupyterServer(Project project, Users user, String secretConfig,
+                                       JupyterSettings jupyterSettings, String allowOrigin)
+      throws ServiceException, JobException {
 
+    String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
     JupyterPaths jupyterPaths = jupyterConfigFilesGenerator.generateJupyterPaths(project, hdfsUser, secretConfig);
     String kubeProjectUser = kubeClientService.getKubeDeploymentName(project, user);
     String pythonKernelName = jupyterConfigFilesGenerator.pythonKernelName
@@ -178,13 +171,13 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   
       // jupyter notebook config
       Writer jupyterNotebookConfig = new StringWriter();
-      jupyterConfigFilesGenerator.createJupyterNotebookConfig(jupyterNotebookConfig, project, nodePort,
-        jupyterSettings, hdfsUser, jupyterPaths.getCertificatesDir(), allowOrigin);
+      jupyterConfigFilesGenerator.createJupyterNotebookConfig(jupyterNotebookConfig, project, hdfsUser, nodePort,
+          jupyterSettings, jupyterPaths.getCertificatesDir(), allowOrigin);
       
       // spark config
       Writer sparkMagicConfig = new StringWriter();
-      jupyterConfigFilesGenerator.createSparkMagicConfig(sparkMagicConfig, project, jupyterSettings, hdfsUser, user,
-        jupyterPaths.getConfDirPath());
+      jupyterConfigFilesGenerator.createSparkMagicConfig(sparkMagicConfig, project, user, jupyterSettings, hdfsUser,
+          jupyterPaths.getConfDirPath());
 
       //If user selected Experiments or Spark we should use the default docker config for the Python kernel
       if(!jupyterSettings.isPythonKernel()) {
@@ -229,8 +222,7 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
       logger.log(SEVERE, "Failed to start Jupyter notebook on Kubernetes", e);
       nodePortOptional.ifPresent(nodePort -> {
         try {
-          stopJupyterServer(project, user, hdfsUser, getJupyterHome(hdfsUser, project, secretDir),
-            CID, nodePort);
+          stopJupyterServer(project, user, getJupyterHome(project, user, secretDir), CID, nodePort);
         } catch (Exception ex) {
           logger.log(Level.WARNING, "Could not stop jupyter server.", ex);
         }
@@ -503,15 +495,15 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   }
 
   @Override
-  public void stopJupyterServer(Project project, Users user, String hdfsUsername, String jupyterHomePath, String cid,
-      Integer port) throws ServiceException {
+  public void stopJupyterServer(Project project, Users user, String jupyterHomePath, String cid, Integer port)
+      throws ServiceException {
     
     if (port == null) {
       throw new IllegalArgumentException("Invalid arguments when stopping the Jupyter Server.");
     }
     
     String errorMessage = "Problem when removing jupyter notebook entry from jupyter_project table";
-    runCatchAndLog(() -> jupyterFacade.remove(hdfsUsername, port), errorMessage, Optional.empty());
+    runCatchAndLog(() -> jupyterFacade.remove(project, user), errorMessage, Optional.empty());
 
     deleteKubeResources(kubeClientService.getKubeProjectName(project),
       kubeClientService.getKubeDeploymentName(project, user));
@@ -552,12 +544,11 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   
   @Override
   public boolean ping(JupyterProject jupyterProject) {
-    String hdfsUser = hdfsUsersFacade.find(jupyterProject.getHdfsUserId()).getName();
-    Project project = projectFacade.findByName(hdfsUsersController.getProjectName(hdfsUser));
-    Users user = userFacade.findByUsername(hdfsUsersController.getUserName(hdfsUser));
+    Project project = jupyterProject.getProject();
+    Users user = jupyterProject.getUser();
     boolean isUp = kubeClientService.getServiceInfo(project, serviceAndDeploymentName(project, user), 1).isPresent();
-    logger.log(FINEST, "Pinging Jupyter for project " + project.getName() + " and user " + user.getUsername()
-        + " with result " + isUp);
+    logger.log(FINEST, "Pinging Jupyter for project " + project.getName() 
+        + " and user " + user.getUsername() + " with result " + isUp);
     return isUp;
   }
   
@@ -572,7 +563,6 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
       .filter(s -> !knownPorts.contains(jupyterPort(s.getSpec()).get()))
       .map(s -> {
         JupyterProject jupyterProject = new JupyterProject();
-        jupyterProject.setHdfsUserId(-1); // Orphaned
         jupyterProject.setCid(CID);
         jupyterProject.setPort(jupyterPort(s.getSpec()).get());
         return jupyterProject;

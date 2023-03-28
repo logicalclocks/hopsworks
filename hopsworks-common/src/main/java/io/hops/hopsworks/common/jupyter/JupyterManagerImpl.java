@@ -47,19 +47,18 @@ public abstract class JupyterManagerImpl implements JupyterManager {
   @EJB
   private OSProcessExecutor osProcessExecutor;
   
-  public abstract JupyterDTO startJupyterServer(Project project, String secretConfig, String hdfsUser, Users user,
+  public abstract JupyterDTO startJupyterServer(Project project, Users user, String secretConfig,
     JupyterSettings js, String allowOrigin) throws ServiceException, JobException;
   
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public String getJupyterHome(String hdfsUser, Project project, String secret)
-      throws ServiceException {
-    
+  public String getJupyterHome(Project project, Users user, String secret) throws ServiceException {
     if (project == null || secret == null) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_HOME_ERROR, Level.WARNING, "user: " + hdfsUser);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_HOME_ERROR,
+          Level.WARNING, "user: " + user.getUsername());
     }
     return settings.getJupyterDir() + File.separator
       + Settings.DIR_ROOT + File.separator + project.getName()
-      + File.separator + hdfsUser + File.separator + secret;
+      + File.separator + user.getUsername() + File.separator + secret;
   }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -92,8 +91,8 @@ public abstract class JupyterManagerImpl implements JupyterManager {
 
   public abstract void waitForStartup(Project project, Users user) throws TimeoutException;
   
-  public abstract void stopJupyterServer(Project project, Users user, String hdfsUsername, String jupyterHomePath,
-    String cid, Integer port) throws ServiceException;
+  public abstract void stopJupyterServer(Project project, Users user, String jupyterHomePath,
+                                         String cid, Integer port) throws ServiceException;
   
   public abstract void projectCleanup(Project project);
   

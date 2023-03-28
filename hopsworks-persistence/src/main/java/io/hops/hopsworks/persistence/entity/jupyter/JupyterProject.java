@@ -40,6 +40,7 @@
 package io.hops.hopsworks.persistence.entity.jupyter;
 
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -66,34 +67,26 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "JupyterProject.findAll",
-          query
-          = "SELECT j FROM JupyterProject j"),
+      query = "SELECT j FROM JupyterProject j"),
   @NamedQuery(name = "JupyterProject.findByPort",
-          query
-          = "SELECT j FROM JupyterProject j WHERE j.port = :port"),
-  @NamedQuery(name = "JupyterProject.findByHdfsUserIdAndPort",
-    query
-      = "SELECT j FROM JupyterProject j WHERE j.hdfsUserId = :hdfsUserId AND j.port = :port"),
-  @NamedQuery(name = "JupyterProject.findByHdfsUserId",
-          query
-          = "SELECT j FROM JupyterProject j WHERE j.hdfsUserId = :hdfsUserId"),
+      query = "SELECT j FROM JupyterProject j WHERE j.port = :port"),
+  @NamedQuery(name = "JupyterProject.findByProjectUser",
+      query = "SELECT j FROM JupyterProject j WHERE j.project = :project AND j.user = :user"),
   @NamedQuery(name = "JupyterProject.findByCreated",
-          query
-          = "SELECT j FROM JupyterProject j WHERE j.created = :created"),
+      query = "SELECT j FROM JupyterProject j WHERE j.created = :created"),
   @NamedQuery(name = "JupyterProject.findByToken",
-          query
-          = "SELECT j FROM JupyterProject j WHERE j.token = :token"),
+      query = "SELECT j FROM JupyterProject j WHERE j.token = :token"),
   @NamedQuery(name = "JupyterProject.findByCid",
-          query
-          = "SELECT j FROM JupyterProject j WHERE j.cid = :cid")})
+      query = "SELECT j FROM JupyterProject j WHERE j.cid = :cid")})
 public class JupyterProject implements Serializable {
+
+  private static final long serialVersionUID = 1L;
 
   @Basic(optional = false)
   @NotNull
   @Column(name = "cid")
   private String cid;
 
-  private static final long serialVersionUID = 1L;
   @Id
   @Basic(optional = false)
   @NotNull
@@ -111,24 +104,20 @@ public class JupyterProject implements Serializable {
   private Date expires;
   @Basic(optional = false)
   @NotNull
-  @Size(min = 20,
-          max = 64)
+  @Size(min = 20, max = 64)
   @Column(name = "secret")
   private String secret;
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1,
-          max = 255)
+  @Size(min = 1, max = 255)
   @Column(name = "token")
   private String token;
-  @JoinColumn(name = "project_id",
-          referencedColumnName = "id")
+  @JoinColumn(name = "project_id", referencedColumnName = "id")
   @ManyToOne(optional = false)
-  private Project projectId;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "hdfs_user_id")
-  private int hdfsUserId;
+  private Project project;
+  @JoinColumn(name = "uid", referencedColumnName = "uid")
+  @ManyToOne(optional = false)
+  private Users user;
   @Basic(optional = false)
   @NotNull
   @Column(name = "no_limit")
@@ -140,12 +129,12 @@ public class JupyterProject implements Serializable {
   public JupyterProject() {
   }
 
-  public JupyterProject(Project project, String secret, Integer port, int hdfsUserId, String hostIp, String token,
+  public JupyterProject(Project project, Users user, String secret, Integer port, String token,
                         String cid, Date expires, boolean noLimit) {
-    this.projectId = project;
+    this.project = project;
+    this.user = user;
     this.secret = secret;
     this.port = port;
-    this.hdfsUserId = hdfsUserId;
     this.created = new Date();
     this.expires = expires;
     this.token = token;
@@ -169,12 +158,12 @@ public class JupyterProject implements Serializable {
     this.port = port;
   }
 
-  public int getHdfsUserId() {
-    return hdfsUserId;
+  public Users getUser() {
+    return user;
   }
 
-  public void setHdfsUserId(int hdfsUserId) {
-    this.hdfsUserId = hdfsUserId;
+  public void setUser(Users user) {
+    this.user = user;
   }
 
   public Date getCreated() {
@@ -201,12 +190,12 @@ public class JupyterProject implements Serializable {
     this.token = token;
   }
 
-  public Project getProjectId() {
-    return projectId;
+  public Project getProject() {
+    return project;
   }
 
-  public void setProjectId(Project projectId) {
-    this.projectId = projectId;
+  public void setProject(Project project) {
+    this.project = project;
   }
 
   public String getCid() {

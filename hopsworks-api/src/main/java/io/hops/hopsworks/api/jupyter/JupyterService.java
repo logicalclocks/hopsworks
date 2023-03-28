@@ -45,7 +45,6 @@ import io.hops.hopsworks.api.jobs.executions.MonitoringUrlBuilder;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterDTO;
@@ -65,7 +64,6 @@ import io.hops.hopsworks.common.livy.LivyMsg;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.HopsUtils;
-import io.hops.hopsworks.common.util.Ip;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -74,7 +72,6 @@ import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterMode;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
@@ -143,8 +140,6 @@ public class JupyterService {
   private JupyterSettingsFacade jupyterSettingsFacade;
   @EJB
   private HdfsUsersController hdfsUsersController;
-  @EJB
-  private HdfsUsersFacade hdfsUsersFacade;
   @EJB
   private Settings settings;
   @EJB
@@ -274,18 +269,16 @@ public class JupyterService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response isRunning(@Context HttpServletRequest req, @Context SecurityContext sc) throws ServiceException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    JupyterProject jp = jupyterFacade.findByProjectUser(project, user)
+        .orElseThrow(() -> new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_FOUND, Level.FINE));
 
-    String hdfsUser = getHdfsUser(sc);
-    JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
-    if (jp == null) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_FOUND, Level.FINE);
-    }
     // Check to make sure the jupyter notebook server is running
     boolean running = jupyterManager.ping(jp);
     // if the notebook is not running but we have a database entry for it,
     // we should remove the DB entry (and restart the notebook server).
     if (!running) {
-      jupyterFacade.remove(hdfsUser, jp.getPort());
+      jupyterFacade.remove(jp);
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_RUNNING, Level.FINE);
     }
 
@@ -307,7 +300,6 @@ public class JupyterService {
       throws ProjectException, HopsSecurityException, ServiceException, GenericException, JobException {
 
     Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
-    String hdfsUser = hdfsUsersController.getHdfsUserName(project, hopsworksUser);
     //The JupyterSettings bean is serialized without the Project and User when attaching it to the notebook as xattr.
     // .We need to put the user object when we are launching Jupyter from the notebook. The Project object is set
     // from in the front-end
@@ -324,84 +316,72 @@ public class JupyterService {
       throw new ProjectException(RESTCodes.ProjectErrorCode.ANACONDA_NOT_ENABLED, Level.FINE);
     }
 
+    if (jupyterFacade.findByProjectUser(project, hopsworksUser).isPresent()) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVER_ALREADY_RUNNING, Level.FINE);
+    }
+
     if (jupyterSettings.getMode() == null) {
       // set default mode for jupyter if mode is null
       jupyterSettings.setMode(JupyterMode.JUPYTER_LAB);
     }
 
-    JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
+    String configSecret = DigestUtils.sha256Hex(Integer.toString(ThreadLocalRandom.current().nextInt()));
+    JupyterDTO dto = null;
+    DistributedFileSystemOps dfso = dfsService.getDfsOps();
+    String allowOriginHost = uriInfo.getBaseUri().getHost();
+    int allowOriginPort = uriInfo.getBaseUri().getPort();
+    String allowOriginPortStr = allowOriginPort != -1 ? ":" + allowOriginPort : "";
+    String allowOrigin = settings.getJupyterOriginScheme() + "://" + allowOriginHost + allowOriginPortStr;
+    try {
+      jupyterSettingsFacade.update(jupyterSettings);
 
-    if (jp == null) {
-      HdfsUsers user = hdfsUsersFacade.findByName(hdfsUser);
-
-      String configSecret = DigestUtils.sha256Hex(Integer.toString(ThreadLocalRandom.current().nextInt()));
-      JupyterDTO dto = null;
-      DistributedFileSystemOps dfso = dfsService.getDfsOps();
-      String allowOriginHost = uriInfo.getBaseUri().getHost();
-      int allowOriginPort = uriInfo.getBaseUri().getPort();
-      String allowOriginPortStr = allowOriginPort != -1 ? ":" + allowOriginPort : "";
-      String allowOrigin = settings.getJupyterOriginScheme() + "://" + allowOriginHost + allowOriginPortStr;
-      try {
-        jupyterSettingsFacade.update(jupyterSettings);
-
-        //Inspect dependencies
-        sparkController
-            .inspectDependencies(project, hopsworksUser, (SparkJobConfiguration) jupyterSettings.getJobConfig());
-        dto = jupyterManager.startJupyterServer(project, configSecret, hdfsUser, hopsworksUser,
-            jupyterSettings, allowOrigin);
-        jupyterJWTManager.materializeJWT(hopsworksUser, project, jupyterSettings, dto.getCid(), dto.getPort(),
-            JUPYTER_JWT_AUD);
-        HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), user.getUsername(),
-            settings.getHdfsTmpCertDir(), dfso, certificateMaterializer, settings, dto.getCertificatesDir());
-        jupyterManager.waitForStartup(project, hopsworksUser);
-      } catch (ServiceException | TimeoutException ex) {
-        if (dto != null) {
-          jupyterController
-              .shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getCid(), dto.getPort());
-        }
-        throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.SEVERE, ex.getMessage(),
-            null, ex);
-      } catch (IOException ex) {
-        if (dto != null) {
-          jupyterController
-              .shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getCid(), dto.getPort());
-        }
-        throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_MATERIALIZATION_ERROR, Level.SEVERE,
-            ex.getMessage(), null, ex);
-      } finally {
-        if (dfso != null) {
-          dfsService.closeDfsClient(dfso);
-        }
+      //Inspect dependencies
+      sparkController
+          .inspectDependencies(project, hopsworksUser, (SparkJobConfiguration) jupyterSettings.getJobConfig());
+      dto = jupyterManager.startJupyterServer(project, hopsworksUser, configSecret, jupyterSettings, allowOrigin);
+      jupyterJWTManager.materializeJWT(hopsworksUser, project, jupyterSettings, dto.getCid(), dto.getPort(),
+          JUPYTER_JWT_AUD);
+      HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), hopsworksUser.getUsername(),
+          settings.getHdfsTmpCertDir(), dfso, certificateMaterializer, settings, dto.getCertificatesDir());
+      jupyterManager.waitForStartup(project, hopsworksUser);
+    } catch (ServiceException | TimeoutException ex) {
+      if (dto != null) {
+        jupyterController.shutdown(project, hopsworksUser, configSecret, dto.getCid(), dto.getPort());
       }
-
-      String externalIp = Ip.getHost(req.getRequestURL().toString());
-
-      try {
-        Date expirationDate = new Date();
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(expirationDate);
-        cal.add(Calendar.HOUR_OF_DAY, jupyterSettings.getShutdownLevel());
-        expirationDate = cal.getTime();
-
-        jp = jupyterFacade.saveServer(externalIp, project, configSecret,
-            dto.getPort(), user.getId(), dto.getToken(), dto.getCid(), expirationDate, jupyterSettings.isNoLimit());
-
-        //set minutes left until notebook server is killed
-        Duration durationLeft = Duration.between(new Date().toInstant(), jp.getExpires().toInstant());
-        jp.setMinutesUntilExpiration(durationLeft.toMinutes());
-      } catch (Exception e) {
-        LOGGER.log(Level.SEVERE, "Failed to save Jupyter notebook settings", e);
-        jupyterController.shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getCid(), dto.getPort());
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.SEVERE, ex.getMessage(),
+          null, ex);
+    } catch (IOException ex) {
+      if (dto != null) {
+        jupyterController.shutdown(project, hopsworksUser, configSecret, dto.getCid(), dto.getPort());
       }
-
-      if (jp == null) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SAVE_SETTINGS_ERROR, Level.SEVERE);
+      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_MATERIALIZATION_ERROR, Level.SEVERE,
+          ex.getMessage(), null, ex);
+    } finally {
+      if (dfso != null) {
+        dfsService.closeDfsClient(dfso);
       }
-    } else {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVER_ALREADY_RUNNING, Level.FINE);
     }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        jp).build();
+
+    try {
+      Date expirationDate = new Date();
+      Calendar cal = Calendar.getInstance();
+      cal.setTime(expirationDate);
+      cal.add(Calendar.HOUR_OF_DAY, jupyterSettings.getShutdownLevel());
+      expirationDate = cal.getTime();
+
+      JupyterProject jupyterProject = jupyterFacade.saveServer(project, hopsworksUser, configSecret, dto.getPort(),
+          dto.getToken(), dto.getCid(), expirationDate, jupyterSettings.isNoLimit());
+
+      //set minutes left until notebook server is killed
+      Duration durationLeft = Duration.between(new Date().toInstant(), jupyterProject.getExpires().toInstant());
+      jupyterProject.setMinutesUntilExpiration(durationLeft.toMinutes());
+
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(jupyterProject).build();
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Failed to save Jupyter notebook settings", e);
+      jupyterController.shutdown(project, hopsworksUser, configSecret, dto.getCid(), dto.getPort());
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SAVE_SETTINGS_ERROR, Level.SEVERE);
+    }
   }
 
   @GET
@@ -410,15 +390,12 @@ public class JupyterService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response stopNotebookServer(@Context HttpServletRequest req,
-                                     @Context SecurityContext sc) throws ProjectException, ServiceException {
+                                     @Context SecurityContext sc) throws ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
-    JupyterProject jp = jupyterFacade.findByUser(hdfsUsername);
-    if (jp == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.JUPYTER_SERVER_NOT_FOUND, Level.FINE,
-          "hdfsUser: " + hdfsUsername);
-    }
-    jupyterController.shutdown(project, hdfsUsername, user, jp.getSecret(), jp.getCid(), jp.getPort());
+    JupyterProject jp = jupyterFacade.findByProjectUser(project, user)
+        .orElseThrow(() -> new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_FOUND, Level.FINE));
+
+    jupyterController.shutdown(project, user, jp.getSecret(), jp.getCid(), jp.getPort());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
@@ -433,17 +410,11 @@ public class JupyterService {
     int extensionIndex = ipynbPath.lastIndexOf(".ipynb");
     StringBuilder pathBuilder = new StringBuilder(ipynbPath.substring(0, extensionIndex)).append(".py");
     String pyAppPath = pathBuilder.toString();
-    String hdfsUsername = getHdfsUser(sc);
     Users user = jWTHelper.getUserPrincipal(sc);
     JupyterController.NotebookConversion conversionType = jupyterController
         .getNotebookConversionType(ipynbPath, user, this.project);
-    jupyterController.convertIPythonNotebook(hdfsUsername, ipynbPath, project, pyAppPath, conversionType);
+    jupyterController.convertIPythonNotebook(project, user, ipynbPath, pyAppPath, conversionType);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
-  }
-
-  private String getHdfsUser(SecurityContext sc) {
-    Users user = jWTHelper.getUserPrincipal(sc);
-    return hdfsUsersController.getHdfsUserName(project, user);
   }
 
   @POST
@@ -492,7 +463,7 @@ public class JupyterService {
           .WRONG_HDFS_USERNAME_PROVIDED_FOR_ATTACHING_JUPYTER_CONFIGURATION_TO_NOTEBOOK, Level.FINE,
           "HDFS username provided does not exist.");
     }
-    jupyterController.attachJupyterConfigurationToNotebook(user.get(), hdfsUsername, project, kernelId);
+    jupyterController.attachJupyterConfigurationToNotebook(project, user.get(), kernelId);
     return Response.ok().build();
   }
 }

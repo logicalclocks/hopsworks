@@ -38,12 +38,8 @@
  */
 package io.hops.hopsworks.common.jupyter;
 
-import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
-import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.util.Settings;
 
 import javax.annotation.PostConstruct;
@@ -76,10 +72,6 @@ public class JupyterNotebookCleaner {
   @EJB
   private JupyterFacade jupyterFacade;
   @EJB
-  private HdfsUsersFacade hdfsUsersFacade;
-  @EJB
-  private UserFacade usersFacade;
-  @EJB
   private JupyterController jupyterController;
   @EJB
   private Settings settings;
@@ -109,11 +101,10 @@ public class JupyterNotebookCleaner {
           // If the notebook is expired
           if (!jp.isNoLimit() && jp.getExpires().before(currentDate)) {
             try {
-              HdfsUsers hdfsUser = hdfsUsersFacade.find(jp.getHdfsUserId());
-              Users user = usersFacade.findByUsername(hdfsUser.getUsername());
-              LOGGER.log(Level.FINE, "Shutting down expired notebook for hdfs user " + hdfsUser.getName());
-              jupyterController.shutdown(jp.getProjectId(), hdfsUser.getName(), user,
-                  jp.getSecret(), jp.getCid(), jp.getPort());
+              LOGGER.log(Level.FINE,
+                  "Shutting down expired notebook user: " + jp.getUser().getUsername()
+                      + " project: " + jp.getProject().getName());
+              jupyterController.shutdown(jp.getProject(), jp.getUser(), jp.getSecret(), jp.getCid(), jp.getPort());
             } catch (Exception e) {
               LOGGER.log(Level.SEVERE, "Failed to cleanup notebook with port " + jp.getPort(), e);
             }

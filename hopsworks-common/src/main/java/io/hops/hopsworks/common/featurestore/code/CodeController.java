@@ -120,17 +120,15 @@ public class CodeController {
 
   private String readNotebookContent(Project project, Users user, String path,
                                      JupyterController.NotebookConversion format) throws ServiceException {
-
-    String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
     if (format == JupyterController.NotebookConversion.HTML) {
-      return jupyterController.convertIPythonNotebook(hdfsUsername, path, project, "", format);
+      return jupyterController.convertIPythonNotebook(project, user, path,  "", format);
     }
     //returns empty contents in the case of not supported notebookConversion
     return null;
   }
 
   private String readPythonFileContent(Project project, Users user, String path) throws FeaturestoreException {
-    DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
+    DistributedFileSystemOps udfso = dfs.getDfsOps(project, user);
     try {
       return udfso.cat(path);
     } catch (IOException e) {
