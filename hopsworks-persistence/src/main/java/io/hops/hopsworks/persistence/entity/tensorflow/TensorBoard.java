@@ -84,11 +84,6 @@ public class TensorBoard implements Serializable {
   @EmbeddedId
   private TensorBoardPK tensorBoardPK;
 
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "hdfs_user_id")
-  private int hdfsUserId;
-
   @Column(name = "cid")
   private String cid;
 
@@ -143,7 +138,7 @@ public class TensorBoard implements Serializable {
   }
 
   public TensorBoard(TensorBoardPK tensorBoardPK, String cid, String endpoint, String mlId,
-                           Date lastAccessed, String hdfsLogdir, String secret, int hdfsUserId) {
+                           Date lastAccessed, String hdfsLogdir, String secret) {
     this.setTensorBoardPK(tensorBoardPK);
     this.setCid(cid);
     this.setEndpoint(endpoint);
@@ -151,7 +146,6 @@ public class TensorBoard implements Serializable {
     this.setLastAccessed(lastAccessed);
     this.setHdfsLogdir(hdfsLogdir);
     this.setSecret(secret);
-    this.setHdfsUserId(hdfsUserId);
   }
 
   public TensorBoardPK getTensorBoardPK() {
@@ -192,14 +186,6 @@ public class TensorBoard implements Serializable {
 
   public void setHdfsLogdir(String hdfsLogdir) {
     this.hdfsLogdir = hdfsLogdir;
-  }
-
-  public int getHdfsUserId() {
-    return hdfsUserId;
-  }
-
-  public void setHdfsUserId(int hdfsUserId) {
-    this.hdfsUserId = hdfsUserId;
   }
 
   public String getMlId() {
