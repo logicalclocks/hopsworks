@@ -49,9 +49,6 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "RStudioProject.findByPort",
           query
           = "SELECT j FROM RStudioProject j WHERE j.port = :port"),
-  @NamedQuery(name = "RStudioProject.findByHdfsUserId",
-          query
-          = "SELECT j FROM RStudioProject j WHERE j.hdfsUserId = :hdfsUserId"),
   @NamedQuery(name = "RStudioProject.findByCreated",
           query
           = "SELECT j FROM RStudioProject j WHERE j.created = :created"),
@@ -109,20 +106,14 @@ public class RStudioProject implements Serializable {
           referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Project projectId;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "hdfs_user_id")
-  private int hdfsUserId;
 
   public RStudioProject() {
   }
 
-  public RStudioProject(Project project, String secret, Integer port,
-          int hdfsUserId, String hostIp, String token, Long pid) {
+  public RStudioProject(Project project, String secret, Integer port, String hostIp, String token, Long pid) {
     this.projectId = project;
     this.secret = secret;
     this.port = port;
-    this.hdfsUserId = hdfsUserId;
     this.created = Date.from(Instant.now());
     this.lastAccessed = Date.from(Instant.now());
     this.hostIp = hostIp;
@@ -144,14 +135,6 @@ public class RStudioProject implements Serializable {
 
   public void setPort(Integer port) {
     this.port = port;
-  }
-
-  public int getHdfsUserId() {
-    return hdfsUserId;
-  }
-
-  public void setHdfsUserId(int hdfsUserId) {
-    this.hdfsUserId = hdfsUserId;
   }
 
   public Date getCreated() {
