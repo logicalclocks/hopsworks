@@ -375,6 +375,9 @@ public class Settings implements Serializable {
   /*----------------------- Python ------------------------*/
   private final static String VARIABLE_MAX_ENV_YML_BYTE_SIZE = "max_env_yml_byte_size";
 
+  /*----------------------- Flyingduck ------------------------*/
+  private final static String VARIABLE_ENABLE_FLYINGDUCK = "enable_flyingduck";
+
   //Git
   private static final String VARIABLE_GIT_IMAGE_VERSION = "git_image_version";
   private static final String VARIABLE_GIT_COMMAND_TIMEOUT_MINUTES_DEFAULT = "git_command_timeout_minutes";
@@ -949,7 +952,10 @@ public class Settings implements Serializable {
 
       ENABLE_JUPYTER_PYTHON_KERNEL_NON_KUBERNETES = setBoolVar(VARIABLE_ENABLE_JUPYTER_PYTHON_KERNEL_NON_KUBERNETES,
         ENABLE_JUPYTER_PYTHON_KERNEL_NON_KUBERNETES);
-  
+
+      ENABLE_FLYINGDUCK = setBoolVar(VARIABLE_ENABLE_FLYINGDUCK,
+              ENABLE_FLYINGDUCK);
+
       MAX_LONG_RUNNING_HTTP_REQUESTS =
         setIntVar(VARIABLE_MAX_LONG_RUNNING_HTTP_REQUESTS, MAX_LONG_RUNNING_HTTP_REQUESTS);
 
@@ -3227,6 +3233,13 @@ public class Settings implements Serializable {
       return true;
     }
     return ENABLE_JUPYTER_PYTHON_KERNEL_NON_KUBERNETES;
+  }
+
+  private boolean ENABLE_FLYINGDUCK = false;
+
+  public synchronized boolean isFlyingduckEnabled() {
+    checkCache();
+    return ENABLE_FLYINGDUCK;
   }
 
   //These dependencies were collected by installing jupyterlab in a new environment
