@@ -495,13 +495,15 @@ public class LibraryInstaller {
 
     File baseDir = new File("/tmp/docker/" + cc.getProjectId().getName());
     baseDir.mkdirs();
+    Project project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
+      RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
     try {
       File dockerFile = new File(baseDir, "dockerFile_" + cc.getProjectId().getName());
       File home = new File(System.getProperty("user.home"));
       FileUtils.copyFileToDirectory(new File(home, ".condarc"), baseDir);
       FileUtils.copyDirectoryToDirectory(new File(home, ".pip"), baseDir);
       try (BufferedWriter writer = new BufferedWriter(new FileWriter(dockerFile))) {
-        writer.write("FROM " + projectUtils.getFullDockerImageName(cc.getProjectId(), false) + "\n");
+        writer.write("FROM " + projectUtils.getFullDockerImageName(project, false) + "\n");
         writer.newLine();
         writer.write(
             "RUN --mount=type=bind,source=.condarc,target=/root/.condarc"
@@ -519,9 +521,7 @@ public class LibraryInstaller {
             throw new UnsupportedOperationException("install type unknown: " + cc.getInstallType());
         }
       }
-  
-      Project project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
-        RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
+
       String nextDockerImageName = getNextDockerImageName(project);
 
       ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
