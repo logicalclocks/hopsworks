@@ -4,10 +4,14 @@
 
 package io.hops.hopsworks.kube.common;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
+import io.fabric8.kubernetes.api.model.GenericKubernetesResourceList;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import io.fabric8.kubernetes.client.utils.Serialization;
 import io.hops.hopsworks.kube.serving.utils.KubeServingUtils;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
@@ -19,9 +23,9 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Stateless
@@ -41,12 +45,18 @@ public class KubeKServeClientService {
   
   @Asynchronous
   public void createOrReplaceInferenceService(Project project, JSONObject inferenceService)
-    throws KubernetesClientException {
+      throws KubernetesClientException {
     String kubeProjectNs = kubeClientService.getKubeProjectName(project);
-    CustomResourceDefinitionContext context = getCustomResourceDefinitionContext();
-    
-    handleClientOp((client) -> client.customResource(context).createOrReplace(kubeProjectNs,
-      inferenceService.toString()));
+    try {
+      GenericKubernetesResource customResource = Serialization.jsonMapper()
+          .readValue(inferenceService.toString(), GenericKubernetesResource.class);
+      CustomResourceDefinitionContext context = getCustomResourceDefinitionContext();
+      handleClientOp((client) -> client.genericKubernetesResources(context)
+          .inNamespace(kubeProjectNs).resource(customResource).create());
+    } catch (JsonProcessingException e) {
+      LOGGER.log(Level.FINE,"Inference service json serialization error", e);
+      throw new KubernetesClientException(e.getMessage());
+    }
   }
   
   @Asynchronous
@@ -55,8 +65,8 @@ public class KubeKServeClientService {
     String kubeProjectNs = kubeClientService.getKubeProjectName(project);
     CustomResourceDefinitionContext context = getCustomResourceDefinitionContext();
     
-    handleClientOp((client) -> client.customResource(context).delete(kubeProjectNs,
-      inferenceServiceMetadata.getName()));
+    handleClientOp((client) -> client.genericKubernetesResources(context)
+        .inNamespace(kubeProjectNs).withName(inferenceServiceMetadata.getName()).delete());
   }
   
   public JSONObject getInferenceServiceStatus(Project project, Serving serving)
@@ -81,16 +91,13 @@ public class KubeKServeClientService {
     String kubeProjectNs = kubeClientService.getKubeProjectName(project);
     Map<String, String> labels = new HashMap<>();
     labels.put(KubeServingUtils.SERVING_ID_LABEL_NAME, String.valueOf(serving.getId()));
-    
-    Map<String, Object> response = handleClientOp((client) -> client.customResource(context).list(kubeProjectNs,
-      labels));
+
+    GenericKubernetesResourceList response = handleClientOp((client) -> client.genericKubernetesResources(context)
+        .inNamespace(kubeProjectNs).withLabels(labels).list());
     
     JSONObject inferenceService = null;
-    if (response != null) {
-      ArrayList<Map<String, Object>> inferenceServices = (ArrayList<Map<String, Object>>) response.get("items");
-      if (inferenceServices.size() > 0) {
-        inferenceService = new JSONObject(inferenceServices.get(0));
-      }
+    if (response != null && response.getItems().size() > 0) {
+      inferenceService = new JSONObject(Serialization.asJson(response.getItems().get(0)));
     }
     return inferenceService;
   }

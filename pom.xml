@@ -130,7 +130,7 @@
     <junit.version>4.13.2</junit.version>
     <kafka-clients.version>2.3.0</kafka-clients.version>
     <kafka_2.11.version>2.3.0</kafka_2.11.version>
-    <kubernetes-client.version>4.10.3</kubernetes-client.version>
+    <kubernetes-client.version>6.5.1</kubernetes-client.version>
     <lambdista-try.version>0.3.1</lambdista-try.version>
     <libthrift.version>0.15.0</libthrift.version>
     <mockito.version>4.3.1</mockito.version>

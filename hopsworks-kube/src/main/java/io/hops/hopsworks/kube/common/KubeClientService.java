@@ -27,17 +27,17 @@ import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
-import io.fabric8.kubernetes.api.model.batch.Job;
-import io.fabric8.kubernetes.api.model.batch.JobCondition;
+import io.fabric8.kubernetes.api.model.NamespaceBuilder;
+import io.fabric8.kubernetes.api.model.batch.v1.Job;
+import io.fabric8.kubernetes.api.model.batch.v1.JobCondition;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.Watch;
-import io.fabric8.kubernetes.client.Watcher;
+import io.fabric8.kubernetes.client.dsl.AnyNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
-import io.fabric8.kubernetes.client.dsl.FilterWatchListMultiDeletable;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
@@ -100,11 +100,11 @@ public class KubeClientService {
   public void createProjectNamespace(Project project)
       throws KubernetesClientException {
     handleClientOp((client) ->
-        client.namespaces().createNew()
+        client.namespaces().resource(new NamespaceBuilder()
             .withNewMetadata()
             .withName(getKubeProjectName(project))
             .endMetadata()
-            .done());
+            .build()).create());
   }
   
   public void deleteProjectNamespace(Project project)
@@ -295,10 +295,10 @@ public class KubeClientService {
   
   public void deleteSecrets(String namespace, Map<String, String> labels, Pair<String, String[]> labelIn) {
     handleClientOp((client) -> {
-      FilterWatchListMultiDeletable<Secret, SecretList, Boolean, Watch, Watcher<Secret>> secrets = (namespace != null)
+      AnyNamespaceOperation<Secret, SecretList, Resource<Secret>> secrets = (namespace != null)
         ? client.secrets().inNamespace(namespace)
         : client.secrets().inAnyNamespace();
-      FilterWatchListDeletable<Secret, SecretList, Boolean, Watch, Watcher<Secret>> secretsWithLabels = null;
+      FilterWatchListDeletable<Secret, SecretList, Resource<Secret>> secretsWithLabels = null;
       if (labels != null) {
         secretsWithLabels = secrets.withLabels(labels);
         if (labelIn != null)
@@ -308,7 +308,10 @@ public class KubeClientService {
           secretsWithLabels = secrets.withLabelIn(labelIn.getL(), labelIn.getR());
         }
       }
-      return (secretsWithLabels != null) ? secretsWithLabels.delete() : secrets.delete();
+      if (secretsWithLabels != null) {
+        return secretsWithLabels.delete();
+      }
+      throw new KubernetesClientException("Secret delete operation without labels not allowed.");
     });
   }
   
@@ -357,10 +360,10 @@ public class KubeClientService {
   
   public List<Secret> getSecrets(String namespace, Map<String, String> labels, Pair<String, String[]> labelIn) {
     return handleClientOp((client) -> {
-      FilterWatchListMultiDeletable<Secret, SecretList, Boolean, Watch, Watcher<Secret>> secrets = (namespace != null)
+      AnyNamespaceOperation<Secret, SecretList, Resource<Secret>> secrets = (namespace != null)
         ? client.secrets().inNamespace(namespace)
         : client.secrets().inAnyNamespace();
-      FilterWatchListDeletable<Secret, SecretList, Boolean, Watch, Watcher<Secret>> secretsWithLabels = null;
+      FilterWatchListDeletable<Secret, SecretList, Resource<Secret>> secretsWithLabels = null;
       if (labels != null) {
         secretsWithLabels = secrets.withLabels(labels);
         if (labelIn != null)
