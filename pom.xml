@@ -128,7 +128,6 @@
     <junit.version>4.13.2</junit.version>
     <kafka-clients.version>2.3.0</kafka-clients.version>
     <kafka_2.11.version>2.3.0</kafka_2.11.version>
-    <kubernetes-client.version>4.10.3</kubernetes-client.version>
     <lambdista-try.version>0.3.1</lambdista-try.version>
     <libthrift.version>0.15.0</libthrift.version>
     <mockito.version>4.3.1</mockito.version>
@@ -291,22 +290,6 @@
         <groupId>fish.payara.api</groupId>
         <artifactId>payara-api</artifactId>
         <version>${payara.extras.version}</version>
-      </dependency>
-      <!-- Kube -->
-      <dependency>
-        <groupId>io.fabric8</groupId>
-        <artifactId>kubernetes-client</artifactId>
-        <version>${kubernetes-client.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>io.github.resilience4j</groupId>
