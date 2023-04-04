@@ -62,8 +62,6 @@ public class StreamFeatureGroup  implements Serializable {
   private Collection<CachedFeatureExtraConstraints> featuresExtraConstraints;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "streamFeatureGroup")
   private Collection<CachedFeature> cachedFeatures;
-  @Column(name = "online_enabled")
-  private boolean onlineEnabled;
   
   public StreamFeatureGroup() {};
 
@@ -97,14 +95,6 @@ public class StreamFeatureGroup  implements Serializable {
 
   public void setFeaturesExtraConstraints(Collection<CachedFeatureExtraConstraints> featuresExtraConstraints) {
     this.featuresExtraConstraints = featuresExtraConstraints;
-  }
-
-  public boolean isOnlineEnabled() {
-    return onlineEnabled;
-  }
-
-  public void setOnlineEnabled(boolean onlineEnabled) {
-    this.onlineEnabled = onlineEnabled;
   }
 
   @Override

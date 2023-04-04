@@ -22,11 +22,12 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteController;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeatureGroupInputValidation;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupDTO;
-import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.query.ConstructorController;
 import io.hops.hopsworks.common.featurestore.query.Feature;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
@@ -102,6 +103,8 @@ public class CachedFeaturegroupController {
   @EJB
   private CachedFeaturegroupFacade cachedFeatureGroupFacade;
   @EJB
+  private FeaturegroupFacade featureGroupFacade;
+  @EJB
   private CertificateMaterializer certificateMaterializer;
   @EJB
   private Settings settings;
@@ -109,8 +112,6 @@ public class CachedFeaturegroupController {
   private FeaturestoreController featurestoreController;
   @EJB
   private OnlineFeaturegroupController onlineFeaturegroupController;
-  @EJB
-  private OnlineFeaturestoreController onlineFeaturestoreController;
   @EJB
   private OfflineFeatureGroupController offlineFeatureGroupController;
   @EJB
@@ -125,6 +126,8 @@ public class CachedFeaturegroupController {
   private ExpectationSuiteController expectationSuiteController;
   @EJB
   private FeaturegroupController featuregroupController;
+  @EJB
+  private FeatureGroupInputValidation featureGroupInputValidation;
 
   private static final Logger LOGGER = Logger.getLogger(CachedFeaturegroupController.class.getName());
   private static final List<String> HUDI_SPEC_FEATURE_NAMES = Arrays.asList("_hoodie_record_key",
@@ -175,33 +178,6 @@ public class CachedFeaturegroupController {
       certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_HIVE_CONNECTION, Level.SEVERE,
           "project: " + project.getName() + ", hive database: " + databaseName, e.getMessage(), e);
-    }
-  }
-
-  /**
-   * Previews a given featuregroup by doing a SELECT LIMIT query on the Hive Table (offline feature data)
-   * and the MySQL table (online feature data)
-   *
-   * @param featuregroup    of the featuregroup to preview
-   * @param project         the project the user is operating from, in case of shared feature store
-   * @param user            the user making the request
-   * @param partition       the selected partition if any as represented in the PARTITIONS_METASTORE
-   * @param online          whether to show preview from the online feature store
-   * @param limit           the number of rows to visualize
-   * @return A DTO with the first 20 feature rows of the online and offline tables.
-   * @throws SQLException
-   * @throws FeaturestoreException
-   * @throws HopsSecurityException
-   */
-  public FeaturegroupPreview getFeaturegroupPreview(Featuregroup featuregroup, Project project,
-                                                    Users user, String partition, boolean online, int limit)
-      throws SQLException, FeaturestoreException, HopsSecurityException {
-    if (online && featuregroup.getCachedFeaturegroup().isOnlineEnabled()) {
-      return onlineFeaturegroupController.getFeaturegroupPreview(featuregroup, project, user, limit);
-    } else if (online) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_ONLINE, Level.FINE);
-    } else {
-      return getOfflineFeaturegroupPreview(featuregroup, project, user, partition, limit);
     }
   }
   
@@ -310,15 +286,13 @@ public class CachedFeaturegroupController {
             cachedFeaturegroupDTO.getFeatures(),
         project, user, getTableFormat(cachedFeaturegroupDTO.getTimeTravelFormat()));
 
-    boolean onlineEnabled = settings.isOnlineFeaturestore() && cachedFeaturegroupDTO.getOnlineEnabled();
-    
     //Get HiveTblId of the newly created table from the metastore
     HiveTbls hiveTbls = cachedFeatureGroupFacade.getHiveTableByNameAndDB(tbl, featurestore.getHiveDbId())
         .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP,
             Level.WARNING, "", "Table created correctly but not in the metastore"));
 
     //Persist cached feature group
-    return persistCachedFeaturegroupMetadata(hiveTbls, onlineEnabled, cachedFeaturegroupDTO.getTimeTravelFormat(),
+    return persistCachedFeaturegroupMetadata(hiveTbls, cachedFeaturegroupDTO.getTimeTravelFormat(),
         cachedFeaturegroupDTO.getFeatures());
   }
 
@@ -338,7 +312,7 @@ public class CachedFeaturegroupController {
     List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS = getFeaturesDTO(featuregroup.getCachedFeaturegroup(),
       featuregroup.getId(), featuregroup.getFeaturestore(), project, user);
 
-    if (settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().isOnlineEnabled()) {
+    if (settings.isOnlineFeaturestore() && featuregroup.isOnlineEnabled()) {
       cachedFeaturegroupDTO.setOnlineEnabled(true);
       cachedFeaturegroupDTO.setOnlineTopicName(onlineFeaturegroupController
               .onlineFeatureGroupTopicName(project.getId(), featuregroup.getId(),
@@ -589,12 +563,10 @@ public class CachedFeaturegroupController {
    * @param featureGroupFeatureDTOS the list of the feature group feature DTOs
    * @return Entity of the created cached feature group
    */
-  private CachedFeaturegroup persistCachedFeaturegroupMetadata(HiveTbls hiveTable, boolean onlineEnabled,
-                                                               TimeTravelFormat timeTravelFormat,
+  private CachedFeaturegroup persistCachedFeaturegroupMetadata(HiveTbls hiveTable, TimeTravelFormat timeTravelFormat,
                                                                List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS) {
     CachedFeaturegroup cachedFeaturegroup = new CachedFeaturegroup();
     cachedFeaturegroup.setHiveTbls(hiveTable);
-    cachedFeaturegroup.setOnlineEnabled(onlineEnabled);
     cachedFeaturegroup.setTimeTravelFormat(timeTravelFormat);
     cachedFeaturegroup.setFeaturesExtraConstraints(
         buildFeatureExtraConstrains(featureGroupFeatureDTOS, cachedFeaturegroup, null));
@@ -619,20 +591,10 @@ public class CachedFeaturegroupController {
    * @throws FeaturestoreException
    * @throws SQLException
    */
-  public FeaturegroupDTO enableFeaturegroupOnline(Featurestore featurestore, Featuregroup featuregroup,
+  public void enableFeaturegroupOnline(Featurestore featurestore, Featuregroup featuregroup,
                                                   Project project, Users user)
       throws FeaturestoreException, SQLException, ServiceException, KafkaException, SchemaException, ProjectException,
       UserException, IOException, HopsSecurityException {
-    if(!settings.isOnlineFeaturestore()) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
-        Level.FINE, "Online Featurestore is not enabled for this Hopsworks cluster.");
-    }
-    if (!onlineFeaturestoreController.checkIfDatabaseExists(
-        onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
-        Level.FINE, "Online Featurestore is not enabled for this project. To enable online feature store, talk to an " +
-        "administrator.");
-    }
     CachedFeaturegroup cachedFeaturegroup = featuregroup.getCachedFeaturegroup();
 
     List<FeatureGroupFeatureDTO> features = getFeaturesDTO(featuregroup.getCachedFeaturegroup(), featuregroup.getId(),
@@ -641,13 +603,12 @@ public class CachedFeaturegroupController {
       features = dropHudiSpecFeatureGroupFeature(features);
     }
 
-    if(!cachedFeaturegroup.isOnlineEnabled()) {
+    if(!featuregroup.isOnlineEnabled()) {
       onlineFeaturegroupController.setupOnlineFeatureGroup(featurestore, featuregroup, features, project, user);
     }
     //Set foreign key of the cached feature group to the new online feature group
-    cachedFeaturegroup.setOnlineEnabled(true);
-    cachedFeatureGroupFacade.updateMetadata(cachedFeaturegroup);
-    return convertCachedFeaturegroupToDTO(featuregroup, project, user);
+    featuregroup.setOnlineEnabled(true);
+    featureGroupFacade.updateFeaturegroupMetadata(featuregroup);
   }
   
   /**
@@ -660,25 +621,13 @@ public class CachedFeaturegroupController {
    * @throws FeaturestoreException
    * @throws SQLException
    */
-  public FeaturegroupDTO disableFeaturegroupOnline(Featuregroup featuregroup, Project project, Users user)
-      throws FeaturestoreException, SQLException, ServiceException, SchemaException, KafkaException {
-    if(!settings.isOnlineFeaturestore()) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
-        Level.FINE, "Online Featurestore is not enabled for this Hopsworks cluster.");
-    }
-    if (!onlineFeaturestoreController.checkIfDatabaseExists(
-        onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()))) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
-        Level.FINE, "Online Featurestore is not enabled for this project. To enable online feature store, talk to an " +
-        "administrator.");
-    }
-    CachedFeaturegroup cachedFeaturegroup = featuregroup.getCachedFeaturegroup();
-    if (settings.isOnlineFeaturestore() && cachedFeaturegroup.isOnlineEnabled()) {
+  public void disableFeaturegroupOnline(Featuregroup featuregroup, Project project, Users user)
+      throws FeaturestoreException, SQLException, SchemaException, KafkaException {
+    if (settings.isOnlineFeaturestore() && featuregroup.isOnlineEnabled()) {
       onlineFeaturegroupController.disableOnlineFeatureGroup(featuregroup, project, user);
-      cachedFeaturegroup.setOnlineEnabled(false);
-      cachedFeatureGroupFacade.persist(cachedFeaturegroup);
+      featuregroup.setOnlineEnabled(false);
+      featureGroupFacade.updateFeaturegroupMetadata(featuregroup);
     }
-    return convertCachedFeaturegroupToDTO(featuregroup, project, user);
   }
 
   public void updateMetadata(Project project, Users user, Featuregroup featuregroup,
@@ -694,7 +643,7 @@ public class CachedFeaturegroupController {
     List<FeatureGroupFeatureDTO> newFeatures = new ArrayList<>();
     if (featuregroupDTO.getFeatures() != null) {
       verifyPreviousSchemaUnchanged(previousSchema, featuregroupDTO.getFeatures());
-      newFeatures = verifyAndGetNewFeatures(previousSchema, featuregroupDTO.getFeatures());
+      newFeatures = featureGroupInputValidation.verifyAndGetNewFeatures(previousSchema, featuregroupDTO.getFeatures());
     }
 
     // change table description
@@ -712,7 +661,7 @@ public class CachedFeaturegroupController {
         featuregroup.getFeaturestore(), tableName, newFeatures, project, user);
 
       // if online feature group
-      if (settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().isOnlineEnabled()) {
+      if (settings.isOnlineFeaturestore() && featuregroup.isOnlineEnabled()) {
         onlineFeaturegroupController.alterOnlineFeatureGroupSchema(
           featuregroup, newFeatures, featuregroupDTO.getFeatures(), project, user);
       }
@@ -791,30 +740,6 @@ public class CachedFeaturegroupController {
                 ", partition key and type cannot be changed when appending features.");
       }
     }
-  }
-
-  public List<FeatureGroupFeatureDTO> verifyAndGetNewFeatures(List<FeatureGroupFeatureDTO> previousSchema,
-                                                              List<FeatureGroupFeatureDTO> newSchema)
-      throws FeaturestoreException {
-    List<FeatureGroupFeatureDTO> newFeatures = new ArrayList<>();
-    for (FeatureGroupFeatureDTO newFeature : newSchema) {
-      boolean isNew =
-        !previousSchema.stream().anyMatch(previousFeature -> previousFeature.getName().equals(newFeature.getName()));
-      if (isNew) {
-        newFeatures.add(newFeature);
-        if (newFeature.getPrimary() || newFeature.getPartition()) {
-          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_UPDATE, Level.FINE,
-            "Appended feature `" + newFeature.getName() + "` is specified as primary or partition key. Primary key and "
-              + "partition key cannot be changed when appending features.");
-        }
-        if (newFeature.getType() == null) {
-          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_UPDATE, Level.FINE,
-            "Appended feature `" + newFeature.getName() + "` is missing type information. Type information is " +
-              "mandatory when appending features to a feature group.");
-        }
-      }
-    }
-    return newFeatures;
   }
 
   public void verifyPrimaryKey(FeaturegroupDTO featuregroupDTO,

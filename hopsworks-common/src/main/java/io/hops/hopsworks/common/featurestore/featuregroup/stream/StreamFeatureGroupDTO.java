@@ -30,10 +30,9 @@ import java.util.Objects;
 public class StreamFeatureGroupDTO extends FeaturegroupDTO {
   private TimeTravelFormat timeTravelFormat = TimeTravelFormat.HUDI;
   private DeltaStreamerJobConf deltaStreamerJobConf;
-  private Boolean onlineEnabled = true;
-  
+
   private List<FeaturegroupDTO> parents;
-  
+
   public StreamFeatureGroupDTO() {
     super();
   }
@@ -41,47 +40,38 @@ public class StreamFeatureGroupDTO extends FeaturegroupDTO {
   public StreamFeatureGroupDTO(Featuregroup featuregroup) {
     super(featuregroup);
   }
-  
+
   public DeltaStreamerJobConf getDeltaStreamerJobConf() {
     return deltaStreamerJobConf;
   }
-  
+
   public void setDeltaStreamerJobConf(
     DeltaStreamerJobConf deltaStreamerJobConf) {
     this.deltaStreamerJobConf = deltaStreamerJobConf;
   }
-  
-  public Boolean getOnlineEnabled() {
-    return onlineEnabled;
-  }
-  
-  public void setOnlineEnabled(Boolean onlineEnabled) {
-    this.onlineEnabled = onlineEnabled;
-  }
-  
+
   public TimeTravelFormat getTimeTravelFormat() {
     return timeTravelFormat;
   }
-  
+
   public void setTimeTravelFormat(
     TimeTravelFormat timeTravelFormat) {
     this.timeTravelFormat = timeTravelFormat;
   }
-  
+
   public List<FeaturegroupDTO> getParents() {
     return parents;
   }
-  
+
   public void setParents(List<FeaturegroupDTO> parents) {
     this.parents = parents;
   }
-  
+
   @Override
   public String toString() {
     return "StreamFeatureGroupDTO{" +
       "timeTravelFormat=" + timeTravelFormat +
       ", deltaStreamerJobConf=" + deltaStreamerJobConf +
-      ", onlineEnabled=" + onlineEnabled +
       ", parentFeatureGroups =" + Objects.toString(parents) +
       '}';
   }

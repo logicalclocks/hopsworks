@@ -203,7 +203,8 @@ module FeaturestoreHelper
   end
 
   def create_on_demand_featuregroup(project_id, featurestore_id, jdbcconnectorId, name: nil, version: 1, query: nil,
-                                    features: nil, data_format: nil, options: nil, event_time: nil)
+                                    features: nil, data_format: nil, options: nil, event_time: nil,
+                                    online_enabled: false)
     type = "onDemandFeaturegroupDTO"
     featuregroupType = "ON_DEMAND_FEATURE_GROUP"
     create_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups"
@@ -224,7 +225,8 @@ module FeaturestoreHelper
         },
         query: query,
         featuregroupType: featuregroupType,
-        eventTime: event_time
+        eventTime: event_time,
+        onlineEnabled: online_enabled
     }
 
     unless data_format == nil

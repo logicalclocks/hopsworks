@@ -151,7 +151,7 @@ public class OnlineFeaturegroupController {
   public void setupOnlineFeatureGroup(Featurestore featureStore, Integer featureGroupId, String featureGroupName,
                                       Integer featureGroupVersion, List<FeatureGroupFeatureDTO> features,
                                       Project project, Users user)
-      throws KafkaException, SchemaException, ProjectException, UserException, FeaturestoreException, SQLException,
+      throws KafkaException, SchemaException, ProjectException, FeaturestoreException, SQLException,
       IOException, HopsSecurityException, ServiceException {
     // check if onlinefs user is part of project
     if (project.getProjectTeamCollection().stream().noneMatch(pt ->
@@ -177,7 +177,7 @@ public class OnlineFeaturegroupController {
   // The topic schema is also registered so it's available both for the hsfs library and for the collector
   public void createFeatureGroupKafkaTopic(Project project, String featureGroupEntityName,
     String topicName, List<FeatureGroupFeatureDTO> features)
-    throws KafkaException, SchemaException, ProjectException, UserException, FeaturestoreException {
+    throws KafkaException, SchemaException, FeaturestoreException {
     
     String avroSchema = avroSchemaConstructorController
       .constructSchema(featureGroupEntityName, Utils.getFeaturestoreName(project), features);
@@ -220,7 +220,8 @@ public class OnlineFeaturegroupController {
                                       String topicName, Project project)
       throws FeaturestoreException, SchemaException, KafkaException {
     // publish new version of avro schema
-    String avroSchema = avroSchemaConstructorController.constructSchema(featureGroup.getName(),
+    String avroSchema = avroSchemaConstructorController.constructSchema(
+      Utils.getFeatureStoreEntityName(featureGroup.getName(), featureGroup.getVersion()),
       Utils.getFeaturestoreName(project), fullNewSchema);
     schemasController.validateSchema(project, avroSchema);
     SubjectDTO topicSubject = subjectsController.registerNewSubject(project, topicName, avroSchema, false);
@@ -318,7 +319,7 @@ public class OnlineFeaturegroupController {
     }
 
     for (String mysqlType : SUPPORTED_MYSQL_TYPES) {
-      // User startsWith to handle offline types like decimal(X, Y) where X and Y depend on teh context
+      // User startsWith to handle offline types like decimal(X, Y) where X and Y depend on the context
       // Same for CHAR(X) where X is the length of the char. We are not particularly interested in the
       // type configuration, but rather if we can use the same Hive type on MySQL or if we need
       // to handle it separately.

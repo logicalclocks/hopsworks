@@ -29,9 +29,6 @@ import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.stream.StreamFeatureGroup;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -200,21 +197,11 @@ public class QuotasEnforcement {
     }
 
     long numFeaturegroups = featuregroups.stream().filter(fg -> {
-      CachedFeaturegroup cfg = fg.getCachedFeaturegroup();
-      if (cfg != null) {
-        return cfg.isOnlineEnabled() == online;
-      }
-      StreamFeatureGroup sfg = fg.getStreamFeatureGroup();
-      if (sfg != null) {
-        return sfg.isOnlineEnabled() == online;
-      }
-      OnDemandFeaturegroup dfg = fg.getOnDemandFeaturegroup();
-      if (dfg != null) {
-        // External Feature Groups do not count
+      if (!online && fg.getOnDemandFeaturegroup() != null) {
+        // for backwards compatability we don't count online disabled on-demand feature group
         return false;
       }
-      // Failsafe, anything else (?) will count regardless
-      return true;
+      return fg.isOnlineEnabled() == online;
     }).count();
     LOGGER.log(Level.FINE,
             "Enforcing quotas for online " + typeForException + " feature groups. Current number of feature groups:" +

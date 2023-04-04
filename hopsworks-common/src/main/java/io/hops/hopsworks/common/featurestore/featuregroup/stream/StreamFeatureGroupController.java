@@ -19,16 +19,15 @@ package io.hops.hopsworks.common.featurestore.featuregroup.stream;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteController;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeatureGroupInputValidation;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
-import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.OfflineFeatureGroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
-import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.SchemaException;
@@ -80,6 +79,8 @@ public class StreamFeatureGroupController {
   private FeaturestoreActivityFacade fsActivityFacade;
   @EJB
   private ExpectationSuiteController expectationSuiteController;
+  @EJB
+  private FeatureGroupInputValidation featureGroupInputValidation;
   
   /**
    * Converts a StreamFeatureGroup entity into a DTO representation
@@ -96,7 +97,7 @@ public class StreamFeatureGroupController {
     }
     StreamFeatureGroupDTO streamFeatureGroupDTO = new StreamFeatureGroupDTO(featuregroup);
   
-    if (featuregroup.getStreamFeatureGroup().isOnlineEnabled()) {
+    if (featuregroup.isOnlineEnabled()) {
       streamFeatureGroupDTO.setOnlineTopicName(onlineFeaturegroupController
         .onlineFeatureGroupTopicName(project.getId(), featuregroup.getId(),
           Utils.getFeaturegroupName(featuregroup)));
@@ -119,7 +120,7 @@ public class StreamFeatureGroupController {
         .findFirst()
         .orElse("")
     );
-    streamFeatureGroupDTO.setOnlineEnabled(featuregroup.getStreamFeatureGroup().isOnlineEnabled());
+    streamFeatureGroupDTO.setOnlineEnabled(featuregroup.isOnlineEnabled());
     
     streamFeatureGroupDTO.setLocation(featurestoreUtils.resolveLocationURI(
       featuregroup.getStreamFeatureGroup().getHiveTbls().getSdId().getLocation()));
@@ -147,7 +148,6 @@ public class StreamFeatureGroupController {
       .collect(Collectors.toList()));
     streamFeatureGroup.setFeaturesExtraConstraints(
       cachedFeaturegroupController.buildFeatureExtraConstrains(featureGroupFeatureDTOS, null, streamFeatureGroup ));
-    streamFeatureGroup.setOnlineEnabled(onlineEnabled);
   
     streamFeatureGroupFacade.persist(streamFeatureGroup);
     return streamFeatureGroup;
@@ -183,34 +183,6 @@ public class StreamFeatureGroupController {
       hiveTbls, streamFeatureGroupDTO.getFeatures(), streamFeatureGroupDTO.getOnlineEnabled());
   }
   
-  /**
-   * Previews a given featuregroup by doing a SELECT LIMIT query on the Hive Table (offline feature data)
-   * and the MySQL table (online feature data)
-   *
-   * @param featuregroup    of the featuregroup to preview
-   * @param project         the project the user is operating from, in case of shared feature store
-   * @param user            the user making the request
-   * @param partition       the selected partition if any as represented in the PARTITIONS_METASTORE
-   * @param online          whether to show preview from the online feature store
-   * @param limit           the number of rows to visualize
-   * @return A DTO with the first 20 feature rows of the online and offline tables.
-   * @throws SQLException
-   * @throws FeaturestoreException
-   * @throws HopsSecurityException
-   */
-  public FeaturegroupPreview getFeaturegroupPreview(Featuregroup featuregroup, Project project,
-    Users user, String partition, boolean online, int limit)
-    throws SQLException, FeaturestoreException, HopsSecurityException {
-    if (online && featuregroup.getStreamFeatureGroup().isOnlineEnabled()) {
-      return onlineFeaturegroupController.getFeaturegroupPreview(featuregroup, project, user, limit);
-    } else if (online) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_ONLINE, Level.FINE);
-    } else {
-      return cachedFeaturegroupController.getOfflineFeaturegroupPreview(featuregroup, project, user, partition, limit);
-    }
-  }
-  
-  
   public void updateMetadata(Project project, Users user, Featuregroup featuregroup,
     FeaturegroupDTO featuregroupDTO)
     throws FeaturestoreException, SQLException, SchemaException, KafkaException {
@@ -226,7 +198,7 @@ public class StreamFeatureGroupController {
     List<FeatureGroupFeatureDTO> newFeatures = new ArrayList<>();
     if (featuregroupDTO.getFeatures() != null) {
       cachedFeaturegroupController.verifyPreviousSchemaUnchanged(previousSchema, featuregroupDTO.getFeatures());
-      newFeatures = cachedFeaturegroupController.verifyAndGetNewFeatures(previousSchema, featuregroupDTO.getFeatures());
+      newFeatures = featureGroupInputValidation.verifyAndGetNewFeatures(previousSchema, featuregroupDTO.getFeatures());
     }
     
     // change table description
@@ -242,7 +214,7 @@ public class StreamFeatureGroupController {
     if (!newFeatures.isEmpty()) {
       offlineFeatureGroupController.alterHiveTableFeatures(
         featuregroup.getFeaturestore(), tableName, newFeatures, project, user);
-      if (featuregroup.getStreamFeatureGroup().isOnlineEnabled()) {
+      if (featuregroup.isOnlineEnabled()) {
         onlineFeaturegroupController.alterOnlineFeatureGroupSchema(
           featuregroup, newFeatures, featuregroupDTO.getFeatures(), project, user);
       } else {

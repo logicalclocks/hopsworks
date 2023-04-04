@@ -36,30 +36,20 @@ import java.util.Objects;
 public class CachedFeaturegroupDTO extends FeaturegroupDTO {
 
   @JsonSetter(nulls = Nulls.SKIP)
-  private Boolean onlineEnabled = false;
-  @JsonSetter(nulls = Nulls.SKIP)
   private TimeTravelFormat timeTravelFormat = TimeTravelFormat.NONE;
-  
+
   private List<FeaturegroupDTO> parents;
 
   public CachedFeaturegroupDTO() {
     super();
   }
-  
+
   public CachedFeaturegroupDTO(Featuregroup featuregroup) {
     super(featuregroup);
   }
 
-  public Boolean getOnlineEnabled() {
-    return onlineEnabled;
-  }
-  
-  public void setOnlineEnabled(Boolean onlineEnabled) {
-    this.onlineEnabled = onlineEnabled;
-  }
-  
   public TimeTravelFormat getTimeTravelFormat () { return timeTravelFormat; }
-  
+
   @JsonSetter(nulls = Nulls.SKIP)
   public void setTimeTravelFormat (TimeTravelFormat timeTravelFormat ) {
     this.timeTravelFormat = timeTravelFormat;
@@ -68,16 +58,15 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
   public List<FeaturegroupDTO> getParents() {
     return parents;
   }
-  
+
   public void setParents(
     List<FeaturegroupDTO> parents) {
     this.parents = parents;
   }
-  
+
   @Override
   public String toString() {
     return "CachedFeaturegroupDTO{" +
-      ", onlineEnabled=" + onlineEnabled +
       ", timeTravelFormat =" + timeTravelFormat +
       ", parentFeatureGroups =" + Objects.toString(parents) +
       '}';

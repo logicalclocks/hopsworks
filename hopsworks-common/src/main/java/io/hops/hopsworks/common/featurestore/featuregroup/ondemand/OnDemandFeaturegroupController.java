@@ -18,14 +18,27 @@ package io.hops.hopsworks.common.featurestore.featuregroup.ondemand;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
+import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeatureGroupInputValidation;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
+import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.exceptions.KafkaException;
+import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.SchemaException;
+import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivityMeta;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeature;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
@@ -45,8 +58,10 @@ import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -70,6 +85,14 @@ public class OnDemandFeaturegroupController {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private InodeController inodeController;
+  @EJB
+  private OnlineFeaturegroupController onlineFeatureGroupController;
+  @EJB
+  private FeatureGroupInputValidation featureGroupInputValidation;
+  @EJB
+  private FeaturegroupFacade featureGroupFacade;
+  @EJB
+  private FeaturestoreActivityFacade fsActivityFacade;
 
   /**
    * Persists an on demand feature group
@@ -131,18 +154,43 @@ public class OnDemandFeaturegroupController {
     return onDemandFeaturegroup;
   }
 
+  public OnDemandFeaturegroupDTO convertOnDemandFeatureGroupToDTO(String featureStoreName, Featuregroup featureGroup,
+    FeaturestoreStorageConnectorDTO storageConnectorDTO) throws FeaturestoreException {
+    List<FeatureGroupFeatureDTO> features = getFeaturesDTO(featureGroup);
+    String onlineTopicName = onlineFeatureGroupController.onlineFeatureGroupTopicName(
+      featureGroup.getFeaturestore().getProject().getId(),
+      featureGroup.getId(), Utils.getFeaturegroupName(featureGroup));
+    return new OnDemandFeaturegroupDTO(featureStoreName, featureGroup, storageConnectorDTO, features, onlineTopicName);
+  }
+
+  private List<FeatureGroupFeatureDTO> getFeaturesDTO(Featuregroup featureGroup)
+    throws FeaturestoreException {
+    List<FeatureGroupFeatureDTO> features = featureGroup.getOnDemandFeaturegroup().getFeatures().stream()
+      .sorted(Comparator.comparing(OnDemandFeature::getIdx))
+      .map(fgFeature ->
+        new FeatureGroupFeatureDTO(fgFeature.getName(), fgFeature.getType(), fgFeature.getDescription(),
+          fgFeature.getPrimary(), fgFeature.getDefaultValue(), featureGroup.getId())).collect(Collectors.toList());
+    return onlineFeatureGroupController.getFeaturegroupFeatures(featureGroup, features);
+  }
+
   /**
    * Updates metadata of an on demand feature group in the feature store
    *
-   * @param onDemandFeaturegroup the on-demand feature group to update
+   * @param featuregroup the on-demand feature group to update
    * @param onDemandFeaturegroupDTO the metadata DTO
    */
-  public void updateOnDemandFeaturegroupMetadata(OnDemandFeaturegroup onDemandFeaturegroup,
+  public void updateOnDemandFeaturegroupMetadata(Project project, Users user, Featuregroup featuregroup,
                                                  OnDemandFeaturegroupDTO onDemandFeaturegroupDTO)
-      throws FeaturestoreException {
+    throws FeaturestoreException, SchemaException, SQLException, KafkaException {
+    OnDemandFeaturegroup onDemandFeaturegroup = featuregroup.getOnDemandFeaturegroup();
+    List<FeatureGroupFeatureDTO> previousSchema = getFeaturesDTO(featuregroup);
+    
     // verify previous schema unchanged and valid
     verifySchemaUnchangedAndValid(onDemandFeaturegroup.getFeatures(), onDemandFeaturegroupDTO.getFeatures());
     
+    List<FeatureGroupFeatureDTO> newFeatures = featureGroupInputValidation.verifyAndGetNewFeatures(previousSchema,
+      onDemandFeaturegroupDTO.getFeatures());
+  
     // Update metadata in entity
     if (onDemandFeaturegroupDTO.getDescription() != null) {
       onDemandFeaturegroup.setDescription(onDemandFeaturegroupDTO.getDescription());
@@ -150,9 +198,23 @@ public class OnDemandFeaturegroupController {
     
     // append new features and update existing ones
     updateOnDemandFeatures(onDemandFeaturegroup, onDemandFeaturegroupDTO.getFeatures());
+  
+    // alter table for new additional features
+    if (!newFeatures.isEmpty()) {
+      if (featuregroup.isOnlineEnabled()) {
+        onlineFeatureGroupController.alterOnlineFeatureGroupSchema(
+          featuregroup, newFeatures, onDemandFeaturegroupDTO.getFeatures(), project, user);
+      }
     
+      // Log schema change
+      String newFeaturesStr = "New features: " + newFeatures.stream().map(FeatureGroupFeatureDTO::getName)
+        .collect(Collectors.joining(","));
+      fsActivityFacade.logMetadataActivity(user, featuregroup, FeaturestoreActivityMeta.FG_ALTERED, newFeaturesStr);
+    }
     // finally merge in database
     onDemandFeaturegroupFacade.updateMetadata(onDemandFeaturegroup);
+  
+  
   }
   
   private void updateOnDemandFeatures(OnDemandFeaturegroup onDemandFeaturegroup,
@@ -166,7 +228,7 @@ public class OnDemandFeaturegroupController {
       } else {
         onDemandFeaturegroup.getFeatures().add(new OnDemandFeature(onDemandFeaturegroup, feature.getName(),
           feature.getType(), feature.getDescription(), feature.getPrimary(),
-          onDemandFeaturegroup.getFeatures().size()));
+          onDemandFeaturegroup.getFeatures().size(), feature.getDefaultValue()));
       }
     }
   }
@@ -188,6 +250,11 @@ public class OnDemandFeaturegroupController {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_UPDATE, Level.FINE,
           "Primary key or type information of feature " + feature.getName() + " changed. Primary key" +
             " and type cannot be changed when updating features.");
+      }
+      if (newFeature.getDefaultValue() != null) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_UPDATE, Level.FINE,
+          "Default values for features appended to external feature groups are not supported. Feature: " +
+            feature.getName() + ", provided default value: " + newFeature.getDefaultValue() + " must be null instead.");
       }
     }
   }
@@ -224,7 +291,7 @@ public class OnDemandFeaturegroupController {
     List<OnDemandFeature> features = new ArrayList<>();
     for (FeatureGroupFeatureDTO f : onDemandFeaturegroupDTO.getFeatures()) {
       features.add(new OnDemandFeature(onDemandFeaturegroup, f.getName(), f.getType(), f.getDescription(),
-        f.getPrimary(), i++));
+        f.getPrimary(), i++, f.getDefaultValue()));
     }
     return features;
   }
@@ -264,5 +331,27 @@ public class OnDemandFeaturegroupController {
     return featurestoreConnectorFacade.findById(connectorId)
         .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CONNECTOR_NOT_FOUND, Level.FINE,
         "Connector with id: " + connectorId + " was not found"));
+  }
+
+  /**
+   * Update an external feature group that currently does not support online feature serving, to support it.
+   *
+   * @param featurestore the featurestore where the featuregroup resides
+   * @param featuregroup the featuregroup entity to update
+   * @param user the user making the request
+   * @return a DTO of the updated featuregroup
+   * @throws FeaturestoreException
+   * @throws SQLException
+   */
+  public void enableFeatureGroupOnline(Featurestore featurestore, Featuregroup featuregroup,
+    Project project, Users user)
+    throws FeaturestoreException, SQLException, ServiceException, KafkaException, SchemaException, ProjectException,
+    UserException, IOException, HopsSecurityException {
+    List<FeatureGroupFeatureDTO> features = getFeaturesDTO(featuregroup);
+    if(!featuregroup.isOnlineEnabled()) {
+      onlineFeatureGroupController.setupOnlineFeatureGroup(featurestore, featuregroup, features, project, user);
+    }
+    featuregroup.setOnlineEnabled(true);
+    featureGroupFacade.updateFeaturegroupMetadata(featuregroup);
   }
 }

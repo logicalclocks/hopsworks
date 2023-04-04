@@ -113,12 +113,8 @@ public class ConstructorController {
     fsQueryDTO.setQuery(makeOfflineQuery(query));
     fsQueryDTO.setHudiCachedFeatureGroups(getHudiAliases(query));
     fsQueryDTO.setOnDemandFeatureGroups(getOnDemandAliases(user, project, query));
-
-    // if on-demand feature groups are involved in the query, we don't support online queries
-    if (fsQueryDTO.getOnDemandFeatureGroups().isEmpty()) {
-      fsQueryDTO.setQueryOnline(
-          generateSQL(query, true).toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
-    }
+    fsQueryDTO.setQueryOnline(
+      generateSQL(query, true).toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
 
     if (pitEnabled) {
       fsQueryDTO.setPitQuery(makePitQuery(query, isTrainingDataset));
@@ -277,7 +273,16 @@ public class ConstructorController {
     return SqlStdOperatorTable.AS.createCall(asNodeList);
   }
 
-  private SqlNode generateOnDemandTableNode(Query query) {
+  private SqlNode generateOnDemandTableNode(Query query, boolean online) {
+    if (online) {
+      List<String> tableIdentifierStr = new ArrayList<>();
+      tableIdentifierStr.add("`" + query.getProject() + "`");
+      tableIdentifierStr.add("`" + query.getFeaturegroup().getName() + "_" + query.getFeaturegroup().getVersion()
+        + "`");
+      SqlNodeList asNodeList = new SqlNodeList(Arrays.asList(new SqlIdentifier(tableIdentifierStr, SqlParserPos.ZERO),
+        new SqlIdentifier("`" + query.getAs() + "`", SqlParserPos.ZERO)), SqlParserPos.ZERO);
+      return SqlStdOperatorTable.AS.createCall(asNodeList);
+    }
     return new SqlIdentifier("`" + query.getAs() + "`", SqlParserPos.ZERO);
   }
 
@@ -292,7 +297,7 @@ public class ConstructorController {
     if (query.getFeaturegroup().getFeaturegroupType() != FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
       return generateCachedTableNode(query, online);
     } else {
-      return generateOnDemandTableNode(query);
+      return generateOnDemandTableNode(query, online);
     }
   }
 

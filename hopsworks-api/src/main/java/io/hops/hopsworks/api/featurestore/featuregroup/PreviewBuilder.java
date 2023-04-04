@@ -17,10 +17,9 @@
 package io.hops.hopsworks.api.featurestore.featuregroup;
 
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeatureGroupStorage;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
-import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
@@ -44,10 +43,7 @@ import java.util.stream.Collectors;
 public class PreviewBuilder {
 
   @EJB
-  private CachedFeaturegroupController cachedFeaturegroupController;
-  
-  @EJB
-  private StreamFeatureGroupController streamFeaturegroupController;
+  private FeaturegroupController featuregroupController;
 
   private URI uri(UriInfo uriInfo, Project project, Featuregroup featuregroup) {
     return uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
@@ -64,15 +60,9 @@ public class PreviewBuilder {
                           String partition, boolean online, int limit)
       throws FeaturestoreException, HopsSecurityException {
 
-    FeaturegroupPreview preview = null;
+    FeaturegroupPreview preview;
     try {
-      if (featuregroup.getStreamFeatureGroup() != null) {
-        preview = streamFeaturegroupController
-          .getFeaturegroupPreview(featuregroup, project, user, partition, online, limit);
-      } else {
-        preview = cachedFeaturegroupController
-          .getFeaturegroupPreview(featuregroup, project, user, partition, online, limit);
-      }
+      preview = featuregroupController.getFeaturegroupPreview(featuregroup, project, user, partition, online, limit);
     } catch (SQLException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_PREVIEW_FEATUREGROUP,
           Level.SEVERE, "Feature Group id: " + featuregroup.getId(), e.getMessage(), e);

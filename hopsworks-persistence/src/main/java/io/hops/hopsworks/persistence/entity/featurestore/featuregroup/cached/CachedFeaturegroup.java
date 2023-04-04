@@ -60,8 +60,6 @@ public class CachedFeaturegroup implements Serializable {
   private Integer id;
   @JoinColumn(name = "offline_feature_group", referencedColumnName = "TBL_ID")
   private HiveTbls hiveTbls;
-  @Column(name = "online_enabled")
-  private boolean onlineEnabled;
   @Basic(optional = false)
   @NotNull
   @Enumerated(EnumType.ORDINAL)
@@ -88,14 +86,6 @@ public class CachedFeaturegroup implements Serializable {
 
   public void setId(Integer id) {
     this.id = id;
-  }
-
-  public boolean isOnlineEnabled() {
-    return onlineEnabled;
-  }
-
-  public void setOnlineEnabled(boolean onlineEnabled) {
-    this.onlineEnabled = onlineEnabled;
   }
 
   public TimeTravelFormat getTimeTravelFormat() {

@@ -20,6 +20,7 @@ import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeatureGroupInputValidation;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -124,5 +125,53 @@ public class TestFeatureGroupInputValidation {
     );
   
     featureGroupInputValidation.verifyFeatureGroupFeatureList(featureList);
+  }
+  
+  @Test
+  public void testVerifyUserInputFeatureGroup() throws Exception {
+    CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO();
+    featuregroupDTO.setTimeTravelFormat(TimeTravelFormat.HUDI);
+    
+    // timestamp type camel case
+    List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
+    newSchema.add(new FeatureGroupFeatureDTO("part_param", "Integer", "", true, false));
+    newSchema.add(new FeatureGroupFeatureDTO("part_param2", "String", "", false , false));
+    newSchema.add(new FeatureGroupFeatureDTO("part_param3", "Timestamp", "", false , true));
+    featuregroupDTO.setFeatures(newSchema);
+    thrown.expect(FeaturestoreException.class);
+    featureGroupInputValidation.verifyPartitionKeySupported(featuregroupDTO);
+  }
+  
+  @Test
+  public void testVerifyAndGetNewFeaturesIfPrimary() throws Exception {
+    List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
+    newSchema.add(new FeatureGroupFeatureDTO("part_param", "Integer", "", true, false));
+    newSchema.add(new FeatureGroupFeatureDTO("part_param2", "String", "", false , false));
+    newSchema.add(new FeatureGroupFeatureDTO("part_param3", "String", "", true , false));
+    
+    thrown.expect(FeaturestoreException.class);
+    featureGroupInputValidation.verifyAndGetNewFeatures(features, newSchema);
+  }
+  
+  @Test
+  public void testVerifyAndGetNewFeaturesIfPartition() throws Exception {
+    List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
+    newSchema.add(new FeatureGroupFeatureDTO("part_param", "Integer", "", true, false));
+    newSchema.add(new FeatureGroupFeatureDTO("part_param2", "String", "", false , false));
+    newSchema.add(new FeatureGroupFeatureDTO("part_param3", "String", "", false , true));
+    
+    thrown.expect(FeaturestoreException.class);
+    featureGroupInputValidation.verifyAndGetNewFeatures(features, newSchema);
+  }
+  
+  @Test
+  public void testVerifyAndGetNewFeaturesIfMissingType() throws Exception {
+    List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
+    newSchema.add(new FeatureGroupFeatureDTO("part_param", "Integer", "", true, false));
+    newSchema.add(new FeatureGroupFeatureDTO("part_param2", "String", "", false , false));
+    newSchema.add(new FeatureGroupFeatureDTO("part_param3", null, "", false , false));
+    
+    thrown.expect(FeaturestoreException.class);
+    featureGroupInputValidation.verifyAndGetNewFeatures(features, newSchema);
   }
 }

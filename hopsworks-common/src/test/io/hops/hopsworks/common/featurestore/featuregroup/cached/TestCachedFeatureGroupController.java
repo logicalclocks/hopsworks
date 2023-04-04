@@ -138,39 +138,6 @@ public class TestCachedFeatureGroupController {
   }
   
   @Test
-  public void testVerifyAndGetNewFeaturesIfPrimary() throws Exception {
-    List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
-    newSchema.add(new FeatureGroupFeatureDTO("part_param", "Integer", "", true, false));
-    newSchema.add(new FeatureGroupFeatureDTO("part_param2", "String", "", false , false));
-    newSchema.add(new FeatureGroupFeatureDTO("part_param3", "String", "", true , false));
-  
-    thrown.expect(FeaturestoreException.class);
-    cachedFeaturegroupController.verifyAndGetNewFeatures(features, newSchema);
-  }
-  
-  @Test
-  public void testVerifyAndGetNewFeaturesIfPartition() throws Exception {
-    List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
-    newSchema.add(new FeatureGroupFeatureDTO("part_param", "Integer", "", true, false));
-    newSchema.add(new FeatureGroupFeatureDTO("part_param2", "String", "", false , false));
-    newSchema.add(new FeatureGroupFeatureDTO("part_param3", "String", "", false , true));
-    
-    thrown.expect(FeaturestoreException.class);
-    cachedFeaturegroupController.verifyAndGetNewFeatures(features, newSchema);
-  }
-  
-  @Test
-  public void testVerifyAndGetNewFeaturesIfMissingType() throws Exception {
-    List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
-    newSchema.add(new FeatureGroupFeatureDTO("part_param", "Integer", "", true, false));
-    newSchema.add(new FeatureGroupFeatureDTO("part_param2", "String", "", false , false));
-    newSchema.add(new FeatureGroupFeatureDTO("part_param3", null, "", false , false));
-    
-    thrown.expect(FeaturestoreException.class);
-    cachedFeaturegroupController.verifyAndGetNewFeatures(features, newSchema);
-  }
-  
-  @Test
   public void testVerifyPrimaryKeyHudi_cachedFeatureGroup() throws Exception {
     List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
     newSchema.add(new FeatureGroupFeatureDTO("part_param", "Integer", "", false, true));
