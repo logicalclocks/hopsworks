@@ -59,6 +59,8 @@ public class OnDemandFeature implements Serializable {
   @Basic(optional = false)
   @Column(name = "idx")
   private Integer idx;
+  @Column(name = "default_value")
+  private String defaultValue;
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -67,13 +69,14 @@ public class OnDemandFeature implements Serializable {
   public OnDemandFeature() {}
 
   public OnDemandFeature(OnDemandFeaturegroup onDemandFeaturegroup, String name, String type,
-                         String description, Boolean primary, Integer idx) {
+                         String description, Boolean primary, Integer idx, String defaultValue) {
     this.onDemandFeaturegroup = onDemandFeaturegroup;
     this.name = name;
     this.type = type;
     this.description = description;
     this.primary = primary;
     this.idx = idx;
+    this.defaultValue = defaultValue;
   }
 
   public Integer getId() {
@@ -132,6 +135,14 @@ public class OnDemandFeature implements Serializable {
     this.idx = idx;
   }
 
+  public String getDefaultValue() {
+    return defaultValue;
+  }
+
+  public void setDefaultValue(String defaultValue) {
+    this.defaultValue = defaultValue;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -144,6 +155,7 @@ public class OnDemandFeature implements Serializable {
     if (!Objects.equals(name, that.name)) return false;
     if (!Objects.equals(type, that.type)) return false;
     if (!Objects.equals(idx, that.idx)) return false;
+    if (!Objects.equals(defaultValue, that.defaultValue)) return false;
     return Objects.equals(primary, that.primary);
   }
 
@@ -155,6 +167,7 @@ public class OnDemandFeature implements Serializable {
     result = 31 * result + (type != null ? type.hashCode() : 0);
     result = 31 * result + (primary != null ? primary.hashCode() : 0);
     result = 31 * result + (idx != null ? idx.hashCode() : 0);
+    result = 31 * result + (defaultValue != null ? defaultValue.hashCode() : 0);
     return result;
   }
 }

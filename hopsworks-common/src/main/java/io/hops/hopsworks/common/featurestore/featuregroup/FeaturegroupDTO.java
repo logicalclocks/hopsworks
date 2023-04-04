@@ -17,9 +17,11 @@
 package io.hops.hopsworks.common.featurestore.featuregroup;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.Nulls;
 import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteDTO;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
@@ -52,6 +54,8 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO<FeaturegroupDTO> {
   private ExpectationSuiteDTO expectationSuite = null;
   private String onlineTopicName = null;
   private String eventTime = null;
+  @JsonSetter(nulls = Nulls.SKIP)
+  private Boolean onlineEnabled = false;
   
   public FeaturegroupDTO() {
   }
@@ -120,6 +124,14 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO<FeaturegroupDTO> {
 
   public void setEventTime(String eventTime) {
     this.eventTime = eventTime;
+  }
+
+  public Boolean getOnlineEnabled() {
+    return onlineEnabled;
+  }
+
+  public void setOnlineEnabled(Boolean onlineEnabled) {
+    this.onlineEnabled = onlineEnabled;
   }
   
   @Override

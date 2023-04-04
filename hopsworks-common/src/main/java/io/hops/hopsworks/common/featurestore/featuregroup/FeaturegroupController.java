@@ -27,12 +27,14 @@ import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupFacade;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupFacade;
+import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsController;
 import io.hops.hopsworks.common.featurestore.statistics.columns.StatisticColumnController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
@@ -123,6 +125,8 @@ public class FeaturegroupController {
   @EJB
   private InodeController inodeController;
   @EJB
+  private OnlineFeaturestoreController onlineFeaturestoreController;
+  @EJB
   private OnlineFeaturegroupController onlineFeaturegroupController;
   @EJB
   private FeaturestoreActivityFacade fsActivityFacade;
@@ -181,13 +185,10 @@ public class FeaturegroupController {
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
       case STREAM_FEATURE_GROUP:
+      case ON_DEMAND_FEATURE_GROUP:
         FeaturegroupDTO featuregroupDTO = convertFeaturegrouptoDTO(featuregroup, project, user);
         deleteFeaturegroup(featuregroup, project, user);
         return createFeaturegroupNoValidation(featuregroup.getFeaturestore(), featuregroupDTO, project, user);
-      case ON_DEMAND_FEATURE_GROUP:
-        throw new FeaturestoreException(
-            RESTCodes.FeaturestoreErrorCode.CLEAR_OPERATION_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS,
-            Level.FINE, "featuregroupId: " + featuregroup.getId());
       default:
         throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE.getMessage()
             + ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
@@ -254,16 +255,13 @@ public class FeaturegroupController {
     CachedFeaturegroup cachedFeaturegroup = null;
     StreamFeatureGroup streamFeatureGroup = null;
   
-    List<FeatureGroupFeatureDTO> featuresNoHudi = null;
+    // make copy of schema without hudi columns
+    List<FeatureGroupFeatureDTO> featuresNoHudi = new ArrayList<>(featuregroupDTO.getFeatures());;
     
     if (featuregroupDTO instanceof CachedFeaturegroupDTO) {
-      // make copy of schema without hudi columns
-      featuresNoHudi = new ArrayList<>(featuregroupDTO.getFeatures());
       cachedFeaturegroup = cachedFeaturegroupController.createCachedFeaturegroup(featurestore,
           (CachedFeaturegroupDTO) featuregroupDTO, project, user);
     } else if (featuregroupDTO instanceof StreamFeatureGroupDTO){
-      // make copy of schema without hudi columns
-      featuresNoHudi = new ArrayList<>(featuregroupDTO.getFeatures());
       streamFeatureGroup = streamFeatureGroupController.createStreamFeatureGroup(featurestore,
         (StreamFeatureGroupDTO) featuregroupDTO, project, user);
     } else {
@@ -276,17 +274,10 @@ public class FeaturegroupController {
       cachedFeaturegroup, streamFeatureGroup, onDemandFeaturegroup);
   
     // online feature group needs to be set up after persisting metadata in order to get feature group id
-    if (featuregroupDTO instanceof CachedFeaturegroupDTO && settings.isOnlineFeaturestore()
-      && featuregroup.getCachedFeaturegroup().isOnlineEnabled()){
+    if (settings.isOnlineFeaturestore() && featuregroup.isOnlineEnabled()) {
       onlineFeaturegroupController.setupOnlineFeatureGroup(featurestore, featuregroup, featuresNoHudi, project, user);
-    } else if (featuregroupDTO instanceof StreamFeatureGroupDTO) {
-      if (settings.isOnlineFeaturestore() && featuregroup.getStreamFeatureGroup().isOnlineEnabled()) {
-        // setup kafka topic and online feature group in rondb
-        onlineFeaturegroupController.setupOnlineFeatureGroup(featurestore, featuregroup, featuresNoHudi, project, user);
-      } else {
-        // not online enabled so set up only kafka topic
-        streamFeatureGroupController.setupOfflineStreamFeatureGroup(project, featuregroup, featuresNoHudi);
-      }
+    } else if (featuregroupDTO instanceof StreamFeatureGroupDTO && !featuregroupDTO.getOnlineEnabled()) {
+      streamFeatureGroupController.setupOfflineStreamFeatureGroup(project, featuregroup, featuresNoHudi);
     }
 
     FeaturegroupDTO completeFeaturegroupDTO = convertFeaturegrouptoDTO(featuregroup, project, user);
@@ -339,7 +330,8 @@ public class FeaturegroupController {
                     featuregroup.getOnDemandFeaturegroup().getFeaturestoreConnector());
 
         OnDemandFeaturegroupDTO onDemandFeaturegroupDTO =
-                new OnDemandFeaturegroupDTO(featurestoreName, featuregroup, storageConnectorDTO);
+          onDemandFeaturegroupController.convertOnDemandFeatureGroupToDTO(featurestoreName, featuregroup,
+            storageConnectorDTO);
 
         try {
           String path = getFeatureGroupLocation(featuregroup);
@@ -412,11 +404,10 @@ public class FeaturegroupController {
    * @throws FeaturestoreException
    */
   public FeaturegroupDTO updateFeaturegroupMetadata(Project project, Users user, Featurestore featurestore,
+                                                    Featuregroup featuregroup,
                                                     FeaturegroupDTO featuregroupDTO)
       throws FeaturestoreException, SQLException, ProvenanceException, ServiceException, SchemaException,
       KafkaException {
-    Featuregroup featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
-
     featurestoreUtils.verifyUserProjectEqualsFsProjectAndDataOwner(user, project, featuregroup.getFeaturestore(),
         FeaturestoreUtils.ActionMessage.UPDATE_FEATURE_GROUP_METADATA);
 
@@ -440,7 +431,7 @@ public class FeaturegroupController {
       streamFeatureGroupController.updateMetadata(project, user, featuregroup,
         (StreamFeatureGroupDTO) featuregroupDTO);
     } else if (featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
-      onDemandFeaturegroupController.updateOnDemandFeaturegroupMetadata(featuregroup.getOnDemandFeaturegroup(),
+      onDemandFeaturegroupController.updateOnDemandFeaturegroupMetadata(project, user, featuregroup,
         (OnDemandFeaturegroupDTO) featuregroupDTO);
     }
 
@@ -464,26 +455,33 @@ public class FeaturegroupController {
   /**
    * Enable online feature serving of a feature group that is currently only offline
    *
-   * @param featurestore    the featurestore where the featuregroup resides
-   * @param featuregroupDTO the updated featuregroup metadata
+   * @param featuregroup the updated featuregroup metadata
+   * @param project
+   * @param user
    * @return DTO of the updated feature group
    * @throws FeaturestoreException
    */
-  public FeaturegroupDTO enableFeaturegroupOnline(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
-                                                  Project project, Users user)
+  public FeaturegroupDTO enableFeaturegroupOnline(Featuregroup featuregroup, Project project, Users user)
       throws FeaturestoreException, SQLException, ServiceException, KafkaException,
       SchemaException, ProjectException, UserException, IOException, HopsSecurityException {
-    Featuregroup featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
-    featurestoreUtils.verifyUserProjectEqualsFsProjectAndDataOwner(user, project, featuregroup.getFeaturestore(),
-        FeaturestoreUtils.ActionMessage.ENABLE_FEATURE_GROUP_ONLINE);
-    if(featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP){
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.ONLINE_FEATURE_SERVING_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS, Level.FINE,
-        ", Online feature serving is only supported for featuregroups of type: "
-          + FeaturegroupType.CACHED_FEATURE_GROUP + ", and the user requested to enable feature serving on a " +
-          "featuregroup with type:" + FeaturegroupType.ON_DEMAND_FEATURE_GROUP);
+    Featurestore featurestore = featuregroup.getFeaturestore();
+    if(!settings.isOnlineFeaturestore()) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
+        Level.FINE, "Online Featurestore is not enabled for this Hopsworks cluster.");
     }
-    cachedFeaturegroupController.enableFeaturegroupOnline(featurestore, featuregroup, project, user);
+    if (!onlineFeaturestoreController.checkIfDatabaseExists(
+      onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
+        Level.FINE, "Online Featurestore is not enabled for this project. To enable online feature store, talk to an " +
+        "administrator.");
+    }
+    featurestoreUtils.verifyUserProjectEqualsFsProjectAndDataOwner(user, project, featurestore,
+        FeaturestoreUtils.ActionMessage.ENABLE_FEATURE_GROUP_ONLINE);
+    if (featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP){
+      onDemandFeaturegroupController.enableFeatureGroupOnline(featurestore, featuregroup, project, user);
+    } else {
+      cachedFeaturegroupController.enableFeaturegroupOnline(featurestore, featuregroup, project, user);
+    }
 
     // Log activity
     fsActivityFacade.logMetadataActivity(user, featuregroup, FeaturestoreActivityMeta.ONLINE_ENABLED, null);
@@ -499,17 +497,22 @@ public class FeaturegroupController {
    * @return DTO of the updated feature group
    * @throws FeaturestoreException
    */
-  public FeaturegroupDTO disableFeaturegroupOnline(Featuregroup featuregroup, Project project, Users user)
+  public FeaturegroupDTO disableFeaturegroupOnline(Featuregroup featuregroup,
+    Project project, Users user)
       throws FeaturestoreException, SQLException, ServiceException, SchemaException, KafkaException {
-    featurestoreUtils.verifyUserProjectEqualsFsProjectAndDataOwner(user, project, featuregroup.getFeaturestore(),
-        FeaturestoreUtils.ActionMessage.DISABLE_FEATURE_GROUP_ONLINE);
-    if(featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.ONLINE_FEATURE_SERVING_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS, Level.FINE,
-        ", Online feature serving is only supported for featuregroups of type: "
-          + FeaturegroupType.CACHED_FEATURE_GROUP + ", and the user requested to a feature serving operation on a " +
-          "featuregroup with type:" + FeaturegroupType.ON_DEMAND_FEATURE_GROUP);
+    Featurestore featurestore = featuregroup.getFeaturestore();
+    if(!settings.isOnlineFeaturestore()) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
+        Level.FINE, "Online Featurestore is not enabled for this Hopsworks cluster.");
     }
+    if (!onlineFeaturestoreController.checkIfDatabaseExists(
+      onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
+        Level.FINE, "Online Featurestore is not enabled for this project. To enable online feature store, talk to an " +
+        "administrator.");
+    }
+    featurestoreUtils.verifyUserProjectEqualsFsProjectAndDataOwner(user, project, featurestore,
+        FeaturestoreUtils.ActionMessage.DISABLE_FEATURE_GROUP_ONLINE);
     cachedFeaturegroupController.disableFeaturegroupOnline(featuregroup, project, user);
 
     // Log activity
@@ -594,18 +597,18 @@ public class FeaturegroupController {
     }
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
-        //Delete hive_table will cascade to cached_featuregroup_table which will cascade to feature_group table
+        // Delete hive_table will cascade to cached_featuregroup_table which will cascade to feature_group table
         cachedFeaturegroupController.dropHiveFeaturegroup(featuregroup, project, user);
-        //Delete mysql table and metadata
-        if(settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().isOnlineEnabled()) {
+        // Delete mysql table and metadata
+        if(settings.isOnlineFeaturestore() && featuregroup.isOnlineEnabled()) {
           onlineFeaturegroupController.disableOnlineFeatureGroup(featuregroup, project, user);
         }
         break;
       case STREAM_FEATURE_GROUP:
-        //Delete hive_table will cascade to stream_featuregroup_table which will cascade to feature_group table
+        // Delete hive_table will cascade to stream_featuregroup_table which will cascade to feature_group table
         cachedFeaturegroupController.dropHiveFeaturegroup(featuregroup, project, user);
-        //Delete mysql table and metadata
-        if (settings.isOnlineFeaturestore() && featuregroup.getStreamFeatureGroup().isOnlineEnabled()) {
+        // Delete mysql table and metadata
+        if (settings.isOnlineFeaturestore() && featuregroup.isOnlineEnabled()) {
           onlineFeaturegroupController.disableOnlineFeatureGroup(featuregroup, project, user);
         } else {
           // only topics need to be deleted, but no RonDB table
@@ -613,9 +616,13 @@ public class FeaturegroupController {
         }
         break;
       case ON_DEMAND_FEATURE_GROUP:
-        //Delete on_demand_feature_group will cascade will cascade to feature_group table
+        // Delete on_demand_feature_group will cascade to feature_group table
         onDemandFeaturegroupController
             .removeOnDemandFeaturegroup(featuregroup.getFeaturestore(), featuregroup, project, user);
+        // Delete mysql table and metadata
+        if (settings.isOnlineFeaturestore() && featuregroup.isOnlineEnabled()) {
+          onlineFeaturegroupController.disableOnlineFeatureGroup(featuregroup, project, user);
+        }
         break;
       default:
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE, Level.FINE,
@@ -754,6 +761,7 @@ public class FeaturegroupController {
     featuregroup.setStreamFeatureGroup(streamFeatureGroup);
     featuregroup.setOnDemandFeaturegroup(onDemandFeaturegroup);
     featuregroup.setEventTime(featuregroupDTO.getEventTime());
+    featuregroup.setOnlineEnabled(settings.isOnlineFeaturestore() && featuregroupDTO.getOnlineEnabled());
 
     StatisticsConfig statisticsConfig = new StatisticsConfig(featuregroupDTO.getStatisticsConfig().getEnabled(),
       featuregroupDTO.getStatisticsConfig().getCorrelations(), featuregroupDTO.getStatisticsConfig().getHistograms(),
@@ -788,7 +796,8 @@ public class FeaturegroupController {
           featuregroup.getFeaturestore(), project, user);
       case ON_DEMAND_FEATURE_GROUP:
         return featuregroup.getOnDemandFeaturegroup().getFeatures().stream()
-          .map(f -> new FeatureGroupFeatureDTO(f.getName(), f.getType(), f.getPrimary(), null, featuregroup.getId()))
+          .map(f -> new FeatureGroupFeatureDTO(
+            f.getName(), f.getType(), f.getPrimary(), f.getDefaultValue(), featuregroup.getId()))
           .collect(Collectors.toList());
     }
     return new ArrayList<>();
@@ -874,16 +883,42 @@ public class FeaturegroupController {
   private void enforceFeaturegroupQuotas(Featurestore featurestore, FeaturegroupDTO featuregroup)
           throws FeaturestoreException {
     try {
-      boolean onlineEnabled = false;
-      if (featuregroup instanceof CachedFeaturegroupDTO) {
-        onlineEnabled = ((CachedFeaturegroupDTO) featuregroup).getOnlineEnabled();
-      } else if (featuregroup instanceof StreamFeatureGroupDTO) {
-        onlineEnabled = ((StreamFeatureGroupDTO) featuregroup).getOnlineEnabled();
-      }
-      quotasEnforcement.enforceFeaturegroupsQuota(featurestore, onlineEnabled);
+      quotasEnforcement.enforceFeaturegroupsQuota(featurestore, featuregroup.getOnlineEnabled());
     } catch (QuotaEnforcementException ex) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP, Level.SEVERE,
               ex.getMessage(), ex.getMessage(), ex);
+    }
+  }
+  
+  /**
+   * Previews a given featuregroup by doing a SELECT LIMIT query on the Hive Table (offline feature data)
+   * and the MySQL table (online feature data)
+   *
+   * @param featuregroup    of the featuregroup to preview
+   * @param project         the project the user is operating from, in case of shared feature store
+   * @param user            the user making the request
+   * @param partition       the selected partition if any as represented in the PARTITIONS_METASTORE
+   * @param online          whether to show preview from the online feature store
+   * @param limit           the number of rows to visualize
+   * @return A DTO with the first 20 feature rows of the online and offline tables.
+   * @throws SQLException
+   * @throws FeaturestoreException
+   * @throws HopsSecurityException
+   */
+  public FeaturegroupPreview getFeaturegroupPreview(Featuregroup featuregroup, Project project,
+    Users user, String partition, boolean online, int limit)
+    throws SQLException, FeaturestoreException, HopsSecurityException {
+    if (online && featuregroup.isOnlineEnabled()) {
+      return onlineFeaturegroupController.getFeaturegroupPreview(featuregroup, project, user, limit);
+    } else if (online) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_ONLINE, Level.FINE);
+    } else if (featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.PREVIEW_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS,
+        Level.FINE, "Preview for offline storage of external feature groups is not supported",
+        "featuregroupId: " + featuregroup.getId());
+    } else {
+      return cachedFeaturegroupController.getOfflineFeaturegroupPreview(featuregroup, project, user, partition, limit);
     }
   }
 }

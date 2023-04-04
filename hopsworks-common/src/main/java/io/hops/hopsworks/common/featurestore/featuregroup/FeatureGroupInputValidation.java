@@ -32,6 +32,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -135,11 +136,7 @@ public class FeatureGroupInputValidation {
    * @throws FeaturestoreException
    */
   public void verifyOnlineOfflineTypeMatch(FeaturegroupDTO featuregroupDTO) throws FeaturestoreException{
-    if ((featuregroupDTO instanceof CachedFeaturegroupDTO
-       && ((CachedFeaturegroupDTO) featuregroupDTO).getOnlineEnabled()) ||
-       (featuregroupDTO instanceof StreamFeatureGroupDTO
-       && ((StreamFeatureGroupDTO) featuregroupDTO).getOnlineEnabled())) {
-  
+    if (featuregroupDTO.getOnlineEnabled()) {
       for (FeatureGroupFeatureDTO feature : featuregroupDTO.getFeatures()) {
         String offlineType = feature.getType().toLowerCase().replace(" ", "");
         String onlineType =
@@ -190,11 +187,7 @@ public class FeatureGroupInputValidation {
    * @throws FeaturestoreException
    */
   public void verifyOnlineSchemaValid(FeaturegroupDTO featuregroupDTO) throws FeaturestoreException{
-    if ((featuregroupDTO instanceof CachedFeaturegroupDTO
-      && ((CachedFeaturegroupDTO) featuregroupDTO).getOnlineEnabled()) ||
-      (featuregroupDTO instanceof StreamFeatureGroupDTO
-        && ((StreamFeatureGroupDTO) featuregroupDTO).getOnlineEnabled())) {
-    
+    if (featuregroupDTO.getOnlineEnabled()) {
       if (featuregroupDTO.getFeatures().size() > FeaturestoreConstants.MAX_MYSQL_COLUMNS) {
         throw new FeaturestoreException(
           COULD_NOT_CREATE_ONLINE_FEATUREGROUP,
@@ -229,10 +222,7 @@ public class FeatureGroupInputValidation {
    * @throws FeaturestoreException
    */
   public void verifyPrimaryKeySupported(FeaturegroupDTO featuregroupDTO) throws FeaturestoreException{
-    if ((featuregroupDTO instanceof CachedFeaturegroupDTO
-      && ((CachedFeaturegroupDTO) featuregroupDTO).getOnlineEnabled()) ||
-      (featuregroupDTO instanceof StreamFeatureGroupDTO
-        && ((StreamFeatureGroupDTO) featuregroupDTO).getOnlineEnabled())) {
+    if (featuregroupDTO.getOnlineEnabled()) {
       Integer totalBytes = 0;
       for (FeatureGroupFeatureDTO feature : featuregroupDTO.getFeatures()) {
         if (feature.getPrimary()) {
@@ -337,5 +327,29 @@ public class FeatureGroupInputValidation {
         }
       }
     }
+  }
+
+  public List<FeatureGroupFeatureDTO> verifyAndGetNewFeatures(List<FeatureGroupFeatureDTO> previousSchema,
+    List<FeatureGroupFeatureDTO> newSchema)
+    throws FeaturestoreException {
+    List<FeatureGroupFeatureDTO> newFeatures = new ArrayList<>();
+    for (FeatureGroupFeatureDTO newFeature : newSchema) {
+      boolean isNew =
+        !previousSchema.stream().anyMatch(previousFeature -> previousFeature.getName().equals(newFeature.getName()));
+      if (isNew) {
+        newFeatures.add(newFeature);
+        if (newFeature.getPrimary() || newFeature.getPartition()) {
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_UPDATE, Level.FINE,
+            "Appended feature `" + newFeature.getName() + "` is specified as primary or partition key. Primary key and "
+              + "partition key cannot be changed when appending features.");
+        }
+        if (newFeature.getType() == null) {
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_UPDATE, Level.FINE,
+            "Appended feature `" + newFeature.getName() + "` is missing type information. Type information is " +
+              "mandatory when appending features to a feature group.");
+        }
+      }
+    }
+    return newFeatures;
   }
 }

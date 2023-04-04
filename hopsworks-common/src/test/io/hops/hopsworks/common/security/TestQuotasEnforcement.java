@@ -51,16 +51,21 @@ public class TestQuotasEnforcement {
     FeaturegroupFacade featuregroupFacade = Mockito.mock(FeaturegroupFacade.class);
     List<Featuregroup> mockedOnlineEnabledFeaturegroups = new ArrayList<>();
     CachedFeaturegroup onlineCachedFG = new CachedFeaturegroup();
-    onlineCachedFG.setOnlineEnabled(true);
     StreamFeatureGroup onlineStreamFG = new StreamFeatureGroup();
-    onlineStreamFG.setOnlineEnabled(true);
+    OnDemandFeaturegroup onlineOnDemandFG = new OnDemandFeaturegroup();
 
     Featuregroup fg0 = new Featuregroup();
     fg0.setCachedFeaturegroup(onlineCachedFG);
+    fg0.setOnlineEnabled(true);
     mockedOnlineEnabledFeaturegroups.add(fg0);
     Featuregroup fg1 = new Featuregroup();
     fg1.setStreamFeatureGroup(onlineStreamFG);
+    fg1.setOnlineEnabled(true);
     mockedOnlineEnabledFeaturegroups.add(fg1);
+    Featuregroup fg2 = new Featuregroup();
+    fg2.setOnDemandFeaturegroup(onlineOnDemandFG);
+    fg2.setOnlineEnabled(true);
+    mockedOnlineEnabledFeaturegroups.add(fg2);
 
     Mockito.when(featuregroupFacade.findByFeaturestore(Mockito.any())).thenReturn(mockedOnlineEnabledFeaturegroups);
 
@@ -77,12 +82,12 @@ public class TestQuotasEnforcement {
 
     // Test Online enabled
     Mockito.when(settings.getQuotasOnlineDisabledFeaturegroups()).thenReturn(100L);
-    // This time it should go through current: 2 max: 3
-    Mockito.when(settings.getQuotasOnlineEnabledFeaturegroups()).thenReturn(3L);
+    // This time it should go through current: 3 max: 4
+    Mockito.when(settings.getQuotasOnlineEnabledFeaturegroups()).thenReturn(4L);
     qe.enforceFeaturegroupsQuota(fs, true);
 
-    // This time it should throw an exception current: 2 max: 2
-    Mockito.when(settings.getQuotasOnlineEnabledFeaturegroups()).thenReturn(2L);
+    // This time it should throw an exception current: 3 max: 3
+    Mockito.when(settings.getQuotasOnlineEnabledFeaturegroups()).thenReturn(3L);
     thrown.expect(QuotaEnforcementException.class);
     thrown.expectMessage("Online enabled feature groups quota reached");
     qe.enforceFeaturegroupsQuota(fs, true);
@@ -93,16 +98,21 @@ public class TestQuotasEnforcement {
     FeaturegroupFacade featuregroupFacade = Mockito.mock(FeaturegroupFacade.class);
     List<Featuregroup> mockedOnlineDisabledFeaturegroups = new ArrayList<>();
     CachedFeaturegroup offlineCachedFG = new CachedFeaturegroup();
-    offlineCachedFG.setOnlineEnabled(false);
     StreamFeatureGroup offlineStreamFG = new StreamFeatureGroup();
-    offlineStreamFG.setOnlineEnabled(false);
+    OnDemandFeaturegroup offlineOnDemandFG = new OnDemandFeaturegroup();
 
     Featuregroup fg0 = new Featuregroup();
     fg0.setCachedFeaturegroup(offlineCachedFG);
+    fg0.setOnlineEnabled(false);
     mockedOnlineDisabledFeaturegroups.add(fg0);
     Featuregroup fg1 = new Featuregroup();
     fg1.setStreamFeatureGroup(offlineStreamFG);
+    fg1.setOnlineEnabled(false);
     mockedOnlineDisabledFeaturegroups.add(fg1);
+    Featuregroup fg2 = new Featuregroup();
+    fg2.setOnDemandFeaturegroup(offlineOnDemandFG);
+    fg2.setOnlineEnabled(false);
+    mockedOnlineDisabledFeaturegroups.add(fg2);
 
     Mockito.when(featuregroupFacade.findByFeaturestore(Mockito.any())).thenReturn(mockedOnlineDisabledFeaturegroups);
 
@@ -119,58 +129,16 @@ public class TestQuotasEnforcement {
 
     // Test Online disabled
     Mockito.when(settings.getQuotasOnlineEnabledFeaturegroups()).thenReturn(100L);
-    // This time it should go through current: 2 max: 3
+    // We make sure On-demand/External online disabled FGs are not counted
+    // It should pass with max: 3 even though current: 3 already
     Mockito.when(settings.getQuotasOnlineDisabledFeaturegroups()).thenReturn(3L);
     qe.enforceFeaturegroupsQuota(fs, false);
 
-    // This time it should throw an exception current: 2 max: 2
+    // This time it should throw an exception current: 3 max: 2
     Mockito.when(settings.getQuotasOnlineDisabledFeaturegroups()).thenReturn(2L);
     thrown.expect(QuotaEnforcementException.class);
     thrown.expectMessage("Online disabled feature groups quota reached");
     qe.enforceFeaturegroupsQuota(fs, false);
-  }
-
-  @Test
-  public void testQuotasIgnoreExternalFeaturegroups() {
-    boolean noException = true;
-    try {
-      FeaturegroupFacade featuregroupFacade = Mockito.mock(FeaturegroupFacade.class);
-      List<Featuregroup> mockedOnlineDisabledFeaturegroups = new ArrayList<>();
-      CachedFeaturegroup offlineFG = new CachedFeaturegroup();
-      offlineFG.setOnlineEnabled(false);
-      OnDemandFeaturegroup ondemandFG = new OnDemandFeaturegroup();
-
-      Featuregroup fg0 = new Featuregroup();
-      fg0.setCachedFeaturegroup(offlineFG);
-      mockedOnlineDisabledFeaturegroups.add(fg0);
-      Featuregroup fg1 = new Featuregroup();
-      fg1.setOnDemandFeaturegroup(ondemandFG);
-      mockedOnlineDisabledFeaturegroups.add(fg1);
-
-      Mockito.when(featuregroupFacade.findByFeaturestore(Mockito.any())).thenReturn(mockedOnlineDisabledFeaturegroups);
-
-      Settings settings = Mockito.mock(Settings.class);
-
-      QuotasEnforcement qe = new QuotasEnforcement();
-      qe.setFeaturegroupFacade(featuregroupFacade);
-      qe.setSettings(settings);
-
-      Featurestore fs = new Featurestore();
-      Project project = new Project();
-      project.setName("ProjectName");
-      fs.setProject(project);
-  
-      // Test Online disabled
-      Mockito.when(settings.getQuotasOnlineEnabledFeaturegroups()).thenReturn(100L);
-
-      // Although quotas has been set to 2 and we do have 2 Feature Groups,
-      // it should go through because one is External and we should ignore it
-      Mockito.when(settings.getQuotasOnlineDisabledFeaturegroups()).thenReturn(2L);
-      qe.enforceFeaturegroupsQuota(fs, false);
-    } catch (Exception e) {
-      noException = false;
-    }
-    Assert.assertTrue(noException);
   }
 
   @Test
