@@ -22,10 +22,8 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandDataFormat;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeature;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -54,7 +52,8 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
   }
 
   public OnDemandFeaturegroupDTO(String featureStoreName, Featuregroup featuregroup,
-                                 FeaturestoreStorageConnectorDTO storageConnectorDTO) {
+                                 FeaturestoreStorageConnectorDTO storageConnectorDTO,
+                                 List<FeatureGroupFeatureDTO> features, String onlineTopicName) {
     super(featuregroup);
     this.query = featuregroup.getOnDemandFeaturegroup().getQuery();
     this.storageConnector = storageConnectorDTO;
@@ -67,11 +66,9 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
 
     setFeaturestoreName(featureStoreName);
     setDescription(featuregroup.getOnDemandFeaturegroup().getDescription());
-    setFeatures(featuregroup.getOnDemandFeaturegroup().getFeatures().stream()
-      .sorted(Comparator.comparing(OnDemandFeature::getIdx))
-      .map(fgFeature ->
-        new FeatureGroupFeatureDTO(fgFeature.getName(), fgFeature.getType(), fgFeature.getDescription(),
-                featuregroup.getId(), fgFeature.getPrimary())).collect(Collectors.toList()));
+    setFeatures(features);
+    setOnlineEnabled(featuregroup.isOnlineEnabled());
+    setOnlineTopicName(onlineTopicName);
   }
 
   public OnDemandFeaturegroupDTO(Featuregroup featuregroup, FeaturestoreStorageConnectorDTO storageConnectorDTO) {

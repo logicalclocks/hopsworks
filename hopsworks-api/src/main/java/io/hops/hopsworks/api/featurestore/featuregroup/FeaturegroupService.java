@@ -453,24 +453,26 @@ public class FeaturegroupService {
     FeaturegroupDTO updatedFeaturegroupDTO = null;
     if(updateMetadata) {
       updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupMetadata(project, user, featurestore,
-        featuregroupDTO);
+        featuregroup, featuregroupDTO);
     }
-    if(enableOnline && featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
-        !(featuregroup.getCachedFeaturegroup().isOnlineEnabled())) {
+    if(enableOnline && !featuregroup.isOnlineEnabled() &&
+        (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP ||
+          featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP)) {
       updatedFeaturegroupDTO =
-          featuregroupController.enableFeaturegroupOnline(featurestore, featuregroupDTO, project, user);
+        featuregroupController.enableFeaturegroupOnline(featuregroup, project, user);
     }
-    if(disableOnline && featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
-        featuregroup.getCachedFeaturegroup().isOnlineEnabled()){
+    if(disableOnline && featuregroup.isOnlineEnabled() &&
+      (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP ||
+        featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP)){
       updatedFeaturegroupDTO = featuregroupController.disableFeaturegroupOnline(featuregroup, project, user);
     }
     if (enableOnline && featuregroup.getFeaturegroupType() == FeaturegroupType.STREAM_FEATURE_GROUP &&
-        !featuregroup.getStreamFeatureGroup().isOnlineEnabled()) {
+        !featuregroup.isOnlineEnabled()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.STREAM_FEATURE_GROUP_ONLINE_DISABLE_ENABLE,
         Level.FINE, "Please create a new version of the feature group to enable online storage.");
     }
     if (disableOnline && featuregroup.getFeaturegroupType() == FeaturegroupType.STREAM_FEATURE_GROUP &&
-        featuregroup.getStreamFeatureGroup().isOnlineEnabled()) {
+        featuregroup.isOnlineEnabled()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.STREAM_FEATURE_GROUP_ONLINE_DISABLE_ENABLE,
         Level.FINE, "Please create a new version of the feature group to disable online storage.");
     }
