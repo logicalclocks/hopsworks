@@ -2962,7 +2962,7 @@ describe "On #{ENV['OS']}" do
         expect(topic.length).to eq(1)
         get_subject_schema(project, topic[0][:name], 2)
         expect_status_details(200)
-        expect(json_body.to_json).to eql("{\"type\":\"record\",\"name\":\"#{featuregroup_name}\",\"namespace\":" +
+        expect(json_body.to_json).to eql("{\"type\":\"record\",\"name\":\"#{featuregroup_name}_#{parsed_json["version"]}\",\"namespace\":" +
                                    "\"#{project.projectname.downcase}_featurestore.db\",\"fields\":[{\"name\":\"testfeature\"," +
                                    "\"type\":[\"null\",\"int\"]},{\"name\":\"testfeature2\",\"type\":[\"null\",\"double\"]}]}")
        end
