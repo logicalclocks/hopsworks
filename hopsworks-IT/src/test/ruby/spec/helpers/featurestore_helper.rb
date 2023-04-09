@@ -531,7 +531,8 @@ module FeaturestoreHelper
     if query.nil?
       query = {
           leftFeatureGroup: {
-              id: fg["id"]
+              id: fg["id"],
+              type: fg["type"]
           },
           leftFeatures: fg["features"],
           joins: []
