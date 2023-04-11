@@ -18,14 +18,13 @@ package io.hops.hopsworks.common.featurestore.storageconnectors.gcs;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.featurestore.storageconnectors.StorageConnectorUtil;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.gcs.FeatureStoreGcsConnector;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -46,13 +45,17 @@ public class FeatureStoreGcsConnectorController {
   
   @EJB
   private StorageConnectorUtil storageConnectorUtil;
-  @EJB
-  private InodeController inodeController;
-  
+
+  public FeatureStoreGcsConnectorController() {}
+
+  public FeatureStoreGcsConnectorController(StorageConnectorUtil storageConnectorUtil) {
+    this.storageConnectorUtil = storageConnectorUtil;
+  }
+
   public FeatureStoreGcsConnectorDTO getConnector(FeaturestoreConnector featurestoreConnector)
     throws FeaturestoreException {
     FeatureStoreGcsConnectorDTO gcsConnectorDTO = new FeatureStoreGcsConnectorDTO(featurestoreConnector);
-    gcsConnectorDTO.setKeyPath(inodeController.getPath(featurestoreConnector.getGcsConnector().getKeyInode()));
+    gcsConnectorDTO.setKeyPath(featurestoreConnector.getGcsConnector().getKeyPath());
     gcsConnectorDTO.setBucket(featurestoreConnector.getGcsConnector().getBucket());
     if (featurestoreConnector.getGcsConnector().getEncryptionSecret() != null) {
       EncryptionSecrets encryptionSecrets = storageConnectorUtil.getSecret(
@@ -64,13 +67,13 @@ public class FeatureStoreGcsConnectorController {
     return gcsConnectorDTO;
   }
   
-  public FeatureStoreGcsConnector createConnector(Users user, Featurestore featureStore,
-    FeatureStoreGcsConnectorDTO gcsConnectorDTO)
+  public FeatureStoreGcsConnector createConnector(Project project, Users user, Featurestore featureStore,
+                                                  FeatureStoreGcsConnectorDTO gcsConnectorDTO)
     throws FeaturestoreException, ProjectException, UserException {
-    validateInput(gcsConnectorDTO);
+    validateInput(project, user, gcsConnectorDTO);
     
     FeatureStoreGcsConnector gcsConnector = new FeatureStoreGcsConnector();
-    setKeyInode(gcsConnectorDTO, gcsConnector);
+    gcsConnector.setKeyPath(gcsConnectorDTO.getKeyPath());
     gcsConnector.setAlgorithm(gcsConnectorDTO.getAlgorithm());
     gcsConnector.setBucket(gcsConnectorDTO.getBucket());
 
@@ -87,13 +90,13 @@ public class FeatureStoreGcsConnectorController {
   
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
   @Transactional(rollbackOn = FeaturestoreException.class)
-  public FeatureStoreGcsConnector updateConnector(Users user, Featurestore featureStore,
-    FeatureStoreGcsConnectorDTO gcsConnectorDTO,
-    FeatureStoreGcsConnector gcsConnector)
-    throws FeaturestoreException, ProjectException, UserException {
+  public FeatureStoreGcsConnector updateConnector(Project project, Users user, Featurestore featureStore,
+                                                  FeatureStoreGcsConnectorDTO gcsConnectorDTO,
+                                                  FeatureStoreGcsConnector gcsConnector)
+      throws FeaturestoreException, ProjectException, UserException {
 
-    validateInput(gcsConnectorDTO);
-    setKeyInode(gcsConnectorDTO, gcsConnector);
+    validateInput(project, user, gcsConnectorDTO);
+    gcsConnector.setKeyPath(gcsConnectorDTO.getKeyPath());
     gcsConnector.setAlgorithm(gcsConnectorDTO.getAlgorithm());
     gcsConnector.setBucket(gcsConnectorDTO.getBucket());
 
@@ -110,20 +113,11 @@ public class FeatureStoreGcsConnectorController {
     }
     return gcsConnector;
   }
-  
-  private void setKeyInode(FeatureStoreGcsConnectorDTO gcsConnectorDTO, FeatureStoreGcsConnector gcsConnector)
-    throws FeaturestoreException {
-    Inode keyInode = inodeController.getInodeAtPath(gcsConnectorDTO.getKeyPath());
-    
-    if (keyInode == null && gcsConnectorDTO.getKeyPath() != null) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG,
-        Level.FINE, "Could not find key file in provided location: " + gcsConnectorDTO.getKeyPath());
-    }
-  
-    gcsConnector.setKeyInode(keyInode);
-  }
-  
-  public void validateInput(FeatureStoreGcsConnectorDTO gcsConnectorDTO) throws FeaturestoreException {
+
+  public void validateInput(Project project, Users user, FeatureStoreGcsConnectorDTO gcsConnectorDTO)
+      throws FeaturestoreException {
+    storageConnectorUtil.validatePath(project, user, gcsConnectorDTO.getKeyPath(), "Key file path");
+
     if (Strings.isNullOrEmpty(gcsConnectorDTO.getKeyPath())) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.GCS_FIELD_MISSING, Level.FINE,
         "Key File Path cannot be empty");

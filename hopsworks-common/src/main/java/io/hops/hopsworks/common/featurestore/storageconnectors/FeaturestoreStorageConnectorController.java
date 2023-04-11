@@ -17,7 +17,6 @@
 package io.hops.hopsworks.common.featurestore.storageconnectors;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
@@ -40,7 +39,6 @@ import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3
 import io.hops.hopsworks.common.featurestore.storageconnectors.snowflake.FeaturestoreSnowflakeConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.snowflake.FeaturestoreSnowflakeConnectorDTO;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
@@ -78,8 +76,6 @@ public class FeaturestoreStorageConnectorController {
   @EJB
   private FeaturestoreS3ConnectorController s3ConnectorController;
   @EJB
-  private ProjectTeamFacade projectTeamFacade;
-  @EJB
   private FeaturestoreConnectorFacade featurestoreConnectorFacade;
   @EJB
   private OnlineFeaturestoreController onlineFeaturestoreController;
@@ -95,8 +91,6 @@ public class FeaturestoreStorageConnectorController {
   private ActivityFacade activityFacade;
   @EJB
   private FeatureStoreGcsConnectorController gcsConnectorController;
-  @EJB
-  private  InodeController inodeController;
   @EJB
   private FeaturestoreUtils featurestoreUtils;
   @EJB
@@ -244,18 +238,19 @@ public class FeaturestoreStorageConnectorController {
         break;
       case KAFKA:
         featurestoreConnector.setConnectorType(FeaturestoreConnectorType.KAFKA);
-        featurestoreConnector.setKafkaConnector(kafkaConnectorController.createConnector(user, featurestore,
+        featurestoreConnector.setKafkaConnector(kafkaConnectorController.createConnector(project, user, featurestore,
           (FeatureStoreKafkaConnectorDTO) featurestoreStorageConnectorDTO));
         break;
       case GCS:
         featurestoreConnector.setConnectorType(FeaturestoreConnectorType.GCS);
-        featurestoreConnector.setGcsConnector(gcsConnectorController.createConnector(user,
+        featurestoreConnector.setGcsConnector(gcsConnectorController.createConnector(project, user,
           featurestore, (FeatureStoreGcsConnectorDTO) featurestoreStorageConnectorDTO));
         break;
       case BIGQUERY:
         featurestoreConnector.setConnectorType(FeaturestoreConnectorType.BIGQUERY);
         featurestoreConnector.setBigqueryConnector(bigqueryConnectorController.createBigqueryConnector(
-          (FeaturestoreBigqueryConnectorDTO) featurestoreStorageConnectorDTO));
+            project, user,
+            (FeaturestoreBigqueryConnectorDTO) featurestoreStorageConnectorDTO));
         break;
       default:
         // We should not reach this point
@@ -329,17 +324,17 @@ public class FeaturestoreStorageConnectorController {
           featurestoreConnector.getSnowflakeConnector()));
         break;
       case KAFKA:
-        featurestoreConnector.setKafkaConnector((kafkaConnectorController.updateConnector(user, featurestore,
+        featurestoreConnector.setKafkaConnector((kafkaConnectorController.updateConnector(project, user, featurestore,
           (FeatureStoreKafkaConnectorDTO) featurestoreStorageConnectorDTO, featurestoreConnector.getKafkaConnector())));
         break;
       case GCS:
-        featurestoreConnector.setGcsConnector(gcsConnectorController.updateConnector(user,featurestore,
+        featurestoreConnector.setGcsConnector(gcsConnectorController.updateConnector(project, user,featurestore,
           (FeatureStoreGcsConnectorDTO) featurestoreStorageConnectorDTO,featurestoreConnector.getGcsConnector()));
         break;
       case BIGQUERY:
         featurestoreConnector.setBigqueryConnector(bigqueryConnectorController.updateBigqueryConnector(
-          (FeaturestoreBigqueryConnectorDTO) featurestoreStorageConnectorDTO,
-          featurestoreConnector.getBigqueryConnector()));
+            project, user, (FeaturestoreBigqueryConnectorDTO) featurestoreStorageConnectorDTO,
+            featurestoreConnector.getBigqueryConnector()));
         break;
       default:
         // We should not reach this point
@@ -422,25 +417,19 @@ public class FeaturestoreStorageConnectorController {
     throws FeaturestoreException {
     switch (featurestoreConnector.getConnectorType()) {
       case GCS:
-        storageConnectorUtil.removeHdfsFile(project, user, inodeController.getPath(
-          featurestoreConnector.getGcsConnector().getKeyInode())
-        );
+        storageConnectorUtil.removeHdfsFile(project, user, featurestoreConnector.getGcsConnector().getKeyPath());
         break;
       case BIGQUERY:
-        storageConnectorUtil.removeHdfsFile(project, user, inodeController.getPath(
-          featurestoreConnector.getBigqueryConnector().getKeyInode())
-        );
+        storageConnectorUtil.removeHdfsFile(project, user, featurestoreConnector.getBigqueryConnector().getKeyPath());
         break;
       case KAFKA:
-        if (featurestoreConnector.getKafkaConnector().getKeystoreInode() != null) {
-          storageConnectorUtil.removeHdfsFile(project, user, inodeController.getPath(
-            featurestoreConnector.getKafkaConnector().getKeystoreInode())
-          );
+        if (!Strings.isNullOrEmpty(featurestoreConnector.getKafkaConnector().getKeyStorePath())) {
+          storageConnectorUtil.removeHdfsFile(project, user,
+              featurestoreConnector.getKafkaConnector().getKeyStorePath());
         }
-        if (featurestoreConnector.getKafkaConnector().getTruststoreInode() != null) {
-          storageConnectorUtil.removeHdfsFile(project, user, inodeController.getPath(
-            featurestoreConnector.getKafkaConnector().getTruststoreInode())
-          );
+        if (!Strings.isNullOrEmpty(featurestoreConnector.getKafkaConnector().getTrustStorePath())) {
+          storageConnectorUtil.removeHdfsFile(project, user,
+              featurestoreConnector.getKafkaConnector().getTrustStorePath());
         }
         break;
     }

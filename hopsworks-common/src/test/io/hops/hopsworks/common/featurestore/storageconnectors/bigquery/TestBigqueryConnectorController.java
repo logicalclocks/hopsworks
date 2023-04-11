@@ -16,29 +16,62 @@
 
 package io.hops.hopsworks.common.featurestore.storageconnectors.bigquery;
 
+import io.hops.hopsworks.common.MockUtils;
+import io.hops.hopsworks.common.featurestore.storageconnectors.StorageConnectorUtil;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.Mockito;
+
+import java.io.IOException;
 
 public class TestBigqueryConnectorController {
   private FeaturestoreBigqueryConnectorController bigqueryConnectorController;
+  private Project project = new Project();
+  private Users user = new Users(123);
+  private Settings settings;
   
   @Rule
   public ExpectedException thrown = ExpectedException.none();
-  
+
   @Before
-  public void setup() {
-    bigqueryConnectorController = new FeaturestoreBigqueryConnectorController();
+  public void setup() throws IOException {
+    DistributedFileSystemOps dfso = Mockito.mock(DistributedFileSystemOps.class);
+    Mockito.when(dfso.exists(Mockito.anyString())).thenReturn(true);
+
+    settings = Mockito.mock(Settings.class);
+
+    StorageConnectorUtil storageConnectorUtil = new StorageConnectorUtil(settings, MockUtils.mockDfs(dfso));
+    bigqueryConnectorController = new FeaturestoreBigqueryConnectorController(storageConnectorUtil);
   }
   
   @Test
   public void testValidateInput_keyPath() {
     FeaturestoreBigqueryConnectorDTO bigqConnectorDTO = new FeaturestoreBigqueryConnectorDTO();
     bigqConnectorDTO.setKeyPath(null);
-    Assert.assertThrows(FeaturestoreException.class, () -> bigqueryConnectorController.validateInput(bigqConnectorDTO));
+    Assert.assertThrows(FeaturestoreException.class,
+        () -> bigqueryConnectorController.validateInput(project, user, bigqConnectorDTO));
+  }
+
+  @Test
+  public void testValidateInput_keyPathNotFound() throws IOException{
+    DistributedFileSystemOps dfso = Mockito.mock(DistributedFileSystemOps.class);
+    Mockito.when(dfso.exists(Mockito.anyString())).thenReturn(false);
+    StorageConnectorUtil storageConnectorUtil = new StorageConnectorUtil(settings, MockUtils.mockDfs(dfso));
+    FeaturestoreBigqueryConnectorController featurestoreBigqueryConnectorController
+        = new FeaturestoreBigqueryConnectorController(storageConnectorUtil);
+
+    FeaturestoreBigqueryConnectorDTO bigqConnectorDTO = new FeaturestoreBigqueryConnectorDTO();
+    bigqConnectorDTO.setKeyPath("/path/does/not/exists");
+    Assert.assertThrows(FeaturestoreException.class,
+        () -> featurestoreBigqueryConnectorController.validateInput(project, user, bigqConnectorDTO));
   }
   
   @Test
@@ -46,7 +79,8 @@ public class TestBigqueryConnectorController {
     FeaturestoreBigqueryConnectorDTO bigqConnectorDTO = new FeaturestoreBigqueryConnectorDTO();
     bigqConnectorDTO.setParentProject(null);
     
-    Assert.assertThrows(FeaturestoreException.class, () -> bigqueryConnectorController.validateInput(bigqConnectorDTO));
+    Assert.assertThrows(FeaturestoreException.class,
+        () -> bigqueryConnectorController.validateInput(project, user, bigqConnectorDTO));
   }
   
   @Test
@@ -57,11 +91,13 @@ public class TestBigqueryConnectorController {
 
     // setting 1 of the three
     bigqConnectorDTO.setQueryProject("project");
-    Assert.assertThrows(FeaturestoreException.class, () -> bigqueryConnectorController.validateInput(bigqConnectorDTO));
+    Assert.assertThrows(FeaturestoreException.class,
+        () -> bigqueryConnectorController.validateInput(project, user, bigqConnectorDTO));
   
     // setting 2 of the three
     bigqConnectorDTO.setQueryTable("table");
-    Assert.assertThrows(FeaturestoreException.class, () -> bigqueryConnectorController.validateInput(bigqConnectorDTO));
+    Assert.assertThrows(FeaturestoreException.class,
+        () -> bigqueryConnectorController.validateInput(project, user, bigqConnectorDTO));
   }
   
   @Test
@@ -71,13 +107,14 @@ public class TestBigqueryConnectorController {
     bigqConnectorDTO.setParentProject("project");
 
     // setting none of throw error
-    Assert.assertThrows(FeaturestoreException.class, () -> bigqueryConnectorController.validateInput(bigqConnectorDTO));
+    Assert.assertThrows(FeaturestoreException.class,
+        () -> bigqueryConnectorController.validateInput(project, user, bigqConnectorDTO));
     
     // setting all three should not throw
     bigqConnectorDTO.setQueryProject("project");
     bigqConnectorDTO.setQueryTable("table");
     bigqConnectorDTO.setDataset("dataset");
-    bigqueryConnectorController.validateInput(bigqConnectorDTO);
+    bigqueryConnectorController.validateInput(project, user, bigqConnectorDTO);
   }
   
   @Test
@@ -87,6 +124,6 @@ public class TestBigqueryConnectorController {
     bigqConnectorDTO.setParentProject("project");
     // setting materialization dataset should not throw error
     bigqConnectorDTO.setMaterializationDataset("dataset");
-    bigqueryConnectorController.validateInput(bigqConnectorDTO);
+    bigqueryConnectorController.validateInput(project, user, bigqConnectorDTO);
   }
 }

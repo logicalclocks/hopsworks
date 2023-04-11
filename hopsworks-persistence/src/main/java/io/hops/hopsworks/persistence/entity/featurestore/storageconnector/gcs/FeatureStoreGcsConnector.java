@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.storageconnector.gcs;
 
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.user.security.secrets.Secret;
 
 import javax.persistence.Basic;
@@ -45,17 +44,10 @@ public class FeatureStoreGcsConnector implements Serializable {
   @Basic(optional = false)
   @Column(name = "id", nullable = false)
   private Integer id;
-  
-  @JoinColumns({
-    @JoinColumn(name = "key_inode_pid",
-      referencedColumnName = "parent_id"),
-    @JoinColumn(name = "key_inode_name",
-      referencedColumnName = "name"),
-    @JoinColumn(name = "key_partition_id",
-      referencedColumnName = "partition_id")})
-  @ManyToOne
-  private Inode keyInode;
-  
+
+  @Column(name = "key_path")
+  private String keyPath;
+
   @JoinColumns({@JoinColumn(name = "encryption_secret_uid", referencedColumnName = "uid"),
     @JoinColumn(name = "encryption_secret_name", referencedColumnName = "secret_name")})
   @ManyToOne(cascade = CascadeType.ALL)
@@ -79,14 +71,14 @@ public class FeatureStoreGcsConnector implements Serializable {
     this.encryptionSecret = encryptionSecret;
   }
 
-  public Inode getKeyInode() {
-    return keyInode;
+  public String getKeyPath() {
+    return keyPath;
   }
-  
-  public void setKeyInode(Inode keyInode) {
-    this.keyInode = keyInode;
+
+  public void setKeyPath(String keyPath) {
+    this.keyPath = keyPath;
   }
-  
+
   public Integer getId() {
     return id;
   }
@@ -110,22 +102,24 @@ public class FeatureStoreGcsConnector implements Serializable {
   public void setBucket(String bucket) {
     this.bucket = bucket;
   }
-  
+
   @Override
   public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
     FeatureStoreGcsConnector that = (FeatureStoreGcsConnector) o;
-    return Objects.equals(id, that.id) && Objects.equals(keyInode, that.keyInode) &&
-      Objects.equals(encryptionSecret, that.encryptionSecret) && algorithm == that.algorithm;
+
+    if (!Objects.equals(id, that.id)) return false;
+    if (!Objects.equals(keyPath, that.keyPath)) return false;
+    if (!Objects.equals(encryptionSecret, that.encryptionSecret))
+      return false;
+    if (algorithm != that.algorithm) return false;
+    return Objects.equals(bucket, that.bucket);
   }
-  
+
   @Override
   public int hashCode() {
-    return Objects.hash(id, keyInode, encryptionSecret, algorithm);
+    return Objects.hash(id, keyPath, encryptionSecret, algorithm);
   }
 }

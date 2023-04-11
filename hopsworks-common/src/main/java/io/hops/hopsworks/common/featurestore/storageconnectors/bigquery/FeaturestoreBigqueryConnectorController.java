@@ -16,14 +16,15 @@
 
 package io.hops.hopsworks.common.featurestore.storageconnectors.bigquery;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.storageconnectors.StorageConnectorUtil;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.bigquery.FeatureStoreBigqueryConnector;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
@@ -43,17 +44,20 @@ public class FeaturestoreBigqueryConnectorController {
   
   private static final Logger LOGGER = Logger.getLogger(FeaturestoreBigqueryConnectorController.class.getName());
   @EJB
-  private InodeController inodeController;
-  @EJB
   private StorageConnectorUtil storageConnectorUtil;
-  
+
+  public FeaturestoreBigqueryConnectorController() {}
+
+  @VisibleForTesting
+  public FeaturestoreBigqueryConnectorController(StorageConnectorUtil storageConnectorUtil) {
+    this.storageConnectorUtil = storageConnectorUtil;
+  }
+
   public FeaturestoreBigqueryConnectorDTO getBigqueryConnectorDTO(FeaturestoreConnector featurestoreConnector)
     throws FeaturestoreException {
     
     FeaturestoreBigqueryConnectorDTO bigqueryConnectorDTO = new FeaturestoreBigqueryConnectorDTO(featurestoreConnector);
-    bigqueryConnectorDTO.setKeyPath(
-      inodeController.getPath(featurestoreConnector.getBigqueryConnector().getKeyInode())
-    );
+    bigqueryConnectorDTO.setKeyPath(featurestoreConnector.getBigqueryConnector().getKeyPath());
     bigqueryConnectorDTO.setParentProject(
       featurestoreConnector.getBigqueryConnector().getParentProject()
     );
@@ -72,11 +76,11 @@ public class FeaturestoreBigqueryConnectorController {
     return bigqueryConnectorDTO;
   }
   
-  public FeatureStoreBigqueryConnector createBigqueryConnector(
-    FeaturestoreBigqueryConnectorDTO featurestoreBigqueryConnectorDTO)
-    throws FeaturestoreException {
+  public FeatureStoreBigqueryConnector createBigqueryConnector(Project project, Users users,
+         FeaturestoreBigqueryConnectorDTO featurestoreBigqueryConnectorDTO)
+      throws FeaturestoreException {
     
-    validateInput(featurestoreBigqueryConnectorDTO);
+    validateInput(project, users, featurestoreBigqueryConnectorDTO);
     FeatureStoreBigqueryConnector featurestoreBigqueryConnector = new FeatureStoreBigqueryConnector();
     return setConnectorData(featurestoreBigqueryConnectorDTO, featurestoreBigqueryConnector);
   }
@@ -84,12 +88,12 @@ public class FeaturestoreBigqueryConnectorController {
   
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
   @Transactional(rollbackOn = {FeaturestoreException.class})
-  public FeatureStoreBigqueryConnector updateBigqueryConnector(
-    FeaturestoreBigqueryConnectorDTO featurestoreBigqueryConnectorDTO,
-    FeatureStoreBigqueryConnector featureStoreBigqueryConnector)
-    throws FeaturestoreException {
+  public FeatureStoreBigqueryConnector updateBigqueryConnector(Project project, Users user,
+          FeaturestoreBigqueryConnectorDTO featurestoreBigqueryConnectorDTO,
+          FeatureStoreBigqueryConnector featureStoreBigqueryConnector)
+      throws FeaturestoreException {
     
-    validateInput(featurestoreBigqueryConnectorDTO);
+    validateInput(project, user, featurestoreBigqueryConnectorDTO);
     return setConnectorData(featurestoreBigqueryConnectorDTO, featureStoreBigqueryConnector);
   }
   
@@ -102,10 +106,10 @@ public class FeaturestoreBigqueryConnectorController {
    * @throws FeaturestoreException
    */
   private FeatureStoreBigqueryConnector setConnectorData(
-    FeaturestoreBigqueryConnectorDTO featurestoreBigqueryConnectorDTO,
-    FeatureStoreBigqueryConnector featureStoreBigqueryConnector) throws FeaturestoreException {
-    
-    setKeyInode(featurestoreBigqueryConnectorDTO, featureStoreBigqueryConnector);
+      FeaturestoreBigqueryConnectorDTO featurestoreBigqueryConnectorDTO,
+      FeatureStoreBigqueryConnector featureStoreBigqueryConnector) {
+
+    featureStoreBigqueryConnector.setKeyPath(featurestoreBigqueryConnectorDTO.getKeyPath());
     featureStoreBigqueryConnector.setParentProject(featurestoreBigqueryConnectorDTO.getParentProject());
     if (featurestoreBigqueryConnectorDTO.getQueryProject() != null) {
       featureStoreBigqueryConnector.setDataset(featurestoreBigqueryConnectorDTO.getDataset());
@@ -128,28 +132,14 @@ public class FeaturestoreBigqueryConnectorController {
     
     return featureStoreBigqueryConnector;
   }
-  
-  private void setKeyInode(FeaturestoreBigqueryConnectorDTO bigqueryConnectorDTO,
-    FeatureStoreBigqueryConnector bigqueryConnector)
-    throws FeaturestoreException {
-    
-    Inode keyInode = inodeController.getInodeAtPath(bigqueryConnectorDTO.getKeyPath());
-    if (keyInode == null && bigqueryConnectorDTO.getKeyPath() != null) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG,
-                                      Level.FINE, "Could not find key file in provided location: "
-                                        + bigqueryConnectorDTO.getKeyPath());
-    }
-    bigqueryConnector.setKeyInode(keyInode);
-  }
-  
-  public void validateInput(FeaturestoreBigqueryConnectorDTO featurestoreBigqueryConnectorDTO)
+
+  public void validateInput(Project project, Users user,
+                            FeaturestoreBigqueryConnectorDTO featurestoreBigqueryConnectorDTO)
     throws FeaturestoreException {
     
     //validate keyPath
-    if (Strings.isNullOrEmpty(featurestoreBigqueryConnectorDTO.getKeyPath())) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
-                                      "Key File Path is mandatory");
-    }
+    storageConnectorUtil.validatePath(project, user, featurestoreBigqueryConnectorDTO.getKeyPath(), "Key file path");
+
     // validate parentProject
     if (Strings.isNullOrEmpty(featurestoreBigqueryConnectorDTO.getParentProject())) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
