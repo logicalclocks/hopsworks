@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.storageconnector.kafka;
 
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.user.security.secrets.Secret;
 
 import javax.persistence.Basic;
@@ -59,24 +58,11 @@ public class FeatureStoreKafkaConnector implements Serializable {
   private SSLEndpointIdentificationAlgorithm sslEndpointIdentificationAlgorithm;
   @Column(name = "options")
   private String options;
-  @JoinColumns({
-    @JoinColumn(name = "truststore_inode_pid",
-      referencedColumnName = "parent_id"),
-    @JoinColumn(name = "truststore_inode_name",
-      referencedColumnName = "name"),
-    @JoinColumn(name = "truststore_partition_id",
-      referencedColumnName = "partition_id")})
-  @ManyToOne
-  private Inode truststoreInode;
-  @JoinColumns({
-    @JoinColumn(name = "keystore_inode_pid",
-      referencedColumnName = "parent_id"),
-    @JoinColumn(name = "keystore_inode_name",
-      referencedColumnName = "name"),
-    @JoinColumn(name = "keystore_partition_id",
-      referencedColumnName = "partition_id")})
-  @ManyToOne
-  private Inode keystoreInode;
+  @Column(name = "truststore_path")
+  private String trustStorePath;
+  @Column(name = "keystore_path")
+  private String keyStorePath;
+
   
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -132,51 +118,52 @@ public class FeatureStoreKafkaConnector implements Serializable {
     this.options = options;
   }
 
-  public Inode getTruststoreInode() {
-    return truststoreInode;
+  public String getTrustStorePath() {
+    return trustStorePath;
   }
 
-  public void setTruststoreInode(Inode truststore_inode) {
-    this.truststoreInode = truststore_inode;
+  public void setTrustStorePath(String trustStorePath) {
+    this.trustStorePath = trustStorePath;
   }
 
-  public Inode getKeystoreInode() {
-    return keystoreInode;
+  public String getKeyStorePath() {
+    return keyStorePath;
   }
 
-  public void setKeystoreInode(Inode keystore_inode) {
-    this.keystoreInode = keystore_inode;
+  public void setKeyStorePath(String keyStorePath) {
+    this.keyStorePath = keyStorePath;
   }
-  
+
   @Override
   public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
     FeatureStoreKafkaConnector that = (FeatureStoreKafkaConnector) o;
-    return Objects.equals(id, that.id) && Objects.equals(bootstrapServers, that.bootstrapServers) &&
-      securityProtocol == that.securityProtocol &&
-      Objects.equals(truststoreInode, that.truststoreInode) &&
-      Objects.equals(sslSecret, that.sslSecret) &&
-      Objects.equals(keystoreInode, that.keystoreInode) &&
-      sslEndpointIdentificationAlgorithm == that.sslEndpointIdentificationAlgorithm &&
-      Objects.equals(options, that.options);
+
+    if (!Objects.equals(id, that.id)) return false;
+    if (!Objects.equals(bootstrapServers, that.bootstrapServers))
+      return false;
+    if (securityProtocol != that.securityProtocol) return false;
+    if (!Objects.equals(sslSecret, that.sslSecret)) return false;
+    if (sslEndpointIdentificationAlgorithm != that.sslEndpointIdentificationAlgorithm) return false;
+    if (!Objects.equals(options, that.options)) return false;
+    if (!Objects.equals(trustStorePath, that.trustStorePath))
+      return false;
+    return Objects.equals(keyStorePath, that.keyStorePath);
   }
-  
+
   @Override
   public int hashCode() {
     int result = id != null ? id.hashCode() : 0;
     result = 31 * result + (bootstrapServers != null ? bootstrapServers.hashCode() : 0);
     result = 31 * result + (securityProtocol != null ? securityProtocol.hashCode() : 0);
-    result = 31 * result + (truststoreInode != null ? truststoreInode.hashCode() : 0);
     result = 31 * result + (sslSecret != null ? sslSecret.hashCode() : 0);
-    result = 31 * result + (keystoreInode != null ? keystoreInode.hashCode() : 0);
-    result = 31 * result + (sslEndpointIdentificationAlgorithm != null ? sslEndpointIdentificationAlgorithm.hashCode() :
-      0);
+    result = 31 * result + (sslEndpointIdentificationAlgorithm != null ?
+        sslEndpointIdentificationAlgorithm.hashCode() : 0);
     result = 31 * result + (options != null ? options.hashCode() : 0);
+    result = 31 * result + (trustStorePath != null ? trustStorePath.hashCode() : 0);
+    result = 31 * result + (keyStorePath != null ? keyStorePath.hashCode() : 0);
     return result;
   }
 }

@@ -19,7 +19,8 @@ package io.hops.hopsworks.common.featurestore.storageconnectors.kafka;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.storageconnectors.StorageConnectorUtil;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
@@ -28,7 +29,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.Featur
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.kafka.FeatureStoreKafkaConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.kafka.SSLEndpointIdentificationAlgorithm;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.kafka.SecurityProtocol;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -37,20 +38,21 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.transaction.Transactional;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class FeatureStoreKafkaConnectorController {
-  
+
   private static final Logger LOGGER = Logger.getLogger(FeatureStoreKafkaConnectorController.class.getName());
   
   @EJB
   private StorageConnectorUtil storageConnectorUtil;
   @EJB
-  private InodeController inodeController;
-  
+  private DistributedFsService dfs;
+
   public FeatureStoreKafkaConnectorDTO getConnector(FeaturestoreConnector featurestoreConnector)
     throws FeaturestoreException {
     FeatureStoreKafkaConnectorDTO kafkaConnectorDTO = new FeatureStoreKafkaConnectorDTO(featurestoreConnector);
@@ -61,31 +63,24 @@ public class FeatureStoreKafkaConnectorController {
       kafkaConnectorDTO.setSslKeystorePassword(kafkaConnectorSecrets.getSslKeyStorePassword());
       kafkaConnectorDTO.setSslKeyPassword(kafkaConnectorSecrets.getSslKeyPassword());
     }
-    kafkaConnectorDTO.setSslTruststoreLocation(
-      featurestoreConnector.getKafkaConnector().getTruststoreInode() == null ? null:
-        inodeController.getPath(featurestoreConnector.getKafkaConnector().getTruststoreInode()));
-    kafkaConnectorDTO.setSslKeystoreLocation(
-      featurestoreConnector.getKafkaConnector().getKeystoreInode() == null ? null:
-        inodeController.getPath(featurestoreConnector.getKafkaConnector().getKeystoreInode()));
+    kafkaConnectorDTO.setSslTruststoreLocation(featurestoreConnector.getKafkaConnector().getTrustStorePath());
+    kafkaConnectorDTO.setSslKeystoreLocation(featurestoreConnector.getKafkaConnector().getKeyStorePath());
     kafkaConnectorDTO.setOptions(
       storageConnectorUtil.toOptions(featurestoreConnector.getKafkaConnector().getOptions()));
     return kafkaConnectorDTO;
   }
   
-  public FeatureStoreKafkaConnector createConnector(Users user, Featurestore featureStore,
+  public FeatureStoreKafkaConnector createConnector(Project project, Users user, Featurestore featureStore,
                                                     FeatureStoreKafkaConnectorDTO kafkaConnectorDTO)
       throws ProjectException, UserException, FeaturestoreException {
     verifyUserInput(kafkaConnectorDTO);
     if (kafkaConnectorDTO.getSecurityProtocol() == SecurityProtocol.SSL) {
-      verifySSLSecurityProtocolProperties(kafkaConnectorDTO);
+      verifySSLSecurityProtocolProperties(project, user, kafkaConnectorDTO);
     }
     
     FeatureStoreKafkaConnector kafkaConnector = new FeatureStoreKafkaConnector();
   
     setGeneralAttributes(kafkaConnectorDTO, kafkaConnector);
-  
-    // get and set inodes to validate that truststore/keystore exist at provided path
-    setTrustStoreKeyStoreInodes(kafkaConnectorDTO, kafkaConnector);
   
     // create secret for truststore password etc.
     String secretName = storageConnectorUtil.createSecretName(featureStore.getId(), kafkaConnectorDTO.getName(),
@@ -104,45 +99,23 @@ public class FeatureStoreKafkaConnectorController {
     kafkaConnector.setOptions(storageConnectorUtil.fromOptions(kafkaConnectorDTO.getOptions()));
     kafkaConnector.setSslEndpointIdentificationAlgorithm(
       SSLEndpointIdentificationAlgorithm.fromString(kafkaConnectorDTO.getSslEndpointIdentificationAlgorithm()));
-  }
-  
-  private void setTrustStoreKeyStoreInodes(FeatureStoreKafkaConnectorDTO kafkaConnectorDTO,
-                                           FeatureStoreKafkaConnector kafkaConnector)
-      throws FeaturestoreException {
-    Inode truststoreInode = kafkaConnectorDTO.getSslTruststoreLocation() == null ? null :
-      inodeController.getInodeAtPath(kafkaConnectorDTO.getSslTruststoreLocation());
-    Inode keystoreInode = kafkaConnectorDTO.getSslKeystoreLocation() == null ? null :
-      inodeController.getInodeAtPath(kafkaConnectorDTO.getSslKeystoreLocation());
-    
-    if (truststoreInode == null && kafkaConnectorDTO.getSslTruststoreLocation() != null) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.KAFKA_STORAGE_CONNECTOR_STORE_NOT_EXISTING,
-        Level.FINE, "Could not find trust store in provided location: " + kafkaConnectorDTO.getSslTruststoreLocation());
-    }
-    
-    if (keystoreInode == null && kafkaConnectorDTO.getSslKeystoreLocation() != null) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.KAFKA_STORAGE_CONNECTOR_STORE_NOT_EXISTING,
-        Level.FINE, "Could not find key store in provided location: " + kafkaConnectorDTO.getSslKeystoreLocation());
-    }
-    
-    kafkaConnector.setTruststoreInode(truststoreInode);
-    kafkaConnector.setKeystoreInode(keystoreInode);
+    kafkaConnector.setKeyStorePath(kafkaConnectorDTO.getSslKeystoreLocation());
+    kafkaConnector.setTrustStorePath(kafkaConnectorDTO.getSslTruststoreLocation());
   }
   
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
   @Transactional(rollbackOn = FeaturestoreException.class)
-  public FeatureStoreKafkaConnector updateConnector(Users user, Featurestore featureStore,
+  public FeatureStoreKafkaConnector updateConnector(Project project, Users user, Featurestore featureStore,
                                                     FeatureStoreKafkaConnectorDTO kafkaConnectorDTO,
                                                     FeatureStoreKafkaConnector kafkaConnector)
       throws FeaturestoreException, ProjectException, UserException {
     verifyUserInput(kafkaConnectorDTO);
     if (kafkaConnectorDTO.getSecurityProtocol() == SecurityProtocol.SSL) {
-      verifySSLSecurityProtocolProperties(kafkaConnectorDTO);
+      verifySSLSecurityProtocolProperties(project, user, kafkaConnectorDTO);
     }
   
     setGeneralAttributes(kafkaConnectorDTO, kafkaConnector);
-    
-    setTrustStoreKeyStoreInodes(kafkaConnectorDTO, kafkaConnector);
-    
+
     FeatureStoreKafkaConnectorSecrets secretsClass =
       new FeatureStoreKafkaConnectorSecrets(kafkaConnectorDTO.getSslTruststorePassword(),
         kafkaConnectorDTO.getSslKeystorePassword(), kafkaConnectorDTO.getSslKeyPassword());
@@ -175,24 +148,21 @@ public class FeatureStoreKafkaConnectorController {
     }
   }
   
-  private void verifySSLSecurityProtocolProperties(FeatureStoreKafkaConnectorDTO kafkaConnectorDTO)
+  private void verifySSLSecurityProtocolProperties(Project project, Users user,
+                                                   FeatureStoreKafkaConnectorDTO kafkaConnectorDTO)
       throws FeaturestoreException {
-    if (Strings.isNullOrEmpty(kafkaConnectorDTO.getSslTruststoreLocation())) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
-        "Truststore location cannot be null or empty for Kafka SSL Security Policy.");
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfs.getDfsOps(project, user);
+      storageConnectorUtil.validatePath(dfso, kafkaConnectorDTO.getSslTruststoreLocation(), "Truststore location");
+      storageConnectorUtil.validatePath(dfso, kafkaConnectorDTO.getSslKeystoreLocation(), "Keystore location");
+    } catch (IOException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.INFO,
+          "Error validating keystore/truststore path", e.getMessage(), e);
+    } finally {
+      dfs.closeDfsClient(dfso);
     }
-    if (Strings.isNullOrEmpty(kafkaConnectorDTO.getSslKeystoreLocation())) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
-        "Keystore location cannot be null or empty for Kafka SSL Security Policy.");
-    }
-    if (Strings.isNullOrEmpty(kafkaConnectorDTO.getSslTruststorePassword())) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
-        "Truststore password cannot be null or empty for Kafka SSL Security Policy.");
-    }
-    if (Strings.isNullOrEmpty(kafkaConnectorDTO.getSslKeystorePassword())) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
-        "Keystore password cannot be null or empty for Kafka SSL Security Policy.");
-    }
+
     if (Strings.isNullOrEmpty(kafkaConnectorDTO.getSslKeyPassword())) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
         "Key password cannot be null or empty for Kafka SSL Security Policy.");

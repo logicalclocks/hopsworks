@@ -17,16 +17,11 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.storageconnector.bigquery;
 
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
-import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
@@ -58,23 +53,18 @@ public class FeatureStoreBigqueryConnector implements Serializable {
   
   @Column(name = "arguments", length = 2000)
   private String arguments;
-  
-  @ManyToOne
-  @JoinColumns({
-    @JoinColumn(name = "key_inode_pid", referencedColumnName = "parent_id"),
-    @JoinColumn(name = "key_inode_name", referencedColumnName = "name"),
-    @JoinColumn(name = "key_partition_id", referencedColumnName = "partition_id")
-    })
-  private Inode keyInode;
-  
-  public Inode getKeyInode() {
-    return keyInode;
+
+  @Column(name = "key_path")
+  private String keyPath;
+
+  public String getKeyPath() {
+    return keyPath;
   }
-  
-  public void setKeyInode(Inode hdfsInodes) {
-    this.keyInode = hdfsInodes;
+
+  public void setKeyPath(String keyPath) {
+    this.keyPath = keyPath;
   }
-  
+
   public String getQueryTable() {
     return queryTable;
   }
@@ -119,8 +109,6 @@ public class FeatureStoreBigqueryConnector implements Serializable {
     return id;
   }
   
-  
-  
   public void setId(Integer id) {
     this.id = id;
   }
@@ -135,24 +123,27 @@ public class FeatureStoreBigqueryConnector implements Serializable {
   
   public FeatureStoreBigqueryConnector() {
   }
-  
+
   @Override
   public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
     FeatureStoreBigqueryConnector that = (FeatureStoreBigqueryConnector) o;
-    return id.equals(that.id) && parentProject.equals(that.parentProject) &&
-      Objects.equals(dataset, that.dataset) && Objects.equals(queryProject, that.queryProject) &&
-      Objects.equals(materializationDataset, that.materializationDataset) &&
-      Objects.equals(queryTable, that.queryTable) && keyInode.equals(that.keyInode);
+
+    if (!Objects.equals(id, that.id)) return false;
+    if (!Objects.equals(parentProject, that.parentProject)) return false;
+    if (!Objects.equals(dataset, that.dataset)) return false;
+    if (!Objects.equals(queryProject, that.queryProject)) return false;
+    if (!Objects.equals(materializationDataset, that.materializationDataset))
+      return false;
+    if (!Objects.equals(queryTable, that.queryTable)) return false;
+    if (!Objects.equals(arguments, that.arguments)) return false;
+    return Objects.equals(keyPath, that.keyPath);
   }
-  
+
   @Override
   public int hashCode() {
-    return Objects.hash(id, parentProject, dataset, queryProject, materializationDataset, queryTable, keyInode);
+    return Objects.hash(id, parentProject, dataset, queryProject, materializationDataset, queryTable, keyPath);
   }
 }

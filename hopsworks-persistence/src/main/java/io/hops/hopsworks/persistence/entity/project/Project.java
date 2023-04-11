@@ -533,7 +533,32 @@ public class Project implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.project.Project[ name=" + this.name + ", id=" + this.id
-        + ", parentId=" + this.inode.getInodePK().getParentId() + " ]";
+    return "Project{" +
+        "projectTeamCollection=" + projectTeamCollection +
+        ", activityCollection=" + activityCollection +
+        ", projectServicesCollection=" + projectServicesCollection +
+        ", datasetCollection=" + datasetCollection +
+        ", datasetSharedWithCollection=" + datasetSharedWithCollection +
+        ", condaCommandsCollection=" + condaCommandsCollection +
+        ", servingCollection=" + servingCollection +
+        ", tensorBoardCollection=" + tensorBoardCollection +
+        ", defaultJobConfigurationCollection=" + defaultJobConfigurationCollection +
+        ", jobsCollection=" + jobsCollection +
+        ", id=" + id +
+        ", name='" + name + '\'' +
+        ", owner=" + owner +
+        ", pythonEnvironment=" + pythonEnvironment +
+        ", created=" + created +
+        ", paymentType=" + paymentType +
+        ", description='" + description + '\'' +
+        ", kafkaMaxNumTopics=" + kafkaMaxNumTopics +
+        ", lastQuotaUpdate=" + lastQuotaUpdate +
+        ", dockerImage='" + dockerImage + '\'' +
+        ", creationStatus=" + creationStatus +
+        ", inode=" + inode +
+        ", pythonDepCollection=" + pythonDepCollection +
+        ", jupyterProjectCollection=" + jupyterProjectCollection +
+        ", projectServiceAlerts=" + projectServiceAlerts +
+        '}';
   }
 }

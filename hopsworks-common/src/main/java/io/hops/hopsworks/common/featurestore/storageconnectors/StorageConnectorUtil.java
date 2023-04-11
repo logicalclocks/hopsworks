@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.featurestore.storageconnectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretPlaintext;
@@ -67,9 +68,15 @@ public class StorageConnectorUtil {
 
   public StorageConnectorUtil() { }
 
-  // For testing
-  protected StorageConnectorUtil(Settings settings) {
+  @VisibleForTesting
+  public StorageConnectorUtil(Settings settings) {
     this.settings = settings;
+  }
+
+  @VisibleForTesting
+  public StorageConnectorUtil(Settings settings, DistributedFsService dfs) {
+    this.settings = settings;
+    this.dfs = dfs;
   }
 
   /**
@@ -181,7 +188,31 @@ public class StorageConnectorUtil {
   public String getValueOrNull(String val) {
     return isNullOrWhitespace(val)? null : val.trim();
   }
-  
+
+  public void validatePath(Project project, Users user, String path, String fileType) throws FeaturestoreException {
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfs.getDfsOps(project, user);
+      validatePath(dfso, path, fileType);
+    } catch (IOException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.INFO,
+          "Error validating " + fileType, e.getMessage(), e);
+    } finally {
+      dfs.closeDfsClient(dfso);
+    }
+  }
+
+  public void validatePath(DistributedFileSystemOps dfso, String path, String fileType)
+      throws IOException, FeaturestoreException {
+    if (Strings.isNullOrEmpty(path)) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
+          fileType + " is mandatory");
+    } else if (!dfso.exists(path)) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
+          fileType + " does not exists");
+    }
+  }
+
   public void removeHdfsFile(Project project, Users user, String keyPath) throws FeaturestoreException {
     if (Strings.isNullOrEmpty(keyPath)){
       throw new IllegalArgumentException("File Path to delete cannot be null or empty");
