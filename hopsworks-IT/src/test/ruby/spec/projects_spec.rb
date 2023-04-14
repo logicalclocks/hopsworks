@@ -345,27 +345,6 @@ describe "On #{ENV['OS']}" do
           project_username = @project[:projectname] + "__" + user.username
           expect(RemoteMaterialReferences.find_by(username: @project[:projectname])).to be_nil
         end
-        it "should delete and recreate spark tour" do
-          project = create_project_tour("spark")
-          delete_project(project)
-          sleep(15)
-          project = create_project_tour("spark")
-          delete_project(project)
-        end
-        it "should delete and recreate kafka tour" do
-          project = create_project_tour("kafka")
-          delete_project(project)
-          sleep(15)
-          project = create_project_tour("kafka")
-          delete_project(project)
-        end
-        it "should delete and recreate deep_learning tour" do
-          project = create_project_tour("ml")
-          delete_project(project)
-          sleep(15)
-          project = create_project_tour("ml")
-          delete_project(project)
-        end
       end
     end
     describe "#update" do

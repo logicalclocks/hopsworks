@@ -50,10 +50,6 @@ angular.module('hopsWorksApp')
                 method: "POST",
                 headers: {'Content-Type': 'application/json; charset=UTF-8'}
               },
-              "example": {
-                'method': 'POST',
-                 url: '/api/project/starterProject/:type'
-              },
               "delete": {
                 url: '/api/project/:id/delete',  
                 method: 'POST'

@@ -17,16 +17,16 @@
 INFERENCE_SCHEMA_NAME = "inferenceschema"
 INFERENCE_SCHEMA_VERSION = 2
 
-TF_TOURS_LOCATION = "/user/hdfs/tensorflow_demo/data"
+TF_TOURS_LOCATION = "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/ml/data"
 MNIST_TOUR_DATA_LOCATION = "#{TF_TOURS_LOCATION}/mnist"
 TF_MODEL_TOUR_FILE_LOCATION = "#{MNIST_TOUR_DATA_LOCATION}/model/*"
 SKLEARN_MODEL_TOUR_FILE_LOCATION = "#{TF_TOURS_LOCATION}/iris/iris_knn.pkl"
 SKLEARN_SCRIPT_FILE_NAME="iris_flower_classifier.py"
-SKLEARN_SCRIPT_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/notebooks/end_to_end_pipeline/sklearn/#{SKLEARN_SCRIPT_FILE_NAME}"
+SKLEARN_SCRIPT_TOUR_FILE_LOCATION = "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/ml/notebooks/end_to_end_pipeline/sklearn/#{SKLEARN_SCRIPT_FILE_NAME}"
 TRANSFORMER_SCRIPT_FILE_NAME="transformer.py"
 TRANSFORMER_NB_FILE_NAME="transformer.ipynb"
-TRANSFORMER_SCRIPT_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/notebooks/serving/kserve/tensorflow/#{TRANSFORMER_SCRIPT_FILE_NAME}"
-TRANSFORMER_NB_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/notebooks/serving/kserve/tensorflow/#{TRANSFORMER_NB_FILE_NAME}"
+TRANSFORMER_SCRIPT_TOUR_FILE_LOCATION = "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/ml/notebooks/serving/kserve/tensorflow/#{TRANSFORMER_SCRIPT_FILE_NAME}"
+TRANSFORMER_NB_TOUR_FILE_LOCATION = "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/ml/notebooks/serving/kserve/tensorflow/#{TRANSFORMER_NB_FILE_NAME}"
 
 module ServingHelper
 
@@ -152,20 +152,20 @@ module ServingHelper
 
   def copy_mnist_files(project_name, user)
     mkdir("/Projects/#{project_name}/Models/mnist/", "#{project_name}__#{user}", "#{project_name}__Models", 750)
-    copy(TF_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
-    copy(TRANSFORMER_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
-    copy(TRANSFORMER_NB_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
-    copy(TRANSFORMER_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/2/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
-    copy(TRANSFORMER_NB_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/2/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy_from_local(TF_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy_from_local(TRANSFORMER_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy_from_local(TRANSFORMER_NB_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy_from_local(TRANSFORMER_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/2/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy_from_local(TRANSFORMER_NB_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/2/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
   end
 
   def copy_iris_files(project_name, user)
     mkdir("/Projects/#{project_name}/Models/irisflowerclassifier/", "#{project_name}__#{user}", "#{project_name}__Models", 750)
     mkdir("/Projects/#{project_name}/Models/irisflowerclassifier/1", "#{project_name}__#{user}", "#{project_name}__Models", 750)
-    copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
-    copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
-    copy(TRANSFORMER_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
-    copy(TRANSFORMER_NB_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy_from_local(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy_from_local(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy_from_local(TRANSFORMER_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy_from_local(TRANSFORMER_NB_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
   end
 
   def parse_serving_json(serving)

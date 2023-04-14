@@ -191,41 +191,6 @@ angular.module('hopsWorksApp')
               });
             };
 
-            self.createExampleProject = function (uiTourName) {
-
-              $scope.creating[uiTourName] = true;
-
-              var internalTourName = '';
-              if(uiTourName === 'Deep Learning') {
-                internalTourName = 'ml';
-              } else {
-                internalTourName = uiTourName;
-              }
-              self.enableTourTips();
-
-              ProjectService.example({type: internalTourName}).$promise.then(
-                      function (success) {
-                        $scope.creating[uiTourName] = false;
-                        self.tourService.setActiveTour(internalTourName);
-                        growl.success("Created Tour Project", {title: 'Success', ttl: 5000});
-                        self.exampleProjectID = success.id;
-                        updateUIAfterChange(true);
-                        if (success.errorMsg) {
-                          $scope.creating[uiTourName] = false;
-                          growl.warning("some problem", {title: 'Error', ttl: 10000});
-                        }
-                      },
-                      function (error) {
-                        $scope.creating[uiTourName] = false;
-                          if (typeof error.data.usrMsg !== 'undefined') {
-                              growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                          } else {
-                              growl.error("", {title: error.data.errorMsg, ttl: 8000});
-                          }
-                      }
-              );
-            };
-
             self.EnterExampleProject = function (id) {
               $location.path('/project/' + id);
               $location.replace();

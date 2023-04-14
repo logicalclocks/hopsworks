@@ -32,11 +32,6 @@ describe "On #{ENV['OS']}" do
           expect_status_details(403)
         end
 
-        it "should not allow creating demo project" do
-          post "#{ENV['HOPSWORKS_API']}/project/starterProject/spark"
-          expect_status_details(403)
-        end
-
         it "should not allow to delete project" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/delete"
           expect_status_details(403)
@@ -148,11 +143,6 @@ describe "On #{ENV['OS']}" do
 
         it "should not allow to create new project" do
           post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}", description: "", status: 0, services: ["JOBS","HIVE"], projectTeam:[], retentionPeriod: ""}
-          expect_status_details(403)
-        end
-
-        it "should not allow creating demo project" do
-          post "#{ENV['HOPSWORKS_API']}/project/starterProject/spark"
           expect_status_details(403)
         end
 

@@ -194,7 +194,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ANACONDA_DEFAULT_REPO = "conda_default_repo";
 
   private static final String VARIABLE_DOWNLOAD_ALLOWED = "download_allowed";
-  private static final String VARIABLE_HOPSEXAMPLES_VERSION = "hopsexamples_version";
 
   private static final String VARIABLE_KAGENT_USER = "kagent_user";
   private static final String VARIABLE_KAGENT_LIVENESS_MONITOR_ENABLED = "kagent_liveness_monitor_enabled";
@@ -646,7 +645,6 @@ public class Settings implements Serializable {
       SPARK_DIR = setDirVar(VARIABLE_SPARK_DIR, SPARK_DIR);
       FLINK_DIR = setDirVar(VARIABLE_FLINK_DIR, FLINK_DIR);
       STAGING_DIR = setDirVar(VARIABLE_STAGING_DIR, STAGING_DIR);
-      HOPS_EXAMPLES_VERSION = setVar(VARIABLE_HOPSEXAMPLES_VERSION, HOPS_EXAMPLES_VERSION);
       HIVE_SUPERUSER = setStrVar(VARIABLE_HIVE_SUPERUSER, HIVE_SUPERUSER);
       HIVE_WAREHOUSE = setStrVar(VARIABLE_HIVE_WAREHOUSE, HIVE_WAREHOUSE);
       HIVE_SCRATCHDIR = setStrVar(VARIABLE_HIVE_SCRATCHDIR, HIVE_SCRATCHDIR);
@@ -1054,8 +1052,7 @@ public class Settings implements Serializable {
   public static final String TENSORBOARD_DIRS = "/tensorboard/";
 
   private String SPARK_DIR = "/srv/hops/spark";
-  public static final String SPARK_EXAMPLES_DIR = "/examples/jars";
-  
+
   public static final String CONVERSION_DIR = "/ipython_conversions/";
 
   public static final String SPARK_NUMBER_EXECUTORS_ENV
@@ -1444,8 +1441,6 @@ public class Settings implements Serializable {
   public static final String HOPS_MODELS_INPUT_EXAMPLE = "input_example.json";
 
   public static final String HOPS_TOUR_DATASET = "TestJob";
-  public static final String HOPS_DL_TOUR_DATASET = "TourData";
-  public static final String HOPS_TOUR_DATASET_JUPYTER = "Jupyter";
   // Distribution-defined classpath to add to processes
   public static final String SPARK_AM_MAIN
       = "org.apache.spark.deploy.yarn.ApplicationMaster";
@@ -1457,8 +1452,6 @@ public class Settings implements Serializable {
   private int SPARK_EXECUTOR_MIN_MEMORY = 1024;
 
   //Flink constants
-  public static final String HOPS_DEEP_LEARNING_TOUR_DATA = "tensorflow_demo/data";
-  public static final String HOPS_DEEP_LEARNING_TOUR_NOTEBOOKS = "tensorflow_demo/notebooks";
   public static final String FLINK_AM_MAIN = "org.apache.flink.yarn.ApplicationMaster";
   public static final String FLINK_ENV_JAVA_OPTS = "env.java.opts";
   public static final String FLINK_STATE_CHECKPOINTS_DIR = "state.checkpoints.dir";
@@ -2332,15 +2325,6 @@ public class Settings implements Serializable {
     return PYTHON_LIBRARY_UPDATES_MONITOR_INTERVAL;
   }
 
-  private String HOPS_EXAMPLES_VERSION = "0.3.0";
-
-  public synchronized String getHopsExamplesSparkFilename() {
-    checkCache();
-    return "hops-examples-spark-" + HOPS_EXAMPLES_VERSION + ".jar";
-  }
-
-
-  //Dela START
   private static final String VARIABLE_HOPSWORKS_PUBLIC_HOST = "hopsworks_public_host";
 
   private Boolean DELA_ENABLED = false; // set to false if not found in variables table
