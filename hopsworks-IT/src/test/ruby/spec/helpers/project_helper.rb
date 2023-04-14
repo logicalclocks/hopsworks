@@ -56,13 +56,18 @@ module ProjectHelper
   end
 
   def with_valid_tour_project(type)
-    @project ||= create_project_tour(type)
+    @project ||= create_project
+    if type.eql?("spark")
+      add_spark_tour_files
+    end
     get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/?action=listing"
     pp "get #{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/?action=listing" if defined?(@debugOpt) && @debugOpt == true
-    if response.code != 200 # project and logged in user not the same
-      pp "tour project create response:#{response.code}" if defined?(@debugOpt) && @debugOpt == true
-      @project = create_project_tour(type)
-    end
+  end
+
+  def add_spark_tour_files()
+    copy_from_local("/srv/hops/spark/examples/jars/spark-examples_#{ENV['SPARK_EXAMPLE_VERSION']}.jar",
+                    "/Projects/#{@project[:projectname]}/Resources/spark-examples.jar", @user[:username],
+                    "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
   end
 
   def create_project(projectName = nil, 
@@ -92,25 +97,6 @@ module ProjectHelper
   def project_expect_status(status)
     body = JSON.parse(response.body)
     expect(response.code).to eq(resolve_status(status, response.code)), "found code:#{response.code} and body:#{body}"
-  end
-
-  def create_project_by_name_existing_user(projectname)
-    new_project = {projectName: projectname, description:"",
-                   services: ["JOBS","JUPYTER", "HIVE", "KAFKA","SERVING", "FEATURESTORE"],
-                   projectTeam:[]}
-    post "#{ENV['HOPSWORKS_API']}/project", new_project
-    project_expect_status(201)
-    expect_json(successMessage: regex("Project created successfully.*"))
-    get_project_by_name(new_project[:projectName])
-  end
-
-  def create_project_tour(tourtype)
-    with_valid_session
-    post "#{ENV['HOPSWORKS_API']}/project/starterProject/#{tourtype}"
-    pp "post #{ENV['HOPSWORKS_API']}/project/starterProject/#{tourtype}" if defined?(@debugOpt) && @debugOpt == true
-    expect_status_details(201)
-    expect_json(description: regex("A demo project*"))
-    get_project_by_name(json_body[:name])
   end
 
   def update_project(project)

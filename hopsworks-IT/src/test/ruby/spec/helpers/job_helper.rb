@@ -129,7 +129,7 @@ module JobHelper
             "amMemory": 1024,
             "amVCores": 1,
             "jobType": "SPARK",
-            "appPath": "hdfs:///Projects/#{project[:projectname]}/TestJob/spark-examples.jar",
+            "appPath": "hdfs:///Projects/#{project[:projectname]}/Resources/spark-examples.jar",
             "mainClass": "org.apache.spark.examples.SparkPi",
             "defaultArgs": "10",
             "spark.executor.instances": 1,
@@ -177,7 +177,7 @@ module JobHelper
     if job_conf.nil?
       job_conf = get_python_default_config(project, job_name, type)
       job_conf["defaultArgs"] = "10"
-      job_conf["files"] = "hdfs:///Projects/#{project[:projectname]}/Resources/README.md,hdfs:///Projects/#{project[:projectname]}/TestJob/spark-examples.jar"
+      job_conf["files"] = "hdfs:///Projects/#{project[:projectname]}/Resources/README.md,hdfs:///Projects/#{project[:projectname]}/Resources/spark-examples.jar"
     end
 
     if type.eql? "py"

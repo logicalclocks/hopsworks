@@ -17,31 +17,6 @@
     <div class="pull-left" style="min-width: 220px; max-width: 220px">
         <div class="list-group">
             <a href="" class="list-group-item active">Help</a>
-            <a href="" ng-click="homeCtrl.showTours = !homeCtrl.showTours" class="list-group-item">
-                <span class="glyphicon"
-                      ng-class="{'glyphicon-triangle-right':!homeCtrl.showTours, 'glyphicon-triangle-bottom':homeCtrl.showTours}"></span>
-                Tours
-                <span class="glyphicon glyphicon-expand pull-right"></span>
-            </a>
-            <a href="" class="list-group-item" ng-show="homeCtrl.showTours" ng-class="{'tour-highlight': homeCtrl.showGettingStarted()}">
-                <div style="margin-top: 10px">
-                    <md-checkbox md-no-ink aria-label="Tour tips" class="md-primary"
-                                 ng-model="homeCtrl.showTT" ng-change="toggleTourTips()">
-                                 Tour tips: {{homeCtrl.showTT? 'ON' : 'OFF'}}
-                    </md-checkbox>
-                </div>
-                <div><i>Click on a tour to get started!</i></div>
-                <div ng-repeat="tour in homeCtrl.tours">
-                    <button style="margin: 0px; padding-bottom: 5px; padding-top: 5px; padding-left: 0px; padding-right: 0px;" type="button" class="btn btn-default btn-block"
-                            ng-click="homeCtrl.createExampleProject(tour.name)">
-                        <span style="margin-right: 5px" class="glyphicon glyphicon-play-circle pull-right"
-                              ng-hide="isCreating(tour.name) === true"></span>
-                        <span style="margin-right: 5px" class="fa fa-spinner fa-spin pull-right"
-                              ng-hide="isCreating(tour.name) === false"></span>
-                        <span class="button-text">{{tour.name}}</span>
-                    </button>
-                </div>
-            </a>
             <a ng-if="isDelaEnabled" href="#!/delahopsDataset" class="list-group-item">
                 <span class="fa fa-globe"></span>
                 Hops Datasets</a>

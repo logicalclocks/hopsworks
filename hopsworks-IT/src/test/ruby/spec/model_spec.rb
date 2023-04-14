@@ -69,7 +69,7 @@ describe "On #{ENV['OS']}" do
 
     context 'with authentication create, get' do
       before :all do
-        with_valid_tour_project("ml")
+        with_valid_project
       end
 
       it "should not find any models" do
@@ -135,7 +135,7 @@ describe "On #{ENV['OS']}" do
   describe 'models sort, filter, offset and limit' do
     context 'with authentication' do
       before :all do
-        with_valid_tour_project("ml")
+        with_valid_project
         create_model_job(@project, experiment_1, "export_model.ipynb")
         run_experiment_blocking(@project, experiment_1)
       end

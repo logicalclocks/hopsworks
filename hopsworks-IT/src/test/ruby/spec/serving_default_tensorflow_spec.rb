@@ -59,7 +59,7 @@ describe "On #{ENV['OS']}" do
       expect_json(usrMsg: "Model path does not respect the Tensorflow standard")
 
       saved_model_path = "#{MNIST_TOUR_DATA_LOCATION}/model/1/saved_model.pb"
-      copy(saved_model_path, "/Projects/#{@project[:projectname]}/Models/mnist/1", "#{@user[:username]}", "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
+      copy_from_local(saved_model_path, "/Projects/#{@project[:projectname]}/Models/mnist/1", "#{@user[:username]}", "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
     end
 
     # artifact version

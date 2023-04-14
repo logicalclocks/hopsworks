@@ -82,7 +82,6 @@ import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
 import io.hops.hopsworks.common.project.ProjectQuotasController;
 import io.hops.hopsworks.common.project.Quotas;
-import io.hops.hopsworks.common.project.TourProjectType;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.common.user.AuthController;
@@ -93,7 +92,6 @@ import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
-import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
@@ -136,7 +134,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -544,85 +541,6 @@ public class ProjectService {
 
     return noCacheResponse.getNoCacheResponseBuilder(
         Response.Status.CREATED).entity(json).build();
-  }
-
-  private void populateActiveServices(List<String> projectServices, TourProjectType tourType) {
-    for (ProjectServiceEnum service : tourType.getActiveServices()) {
-      projectServices.add(service.name());
-    }
-  }
-
-  @POST
-  @Path("starterProject/{type}")
-  @Produces(MediaType.APPLICATION_JSON)
-  public Response example(@PathParam("type") String type, @Context HttpServletRequest req, @Context SecurityContext sc)
-    throws DatasetException, GenericException, KafkaException, ProjectException, UserException, ServiceException,
-    HopsSecurityException, FeaturestoreException, JobException, IOException, OpenSearchException, SchemaException,
-    ProvenanceException {
-    TourProjectType demoType;
-    try {
-      demoType = TourProjectType.fromString(type);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException("Type must be one of: " + Arrays.toString(TourProjectType.values()));
-    }
-    ProjectDTO projectDTO = new ProjectDTO();
-    Project project = null;
-    projectDTO.setDescription("A demo project for getting started with " + demoType.getDescription());
-
-    Users user = jWTHelper.getUserPrincipal(sc);
-    String username = user.getUsername();
-    List<String> projectServices = new ArrayList<>();
-    //save the project
-
-    String readMeMessage = null;
-    switch (demoType) {
-      case KAFKA:
-        // It's a Kafka guide
-        projectDTO.setProjectName("demo_" + TourProjectType.KAFKA.getTourName() + "_" + username);
-        populateActiveServices(projectServices, TourProjectType.KAFKA);
-        readMeMessage = "jar file to demonstrate Kafka streaming";
-        break;
-      case SPARK:
-        // It's a Spark guide
-        projectDTO.setProjectName("demo_" + TourProjectType.SPARK.getTourName() + "_" + username);
-        populateActiveServices(projectServices, TourProjectType.SPARK);
-        readMeMessage = "jar file to demonstrate the creation of a spark batch job";
-        break;
-      case ML:
-        // It's a TensorFlow guide
-        projectDTO.setProjectName("demo_" + TourProjectType.ML.getTourName() + "_" + username);
-        populateActiveServices(projectServices, TourProjectType.ML);
-        readMeMessage = "Jupyter notebooks and training data for demonstrating how to run Deep Learning";
-        break;
-      default:
-        throw new IllegalArgumentException("Type must be one of: " + Arrays.toString(TourProjectType.values()));
-    }
-    projectDTO.setServices(projectServices);
-
-    DistributedFileSystemOps dfso = null;
-    DistributedFileSystemOps udfso = null;
-    try {
-      project = projectController.createProject(projectDTO, user);
-      dfso = dfs.getDfsOps();
-      username = hdfsUsersBean.getHdfsUserName(project, user);
-      udfso = dfs.getDfsOps(username);
-      ProvTypeDTO projectMetaStatus = fsProvenanceController.getProjectProvType(user, project);
-      String tourFilesDataset
-        = projectController.addTourFilesToProject(user.getEmail(), project, dfso, dfso, demoType, projectMetaStatus);
-      //TestJob dataset
-      datasetController.generateReadme(udfso, tourFilesDataset, readMeMessage, project.getName());
-    } catch (Exception ex) {
-      projectController.cleanup(project);
-      throw ex;
-    } finally {
-      if (dfso != null) {
-        dfso.close();
-      }
-      if (udfso != null) {
-        dfs.closeDfsClient(udfso);
-      }
-    }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(project).build();
   }
 
   @POST

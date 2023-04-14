@@ -17,12 +17,20 @@
 INFERENCE_SCHEMA_NAME = "inferenceschema"
 INFERENCE_SCHEMA_VERSION = 2
 
-TF_TOURS_LOCATION = "/user/hdfs/tensorflow_demo/data"
+TF_TOURS_LOCATION = "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/ml/data"
 MNIST_TOUR_DATA_LOCATION = "#{TF_TOURS_LOCATION}/mnist"
 TF_MODEL_TOUR_FILE_LOCATION = "#{MNIST_TOUR_DATA_LOCATION}/model/*"
 SKLEARN_MODEL_TOUR_FILE_LOCATION = "#{TF_TOURS_LOCATION}/iris/iris_knn.pkl"
 SKLEARN_SCRIPT_FILE_NAME="iris_flower_classifier.py"
+<<<<<<< HEAD
 SKLEARN_SCRIPT_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/notebooks/end_to_end_pipeline/sklearn/#{SKLEARN_SCRIPT_FILE_NAME}"
+=======
+SKLEARN_SCRIPT_TOUR_FILE_LOCATION = "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/ml/notebooks/end_to_end_pipeline/sklearn/#{SKLEARN_SCRIPT_FILE_NAME}"
+TRANSFORMER_SCRIPT_FILE_NAME="transformer.py"
+TRANSFORMER_NB_FILE_NAME="transformer.ipynb"
+TRANSFORMER_SCRIPT_TOUR_FILE_LOCATION = "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/ml/notebooks/serving/kserve/tensorflow/#{TRANSFORMER_SCRIPT_FILE_NAME}"
+TRANSFORMER_NB_TOUR_FILE_LOCATION = "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/ml/notebooks/serving/kserve/tensorflow/#{TRANSFORMER_NB_FILE_NAME}"
+>>>>>>> 1977e2878d ([HWORKS-455] Remove old tours (#1337))
 
 module ServingHelper
 
@@ -92,14 +100,95 @@ module ServingHelper
 
   def copy_mnist_files(project_name, user)
     mkdir("/Projects/#{project_name}/Models/mnist/", "#{project_name}__#{user}", "#{project_name}__Models", 750)
+<<<<<<< HEAD
     copy(TF_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+=======
+    copy_from_local(TF_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy_from_local(TRANSFORMER_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy_from_local(TRANSFORMER_NB_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy_from_local(TRANSFORMER_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/2/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy_from_local(TRANSFORMER_NB_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/2/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+>>>>>>> 1977e2878d ([HWORKS-455] Remove old tours (#1337))
   end
 
   def copy_iris_files(project_name, user)
     mkdir("/Projects/#{project_name}/Models/irisflowerclassifier/", "#{project_name}__#{user}", "#{project_name}__Models", 750)
     mkdir("/Projects/#{project_name}/Models/irisflowerclassifier/1", "#{project_name}__#{user}", "#{project_name}__Models", 750)
+<<<<<<< HEAD
     copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
     copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+=======
+    copy_from_local(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy_from_local(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy_from_local(TRANSFORMER_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy_from_local(TRANSFORMER_NB_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+  end
+
+  def parse_serving_json(serving)
+    if serving[:batchingConfiguration].is_a?(String)
+      serving[:batchingConfiguration] = JSON.parse(serving[:batchingConfiguration])
+    end
+    if serving[:predictorResources].is_a?(String)
+      serving[:predictorResources] = JSON.parse(serving[:predictorResources])
+    end
+    if serving[:transformerResources].is_a?(String)
+      serving[:transformerResources] = JSON.parse(serving[:transformerResources])
+    end
+    if serving[:kafkaTopicDTO].is_a?(String)
+      serving[:kafkaTopicDTO] = JSON.parse(serving[:kafkaTopicDTO])
+    end
+    return serving
+  end
+
+  def purge_all_kserve_instances(project_name="", should_exist=true)
+
+    if !project_name.empty?
+      # Purge all inferenceservices in a namespace
+      namespace = project_name.gsub("_","-").downcase
+      output = nil
+      inf_services = nil
+
+      if kubernetes_installed
+        kube_user = Variables.find_by(id: "kube_user").value
+
+        #Get all inference services
+        cmd = "sudo su #{kube_user} /bin/bash -c \"kubectl get inferenceservices --namespace=#{namespace} -o=jsonpath='{.items[*].metadata.name}'\""
+        Open3.popen3(cmd) do |_, stdout, _, wait_thr|
+          inf_services = stdout.read.split("\n")
+        end
+        if should_exist
+          expect(inf_services).not_to be_empty
+        end
+
+        #Remove all inference services
+        cmd = "sudo su #{kube_user} /bin/bash -c \"kubectl delete --all inferenceservices --namespace=#{namespace}\""
+        Open3.popen3(cmd) do |_, stdout, _, wait_thr|
+          output = stdout.read
+        end
+
+        if should_exist
+          output != "No resources in #{namespace} namespace." and output != ""
+        else
+          output == "No resources in #{namespace} namespace." or output == ""
+        end
+        if should_exist
+          inf_services.each do |name|
+            expect(output).to include(name)
+          end
+        else
+          inf_services.each do |name|
+            expect(output).not_to include(name)
+          end
+        end
+      end
+    else
+      # Purge all inferenceservices
+      cmd = "sudo su #{kube_user} /bin/bash -c \"kubectl delete --all inferenceservices --all-namespaces\""
+      Open3.popen3(cmd) do |_, stdout, _, wait_thr|
+        output = stdout.read
+      end
+    end
+>>>>>>> 1977e2878d ([HWORKS-455] Remove old tours (#1337))
   end
 
   def purge_all_tf_serving_instances()

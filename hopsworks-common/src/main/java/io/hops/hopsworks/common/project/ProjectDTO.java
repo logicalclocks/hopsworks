@@ -62,7 +62,6 @@ public class ProjectDTO {
   private List<InodeView> datasets;
   private Long inodeid;
   private Quotas quotas;
-  private String hopsExamples;
   private boolean isPreinstalledDockerImage;
   private boolean isOldDockerImage;
   private CreationStatus creationStatus;
@@ -77,7 +76,7 @@ public class ProjectDTO {
   }
 
   public ProjectDTO(Project project, Long inodeid, List<String> services,
-                    List<ProjectTeam> projectTeam, Quotas quotas, String hopsExamples,
+                    List<ProjectTeam> projectTeam, Quotas quotas,
                     boolean isPreinstalledDockerImage, boolean isOldDockerImage) {
     this.projectId = project.getId();
     this.inodeid = inodeid;
@@ -89,7 +88,6 @@ public class ProjectDTO {
     this.services = services;
     this.projectTeam = projectTeam;
     this.quotas = quotas;
-    this.hopsExamples = hopsExamples;
     this.isPreinstalledDockerImage = isPreinstalledDockerImage;
     this.isOldDockerImage = isOldDockerImage;
     this.creationStatus = project.getCreationStatus();
@@ -214,14 +212,6 @@ public class ProjectDTO {
 
   public void setQuotas(Quotas quotas) {
     this.quotas = quotas;
-  }
-
-  public String getHopsExamples() {
-    return hopsExamples;
-  }
-
-  public void setHopsExamples(String hopsExamples) {
-    this.hopsExamples = hopsExamples;
   }
 
   public boolean getIsPreinstalledDockerImage() {

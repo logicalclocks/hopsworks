@@ -2043,7 +2043,7 @@ public class ProjectController {
     Quotas quotas = projectQuotasController.getQuotas(project);
 
     return new ProjectDTO(project, inode.getId(), services, projectTeam, quotas,
-      settings.getHopsExamplesSparkFilename(), projectUtils.dockerImageIsPreinstalled(project.getDockerImage()),
+        projectUtils.dockerImageIsPreinstalled(project.getDockerImage()),
         projectUtils.isOldDockerImage(project.getDockerImage()));
   }
 
@@ -2291,30 +2291,6 @@ public class ProjectController {
   }
 
   /**
-   * Retrieves all the project teams that a user have a role.
-   *
-   * @param email of the user
-   * @param ignoreCase
-   * @return a list of project names
-   */
-  public List<String> findProjectNamesByUser(String email, boolean ignoreCase) {
-    Users user = userFacade.findByEmail(email);
-    List<ProjectTeam> projectTeams = projectTeamFacade.findActiveByMember(user);
-    List<String> projects = null;
-    if (projectTeams != null && projectTeams.size() > 0) {
-      projects = new ArrayList<>();
-      for (ProjectTeam team : projectTeams) {
-        if (ignoreCase) {
-          projects.add(team.getProject().getName().toLowerCase());
-        } else {
-          projects.add(team.getProject().getName());
-        }
-      }
-    }
-    return projects;
-  }
-
-  /**
    * Retrieves all the project teams for a project
    *
    *
@@ -2337,104 +2313,6 @@ public class ProjectController {
   public void logActivity(String activityPerformed, Users performedBy, Project performedOn, ActivityFlag flag) {
     activityFacade.persistActivity(activityPerformed, performedOn, performedBy, flag);
   }
-  
-  public String addTourFilesToProject(String username, Project project, DistributedFileSystemOps dfso,
-    DistributedFileSystemOps udfso, TourProjectType projectType, ProvTypeDTO projectProvCore) throws DatasetException,
-    HopsSecurityException, ProjectException {
-    String tourFilesDataset = Settings.HOPS_TOUR_DATASET;
-    Users user = userFacade.findByEmail(username);
-    if (null != projectType) {
-      String projectPath = Utils.getProjectPath(project.getName());
-
-      switch (projectType) {
-        case SPARK:
-          datasetController.createDataset(user, project, tourFilesDataset, "files for guide projects",
-            Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET),
-              false, DatasetAccessPermission.EDITABLE, dfso);
-          String exampleDir = settings.getSparkDir() + Settings.SPARK_EXAMPLES_DIR + "/";
-          try {
-            File dir = new File(exampleDir);
-            File[] file = dir.listFiles((File dir1, String name) ->
-              name.matches("spark-examples(.*).jar"));
-            if (file.length == 0) {
-              throw new IllegalStateException("No spark-examples*.jar was found in "
-                + dir.getAbsolutePath());
-            }
-            if (file.length > 1) {
-              LOGGER.log(Level.WARNING,
-                "More than one spark-examples*.jar found in {0}.", dir.
-                  getAbsolutePath());
-            }
-            String hdfsJarPath = projectPath + tourFilesDataset + "/spark-examples.jar";
-            udfso.copyToHDFSFromLocal(false, file[0].getAbsolutePath(), hdfsJarPath);
-            String datasetGroup = hdfsUsersController.getHdfsGroupName(project, tourFilesDataset);
-            String userHdfsName = hdfsUsersController.getHdfsUserName(project, user);
-            udfso.setPermission(new Path(hdfsJarPath), udfso.getParentPermission(new Path(hdfsJarPath)));
-            udfso.setOwner(new Path(projectPath + tourFilesDataset + "/spark-examples.jar"),
-              userHdfsName, datasetGroup);
-
-          } catch (IOException ex) {
-            throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_TOUR_FILES_ERROR, Level.SEVERE,
-              "project: " + project.getName(), ex.getMessage(), ex);
-          }
-          break;
-        case KAFKA:
-          datasetController.createDataset(user, project, tourFilesDataset, "files for guide projects",
-            Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET),
-              false, DatasetAccessPermission.EDITABLE, dfso);
-          // Get the JAR from /user/<super user>
-          String kafkaExampleSrc = "/user/" + settings.getSparkUser() + "/"
-            + settings.getHopsExamplesSparkFilename();
-          String kafkaExampleDst = projectPath + tourFilesDataset + "/" + settings.getHopsExamplesSparkFilename();
-          try {
-            udfso.copyInHdfs(new Path(kafkaExampleSrc), new Path(kafkaExampleDst));
-            String datasetGroup = hdfsUsersController.getHdfsGroupName(project, tourFilesDataset);
-            String userHdfsName = hdfsUsersController.getHdfsUserName(project, user);
-            udfso.setPermission(new Path(kafkaExampleDst), udfso.getParentPermission(new Path(kafkaExampleDst)));
-            udfso.setOwner(new Path(kafkaExampleDst), userHdfsName, datasetGroup);
-
-          } catch (IOException ex) {
-            throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_TOUR_FILES_ERROR, Level.SEVERE,
-              "project: " + project.getName(), ex.getMessage(), ex);
-          }
-          break;
-        case ML:
-          tourFilesDataset = Settings.HOPS_DL_TOUR_DATASET;
-          datasetController.createDataset(user, project, tourFilesDataset, "sample training data for notebooks",
-            Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET)
-            , false, DatasetAccessPermission.EDITABLE, dfso);
-          String DLDataSrc = "/user/" + settings.getHdfsSuperUser() + "/" + Settings.HOPS_DEEP_LEARNING_TOUR_DATA
-            + "/*";
-          String DLDataDst = projectPath + Settings.HOPS_DL_TOUR_DATASET;
-          String DLNotebooksSrc = "/user/" + settings.getHdfsSuperUser() + "/" +
-            Settings.HOPS_DEEP_LEARNING_TOUR_NOTEBOOKS;
-          String DLNotebooksDst = projectPath + Settings.HOPS_TOUR_DATASET_JUPYTER;
-          try {
-            udfso.copyInHdfs(new Path(DLDataSrc), new Path(DLDataDst));
-            String datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_DL_TOUR_DATASET);
-            String userHdfsName = hdfsUsersController.getHdfsUserName(project, user);
-            Inode tourDs = inodeController.getInodeAtPath(DLDataDst);
-            datasetController.recChangeOwnershipAndPermission(new Path(DLDataDst),
-              FsPermission.createImmutable(tourDs.getPermission()),
-              userHdfsName, datasetGroup, dfso, udfso);
-            udfso.copyInHdfs(new Path(DLNotebooksSrc + "/*"), new Path(DLNotebooksDst));
-            datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET_JUPYTER);
-            Inode jupyterDS = inodeController.getInodeAtPath(DLNotebooksDst);
-            datasetController.recChangeOwnershipAndPermission(new Path(DLNotebooksDst),
-              FsPermission.createImmutable(jupyterDS.getPermission()),
-              userHdfsName, datasetGroup, dfso, udfso);
-          } catch (IOException ex) {
-            throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_TOUR_FILES_ERROR, Level.SEVERE,
-              "project: " + project.getName(), ex.getMessage(), ex);
-          }
-          break;
-        default:
-          break;
-      }
-    }
-    return tourFilesDataset;
-  }
-
   public List<YarnPriceMultiplicator> getYarnMultiplicators() {
     List<YarnPriceMultiplicator> multiplicators = new ArrayList<>(yarnProjectsQuotaFacade.getMultiplicators());
     if (multiplicators.isEmpty()) {
