@@ -105,5 +105,9 @@
       <groupId>javax.json.bind</groupId>
       <artifactId>javax.json.bind-api</artifactId>
     </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
   </dependencies>
 </project>
