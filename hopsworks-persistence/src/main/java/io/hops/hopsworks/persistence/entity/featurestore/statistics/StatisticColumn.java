@@ -103,15 +103,12 @@ public class StatisticColumn implements Serializable {
       return false;
     }
     StatisticColumn that = (StatisticColumn) o;
-    return Objects.equals(id, that.id) &&
-      Objects.equals(statisticsConfig, that.statisticsConfig) &&
-      Objects.equals(name, that.name);
+    return Objects.equals(id, that.id) && Objects.equals(name, that.name);
   }
 
   @Override
   public int hashCode() {
     int result = id.hashCode();
-    result = 31 * result + statisticsConfig.hashCode();
     result = 31 * result + name.hashCode();
     return result;
   }
