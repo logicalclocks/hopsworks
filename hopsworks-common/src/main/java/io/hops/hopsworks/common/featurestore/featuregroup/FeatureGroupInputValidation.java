@@ -45,16 +45,18 @@ import static io.hops.hopsworks.restutils.RESTCodes.FeaturestoreErrorCode.COULD_
 public class FeatureGroupInputValidation {
   
   @EJB
-  private FeaturestoreInputValidation featureStoreInputValidation;
+  protected FeaturestoreInputValidation featureStoreInputValidation;
   @EJB
-  private OnlineFeaturegroupController onlineFeaturegroupController;
+  protected OnlineFeaturegroupController onlineFeaturegroupController;
   
   public FeatureGroupInputValidation() {
   }
   
   // for testing
-  public FeatureGroupInputValidation(FeaturestoreInputValidation featureStoreInputValidation) {
+  public FeatureGroupInputValidation(FeaturestoreInputValidation featureStoreInputValidation,
+                                     OnlineFeaturegroupController onlineFeaturegroupController) {
     this.featureStoreInputValidation = featureStoreInputValidation;
+    this.onlineFeaturegroupController = onlineFeaturegroupController;
   }
   
   /**
@@ -164,7 +166,8 @@ public class FeatureGroupInputValidation {
 
         if ((offlineType.startsWith("array") ||
           offlineType.startsWith("struct") ||
-          offlineType.startsWith("binary")) &&
+          offlineType.startsWith("binary") ||
+          offlineType.startsWith("map")) &&
           (onlineType.startsWith("varbinary") || onlineType.equals("blob"))) {
           continue;
         }
