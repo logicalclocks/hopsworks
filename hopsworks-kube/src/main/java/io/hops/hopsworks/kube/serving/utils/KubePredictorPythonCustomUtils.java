@@ -133,13 +133,14 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
   
   private Container buildPredictorContainer(Project project, Users user, Serving serving)
     throws ServiceDiscoveryException, ApiKeyException {
-    
-    List<EnvVar> envVars = buildEnvironmentVariables(project, user, serving);
+
     List<VolumeMount> volumeMounts = kubePredictorUtils.buildVolumeMounts();
   
     DeployableComponentResources predictorResources = serving.getPredictorResources();
     ResourceRequirements resourceRequirements = kubeClientService.
       buildResourceRequirements(predictorResources.getLimits(), predictorResources.getRequests());
+
+    List<EnvVar> envVars = buildEnvironmentVariables(project, user, serving, resourceRequirements);
     
     return new ContainerBuilder()
       .withName("predictor")
@@ -153,7 +154,8 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
       .build();
   }
   
-  private List<EnvVar> buildEnvironmentVariables(Project project, Users user, Serving serving)
+  private List<EnvVar> buildEnvironmentVariables(Project project, Users user, Serving serving,
+                                                 ResourceRequirements resourceRequirements)
     throws ServiceDiscoveryException, ApiKeyException {
     List<EnvVar> envVars = new ArrayList<>();
     
@@ -212,6 +214,9 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
       .withValue(String.valueOf(serving.getModelVersion())).build());
     envVars.add(new EnvVarBuilder().withName("ARTIFACT_VERSION")
       .withValue(String.valueOf(serving.getArtifactVersion())).build());
+
+    envVars.add(new EnvVarBuilder().withName("NVIDIA_VISIBLE_DEVICES")
+      .withValue(kubeClientService.getNvidiaVisibleDevices(resourceRequirements)).build());
     
     return envVars;
   }

@@ -204,7 +204,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
           buildResourceRequirements(jobConfiguration.getResourceConfig());
 
         List<EnvVar> primaryContainerEnv = getPrimaryContainerEnv(job.getJobType(), user, hdfsUser, project, execution,
-          certificatesDir, secretsDir, settings.getAnacondaProjectDir(), jobConfiguration);
+          certificatesDir, secretsDir, settings.getAnacondaProjectDir(), jobConfiguration, resourceRequirements);
         List<EnvVar> sidecarContainerEnv = getSidecarContainerEnv(job.getJobType(), project, execution,
           certificatesDir, hdfsUser);
         
@@ -576,7 +576,8 @@ public class KubeExecutionController extends AbstractExecutionController impleme
 
   private List<EnvVar> getPrimaryContainerEnv(JobType jobType, Users user, String hadoopUser, Project project,
     Execution execution, String certificatesDir, String secretsDir, String anacondaEnv,
-    DockerJobConfiguration dockerJobConfiguration) throws ServiceDiscoveryException, IOException, ApiKeyException {
+    DockerJobConfiguration dockerJobConfiguration, ResourceRequirements resourceRequirements)
+    throws ServiceDiscoveryException, IOException, ApiKeyException {
     
     List<EnvVar> environment = new ArrayList<>();
     switch (jobType) {
@@ -640,6 +641,8 @@ public class KubeExecutionController extends AbstractExecutionController impleme
         environment.add(new EnvVarBuilder().withName("APP_ARGS").withValue(execution.getArgs()).build());
         environment.add(new EnvVarBuilder().withName("APP_FILES")
           .withValue(((PythonJobConfiguration)dockerJobConfiguration).getFiles()).build());
+        environment.add(new EnvVarBuilder().withName("NVIDIA_VISIBLE_DEVICES")
+          .withValue(kubeClientService.getNvidiaVisibleDevices(resourceRequirements)).build());
         
         // serving env vars
         if (settings.getKubeKServeInstalled()) {

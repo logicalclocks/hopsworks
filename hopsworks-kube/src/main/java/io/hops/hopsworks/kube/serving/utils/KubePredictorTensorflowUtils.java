@@ -156,6 +156,8 @@ public class KubePredictorTensorflowUtils extends KubePredictorServerUtils {
       .withValue("1233").build());
     tfServingEnv.add(new EnvVarBuilder().withName("RESTPORT")
       .withValue("1234").build());
+    tfServingEnv.add(new EnvVarBuilder().withName("NVIDIA_VISIBLE_DEVICES")
+      .withValue(kubeClientService.getNvidiaVisibleDevices(resourceRequirements)).build());
     
     List<Volume> volumes = kubePredictorUtils.buildVolumes(project, user);
   

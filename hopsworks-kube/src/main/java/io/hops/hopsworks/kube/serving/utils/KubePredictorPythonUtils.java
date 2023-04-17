@@ -118,7 +118,7 @@ public class KubePredictorPythonUtils {
     ResourceRequirements resourceRequirements = kubeClientService.
       buildResourceRequirements(predictorResources.getLimits(), predictorResources.getRequests());
     
-    List<EnvVar> envVars = buildEnvironmentVariables(project, user, serving);
+    List<EnvVar> envVars = buildEnvironmentVariables(project, user, serving, resourceRequirements);
 
     List<Volume> volumes = kubePredictorUtils.buildVolumes(project, user);
     
@@ -206,7 +206,8 @@ public class KubePredictorPythonUtils {
       .build();
   }
   
-  private List<EnvVar> buildEnvironmentVariables(Project project, Users user, Serving serving)
+  private List<EnvVar> buildEnvironmentVariables(Project project, Users user, Serving serving,
+                                                 ResourceRequirements resourceRequirements)
     throws ServiceDiscoveryException, ApiKeyException {
     String projectUser = project.getName() + HOPS_USERNAME_SEPARATOR + user.getUsername();
     String servingIdStr = String.valueOf(serving.getId());
@@ -236,6 +237,8 @@ public class KubePredictorPythonUtils {
     envVars.add(new EnvVarBuilder().withName("SCRIPT_NAME")
       .withValue(kubePredictorUtils.getPredictorFileName(serving, true)).build());
     envVars.add(new EnvVarBuilder().withName("IS_KUBE").withValue("true").build());
+    envVars.add(new EnvVarBuilder().withName("NVIDIA_VISIBLE_DEVICES")
+      .withValue(kubeClientService.getNvidiaVisibleDevices(resourceRequirements)).build());
     
     // HSFS and HOPS
     envVars.add(new EnvVarBuilder()

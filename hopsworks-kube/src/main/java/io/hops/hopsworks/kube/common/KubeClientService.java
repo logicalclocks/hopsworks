@@ -799,6 +799,25 @@ public class KubeClientService {
       }
     }
   }
+
+  //Workaround for https://github.com/NVIDIA/k8s-device-plugin/issues/61
+  public String getNvidiaVisibleDevices(ResourceRequirements resourceRequirements) {
+    int gpuLimits = 0;
+    if(resourceRequirements.getLimits().containsKey("nvidia.com/gpu")) {
+      gpuLimits = resourceRequirements.getLimits().get("nvidia.com/gpu").getNumericalAmount().intValue();
+    }
+
+    int gpuRequested = 0;
+    if(resourceRequirements.getRequests().containsKey("nvidia.com/gpu")) {
+      gpuRequested = resourceRequirements.getRequests().get("nvidia.com/gpu").getNumericalAmount().intValue();
+    }
+
+    if(gpuLimits > 0 || gpuRequested > 0) {
+      return "all"; //use nvidia-container-runtime
+    } else {
+      return "void"; //same behaviour as runc (default container runtime) - i.e no access to GPUs
+    }
+  }
   
   public Pair<Integer, Integer> getNumReplicasRange(Integer minReplicas) {
     if (settings.getKubeServingMinNumInstances() == 0 && minReplicas != 0) {

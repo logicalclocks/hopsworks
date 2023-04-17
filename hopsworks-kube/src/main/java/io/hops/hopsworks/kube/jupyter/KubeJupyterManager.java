@@ -286,6 +286,8 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
     environment.add(new EnvVarBuilder().withName("HADOOP_HOME").withValue(hadoopHome).build());
     environment.add(new EnvVarBuilder().withName("ANACONDA_ENV").withValue(anacondaEnv).build());
     environment.add(new EnvVarBuilder().withName("PYTHONHASHSEED").withValue("0").build());
+    environment.add(new EnvVarBuilder().withName("NVIDIA_VISIBLE_DEVICES")
+      .withValue(kubeClientService.getNvidiaVisibleDevices(resourceRequirements)).build());
 
     // serving env vars
     if (settings.getKubeKServeInstalled()) {
