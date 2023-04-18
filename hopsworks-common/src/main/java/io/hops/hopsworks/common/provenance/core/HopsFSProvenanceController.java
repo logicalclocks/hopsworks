@@ -30,6 +30,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.common.provenance.core.dto.ProvCoreDTO;
 import io.hops.hopsworks.common.provenance.core.dto.ProvDatasetDTO;
@@ -79,6 +80,8 @@ public class HopsFSProvenanceController {
   private HopsworksJAXBContext converter;
   @EJB
   private XAttrsController xattrCtrl;
+  @EJB
+  private InodeController inodeController;
   
   /**
    * To be used on projects/datasets - only these have a provenance core xattr
@@ -140,6 +143,7 @@ public class HopsFSProvenanceController {
   public void updateProjectProvType(Project project, ProvTypeDTO newProvType, DistributedFileSystemOps dfso)
     throws ProvenanceException {
     String projectPath = Utils.getProjectPath(project.getName());
+    Inode projectInode = inodeController.getProjectRoot(project.getName());
     
     ProvCoreDTO provCore = getProvCoreXAttr(projectPath, dfso);
     if (provCore != null && newProvType.equals(provCore.getType())) {
@@ -148,7 +152,7 @@ public class HopsFSProvenanceController {
     provCore = new ProvCoreDTO(newProvType, null);
     setProvCoreXAttr(projectPath, provCore, dfso);
   
-    provCore = new ProvCoreDTO(newProvType, project.getInode().getId());
+    provCore = new ProvCoreDTO(newProvType, projectInode.getId());
     for (Dataset dataset : project.getDatasetCollection()) {
       String datasetPath = Utils.getFileSystemDatasetPath(dataset, settings);
       ProvCoreDTO datasetProvCore = getProvCoreXAttr(datasetPath, dfso);
@@ -163,7 +167,8 @@ public class HopsFSProvenanceController {
   
   public void updateDatasetProvType(Dataset dataset, ProvTypeDTO newProvType, DistributedFileSystemOps dfso)
     throws ProvenanceException {
-    ProvCoreDTO newProvCore = new ProvCoreDTO(newProvType, dataset.getProject().getInode().getId());
+    Inode projectInode = inodeController.getProjectRoot(dataset.getProject().getName());
+    ProvCoreDTO newProvCore = new ProvCoreDTO(newProvType, projectInode.getId());
     String datasetPath = Utils.getFileSystemDatasetPath(dataset, settings);
     ProvCoreDTO currentProvCore = getProvCoreXAttr(datasetPath, dfso);
     if(currentProvCore != null && currentProvCore.getType().equals(newProvType)) {
@@ -175,7 +180,8 @@ public class HopsFSProvenanceController {
   public void updateHiveDatasetProvCore(Project project, String hiveDBPath, ProvTypeDTO newProvType,
     DistributedFileSystemOps dfso)
     throws ProvenanceException {
-    ProvCoreDTO newProvCore = new ProvCoreDTO(newProvType, project.getInode().getId());
+    Inode projectInode = inodeController.getProjectRoot(project.getName());
+    ProvCoreDTO newProvCore = new ProvCoreDTO(newProvType, projectInode.getId());
     ProvCoreDTO currentProvCore = getProvCoreXAttr(hiveDBPath, dfso);
     if(currentProvCore != null && currentProvCore.getType().equals(newProvType)) {
       return;

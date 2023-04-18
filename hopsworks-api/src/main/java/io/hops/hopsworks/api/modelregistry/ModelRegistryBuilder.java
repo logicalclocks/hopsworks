@@ -86,7 +86,6 @@ public class ModelRegistryBuilder {
             .collect(Collectors.toList());
 
     dto.setCount((long)modelsDatasets.size());
-
     for(Dataset ds: modelsDatasets) {
       ModelRegistryDTO modelRegistryDTO = build(uriInfo, resourceRequest, user, project, ds.getProject());
       if(modelRegistryDTO != null) {

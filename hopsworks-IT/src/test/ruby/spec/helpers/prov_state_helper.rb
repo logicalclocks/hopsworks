@@ -73,7 +73,7 @@ module ProvStateHelper
   end
 
   def prov_create_experiment(project, experiment_name) 
-    #pp "create experiment #{experiment_name} in project #{project[:inode_name]}"
+    #pp "create experiment #{experiment_name} in project #{project[:projectname]}"
     prov_create_dir(project, "Experiments/#{experiment_name}")
   end
 
@@ -94,26 +94,26 @@ module ProvStateHelper
   end
 
   def prov_create_td(project, td_name, td_version) 
-    #pp "create training dataset #{td_name}_#{td_version} in project #{project[:inode_name]}"
-    training_datasets = "#{project[:inode_name]}_Training_Datasets"
+    #pp "create training dataset #{td_name}_#{td_version} in project #{project[:projectname]}"
+    training_datasets = "#{project[:projectname]}_Training_Datasets"
     prov_create_dir(project, "#{training_datasets}/#{td_name}_#{td_version}")
   end
 
   def prov_delete_experiment(project, experiment_name) 
-    #pp "delete experiment #{experiment_name} in project #{project[:inode_name]}"
+    #pp "delete experiment #{experiment_name} in project #{project[:projectname]}"
     experiments = "Experiments"
     prov_delete_dir(project, "#{experiments}/#{experiment_name}")
   end
 
   def prov_delete_model(project, model_name) 
-    #pp "delete model #{model_name} in project #{project[:inode_name]}"
+    #pp "delete model #{model_name} in project #{project[:projectname]}"
     models = "Models"
     prov_delete_dir(project, "#{models}/#{model_name}")
   end
 
   def prov_delete_td(project, td_name, td_version) 
-    #pp "delete training dataset #{td_name}_#{td_version} in project #{project[:inode_name]}"
-    training_datasets = "#{project[:inode_name]}_Training_Datasets"
+    #pp "delete training dataset #{td_name}_#{td_version} in project #{project[:projectname]}"
+    training_datasets = "#{project[:projectname]}_Training_Datasets"
     prov_delete_dir(project, "#{training_datasets}/#{td_name}_#{td_version}")
   end
 
@@ -130,14 +130,14 @@ module ProvStateHelper
   end
 
   def prov_get_td_record(project, td_name, td_version) 
-    training_datasets = "#{project[:inode_name]}_Training_Datasets"
+    training_datasets = "#{project[:projectname]}_Training_Datasets"
     training_dataset = prov_td_id(td_name, td_version)
-    FileProv.where("project_name": project["inode_name"], "i_parent_name": training_datasets, "i_name": training_dataset)
+    FileProv.where("project_name": project["projectname"], "i_parent_name": training_datasets, "i_name": training_dataset)
   end
 
   def prov_get_experiment_record(project, experiment_name) 
     experiment_parent = "Experiments"
-    FileProv.where("project_name": project["inode_name"], "i_parent_name": experiment_parent, "i_name": experiment_name)
+    FileProv.where("project_name": project["projectname"], "i_parent_name": experiment_parent, "i_name": experiment_name)
   end
 
   def prov_add_app_states1(app_id, user)

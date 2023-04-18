@@ -25,6 +25,7 @@ import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jupyter.JupyterController;
@@ -47,6 +48,7 @@ import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
@@ -95,6 +97,8 @@ public class ModelsController {
   private ProjectFacade projectFacade;
   @EJB
   private ModelUtils modelUtils;
+  @EJB
+  private InodeController inodeController;
   @Inject
   private ServingController servingController;
   
@@ -112,12 +116,13 @@ public class ModelsController {
   }
 
   public ProvStateDTO getModel(Project project, String mlId) throws ProvenanceException {
+    Inode projectInode = inodeController.getProjectRoot(project.getName());
     ProvStateParamBuilder provFilesParamBuilder = new ProvStateParamBuilder()
-      .filterByField(ProvStateParser.FieldsP.PROJECT_I_ID, project.getInode().getId())
+      .filterByField(ProvStateParser.FieldsP.PROJECT_I_ID, projectInode.getId())
       .filterByField(ProvStateParser.FieldsP.ML_TYPE, Provenance.MLType.MODEL.name())
       .filterByField(ProvStateParser.FieldsP.ML_ID, mlId)
       .paginate(0, 1);
-    ProvStateDTO fileState = provenanceController.provFileStateList(project, provFilesParamBuilder);
+    ProvStateDTO fileState = provenanceController.provFileStateList(projectInode, provFilesParamBuilder);
     if (fileState != null) {
       List<ProvStateDTO> experiments = fileState.getItems();
       if (experiments != null && !experiments.isEmpty()) {

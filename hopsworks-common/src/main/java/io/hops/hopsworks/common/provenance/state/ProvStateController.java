@@ -34,7 +34,7 @@ import io.hops.hopsworks.common.provenance.util.functional.CheckedSupplier;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
-import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.javatuples.Pair;
 import org.opensearch.action.search.SearchRequest;
@@ -81,14 +81,15 @@ public class ProvStateController {
 
   public ProvStateController() {}
 
-  public ProvStateDTO provFileStateList(Project project, ProvStateParamBuilder params)
+  public ProvStateDTO provFileStateList(Inode projectInode, ProvStateParamBuilder params)
     throws ProvenanceException {
     if (params.base.pagination != null && !params.extensions.appStateFilter.isEmpty()) {
       String msg = "cannot use pagination with app state filtering";
       throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.UNSUPPORTED, Level.INFO, msg);
     }
     ProvStateDTO fileStates
-      = provFileState(project, params.base, new HandlerFactory.BaseList(), Provenance.getProjectIndex(project));
+      = provFileState(projectInode, params.base, new HandlerFactory.BaseList(),
+      Provenance.getProjectIndex(projectInode));
     if (params.extensions.hasAppExpansion()) {
       //If withAppStates, update params based on appIds of items files and do a appState index query.
       //After this filter the fileStates based on the results of the appState query
@@ -122,24 +123,24 @@ public class ProvStateController {
    * @return
    * @throws ProvenanceException
    */
-  public <R, S1, S2> S2 provFileState(Project project, ProvStateParamBuilder.Base base,
+  public <R, S1, S2> S2 provFileState(Inode projectInode, ProvStateParamBuilder.Base base,
                                       HandlerFactory<R, S1, S2> handlerFactory, String index)
     throws ProvenanceException {
 
     checkMapping(base, index);
-    return provFileState(project.getInode().getId(),
+    return provFileState(projectInode.getId(),
       base.fileStateFilter, base.fileStateSortBy,
       base.exactXAttrFilter, base.likeXAttrFilter, base.hasXAttrFilter,
       base.xAttrSortBy, base.pagination.getValue0(), base.pagination.getValue1(), handlerFactory);
   }
 
-  public ProvStateDTO provFileStateCount(Project project, ProvStateParamBuilder params)
+  public ProvStateDTO provFileStateCount(Inode projectInode, ProvStateParamBuilder params)
     throws ProvenanceException {
     if (params.extensions.hasAppExpansion()) {
       throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.UNSUPPORTED, Level.INFO,
         "provenance file state count does not currently work with app state expansion");
     }
-    return provFileStateCount(project.getInode().getId(), params.base.fileStateFilter,
+    return provFileStateCount(projectInode.getId(), params.base.fileStateFilter,
       params.base.exactXAttrFilter, params.base.likeXAttrFilter, params.base.hasXAttrFilter);
   }
 

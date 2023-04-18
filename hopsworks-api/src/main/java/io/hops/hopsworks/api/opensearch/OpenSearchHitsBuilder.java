@@ -185,7 +185,7 @@ public class OpenSearchHitsBuilder {
       Project project = projectFacade.find(item.getProjectId());
       if (project != null) {
         item.setMember(projectTeamFacade.isUserMemberOfProject(project, user));
-        item.setProjectIId(project.getInode().getId());
+        item.setProjectIId(inodeController.getProjectRoot(project.getName()).getId());
         item.setMembers(getMembers(project));
         item.setCreated(project.getCreated());
       }

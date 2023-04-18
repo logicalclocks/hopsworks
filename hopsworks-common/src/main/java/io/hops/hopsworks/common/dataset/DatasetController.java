@@ -765,8 +765,9 @@ public class DatasetController {
   }
 
   private Dataset getTrainingDataset(Project project) {
+    Inode projectInode = inodeController.getProjectRoot(project.getName());
     String trainingDatasetName = project.getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName();
-    Inode inode = inodes.findByParentAndName(project.getInode(), trainingDatasetName);
+    Inode inode = inodes.findByParentAndName(projectInode, trainingDatasetName);
     return datasetFacade.findByProjectAndInode(project, inode);
   }
 
@@ -783,7 +784,8 @@ public class DatasetController {
   }
 
   private Dataset getFeatureStoreServiceDataset(Project project, Settings.ServiceDataset serviceDataset) {
-    Inode inode = inodes.findByParentAndName(project.getInode(), serviceDataset.getName());
+    Inode projectInode = inodeController.getProjectRoot(project.getName());
+    Inode inode = inodes.findByParentAndName(projectInode, serviceDataset.getName());
     return datasetFacade.findByProjectAndInode(project, inode);
   }
 

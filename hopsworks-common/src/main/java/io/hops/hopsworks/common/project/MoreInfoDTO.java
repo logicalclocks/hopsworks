@@ -62,8 +62,8 @@ public class MoreInfoDTO {
   public MoreInfoDTO() {
   }
 
-  public MoreInfoDTO(Project proj) {
-    this.inodeid = proj.getInode().getId();
+  public MoreInfoDTO(Project proj, Inode projectInode) {
+    this.inodeid = projectInode.getId();
     this.user = proj.getOwner().getFname() + " " + proj.getOwner().getFname();
     this.size = 0;
     this.createDate = proj.getCreated();

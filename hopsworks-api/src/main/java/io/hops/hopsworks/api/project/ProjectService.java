@@ -296,7 +296,8 @@ public class ProjectService {
       if (proj == null) {
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
       }
-      info = new MoreInfoDTO(proj);
+      Inode projectInode = inodeController.getProjectRoot(proj.getName());
+      info = new MoreInfoDTO(proj, projectInode);
     }
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(

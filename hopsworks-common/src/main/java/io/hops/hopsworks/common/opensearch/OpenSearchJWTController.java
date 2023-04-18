@@ -15,6 +15,8 @@
  */
 package io.hops.hopsworks.common.opensearch;
 
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectRoleTypes;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
@@ -49,6 +51,8 @@ public class OpenSearchJWTController {
   private Settings settings;
   @EJB
   private ProjectTeamFacade projectTeamFacade;
+  @EJB
+  private InodeController inodeController;
   
   public String getSigningKeyForELK() throws OpenSearchException {
     SignatureAlgorithm alg = SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg());
@@ -92,8 +96,9 @@ public class OpenSearchJWTController {
   
   private String createTokenForELK(Project project, String role)
       throws OpenSearchException {
+    Inode projectInode = inodeController.getProjectRoot(project.getName());
     String userRole = OpenSearchUtils.getValidRole(role);
-    return createTokenForELK(project.getName(), Optional.of(project.getInode().getId()), userRole);
+    return createTokenForELK(project.getName(), Optional.of(projectInode.getId()), userRole);
   }
   
   private String createTokenForELK(String project, Optional<Long> projectInodeId, String userRole)

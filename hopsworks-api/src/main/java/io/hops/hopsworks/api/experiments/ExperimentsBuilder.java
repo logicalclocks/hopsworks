@@ -27,6 +27,7 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.state.ProvStateController;
 import io.hops.hopsworks.common.provenance.state.ProvStateParamBuilder;
@@ -42,6 +43,7 @@ import io.hops.hopsworks.exceptions.InvalidQueryException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
@@ -104,6 +106,8 @@ public class ExperimentsBuilder {
   private AccessController accessCtrl;
   @EJB
   private DatasetController datasetCtrl;
+  @EJB
+  private InodeController inodeController;
 
   public ExperimentDTO uri(ExperimentDTO dto, UriInfo uriInfo, Project project) {
     dto.setHref(uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
@@ -157,8 +161,9 @@ public class ExperimentsBuilder {
           //no endpoint - no results
           return dto;
         }
+        Inode projectInode = inodeController.getProjectRoot(project.getName());
         ProvStateDTO fileState
-          = provenanceController.provFileStateList(project, provFilesParamBuilder.getValue0());
+          = provenanceController.provFileStateList(projectInode, provFilesParamBuilder.getValue0());
         if (fileState != null) {
           List<ProvStateDTO> experiments = fileState.getItems();
           dto.setCount(fileState.getCount());
@@ -311,7 +316,8 @@ public class ExperimentsBuilder {
       for (AbstractFacade.FilterBy filterBy : filters) {
         if (filterBy.getParam().compareToIgnoreCase(Filters.ENDPOINT_ID.name()) == 0) {
           ExperimentsEndpointDTO endpoint = verifyExperimentsEndpoint(project, filterBy.getValue());
-          selectedEndpoints.put(endpoint.getParentProject().getInode().getId(), endpoint);
+          selectedEndpoints.put(inodeController.getProjectRoot(endpoint.getParentProject().getName()).getId(),
+            endpoint);
         } else if (filterBy.getParam().compareToIgnoreCase(Filters.NAME_LIKE.name()) == 0) {
           provFilesParamBuilder.filterLikeXAttr(EXPERIMENT_SUMMARY_XATTR_NAME + ".name", filterBy.getValue());
         } else if (filterBy.getParam().compareToIgnoreCase(Filters.NAME_EQ.name()) == 0) {
@@ -359,12 +365,13 @@ public class ExperimentsBuilder {
     //an endpoint always has to be selected, if none provided, then all accessible endpoints are used
     if(selectedEndpoints.isEmpty()) {
       for(ExperimentsEndpointDTO endpoint : experimentsController.getExperimentsEndpoints(project)) {
-        selectedEndpoints.put(endpoint.getParentProject().getInode().getId(), endpoint);
+        selectedEndpoints.put(inodeController.getProjectRoot(endpoint.getParentProject().getName()).getId(), endpoint);
       }
     }
     for(ExperimentsEndpointDTO endpoint : selectedEndpoints.values()) {
       provFilesParamBuilder
-        .filterByField(ProvStateParser.FieldsP.PROJECT_I_ID, endpoint.getParentProject().getInode().getId())
+        .filterByField(ProvStateParser.FieldsP.PROJECT_I_ID,
+          inodeController.getProjectRoot(endpoint.getParentProject().getName()).getId())
         .filterByField(ProvStateParser.FieldsP.DATASET_I_ID, endpoint.getDatasetInodeId());
     }
     return Pair.with(provFilesParamBuilder, selectedEndpoints);
