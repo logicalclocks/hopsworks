@@ -2302,7 +2302,9 @@ public class RESTCodes {
         Response.Status.INTERNAL_SERVER_ERROR),
     USER_IS_NOT_REPOSITORY_OWNER(35, "User not allowed to perform operation in repository",
             Response.Status.FORBIDDEN),
-    READ_ONLY_REPOSITORY(36, "Repository is read only", Response.Status.BAD_REQUEST);
+    READ_ONLY_REPOSITORY(36, "Repository is read only", Response.Status.BAD_REQUEST),
+    ERROR_VALIDATING_REPOSITORY_PATH(37, "Error validating git repository path",
+        Response.Status.INTERNAL_SERVER_ERROR);
     private Integer code;
     private String message;
     private Response.Status respStatus;

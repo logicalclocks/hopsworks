@@ -114,7 +114,6 @@ public class GitContainerArgumentsWriter {
             .setProjectId(String.valueOf(gitOpExecution.getRepository().getProject().getId()))
             .setGitUsername(authSecrets.getUsername())
             .setGitToken(authSecrets.getPassword())
-            .setInodeHdfsGroup(gitOpExecution.getRepository().getInode().getHdfsGroup().getName())
             .setRepositoryId(String.valueOf(gitOpExecution.getRepository().getId()))
             .build();
   }

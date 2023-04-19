@@ -17,7 +17,6 @@ package io.hops.hopsworks.persistence.entity.git;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.hops.hopsworks.persistence.entity.git.config.GitProvider;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
@@ -30,7 +29,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -50,9 +48,9 @@ import java.io.Serializable;
     @NamedQuery(name = "GitRepository.findById",
         query
             = "SELECT r FROM GitRepository r WHERE r.id = :id"),
-    @NamedQuery(name = "GitRepository.findByInode",
+    @NamedQuery(name = "GitRepository.findByPath",
         query
-            = "SELECT r FROM GitRepository r WHERE r.inode = :inode"),
+            = "SELECT r FROM GitRepository r WHERE r.repositoryPath = :path"),
     @NamedQuery(name = "GitRepository.findAllWithRunningOperation",
         query
             = "SELECT r FROM GitRepository r WHERE r.cid IS NOT NULL"),
@@ -68,24 +66,6 @@ public class GitRepository implements Serializable {
   @Column(name = "id")
   private Integer id;
 
-  @JoinColumns({
-      @JoinColumn(name = "inode_pid",
-          referencedColumnName = "parent_id")
-      ,
-      @JoinColumn(name = "inode_name",
-          referencedColumnName = "name")
-      ,
-      @JoinColumn(name = "partition_id",
-          referencedColumnName = "partition_id")})
-  @ManyToOne(optional = false)
-  private Inode inode;
-
-  @Basic(optional = false)
-  @Column(name = "inode_name",
-      updatable = false,
-      insertable = false)
-  private String name;
-
   @JoinColumn(name = "project",
       referencedColumnName = "id")
   @ManyToOne(optional = false)
@@ -98,6 +78,18 @@ public class GitRepository implements Serializable {
   @Column(name = "provider")
   @Enumerated(EnumType.STRING)
   private GitProvider gitProvider;
+
+  @Basic(optional = false)
+  @NotNull
+  @Size(max = 1000)
+  @Column(name = "path", unique = true)
+  private String repositoryPath;
+
+  @Basic(optional = false)
+  @NotNull
+  @Size(max = 255)
+  @Column(name = "name")
+  private String name;
 
   @Size(max = 255)
   @Column(name = "current_branch")
@@ -119,25 +111,21 @@ public class GitRepository implements Serializable {
 
   public GitRepository() {}
 
-  public GitRepository(Inode inode, Project project, GitProvider gitProvider, Users creator) {
-    this.inode = inode;
+  public GitRepository(Project project, GitProvider gitProvider, Users creator, String name, String repositoryPath) {
     this.project = project;
     this.gitProvider = gitProvider;
     this.creator = creator;
-    this.name = inode.getInodePK().getName();
+    this.name = name;
+    this.repositoryPath = repositoryPath;
   }
 
   public Integer getId() { return id; }
 
   public void setId(Integer id) { this.id = id; }
 
-  public Inode getInode() { return inode; }
-
   public Project getProject() { return project; }
 
   public void setProject(Project project) { this.project = project; }
-
-  public void setInode(Inode inode) { this.inode = inode; }
 
   public GitProvider getGitProvider() { return gitProvider; }
 
@@ -158,6 +146,10 @@ public class GitRepository implements Serializable {
   public Users getCreator() { return creator; }
 
   public void setCreator(Users creator) { this.creator = creator; }
+
+  public String getRepositoryPath() { return repositoryPath; }
+
+  public void setRepositoryPath(String repositoryPath) { this.repositoryPath = repositoryPath; }
 
   public String getName() { return name; }
 

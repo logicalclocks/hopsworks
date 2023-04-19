@@ -23,7 +23,6 @@ import io.hops.hopsworks.common.dao.git.GitCommitsFacade;
 import io.hops.hopsworks.common.dao.git.GitOpExecutionFacade;
 import io.hops.hopsworks.common.dao.git.GitRepositoryFacade;
 import io.hops.hopsworks.common.git.GitCommitDTO;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.git.GitCommit;
 import io.hops.hopsworks.persistence.entity.git.GitOpExecution;
@@ -50,8 +49,6 @@ public class GitRepositoryBuilder {
   private static final int DEFAULT_REPOSITORY_LIMIT = 20;
   @EJB
   private GitRepositoryFacade gitRepositoryFacade;
-  @EJB
-  private InodeController inodeController;
   @EJB
   private GitOpExecutionFacade gitOpExecutionFacade;
   @EJB
@@ -92,8 +89,8 @@ public class GitRepositoryBuilder {
     repositoryDTO.setExpand(expand(resourceRequest));
     if (repositoryDTO.isExpand()) {
       repositoryDTO.setId(repository.getId());
-      repositoryDTO.setName(repository.getInode().getInodePK().getName());
-      repositoryDTO.setPath(inodeController.getPath(repository.getInode()));
+      repositoryDTO.setName(repository.getName());
+      repositoryDTO.setPath(repository.getRepositoryPath());
       repositoryDTO.setProvider(repository.getGitProvider());
       repositoryDTO.setCurrentBranch(repository.getCurrentBranch());
       repositoryDTO.setCreator(

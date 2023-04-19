@@ -205,6 +205,10 @@ module GitHelper
     get url
   end
 
+  def delete_repository(project_id, id)
+    delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/git/repository/#{id}"
+  end
+
   def checkout_files(project_id, repository_id, command_config)
     post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/git/repository/#{repository_id}/file", command_config
   end
