@@ -51,7 +51,7 @@ public class ProvenanceCleaner {
   @PostConstruct
   private void init() {
     long cleanerPeriod = settings.getProvCleanerPeriod();
-    LOGGER.log(Level.INFO, "timer - provenance cleaner - period:{0}s", cleanerPeriod);
+    LOGGER.log(Level.FINE, "timer - provenance cleaner - period:{0}s", cleanerPeriod);
     timerService.createTimer(cleanerPeriod * 1000, cleanerPeriod * 1000, "Timer for provenance cleaner.");
   }
   

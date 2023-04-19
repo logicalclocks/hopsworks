@@ -87,7 +87,7 @@ public class PermissionsCleaner {
   @Asynchronous
   public void fixPermissions() {
     fixPermissions(0, 0l);
-    LOGGER.log(Level.INFO, "Manual fix permissions triggered.");
+    LOGGER.log(Level.FINE, "Manual fix permissions triggered.");
   }
 
   private int fixPermissions(int index, Long startTime) {

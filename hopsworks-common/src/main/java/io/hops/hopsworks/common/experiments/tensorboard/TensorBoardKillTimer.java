@@ -59,7 +59,7 @@ public class TensorBoardKillTimer {
           hour = "*")
   public void rotate(Timer timer) {
     try {
-      LOGGER.log(Level.INFO, "Running TensorBoardKillTimer.");
+      LOGGER.log(Level.FINE, "Running TensorBoardKillTimer.");
       int tensorBoardMaxLastAccessed = settings.getTensorBoardMaxLastAccessed();
       Collection<TensorBoard> tensorBoardCollection = tensorBoardFacade.findAll();
       for (TensorBoard tensorBoard : tensorBoardCollection) {
