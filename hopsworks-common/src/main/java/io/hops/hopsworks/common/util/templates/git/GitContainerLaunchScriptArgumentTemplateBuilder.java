@@ -30,7 +30,6 @@ public class GitContainerLaunchScriptArgumentTemplateBuilder {
   private String projectId;
   private String gitUsername;
   private String gitToken;
-  private String inodeHdfsGroup;
   private String repositoryId;
 
   private GitContainerLaunchScriptArgumentTemplateBuilder() {}
@@ -134,13 +133,6 @@ public class GitContainerLaunchScriptArgumentTemplateBuilder {
 
   public GitContainerLaunchScriptArgumentTemplateBuilder setGitToken(String gitToken) {
     this.gitToken = gitToken;
-    return this;
-  }
-
-  public String getInodeHdfsGroup() { return inodeHdfsGroup; }
-
-  public GitContainerLaunchScriptArgumentTemplateBuilder setInodeHdfsGroup(String inodeHdfsGroup) {
-    this.inodeHdfsGroup = inodeHdfsGroup;
     return this;
   }
 

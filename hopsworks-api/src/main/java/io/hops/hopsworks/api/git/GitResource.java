@@ -67,6 +67,7 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -390,6 +391,21 @@ public class GitResource {
     resourceRequest.setExpansions(executionBeanParam.getExpansions().getResources());
     GitOpExecutionDTO dto = executionBuilder.build(uriInfo, resourceRequest, execution);
     return Response.ok().entity(dto).build();
+  }
+
+  @ApiOperation(value = "Delete the git repository")
+  @DELETE
+  @Path("/repository/{repositoryId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response delete(@Context UriInfo uriInfo, @PathParam("repositoryId") Integer repositoryId,
+                         @Context SecurityContext sc,
+                         @Context HttpServletRequest req) throws GitOpException {
+    Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
+    gitController.deleteRepository(project, hopsworksUser, repositoryId);
+    return Response.noContent().build();
   }
 
   @Logged(logLevel = LogLevel.OFF)

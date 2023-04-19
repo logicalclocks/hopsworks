@@ -19,7 +19,6 @@ import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.persistence.entity.git.GitRepository;
 import io.hops.hopsworks.persistence.entity.git.config.GitProvider;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
@@ -101,20 +100,21 @@ public class GitRepositoryFacade extends AbstractFacade<GitRepository> {
     }
   }
 
-  public Optional<GitRepository> findByInode(Inode inode) {
+  public Optional<GitRepository> findByPath(String path) {
     try {
       return Optional.of(em.createNamedQuery(
-              "GitRepository.findByInode",
+              "GitRepository.findByPath",
               GitRepository.class)
-          .setParameter("inode", inode)
+          .setParameter("path", path)
           .getSingleResult());
     } catch (NoResultException e) {
       return Optional.empty();
     }
   }
 
-  public GitRepository create(Inode inode, Project project, GitProvider gitProvider, Users user) {
-    GitRepository gitRepository = new GitRepository(inode, project,  gitProvider, user);
+  public GitRepository create(Project project, GitProvider gitProvider, Users user, String name, String repositoryPath)
+  {
+    GitRepository gitRepository = new GitRepository(project,  gitProvider, user, name, repositoryPath);
     em.persist(gitRepository);
     em.flush();
     return gitRepository;
@@ -127,6 +127,12 @@ public class GitRepositoryFacade extends AbstractFacade<GitRepository> {
   public GitRepository updateRepositoryCid(GitRepository repository, String pid) {
     repository.setCid(pid);
     return updateRepository(repository);
+  }
+
+  public void deleteRepository(GitRepository repository) {
+    if (repository != null) {
+      em.remove(repository);
+    }
   }
 
   private void setFilter(Set<? extends AbstractFacade.FilterBy> filter, Query q) {

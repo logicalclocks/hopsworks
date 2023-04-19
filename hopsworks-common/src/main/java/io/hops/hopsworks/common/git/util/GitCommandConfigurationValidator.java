@@ -20,20 +20,21 @@ import io.hops.hopsworks.common.dao.git.GitRepositoryFacade;
 import io.hops.hopsworks.common.git.BasicAuthSecrets;
 import io.hops.hopsworks.common.git.CloneCommandConfiguration;
 import io.hops.hopsworks.common.git.CommitCommandConfiguration;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GitOpException;
 import io.hops.hopsworks.persistence.entity.git.GitRepository;
 import io.hops.hopsworks.persistence.entity.git.config.GitCommandConfiguration;
 import io.hops.hopsworks.persistence.entity.git.config.GitCommandType;
 import io.hops.hopsworks.persistence.entity.git.config.GitProvider;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import java.io.IOException;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -49,18 +50,19 @@ public class GitCommandConfigurationValidator {
   @EJB
   private GitRepositoryFacade gitRepositoryFacade;
   @EJB
-  private InodeController inodeController;
-  @EJB
   private Settings settings;
+  @EJB
+  private DistributedFsService dfs;
 
-  public void verifyCloneOptions(CloneCommandConfiguration config) throws IllegalArgumentException {
+  public void verifyCloneOptions(Project project, Users user, CloneCommandConfiguration config)
+      throws IllegalArgumentException {
     if (Strings.isNullOrEmpty(config.getUrl())) {
       throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.REPOSITORY_URL_NOT_PROVIDED.getMessage());
     } else if (config.getProvider() == null) {
       throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.GIT_PROVIDER_NOT_PROVIDED.getMessage()
           + "Invalid git provider. Git provider should be one of GitHub, GitLab, or BitBucket");
     }
-    verifyRepositoryPath(config.getPath());
+    verifyRepositoryPath(project, user, config.getPath());
   }
 
   public void verifyCommitOptions(CommitCommandConfiguration commitConfiguration)
@@ -110,20 +112,27 @@ public class GitCommandConfigurationValidator {
    * @param gitPath
    * @throws IllegalArgumentException
    */
-  private void verifyRepositoryPath(String gitPath) throws IllegalArgumentException {
-    Inode inode = inodeController.getInodeAtPath(gitPath);
-    if (Strings.isNullOrEmpty(gitPath)) {
-      throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.DIRECTORY_PATH_NOT_PROVIDED.getMessage());
-    } else if (inode == null) {
-      throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.DIRECTORY_PATH_DOES_NOT_EXIST.getMessage());
-    } else {
-      if (!inode.isDir()) {
-        throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.PATH_IS_NOT_DIRECTORY.getMessage());
+  private void verifyRepositoryPath(Project project, Users user, String gitPath) throws IllegalArgumentException {
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfs.getDfsOps(project, user);
+      if (Strings.isNullOrEmpty(gitPath)) {
+        throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.DIRECTORY_PATH_NOT_PROVIDED.getMessage());
+      } else if (!dfso.exists(gitPath)) {
+        throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.DIRECTORY_PATH_DOES_NOT_EXIST.getMessage());
+      } else {
+        if (!dfso.isDir(gitPath)) {
+          throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.PATH_IS_NOT_DIRECTORY.getMessage());
+        }
+        //Verify if path is not already a git repository
+        if (gitRepositoryFacade.findByPath(gitPath).isPresent()) {
+          throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.DIRECTORY_IS_ALREADY_GIT_REPO.getMessage());
+        }
       }
-      //Verify if path is not already a git repository
-      if (gitRepositoryFacade.findByInode(inode).isPresent()) {
-        throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.DIRECTORY_IS_ALREADY_GIT_REPO.getMessage());
-      }
+    } catch (IOException e) {
+      throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.ERROR_VALIDATING_REPOSITORY_PATH.getMessage());
+    } finally {
+      dfs.closeDfsClient(dfso);
     }
   }
 

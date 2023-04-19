@@ -71,7 +71,7 @@ describe "On #{ENV['OS']}" do
           repo_id, repo_path = clone_repo(@project[:id], clone_config)
           expect(repo_id).not_to be_nil
           expect(repo_path).not_to be_nil
-          delete_repository(@project, repo_path)
+          delete_repository(@project[:id], repo_path)
         end
         it "should clone a single branch - #{git_provider}" do
           branch = ""
@@ -87,7 +87,7 @@ describe "On #{ENV['OS']}" do
           repo_id, repo_path = clone_repo(@project[:id], clone_config)
           expect(repo_id).not_to be_nil
           expect(repo_path).not_to be_nil
-          delete_repository(@project, repo_path)
+          delete_repository(@project[:id],repo_id)
         end
       end
     end
@@ -110,7 +110,7 @@ describe "On #{ENV['OS']}" do
         expect(repo_path).not_to be_nil
         git_pull(@project[:id], repo_id)
         expect_status_details(400, error_code: 500029)
-        delete_dataset(@project, dir_name)
+        delete_repository(@project[:id], repo_id)
       end
       git_providers = ['GitHub', 'GitLab']
       git_providers.each do |git_provider|
@@ -124,7 +124,7 @@ describe "On #{ENV['OS']}" do
           expect(repo_path).not_to be_nil
           git_push(@project[:id], repo_id)
           expect_status_details(400, error_code: 500029)
-          delete_dataset(@project, dir_name)
+          delete_repository(@project[:id], repo_id)
         end
       end
     end
@@ -134,7 +134,7 @@ describe "On #{ENV['OS']}" do
       end
       it 'should get all repositories in the project' do
         clone_config = get_clone_config("GitHub", @project1[:projectname])
-        _, repo_path = clone_repo(@project1[:id], clone_config)
+        repo_id, _ = clone_repo(@project1[:id], clone_config)
 
         get_project_git_repositories(@project1[:id])
         expect(json_body[:count]).to eq(1)
@@ -144,7 +144,7 @@ describe "On #{ENV['OS']}" do
         expect(json_body[:count]).to eq(1)
         expect(json_body[:items][0][:creator][:email]).not_to be_nil
 
-        delete_repository(@project1, repo_path)
+        delete_repository(@project1[:id], repo_id)
       end
       describe '#sort' do
         before(:all) do
@@ -155,7 +155,7 @@ describe "On #{ENV['OS']}" do
           get_project_git_repositories(@project1[:id], query="?expand=creator")
           expect(json_body[:count]).to be > 1
           repositories = json_body[:items]
-          repositories.each{|r| delete_repository(@project1, r[:path])}
+          repositories.each{|r| delete_repository(@project1[:id], r[:id])}
         end
         it 'should get all repositories sorted by id (asc)' do
           test_sort_by_id(@project1[:id])
@@ -188,8 +188,8 @@ describe "On #{ENV['OS']}" do
           get_project_git_repositories(@project1[:id], "?expand=creator")
           expect(json_body[:count]).to eq(1)
           expect(json_body[:items][0][:creator][:username]).to eql @user[:username]
-          delete_repository(@project1, path1)
-          delete_repository(@project1, path2)
+          delete_repository(@project1[:id], repoId1)
+          delete_repository(@project1[:id], repoId2)
         end
       end
     end
@@ -215,7 +215,11 @@ describe "On #{ENV['OS']}" do
     end
     describe "Perform operations on the cloned repositories" do
       after :each do
-        delete_repository(@project, "/Projects/#{@project[:projectname]}/Jupyter/livy-chef")
+        get_project_git_repositories(@project[:id])
+        if json_body[:count] > 0
+          repositories = json_body[:items]
+          repositories.each{|r| delete_repository(@project[:id], r[:id])}
+        end
       end
       it 'should retrieve repository by its id' do
         clone_config = get_clone_config("GitHub", @project[:projectname], url="https://github.com/logicalclocks/livy-chef.git")
@@ -226,8 +230,7 @@ describe "On #{ENV['OS']}" do
       end
       it "should get executions performed in the repository" do
         clone_config = get_clone_config("GitHub", @project[:projectname], url="https://github.com/logicalclocks/livy-chef.git")
-        repository_id, repository_path = clone_repo(@project[:id], clone_config)
-
+        repository_id, _ = clone_repo(@project[:id], clone_config)
         get_git_executions(@project[:id], repository_id)
         expect(json_body[:count]).to be > 0
         expect(json_body[:items][0][:repository][:path]).to be nil
@@ -411,7 +414,7 @@ describe "On #{ENV['OS']}" do
           get_repository(@project[:id], repo_id)
           expect_status_details(200)
           expect(json_body[:readOnly]).to be == true
-          delete_dataset(@project, dir_name)
+          delete_repository(@project[:id], repo_id)
         end
       end
       describe "Operation on read only repositories" do
@@ -433,7 +436,7 @@ describe "On #{ENV['OS']}" do
           }
           git_commit(@project[:id], repo_id, commit_config.to_json)
           expect_status_details(400, error_code: 500036)
-          delete_dataset(@project, dir_name)
+          delete_repository(@project[:id], repo_id)
         end
         it 'should fail to checkout a file in a read only repository' do
           dir_name = "/Projects/#{@project[:projectname]}/Jupyter/testDir#{short_random_id}"
@@ -449,15 +452,15 @@ describe "On #{ENV['OS']}" do
           }
           checkout_files(@project[:id], repo_id, checkout_command_config.to_json)
           expect_status_details(400, error_code: 500036)
-          delete_dataset(@project, dir_name)
+          delete_repository(@project[:id], repo_id)
         end
       end
     end
     describe "Operation on big repositories" do
       it "should be able to clone big repositories" do
         clone_config = get_clone_config("GitHub", @project[:projectname], url="https://github.com/logicalclocks/hops-examples.git")
-        _, repository_path = clone_repo(@project[:id], clone_config, big_repo=true)
-        delete_repository(@project, repository_path)
+        repoId, _ = clone_repo(@project[:id], clone_config, big_repo=true)
+        delete_repository(@project[:id], repoId)
       end
     end
     describe "Git operation" do
@@ -474,11 +477,10 @@ describe "On #{ENV['OS']}" do
           execution_id = json_body[:id]
           get_repository(@project[:id], repository_id)
           expect_status_details(200)
-          repository_path = json_body[:path]
           expect(json_body[:ongoingOperation]).not_to be_nil
           wait_for_git_operation_completed(@project[:id], repository_id, execution_id, "Success")
         ensure
-          delete_repository(@project, repository_path)
+          delete_repository(@project[:id], repository_id)
         end
       end
       it "should not allow two operations at same time in the same repository" do
@@ -490,13 +492,12 @@ describe "On #{ENV['OS']}" do
           execution_id = json_body[:id]
           get_repository(@project[:id], repository_id)
           expect_status_details(200)
-          repository_path = json_body[:path]
           #do another operation without waiting
           git_status(@project[:id], repository_id)
           expect(json_body[:errorCode]).to be == 500027
           wait_for_git_operation_completed(@project[:id], repository_id, execution_id, "Success")
         ensure
-          delete_repository(@project, repository_path)
+          delete_repository(@project[:id], repository_id)
         end
       end
       it "should be killed by timer" do
@@ -511,13 +512,12 @@ describe "On #{ENV['OS']}" do
           execution_id = json_body[:id]
           get_repository(@project[:id], repository_id)
           expect_status_details(200)
-          repository_path = json_body[:path]
           wait_for_git_op do
             get_git_execution_object(@project[:id], repository_id, execution_id)
             json_body[:state] == "Timedout"
           end
         ensure
-          delete_repository(@project, repository_path)
+          delete_repository(@project[:id], repository_id)
         end
       end
     end

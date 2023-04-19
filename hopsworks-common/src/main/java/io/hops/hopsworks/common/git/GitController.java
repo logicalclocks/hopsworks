@@ -26,7 +26,6 @@ import io.hops.hopsworks.common.git.util.GitCommandConfigurationValidator;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.GitOpException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -38,7 +37,6 @@ import io.hops.hopsworks.persistence.entity.git.GitCommit;
 import io.hops.hopsworks.persistence.entity.git.GitRepositoryRemote;
 import io.hops.hopsworks.persistence.entity.git.config.GitCommandConfiguration;
 import io.hops.hopsworks.persistence.entity.git.config.GitCommandType;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -49,6 +47,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -59,8 +58,6 @@ public class GitController {
   private static final Logger LOGGER = Logger.getLogger(GitController.class.getName());
   private static final String REPO_NAME_DELIMETER = "_";
 
-  @EJB
-  private InodeController inodeController;
   @EJB
   private DistributedFsService dfsService;
   @EJB
@@ -80,10 +77,10 @@ public class GitController {
 
   public GitOpExecution clone(CloneCommandConfiguration cloneConfigurationDTO, Project project, Users hopsworksUser)
       throws IllegalArgumentException, GitOpException, HopsSecurityException, DatasetException {
-    commandConfigurationValidator.verifyCloneOptions(cloneConfigurationDTO);
+    commandConfigurationValidator.verifyCloneOptions(project, hopsworksUser, cloneConfigurationDTO);
     //create the repository dir. The go-git does not create a directory, so we need to create it before
-    String fullRepoDirPath = cloneConfigurationDTO.getPath() + File.separator
-            + commandConfigurationValidator.getRepositoryName(cloneConfigurationDTO.getUrl());
+    String repositoryName = commandConfigurationValidator.getRepositoryName(cloneConfigurationDTO.getUrl());
+    String fullRepoDirPath = cloneConfigurationDTO.getPath() + File.separator + repositoryName;
     DistributedFileSystemOps udfso = dfsService.getDfsOps(hdfsUsersController.getHdfsUserName(project, hopsworksUser));
     try {
       datasetController.createSubDirectory(project, new Path(fullRepoDirPath), udfso);
@@ -100,9 +97,8 @@ public class GitController {
       //Close the udfso
       dfsService.closeDfsClient(udfso);
     }
-    Inode inode = inodeController.getInodeAtPath(fullRepoDirPath);
-    GitRepository repository = gitRepositoryFacade.create(inode, project, cloneConfigurationDTO.getProvider(),
-        hopsworksUser);
+    GitRepository repository = gitRepositoryFacade.create(project, cloneConfigurationDTO.getProvider(),
+        hopsworksUser, repositoryName, fullRepoDirPath);
     //Create the default remote
     gitRepositoryRemotesFacade.save(new GitRepositoryRemote(repository, Constants.REPOSITORY_DEFAULT_REMOTE_NAME,
         cloneConfigurationDTO.getUrl()));
@@ -139,14 +135,13 @@ public class GitController {
     commandConfigurationValidator.verifyCommitOptions(commitConfigurationDTO);
     String userFullName = hopsworksUser.getFname() + " " + hopsworksUser.getLname();
     GitRepository repository = commandConfigurationValidator.verifyRepository(project, hopsworksUser, repositoryId);
-    String repositoryFullPath = inodeController.getPath(repository.getInode());
     GitCommandConfiguration commandConfiguration =
         new GitCommandConfigurationBuilder().setCommandType(GitCommandType.COMMIT)
             .setMessage(commitConfigurationDTO.getMessage())
             .setFiles(commitConfigurationDTO.getFiles())
             .setAll(commitConfigurationDTO.isAll())
             .setCommitter(new CommitterSignature(userFullName, hopsworksUser.getEmail()))
-            .setPath(repositoryFullPath)
+            .setPath(repository.getRepositoryPath())
             .build();
     return executionController.createExecution(commandConfiguration, project, hopsworksUser, repository);
   }
@@ -155,10 +150,9 @@ public class GitController {
                                             Integer repositoryId, String branchName, String commit) 
       throws GitOpException, HopsSecurityException, IllegalArgumentException {
     GitRepository repository = commandConfigurationValidator.verifyRepository(project, hopsworksUser, repositoryId);
-    String repositoryFullPath = inodeController.getPath(repository.getInode());
     GitCommandConfigurationBuilder builder = new GitCommandConfigurationBuilder();
     builder.setBranchName(branchName);
-    builder.setPath(repositoryFullPath);
+    builder.setPath(repository.getRepositoryPath());
     switch (action) {
       case CREATE:
       case CREATE_CHECKOUT:
@@ -202,8 +196,8 @@ public class GitController {
       throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.INVALID_REMOTE_NAME.getMessage());
     }
     GitRepository repository = commandConfigurationValidator.verifyRepository(project, hopsworksUser, repositoryId);
-    String repositoryFullPath = inodeController.getPath(repository.getInode());
-    GitCommandConfigurationBuilder builder = new GitCommandConfigurationBuilder().setPath(repositoryFullPath)
+    GitCommandConfigurationBuilder builder = new GitCommandConfigurationBuilder()
+        .setPath(repository.getRepositoryPath())
         .setRemoteName(remoteName);
     switch (action) {
       case ADD:
@@ -227,13 +221,12 @@ public class GitController {
     commandConfigurationValidator.verifyRemoteNameAndBranch(configurationDTO.getRemoteName(),
         configurationDTO.getBranchName());
     GitRepository repository = commandConfigurationValidator.verifyRepository(project, hopsworksUser, repositoryId);
-    String repositoryFullPath = inodeController.getPath(repository.getInode());
     GitCommandConfiguration pushCommandConfiguration = new GitCommandConfigurationBuilder()
         .setCommandType(GitCommandType.PUSH)
         .setRemoteName(configurationDTO.getRemoteName())
         .setBranchName(configurationDTO.getBranchName())
         .setForce(configurationDTO.isForce())
-        .setPath(repositoryFullPath)
+        .setPath(repository.getRepositoryPath())
         .build();
     return executionController.createExecution(pushCommandConfiguration, project, hopsworksUser, repository);
   }
@@ -244,13 +237,12 @@ public class GitController {
     String userFullName = hopsworksUser.getFname() + " " + hopsworksUser.getLname();
     commandConfigurationValidator.verifyRemoteNameAndBranch(configDTO.getRemoteName(), configDTO.getBranchName());
     GitRepository repository = commandConfigurationValidator.verifyRepository(project, hopsworksUser, repositoryId);
-    String repositoryFullPath = inodeController.getPath(repository.getInode());
     GitCommandConfiguration pullCommandConfiguration =
         new GitCommandConfigurationBuilder().setCommandType(GitCommandType.PULL)
             .setRemoteName(configDTO.getRemoteName())
             .setForce(configDTO.isForce())
             .setBranchName(configDTO.getBranchName())
-            .setPath(repositoryFullPath)
+            .setPath(repository.getRepositoryPath())
             .setCommitter(new CommitterSignature(userFullName, hopsworksUser.getEmail()))
             .build();
     return executionController.createExecution(pullCommandConfiguration, project, hopsworksUser, repository);
@@ -259,11 +251,10 @@ public class GitController {
   public GitOpExecution status(Project project, Users hopsworksUser, Integer repositoryId)
       throws GitOpException, HopsSecurityException {
     GitRepository repository = commandConfigurationValidator.verifyRepository(project, hopsworksUser, repositoryId);
-    String repositoryFullPath = inodeController.getPath(repository.getInode());
     GitCommandConfiguration statusCommandConfig =
         new GitCommandConfigurationBuilder()
             .setCommandType(GitCommandType.STATUS)
-            .setPath(repositoryFullPath)
+            .setPath(repository.getRepositoryPath())
             .build();
     return executionController.createExecution(statusCommandConfig, project, hopsworksUser, repository);
   }
@@ -274,11 +265,10 @@ public class GitController {
       throw new IllegalArgumentException("File paths are empty.");
     }
     GitRepository repository = commandConfigurationValidator.verifyRepository(project, hopsworksUser, repositoryId);
-    String repositoryFullPath = inodeController.getPath(repository.getInode());
     GitCommandConfiguration fileCheckoutConfiguration =
         new GitCommandConfigurationBuilder()
             .setCommandType(GitCommandType.FILE_CHECKOUT)
-            .setPath(repositoryFullPath)
+            .setPath(repository.getRepositoryPath())
             .setFiles(filePaths)
             .build();
     return executionController.createExecution(fileCheckoutConfiguration, project, hopsworksUser, repository);
@@ -298,6 +288,21 @@ public class GitController {
       commit.setBranch(branchName);
       commit.setRepository(repository);
       gitCommitsFacade.create(commit);
+    }
+  }
+
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public void deleteRepository(Project project, Users user, Integer repositoryId) throws GitOpException {
+    GitRepository repository = commandConfigurationValidator.verifyRepository(project, user, repositoryId);
+    String path = repository.getRepositoryPath();
+    gitRepositoryFacade.deleteRepository(repository);
+    DistributedFileSystemOps udfso = dfsService.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
+    try {
+      udfso.rm(new Path(path), true);
+    } catch (IOException e) {
+      LOGGER.log(Level.FINE, "Failed to a delete git repository on path: " + path, e);
+    } finally {
+      dfsService.closeDfsClient(udfso);
     }
   }
 }
