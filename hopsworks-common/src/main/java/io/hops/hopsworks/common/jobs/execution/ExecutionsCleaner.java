@@ -86,16 +86,16 @@ public class ExecutionsCleaner {
   @Timeout
   public void deleteOrphanExecutions(Timer timer) {
     try {
-      LOG.log(Level.INFO, "deleteOrphanExecutions start");
+      LOG.log(Level.FINE, "deleteOrphanExecutions start");
       List<Execution> executions = executionFacade.findOrphaned(new Pair<>(0, batchSize));
       while (!executions.isEmpty()) {
-        LOG.log(Level.INFO, "Executions to delete: " + executions);
+        LOG.log(Level.INFO, "Deleting orphaned executions: " + executions);
         executionFacade.batchDelete(executions);
         executions = executionFacade.findOrphaned(new Pair<>(0, batchSize));
       }
     } catch (Exception ex) {
       LOG.log(Level.SEVERE, "ExecutionCleaner timer error", ex);
     }
-    LOG.log(Level.INFO, "deleteOrphanExecutions end");
+    LOG.log(Level.FINE, "deleteOrphanExecutions end");
   }
 }

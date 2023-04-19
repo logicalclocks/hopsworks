@@ -91,7 +91,7 @@ public class JupyterNotebookCleaner {
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void execute(Timer timer) {
     try {
-      LOGGER.log(Level.INFO, "Running JupyterNotebookCleaner.");
+      LOGGER.log(Level.FINE, "Running JupyterNotebookCleaner.");
       // 1. Get all Running Jupyter Notebook Servers
       List<JupyterProject> servers = jupyterFacade.getAllNotebookServers();
 

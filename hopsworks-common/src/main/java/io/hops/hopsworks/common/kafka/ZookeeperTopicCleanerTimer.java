@@ -92,7 +92,7 @@ public class ZookeeperTopicCleanerTimer {
       minute = "0",
       hour = "*")
   public void execute(Timer timer) {
-    LOGGER.log(Level.INFO, "Running ZookeeperTopicCleanerTimer.");
+    LOGGER.log(Level.FINE, "Running ZookeeperTopicCleanerTimer.");
 
     try {
       String zkConnectionString = kafkaBrokers.getZookeeperConnectionString();
