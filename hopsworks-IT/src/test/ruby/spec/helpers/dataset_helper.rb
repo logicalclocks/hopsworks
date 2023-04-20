@@ -61,11 +61,13 @@ module DatasetHelper
   def uploadFile(project, dsname, filePath)
     file_size = File.size(filePath)
     file_name = File.basename(filePath)
-    file = URI.encode_www_form({flowChunkNumber: 1, flowChunkSize: 1048576,
-                                flowCurrentChunkSize: file_size, flowTotalSize: file_size,
-                                flowIdentifier: "#{file_size}-#{file_name}", flowFilename: "#{file_name}",
-                                flowRelativePath: "#{file_name}", flowTotalChunks: 1})
-    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/upload/#{dsname}?#{file}", {content_type: "multipart/form-data"}
+    params = {file: File.new(filePath, 'r:UTF-8'),
+              flowChunkNumber: 1, flowChunkSize: 1048576,
+              flowCurrentChunkSize: file_size, flowTotalSize: file_size,
+              flowIdentifier: "#{file_size}-#{file_name}", flowFilename: "#{file_name}",
+              flowRelativePath: "#{file_name}", flowTotalChunks: 1}
+    multipart = RestClient::Payload::Multipart.new(params)
+    post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/upload/#{dsname}", multipart.read, multipart.headers
   end
   
   def create_dataset_checked
