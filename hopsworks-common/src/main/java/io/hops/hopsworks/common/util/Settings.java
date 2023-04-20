@@ -1096,9 +1096,10 @@ public class Settings implements Serializable {
 
   public static final String SPARK_PYSPARK_PYTHON_OPTION = "spark.pyspark.python";
 
-  //Spark log4j and metrics properties
+  //log4j and metrics properties
   public static final String JOB_LOG4J_CONFIG = "log4j.configurationFile";
   public static final String JOB_LOG4J_PROPERTIES = "log4j2.properties";
+  
   //If the value of this property changes, it must be changed in spark-chef log4j.properties as well
   public static final String LOGSTASH_JOB_INFO = "hopsworks.logstash.job.info";
 

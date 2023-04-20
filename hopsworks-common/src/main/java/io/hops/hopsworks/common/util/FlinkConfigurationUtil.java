@@ -24,34 +24,34 @@ import io.hops.hopsworks.persistence.entity.jobs.configuration.flink.FlinkJobCon
 import io.hops.hopsworks.common.util.templates.ConfigProperty;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class FlinkConfigurationUtil extends ConfigurationUtil {
   @Override
   public Map<String, String> setFrameworkProperties(Project project, JobConfiguration jobConfiguration,
-                                                    Settings settings, String hdfsUser, Users hopsworksUser,
-                                                    Map<String, String> extraJavaOptions, String kafkaBrokersString,
-                                                    String hopsworksRestEndpoint, ServingConfig servingConfig,
-                                                    ServiceDiscoveryController serviceDiscoveryController)
-      throws IOException {
+    Settings settings, String hdfsUser, Users hopsworksUser,
+    Map<String, String> extraJavaOptions, String kafkaBrokersString,
+    String hopsworksRestEndpoint, ServingConfig servingConfig,
+    ServiceDiscoveryController serviceDiscoveryController) {
     FlinkJobConfiguration flinkJobConfiguration = (FlinkJobConfiguration) jobConfiguration;
     
     Map<String, ConfigProperty> flinkProps = new HashMap<>();
-    flinkProps.put(Settings.JOB_LOG4J_CONFIG, new ConfigProperty(
-      Settings.JOB_LOG4J_CONFIG, HopsUtils.IGNORE, settings.getFlinkConfDir() + Settings.JOB_LOG4J_PROPERTIES));
-    flinkProps.put(Settings.JOB_LOG4J_PROPERTIES, new ConfigProperty(
-      Settings.JOB_LOG4J_PROPERTIES, HopsUtils.IGNORE, settings.getFlinkConfDir() + Settings.JOB_LOG4J_PROPERTIES));
-    flinkProps.put(Settings.FLINK_STATE_CHECKPOINTS_DIR, new ConfigProperty(
-      Settings.FLINK_STATE_CHECKPOINTS_DIR, HopsUtils.OVERWRITE,
-      "hdfs://" + Utils.getProjectPath(project.getName()) + Settings.PROJECT_STAGING_DIR + "/flink"));
+    flinkProps.put(Settings.JOB_LOG4J_CONFIG,
+      new ConfigProperty(
+        Settings.JOB_LOG4J_CONFIG,
+        HopsUtils.IGNORE,
+        settings.getFlinkConfDir() + Settings.JOB_LOG4J_PROPERTIES));
+    flinkProps.put(Settings.FLINK_STATE_CHECKPOINTS_DIR,
+      new ConfigProperty(
+        Settings.FLINK_STATE_CHECKPOINTS_DIR,
+        HopsUtils.OVERWRITE,
+        "hdfs://" + Utils.getProjectPath(project.getName()) + Settings.PROJECT_STAGING_DIR + "/flink"));
     
     if (extraJavaOptions == null) {
       extraJavaOptions = new HashMap<>();
     }
     extraJavaOptions.put(Settings.JOB_LOG4J_CONFIG, settings.getFlinkConfDir() + Settings.JOB_LOG4J_PROPERTIES);
-    extraJavaOptions.put(Settings.JOB_LOG4J_PROPERTIES, settings.getFlinkConfDir() + Settings.JOB_LOG4J_PROPERTIES);
     extraJavaOptions.put(Settings.HOPSWORKS_REST_ENDPOINT_PROPERTY, hopsworksRestEndpoint);
     extraJavaOptions.put(Settings.HOPSUTIL_INSECURE_PROPERTY, String.valueOf(settings.isHopsUtilInsecure()));
     extraJavaOptions.put(Settings.SERVER_TRUSTSTORE_PROPERTY, Settings.SERVER_TRUSTSTORE_PROPERTY);
@@ -65,6 +65,10 @@ public class FlinkConfigurationUtil extends ConfigurationUtil {
     if (jobConfiguration.getAppName() != null) {
       extraJavaOptions.put(Settings.HOPSWORKS_JOBNAME_PROPERTY, jobConfiguration.getAppName());
     }
+    // to show logs in Flink IU
+    extraJavaOptions.put("log.file", "$LOG_DIRS/flink_log/output.log");
+    extraJavaOptions.put("web.log.path", "$LOG_DIRS/flink_log/output.log");
+    extraJavaOptions.put("taskmanager.log.path", "$LOG_DIRS/flink_log/output.log");
     
     StringBuilder extraJavaOptionsSb = new StringBuilder();
     for (String key : extraJavaOptions.keySet()) {
