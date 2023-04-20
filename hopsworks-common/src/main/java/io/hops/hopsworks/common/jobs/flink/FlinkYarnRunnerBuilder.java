@@ -65,7 +65,9 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.apache.flink.configuration.GlobalConfiguration.loadConfiguration;
@@ -156,7 +158,7 @@ public class FlinkYarnRunnerBuilder {
         .setAppName("Flink session with " + flinkJobConfiguration.getNumberOfTaskSlots() + " " + "NumberOfTaskSlots");
     }
     flinkConf.setString("containerized.master.env.HOPSWORKS_JOB_NAME", flinkJobConfiguration.getAppName());
-    
+
     //Create dynamicProperties from finalJobProps
     YarnClusterDescriptor cluster = new YarnClusterDescriptor(flinkConf,
             yarnConf, yarnClient, YarnClientYarnClusterInformationRetriever.create(yarnClient), true);
@@ -166,6 +168,10 @@ public class FlinkYarnRunnerBuilder {
                  .setTaskManagerMemoryMB(flinkJobConfiguration.getTaskManagerMemory())
                  .setSlotsPerTaskManager(flinkJobConfiguration.getNumberOfTaskSlots())
                  .createClusterSpecification();
+  
+    List<File> shipFiles = new ArrayList<>();
+    shipFiles.add(new File(settings.getFlinkDir(), "lib"));
+    cluster.addShipFiles(shipFiles);
     
     cluster.setLocalJarPath(new Path(settings.getLocalFlinkJarPath()));
     cluster.setDocker(ProjectUtils.getFullDockerImageName(project, settings, serviceDiscoveryController, true),
