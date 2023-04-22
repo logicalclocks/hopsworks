@@ -19,7 +19,6 @@ package io.hops.hopsworks.persistence.entity.featurestore.code;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 
 import javax.persistence.Entity;
 import javax.persistence.NamedQueries;
@@ -33,6 +32,7 @@ import javax.persistence.Column;
 import javax.persistence.JoinColumns;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Date;
@@ -70,15 +70,10 @@ public class FeaturestoreCode implements Serializable {
   @Column(name = "application_id")
   private String applicationID;
 
-  @JoinColumns({
-          @JoinColumn(name = "inode_pid",
-                  referencedColumnName = "parent_id"),
-          @JoinColumn(name = "inode_name",
-                  referencedColumnName = "name"),
-          @JoinColumn(name = "partition_id",
-                  referencedColumnName = "partition_id")})
-  @ManyToOne(optional = false)
-  private Inode inode;
+  @Basic(optional = false)
+  @Column(name = "name")
+  @Size(max = 255)
+  private String fileName;
 
   @JoinColumn(name = "feature_group_id", referencedColumnName = "id")
   private Featuregroup featureGroup;
@@ -97,16 +92,16 @@ public class FeaturestoreCode implements Serializable {
   public FeaturestoreCode() {
   }
 
-  public FeaturestoreCode(Date commitTime, Inode inode, TrainingDataset trainingDataset, String applicationID) {
+  public FeaturestoreCode(Date commitTime, TrainingDataset trainingDataset, String fileName, String applicationID) {
     this.commitTime = commitTime;
-    this.inode = inode;
+    this.fileName = fileName;
     this.trainingDataset = trainingDataset;
     this.applicationID = applicationID;
   }
 
-  public FeaturestoreCode(Date commitTime, Inode inode, Featuregroup featureGroup, String applicationID) {
+  public FeaturestoreCode(Date commitTime, Featuregroup featureGroup, String fileName, String applicationID) {
     this.commitTime = commitTime;
-    this.inode = inode;
+    this.fileName = fileName;
     this.featureGroup = featureGroup;
     this.applicationID = applicationID;
   }
@@ -135,16 +130,11 @@ public class FeaturestoreCode implements Serializable {
     return this.applicationID;
   }
 
+  public String getFileName() { return fileName; }
+  public void setFileName(String fileName) { this.fileName = fileName; }
+
   public void setApplicationID(String applicationID) {
     this.applicationID = applicationID;
-  }
-
-  public Inode getInode() {
-    return inode;
-  }
-
-  public void setInode(Inode inode) {
-    this.inode = inode;
   }
 
   public Featuregroup getFeatureGroup() {
@@ -188,7 +178,7 @@ public class FeaturestoreCode implements Serializable {
     if (!commitTime.equals(that.commitTime)) {
       return false;
     }
-    if (!inode.equals(that.inode)) {
+    if (!fileName.equals(that.fileName)) {
       return false;
     }
     if (featureGroup != null ? !featureGroup.equals(that.featureGroup) : that.featureGroup != null) {
@@ -205,7 +195,7 @@ public class FeaturestoreCode implements Serializable {
   public int hashCode() {
     int result = id.hashCode();
     result = 31 * result + commitTime.hashCode();
-    result = 31 * result + inode.hashCode();
+    result = 31 * result + fileName.hashCode();
     result = 31 * result + (featureGroup != null ? featureGroup.hashCode() : 0);
     result = 31 * result + (featureGroupCommit != null ? featureGroupCommit.hashCode() : 0);
     result = 31 * result + (trainingDataset != null ? trainingDataset.hashCode() : 0);

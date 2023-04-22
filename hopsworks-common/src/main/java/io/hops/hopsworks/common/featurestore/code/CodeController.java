@@ -24,7 +24,6 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -35,7 +34,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregro
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.python.PythonJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
@@ -67,8 +65,6 @@ public class CodeController {
   private JobFacade jobFacade;
   @EJB
   private DistributedFsService dfs;
-  @EJB
-  private InodeController inodeController;
   @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
@@ -145,11 +141,11 @@ public class CodeController {
                                        CodeActions.RunType type)
       throws ServiceException, FeaturestoreException {
 
-    Inode codeInode = saveCode(project, user, applicationId, featuregroup, entityId,
+    String path = saveCode(project, user, applicationId, featuregroup, entityId,
         databricksNotebook, databricksArchive, type);
 
     Timestamp commitTime = new Timestamp(codeCommitTimeStamp);
-    FeaturestoreCode featurestoreCode = new FeaturestoreCode(commitTime, codeInode, featuregroup, applicationId);
+    FeaturestoreCode featurestoreCode = new FeaturestoreCode(commitTime, featuregroup, path, applicationId);
 
     if ((featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
         featuregroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) ||
@@ -169,57 +165,44 @@ public class CodeController {
                                        CodeActions.RunType type)
           throws ServiceException, FeaturestoreException {
 
-    Inode codeInode = saveCode(project, user, applicationId, trainingDataset, entityId,
+    String path = saveCode(project, user, applicationId, trainingDataset, entityId,
         databricksNotebook, databricksArchive, type);
 
     Timestamp commitTime = new Timestamp(codeCommitTimeStamp);
-    FeaturestoreCode featurestoreCode = new FeaturestoreCode(commitTime, codeInode, trainingDataset, applicationId);
+    FeaturestoreCode featurestoreCode = new FeaturestoreCode(commitTime, trainingDataset, path, applicationId);
 
     return featurestoreCodeFacade.update(featurestoreCode);
   }
 
-  private Inode saveCode(Project project, Users user, String applicationId,
+  private String saveCode(Project project, Users user, String applicationId,
                          Featuregroup featureGroup, String entityId,
                          String databricksNotebook, byte[] databricksArchive,
                          CodeActions.RunType type)
           throws ServiceException, FeaturestoreException {
-
-    Path datasetDir = new Path(Utils.getFeaturestorePath(project, settings));
-    String datasetName = Utils.getFeaturegroupName(featureGroup);
-
     if (type == CodeActions.RunType.JOB) {
       // Log the job activity before saving the code
       executionFacade.findByAppId(applicationId)
           .ifPresent(execution -> featurestoreActivityFacade.logExecutionActivity(featureGroup, execution));
     }
 
-    return saveCode(project, user, applicationId, entityId, datasetDir, datasetName,
+    return saveCode(project, user, applicationId, entityId, getCodeDirFullPath(project, featureGroup),
         databricksNotebook, databricksArchive, type);
   }
 
-  private Inode saveCode(Project project, Users user, String applicationId,
+  private String saveCode(Project project, Users user, String applicationId,
                          TrainingDataset trainingDataset, String entityId,
                          String databricksNotebook, byte[] databricksArchive,
                          CodeActions.RunType type)
           throws ServiceException, FeaturestoreException {
-
-    Path datasetDir = new Path(Utils.getProjectPath(project.getName()),
-            project.getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName());
-    String datasetName = Utils.getTrainingDatasetName(trainingDataset);
-
-    return saveCode(project, user, applicationId, entityId, datasetDir,
-        datasetName, databricksNotebook, databricksArchive, type);
+    return saveCode(project, user, applicationId, entityId, getCodeDirFullPath(project, trainingDataset),
+        databricksNotebook, databricksArchive, type);
   }
 
-  private Inode saveCode(Project project, Users user, String applicationId,
-                         String entityId, Path datasetDir, String datasetName,
-                         String databricksNotebook, byte[] databricksArchive,
+  private String saveCode(Project project, Users user, String applicationId,
+                         String entityId, Path dirPath, String databricksNotebook, byte[] databricksArchive,
                          CodeActions.RunType type)
           throws ServiceException, FeaturestoreException {
 
-    // Construct the directory path
-    Path codeDir = new Path(datasetDir, CODE);
-    Path dirPath = new Path(codeDir, datasetName);
     Path filePath;
 
     switch(type) {
@@ -237,7 +220,7 @@ public class CodeController {
         throw new NotImplementedException();
     }
 
-    return inodeController.getInodeAtPath(filePath.toString());
+    return filePath.getName();
   }
 
   private Path saveJob(Project project, Users user, String entityId, Path dirPath, String applicationId)
@@ -297,5 +280,23 @@ public class CodeController {
     }
 
     return notebookPath;
+  }
+
+  public Path getCodeDirFullPath(Project project, Featuregroup featureGroup) {
+    Path datasetDir = new Path(Utils.getFeaturestorePath(project, settings));
+    String datasetName = Utils.getFeaturegroupName(featureGroup);
+    return getCodeDirFullPath(datasetDir, datasetName);
+  }
+
+  public Path getCodeDirFullPath(Project project, TrainingDataset trainingDataset) {
+    Path datasetDir = new Path(Utils.getProjectPath(project.getName()),
+        project.getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName());
+    String datasetName = Utils.getTrainingDatasetName(trainingDataset);
+    return getCodeDirFullPath(datasetDir, datasetName);
+  }
+
+  private Path getCodeDirFullPath(Path datasetDir, String datasetName) {
+    Path codeDir = new Path(datasetDir, CODE);
+    return new Path(codeDir, datasetName);
   }
 }
