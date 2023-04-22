@@ -115,8 +115,8 @@ public class ProjectsAdminResource {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @Path("{id}")
-  public Response getProjectAdminInfo(@PathParam("id") Integer projectId,
+  @Path("{projectId}")
+  public Response getProjectAdminInfo(@PathParam("projectId") Integer projectId,
                                       @BeanParam ExpansionBeanParam expansionBeanParam,
                                       @Context HttpServletRequest req,
                                       @Context UriInfo uriInfo,
@@ -134,8 +134,8 @@ public class ProjectsAdminResource {
 
   @PUT
   @Consumes(MediaType.APPLICATION_JSON)
-  @Path("{id}")
-  public Response setProjectAdminInfo(@PathParam("id") Integer projectId,
+  @Path("{projectId}")
+  public Response setProjectAdminInfo(@PathParam("projectId") Integer projectId,
                                       ProjectAdminInfoDTO projectAdminInfoDTO,
                                       @Context HttpServletRequest req,
                                       @Context UriInfo uriInfo,
@@ -154,11 +154,11 @@ public class ProjectsAdminResource {
 
   @DELETE
   @Produces(MediaType.APPLICATION_JSON)
-  @Path("{id}")
+  @Path("{projectId}")
   public Response deleteProject(@Context HttpServletRequest req,
                                 @Context UriInfo uriInfo,
                                 @Context SecurityContext sc,
-                                @PathParam("id") Integer id,
+                                @PathParam("projectId") Integer id,
                                 @QueryParam("force") @DefaultValue("false") Boolean force)
       throws ProjectException, GenericException {
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -176,9 +176,9 @@ public class ProjectsAdminResource {
   }
 
   @POST
-  @Path("{id}/fix-permission")
+  @Path("{projectId}/fix-permission")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response forcePermissionFix(@PathParam("id") Integer projectId,
+  public Response forcePermissionFix(@PathParam("projectId") Integer projectId,
                                      @Context HttpServletRequest req,
                                      @Context SecurityContext sc)
     throws ProjectException {

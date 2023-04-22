@@ -9,6 +9,7 @@ public class LogMessage {
   private String parameters;
   private String outcome;
   private CallerIdentifier caller;
+  private String projectName;
   private String clientIp;
   private String userAgent;
   private String pathInfo;
@@ -47,6 +48,14 @@ public class LogMessage {
   
   public void setCaller(CallerIdentifier caller) {
     this.caller = caller;
+  }
+  
+  public String getProjectName() {
+    return projectName;
+  }
+  
+  public void setProjectName(String projectName) {
+    this.projectName = projectName;
   }
   
   public String getClientIp() {

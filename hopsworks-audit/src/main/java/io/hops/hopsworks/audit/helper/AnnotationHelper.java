@@ -17,6 +17,7 @@ package io.hops.hopsworks.audit.helper;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.google.common.base.Strings;
 import io.hops.hopsworks.audit.auditor.annotation.AuditTarget;
 import io.hops.hopsworks.audit.logger.annotation.Caller;
 import io.hops.hopsworks.common.dao.user.UserDTO;
@@ -32,7 +33,10 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.CookieParam;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriInfo;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -57,6 +61,8 @@ public class AnnotationHelper {
   public static final String CLIENT_IP = "client-ip";
   public static final String PATH_INFO = "pathInfo";
   
+  @EJB
+  private LoggerCache loggerCache;
   @EJB
   private UserFacade userFacade;
   
@@ -141,8 +147,7 @@ public class AnnotationHelper {
           return getCallerIdentifier(methodParameters[i], parameters[i]);
         } else if (parameters[i] instanceof SecurityContext &&
           ((SecurityContext) parameters[i]).getUserPrincipal() != null) {
-          caller.setUsername(((SecurityContext) parameters[i]).getUserPrincipal().getName());
-          return caller;
+          return getCaller(UserIdentifier.USERNAME, ((SecurityContext) parameters[i]).getUserPrincipal().getName());
         } else if (parameters[i] instanceof HttpServletRequest) {
           if (((HttpServletRequest) parameters[i]).getRemoteUser() != null) {
             caller.setEmail(((HttpServletRequest) parameters[i]).getRemoteUser());
@@ -150,8 +155,7 @@ public class AnnotationHelper {
           }
           String subject = getSubjectFromJWT((HttpServletRequest) parameters[i]);
           if (subject != null && !subject.isEmpty()) {
-            caller.setUsername(subject);
-            return caller;
+            return getCaller(UserIdentifier.USERNAME, subject);
           }
         }
       }
@@ -228,25 +232,28 @@ public class AnnotationHelper {
   }
   
   private CallerIdentifier getCaller(UserIdentifier identifier, Object userIdentifier) {
-    CallerIdentifier caller = new CallerIdentifier();
+    CallerIdentifier caller;
     switch (identifier) {
       case ID:
-        caller.setUserId((Integer) userIdentifier);
+        caller = loggerCache.getCaller((Integer) userIdentifier);
         break;
       case EMAIL:
+        caller = new CallerIdentifier();
         caller.setEmail((String) userIdentifier);
         break;
       case USERNAME:
-        caller.setUsername((String) userIdentifier);
+        caller = loggerCache.getCaller((String) userIdentifier);
         break;
       case USER_DTO:
+        caller = new CallerIdentifier();
         caller.setEmail(((UserDTO) userIdentifier).getEmail());
         break;
       case USERS:
+        caller = new CallerIdentifier();
         caller.setEmail(((Users) userIdentifier).getEmail());
         break;
       case KEY:
-        caller.setUsername(getUserFromKey((String) userIdentifier));
+        caller = loggerCache.getCaller(getUserFromKey((String) userIdentifier));
         break;
       default:
         return null;
@@ -273,4 +280,71 @@ public class AnnotationHelper {
     }
     return null;
   }
+  
+  public String getProjectName(Method method, Object[] parameters) {
+    Parameter[] methodParameters = method.getParameters();
+    String projectName;
+    if (parameters != null) {
+      for (int i = 0; i < parameters.length; i++) {
+        projectName = getProjectName(methodParameters[i], parameters[i]);
+        if (!Strings.isNullOrEmpty(projectName)) {
+          return projectName;
+        }
+      }
+    }
+    return "";
+  }
+  
+  private String getProjectName(Parameter methodParam, Object parameter) {
+    String projectName = getProjectNameFromPathParam(methodParam, parameter);
+    if (Strings.isNullOrEmpty(projectName)) {
+      projectName = getProjectNameFromUriInfo(parameter);
+    }
+    if (Strings.isNullOrEmpty(projectName)) {
+      projectName = getProjectNameFromUriHttpServletRequest(parameter);
+    }
+    return projectName;
+  }
+  
+  private String getProjectNameFromPathParam(Parameter methodParam, Object parameter) {
+    //If method has parameter @PathParam("projectId")
+    String pathParam = methodParam.isAnnotationPresent(PathParam.class) ?
+      methodParam.getAnnotation(PathParam.class).value() : "";
+    if (pathParam.equals("projectId")) {
+      return loggerCache.getProject((Integer) parameter);
+    }
+    if (pathParam.equals("projectName")) {
+      return (String) parameter;
+    }
+    return null;
+  }
+  
+  private String getProjectNameFromUriInfo(Object parameter) {
+    //If method has parameter @Context UriInfo
+    if (parameter instanceof UriInfo) {
+      MultivaluedMap<String, String> pathParameters = ((UriInfo) parameter).getPathParameters();
+      String projectId = pathParameters.getFirst("projectId");
+      String projectName = pathParameters.getFirst("projectName");
+      if (!Strings.isNullOrEmpty(projectName)) {
+        return projectName;
+      }
+      if (!Strings.isNullOrEmpty(projectId)) {
+        return loggerCache.getProject(projectId);
+      }
+    }
+    return null;
+  }
+  
+  private String getProjectNameFromUriHttpServletRequest(Object parameter) {
+    //If method has parameter @Context HttpServletRequest to get path info -> /project/id
+    if (parameter instanceof HttpServletRequest) {
+      String pathInfo = ((HttpServletRequest) parameter).getPathInfo();
+      String[] pathParts = pathInfo.split("/");
+      if (pathParts.length > 2 && pathParts[1].equals("project")) {
+        return loggerCache.getProject(pathParts[2]);
+      }
+    }
+    return null;
+  }
+  
 }

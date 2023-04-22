@@ -73,29 +73,32 @@ public class LogInterceptor implements Serializable {
     CallerIdentifier caller = annotationHelper.getCallerIdentifier(method, context.getParameters());
     Map<String, String> clientInfo = annotationHelper.getClientInfo(context.getParameters());
     List<Object> params = annotationHelper.getParamsExceptAnnotated(method, context.getParameters(), Secret.class);
+    String projectName = annotationHelper.getProjectName(method, context.getParameters());
 
     Object ret;
     try {
       ret = context.proceed();
     } catch (Exception e) {
-      log(resourceClass.getName(), method.getName(), caller, clientInfo, params, getExceptionMessage(e), level);
+      log(resourceClass.getName(), method.getName(), caller, projectName, clientInfo, params, getExceptionMessage(e),
+        level);
       throw e;
     }
     if (method.getReturnType().equals(Void.TYPE)) {
-      log(resourceClass.getName(), method.getName(), caller, clientInfo, params, "void", level);
+      log(resourceClass.getName(), method.getName(), caller, projectName, clientInfo, params, "void", level);
     } else {
       Response res = auditHelper.getResponse(ret);
       if (res != null) {
-        log(resourceClass.getName(), method.getName(), caller, clientInfo, params, String.valueOf(res.getStatus()),
-          level);
+        log(resourceClass.getName(), method.getName(), caller, projectName, clientInfo, params,
+          String.valueOf(res.getStatus()), level);
       } else {
-        log(resourceClass.getName(), method.getName(), caller, clientInfo, params, ret.getClass().getName(), level);
+        log(resourceClass.getName(), method.getName(), caller, projectName, clientInfo, params,
+          ret.getClass().getName(), level);
       }
     }
     return ret;
   }
 
-  private void log(String className, String methodName, CallerIdentifier caller,
+  private void log(String className, String methodName, CallerIdentifier caller, String projectName,
                    Map<String, String> callInfo, List<Object> parameters, String outcome, Level level) {
     String format = variablesHelper.getAuditLogFileType();
     if (format.equals(SimpleFormatter.class.getName())) {
@@ -107,6 +110,7 @@ public class LogInterceptor implements Serializable {
         .with("email", caller.getEmail() != null ? caller.getEmail() : "")
         .with("username", caller.getUsername() != null ? caller.getUsername() : "")
         .with("user-id", caller.getUserId() != null ? caller.getUserId() : "")
+        .with("project", projectName != null ? projectName : "")
         .with("path-info", callInfo.get(AnnotationHelper.PATH_INFO))
         .with("client-ip", callInfo.get(AnnotationHelper.CLIENT_IP))
         .with("user-agent", callInfo.get(AnnotationHelper.USER_AGENT));
@@ -119,6 +123,7 @@ public class LogInterceptor implements Serializable {
       logMessage.setMethodName(methodName);
       logMessage.setParameters(parameters.toString());
       logMessage.setCaller(caller);
+      logMessage.setProjectName(projectName);
       logMessage.setOutcome(outcome != null ? outcome : "");
       logMessage.setDateTime(new SimpleDateFormat(dateFormat).format(new Date()));
       logMessage.setUserAgent(callInfo.get(AnnotationHelper.USER_AGENT));
