@@ -8,14 +8,10 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.protocol.LastUpdatedContentSummary;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import javax.ejb.EJB;
+import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
-import javax.ejb.Timeout;
-import javax.ejb.TimerConfig;
-import javax.ejb.TimerService;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
@@ -28,21 +24,12 @@ import java.util.logging.Logger;
 public class CloudStorageUsageReporter {
   private static final Logger LOG = Logger.getLogger(CloudStorageUsageReporter.class.getName());
 
-  @Resource
-  private TimerService timerService;
   @EJB
   private CloudClient cloudClient;
   @EJB
   private DistributedFsService dfs;
-
-  @PostConstruct
-  public void init() {
-    LOG.log(Level.INFO, "Hopsworks@Cloud - Initializing CloudStorageUsageReporter");
-    timerService.createIntervalTimer(0, 15 * 60 * 1000,
-            new TimerConfig("Cloud storage usage reporter", false));
-  }
-
-  @Timeout
+  
+  @Schedule(minute = "*/15", info = "Cloud storage usage reporter")
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void reportStorageUsage() {
     DistributedFileSystemOps dfso = null;

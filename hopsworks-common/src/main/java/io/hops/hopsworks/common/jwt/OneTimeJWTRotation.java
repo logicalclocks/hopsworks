@@ -17,51 +17,39 @@ package io.hops.hopsworks.common.jwt;
 
 import io.hops.hopsworks.jwt.Constants;
 import io.hops.hopsworks.jwt.JWTController;
-import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
+
 import javax.annotation.Resource;
 import javax.ejb.EJB;
+import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.Timeout;
 import javax.ejb.Timer;
 import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
+import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Startup
 @Singleton
 public class OneTimeJWTRotation {
-
   private final static Logger LOGGER = Logger.getLogger(OneTimeJWTRotation.class.getName());
-  private final static long TIMER_INTERVAL = 1 * (24 * 60 * 60 * 1000);
 
   @EJB
   private JWTController jWTController;
   @Resource
   TimerService timerService;
-
-  @PostConstruct
-  private void init() {
-    timerService.createTimer(0, TIMER_INTERVAL, "Mark");
-  }
-
-  @PreDestroy
-  private void destroyTimer() {
-    for (Timer timer : timerService.getTimers()) {
-      timer.cancel();
-    }
-  }
-
-  private void markAndSetTimer() {
+  
+  @Schedule(info = "Mark old JWT signing keys")
+  public void markOldSigningKeys() {
     boolean marked = jWTController.markOldSigningKeys();
     if (marked) {
       //(60000 + 60000)*2 = 240000 milliseconds = 4 min
       long duration = (Constants.DEFAULT_EXPIRY_LEEWAY * 1000 + Constants.ONE_TIME_JWT_LIFETIME_MS) * 2;
       TimerConfig config = new TimerConfig();
-      config.setInfo("Remove");
+      config.setInfo("Remove old JWT signing keys");
+      config.setPersistent(false);
       timerService.createSingleActionTimer(duration, config);
     }
   }
@@ -69,12 +57,7 @@ public class OneTimeJWTRotation {
   @Timeout
   public void performTimeout(Timer timer) {
     try {
-      String name = (String) timer.getInfo();
-      if ("Mark".equals(name)) {
-        markAndSetTimer();
-      } else {
-        jWTController.removeMarkedKeys();
-      }
+      jWTController.removeMarkedKeys();
       LOGGER.log(Level.INFO, "{0} timer event: {1}.", new Object[]{timer.getInfo(), new Date()});
     } catch (Exception e) {
       LOGGER.log(Level.SEVERE, "Got an exception while rotating one-time jwt", e);

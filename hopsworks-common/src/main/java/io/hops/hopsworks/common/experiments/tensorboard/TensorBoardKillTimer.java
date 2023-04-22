@@ -52,12 +52,13 @@ public class TensorBoardKillTimer {
   private TensorBoardProcessMgr tensorBoardProcessMgr;
   @EJB
   private TensorBoardController tensorBoardController;
-
-
+  
+  
   @Schedule(persistent = false,
-          minute = "*/10",
-          hour = "*")
-  public void rotate(Timer timer) {
+    minute = "*/10",
+    hour = "*",
+    info = "TensorBoard Killer timer")
+  public void tensorBoardKiller(Timer timer) {
     try {
       LOGGER.log(Level.FINE, "Running TensorBoardKillTimer.");
       int tensorBoardMaxLastAccessed = settings.getTensorBoardMaxLastAccessed();
@@ -83,29 +84,33 @@ public class TensorBoardKillTimer {
         String tbDirPath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS;
         File tbDir = new File(tbDirPath);
         //For each project_projectmember directory try to find .pid file
-        for (File currentTbDir : tbDir.listFiles()) {
-          for (File possiblePidFile : currentTbDir.listFiles()) {
-            if (possiblePidFile.getName().endsWith(".pid")) {
-              String cid = com.google.common.io.Files.readFirstLine(possiblePidFile, Charset.defaultCharset());
-
-              if (cid != null) {
-                // do not kill TBs which are in the DB
-                boolean tbExists = false;
-                for (TensorBoard tb : TBs) {
-                  if (tb.getCid().equals(cid)) {
-                    tbExists = true;
+        if (tbDir.exists() && tbDir.isDirectory()) {
+          for (File currentTbDir : tbDir.listFiles()) {
+            for (File possiblePidFile : currentTbDir.listFiles()) {
+              if (possiblePidFile.getName().endsWith(".pid")) {
+                String cid = com.google.common.io.Files.readFirstLine(possiblePidFile, Charset.defaultCharset());
+        
+                if (cid != null) {
+                  // do not kill TBs which are in the DB
+                  boolean tbExists = false;
+                  for (TensorBoard tb : TBs) {
+                    if (tb.getCid().equals(cid)) {
+                      tbExists = true;
+                    }
                   }
-                }
-
-                if (!tbExists) {
-                  LOGGER.log(Level.WARNING, "Detected a stray TensorBoard with pid "
-                          + cid + " in directory " + currentTbDir.getAbsolutePath() + ", cleaning up...");
-                  tensorBoardProcessMgr.killTensorBoard(cid);
-                  tensorBoardProcessMgr.removeTensorBoardDirectory(currentTbDir.getAbsolutePath());
+          
+                  if (!tbExists) {
+                    LOGGER.log(Level.WARNING, "Detected a stray TensorBoard with pid "
+                      + cid + " in directory " + currentTbDir.getAbsolutePath() + ", cleaning up...");
+                    tensorBoardProcessMgr.killTensorBoard(cid);
+                    tensorBoardProcessMgr.removeTensorBoardDirectory(currentTbDir.getAbsolutePath());
+                  }
                 }
               }
             }
           }
+        } else {
+          LOGGER.log(Level.WARNING, "No TensorBoard directory found.");
         }
       } catch (IOException | NumberFormatException e) {
         LOGGER.log(Level.SEVERE, "Exception while reading .pid files", e);

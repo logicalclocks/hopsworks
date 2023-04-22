@@ -88,9 +88,7 @@ public class ZookeeperTopicCleanerTimer {
   private ZooKeeper zk = null;
 
   // Run once per hour 
-  @Schedule(persistent = false,
-      minute = "0",
-      hour = "*")
+  @Schedule(minute = "0", hour = "*", info="Zookeeper Topic Cleaner")
   public void execute(Timer timer) {
     LOGGER.log(Level.FINE, "Running ZookeeperTopicCleanerTimer.");
 

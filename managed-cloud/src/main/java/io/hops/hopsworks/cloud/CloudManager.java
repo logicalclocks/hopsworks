@@ -3,19 +3,19 @@
  */
 package io.hops.hopsworks.cloud;
 
-import com.google.common.collect.Lists;
-import io.hops.hopsworks.cloud.dao.heartbeat.CloudNodeType;
-import io.hops.hopsworks.cloud.dao.heartbeat.HeartbeatRequest;
-import io.hops.hopsworks.cloud.dao.heartbeat.HeartbeatResponse;
-import io.hops.hopsworks.cloud.dao.heartbeat.commands.CloudCommandType;
-import io.hops.hopsworks.cloud.dao.heartbeat.commands.CommandStatus;
-import io.hops.hopsworks.cloud.dao.heartbeat.commands.RemoveNodesCommand;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import com.logicalclocks.servicediscoverclient.service.Service;
+import io.hops.hopsworks.cloud.dao.heartbeat.CloudNodeType;
 import io.hops.hopsworks.cloud.dao.heartbeat.DecommissionStatus;
+import io.hops.hopsworks.cloud.dao.heartbeat.HeartbeatRequest;
+import io.hops.hopsworks.cloud.dao.heartbeat.HeartbeatResponse;
 import io.hops.hopsworks.cloud.dao.heartbeat.commands.BackupCommand;
+import io.hops.hopsworks.cloud.dao.heartbeat.commands.CloudCommandType;
+import io.hops.hopsworks.cloud.dao.heartbeat.commands.CommandStatus;
 import io.hops.hopsworks.cloud.dao.heartbeat.commands.DecommissionNodeCommand;
+import io.hops.hopsworks.cloud.dao.heartbeat.commands.RemoveNodesCommand;
 import io.hops.hopsworks.common.dao.host.HostDTO;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
@@ -30,45 +30,6 @@ import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import io.hops.hopsworks.persistence.entity.host.Hosts;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
-import java.io.IOException;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.ejb.EJB;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
-import javax.ejb.Timeout;
-import javax.ejb.TimerConfig;
-import javax.ejb.TimerService;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -80,14 +41,47 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
+import javax.ejb.Schedule;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
 @Singleton
 @Startup
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class CloudManager {
   private static final Logger LOG = Logger.getLogger(CloudManager.class.getName());
 
-  @Resource
-  private TimerService timerService;
   @EJB
   private CloudClient cloudClient;
   @EJB
@@ -137,10 +131,9 @@ public class CloudManager {
       whitelistLog.append(h).append(" ");
     }
     LOG.log(Level.INFO, whitelistLog.toString());
-    timerService.createIntervalTimer(0, 3000, new TimerConfig("Cloud heartbeat", false));
   }
-
-  @Timeout
+  
+  @Schedule(second = "*/3", info = "Cloud heartbeat")
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void heartbeat() {
     try {

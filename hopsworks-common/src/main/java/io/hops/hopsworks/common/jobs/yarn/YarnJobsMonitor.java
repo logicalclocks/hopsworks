@@ -93,12 +93,12 @@ public class YarnJobsMonitor implements JobsMonitor {
   Map<String, YarnMonitor> monitors = new HashMap<>();
   Map<String, Integer> failures = new HashMap<>();
   private final Map<ApplicationId, Future<Execution>> copyLogsFutures = new HashMap<>();
-
-  @Schedule(persistent = false,
-      second = "*/5",
-      minute = "*",
-      hour = "*")
-  public synchronized void monitor(Timer timer) {
+  
+  @Schedule(second = "*/5",
+    minute = "*",
+    hour = "*",
+    info = "Yarn job monitor timer")
+  public synchronized void yarnJobMonitor(Timer timer) {
     try {
       Map<String, Execution> executions = new HashMap<>();
       List<Execution> execs = executionFacade.findNotFinished();

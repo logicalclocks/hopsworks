@@ -62,7 +62,7 @@ public class PushgatewayMonitor {
   @EJB
   private YarnClientService ycs;
 
-  @Schedule(persistent = false, second = "0", minute = "*", hour = "*")
+  @Schedule(second = "0", minute = "*", hour = "*", info = "Prometheus push gateway timer")
   public synchronized void monitor(Timer timer) {
     try {
       PushgatewayResults results = scrapeMetrics();

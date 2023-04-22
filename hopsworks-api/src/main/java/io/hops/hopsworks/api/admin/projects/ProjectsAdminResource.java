@@ -23,7 +23,7 @@ import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dataset.acl.PermissionsCleaner;
+import io.hops.hopsworks.common.dataset.acl.PermissionsFixer;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
 import io.hops.hopsworks.common.project.ProjectQuotasController;
@@ -88,7 +88,7 @@ public class ProjectsAdminResource {
   @EJB
   private JWTHelper jWTHelper;
   @EJB
-  private PermissionsCleaner permissionsCleaner;
+  private PermissionsFixer permissionsFixer;
   @EJB
   private ProjectsAdminBuilder projectsAdminBuilder;
   @EJB
@@ -186,7 +186,7 @@ public class ProjectsAdminResource {
     if (project == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
     }
-    permissionsCleaner.fixPermissions(project);
+    permissionsFixer.fixPermissions(project);
     return Response.noContent().build();
   }
 
@@ -224,7 +224,7 @@ public class ProjectsAdminResource {
   @Path("fix-permission")
   @Produces(MediaType.APPLICATION_JSON)
   public Response forcePermissionFix(@Context HttpServletRequest req, @Context SecurityContext sc) {
-    permissionsCleaner.fixPermissions();
+    permissionsFixer.fixPermissions();
     return Response.accepted().build();
   }
 }

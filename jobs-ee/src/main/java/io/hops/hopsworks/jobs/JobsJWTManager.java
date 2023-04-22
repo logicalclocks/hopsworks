@@ -79,9 +79,7 @@ public class JobsJWTManager {
     }
   }
   
-  @Schedule(persistent = false,
-    minute = "*/1",
-    hour = "*")
+  @Schedule(minute = "*/1", hour = "*", info = "Jobs JWT renew Manager")
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void monitorJWT() {
     // Get all JWTs for jobs, check creation date in Kubernetes and renew if necessary

@@ -16,44 +16,27 @@
 package io.hops.hopsworks.common.jwt;
 
 import io.hops.hopsworks.jwt.JWTController;
+
+import javax.ejb.EJB;
+import javax.ejb.Schedule;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.ejb.Timer;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.annotation.Resource;
-import javax.ejb.EJB;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
-import javax.ejb.Timeout;
-import javax.ejb.Timer;
-import javax.ejb.TimerService;
 
 @Startup
 @Singleton
 public class InvalidatedJWTCleanup {
 
   private final static Logger LOGGER = Logger.getLogger(InvalidatedJWTCleanup.class.getName());
-  private final static long CLEANUP_INTERVAL = 2 * (24 * 60 * 60 * 1000);
+
   @EJB
   private JWTController jWTController;
-  @Resource
-  TimerService timerService;
-
-  @PostConstruct
-  private void init() {
-    timerService.createTimer(0, CLEANUP_INTERVAL, "Invalidated JWT cleanup");
-  }
-
-  @PreDestroy
-  private void destroyTimer() {
-    for (Timer timer : timerService.getTimers()) {
-      timer.cancel();
-    }
-  }
-
-  @Timeout
-  public void performTimeout(Timer timer) {
+  
+  @Schedule(info = "Invalidated JWT cleanup")
+  public void cleanInvalidatedJwt(Timer timer) {
     try {
       int count = jWTController.cleanupInvalidTokens();
       LOGGER.log(Level.INFO, "{0} timer event: {1}, removed {2} tokens.",

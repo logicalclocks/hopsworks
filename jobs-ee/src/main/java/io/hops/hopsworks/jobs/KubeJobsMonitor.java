@@ -54,10 +54,7 @@ public class KubeJobsMonitor implements JobsMonitor {
   @EJB
   private ExecutionUpdateController executionUpdateController;
   
-  @Schedule(persistent = false,
-    second = "*/5",
-    minute = "*",
-    hour = "*")
+  @Schedule(second = "*/5", minute = "*", hour = "*", info = "Kube Jobs Monitor")
   public synchronized void monitor(Timer timer) {
     LOGGER.log(Level.FINE, "Running KubeJobsMonitor timer");
     try {
