@@ -226,8 +226,13 @@ public class OnlineFeaturestoreController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
         Level.FINE, "Online feature store service is not enabled for this Hopsworks instance");
     }
+    String db = getOnlineFeaturestoreDbName(featurestore.getProject());
+
     // Create dataset
-    onlineFeaturestoreFacade.createOnlineFeaturestoreDatabase(getOnlineFeaturestoreDbName(featurestore.getProject()));
+    onlineFeaturestoreFacade.createOnlineFeaturestoreDatabase(db);
+
+    // Create kafka offset table
+    onlineFeaturestoreFacade.createOnlineFeaturestoreKafkaOffsetTable(db);
 
     // Create project owner database user
     createDatabaseUser(user, featurestore, ProjectRoleTypes.DATA_OWNER.getRole());

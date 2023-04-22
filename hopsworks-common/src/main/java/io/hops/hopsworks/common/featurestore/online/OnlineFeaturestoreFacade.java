@@ -121,7 +121,7 @@ public class OnlineFeaturestoreFacade {
   /**
    * Create an Online Featurestore Database. Fails if the database already exists.
    *
-   * @param db name of the table
+   * @param db name of the database
    */
   public void createOnlineFeaturestoreDatabase(String db) throws FeaturestoreException {
     //Prepared statements with parameters can only be done for
@@ -304,6 +304,29 @@ public class OnlineFeaturestoreFacade {
     } catch (SQLException se) {
       LOGGER.log(Level.SEVERE, "Error checking if database exists", se);
       return false;
+    }
+  }
+
+  /**
+   * Create a Kafka Offset table in Online Featurestore Database.
+   *
+   * @param db name of the database
+   */
+  public void createOnlineFeaturestoreKafkaOffsetTable(String db) throws FeaturestoreException {
+    //Prepared statements with parameters can only be done for
+    //WHERE/HAVING Clauses, not names of tables or databases
+    try {
+      executeUpdate(
+              "CREATE TABLE IF NOT EXISTS `" + db + "`.`kafka_offsets` (\n" +
+                      "`topic` varchar(255) COLLATE latin1_general_cs NOT NULL,\n" +
+                      "`partition` SMALLINT NOT NULL,\n" +
+                      "`offset` BIGINT UNSIGNED NOT NULL,\n" +
+                      "PRIMARY KEY (`topic`,`partition`)\n" +
+                    ") ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs;");
+    } catch (SQLException se) {
+      throw new FeaturestoreException(
+              RESTCodes.FeaturestoreErrorCode.ERROR_CREATING_ONLINE_FEATURESTORE_KAFKA_OFFSET_TABLE,
+              Level.SEVERE, "Error running create query", se.getMessage(), se);
     }
   }
 

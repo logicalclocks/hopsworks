@@ -112,6 +112,23 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
+    
+    describe "ensure currect tables are created in online feature store" do
+      context 'with valid project and online feature store enabled' do
+        before :all do
+          if getVar("featurestore_online_enabled") == false
+            skip "Online Feature Store not enabled, skip online featurestore tests"
+          end
+          with_valid_project
+        end
+        
+        it "should make sure that kafka_offsets table is created in featurestores" do
+          project = get_project
+          tables = Tables.where(TABLE_SCHEMA:project[:projectname], TABLE_NAME:"kafka_offsets")
+          expect(tables.length).to eq(1)
+        end
+      end
+    end
 
     describe "grant correct permissions for the online feature store" do
       context 'with valid project and online feature store enabled' do
