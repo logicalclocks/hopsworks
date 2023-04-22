@@ -52,11 +52,9 @@ public class GitTimeoutCommandsMonitor {
   private GitCommandOperationUtil gitCommandOperationUtil;
   @EJB
   private Settings settings;
-
-  @Schedule(persistent = false,
-      minute = "*/1",
-      hour = "*")
-  public void rotate(Timer timer) {
+  
+  @Schedule(minute = "*/1", hour = "*", info = "Git Commands Monitor timer")
+  public void gitCommandMonitor(Timer timer) {
     LOGGER.log(Level.FINE, "Running GitTimeoutCommandsMonitor");
     Collection<GitRepository> repositories = gitRepositoryFacade.findAllWithOngoingOperations();
     for (GitRepository repository : repositories) {

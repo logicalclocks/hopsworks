@@ -45,6 +45,7 @@ public class ProvenanceCleaner {
   private ProvenanceCleanerController cleanerCtrl;
   @Resource
   TimerService timerService;
+  private Timer timer;
   
   private String lastIndexChecked = "";
   
@@ -52,12 +53,12 @@ public class ProvenanceCleaner {
   private void init() {
     long cleanerPeriod = settings.getProvCleanerPeriod();
     LOGGER.log(Level.FINE, "timer - provenance cleaner - period:{0}s", cleanerPeriod);
-    timerService.createTimer(cleanerPeriod * 1000, cleanerPeriod * 1000, "Timer for provenance cleaner.");
+    timer = timerService.createTimer(cleanerPeriod * 1000, cleanerPeriod * 1000, "Timer for provenance cleaner.");
   }
   
   @PreDestroy
   private void destroyTimer() {
-    for (Timer timer : timerService.getTimers()) {
+    if (timer != null) {
       timer.cancel();
     }
   }

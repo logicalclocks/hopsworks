@@ -64,7 +64,7 @@ public class OpenSearchCleaner {
    *
    * @param timer timer
    */
-  @Schedule(persistent = false, minute = "0", hour = "1")
+  @Schedule(minute = "0", hour = "1", info = "OpenSearch Cleaner timer")
   public void deleteLogIndices(Timer timer) {
     LOGGER.log(Level.INFO, "Running OpenSearchCleaner.");
     //Get all log indices

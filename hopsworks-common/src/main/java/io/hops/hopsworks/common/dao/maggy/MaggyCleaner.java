@@ -34,12 +34,8 @@ import javax.ejb.Timer;
 @Singleton
 public class MaggyCleaner {
 
-  private final static Logger LOGGER = Logger.getLogger(
-      MaggyCleaner.class.getName());
-
-  public final int connectionTimeout = 90 * 1000;// 30 seconds
-
-  public int sessionTimeoutMs = 30 * 1000;//30 seconds  
+  private final static Logger LOGGER = Logger.getLogger(MaggyCleaner.class.getName());
+  
   @EJB
   private LivyController livyService;
   @EJB
@@ -47,11 +43,9 @@ public class MaggyCleaner {
   @EJB
   private Settings settings;
 
-  // Run once per hour
-  @Schedule(persistent = false,
-      minute = "0",
-      hour = "*")
-  public void execute(Timer timer) {
+  // Run once per hour. Only one node in HA should run this, so it needs to be persistent = true.
+  @Schedule(hour = "*", info = "Maggy Cleaner timer")
+  public void maggyCleaner(Timer timer) {
     try {
       // Get all Running Maggy Drivers
       List<MaggyDriver> drivers = maggyFacade.getAllDrivers();
@@ -69,8 +63,7 @@ public class MaggyCleaner {
         for (MaggyDriver md : drivers) {
         // Only cleanup Drivers older than 24 hours - in case Livy returns no session,
         // but there really is an Driver running
-          if (md.getCreated().before(
-              new Date(System.currentTimeMillis() - settings.getMaggyCleanupInterval()))) {
+          if (md.getCreated().before(new Date(System.currentTimeMillis() - settings.getMaggyCleanupInterval()))) {
             driversToRemove.add(md);
             if (sessions != null) {
               for (Session s : sessions) {
