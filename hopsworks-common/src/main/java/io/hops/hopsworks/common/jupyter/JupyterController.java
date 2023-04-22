@@ -148,7 +148,7 @@ public class JupyterController {
         LOGGER.log(Level.WARNING, "error code: " + processResult.getExitCode(), "Failed to convert "
             + notebookPath + "\nstderr: " + processResult.getStderr() + "\nstdout: " + processResult.getStdout());
         throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR, Level.SEVERE,
-            "error code: " + processResult.getExitCode(), "Failed to convert " + notebookPath
+            "Failed to convert ipython notebook to " + notebookConversion + " file", "Failed to convert " + notebookPath
             + "\nstderr: " + processResult.getStderr()
             + "\nstdout: " + processResult.getStdout());
       }

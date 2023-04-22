@@ -20,7 +20,6 @@ import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.featurestore.code.CodeController;
 import io.hops.hopsworks.common.featurestore.code.FeaturestoreCodeFacade;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -31,6 +30,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.Trainin
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -49,8 +49,6 @@ public class CodeBuilder {
   private FeaturestoreCodeFacade codeFacade;
   @EJB
   private CodeController codeController;
-  @EJB
-  private InodeController inodeController;
 
   private UriBuilder uri(UriInfo uriInfo, Project project, Featurestore featurestore) {
     return uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
@@ -107,13 +105,13 @@ public class CodeBuilder {
                        Featuregroup featuregroup,
                        FeaturestoreCode featurestoreCode,
                        JupyterController.NotebookConversion format) throws FeaturestoreException, ServiceException {
-    String path = inodeController.getPath(featurestoreCode.getInode());
-
+    Path fullCodePath = new Path(codeController.getCodeDirFullPath(project, featuregroup),
+        featurestoreCode.getFileName());
     CodeDTO dto = new CodeDTO();
     dto.setCodeId(featurestoreCode.getId());
     dto.setApplicationId(featurestoreCode.getApplicationID());
     dto.setHref(uri(uriInfo, project, featuregroup.getFeaturestore(), featuregroup, featurestoreCode));
-    dto.setPath(path);
+    dto.setPath(fullCodePath.toString());
     dto.setExpand(expand(resourceRequest));
     if (dto.isExpand()) {
       dto.setCommitTime(featurestoreCode.getCommitTime().getTime());
@@ -122,8 +120,9 @@ public class CodeBuilder {
             featurestoreCode.getFeatureGroupCommit().getFeatureGroupCommitPK().getCommitId());
       }
       if (resourceRequest.getField() != null && resourceRequest.getField().contains("content")) {
-        dto.setContentFormat(codeController.getContentFormat(path));
-        dto.setContent(codeController.readContent(project, user, path, dto.getContentFormat(), format));
+        dto.setContentFormat(codeController.getContentFormat(fullCodePath.toString()));
+        dto.setContent(codeController.readContent(project, user, fullCodePath.toString(), dto.getContentFormat(),
+            format));
       }
     }
 
@@ -135,19 +134,20 @@ public class CodeBuilder {
                        TrainingDataset trainingDataset,
                        FeaturestoreCode featurestoreCode,
                        JupyterController.NotebookConversion format) throws FeaturestoreException, ServiceException {
-    String path = inodeController.getPath(featurestoreCode.getInode());
-
+    Path fullCodePath = new Path(codeController.getCodeDirFullPath(project, trainingDataset),
+        featurestoreCode.getFileName());
     CodeDTO dto = new CodeDTO();
     dto.setCodeId(featurestoreCode.getId());
     dto.setApplicationId(featurestoreCode.getApplicationID());
     dto.setHref(uri(uriInfo, project, trainingDataset.getFeaturestore(), trainingDataset, featurestoreCode));
-    dto.setPath(path);
+    dto.setPath(fullCodePath.toString());
     dto.setExpand(expand(resourceRequest));
     if (dto.isExpand()) {
       dto.setCommitTime(featurestoreCode.getCommitTime().getTime());
       if (resourceRequest.getField() != null && resourceRequest.getField().contains("content")) {
-        dto.setContentFormat(codeController.getContentFormat(path));
-        dto.setContent(codeController.readContent(project, user, path, dto.getContentFormat(), format));
+        dto.setContentFormat(codeController.getContentFormat(fullCodePath.toString()));
+        dto.setContent(codeController.readContent(project, user, fullCodePath.toString(), dto.getContentFormat(),
+            format));
       }
     }
 
