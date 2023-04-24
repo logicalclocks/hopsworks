@@ -17,29 +17,28 @@
 package io.hops.hopsworks.api.experiments;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hops.hopsworks.api.experiments.dto.ExperimentDTO;
 import io.hops.hopsworks.api.experiments.dto.results.ExperimentResultSummaryDTO;
+import io.hops.hopsworks.common.util.DtoConverter;
 import io.hops.hopsworks.exceptions.ExperimentsException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.Singleton;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 
-@Singleton
+@Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class ExperimentConverter {
-  final ObjectMapper objectMapper = new ObjectMapper();
+  @EJB
+  private DtoConverter dtoConverter;
   
   private <T> T readValue(String jsonConfig, Class<T> resultClass) throws ExperimentsException {
     try {
-      return objectMapper.readValue(jsonConfig, resultClass);
+      return dtoConverter.readValue(jsonConfig, resultClass);
     } catch (JsonProcessingException e) {
       throw new ExperimentsException(RESTCodes.ExperimentsErrorCode.EXPERIMENT_MARSHALLING_FAILED, Level.FINE,
         "Failed to unmarshal", "Error occurred during unmarshalling:" + jsonConfig, e);
@@ -49,7 +48,7 @@ public class ExperimentConverter {
   private String writeValue(Object value) throws ExperimentsException {
     String jsonConfig;
     try {
-      jsonConfig = objectMapper.writeValueAsString(value);
+      jsonConfig = dtoConverter.writeValue(value);
     } catch (JsonProcessingException e) {
       throw new ExperimentsException(RESTCodes.ExperimentsErrorCode.EXPERIMENT_MARSHALLING_FAILED, Level.FINE,
         "Failed to marshal", "Failed to marshal:" + value.toString(), e);
