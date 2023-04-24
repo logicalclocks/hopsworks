@@ -34,7 +34,7 @@ import java.util.Optional;
 import java.util.logging.Level;
 
 @Stateless
-@TransactionAttribute(TransactionAttributeType.NEVER)
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class HostsController {
   
   @EJB
