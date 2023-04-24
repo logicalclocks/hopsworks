@@ -29,7 +29,7 @@ public class CloudStorageUsageReporter {
   @EJB
   private DistributedFsService dfs;
   
-  @Schedule(minute = "*/15", info = "Cloud storage usage reporter")
+  @Schedule(minute = "*/15", hour = "*", info = "Cloud storage usage reporter")
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void reportStorageUsage() {
     DistributedFileSystemOps dfso = null;

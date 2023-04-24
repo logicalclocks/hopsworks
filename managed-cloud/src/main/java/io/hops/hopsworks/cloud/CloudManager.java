@@ -133,7 +133,7 @@ public class CloudManager {
     LOG.log(Level.INFO, whitelistLog.toString());
   }
   
-  @Schedule(second = "*/3", info = "Cloud heartbeat")
+  @Schedule(second = "*/3", minute = "*", hour = "*", info = "Cloud heartbeat")
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void heartbeat() {
     try {

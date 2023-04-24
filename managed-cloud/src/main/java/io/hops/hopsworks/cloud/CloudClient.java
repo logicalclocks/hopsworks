@@ -40,7 +40,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Stateless
-@TransactionAttribute(TransactionAttributeType.NEVER)
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 @DependsOn("Settings")
 public class CloudClient {
   private final static Logger LOGGER = Logger.getLogger(CloudClient.class.getName());
