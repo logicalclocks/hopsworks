@@ -152,25 +152,34 @@ public class PythonResourcesController {
   }
 
   private Map<String, String> getCadvisorQueries() {
+    final String dockerCgroupParent = settings.getDockerCgroupParent();
+    String cGroupParentForRegex = dockerCgroupParent.replaceAll("\\.", "\\\\\\\\.");
+    final String headNodeInstanceQuery = "instance='" + glassfishIp + ":" + nodeExporterPort + "'";
     return new HashMap<String, String>() {
       {
         put(DOCKER_CURRENT_CPU_USAGE_KEY,
-            "sum(avg by (cpu) (rate(container_cpu_usage_seconds_total{id=~'.*/docker/.*'}[60s]) * 100))");
+            "sum(avg by (cpu) (rate(container_cpu_usage_seconds_total{id=~'.*/" + cGroupParentForRegex
+                + "/.*'}[60s]) * 100))");
         put(DOCKER_TOTAL_ALLOCATABLE_CPU_KEY,
-            "(container_spec_cpu_quota{id='/docker'}/" + settings.getDockerCgroupCpuPeriod() + ")*100");
-        put(DOCKER_CURRENT_MEMORY_USAGE_KEY, "sum(container_memory_working_set_bytes{id=~'.*/docker/.*'})");
-        put(DOCKER_TOTAL_ALLOCATABLE_MEMORY_KEY, "container_spec_memory_limit_bytes{id='/docker'}");
+            "(sum(container_spec_cpu_quota{id='/" + dockerCgroupParent + "'})/("
+                + settings.getDockerCgroupCpuPeriod()
+                + " * (count(count(node_cpu_seconds_total{" + headNodeInstanceQuery + "}) without (mode,instance,job))"
+                + "without (cpu))))*100");
+        put(DOCKER_CURRENT_MEMORY_USAGE_KEY, "sum(container_memory_working_set_bytes{id=~'.*/" + cGroupParentForRegex
+            + "/.*'})");
+        put(DOCKER_TOTAL_ALLOCATABLE_MEMORY_KEY, "container_spec_memory_limit_bytes{id='/" + dockerCgroupParent
+            + "'}");
       }
     };
   }
 
   private Map<String, String> getNodeExporterQueriesHeadNode() {
-    String headNodeQuery = "instance='" + glassfishIp + ":" + nodeExporterPort + "'";
+    final String headNodeQuery = "instance='" + glassfishIp + ":" + nodeExporterPort + "'";
     return new HashMap<String, String>() {
       {
         put(CLUSTER_CURRENT_CPU_USAGE,
-            "100 - ((sum((avg by (instance) (rate(node_cpu_seconds_total{mode='idle', " + headNodeQuery + "}[1m])) " +
-                "* 100)))/(count(node_memory_Active_bytes{" + headNodeQuery + "})))");
+            "100 - ((sum((avg by (instance) (rate(node_cpu_seconds_total{mode='idle', " + headNodeQuery + "}[1m])) "
+                + "* 100)))/(count(node_memory_Active_bytes{" + headNodeQuery + "})))");
         put(CLUSTER_CURRENT_MEMORY_USAGE, "sum(node_memory_Active_bytes{" + headNodeQuery + "})");
         put(CLUSTER_TOTAL_MEMORY_CAPACITY, "sum(node_memory_MemTotal_bytes{" + headNodeQuery + "})");
       }
