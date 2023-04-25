@@ -43,7 +43,6 @@ import org.w3c.dom.Element;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
@@ -78,7 +77,7 @@ import java.util.stream.Collectors;
 
 @Singleton
 @Startup
-@TransactionAttribute(TransactionAttributeType.NEVER)
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class CloudManager {
   private static final Logger LOG = Logger.getLogger(CloudManager.class.getName());
 
@@ -133,8 +132,6 @@ public class CloudManager {
     LOG.log(Level.INFO, whitelistLog.toString());
   }
   
-  @Schedule(second = "*/3", minute = "*", hour = "*", info = "Cloud heartbeat")
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void heartbeat() {
     try {
       if (firstHeartbeat) {

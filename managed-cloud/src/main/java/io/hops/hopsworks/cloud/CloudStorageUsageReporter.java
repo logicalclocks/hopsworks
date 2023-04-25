@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 
 @Singleton
 @Startup
-@TransactionAttribute(TransactionAttributeType.NEVER)
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class CloudStorageUsageReporter {
   private static final Logger LOG = Logger.getLogger(CloudStorageUsageReporter.class.getName());
 
@@ -30,15 +30,15 @@ public class CloudStorageUsageReporter {
   private DistributedFsService dfs;
   
   @Schedule(minute = "*/15", hour = "*", info = "Cloud storage usage reporter")
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void reportStorageUsage() {
+    LOG.log(Level.FINE, "Hopsworks@Cloud - reportStorageUsage");
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
       LastUpdatedContentSummary summary = dfso.getFilesystem().getLastUpdatedContentSummary(new Path("/"));
       cloudClient.sendStorageUsage(summary.getSpaceConsumed(), summary.getFileAndDirCount());
     } catch (IOException ex) {
-      LOG.log(Level.SEVERE, "failded to send cloud storage usage report", ex);
+      LOG.log(Level.SEVERE, "failed to send cloud storage usage report", ex);
     } finally {
       dfs.closeDfsClient(dfso);
     }
