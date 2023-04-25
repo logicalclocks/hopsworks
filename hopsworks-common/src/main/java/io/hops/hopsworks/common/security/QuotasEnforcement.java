@@ -180,11 +180,10 @@ public class QuotasEnforcement {
   }
 
   private boolean isDeploymentRunning(ServingWrapper serving) {
-    return serving.getStatus().equals(ServingStatusEnum.STARTING)
-            || serving.getStatus().equals(ServingStatusEnum.FAILED)
-            || serving.getStatus().equals(ServingStatusEnum.RUNNING)
-            || serving.getStatus().equals(ServingStatusEnum.IDLE)
-            || serving.getStatus().equals(ServingStatusEnum.UPDATING);
+    return !serving.getStatus().equals(ServingStatusEnum.CREATING)
+        && !serving.getStatus().equals(ServingStatusEnum.CREATED)
+        && !serving.getStatus().equals(ServingStatusEnum.STOPPING)
+        && !serving.getStatus().equals(ServingStatusEnum.STOPPED);
   }
 
   private void enforceFeaturegroupsQuotaInternal(Featurestore featurestore, List<Featuregroup> featuregroups,

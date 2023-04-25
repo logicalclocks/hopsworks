@@ -926,6 +926,16 @@ describe "On #{ENV['OS']}" do
         delete_all_servings(@project[:id])
       end
 
+      it "should fail to start a deployment that is being creating" do
+        result = get_serving(@project, @serving[:name])
+        if result['status'] == "Creating"
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
+          expect_status_details(400, error_code: 240003)
+        else
+          skip "Serving already created"
+        end
+      end
+
       it "should be able to start a serving instance" do
         start_serving(@project, @serving)
         wait_for_type(@serving[:name])
@@ -1006,7 +1016,7 @@ describe "On #{ENV['OS']}" do
         with_tensorflow_serving(@project[:id], @project[:projectname], @user[:username])
 
         start_serving(@project, @serving)
-        wait_for_serving_status(@serving[:name], "Running")
+        wait_for_serving_status(@project, @serving[:name], ["Running"])
       end
 
       after :all do
@@ -1014,14 +1024,24 @@ describe "On #{ENV['OS']}" do
         delete_all_servings(@project[:id])
       end
 
-      it "should be able to kill a running serving instance" do
+      it "should fail to stop a deployment that is being creating" do
+        result = get_serving(@project, @serving[:name])
+        if result['status'] == "Creating"
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
+          expect_status_details(400, error_code: 240003)
+        else
+          skip "Serving already created"
+        end
+      end
+
+      it "should be able to stop a running serving instance" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
         expect_status_details(200)
 
-        wait_for_serving_status(@serving[:name], "Stopped")
+        wait_for_serving_status(@project, @serving[:name], ["Stopped"])
       end
 
-      it "should fail to kill a non running instance" do
+      it "should fail to stop a non running instance" do
         # serving is already stopped
 
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
@@ -1034,7 +1054,7 @@ describe "On #{ENV['OS']}" do
         end
 
         start_serving(@project, @serving)
-        wait_for_serving_status(@serving[:name], "Running")
+        wait_for_serving_status(@project, @serving[:name], ["Running"])
 
         # Simulate the process dying by its own
         system "pgrep -f tensorflow_model_server | xargs kill -9"
@@ -1093,6 +1113,15 @@ describe "On #{ENV['OS']}" do
         delete_all_servings(@project[:id])
       end
 
+      it "should delete a deployment that is being creating" do
+        result = get_serving(@project, @serving[:name])
+        delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}"
+        expect_status_details(200)
+        if result['status'] != "Creating"
+          skip "Serving already created"
+        end
+      end
+
       it "should delete a serving instance" do
         delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}"
         expect_status_details(200)
@@ -1149,20 +1178,23 @@ describe "On #{ENV['OS']}" do
       before :all do
         with_valid_project
         copy_mnist_files(@project[:projectname], @user[:username])
-        create_tensorflow_serving(@project[:id], @project[:projectname])
-        create_tensorflow_serving(@project[:id], @project[:projectname])
-        @tf_serving = create_tensorflow_serving(@project[:id], @project[:projectname])
+        @tf_serving1 = create_tensorflow_serving(@project[:id], @project[:projectname])
+        @tf_serving2 = create_tensorflow_serving(@project[:id], @project[:projectname])
+        @tf_serving3 = create_tensorflow_serving(@project[:id], @project[:projectname])
       end
 
       it "should return all servings" do
         get_servings(@project, nil)
         expect_status_details(200)
-        json_body.each {|model| expect(model[:status]).to eq "Created"}
+        json_body.each {|model| expect(["Creating", "Created"].find { |s| s == model[:status] }).to_not be_nil }
         expect(json_body.length).to eq 3
       end
 
       describe "#status" do
         it "should return all servings in created state" do
+          wait_for_serving_status(@project, @tf_serving1[:name], ["Created"])
+          wait_for_serving_status(@project, @tf_serving2[:name], ["Created"])
+          wait_for_serving_status(@project, @tf_serving3[:name], ["Created"])
           get_servings(@project, "?status=Created")
           expect_status_details(200)
           json_body.each {|model| expect(model[:status]).to eq "Created"}
@@ -1176,8 +1208,8 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should return single running serving" do
-          start_serving(@project, @tf_serving)
-          wait_for_serving_status(@tf_serving[:name], "Running")
+          start_serving(@project, @tf_serving3)
+          wait_for_serving_status(@project, @tf_serving3[:name], ["Running"])
 
           get_servings(@project, "?status=Running")
           expect_status_details(200)
