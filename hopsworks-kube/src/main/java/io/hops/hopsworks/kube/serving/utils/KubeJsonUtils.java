@@ -75,11 +75,6 @@ public class KubeJsonUtils {
       pipeline.put("transformer", transformer);
     }
     
-    // Resource version
-    if (resourceVersion != null) {
-      metadata.put("resourceVersion", resourceVersion);
-    }
-    
     return new JSONObject() {
       {
         put("apiVersion", String.format("%s/%s", KubeKServeClientService.INFERENCESERVICE_GROUP,

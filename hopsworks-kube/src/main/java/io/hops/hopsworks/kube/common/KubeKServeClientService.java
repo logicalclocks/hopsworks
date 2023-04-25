@@ -44,7 +44,7 @@ public class KubeKServeClientService {
   private KubeClientService kubeClientService;
   
   @Asynchronous
-  public void createOrReplaceInferenceService(Project project, JSONObject inferenceService)
+  public void createInferenceService(Project project, JSONObject inferenceService)
       throws KubernetesClientException {
     String kubeProjectNs = kubeClientService.getKubeProjectName(project);
     try {
@@ -53,6 +53,22 @@ public class KubeKServeClientService {
       CustomResourceDefinitionContext context = getCustomResourceDefinitionContext();
       handleClientOp((client) -> client.genericKubernetesResources(context)
           .inNamespace(kubeProjectNs).resource(customResource).create());
+    } catch (JsonProcessingException e) {
+      LOGGER.log(Level.FINE,"Inference service json serialization error", e);
+      throw new KubernetesClientException(e.getMessage());
+    }
+  }
+  
+  @Asynchronous
+  public void updateInferenceService(Project project, JSONObject inferenceService)
+    throws KubernetesClientException {
+    String kubeProjectNs = kubeClientService.getKubeProjectName(project);
+    try {
+      GenericKubernetesResource customResource = Serialization.jsonMapper()
+        .readValue(inferenceService.toString(), GenericKubernetesResource.class);
+      CustomResourceDefinitionContext context = getCustomResourceDefinitionContext();
+      handleClientOp((client) -> client.genericKubernetesResources(context)
+        .inNamespace(kubeProjectNs).resource(customResource).update());
     } catch (JsonProcessingException e) {
       LOGGER.log(Level.FINE,"Inference service json serialization error", e);
       throw new KubernetesClientException(e.getMessage());

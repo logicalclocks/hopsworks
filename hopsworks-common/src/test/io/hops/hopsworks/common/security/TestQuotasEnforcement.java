@@ -222,36 +222,40 @@ public class TestQuotasEnforcement {
     List<ServingWrapper> mockServings = new ArrayList<>();
   
     ServingWrapper sw0 = new ServingWrapper(new Serving());
-    sw0.setStatus(ServingStatusEnum.CREATED);
+    sw0.setStatus(ServingStatusEnum.CREATING);
     mockServings.add(sw0);
   
     ServingWrapper sw1 = new ServingWrapper(new Serving());
-    sw1.setStatus(ServingStatusEnum.STARTING);
+    sw1.setStatus(ServingStatusEnum.CREATED);
     mockServings.add(sw1);
   
     ServingWrapper sw2 = new ServingWrapper(new Serving());
-    sw2.setStatus(ServingStatusEnum.FAILED);
+    sw2.setStatus(ServingStatusEnum.STARTING);
     mockServings.add(sw2);
 
     ServingWrapper sw3 = new ServingWrapper(new Serving());
-    sw3.setStatus(ServingStatusEnum.RUNNING);
+    sw3.setStatus(ServingStatusEnum.FAILED);
     mockServings.add(sw3);
-  
+
     ServingWrapper sw4 = new ServingWrapper(new Serving());
-    sw4.setStatus(ServingStatusEnum.IDLE);
+    sw4.setStatus(ServingStatusEnum.RUNNING);
     mockServings.add(sw4);
-    
+  
     ServingWrapper sw5 = new ServingWrapper(new Serving());
-    sw5.setStatus(ServingStatusEnum.UPDATING);
+    sw5.setStatus(ServingStatusEnum.IDLE);
     mockServings.add(sw5);
 
     ServingWrapper sw6 = new ServingWrapper(new Serving());
-    sw6.setStatus(ServingStatusEnum.STOPPING);
+    sw6.setStatus(ServingStatusEnum.UPDATING);
     mockServings.add(sw6);
-  
+
     ServingWrapper sw7 = new ServingWrapper(new Serving());
-    sw7.setStatus(ServingStatusEnum.STOPPED);
+    sw7.setStatus(ServingStatusEnum.STOPPING);
     mockServings.add(sw7);
+  
+    ServingWrapper sw8 = new ServingWrapper(new Serving());
+    sw8.setStatus(ServingStatusEnum.STOPPED);
+    mockServings.add(sw8);
 
     ServingController servingController = Mockito.mock(ServingController.class);
     Mockito.when(servingController.getAll(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(mockServings);

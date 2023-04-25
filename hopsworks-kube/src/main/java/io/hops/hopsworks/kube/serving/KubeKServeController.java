@@ -62,21 +62,12 @@ public class KubeKServeController extends KubeToolServingController {
   
   @Override
   public void createInstance(Project project, Users user, Serving serving) throws ServingException {
-    createOrReplace(project, buildInferenceService(project, user, serving));
+    kubeKServeClientService.createInferenceService(project, buildInferenceService(project, user, serving));
   }
   
   @Override
   public void updateInstance(Project project, Users user, Serving serving) throws ServingException {
-    try {
-      JSONObject metadata = kubeKServeClientService.getInferenceServiceMetadata(project, serving);
-      if (metadata != null) {
-        // When updating an inference service, the current resource version must be indicated
-        String resourceVersion = metadata.getString("resourceVersion");
-        createOrReplace(project, buildInferenceService(project, user, serving, resourceVersion));
-      }
-    } catch (KubernetesClientException e) {
-      throw new ServingException(RESTCodes.ServingErrorCode.UPDATE_ERROR, Level.SEVERE, null, e.getMessage(), e);
-    }
+    kubeKServeClientService.updateInferenceService(project, buildInferenceService(project, user, serving));
   }
   
   @Override
@@ -139,25 +130,23 @@ public class KubeKServeController extends KubeToolServingController {
     return logs;
   }
   
-  private void createOrReplace(Project project, JSONObject inferenceService) {
-    kubeKServeClientService.createOrReplaceInferenceService(project, inferenceService);
-  }
-  
   private Pair<ServingStatusEnum, ServingStatusCondition> getServingStatusAndCondition(Serving serving,
     JSONObject inferenceService, List<Pod> pods) {
     
     // Detect created, stopped or stopping deployments.
     if (serving.getDeployed() == null) {
       // if the deployment is not deployed, it can be stopping, stopped or just created.
-      ServingStatusCondition condition = kubeServingUtils.getDeploymentCondition(serving.getDeployed(), pods);
+      Boolean artifactFileExists = kubeArtifactUtils.checkArtifactFileExists(serving);
+      ServingStatusCondition condition = kubeServingUtils.getDeploymentCondition(serving.getDeployed(),
+        artifactFileExists, pods);
       if (inferenceService == null) {
         // if the inference service is not created, check running pods
         if (pods.isEmpty()) {
-          // if no pods are running, inference service is stopped or has never been started (no revision number)
-          return new Pair<>(
-            serving.getRevision() == null ? ServingStatusEnum.CREATED : ServingStatusEnum.STOPPED,
-            condition
-          );
+          // if no pods are running, inference service is stopped, created or creatin
+          ServingStatusEnum status = artifactFileExists
+            ? (serving.getRevision() == null ? ServingStatusEnum.CREATED : ServingStatusEnum.STOPPED)
+            : ServingStatusEnum.CREATING;
+          return new Pair<>(status, condition);
         }
       }
       // Otherwise, the serving is still stopping
@@ -195,15 +184,18 @@ public class KubeKServeController extends KubeToolServingController {
     }
     
     // Check inference service ready status
+    Boolean artifactFileExists = kubeArtifactUtils.checkArtifactFileExists(serving);
     String readyStatus = ready != null ? ready.getString("status") : "False";
     if (readyStatus.equals("False") || readyStatus.equals("Unknown")) {
       // Sometimes Knative fails to reconcile the ingress with a warning message: "object has been updated". In this
       // case, KServe temporarily sets Ready to False, until Knative reconciles the ingress successfully.
-      
-      ServingStatusCondition condition = kubeServingUtils.getDeploymentCondition(serving.getDeployed(), pods);
+      ServingStatusCondition condition = kubeServingUtils.getDeploymentCondition(serving.getDeployed(),
+        artifactFileExists, pods);
       if (condition.getStatus() != null && !condition.getStatus()) {
         // if the status is False, it failed
-        return new Pair<>(ServingStatusEnum.FAILED, condition);
+        return artifactFileExists
+          ? new Pair<>(ServingStatusEnum.FAILED, condition)
+          : new Pair<>(ServingStatusEnum.CREATING, condition);
       }
 
       // otherwise, it is starting or updating
@@ -218,9 +210,14 @@ public class KubeKServeController extends KubeToolServingController {
     // if the status is True, the inference service is either running or idle.
     if (pods.isEmpty()) {
       // if no pods running, the deployment scaled to zero replicas
-      return new Pair<>(
+      return artifactFileExists
+        ? new Pair<>(
         ServingStatusEnum.IDLE,
         ServingStatusCondition.getReadySuccessCondition(kubeServingUtils.READY_SUCCESS_IDLE_CONDITION_MESSAGE)
+      )
+        : new Pair<>(
+        ServingStatusEnum.CREATING,
+        ServingStatusCondition.getStoppedCreatingCondition()
       );
     }
     // if no available predictors or no available transformers, deployment is IDLE
@@ -234,9 +231,14 @@ public class KubeKServeController extends KubeToolServingController {
       }
     }
     if (predReplicas == 0 || (serving.getTransformer() != null && transReplicas == 0)) {
-      return new Pair<>(
+      return artifactFileExists
+        ? new Pair<>(
         ServingStatusEnum.IDLE,
         ServingStatusCondition.getReadySuccessCondition(kubeServingUtils.READY_SUCCESS_IDLE_CONDITION_MESSAGE)
+      )
+        : new Pair<>(
+        ServingStatusEnum.CREATING,
+        ServingStatusCondition.getStoppedCreatingCondition()
       );
     }
     return new Pair<>(

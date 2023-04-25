@@ -5,6 +5,7 @@
 package io.hops.hopsworks.kube.serving.utils;
 
 import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
+import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
@@ -168,8 +169,12 @@ public class KubeServingUtils {
       serving.getProject().getId() + "/inference/models/" + serving.getName() + (verb != null ? verb.toString() : "");
   }
   
-  public ServingStatusCondition getDeploymentCondition(Date deployed, List<Pod> pods) {
+  public ServingStatusCondition getDeploymentCondition(Date deployed, Boolean artifactFileExists, List<Pod> pods) {
     ServingStatusCondition condition = null;
+    
+    if (!artifactFileExists) {
+      return ServingStatusCondition.getStoppedCreatingCondition();
+    }
     
     if (pods.isEmpty()) {
       return deployed != null
@@ -211,9 +216,19 @@ public class KubeServingUtils {
               pod.getStatus().getInitContainerStatuses().get(0).getLastState().getTerminated();
             if (terminatedState != null && terminatedState.getExitCode() > 0) {
               // this pod failed to initialized
-              condition = deployed != null
-                ? ServingStatusCondition.getInitializedFailedCondition("storage initializer finished unsuccessfully")
-                : ServingStatusCondition.getStoppedInProgressCondition();
+              int restartCount = 0;
+              if (!pod.getStatus().getContainerStatuses().isEmpty()) {
+                ContainerStatus status = pod.getStatus().getContainerStatuses().get(0);
+                restartCount = status.getRestartCount() != null ? status.getRestartCount() : 0;
+              }
+              if (deployed == null) {
+                condition = ServingStatusCondition.getStoppedInProgressCondition();
+              } else {
+                condition = restartCount > 2
+                  ? ServingStatusCondition.getInitializedFailedCondition("storage initializer " +
+                    "finished unsuccessfully")
+                  : ServingStatusCondition.getStoppedCreatingCondition();
+              }
             } else {
               // this pod is still initializing
               condition = ServingStatusCondition.getInitializedInProgressCondition();

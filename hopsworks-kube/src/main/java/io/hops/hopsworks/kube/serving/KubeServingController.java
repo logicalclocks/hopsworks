@@ -206,7 +206,8 @@ public class KubeServingController implements ServingController {
     try {
       KubeServingInternalStatus internalStatus = toolServingController.getInternalStatus(project, serving);
       
-      if (internalStatus.getServingStatus() == ServingStatusEnum.CREATED ||
+      if (internalStatus.getServingStatus() == ServingStatusEnum.CREATING ||
+          internalStatus.getServingStatus() == ServingStatusEnum.CREATED ||
           internalStatus.getServingStatus() == ServingStatusEnum.IDLE ||
           internalStatus.getServingStatus() == ServingStatusEnum.STOPPED ||
           internalStatus.getServingStatus() == ServingStatusEnum.STOPPING) {
@@ -232,6 +233,9 @@ public class KubeServingController implements ServingController {
   private void start(Project project, Users user, Serving serving, KubeServingInternalStatus internalStatus)
      throws ServingException {
     switch (internalStatus.getServingStatus()) {
+      case CREATING:
+        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR, Level.FINE,
+          "Deployment is being prepared. Please, try later.");
       case CREATED:
       case STOPPED:
         if (serving.getDeployed() == null) {
@@ -276,6 +280,12 @@ public class KubeServingController implements ServingController {
   private void stop(Project project, Serving serving, KubeServingInternalStatus internalStatus)
       throws ServingException {
     switch (internalStatus.getServingStatus()) {
+      case CREATING:
+        if (serving.getDeployed() == null) {
+          throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR, Level.FINE,
+            "Deployment is already stopped.");
+        }
+        break;
       case CREATED:
       case STOPPING:
       case STOPPED:

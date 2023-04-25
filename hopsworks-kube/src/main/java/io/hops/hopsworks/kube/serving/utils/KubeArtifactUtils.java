@@ -103,6 +103,11 @@ public class KubeArtifactUtils {
     return inodeController.existsPath(hdfsPath);
   }
   
+  public Boolean checkArtifactFileExists(Serving serving) {
+    String hdfsPath = getArtifactFilePath(serving);
+    return inodeController.existsPath(hdfsPath);
+  }
+  
   public String getArtifactDirPath(Serving serving) {
     return getArtifactDirPath(serving, getArtifactRootDirPath(serving));
   }

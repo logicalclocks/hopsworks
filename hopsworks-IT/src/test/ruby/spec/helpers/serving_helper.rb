@@ -256,6 +256,8 @@ module ServingHelper
   end
 
   def start_serving(project, serving)
+    #Stopped status can happen if the deployment is reused, which is the case in some of the tests
+    wait_for_serving_status(project, serving[:name], ["Created", "Stopped"])
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/serving/#{serving[:id]}?action=start"
     expect_status_details(200)
   end
@@ -334,8 +336,8 @@ module ServingHelper
       end
   end
 
-  def get_serving(serving_name)
-    serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
+  def get_serving(project, serving_name)
+    serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/serving/"
     expect_status_details(200)
     servings = JSON.parse(serving_list)
     servings.select { |serving| serving['name'] == serving_name}[0]
@@ -390,11 +392,11 @@ module ServingHelper
     end
   end
 
-  def wait_for_serving_status(serving_name, status, timeout: 180, delay: 10)
+  def wait_for_serving_status(project, serving_name, accepted_status, timeout: 180, delay: 10)
     wait_result = wait_for_me_time(timeout, delay) do
-      result = get_serving(serving_name)
-      { 'success' => result['status'].eql?(status), 'status' => result['status'] }
+      result = get_serving(project, serving_name)
+      { 'success' => accepted_status.include?(result['status']), 'status' => result['status'] }
     end
-    expect(wait_result["status"]).to eql(status)
+    expect(accepted_status.include?(wait_result["status"]))
   end
 end

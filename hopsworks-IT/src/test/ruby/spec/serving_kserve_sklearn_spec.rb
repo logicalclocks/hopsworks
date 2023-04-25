@@ -1372,7 +1372,7 @@ describe "On #{ENV['OS']}" do
 
         it "should be able to start a serving instance" do
           start_serving(@project, @serving)
-          wait_for_serving_status(@serving[:name], "Running")
+          wait_for_serving_status(@project, @serving[:name], ["Running"])
 
           # Check that the logs are written in the OpenSearch index.
           wait_result = wait_for_me_time(30, 4) do
@@ -1411,7 +1411,7 @@ describe "On #{ENV['OS']}" do
           expect_status_details(201)
 
           start_serving(@project, @serving)
-          wait_for_serving_status(@serving[:name], "Running")
+          wait_for_serving_status(@project, @serving[:name], ["Running"])
 
           # Check that the logs are written in the OpenSearch index.
           wait_result = wait_for_me_time(30, 4) do
@@ -1442,7 +1442,7 @@ describe "On #{ENV['OS']}" do
 
         it "should be able to kill a running serving instance" do
           start_serving(@project, @serving)
-          wait_for_serving_status(@serving[:name], "Running")
+          wait_for_serving_status(@project, @serving[:name], ["Running"])
 
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
           expect_status_details(200)
@@ -1466,7 +1466,7 @@ describe "On #{ENV['OS']}" do
 
         it "should be able to delete a running instance" do
           start_serving(@project, @serving)
-          wait_for_serving_status(@serving[:name], "Running")
+          wait_for_serving_status(@project, @serving[:name], ["Running"])
 
           delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}"
           expect_status_details(200)

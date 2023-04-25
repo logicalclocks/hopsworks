@@ -22,6 +22,7 @@ import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.kube.common.KubeClientService;
+import io.hops.hopsworks.kube.serving.utils.KubeArtifactUtils;
 import io.hops.hopsworks.kube.serving.utils.KubePredictorServerUtils;
 import io.hops.hopsworks.kube.serving.utils.KubePredictorUtils;
 import io.hops.hopsworks.kube.serving.utils.KubeServingUtils;
@@ -51,6 +52,8 @@ public class KubeDeploymentServingController extends KubeToolServingController {
   private KubeClientService kubeClientService;
   @EJB
   private KubeServingUtils kubeServingUtils;
+  @EJB
+  private KubeArtifactUtils kubeArtifactUtils;
   @EJB
   private KubePredictorUtils kubePredictorUtils;
   
@@ -163,15 +166,17 @@ public class KubeDeploymentServingController extends KubeToolServingController {
     // Detect created, stopped or stopping deployments.
     if (serving.getDeployed() == null) {
       // if the deployment is not deployed, it can be stopping, stopped or just created
-      ServingStatusCondition condition = kubeServingUtils.getDeploymentCondition(serving.getDeployed(), pods);
+      Boolean artifactFileExists = kubeArtifactUtils.checkArtifactFileExists(serving);
+      ServingStatusCondition condition = kubeServingUtils.getDeploymentCondition(serving.getDeployed(),
+        artifactFileExists, pods);
       if (deploymentStatus == null) {
         // and the deployment spec is not created, check running pods
         if (pods.isEmpty()) {
-          // if no pods are running, inference service is stopped or has neever been started (no revision number)
-          return new Pair<>(
-            serving.getRevision() == null ? ServingStatusEnum.CREATED : ServingStatusEnum.STOPPED,
-            condition
-          );
+          // if no pods are running, inference service is stopped, created or creating
+          ServingStatusEnum status = artifactFileExists
+            ? (serving.getRevision() == null ? ServingStatusEnum.CREATED : ServingStatusEnum.STOPPED)
+            : ServingStatusEnum.CREATING;
+          return new Pair<>(status, condition);
         }
       }
       // Otherwise, the serving is still stopping
@@ -187,28 +192,37 @@ public class KubeDeploymentServingController extends KubeToolServingController {
       );
     }
   
+    Boolean artifactFileExists = kubeArtifactUtils.checkArtifactFileExists(serving);
     Optional<DeploymentCondition> givenCondition = deploymentStatus.getConditions().stream()
       .filter(c -> c.getType().equals("ReplicaFailure")).findFirst();
     if (givenCondition.isPresent() && givenCondition.get().getStatus().equals("True")) {
       // if the given deployment condition is replica failure, the deployment failed
-      return new Pair<>(ServingStatusEnum.FAILED, kubeServingUtils.getDeploymentCondition(serving.getDeployed(), pods));
+      ServingStatusCondition condition = kubeServingUtils.getDeploymentCondition(serving.getDeployed(),
+        artifactFileExists, pods);
+      return artifactFileExists
+        ? new Pair<>(ServingStatusEnum.FAILED, condition)
+        : new Pair<>(ServingStatusEnum.CREATING, condition);
     }
     
     boolean anyRestartedContainer = pods.stream().anyMatch(p -> {
-      if (p.getStatus().getContainerStatuses().size() == 0) return false;
+      if (p.getStatus().getContainerStatuses().isEmpty()) return false;
       ContainerStatus status = p.getStatus().getContainerStatuses().get(0);
       return status.getRestartCount() != null && status.getRestartCount() > 2;
     });
     if (anyRestartedContainer) {
-      ServingStatusCondition condition = ServingStatusCondition.getStartedFailedCondition(
-        "predictor" + kubeServingUtils.STARTED_FAILED_CONDITION_MESSAGE);
-      return new Pair<>(ServingStatusEnum.FAILED, condition);
+      return artifactFileExists
+        ? new Pair<>(ServingStatusEnum.FAILED, ServingStatusCondition.getStartedFailedCondition(
+        "predictor" + kubeServingUtils.STARTED_FAILED_CONDITION_MESSAGE))
+        : new Pair<>(ServingStatusEnum.CREATING, ServingStatusCondition.getStoppedCreatingCondition());
     }
   
-    ServingStatusCondition condition = kubeServingUtils.getDeploymentCondition(serving.getDeployed(), pods);
+    ServingStatusCondition condition = kubeServingUtils.getDeploymentCondition(serving.getDeployed(),
+      artifactFileExists, pods);
     if (condition.getStatus() != null && !condition.getStatus()) {
       // if it's a failing condition, the deployment is failing to start
-      return new Pair<>(ServingStatusEnum.FAILED, condition);
+      return artifactFileExists
+        ? new Pair<>(ServingStatusEnum.FAILED, condition)
+        : new Pair<>(ServingStatusEnum.CREATING, condition);
     }
   
     // otherwise, it is starting, updating or running

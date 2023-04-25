@@ -72,12 +72,12 @@ describe "On #{ENV['OS']}" do
 
         before :all do
           start_serving(@project, @serving)
-          wait_for_serving_status(@serving[:name], "Running")
+          wait_for_serving_status(@project, @serving[:name], ["Running"])
         end
 
         after :all do
           stop_serving(@project, @serving)
-          wait_for_serving_status(@serving[:name], "Stopped")
+          wait_for_serving_status(@project, @serving[:name], ["Stopped"])
         end
 
         it "should fail to infer from a KServe serving with JWT authentication" do
@@ -110,7 +110,7 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should fail to send a request to a non running model" do
-        serving = get_serving(@serving[:name])
+        serving = get_serving(@project, @serving[:name])
         expect(serving[:status]).not_to eq("Running")
 
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
@@ -122,12 +122,12 @@ describe "On #{ENV['OS']}" do
       context 'with running model do' do
         before :all do
           start_serving(@project, @serving)
-          wait_for_serving_status(@serving[:name], "Running")
+          wait_for_serving_status(@project, @serving[:name], ["Running"])
         end
 
         after :all do
           stop_serving(@project, @serving)
-          wait_for_serving_status(@serving[:name], "Stopped")
+          wait_for_serving_status(@project, @serving[:name], ["Stopped"])
         end
 
         context "through Hopsworks REST API" do
@@ -186,7 +186,7 @@ describe "On #{ENV['OS']}" do
 
             it "should succeed to infer from a serving with no kafka logging" do
               stop_serving(@project, @serving)
-              wait_for_serving_status(@serving[:name], "Stopped")
+              wait_for_serving_status(@project, @serving[:name], ["Stopped"])
 
               put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                {id: @serving[:id],
@@ -202,7 +202,7 @@ describe "On #{ENV['OS']}" do
               expect_status_details(201)
 
               start_serving(@project, @serving)
-              wait_for_serving_status(@serving[:name], "Running")
+              wait_for_serving_status(@project, @serving[:name], ["Running"])
 
               post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
                   instances: test_data
@@ -213,7 +213,7 @@ describe "On #{ENV['OS']}" do
 
             it "should succeed to infer from a serving with model file and without predictor and transformer" do
               stop_serving(@project, @serving)
-              wait_for_serving_status(@serving[:name], "Stopped")
+              wait_for_serving_status(@project, @serving[:name], ["Stopped"])
 
               put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                {id: @serving[:id],
@@ -231,7 +231,7 @@ describe "On #{ENV['OS']}" do
               expect_status_details(201)
               
               start_serving(@project, @serving)
-              wait_for_serving_status(@serving[:name], "Running")
+              wait_for_serving_status(@project, @serving[:name], ["Running"])
 
               post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
                   instances: test_data
@@ -242,7 +242,7 @@ describe "On #{ENV['OS']}" do
 
             it "should succeed to infer from a serving with model file and transformer and without predictor" do
               stop_serving(@project, @serving)
-              wait_for_serving_status(@serving[:name], "Stopped")
+              wait_for_serving_status(@project, @serving[:name], ["Stopped"])
 
               put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                {id: @serving[:id],
@@ -265,7 +265,7 @@ describe "On #{ENV['OS']}" do
               expect_status_details(201)
 
               start_serving(@project, @serving)
-              wait_for_serving_status(@serving[:name], "Running")
+              wait_for_serving_status(@project, @serving[:name], ["Running"])
 
               post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
                   instances: test_data
@@ -276,7 +276,7 @@ describe "On #{ENV['OS']}" do
 
             it "should succeed to infer from a serving without model file and transformer but with predictor" do
               stop_serving(@project, @serving)
-              wait_for_serving_status(@serving[:name], "Stopped")
+              wait_for_serving_status(@project, @serving[:name], ["Stopped"])
 
               put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                {id: @serving[:id],
@@ -298,7 +298,7 @@ describe "On #{ENV['OS']}" do
               expect_status_details(201)
 
               start_serving(@project, @serving)
-              wait_for_serving_status(@serving[:name], "Running")
+              wait_for_serving_status(@project, @serving[:name], ["Running"])
 
               post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
                   inputs: test_data
@@ -309,7 +309,7 @@ describe "On #{ENV['OS']}" do
 
             it "should succeed to infer from a serving without model file but with predictor and transformer" do
               stop_serving(@project, @serving)
-              wait_for_serving_status(@serving[:name], "Stopped")
+              wait_for_serving_status(@project, @serving[:name], ["Stopped"])
 
               put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                {id: @serving[:id],
@@ -333,7 +333,7 @@ describe "On #{ENV['OS']}" do
               expect_status_details(201)
 
               start_serving(@project, @serving)
-              wait_for_serving_status(@serving[:name], "Running")
+              wait_for_serving_status(@project, @serving[:name], ["Running"])
 
               post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
                   inputs: test_data
@@ -349,7 +349,7 @@ describe "On #{ENV['OS']}" do
           before :all do
             # refresh serving once it's running to get internal IPs and port
             @serving = Serving.find(@serving[:id])
-            wait_for_serving_status(@serving[:name], "Running")
+            wait_for_serving_status(@project, @serving[:name], ["Running"])
 
             @inference_endpoints = get_inference_endpoints
             @inference_endpoint = get_inference_endpoint(@inference_endpoints, "NODE")
