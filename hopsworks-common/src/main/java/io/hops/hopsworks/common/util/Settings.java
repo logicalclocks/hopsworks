@@ -405,6 +405,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_DOCKER_CGROUP_CPU_QUOTA = "docker_cgroup_cpu_quota_percentage";
   private static final String VARIABLE_DOCKER_CGROUP_CPU_PERIOD = "docker_cgroup_cpu_period";
   private static final String VARIABLE_DOCKER_CGROUP_MONITOR_INTERVAL = "docker_cgroup_monitor_interval";
+  private static final String VARIABLE_DOCKER_CGROUP_PARENT = "docker_cgroup_parent";
 
   private static final String VARIABLE_PROMETHEUS_PORT = "prometheus_port";
 
@@ -902,6 +903,7 @@ public class Settings implements Serializable {
       ENABLE_GIT_READ_ONLY_REPOSITORIES = setBoolVar(VARIABLE_ENABLE_GIT_READ_ONLY_REPOSITORIES,
               ENABLE_GIT_READ_ONLY_REPOSITORIES);
 
+      //Docker cgroups
       DOCKER_CGROUP_ENABLED = setBoolVar(VARIABLE_DOCKER_CGROUP_ENABLED, DOCKER_CGROUP_ENABLED);
       DOCKER_CGROUP_MEMORY_LIMIT = setStrVar(VARIABLE_DOCKER_CGROUP_HARD_LIMIT_MEMORY,
           DOCKER_CGROUP_MEMORY_LIMIT);
@@ -911,6 +913,7 @@ public class Settings implements Serializable {
       DOCKER_CGROUP_CPU_PERIOD = setIntVar(VARIABLE_DOCKER_CGROUP_CPU_PERIOD, DOCKER_CGROUP_CPU_PERIOD);
       DOCKER_CGROUP_MONITOR_INTERVAL = setStrVar(VARIABLE_DOCKER_CGROUP_MONITOR_INTERVAL,
           DOCKER_CGROUP_MONITOR_INTERVAL);
+      DOCKER_CGROUP_PARENT = setStrVar(VARIABLE_DOCKER_CGROUP_PARENT, DOCKER_CGROUP_PARENT);
 
       PROMETHEUS_PORT = setIntVar(VARIABLE_PROMETHEUS_PORT, PROMETHEUS_PORT);
   
@@ -1783,6 +1786,12 @@ public class Settings implements Serializable {
   public synchronized String getDockerCgroupIntervalMonitor() {
     checkCache();
     return DOCKER_CGROUP_MONITOR_INTERVAL;
+  }
+
+  private String DOCKER_CGROUP_PARENT = "docker.slice";
+  public synchronized String getDockerCgroupParent() {
+    checkCache();
+    return DOCKER_CGROUP_PARENT;
   }
 
 
