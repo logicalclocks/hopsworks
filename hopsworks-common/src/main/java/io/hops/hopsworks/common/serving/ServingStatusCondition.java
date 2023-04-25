@@ -37,6 +37,7 @@ public class ServingStatusCondition {
   public static final String UnscheduledInProgress = "Waiting for being unscheduled";
   public static final String StoppedInProgress = "Stopping deployment";
   public static final String StoppedSuccess = "Deployment is not running";
+  public static final String StoppedCreating = "Deployment is being prepared";
   
   public ServingStatusCondition() {
   }
@@ -129,5 +130,9 @@ public class ServingStatusCondition {
   
   public static ServingStatusCondition getStoppedSuccessCondition() {
     return new ServingStatusCondition(ServingStatusConditionEnum.STOPPED, true, StoppedSuccess);
+  }
+  
+  public static ServingStatusCondition getStoppedCreatingCondition() {
+    return new ServingStatusCondition(ServingStatusConditionEnum.STOPPED, StoppedCreating);
   }
 }

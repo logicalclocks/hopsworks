@@ -43,6 +43,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ServingStatusEnum {
+  CREATING("Creating"),
   CREATED("Created"),
   STARTING("Starting"),
   FAILED("Failed"),
