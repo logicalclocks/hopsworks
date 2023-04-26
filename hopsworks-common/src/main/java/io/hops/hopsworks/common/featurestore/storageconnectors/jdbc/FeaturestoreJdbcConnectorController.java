@@ -32,6 +32,9 @@ import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.jdbc.F
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.HiveTags;
+import io.hops.hopsworks.servicediscovery.tags.MysqlTags;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -189,9 +192,10 @@ public class FeaturestoreJdbcConnectorController {
     String connectionString = "";
     try {
       connectionString = jdbcConnectorDTO.getConnectionString().replace(
-          serviceDiscoveryController.constructServiceFQDN(ServiceDiscoveryController.HopsworksService.ONLINEFS_MYSQL),
+          serviceDiscoveryController.constructServiceFQDN(
+              HopsworksService.MYSQL.getNameWithTag(MysqlTags.onlinefs)),
           serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
-              ServiceDiscoveryController.HopsworksService.ONLINEFS_MYSQL).getAddress());
+              HopsworksService.MYSQL.getNameWithTag(MysqlTags.onlinefs)).getAddress());
     } catch (ServiceDiscoveryException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_GET_ERROR, Level.SEVERE,
           "Error resolving MySQL DNS name", e.getMessage(), e);
@@ -207,9 +211,10 @@ public class FeaturestoreJdbcConnectorController {
     String connectionString = "";
     try {
       connectionString = jdbcConnectorDTO.getConnectionString().replace(
-          serviceDiscoveryController.constructServiceFQDN(ServiceDiscoveryController.HopsworksService.HIVE_SERVER_TLS),
+          serviceDiscoveryController.constructServiceFQDN(
+              HopsworksService.HIVE.getNameWithTag(HiveTags.hiveserver2_tls)),
           serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
-              ServiceDiscoveryController.HopsworksService.HIVE_SERVER_TLS).getAddress());
+              HopsworksService.HIVE.getNameWithTag(HiveTags.hiveserver2_tls)).getAddress());
     } catch (ServiceDiscoveryException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_GET_ERROR, Level.SEVERE,
           "Error resolving Hive DNS name", e.getMessage(), e);

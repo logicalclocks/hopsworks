@@ -75,7 +75,9 @@ public class CAConf {
     // This property is duplicated in Settings.java
     KUBERNETES("kubernetes_installed", "false"),
     // This property is duplicated in Settings.java
-    KUBERNETES_TYPE("kube_type", "local");
+    KUBERNETES_TYPE("kube_type", "local"),
+    // This property is duplicated in Settings.java
+    SERVICE_DISCOVERY_DOMAIN("service_discovery_domain", "consul");
 
     private String key;
     private String defaultValue;

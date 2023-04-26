@@ -31,6 +31,8 @@ import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardProcessMgr;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.exceptions.TensorBoardException;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.NamenodeTags;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import javax.ejb.EJB;
@@ -175,7 +177,7 @@ public class TensorBoardController {
    */
   public String prependNameNode(String hdfsPath) throws ServiceDiscoveryException {
     Service namenode = serviceDiscoveryController
-        .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.RPC_NAMENODE);
+        .getAnyAddressOfServiceWithDNS(HopsworksService.NAMENODE.getNameWithTag(NamenodeTags.rpc));
     return "hdfs://" + namenode.getName() + ":" + namenode.getPort() + hdfsPath;
   }
 }

@@ -38,6 +38,8 @@ import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.NamenodeTags;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -242,7 +244,7 @@ public class FeaturestoreUtils {
    */
   public String prependNameNode(String hdfsPath) throws ServiceDiscoveryException {
     Service namenode = serviceDiscoveryController
-            .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.RPC_NAMENODE);
+            .getAnyAddressOfServiceWithDNS(HopsworksService.NAMENODE.getNameWithTag(NamenodeTags.rpc));
     return DistributedFsService.HOPSFS_SCHEME + namenode.getName() + ":" + namenode.getPort() + hdfsPath;
   }
   

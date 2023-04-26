@@ -19,6 +19,7 @@ import io.hops.hadoop.shaded.com.google.gson.Gson;
 import io.hops.hopsworks.ca.configuration.CAConf;
 import io.hops.hopsworks.ca.configuration.CAConfiguration;
 import io.hops.hopsworks.ca.configuration.CAsConfiguration;
+import io.hops.hopsworks.ca.configuration.IntermediateCAConfiguration;
 import io.hops.hopsworks.ca.configuration.KubeCAConfiguration;
 import io.hops.hopsworks.persistence.entity.pki.CAType;
 import org.apache.commons.lang3.tuple.Pair;
@@ -79,7 +80,7 @@ public class TestPKI extends PKIMocking {
     Assert.assertEquals("CN=root_name", pki.getCaSubjectNames().get(CAType.ROOT).toString());
     Assert.assertEquals(intermediateName, pki.getCaSubjectNames().get(CAType.INTERMEDIATE));
 
-    CAConfiguration intermediateConf = new CAConfiguration("CN=inter_name", null);
+    IntermediateCAConfiguration intermediateConf = new IntermediateCAConfiguration("CN=inter_name", null);
     KubeCAConfiguration kubernetesConf = new KubeCAConfiguration("CN=kube_name", null,null);
     casConf = new CAsConfiguration(rootConf, intermediateConf, kubernetesConf);
     jsonConf = gson.toJson(casConf);

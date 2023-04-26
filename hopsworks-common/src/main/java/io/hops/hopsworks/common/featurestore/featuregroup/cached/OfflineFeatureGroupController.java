@@ -32,6 +32,8 @@ import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.HiveTags;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.TableType;
@@ -333,7 +335,7 @@ public class OfflineFeatureGroupController {
 
       // Get metastore service information from consul
       Service metastoreService = serviceDiscoveryController
-          .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.HIVE_METASTORE);
+          .getAnyAddressOfServiceWithDNS(HopsworksService.HIVE.getNameWithTag(HiveTags.metastore));
 
       TTransport transport;
       if (settings.getHopsRpcTls()) {
