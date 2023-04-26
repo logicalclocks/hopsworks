@@ -55,6 +55,8 @@ import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.ResourceManagerTags;
 import io.swagger.annotations.Api;
 import org.apache.http.HttpHost;
 import org.apache.http.client.methods.HttpGet;
@@ -151,7 +153,8 @@ public class ClusterUtilisationService {
     Service rm = null;
     try {
       rm = serviceDiscoveryController
-          .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.HTTPS_RESOURCEMANAGER);
+          .getAnyAddressOfServiceWithDNS(
+              HopsworksService.RESOURCE_MANAGER.getNameWithTag(ResourceManagerTags.https));
     } catch (ServiceDiscoveryException e) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_DISCOVERY_ERROR, Level.FINE);
     }

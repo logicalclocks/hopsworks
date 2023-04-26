@@ -46,6 +46,7 @@ import io.hops.hopsworks.persistence.entity.jobs.configuration.DockerJobConfigur
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.DockerResourcesConfiguration;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -188,7 +189,7 @@ public class ProjectUtils {
       ServiceDiscoveryController serviceDiscoveryController) throws
       ServiceDiscoveryException {
     com.logicalclocks.servicediscoverclient.service.Service registry = serviceDiscoveryController
-        .getAnyAddressOfServiceWithDNSSRVOnly(ServiceDiscoveryController.HopsworksService.REGISTRY);
+        .getAnyAddressOfServiceWithDNSSRVOnly(HopsworksService.DOCKER_REGISTRY.getName());
     if(settings.isManagedDockerRegistry()){
       String registryUrl = registry.getAddress();
       String dockerNamespace = settings.getDockerNamespace();
@@ -202,7 +203,7 @@ public class ProjectUtils {
   
   public String getRegistryAddress() throws ServiceDiscoveryException {
     com.logicalclocks.servicediscoverclient.service.Service registry = serviceDiscoveryController
-        .getAnyAddressOfServiceWithDNSSRVOnly(ServiceDiscoveryController.HopsworksService.REGISTRY);
+        .getAnyAddressOfServiceWithDNSSRVOnly(HopsworksService.DOCKER_REGISTRY.getName());
     return registry.getAddress();
   }
   

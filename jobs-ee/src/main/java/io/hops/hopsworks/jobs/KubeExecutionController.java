@@ -69,6 +69,9 @@ import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.GlassfishTags;
+import io.hops.hopsworks.servicediscovery.tags.LogstashTags;
 import org.apache.commons.io.FilenameUtils;
 import org.javatuples.Pair;
 
@@ -615,7 +618,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
         }
         Service hopsworks =
                 serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
-                        ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
+                        HopsworksService.GLASSFISH.getNameWithTag(GlassfishTags.hopsworks));
         environment.add(new EnvVarBuilder().withName("REST_ENDPOINT")
           .withValue("https://" + hopsworks.getName() + ":" + hopsworks.getPort()).build());
         environment.add(new EnvVarBuilder().withName(Settings.SPARK_PYSPARK_PYTHON)
@@ -756,7 +759,8 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   private String getLogstashURL() throws ServiceDiscoveryException {
     com.logicalclocks.servicediscoverclient.service.Service logstash =
             serviceDiscoveryController
-                    .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.PYTHON_JOBS_LOGSTASH);
+                    .getAnyAddressOfServiceWithDNS(
+                        HopsworksService.LOGSTASH.getNameWithTag(LogstashTags.pythonjobs));
     return logstash.getAddress() + ":" + logstash.getPort();
   }
 

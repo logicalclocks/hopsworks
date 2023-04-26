@@ -50,6 +50,8 @@ import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.HiveTags;
 import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
@@ -338,7 +340,7 @@ public class FeaturestoreController {
     String hiveEndpoint = "";
     try {
       hiveEndpoint = serviceDiscoveryController
-          .constructServiceFQDNWithPort(ServiceDiscoveryController.HopsworksService.HIVE_SERVER_TLS);
+          .constructServiceFQDNWithPort(HopsworksService.HIVE.getNameWithTag(HiveTags.hiveserver2_tls));
     } catch (ServiceDiscoveryException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CONNECTOR_NOT_FOUND,
           Level.SEVERE, "Could not create Hive connection string", e.getMessage(), e);

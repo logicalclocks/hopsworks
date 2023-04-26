@@ -22,6 +22,8 @@ import com.logicalclocks.servicediscoverclient.service.ServiceQuery;
 import io.hops.hopsworks.common.dao.kafka.KafkaConst;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.ZooKeeperTags;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
@@ -134,7 +136,8 @@ public class KafkaBrokers {
   public String getZookeeperConnectionString() throws ServiceDiscoveryException {
     return serviceDiscoveryController.getService(
       Type.DNS, ServiceQuery.of(
-        serviceDiscoveryController.constructServiceFQDN(ServiceDiscoveryController.HopsworksService.ZOOKEEPER_CLIENT),
+        serviceDiscoveryController.constructServiceFQDN(
+            HopsworksService.ZOOKEEPER.getNameWithTag(ZooKeeperTags.client)),
         Collections.emptySet()))
       .map(zkServer -> zkServer.getAddress() + ":" + zkServer.getPort())
       .collect(Collectors.joining(","));

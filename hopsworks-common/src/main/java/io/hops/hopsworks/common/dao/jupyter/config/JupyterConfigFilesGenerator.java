@@ -68,6 +68,9 @@ import io.hops.hopsworks.common.util.templates.jupyter.SparkMagicConfigTemplateB
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.GlassfishTags;
+import io.hops.hopsworks.servicediscovery.tags.NamenodeTags;
 import org.apache.commons.io.FileUtils;
 
 import javax.ejb.EJB;
@@ -221,9 +224,9 @@ public class JupyterConfigFilesGenerator {
                                           String certsDir, String allowOrigin)
         throws IOException, ServiceDiscoveryException {
     Service namenode = serviceDiscoveryController
-        .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.RPC_NAMENODE);
+        .getAnyAddressOfServiceWithDNS(HopsworksService.NAMENODE.getNameWithTag(NamenodeTags.rpc));
     String hopsworksRestEndpoint = "https://" + serviceDiscoveryController
-        .constructServiceFQDNWithPort(ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
+        .constructServiceFQDNWithPort(HopsworksService.GLASSFISH.getNameWithTag(GlassfishTags.hopsworks));
     DockerJobConfiguration dockerJobConfiguration = (DockerJobConfiguration)js.getDockerConfig();
 
     JupyterContentsManager jcm = JupyterContentsManager.HDFS_CONTENTS_MANAGER;
@@ -292,7 +295,7 @@ public class JupyterConfigFilesGenerator {
 
     // Set Hopsworks consul service domain, don't use the address, use the name
     String hopsworksRestEndpoint = "https://" + serviceDiscoveryController.
-        constructServiceFQDNWithPort(ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
+        constructServiceFQDNWithPort(HopsworksService.GLASSFISH.getNameWithTag(GlassfishTags.hopsworks));
 
     finalSparkConfiguration.putAll(
         sparkConfigurationUtil.setFrameworkProperties(project, sparkJobConfiguration, settings, hdfsUser, user,
@@ -310,7 +313,7 @@ public class JupyterConfigFilesGenerator {
   
     try {
       Service livyService = serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
-          ServiceDiscoveryController.HopsworksService.LIVY);
+          HopsworksService.LIVY.getName());
       SparkMagicConfigTemplateBuilder templateBuilder = SparkMagicConfigTemplateBuilder.newBuilder()
           .setLivyIp(livyService.getAddress())
           .setJupyterHome(confDirPath)

@@ -35,6 +35,8 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.DeployableComponentResources;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.GlassfishTags;
 import org.json.JSONObject;
 
 import javax.ejb.EJB;
@@ -181,7 +183,8 @@ public class KubeTransformerUtils {
     envVars.add(new EnvVarBuilder()
       .withName("HADOOP_USER_NAME").withValue(hdfsUsersController.getHdfsUserName(project, user)).build());
     envVars.add(new EnvVarBuilder().withName("REST_ENDPOINT").withValue("https://" + serviceDiscoveryController
-      .constructServiceFQDNWithPort(ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP)).build());
+      .constructServiceFQDNWithPort(HopsworksService.GLASSFISH.getNameWithTag(GlassfishTags.hopsworks)))
+        .build());
     envVars.add(new EnvVarBuilder()
       .withName("REQUESTS_VERIFY").withValue(String.valueOf(settings.getRequestsVerify())).build());
     envVars.add(new EnvVarBuilder().withName("MATERIAL_DIRECTORY").withValue("/certs").build());

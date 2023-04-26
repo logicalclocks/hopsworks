@@ -30,6 +30,8 @@ import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import io.hops.hopsworks.persistence.entity.host.Hosts;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.NamenodeTags;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -200,9 +202,9 @@ public class CloudManager {
       try {
         //check if the resource manager and the namenode are up
         Service rm = serviceDiscoveryController
-            .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.RESOURCEMANAGER);
+            .getAnyAddressOfServiceWithDNS(HopsworksService.RESOURCE_MANAGER.getName());
         Service nm = serviceDiscoveryController
-            .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.RPC_NAMENODE);
+            .getAnyAddressOfServiceWithDNS(HopsworksService.NAMENODE.getNameWithTag(NamenodeTags.rpc));
         
         final List<RemoveNodesCommand> removeNodesRequests = response.getCommands().stream()
             .filter(cc -> cc.getType().equals(CloudCommandType.REMOVE_NODES))

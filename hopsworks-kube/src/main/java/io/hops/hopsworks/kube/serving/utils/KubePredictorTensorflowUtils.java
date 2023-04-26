@@ -43,6 +43,8 @@ import io.hops.hopsworks.persistence.entity.serving.DeployableComponentResources
 import io.hops.hopsworks.persistence.entity.serving.InferenceLogging;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.NamenodeTags;
 import org.json.JSONObject;
 
 import javax.ejb.EJB;
@@ -134,7 +136,7 @@ public class KubePredictorTensorflowUtils extends KubePredictorServerUtils {
     tfServingEnv.add(new EnvVarBuilder().withName("PROJECT_NAME").withValue(project.getName().toLowerCase()).build());
     tfServingEnv.add(new EnvVarBuilder().withName(MODEL_DIR)
       .withValue("hdfs://" + serviceDiscoveryController.constructServiceFQDN(
-        ServiceDiscoveryController.HopsworksService.RPC_NAMENODE) + "/" + serving.getModelPath()).build());
+        HopsworksService.NAMENODE.getNameWithTag(NamenodeTags.rpc)) + "/" + serving.getModelPath()).build());
     tfServingEnv.add(new EnvVarBuilder().withName(MODEL_VERSION)
       .withValue(String.valueOf(serving.getModelVersion())).build());
     tfServingEnv.add(new EnvVarBuilder().withName("TLS")

@@ -42,6 +42,8 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.secrets.SecretId;
 import io.hops.hopsworks.persistence.entity.user.security.secrets.VisibilityType;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.MysqlTags;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import javax.annotation.PostConstruct;
@@ -552,7 +554,7 @@ public class OnlineFeaturestoreController {
 
   private String getJdbcURL(String dbName) throws ServiceDiscoveryException {
     return MYSQL_JDBC + serviceDiscoveryController
-        .constructServiceAddressWithPort(ServiceDiscoveryController.HopsworksService.ONLINEFS_MYSQL)
+        .constructServiceAddressWithPort(HopsworksService.MYSQL.getNameWithTag(MysqlTags.onlinefs))
         + "/" + dbName + MYSQL_PROPERTIES;
   }
 }

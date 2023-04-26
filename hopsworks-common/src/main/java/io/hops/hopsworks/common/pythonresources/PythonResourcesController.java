@@ -22,6 +22,8 @@ import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.util.PrometheusClient;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.GlassfishTags;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -72,10 +74,10 @@ public class PythonResourcesController {
     try {
       Service nodeExporterService =
           serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
-              ServiceDiscoveryController.HopsworksService.NODE_EXPORTER);
+              HopsworksService.NODE_EXPORTER.getName());
       nodeExporterPort = nodeExporterService.getPort();
       Service glassfishService = serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
-          ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
+          HopsworksService.GLASSFISH.getNameWithTag(GlassfishTags.hopsworks));
       glassfishIp = glassfishService.getAddress();
     } catch (ServiceDiscoveryException e) {
       LOGGER.log(Level.INFO, e.getMessage());
@@ -115,11 +117,11 @@ public class PythonResourcesController {
     if (nodeExporterPort == null) {
       Service nodeExporterService =
           serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
-              ServiceDiscoveryController.HopsworksService.NODE_EXPORTER);
+              HopsworksService.NODE_EXPORTER.getName());
       nodeExporterPort = nodeExporterService.getPort();
     } else if (Strings.isNullOrEmpty(glassfishIp)) {
       Service glassfishService = serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
-          ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
+          HopsworksService.GLASSFISH.getNameWithTag(GlassfishTags.hopsworks));
       glassfishIp = glassfishService.getAddress();
     }
 

@@ -47,6 +47,9 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.DeployableComponentResources;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.GlassfishTags;
+import io.hops.hopsworks.servicediscovery.tags.NamenodeTags;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -222,11 +225,12 @@ public class KubePredictorPythonUtils {
       .withValue(String.valueOf(serving.getArtifactVersion())).build());
     envVars.add(new EnvVarBuilder().withName(ARTIFACT_PATH)
       .withValue("hdfs://" + serviceDiscoveryController.constructServiceFQDN(
-        ServiceDiscoveryController.HopsworksService.RPC_NAMENODE) +"/"+ kubeArtifactUtils.getArtifactFilePath(serving))
+        HopsworksService.NAMENODE.getNameWithTag(NamenodeTags.rpc)) +"/"
+          + kubeArtifactUtils.getArtifactFilePath(serving))
       .build());
     envVars.add(new EnvVarBuilder().withName(DEFAULT_FS)
       .withValue("hdfs://" + serviceDiscoveryController.constructServiceFQDN(
-        ServiceDiscoveryController.HopsworksService.RPC_NAMENODE)).build());
+        HopsworksService.NAMENODE.getNameWithTag(NamenodeTags.rpc))).build());
     envVars.add(new EnvVarBuilder().withName("MATERIAL_DIRECTORY").withValue("/certs").build());
     envVars.add(new EnvVarBuilder().withName("TLS").withValue(String.valueOf(settings.getHopsRpcTls())).build());
     envVars.add(new EnvVarBuilder().withName("HADOOP_PROXY_USER").withValue(projectUser).build());
@@ -244,7 +248,8 @@ public class KubePredictorPythonUtils {
     envVars.add(new EnvVarBuilder()
       .withName("HADOOP_USER_NAME").withValue(hdfsUsersController.getHdfsUserName(project, user)).build());
     envVars.add(new EnvVarBuilder().withName("REST_ENDPOINT").withValue("https://" + serviceDiscoveryController
-      .constructServiceFQDNWithPort(ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP)).build());
+      .constructServiceFQDNWithPort(HopsworksService.GLASSFISH.getNameWithTag(GlassfishTags.hopsworks)))
+        .build());
     envVars.add(new EnvVarBuilder()
       .withName("REQUESTS_VERIFY").withValue(String.valueOf(settings.getRequestsVerify())).build());
     envVars.add(new EnvVarBuilder().withName("MATERIAL_DIRECTORY").withValue("/certs").build());

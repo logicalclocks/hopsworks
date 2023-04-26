@@ -55,6 +55,8 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.jobs.history.YarnApplicationstate;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.ResourceManagerTags;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -138,7 +140,7 @@ public class YarnUIProxyServlet extends ProxyServlet {
     try {
       httpsResourceManager =
           serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
-              ServiceDiscoveryController.HopsworksService.HTTPS_RESOURCEMANAGER);
+              HopsworksService.RESOURCE_MANAGER.getNameWithTag(ResourceManagerTags.https));
       targetUri = "https://" + httpsResourceManager.getName() + ":" + httpsResourceManager.getPort();
       targetUriObj = new URI(targetUri);
     } catch (Exception e) {

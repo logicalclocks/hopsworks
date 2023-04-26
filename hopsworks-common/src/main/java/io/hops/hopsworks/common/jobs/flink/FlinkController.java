@@ -64,6 +64,8 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.GlassfishTags;
 import io.hops.security.UserNotFoundException;
 import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.yarn.YarnClientYarnClusterInformationRetriever;
@@ -136,7 +138,7 @@ public class FlinkController {
     FlinkJob flinkjob = null;
     try {
       String hopsworksRestEndpoint = "https://" + serviceDiscoveryController.
-          constructServiceFQDNWithPort(ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
+          constructServiceFQDNWithPort(HopsworksService.GLASSFISH.getNameWithTag(GlassfishTags.hopsworks));
 
       UserGroupInformation proxyUser = UserGroupInformation.createProxyUser(username,
         UserGroupInformation.getLoginUser());

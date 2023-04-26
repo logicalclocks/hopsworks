@@ -68,6 +68,8 @@ import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.LogstashTags;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -439,7 +441,7 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   
     com.logicalclocks.servicediscoverclient.service.Service logstash =
       serviceDiscoveryController
-        .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.JUPYTER_LOGSTASH);
+        .getAnyAddressOfServiceWithDNS(HopsworksService.LOGSTASH.getNameWithTag(LogstashTags.jupyter));
     String logstashAddr = logstash.getAddress() + ":" + logstash.getPort();
   
     Map<String, String> filebeatEnv = new HashMap<>();

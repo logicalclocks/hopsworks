@@ -20,6 +20,8 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.project.ProjectController;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.AirflowTags;
 import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
@@ -79,7 +81,7 @@ public class AirflowProxyServlet extends ProxyServlet {
   protected void initTarget() throws ServletException {
     try {
       targetUri = "http://" + serviceDiscoveryController.constructServiceFQDNWithPort(
-        ServiceDiscoveryController.HopsworksService.AIRFLOW_UI) + "/hopsworks-api/airflow";
+        HopsworksService.AIRFLOW.getNameWithTag(AirflowTags.ui)) + "/hopsworks-api/airflow";
       targetUriObj = new URI(targetUri);
     } catch (Exception e) {
       throw new ServletException("Trying to process targetUri init parameter: " + e, e);

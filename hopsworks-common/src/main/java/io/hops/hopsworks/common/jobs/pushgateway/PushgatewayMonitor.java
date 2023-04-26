@@ -22,6 +22,8 @@ import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.proxies.client.HttpClient;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.PrometheusTags;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.client.api.YarnClient;
@@ -78,7 +80,7 @@ public class PushgatewayMonitor {
   private PushgatewayResults scrapeMetrics() throws ServiceDiscoveryException, IOException {
     Service pushgatewayService =
         serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
-            ServiceDiscoveryController.HopsworksService.PUSHGATEWAY);
+            HopsworksService.PROMETHEUS.getNameWithTag(PrometheusTags.pushgateway));
     HttpHost pushgatewayHost = new HttpHost(pushgatewayService.getAddress(), pushgatewayService.getPort());
     return httpClient.execute(pushgatewayHost, new HttpGet(METRICS_ENDPOINT),
         new HttpClient.ObjectResponseHandler<>(PushgatewayResults.class, httpClient.getObjectMapper()));
@@ -109,7 +111,7 @@ public class PushgatewayMonitor {
 
     // For each group send a request to pushgateway to remove the group
     Service pushgatewayService = serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
-            ServiceDiscoveryController.HopsworksService.PUSHGATEWAY);
+            HopsworksService.PROMETHEUS.getNameWithTag(PrometheusTags.pushgateway));
     HttpHost pushgatewayHost = new HttpHost(pushgatewayService.getAddress(), pushgatewayService.getPort());
     String groupPath = "";
     for (Map<String, String> group : groupsToRemove) {

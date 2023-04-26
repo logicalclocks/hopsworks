@@ -35,6 +35,9 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.secrets.Secret;
 import io.hops.hopsworks.persistence.entity.user.security.secrets.VisibilityType;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.GlassfishTags;
+import io.hops.hopsworks.servicediscovery.tags.HiveTags;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.hadoop.net.HopsSSLSocketFactory;
 import org.apache.hadoop.security.ssl.SSLFactory;
@@ -329,7 +332,7 @@ public class DatabricksController {
     sparkConfiguration.put("spark.sql.hive.metastore.jars", jarPath);
 
     Service hiveMetastoreService = serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
-        ServiceDiscoveryController.HopsworksService.HIVE_METASTORE);
+        HopsworksService.HIVE.getNameWithTag(HiveTags.metastore));
 
     sparkConfiguration.put("spark.hadoop.hive.metastore.uris",
         "thrift://" + hiveMetastoreService.getAddress() + ":" + hiveMetastoreService.getPort());
@@ -389,7 +392,7 @@ public class DatabricksController {
     try {
       return Paths.get("/hopsworks",
           serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
-              ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP).getAddress(),
+              HopsworksService.GLASSFISH.getNameWithTag(GlassfishTags.hopsworks)).getAddress(),
           hdfsUsersController.getHdfsUserName(project, user));
     } catch (ServiceDiscoveryException se) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_DISCOVERY_ERROR, Level.SEVERE,
@@ -401,7 +404,7 @@ public class DatabricksController {
     try {
       return Paths.get("/hopsworks",
           serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
-              ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP).getAddress());
+              HopsworksService.GLASSFISH.getNameWithTag(GlassfishTags.hopsworks)).getAddress());
     } catch (ServiceDiscoveryException se) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_DISCOVERY_ERROR, Level.SEVERE,
           "Cannot resolve Hopsworks service", se.getMessage(), se);

@@ -64,6 +64,8 @@ import io.hops.hopsworks.persistence.entity.log.operation.OperationType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.HiveTags;
 import org.apache.hadoop.fs.Path;
 
 import javax.annotation.PostConstruct;
@@ -285,17 +287,18 @@ public class HiveController {
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public String getHiveServerExternalEndpoint() throws ServiceDiscoveryException {
-    return getHiveServerEndpoint(ServiceDiscoveryController.HopsworksService.HIVE_SERVER_PLAIN);
+    return getHiveServerEndpoint(HiveTags.hiveserver2_plain);
   }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public String getHiveServerInternalEndpoint() throws ServiceDiscoveryException {
-    return getHiveServerEndpoint(ServiceDiscoveryController.HopsworksService.HIVE_SERVER_TLS);
+    return getHiveServerEndpoint(HiveTags.hiveserver2_tls);
   }
 
-  private String getHiveServerEndpoint(ServiceDiscoveryController.HopsworksService service)
+  private String getHiveServerEndpoint(HiveTags tag)
       throws ServiceDiscoveryException {
-    Service hive = serviceDiscoveryController.getAnyAddressOfServiceWithDNS(service);
+    Service hive =
+        serviceDiscoveryController.getAnyAddressOfServiceWithDNS(HopsworksService.HIVE.getNameWithTag(tag));
     return hive.getAddress() + ":" + hive.getPort();
   }
 }

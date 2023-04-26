@@ -63,6 +63,7 @@
     <module>alerting</module>
     <module>hopsworks-alert</module>
     <module>tags-ee</module>
+    <module>hopsworks-service-discovery</module>
   </modules>
 
   <properties>
@@ -626,6 +627,11 @@
         <artifactId>jobs-ee</artifactId>
         <version>${project.version}</version>
         <type>ejb</type>
+      </dependency>
+      <dependency>
+        <groupId>io.hops.hopsworks</groupId>
+        <artifactId>hopsworks-service-discovery</artifactId>
+        <version>${project.version}</version>
       </dependency>
       <!-- end Hopsworks -->
       <dependency>
