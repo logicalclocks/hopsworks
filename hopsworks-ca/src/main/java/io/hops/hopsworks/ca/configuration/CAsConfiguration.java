@@ -25,12 +25,13 @@ public class CAsConfiguration {
   final private CAConfiguration rootCA;
 
   @SerializedName("intermediateCA")
-  final private CAConfiguration intermediateCA;
+  final private IntermediateCAConfiguration intermediateCA;
 
   @SerializedName("kubernetesCA")
   final private KubeCAConfiguration kubernetesCA;
 
-  public CAsConfiguration(CAConfiguration rootCA, CAConfiguration intermediateCA, KubeCAConfiguration kubernetesCA) {
+  public CAsConfiguration(CAConfiguration rootCA, IntermediateCAConfiguration intermediateCA,
+      KubeCAConfiguration kubernetesCA) {
     this.rootCA = rootCA;
     this.intermediateCA = intermediateCA;
     this.kubernetesCA = kubernetesCA;
@@ -40,7 +41,7 @@ public class CAsConfiguration {
     return Optional.ofNullable(rootCA);
   }
 
-  public Optional<CAConfiguration> getIntermediateCA() {
+  public Optional<IntermediateCAConfiguration> getIntermediateCA() {
     return Optional.ofNullable(intermediateCA);
   }
 

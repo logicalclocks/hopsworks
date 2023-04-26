@@ -27,6 +27,8 @@ import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.NamenodeTags;
 import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
@@ -60,7 +62,7 @@ public class HopsfsTrainingDatasetController {
     Service namenodeService;
     try {
       namenodeService = serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
-          ServiceDiscoveryController.HopsworksService.RPC_NAMENODE);
+          HopsworksService.NAMENODE.getNameWithTag(NamenodeTags.rpc));
     } catch (ServiceDiscoveryException e) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_NOT_FOUND,
           Level.SEVERE, "Could not find namenode service", e.getMessage(), e);

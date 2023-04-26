@@ -66,6 +66,8 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.GlassfishTags;
 import org.apache.hadoop.security.UserGroupInformation;
 
 import javax.ejb.EJB;
@@ -271,7 +273,8 @@ public class SparkController {
     try {
       // Set Hopsworks consul service domain, don't use the address, use the name
       String hopsworksRestEndpoint = "https://" + serviceDiscoveryController.
-              constructServiceFQDNWithPort(ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
+              constructServiceFQDNWithPort(
+                  HopsworksService.GLASSFISH.getNameWithTag(GlassfishTags.hopsworks));
 
       UserGroupInformation proxyUser = UserGroupInformation.createProxyUser(username,
         UserGroupInformation.getLoginUser());

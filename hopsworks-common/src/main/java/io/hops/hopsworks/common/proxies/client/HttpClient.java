@@ -23,6 +23,8 @@ import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryExcept
 import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.GlassfishTags;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
@@ -187,7 +189,7 @@ public class HttpClient {
     if(host==null){
       try {
         Service hopsworksService = serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
-            ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
+            HopsworksService.GLASSFISH.getNameWithTag(GlassfishTags.hopsworks));
         host = new HttpHost(hopsworksService.getName(), hopsworksService.getPort(), "HTTPS");
       } catch (ServiceDiscoveryException ex) {
         throw new IOException(ex);

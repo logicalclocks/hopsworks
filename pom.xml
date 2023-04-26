@@ -59,6 +59,7 @@
     <module>hopsworks-UT</module>
     <module>alerting</module>
     <module>hopsworks-alert</module>
+    <module>hopsworks-service-discovery</module>
   </modules>
 
   <properties>
@@ -570,6 +571,11 @@
       <dependency>
         <groupId>io.hops.hopsworks</groupId>
         <artifactId>hopsworks-rest-utils</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.hops.hopsworks</groupId>
+        <artifactId>hopsworks-service-discovery</artifactId>
         <version>${project.version}</version>
       </dependency>
       <!-- end Hopsworks -->

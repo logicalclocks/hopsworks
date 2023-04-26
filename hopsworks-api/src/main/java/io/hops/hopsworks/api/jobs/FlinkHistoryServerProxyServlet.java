@@ -24,6 +24,8 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.jobs.flink.FlinkCompletedJobsCache;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.FlinkTags;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
@@ -75,7 +77,7 @@ public class FlinkHistoryServerProxyServlet extends ProxyServlet {
   protected void initTarget() throws ServletException {
     try {
       targetUri = "http://" + serviceDiscoveryController.constructServiceFQDNWithPort(
-        ServiceDiscoveryController.HopsworksService.FLINK_HISTORY_SERVER);
+        HopsworksService.FLINK.getNameWithTag(FlinkTags.historyserver));
       targetUriObj = new URI(targetUri);
     } catch (Exception e) {
       throw new ServletException("Trying to process targetUri init parameter: " + e, e);

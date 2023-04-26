@@ -45,6 +45,7 @@ import io.hops.hopsworks.ca.configuration.CAConfiguration;
 import io.hops.hopsworks.ca.configuration.CAsConfiguration;
 import io.hops.hopsworks.ca.configuration.KubeCAConfiguration;
 import io.hops.hopsworks.ca.configuration.SubjectAlternativeName;
+import io.hops.hopsworks.ca.configuration.UsernamesConfiguration;
 import io.hops.hopsworks.ca.persistence.CRLFacade;
 import io.hops.hopsworks.ca.persistence.KeyFacade;
 import io.hops.hopsworks.ca.persistence.SerialNumberFacade;
@@ -55,16 +56,23 @@ import io.hops.hopsworks.persistence.entity.pki.PKICrl;
 import io.hops.hopsworks.persistence.entity.pki.PKIKey;
 import io.hops.hopsworks.persistence.entity.pki.KeyIdentifier;
 import io.hops.hopsworks.persistence.entity.pki.PKICertificate;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.Utilities;
+import io.hops.hopsworks.servicediscovery.tags.MysqlTags;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStrictStyle;
 import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.asn1.x500.style.IETFUtils;
 import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
 import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.CRLReason;
 import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.Extensions;
 import org.bouncycastle.asn1.x509.ExtensionsGenerator;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.asn1.x509.GeneralNames;
@@ -134,11 +142,15 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAmount;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.logging.Level;
@@ -157,6 +169,7 @@ public class PKI {
   private static final CRLReason REVOCATION_REASON = CRLReason.lookup(CRLReason.privilegeWithdrawn);
 
   private final AtomicBoolean CA_INITIALIZED = new AtomicBoolean(false);
+  private static final GeneralName[] EMTPY_GENERAL_NAMES = new GeneralName[0];
 
   @EJB
   private SerialNumberFacade serialNumberFacade;
@@ -170,6 +183,8 @@ public class PKI {
   private CRLFacade crlFacade;
   @EJB
   private CAConf caConf;
+  @EJB
+  private UsernamesConfiguration usernamesConfiguration;
 
   private KeyPairGenerator keyPairGenerator;
   private KeyFactory keyFactory;
@@ -643,7 +658,7 @@ public class PKI {
   private final Duration ROOT_CA_DEFAULT_VALIDITY_PERIOD = Duration.of(PKIUtils.TEN_YEARS, ChronoUnit.DAYS);
   private final Duration INTERMEDIATE_CA_DEFAULT_VALIDITY_PERIOD = Duration.of(PKIUtils.TEN_YEARS, ChronoUnit.DAYS);
   private final Duration KUBERNETES_CA_DEFAULT_VALIDITY_PERIOD = Duration.of(PKIUtils.TEN_YEARS, ChronoUnit.DAYS);
-  private Duration getCAValidityPeriod(Optional<CAConfiguration> conf, Duration defaultDuration) {
+  private Duration getCAValidityPeriod(Optional<? extends CAConfiguration> conf, Duration defaultDuration) {
     if (conf.isPresent() && conf.get().getValidityDuration().isPresent()) {
       return pkiUtils.parseDuration(conf.get().getValidityDuration().get());
     }
@@ -783,7 +798,8 @@ public class PKI {
       throw new CAInitializationException(ex);
     }
     CAType caType = pkiUtils.getResponsibleCA(certificateType);
-    Function<X509v3CertificateBuilder, Void> certificateExtensionsBuilder = getExtensionsBuilder(caType);
+    Function<ExtensionsBuilderParameter, Void>[] certificateExtensionsBuilder = getExtensionsBuilders(caType,
+        certificateType);
     X509Certificate certificate = signCertificateSigningRequest(csrStr, certificateType, caType,
         certificateExtensionsBuilder);
     LOGGER.log(Level.FINE, "Signed certificate and going to Save");
@@ -793,8 +809,8 @@ public class PKI {
     return certificate;
   }
 
-  protected final static Function<X509v3CertificateBuilder, Void> EMPTY_CERTIFICATE_EXTENSIONS_BUILDER = (b) -> null;
-  protected final Function<X509v3CertificateBuilder, Void> KUBE_CERTIFICATE_EXTENSIONS_BUILDER = (b) -> {
+  protected final static Function<ExtensionsBuilderParameter, Void> EMPTY_CERTIFICATE_EXTENSIONS_BUILDER = (b) -> null;
+  protected final Function<ExtensionsBuilderParameter, Void> KUBE_CERTIFICATE_EXTENSIONS_BUILDER = (b) -> {
     if (conf.getKubernetesCA().isPresent()) {
       KubeCAConfiguration kubeCAConf = (KubeCAConfiguration) conf.getKubernetesCA().get();
       if (kubeCAConf.getSubjectAlternativeName().isPresent()) {
@@ -826,7 +842,7 @@ public class PKI {
         if (generalNames != null) {
           try {
             GeneralName[] gn = generalNames.toArray(new GeneralName[0]);
-            b.addExtension(Extension.subjectAlternativeName, false, new GeneralNames(gn));
+            appendSubjectAlternativeNames(b.certificateBuilder, gn);
           } catch (CertIOException ex) {
             throw new RuntimeException(ex);
           }
@@ -836,12 +852,193 @@ public class PKI {
     return null;
   };
 
-  protected Function<X509v3CertificateBuilder, Void> getExtensionsBuilder(CAType caType) {
-    return caType.equals(CAType.KUBECA) ? KUBE_CERTIFICATE_EXTENSIONS_BUILDER : EMPTY_CERTIFICATE_EXTENSIONS_BUILDER;
+  protected final Function<ExtensionsBuilderParameter, Void> SAN_CERTIFICATE_EXTENSIONS_BUILDER = (b) -> {
+    if (b.certificateType.equals(CertificateType.HOST)) {
+      Optional<String> cn = parseX509CommonName(b.certificationRequest);
+      if (!cn.isPresent()) {
+        throw new RuntimeException("x509 subject " + b.certificationRequest.getSubject().toString()
+            + " does not have CN field");
+      }
+
+      GeneralName hostname = new GeneralName(GeneralName.dNSName, cn.get());
+      GeneralName[] names = new GeneralName[1];
+      names[0] = hostname;
+      try {
+        appendSubjectAlternativeNames(b.certificateBuilder, names);
+
+        Optional<String> l = parseX509Locality(b.certificationRequest);
+        if (l.isPresent()) {
+          GeneralName[] sanForUsername = getSanForUsername(l.get());
+          appendSubjectAlternativeNames(b.certificateBuilder, sanForUsername);
+
+          final Set<String> extraSanSet = new HashSet<>();
+          conf.getIntermediateCA().ifPresent(c -> {
+            if (c.getExtraUsernameSAN() != null) {
+              SubjectAlternativeName extraSan = c.getExtraUsernameSAN().get(l.get());
+              if (extraSan != null) {
+                extraSan.getDns().ifPresent(extraSanSet::addAll);
+              }
+            }
+          });
+          if (!extraSanSet.isEmpty()) {
+            appendSubjectAlternativeNames(b.certificateBuilder, convertToGeneralNames(extraSanSet, false));
+          }
+        }
+      } catch (CertIOException ex) {
+        throw new RuntimeException(ex);
+      }
+    }
+    return null;
+  };
+
+  GeneralName[] getSanForUsername(String username) {
+    String normalizedUsername = usernamesConfiguration.getNormalizedUsername(username);
+    if (normalizedUsername == null) {
+      return EMTPY_GENERAL_NAMES;
+    }
+    switch (normalizedUsername) {
+      case "glassfish":
+      case "glassfishinternal":
+        return convertToGeneralNames(HopsworksService.GLASSFISH.domains(), true);
+      case "hdfs":
+        return convertToGeneralNames(mergeSets(
+            HopsworksService.NAMENODE.domains(),
+            HopsworksService.SPARK_HISTORY_SERVER.domains()), true);
+      case "hive":
+        return convertToGeneralNames(HopsworksService.HIVE.domains(), true);
+      case "livy":
+        return convertToGeneralNames(HopsworksService.LIVY.domains(), true);
+      case "flink":
+        return convertToGeneralNames(HopsworksService.FLINK.domains(), true);
+      case "consul":
+        return convertToGeneralNames(HopsworksService.CONSUL.domains(), true);
+      case "hopsmon":
+        return convertToGeneralNames(HopsworksService.PROMETHEUS.domains(), true);
+      case "zookeeper":
+        return convertToGeneralNames(HopsworksService.ZOOKEEPER.domains(), true);
+      case "rmyarn":
+        return convertToGeneralNames(HopsworksService.RESOURCE_MANAGER.domains(), true);
+      case "onlinefs":
+        Set<String> onlinefsDomain = new HashSet<>();
+        onlinefsDomain.add(HopsworksService.MYSQL.getNameWithTag(MysqlTags.onlinefs));
+        return convertToGeneralNames(onlinefsDomain, true);
+      case "elastic":
+        return convertToGeneralNames(HopsworksService.LOGSTASH.domains(), true);
+      case "flyingduck":
+        return convertToGeneralNames(HopsworksService.FLYING_DUCK.domains(), true);
+      case "kagent":
+        return convertToGeneralNames(HopsworksService.DOCKER_REGISTRY.domains(), true);
+      default:
+        return EMTPY_GENERAL_NAMES;
+    }
+  }
+
+  Set<String> mergeSets(Set<String>... sets) {
+    Set<String> merged = new HashSet<>();
+    for (Set<String> set : sets) {
+      merged.addAll(set);
+    }
+    return merged;
+  }
+
+  GeneralName[] convertToGeneralNames(Set<String> domains, boolean isServiceDiscoveryDomain) {
+    GeneralName[] names = new GeneralName[domains.size()];
+    Iterator<String> i = domains.iterator();
+    int idx = 0;
+    while (i.hasNext()) {
+      String domain = i.next();
+      names[idx] = new GeneralName(GeneralName.dNSName,
+          isServiceDiscoveryDomain ? Utilities.constructServiceFQDN(domain,
+          caConf.getString(CAConf.CAConfKeys.SERVICE_DISCOVERY_DOMAIN)) : domain);
+      idx++;
+    }
+    return names;
+  }
+
+  @VisibleForTesting
+  Optional<String> parseX509CommonName(PKCS10CertificationRequest csr) {
+    return parseX509Rdn(csr, BCStyle.CN);
+  }
+
+  @VisibleForTesting
+  Optional<String> parseX509Locality(PKCS10CertificationRequest csr) {
+    return parseX509Rdn(csr, BCStyle.L);
+  }
+
+  private Optional<String> parseX509Rdn(PKCS10CertificationRequest csr, ASN1ObjectIdentifier identifier) {
+    RDN[] rdns = csr.getSubject().getRDNs(identifier);
+    if (rdns.length == 0) {
+      return Optional.empty();
+    }
+    return Optional.of(IETFUtils.valueToString(rdns[0].getFirst().getValue()));
+  }
+
+  void appendSubjectAlternativeNames(X509v3CertificateBuilder certificateBuilder, GeneralName[] namesToAdd)
+      throws CertIOException {
+    if (!certificateBuilder.hasExtension(Extension.subjectAlternativeName)) {
+      certificateBuilder.addExtension(Extension.subjectAlternativeName, false, new GeneralNames(namesToAdd));
+    } else {
+      Extension existingExtension = certificateBuilder.getExtension(Extension.subjectAlternativeName);
+      Extensions existingExtensions = new Extensions(existingExtension);
+      GeneralNames existingGeneralNames = GeneralNames.fromExtensions(existingExtensions,
+          Extension.subjectAlternativeName);
+      GeneralName[] existingNames = existingGeneralNames.getNames();
+      Set<GeneralName> uniqueGeneralNames = new HashSet<>(Arrays.asList(existingNames));
+      uniqueGeneralNames.addAll(Arrays.asList(namesToAdd));
+      GeneralName[] finalNames = new GeneralName[uniqueGeneralNames.size()];
+      uniqueGeneralNames.toArray(finalNames);
+      certificateBuilder.replaceExtension(Extension.subjectAlternativeName, false, new GeneralNames(finalNames));
+    }
+  }
+
+  static class ExtensionsBuilderParameter {
+    private final X509v3CertificateBuilder certificateBuilder;
+    private final PKCS10CertificationRequest certificationRequest;
+    private final CertificateType certificateType;
+
+    private ExtensionsBuilderParameter(X509v3CertificateBuilder certificateBuilder,
+        PKCS10CertificationRequest certificationRequest, CertificateType certificateType) {
+      this.certificateBuilder = certificateBuilder;
+      this.certificationRequest = certificationRequest;
+      this.certificateType = certificateType;
+    }
+
+    static ExtensionsBuilderParameter of(X509v3CertificateBuilder certificateBuilder,
+        PKCS10CertificationRequest certificationRequest, CertificateType certificateType) {
+      return new ExtensionsBuilderParameter(certificateBuilder, certificationRequest, certificateType);
+    }
+
+    @VisibleForTesting
+    static ExtensionsBuilderParameter of(X509v3CertificateBuilder certificateBuilder) {
+      return new ExtensionsBuilderParameter(certificateBuilder, null, CertificateType.APP);
+    }
+  }
+
+  private final Function<ExtensionsBuilderParameter, Void>[] HOST_CERTIFICATES_EXTENSION_BUILDERS =
+      new Function[]{SAN_CERTIFICATE_EXTENSIONS_BUILDER};
+
+  private final Function<ExtensionsBuilderParameter, Void>[] KUBERNETES_CERTIFICATES_EXTENSION_BUILDERS =
+      new Function[]{
+          KUBE_CERTIFICATE_EXTENSIONS_BUILDER,
+          SAN_CERTIFICATE_EXTENSIONS_BUILDER,
+      };
+
+  private final Function<ExtensionsBuilderParameter, Void>[] EMTPY_CERTIFICATES_EXTENSION_BUILDERS =
+      new Function[0];
+
+  protected Function<ExtensionsBuilderParameter, Void>[] getExtensionsBuilders(CAType caType,
+      CertificateType certificateType) {
+    if (certificateType.equals(CertificateType.HOST)) {
+      return HOST_CERTIFICATES_EXTENSION_BUILDERS;
+    }
+    if (caType.equals(CAType.KUBECA)) {
+      return KUBERNETES_CERTIFICATES_EXTENSION_BUILDERS;
+    }
+    return EMTPY_CERTIFICATES_EXTENSION_BUILDERS;
   }
 
   protected X509Certificate signCertificateSigningRequest(String csrStr, CertificateType certificateType, CAType caType,
-      Function<X509v3CertificateBuilder, Void> extensionsBuilder)
+      Function<ExtensionsBuilderParameter, Void>[] extensionsBuilders)
       throws IOException, CertificateEncodingException, CACertificateNotFoundException,
       CertificateAlreadyExistsException, KeyException, NoSuchAlgorithmException, CertIOException,
       OperatorCreationException, CertificateException, InvalidKeyException, SignatureException,
@@ -896,7 +1093,9 @@ public class PKI {
         .addExtension(Extension.subjectKeyIdentifier, false,
             extUtils.createSubjectKeyIdentifier(csr.getSubjectPublicKeyInfo()));
     try {
-      extensionsBuilder.apply(builder);
+      for (Function<ExtensionsBuilderParameter, Void> f : extensionsBuilders) {
+        f.apply(ExtensionsBuilderParameter.of(builder, csr, certificateType));
+      }
     } catch (Exception ex) {
       throw new CertIOException("Failed to add extension to certificate", ex);
     }
@@ -1220,5 +1419,10 @@ public class PKI {
   @VisibleForTesting
   protected void setConverter(JcaX509CertificateConverter converter) {
     this.converter = converter;
+  }
+
+  @VisibleForTesting
+  protected void setUsernamesConfiguration(UsernamesConfiguration usernamesConfiguration) {
+    this.usernamesConfiguration = usernamesConfiguration;
   }
 }

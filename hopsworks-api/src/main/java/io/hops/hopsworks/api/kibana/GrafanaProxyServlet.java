@@ -55,6 +55,7 @@ import io.hops.hopsworks.persistence.entity.jobs.history.YarnApplicationstate;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
 import joptsimple.internal.Strings;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.utils.URIUtils;
@@ -120,7 +121,7 @@ public class GrafanaProxyServlet extends ProxyServlet {
   protected void initTarget() throws ServletException {
     try {
       targetUri = "http://" + serviceDiscoveryController.constructServiceFQDNWithPort(
-        ServiceDiscoveryController.HopsworksService.GRAFANA);
+        HopsworksService.GRAFANA.getName());
       targetUriObj = new URI(targetUri);
     } catch (Exception e) {
       throw new ServletException("Trying to process targetUri init parameter: " + e, e);

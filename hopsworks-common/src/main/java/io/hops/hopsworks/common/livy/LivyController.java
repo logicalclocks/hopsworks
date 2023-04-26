@@ -47,6 +47,8 @@ import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -151,7 +153,7 @@ public class LivyController {
 
   private String getLivyURL() throws ServiceDiscoveryException {
     Service livy = serviceDiscoveryController
-        .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.LIVY);
+        .getAnyAddressOfServiceWithDNS(HopsworksService.LIVY.getName());
     return "http://" + livy.getAddress() + ":" + livy.getPort();
   }
 }

@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.proxies.client.HttpRetryableAction;
 import io.hops.hopsworks.common.proxies.client.NotRetryableClientProtocolException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
 import org.apache.hadoop.util.ExponentialBackOff;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
@@ -74,7 +75,7 @@ public class PrometheusClient {
     try {
       Service prometheusService =
           serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
-              ServiceDiscoveryController.HopsworksService.PROMETHEUS);
+              HopsworksService.PROMETHEUS.getName());
       prometheusIP = prometheusService.getAddress();
       connectionManager = createConnectionManager();
       client = HttpClients.custom()
@@ -112,7 +113,7 @@ public class PrometheusClient {
       if (Strings.isNullOrEmpty(prometheusIP)) {
         Service prometheusService =
             serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
-                ServiceDiscoveryController.HopsworksService.PROMETHEUS);
+                HopsworksService.PROMETHEUS.getName());
         prometheusIP = prometheusService.getAddress();
       }
       final HttpUriRequest httpRequest = new HttpGet(getUri(query));
