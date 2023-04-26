@@ -27,10 +27,12 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.hive.HiveController;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.hdfs.HdfsDirectoryWithQuotaFeature;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.jobs.quota.YarnProjectsQuota;
 import io.hops.hopsworks.persistence.entity.project.PaymentType;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -71,6 +73,8 @@ public class ProjectQuotasController {
   private InodeController inodeController;
   @Inject
   private DistributedFsService dfs;
+  @Inject
+  private Settings settings;
 
   public Quotas getQuotas(Project project) {
     Quotas quotas = new Quotas();
@@ -104,8 +108,10 @@ public class ProjectQuotasController {
     List<Dataset> datasets = (List<Dataset>) project.getDatasetCollection();
     for (Dataset ds : datasets) {
       if (ds.getDsType() == DatasetType.HIVEDB) {
+        Path datasetPath = Utils.getDatasetPath(ds, settings);
+        Inode dsInode = inodeController.getInodeAtPath(datasetPath.toString());
         Optional<HdfsDirectoryWithQuotaFeature> dbInodeAttrsOptional =
-            hdfsDirectoryWithQuotaFeatureFacade.getByInodeId(ds.getInodeId());
+            hdfsDirectoryWithQuotaFeatureFacade.getByInodeId(dsInode.getId());
         if (dbInodeAttrsOptional.isPresent()) {
           // storage quota
           quotas.setHiveQuota(convertToTeraBytes(dbInodeAttrsOptional.get().getSsquota().longValue()));
@@ -120,8 +126,10 @@ public class ProjectQuotasController {
           quotas.setHiveNsQuota(HdfsConstants.QUOTA_RESET);
         }
       } else if (ds.getDsType() == DatasetType.FEATURESTORE) {
+        Path datasetPath = Utils.getDatasetPath(ds, settings);
+        Inode dsInode = inodeController.getInodeAtPath(datasetPath.toString());
         Optional<HdfsDirectoryWithQuotaFeature> fsInodeAttrsOptional =
-            hdfsDirectoryWithQuotaFeatureFacade.getByInodeId(ds.getInodeId());
+            hdfsDirectoryWithQuotaFeatureFacade.getByInodeId(dsInode.getId());
         if (fsInodeAttrsOptional.isPresent()) {
           // storage quota
           quotas.setFeaturestoreQuota(convertToTeraBytes(fsInodeAttrsOptional.get().getSsquota().longValue()));

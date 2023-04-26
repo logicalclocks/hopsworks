@@ -99,6 +99,8 @@ public class ModelsController {
   private ModelUtils modelUtils;
   @EJB
   private InodeController inodeController;
+  @EJB
+  private Settings settings;
   @Inject
   private ServingController servingController;
   
@@ -195,10 +197,6 @@ public class ModelsController {
       return relativePath;
     }
   }
-  
-  public ModelRegistryDTO getModelRegistry(Project project) throws DatasetException {
-    return ModelRegistryDTO.fromDataset(datasetController.getByName(project, Settings.HOPS_MODELS_DATASET));
-  }
 
   public ModelRegistryDTO verifyModelRegistryAccess(Project userProject, Integer modelRegistryId)
           throws ModelRegistryException {
@@ -220,7 +218,8 @@ public class ModelsController {
 
     //Validate user project has got access to the models dataset
     if (accessCtrl.hasAccess(userProject, dataset)) {
-      return ModelRegistryDTO.fromDataset(dataset);
+      Inode modelsDatasetInode = inodeController.getInodeAtPath(Utils.getDatasetPath(dataset, settings).toString());
+      return ModelRegistryDTO.fromDataset(modelRegistryProject, modelsDatasetInode);
     } else {
       throw new ModelRegistryException(RESTCodes.ModelRegistryErrorCode.MODEL_REGISTRY_ACCESS_DENIED, Level.FINE,
               "The current project " + userProject.getName() + " does not have access to model registry of project " +

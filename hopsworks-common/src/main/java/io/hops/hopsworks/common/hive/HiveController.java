@@ -188,7 +188,8 @@ public class HiveController {
 
     // Persist Hive db as dataset in the Hopsworks database
     // Make the dataset editable by owners by default
-    Dataset dbDataset = new Dataset(dbInode, project, DatasetAccessPermission.EDITABLE_BY_OWNERS);
+    Dataset dbDataset = new Dataset(project, dbInode.getInodePK().getName(),
+      DatasetAccessPermission.EDITABLE_BY_OWNERS);
     dbDataset.setDsType(datasetType);
     dbDataset.setSearchable(true);
     dbDataset.setFeatureStore(featurestore);
@@ -199,7 +200,7 @@ public class HiveController {
       hdfsUsersBean.createDatasetGroupsAndSetPermissions(user, project, dbDataset, dbPath, dfso);
   
       fsProvenanceCtrl.updateHiveDatasetProvCore(project, dbPath.toString(), metaStatus, dfso);
-      datasetController.logDataset(project, dbDataset, OperationType.Add);
+      datasetController.logDataset(project, dbDataset, dbInode, OperationType.Add);
       activityFacade.persistActivity(ActivityFacade.NEW_DATA + dbDataset.getName(), project, user,
         ActivityFlag.DATASET);
 

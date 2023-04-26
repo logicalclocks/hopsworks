@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.api.experiments.dto;
 
-import io.hops.hopsworks.persistence.entity.dataset.Dataset;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -42,8 +42,8 @@ public class ExperimentsEndpointDTO {
     this.datasetInodeId = datasetInodeId;
   }
   
-  public static ExperimentsEndpointDTO fromDataset(Dataset ds) {
-    return new ExperimentsEndpointDTO(ds.getProject(), ds.getInode().getId());
+  public static ExperimentsEndpointDTO fromDataset(Project project, Inode experimentsRegistryInode) {
+    return new ExperimentsEndpointDTO(project, experimentsRegistryInode.getId());
   }
   
   @XmlElement(name = "id")

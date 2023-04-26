@@ -24,10 +24,13 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.FsPermissions;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsGroups;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -71,7 +74,8 @@ public class PermissionsFixer {
   private DistributedFsService dfsService;
   @EJB
   private InodeController inodeController;
-  
+  @EJB
+  private Settings settings;
   @Asynchronous
   public void fixPermissions() {
     fixPermissions(0, 0L);
@@ -108,24 +112,25 @@ public class PermissionsFixer {
   
   private void fixProject(Project project) throws IOException {
     List<Dataset> datasetList = datasetFacade.findByProject(project);
+    Inode projectInode = inodeController.getProjectRoot(project.getName());
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfsService.getDfsOps();
       for (Dataset dataset : datasetList) {
-        fixDataset(dataset, dfso);
+        fixDataset(projectInode, dataset, dfso);
       }
     } finally {
       dfsService.closeDfsClient(dfso);
     }
   }
   
-  private void fixDataset(Dataset dataset, DistributedFileSystemOps dfso) throws IOException {
+  private void fixDataset(Inode projectInode, Dataset dataset, DistributedFileSystemOps dfso) throws IOException {
     String datasetGroup = hdfsUsersController.getHdfsGroupName(dataset.getProject(), dataset);
     String datasetAclGroup = hdfsUsersController.getHdfsAclGroupName(dataset.getProject(), dataset);
 
     HdfsGroups hdfsDatasetGroup = getOrCreateGroup(datasetGroup, dfso);
     HdfsGroups hdfsDatasetAclGroup = getOrCreateGroup(datasetAclGroup, dfso);
-    fixPermission(dataset, hdfsDatasetGroup, hdfsDatasetAclGroup, dfso);
+    fixPermission(projectInode, dataset, hdfsDatasetGroup, hdfsDatasetAclGroup, dfso);
   }
   
   private HdfsGroups getOrCreateGroup(String group, DistributedFileSystemOps dfso) throws IOException {
@@ -138,8 +143,8 @@ public class PermissionsFixer {
     return hdfsGroup;
   }
   
-  private void fixPermission(Dataset dataset, HdfsGroups hdfsDatasetGroup, HdfsGroups hdfsDatasetAclGroup,
-    DistributedFileSystemOps dfso) throws IOException {
+  private void fixPermission(Inode projectInode, Dataset dataset, HdfsGroups hdfsDatasetGroup,
+                             HdfsGroups hdfsDatasetAclGroup, DistributedFileSystemOps dfso) throws IOException {
     if (hdfsDatasetGroup == null || hdfsDatasetAclGroup == null) {
       LOGGER.log(Level.WARNING, "Failed to get groups: hdfsDatasetGroup or hdfsDatasetAclGroup");
       return;
@@ -148,9 +153,11 @@ public class PermissionsFixer {
       dataset.setPermission(DatasetAccessPermission.READ_ONLY);
       datasetFacade.merge(dataset);
     }
-    testFsPermission(dataset, dfso);
+    Inode datasetInode = inodeController.getProjectDatasetInode(projectInode,
+      Utils.getDatasetPath(dataset, settings).toString(), dataset);
+    testFsPermission(dataset, datasetInode, dfso);
     testAndFixPermissionForAllMembers(dataset.getProject(), dfso, hdfsDatasetGroup, hdfsDatasetAclGroup,
-      dataset.getInode().getHdfsUser(), dataset.getPermission());
+      datasetInode.getHdfsUser(), dataset.getPermission());
     List<ProjectTeam> datasetTeamCollection = new ArrayList<>(dataset.getProject().getProjectTeamCollection());
     for (DatasetSharedWith datasetSharedWith : dataset.getDatasetSharedWithCollection()) {
       if (dataset.isPublicDs() && !DatasetAccessPermission.READ_ONLY.equals(datasetSharedWith.getPermission())) {
@@ -164,16 +171,16 @@ public class PermissionsFixer {
       }
     }
     testAndRemoveUsersFromGroup(datasetTeamCollection, hdfsDatasetGroup, hdfsDatasetAclGroup,
-      dataset.getInode().getHdfsUser(), dfso);
+      datasetInode.getHdfsUser(), dfso);
   }
   
-  private void testFsPermission(Dataset dataset, DistributedFileSystemOps dfso) throws IOException {
-    FsPermission fsPermission = FsPermission.createImmutable(dataset.getInode().getPermission());
+  private void testFsPermission(Dataset dataset, Inode datasetInode, DistributedFileSystemOps dfso) throws IOException {
+    FsPermission fsPermission = FsPermission.createImmutable(datasetInode.getPermission());
     FsPermission fsPermissionReadOnly = FsPermission.createImmutable((short)00550);
     FsPermission fsPermissionReadOnlyT = FsPermission.createImmutable((short)01550);
     FsPermission fsPermissionDefault = FsPermissions.rwxrwx___;
     FsPermission fsPermissionDefaultT = FsPermissions.rwxrwx___T;
-    Path path = new Path(inodeController.getPath(dataset.getInode()));
+    Path path = new Path(inodeController.getPath(datasetInode));
     if (dataset.isPublicDs() && !fsPermissionReadOnly.equals(fsPermission) &&
       !fsPermissionReadOnlyT.equals(fsPermission)) {
       hdfsUsersController.makeImmutable(path, dfso);

@@ -495,7 +495,7 @@ describe "On #{ENV['OS']}" do
           dsname = "dataset_#{short_random_id}"
           create_dataset_by_name_checked(project, dsname, permission: "READ_ONLY")
           ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
-          request_dataset_access(project, ds[:inode_id])
+          request_dataset_access(project, get_dataset_inode(@project, ds)[:id])
           share_dataset(@project, dsname, project[:projectname], permission: "EDITABLE", datasetType: "&type=DATASET")
           get_datasets_in_path(project, "#{@project[:projectname]}::#{dsname}")
           expect_status_details(200)
@@ -512,7 +512,7 @@ describe "On #{ENV['OS']}" do
           create_session(req_user[:email], "Pass123")
           req_projectname = "project_#{short_random_id}"
           req_project = create_project_by_name(req_projectname)
-          request_dataset_access_checked(req_project, ds[:inode_id])
+          request_dataset_access_checked(req_project, get_dataset_inode(@project, ds)[:id])
 
           create_session(@project[:username], "Pass123") # be the user of the project that owns the dataset
           share_dataset_checked(@project, dsname, req_project[:projectname], permission: "EDITABLE", datasetType: "&type=DATASET")
@@ -1435,24 +1435,6 @@ describe "On #{ENV['OS']}" do
         it 'should return sorted datasets by searchable (desc)' do
           test_sort_by_str(@project, @datasets, "", "searchable", "desc", "searchable")
         end
-        it 'should return sorted datasets by size (asc)' do
-          test_sort_by_attr(@project, @datasets, "", "size", "asc", "size")# dataset size is not set
-        end
-        it 'should return sorted datasets by size (desc)' do
-          test_sort_by_attr(@project, @datasets, "", "size", "desc", "size")
-        end
-        it 'should return sorted datasets by modificationTime (asc)' do
-          test_sort_by_date_attr(@project, @datasets, "", "modificationTime", "asc", "modification_time")
-        end
-        it 'should return sorted datasets by modificationTime (desc)' do
-          test_sort_by_date_attr(@project, @datasets, "", "modificationTime", "desc", "modification_time")
-        end
-        it 'should return sorted datasets by accessTime (asc)' do
-          test_sort_by_date_attr(@project, @datasets, "", "accessTime", "asc", "access_time")
-        end
-        it 'should return sorted datasets by accessTime (desc)' do
-          test_sort_by_date_attr(@project, @datasets, "", "accessTime", "desc", "access_time")
-        end
         it 'should return sorted datasets by type (asc)' do
           test_sort_by_datasetType(@project, @datasets, "", "datasetType", "asc", "type")
         end
@@ -1525,72 +1507,11 @@ describe "On #{ENV['OS']}" do
         it 'should return only accepted datasets' do
           test_filter_by(@project, [false], "", "accepted", "accepted:true")
         end
-        it 'should return only datasets underConstruction' do
-          test_filter_by_attr(@project, [true], "", "underConstruction", "under_construction:false")
-        end
         it 'should return only searchable datasets' do
           test_filter_by(@project, [false], "", "searchable", "searchable:true")
         end
         it 'should filter by name' do
           test_filter_by_starts_with(@project, @datasets, "", "name", "name", "data")
-        end
-        it 'should filter by user email' do
-          nonSharedDs = @datasets.map { |o| o if o[:shared]==false}.compact
-          test_filter_by_eq_attr(@project, nonSharedDs, "", "owner", "#{@user[:fname]} #{@user[:lname]}", "user_email",
-                                 @user[:email])
-        end
-        it 'should filter by user project name' do
-          nonSharedDs = @datasets.map { |o| o if o[:shared]==false}.compact
-          test_filter_by_eq_attr(@project, nonSharedDs, "", "owner", "#{@user[:fname]} #{@user[:lname]}", "hdfs_user",
-                                 "#{@project[:projectname]}__#{@user[:username]}")
-        end
-        it 'should filter by size == ' do
-          test_filter_by_eq_attr(@project, @datasets, "", "size", 0, "size", 0)#folders have no size but filter should work
-        end
-        it 'should filter by size > ' do
-          test_filter_by_gt_attr(@project, @datasets, "", "size", -1, "size_gt", -1)
-        end
-        it 'should filter by size < ' do
-          test_filter_by_lt_attr(@project, @datasets, "", "size", 10, "size_lt", 10)
-        end
-        it 'should filter by modificationTime = ' do
-          s = @datasets.sample
-          mt = s[:attributes][:modificationTime]
-          if mt.length < 24
-            mt.insert(22, "0")
-          end
-          test_filter_by_eq_attr(@project, @datasets, "", "modificationTime", s[:attributes][:modificationTime], "modification_time", mt)
-        end
-        it 'should filter by modificationTime <' do
-          s = @datasets.sample
-          mt = s[:attributes][:modificationTime]
-          if mt.length < 24
-            mt.insert(22, "0")
-          end
-          test_filter_by_lt_attr(@project, @datasets, "", "modificationTime", s[:attributes][:modificationTime], "modification_time_lt", mt)
-        end
-        it 'should filter by modificationTime >' do
-          s = @datasets.sample
-          mt = s[:attributes][:modificationTime]
-          if mt.length < 24
-            mt.insert(22, "0")
-          end
-          test_filter_by_gt_attr(@project, @datasets, "", "modificationTime", s[:attributes][:modificationTime], "modification_time_gt", mt)
-        end
-        it 'should filter by accessTime =' do
-          s = @datasets.sample
-          acct = s[:attributes][:accessTime]
-          test_filter_by_eq_attr(@project, @datasets, "", "accessTime", acct, "access_time", acct)
-        end
-        it 'should filter datasets by accessTime <' do
-          s = @datasets.sample
-          acct = s[:attributes][:accessTime]
-          test_filter_by_lt_attr(@project, @datasets, "", "accessTime", acct, "access_time_lt", acct)
-        end
-        it 'should filter datasets by accessTime >' do
-          s = @datasets.sample
-          acct = s[:attributes][:accessTime]
-          test_filter_by_gt_attr(@project, @datasets, "", "accessTime", acct, "access_time_gt", acct)
         end
       end
       context 'dataset content' do

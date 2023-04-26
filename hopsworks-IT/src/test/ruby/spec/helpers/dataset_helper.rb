@@ -109,8 +109,8 @@ module DatasetHelper
     request_dataset_access(requestingProject, ds[:attributes][:id])
   end
 
-  def request_access_by_dataset(dataset, requesting_project)
-    dataset_inode = get_dataset_inode(dataset)
+  def request_access_by_dataset(origin_project, dataset, requesting_project)
+    dataset_inode = get_dataset_inode(origin_project, dataset)
     query = "#{ENV['HOPSWORKS_API']}/request/access"
     payload = {inodeId: dataset_inode[:id], projectId: requesting_project[:id]}
     pp "#{query}, #{payload}" if defined?(@debugOpt) && @debugOpt == true
@@ -250,10 +250,25 @@ module DatasetHelper
     expect_status_details(204)
   end
 
-  def get_dataset_inode(dataset)
-    inode = INode.where(partition_id: dataset[:partition_id], parent_id: dataset[:inode_pid], name: dataset[:inode_name])
-    expect(inode.length).to eq(1), "inode not found for dataset: #{dataset[:inode_name]}"
-    inode.first
+  def get_dataset_inode(project, dataset)
+    puts dataset
+    if dataset[:dstype] == 0
+      projects_root_inode = INode.where(parent_id:1, name: "Projects")
+      expect(projects_root_inode.length).to eq(1), "inode not found for project: #{project[:projectname]}"
+      project_inode = INode.where(parent_id:projects_root_inode.first[:id], name: project[:projectname])
+      dataset_inode = INode.where(parent_id:project_inode.first[:id], name: dataset[:inode_name])
+    else
+      apps_inode = INode.where(parent_id:1, name:"apps")
+      hive_inode = INode.where(parent_id:apps_inode.first[:id], name:"hive")
+      warehouse_inode = INode.where(parent_id:hive_inode.first[:id], name:"warehouse")
+      if dataset[:dstype] == 1
+        dataset_inode = INode.where(parent_id:warehouse_inode.first[:id], name:"#{project[:projectname].downcase}.db")
+      elsif dataset[:dstype] == 2
+        dataset_inode = INode.where(parent_id:warehouse_inode.first[:id], name:"#{project[:projectname].downcase}_featurestore.db")
+      end
+    end
+    expect(dataset_inode.length).to eq(1), "inode not found for dataset: #{dataset[:inode_name]}"
+    dataset_inode.first
   end
 
   def publish_dataset(project, dataset_name, datasetType: "DATASET")

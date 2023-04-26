@@ -157,7 +157,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
   /**
    * find inode by id
    * <p/>
-   * @param id
+   * @param ids
    * @return
    */
   public List<Inode> findByIdList(List<Long> ids) {

@@ -49,6 +49,7 @@ import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -206,26 +207,29 @@ public class HopsFSProvenanceController {
     
     try {
       List<ProvDatasetDTO> result = new ArrayList<>();
+      Inode projectInode = inodeController.getProjectRoot(project.getName());
       for (Dataset dataset : project.getDatasetCollection()) {
-        String datasetPath = Utils.getFileSystemDatasetPath(dataset, settings);
-        ProvCoreDTO provCore = getProvCoreXAttr(datasetPath, udfso);
+        Path datasetPath = Utils.getDatasetPath(dataset, settings);
+        ProvCoreDTO provCore = getProvCoreXAttr(datasetPath.toString(), udfso);
         if(provCore == null) {
           throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.INTERNAL_ERROR, Level.WARNING,
             "malformed dataset - provenance", "no provenance core xattr");
         }
-        ProvDatasetDTO dsState = new ProvDatasetDTO(dataset.getName(), dataset.getInode().getId(), provCore.getType());
+        Inode datasetInode = inodeController.getProjectDatasetInode(projectInode, datasetPath.toString(), dataset);
+        ProvDatasetDTO dsState = new ProvDatasetDTO(dataset.getName(), datasetInode.getId(), provCore.getType());
         result.add(dsState);
       }
       for(DatasetSharedWith dataset : project.getDatasetSharedWithCollection()) {
-        String datasetPath = Utils.getFileSystemDatasetPath(dataset.getDataset(), settings);
-        ProvCoreDTO provCore = getProvCoreXAttr(datasetPath, udfso);
+        Path datasetPath = Utils.getDatasetPath(dataset.getDataset(), settings);
+        Inode datasetInode = inodeController.getInodeAtPath(datasetPath.toString());
+        ProvCoreDTO provCore = getProvCoreXAttr(datasetPath.toString(), udfso);
         if(provCore == null) {
           throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.INTERNAL_ERROR, Level.WARNING,
             "malformed dataset - provenance", "no provenance core xattr");
         }
         ProvDatasetDTO dsState = new ProvDatasetDTO(
           dataset.getDataset().getProject().getName() + "::" + dataset.getDataset().getName(),
-          dataset.getDataset().getInode().getId(), provCore.getType());
+          datasetInode.getId(), provCore.getType());
         result.add(dsState);
       }
       return result;

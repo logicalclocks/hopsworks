@@ -40,9 +40,12 @@
 package io.hops.hopsworks.common.opensearch;
 
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturestoreXAttrsConstants;
+import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -52,6 +55,7 @@ import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.util.Settings;
+import org.apache.hadoop.fs.Path;
 import org.apache.lucene.search.join.ScoreMode;
 import org.opensearch.action.search.MultiSearchRequest;
 import org.opensearch.action.search.MultiSearchResponse;
@@ -108,6 +112,8 @@ public class OpenSearchController {
   private ProjectFacade projectFacade;
   @EJB
   private DatasetController datasetController;
+  @EJB
+  private InodeController inodeController;
   @EJB
   private KibanaClient kibanaClient;
   @EJB
@@ -181,8 +187,9 @@ public class OpenSearchController {
     }
     
     Dataset dataset = datasetController.getByProjectAndDsName(project,null, dsName);
-    final long datasetId = dataset.getInodeId();
-    SearchResponse response = executeSearchQuery(datasetSearchQuery(datasetId, searchTerm.toLowerCase()));
+    Path datasetPath = Utils.getDatasetPath(dataset, settings);
+    Inode datasetInode = inodeController.getInodeAtPath(datasetPath.toString());
+    SearchResponse response = executeSearchQuery(datasetSearchQuery(datasetInode.getId(), searchTerm.toLowerCase()));
     if (response.status().getStatus() == 200) {
       if (response.getHits().getHits().length > 0) {
         return response.getHits().getHits();
@@ -396,7 +403,9 @@ public class OpenSearchController {
     Project project = projectFacade.find(projectId);
     Collection<DatasetSharedWith> datasetSharedWithCollection = project.getDatasetSharedWithCollection();
     for (DatasetSharedWith ds : datasetSharedWithCollection) {
-      long datasetId = ds.getDataset().getInode().getId();
+      Path datasetPath = Utils.getDatasetPath(ds.getDataset(), settings);
+      Inode datasetInode = inodeController.getInodeAtPath(datasetPath.toString());
+      long datasetId = datasetInode.getId();
       elasticHits = executeProjectSearchQuery(searchSpecificDataset(datasetId, searchTerm), elasticHits);
       elasticHits = executeProjectSearchQuery(datasetSearchQuery(datasetId, searchTerm), elasticHits);
     }

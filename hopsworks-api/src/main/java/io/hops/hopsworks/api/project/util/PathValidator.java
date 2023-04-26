@@ -156,11 +156,11 @@ public class PathValidator {
     String dsRelativePathStr = buildRelativePath(pathComponents, 1, pathComponents.length);
 
     if (dsRelativePathStr.isEmpty()) {
-      dsPath.setFullPath(datasetController.getDatasetPath(ds));
+      dsPath.setFullPath(Utils.getDatasetPath(ds, settings));
     } else {
       Path dsRelativePath = new Path(dsRelativePathStr);
       dsPath.setDsRelativePath(dsRelativePath);
-      Path fullPath = new Path(datasetController.getDatasetPath(ds), dsRelativePath);
+      Path fullPath = new Path(Utils.getDatasetPath(ds, settings), dsRelativePath);
       dsPath.setFullPath(fullPath);
     }
   }
@@ -194,7 +194,7 @@ public class PathValidator {
       throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, Level.FINE);
     }
 
-    Dataset originalDataset = datasetFacade.findByInode(dsInode);
+    Dataset originalDataset = datasetFacade.findByProjectAndName(project, dsInode.getInodePK().getName());
     if (originalDataset == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
     }

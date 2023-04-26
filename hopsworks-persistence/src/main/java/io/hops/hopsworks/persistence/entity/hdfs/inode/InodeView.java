@@ -117,48 +117,48 @@ public final class InodeView {
    * @param ds
    * @param path
    */
-  public InodeView(Inode parent, Dataset ds, String path) {
-    this.name = ds.getInode().getInodePK().getName();
+  public InodeView(Inode parent, Inode current, Dataset ds, String path) {
+    this.name = current.getInodePK().getName();
     this.parentId = parent.getId();
-    this.dir = ds.getInode().isDir();
-    this.id = ds.getInode().getId();
-    this.size = ds.getInode().getSize();
-    this.underConstruction = ds.getInode().isUnderConstruction();
+    this.dir = current.isDir();
+    this.id = current.getId();
+    this.size = current.getSize();
+    this.underConstruction = current.isUnderConstruction();
     this.publicId = ds.getPublicDsId();
     this.parent = false;
     this.path = path;
     this.modification
-      = new Date(ds.getInode().getModificationTime().longValue());
-    this.accessTime = new Date(ds.getInode().getAccessTime().longValue());
+      = new Date(current.getModificationTime().longValue());
+    this.accessTime = new Date(current.getAccessTime().longValue());
     this.shared = false;
     this.owningProjectName = parent.inodePK.getName();
     this.type = ds.getDsType();
     this.description = ds.getDescription();
     this.status = true;
-    if (ds.getInode().getHdfsUser() != null) {
-      this.owner = ds.getInode().getHdfsUser().getUsername();
+    if (current.getHdfsUser() != null) {
+      this.owner = current.getHdfsUser().getUsername();
     } else {
       this.owner = "";
     }
     this.permission = FsPermission.
-      createImmutable(ds.getInode().getPermission()).toString();
+      createImmutable(current.getPermission()).toString();
     this.publicDs = ds.getPublicDs();
     this.searchable = ds.isSearchable();
   }
   
-  public InodeView(Inode parent, DatasetSharedWith ds, String path) {
-    this.name = ds.getDataset().getInode().getInodePK().getName();
+  public InodeView(Inode parent, Inode sharedDsInode, DatasetSharedWith ds, String path) {
+    this.name = sharedDsInode.getInodePK().getName();
     this.parentId = parent.getId();
-    this.dir = ds.getDataset().getInode().isDir();
-    this.id = ds.getDataset().getInode().getId();
-    this.size = ds.getDataset().getInode().getSize();
-    this.underConstruction = ds.getDataset().getInode().isUnderConstruction();
+    this.dir = sharedDsInode.isDir();
+    this.id = sharedDsInode.getId();
+    this.size = sharedDsInode.getSize();
+    this.underConstruction = sharedDsInode.isUnderConstruction();
     this.publicId = ds.getDataset().getPublicDsId();
     this.parent = false;
     this.path = path;
     this.modification
-      = new Date(ds.getDataset().getInode().getModificationTime().longValue());
-    this.accessTime = new Date(ds.getDataset().getInode().getAccessTime().longValue());
+      = new Date(sharedDsInode.getModificationTime().longValue());
+    this.accessTime = new Date(sharedDsInode.getAccessTime().longValue());
     this.shared = true;
     this.owningProjectName = parent.inodePK.getName();
     this.type = ds.getDataset().getDsType();
@@ -177,13 +177,13 @@ public final class InodeView {
     }
     this.description = ds.getDataset().getDescription();
     this.status = ds.getAccepted();
-    if (ds.getDataset().getInode().getHdfsUser() != null) {
-      this.owner = ds.getDataset().getInode().getHdfsUser().getUsername();
+    if (sharedDsInode.getHdfsUser() != null) {
+      this.owner = sharedDsInode.getHdfsUser().getUsername();
     } else {
       this.owner = "";
     }
     this.permission = FsPermission.
-      createImmutable(ds.getDataset().getInode().getPermission()).toString();
+      createImmutable(sharedDsInode.getPermission()).toString();
     this.publicDs = ds.getDataset().getPublicDs();
     this.searchable = ds.getDataset().isSearchable();
   }

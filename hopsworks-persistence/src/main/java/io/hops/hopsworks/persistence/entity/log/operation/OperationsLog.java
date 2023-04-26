@@ -49,6 +49,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 
@@ -98,13 +99,13 @@ public class OperationsLog implements Serializable {
   public OperationsLog() {
   }
 
-  public OperationsLog(Dataset dataset, OperationType opType) {
+  public OperationsLog(Dataset dataset, Long datasetInodeId, OperationType opType) {
     this.opId = dataset.getId();
     this.opOn = OperationOn.Dataset;
     this.opType = opType;
     this.projectId = dataset.getProject().getId();
-    this.datasetId = dataset.getInodeId();
-    this.inodeId = dataset.getInodeId();
+    this.datasetId = datasetInodeId;
+    this.inodeId = datasetInodeId;
   }
 
   public OperationsLog(Project project, Long projectInodeId, OperationType opType) {

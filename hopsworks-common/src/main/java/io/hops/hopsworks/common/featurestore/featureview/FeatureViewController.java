@@ -27,6 +27,7 @@ import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.provenance.explicit.FeatureViewLinkController;
@@ -71,6 +72,8 @@ public class FeatureViewController {
   private FeatureViewFacade featureViewFacade;
   @EJB
   private InodeController inodeController;
+  @EJB
+  private Settings settings;
   @EJB
   private DistributedFsService dfs;
   @EJB
@@ -136,10 +139,11 @@ public class FeatureViewController {
 
     Dataset datasetsFolder = featurestoreConnector.getHopsfsConnector().getHopsfsDataset();
 
+
     DistributedFileSystemOps udfso = null;
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     try {
-      Path path = new Path(String.format(PATH_TO_FEATURE_VIEW, inodeController.getPath(datasetsFolder.getInode()),
+      Path path = new Path(String.format(PATH_TO_FEATURE_VIEW, Utils.getDatasetPath(datasetsFolder, settings),
           featureView.getName(), featureView.getVersion()));
 
       udfso = dfs.getDfsOps(username);

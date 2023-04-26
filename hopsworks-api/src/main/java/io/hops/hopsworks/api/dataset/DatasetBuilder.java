@@ -25,11 +25,11 @@ import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetSharedWithFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
@@ -39,7 +39,7 @@ import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -52,7 +52,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -67,8 +66,6 @@ public class DatasetBuilder {
   @EJB
   private DatasetSharedWithFacade datasetSharedWithFacade;
   @EJB
-  private DatasetController datasetController;
-  @EJB
   private InodeAttributeBuilder inodeAttributeBuilder;
   @EJB
   private InodeController inodeController;
@@ -80,6 +77,8 @@ public class DatasetBuilder {
   private TagBuilder tagsBuilder;
   @EJB
   private UsersBuilder usersBuilder;
+  @EJB
+  private Settings settings;
   
   //For testing
   public DatasetBuilder() {
@@ -153,15 +152,16 @@ public class DatasetBuilder {
         }
         //if shared parent and owner not this project
         dto.setAttributes(
-            inodeAttributeBuilder.build(new InodeAttributeDTO(), resourceRequest, dataset.getInode(), null, null));
+            inodeAttributeBuilder.build(new InodeAttributeDTO(), resourceRequest, datasetPath.getInode(),
+              datasetPath.getFullPath().getParent().toString(), null));
       } else if (DatasetType.DATASET.equals(dataset.getDsType())) {
         dto.setName(dataset.getName());
-        dto.setAttributes(inodeAttributeBuilder.build(new InodeAttributeDTO(), resourceRequest, dataset.getInode(),
+        dto.setAttributes(inodeAttributeBuilder.build(new InodeAttributeDTO(), resourceRequest, datasetPath.getInode(),
           parentPath, dirOwner));
       } else {
         dto.setName(dataset.getName());
-        dto.setAttributes(inodeAttributeBuilder.build(new InodeAttributeDTO(), resourceRequest, dataset.getInode(),
-          null, dirOwner));
+        dto.setAttributes(inodeAttributeBuilder.build(new InodeAttributeDTO(), resourceRequest, datasetPath.getInode(),
+          datasetPath.getFullPath().getParent().toString(), dirOwner));
       }
     }
     return dto;
@@ -195,25 +195,6 @@ public class DatasetBuilder {
     DatasetDTO dto = new DatasetDTO();
     uriItems(dto, uriInfo, datasetPath);
     return build(dto, uriInfo, resourceRequest, user, datasetPath, parentPath, dirOwner);
-  }
-
-  /**
-   * Build a single Dataset
-   *
-   * @param uriInfo
-   * @param resourceRequest
-   * @param name
-   * @return
-   */
-  public DatasetDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project accessProject, Users user,
-                          String name)
-    throws DatasetException, MetadataException, SchematizedTagException {
-    Dataset dataset = datasetController.getByProjectAndDsName(accessProject, null, name);
-    if (dataset == null) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
-    }
-    DatasetPath datasetPath = datasetHelper.getTopLevelDatasetPath(accessProject, dataset);
-    return build(uriInfo, resourceRequest, user, datasetPath, null, null, false);
   }
 
   /**
@@ -278,8 +259,11 @@ public class DatasetBuilder {
     List<Dataset> datasets, Project accessProject, Users user, String parentPath, Users dirOwner)
     throws DatasetException, MetadataException, SchematizedTagException {
     if (datasets != null && !datasets.isEmpty()) {
+      Inode projectInode = inodeController.getProjectRoot(accessProject.getName());
       for(Dataset dataset : datasets) {
-        DatasetPath datasetPath = datasetHelper.getTopLevelDatasetPath(accessProject, dataset);
+        Inode datasetInode = inodeController.getProjectDatasetInode(projectInode,
+          Utils.getDatasetPath(dataset, settings).toString(), dataset);
+        DatasetPath datasetPath = datasetHelper.getTopLevelDatasetPath(accessProject, dataset, datasetInode);
         dto.addItem(buildItems(uriInfo, resourceRequest, user, datasetPath, parentPath, dirOwner));
       }
     }
@@ -294,7 +278,9 @@ public class DatasetBuilder {
     throws DatasetException, MetadataException, SchematizedTagException {
     if (datasetSharedWithList != null && !datasetSharedWithList.isEmpty()) {
       for(DatasetSharedWith datasetSharedWith : datasetSharedWithList) {
-        DatasetPath datasetPath = datasetHelper.getTopLevelDatasetPath(accessProject, datasetSharedWith);
+        Path dsPath = Utils.getDatasetPath(datasetSharedWith.getDataset(), settings);
+        Inode datasetInode = inodeController.getInodeAtPath(dsPath.toString());
+        DatasetPath datasetPath = datasetHelper.getTopLevelDatasetPath(accessProject, datasetSharedWith, datasetInode);
         dto.addItem(buildItems(uriInfo, resourceRequest, user, datasetPath, parentPath, dirOwner));
       }
     }
@@ -325,17 +311,10 @@ public class DatasetBuilder {
           return order(a.getName(), b.getName(), sortBy.getParam());
         case PUBLIC:
           return order(a.getPublicDataset(), b.getPublicDataset(), sortBy.getParam());
-        case SIZE:
-          return order(a.getAttributes().getSize(), b.getAttributes().getSize(), sortBy.getParam());
         case TYPE:
           return order(a.getDatasetType().name(), b.getDatasetType().name(), sortBy.getParam());
         case SEARCHABLE:
           return order(a.isSearchable(), b.isSearchable(), sortBy.getParam());
-        case MODIFICATION_TIME:
-          return order(a.getAttributes().getModificationTime(), b.getAttributes().getModificationTime(),
-            sortBy.getParam());
-        case ACCESS_TIME:
-          return order(a.getAttributes().getAccessTime(), b.getAttributes().getAccessTime(), sortBy.getParam());
         default:
           throw new UnsupportedOperationException("Sort By " + sortBy + " not supported");
       }

@@ -17,7 +17,7 @@ package io.hops.hopsworks.api.modelregistry.dto;
 
 import io.hops.hopsworks.api.modelregistry.models.dto.ModelDTO;
 import io.hops.hopsworks.common.api.RestDTO;
-import io.hops.hopsworks.persistence.entity.dataset.Dataset;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -44,8 +44,8 @@ public class ModelRegistryDTO extends RestDTO<ModelRegistryDTO> {
     this.datasetInodeId = datasetInodeId;
   }
   
-  public static ModelRegistryDTO fromDataset(Dataset ds) {
-    return new ModelRegistryDTO(ds.getProject(), ds.getInodeId());
+  public static ModelRegistryDTO fromDataset(Project project, Inode modelRegistryInode) {
+    return new ModelRegistryDTO(project, modelRegistryInode.getId());
   }
   
   @XmlElement(name = "id")

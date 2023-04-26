@@ -44,6 +44,7 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import io.hops.hopsworks.persistence.entity.dataset.DatasetPermissions;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.user.UserCardDTO;
@@ -81,9 +82,9 @@ public class DataSetDTO {
     this.generateReadme = generateReadme;
   }
 
-  public DataSetDTO(Dataset ds, Project project, List<String> sharedWith) {
-    this.inodeId = ds.getInode().getId();
-    this.name = ds.getInode().getInodePK().getName();
+  public DataSetDTO(Dataset ds, Inode datasetInode, Project project, List<String> sharedWith) {
+    this.inodeId = datasetInode.getId();
+    this.name = datasetInode.getInodePK().getName();
     this.description = ds.getDescription();
     this.projectName = project.getName();
     this.sharedWith = sharedWith;
@@ -108,23 +109,6 @@ public class DataSetDTO {
       projectTeam.add(new UserCardDTO(member.getUser().getFname(), member.
               getUser().getLname(), member.getUser().getEmail()));
     }
-  }
-
-  public DataSetDTO(Dataset ds) {
-    this.inodeId = ds.getInode().getId();
-    this.name = ds.getInode().getInodePK().getName();
-    this.description = ds.getDescription();
-    this.projectName = ds.getProject().getName();
-    this.sharedWith = sharedWith;
-    this.projectTeam = new ArrayList<>();
-    this.isPublic = ds.isPublicDs();
-    this.searchable = ds.isSearchable();
-    //this have to be done because project team contains too much info.
-    for (ProjectTeam member : ds.getProject().getProjectTeamCollection()) {
-      projectTeam.add(new UserCardDTO(member.getUser().getFname(), member.
-          getUser().getLname(), member.getUser().getEmail()));
-    }
-    this.type = ds.getDsType();
   }
   
   public Long getInodeId() {

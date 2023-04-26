@@ -348,7 +348,7 @@ public class ProjectService {
     Inode inode = inodes.findById(inodeId);
     Inode parent = inodes.findParent(inode);
     Project proj = projectFacade.findByName(parent.getInodePK().getName());
-    Dataset ds = datasetFacade.findByProjectAndInode(proj, inode);
+    Dataset ds = datasetFacade.findByProjectAndName(proj, inode.getInodePK().getName());
     if (ds != null && !ds.isSearchable()) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.README_NOT_ACCESSIBLE, Level.FINE);
     }
@@ -373,7 +373,9 @@ public class ProjectService {
     if (inode == null) {
       return null;
     }
-    Dataset ds = datasetFacade.findByInode(inode);
+    Inode projectInode = inodes.findParent(inode);
+    Project project = projectFacade.findByName(projectInode.getInodePK().getName());
+    Dataset ds = datasetFacade.findByProjectAndName(project, inode.getInodePK().getName());
     if (ds != null && !ds.isSearchable()) {
       return null;
     }
@@ -410,7 +412,7 @@ public class ProjectService {
     throws DatasetException {
     Inode inode = inodes.findById(inodeId);
     Project proj = datasetController.getOwningProject(inode);
-    Dataset ds = datasetFacade.findByProjectAndInode(proj, inode);
+    Dataset ds = datasetFacade.findByProjectAndName(proj, inode.getInodePK().getName());
     if (ds == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE, "inodeId: " + inodeId);
     }
@@ -422,7 +424,7 @@ public class ProjectService {
         sharedWith.add(d.getProject().getName());
       }
     }
-    DataSetDTO dataset = new DataSetDTO(ds, proj, sharedWith);
+    DataSetDTO dataset = new DataSetDTO(ds, inode, proj, sharedWith);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(dataset).build();
   }
 

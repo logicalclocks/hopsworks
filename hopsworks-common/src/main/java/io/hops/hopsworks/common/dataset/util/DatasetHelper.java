@@ -24,6 +24,7 @@ import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.hadoop.fs.Path;
@@ -101,35 +102,41 @@ public class DatasetHelper {
       DatasetSharedWith datasetSharedWith = datasetSharedWithFacade.findByProjectAndDataset(project, dataset);
       datasetPath.setDatasetSharedWith(datasetSharedWith);
     }
+    //This line would benefit from an Inode cache on /Projects or even /Projects/project level
+    Inode projectInode = inodeController.getProjectRoot(dataset.getProject().getName());
+    Inode datasetInode = inodeController.getProjectDatasetInode(projectInode,
+      datasetPath.getDatasetFullPath().toString(), datasetPath.getDataset());
     if (datasetPath.isTopLevelDataset()) {
-      datasetPath.setInode(datasetPath.getDataset().getInode());
+      datasetPath.setInode(datasetInode);
+      return datasetPath;
     } else {
-      datasetPath.setInode(inodeController.getInodeAtPath(datasetPath.getDataset().getInode(),
+      datasetPath.setInode(inodeController.getInodeAtPath(datasetInode,
         datasetPath.getDatasetFullPath().depth(), datasetPath.getDatasetRelativePath()));// expensive
     }
     return datasetPath;
   }
   
-  public DatasetPath getTopLevelDatasetPath(Project project, Dataset dataset) throws DatasetException {
+  public DatasetPath getTopLevelDatasetPath(Project project, Dataset dataset, Inode dsInode) throws DatasetException {
     DatasetPath datasetPath;
     if(dataset.isShared(project)) {
       DatasetSharedWith datasetSharedWith = datasetSharedWithFacade.findByProjectAndDataset(project, dataset);
-      datasetPath = getTopLevelDatasetPath(project, datasetSharedWith);
+      datasetPath = getTopLevelDatasetPath(project, datasetSharedWith, dsInode);
     } else {
       datasetPath = getNewDatasetPath(project, dataset.getName(), dataset.getDsType());
       datasetPath.setDataset(dataset);
-      datasetPath.setInode(dataset.getInode());
+      datasetPath.setInode(dsInode);
     }
     return datasetPath;
   }
   
-  public DatasetPath getTopLevelDatasetPath(Project project, DatasetSharedWith datasetSharedWith)
+  public DatasetPath getTopLevelDatasetPath(Project project, DatasetSharedWith datasetSharedWith,
+                                            Inode datasetSharedWithInode)
     throws DatasetException {
     String path = datasetSharedWith.getDatasetName();
     DatasetPath datasetPath = getNewDatasetPath(project, path, datasetSharedWith.getDataset().getDsType());
     datasetPath.setDataset(datasetSharedWith.getDataset());
     datasetPath.setDatasetSharedWith(datasetSharedWith);
-    datasetPath.setInode(datasetSharedWith.getDataset().getInode());
+    datasetPath.setInode(datasetSharedWithInode);
     return datasetPath;
   }
   
