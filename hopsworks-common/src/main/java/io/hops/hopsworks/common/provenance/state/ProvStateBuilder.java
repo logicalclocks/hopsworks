@@ -15,9 +15,11 @@
  */
 package io.hops.hopsworks.common.provenance.state;
 
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.PaginationParams;
 import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -32,11 +34,14 @@ import java.util.logging.Level;
 public class ProvStateBuilder {
   @EJB
   private ProvStateController stateProvCtrl;
+  @EJB
+  private InodeController inodeController;
   
   public ProvStateDTO build(Project project, ProvStateParams stateParams, PaginationParams pagParams)
     throws ProvenanceException {
+    Inode projectInode = inodeController.getProjectRoot(project.getName());
     ProvStateParamBuilder paramBuilder = new ProvStateParamBuilder()
-      .filterByField(ProvStateParser.FieldsP.PROJECT_I_ID, project.getInode().getId())
+      .filterByField(ProvStateParser.FieldsP.PROJECT_I_ID, projectInode.getId())
       .filterByFields(stateParams.getFileStateFilterBy())
       .sortByFields(stateParams.getFileStateSortBy())
       .filterByXAttrs(stateParams.getExactXAttrParams())
@@ -48,8 +53,8 @@ public class ProvStateBuilder {
       .paginate(pagParams.getOffset(), pagParams.getLimit());
   
     switch (stateParams.getReturnType()) {
-      case LIST: return stateProvCtrl.provFileStateList(project, paramBuilder);
-      case COUNT: return stateProvCtrl.provFileStateCount(project, paramBuilder);
+      case LIST: return stateProvCtrl.provFileStateList(projectInode, paramBuilder);
+      case COUNT: return stateProvCtrl.provFileStateCount(projectInode, paramBuilder);
       default:
         throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.UNSUPPORTED, Level.INFO,
           "return type: " + stateParams.getReturnType() + " is not managed");

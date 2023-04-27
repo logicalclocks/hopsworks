@@ -25,6 +25,7 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
@@ -67,6 +68,8 @@ public class ProjectQuotasController {
   @Inject
   private FeaturestoreController featurestoreController;
   @Inject
+  private InodeController inodeController;
+  @Inject
   private DistributedFsService dfs;
 
   public Quotas getQuotas(Project project) {
@@ -78,10 +81,9 @@ public class ProjectQuotasController {
       quotas.setYarnQuotaInSecs(yarnQuotaOpt.get().getQuotaRemaining());
       quotas.setYarnUsedQuotaInSecs(yarnQuotaOpt.get().getTotal());
     }
-
     // HDFS project directory quota
     Optional<HdfsDirectoryWithQuotaFeature> projectInodeAttrsOptional =
-        hdfsDirectoryWithQuotaFeatureFacade.getByInodeId(project.getInode().getId());
+        hdfsDirectoryWithQuotaFeatureFacade.getByInodeId(inodeController.getProjectRoot(project.getName()).getId());
     if (projectInodeAttrsOptional.isPresent()) {
       // storage quota
       Long storageQuota = projectInodeAttrsOptional.get().getSsquota().longValue();

@@ -132,9 +132,7 @@ angular.module('hopsWorksApp')
 
             self.projectFile = {
               description: null,
-              id: null,
               name: null,
-              parentId: null,
               path: null,
               quotas: null
             };
@@ -183,9 +181,7 @@ angular.module('hopsWorksApp')
               ProjectService.get({}, {'id': self.projectId}).$promise.then(
                       function (success) {
                         self.currentProject = success;
-                        self.projectFile.id = self.currentProject.inodeid;
                         self.projectFile.name = self.currentProject.projectName;
-                        self.projectFile.parentId = self.currentProject.projectTeam[0].project.inode.inodePK.parentId;
                         self.projectFile.path = "/Projects/" + self.currentProject.projectName;
                         self.projectFile.description = self.currentProject.description;
                         self.projectFile.quotas = self.currentProject.quotas;
@@ -194,11 +190,6 @@ angular.module('hopsWorksApp')
                         } else {
                           self.tourService.resetTours();
                         }
-                        $rootScope.$broadcast('setMetadata', {file:
-                                  {id: self.projectFile.id,
-                                    name: self.projectFile.name,
-                                    parentId: self.projectFile.parentId,
-                                    path: self.projectFile.path}});
 
                         self.projectMembers = self.currentProject.projectTeam;
                         self.alreadyChoosenServices = [];

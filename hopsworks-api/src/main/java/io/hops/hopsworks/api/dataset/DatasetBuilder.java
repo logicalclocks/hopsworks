@@ -28,6 +28,7 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.MetadataException;
@@ -226,10 +227,10 @@ public class DatasetBuilder {
   public DatasetDTO buildItems(UriInfo uriInfo, ResourceRequest resourceRequest,
     ResourceRequest sharedDatasetResourceRequest, Project project, Users user)
     throws DatasetException, MetadataException, SchematizedTagException {
-    Inode parent = project.getInode();
-    datasetHelper.checkResourceRequestLimit(resourceRequest, parent.getChildrenNum());
-    String parentPath = inodeController.getPath(parent);
-    Users dirOwner = userFacade.findByUsername(parent.getHdfsUser().getUsername());
+    Inode projectInode = inodeController.getProjectRoot(project.getName());
+    datasetHelper.checkResourceRequestLimit(resourceRequest, projectInode.getChildrenNum());
+    String parentPath = Utils.getProjectPath(project.getName());
+    Users dirOwner = userFacade.findByUsername(projectInode.getHdfsUser().getUsername());
     return items(new DatasetDTO(), uriInfo, resourceRequest, sharedDatasetResourceRequest, project, user, parentPath,
       dirOwner);
   }

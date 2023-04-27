@@ -99,6 +99,7 @@ public class ModelRegistryResource {
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
     ModelRegistryDTO dto = modelRegistryBuilder.build(uriInfo, resourceRequest, user, project);
+
     return Response.ok().entity(dto).build();
   }
 

@@ -160,9 +160,8 @@ describe "On #{ENV['OS']}" do
       before :all do
         with_valid_session
         @proj = create_project
-        proj_inode = INode.where("partition_id": @proj[:partition_id],"parent_id": @proj[:inode_pid], "name": @proj[:inode_name])
-        expect(proj_inode.length).to eq 1
-        @proj_inode_id=proj_inode[0][:id]
+        proj_inode = get_project_inode(@proj)
+        @proj_inode_id=proj_inode[:id]
       end
 
       it "should be able to generate a jwt token with valid attributes" do
@@ -187,9 +186,8 @@ describe "On #{ENV['OS']}" do
       before :all do
         with_valid_project
         @proj = get_project
-        proj_inode = INode.where("partition_id": @proj[:partition_id],"parent_id": @proj[:inode_pid], "name": @proj[:inode_name])
-        expect(proj_inode.length).to eq 1
-        @proj_inode_id=proj_inode[0][:id]
+        proj_inode = get_project_inode(@proj)
+        @proj_inode_id=proj_inode[:id]
       end
 
       it "should be able to create a jwt token in the project with data_scientist role" do

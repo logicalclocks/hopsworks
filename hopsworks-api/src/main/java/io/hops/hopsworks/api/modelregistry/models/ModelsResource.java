@@ -160,8 +160,8 @@ public class ModelsResource {
     ProvStateDTO fileState = modelsController.getModel(modelRegistryProject, id);
 
     if(fileState != null) {
-      ModelDTO dto = modelsBuilder.build(uriInfo, resourceRequest, user, userProject, modelRegistryProject, fileState,
-              modelUtils.getModelsDatasetPath(userProject, modelRegistryProject));
+      ModelDTO dto = modelsBuilder.build(uriInfo, resourceRequest, user, userProject, modelRegistryProject,
+        fileState, modelUtils.getModelsDatasetPath(userProject, modelRegistryProject));
       if(dto == null) {
         throw new GenericException(RESTCodes.GenericErrorCode.NOT_AUTHORIZED_TO_ACCESS, Level.FINE);
       } else {

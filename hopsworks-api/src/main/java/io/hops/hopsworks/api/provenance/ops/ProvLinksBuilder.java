@@ -15,14 +15,17 @@
  */
 package io.hops.hopsworks.api.provenance.ops;
 
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.PaginationParams;
 import io.hops.hopsworks.common.provenance.ops.ProvLinksParamBuilder;
 import io.hops.hopsworks.common.provenance.ops.ProvOpsControllerIface;
 import io.hops.hopsworks.common.provenance.ops.dto.ProvLinksDTO;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -33,15 +36,18 @@ import javax.inject.Inject;
 public class ProvLinksBuilder {
   @Inject
   private ProvOpsControllerIface opsProvCtrl;
+  @EJB
+  private InodeController inodeController;
 
   public ProvLinksDTO build(Project project, ProvLinksBeanParams opsParams, PaginationParams pagParams)
           throws ProvenanceException, GenericException {
+    Inode projectInode = inodeController.getProjectRoot(project.getName());
     ProvLinksParamBuilder paramBuilder = new ProvLinksParamBuilder()
             .onlyApps(opsParams.isOnlyApps())
             .linkType(opsParams.isFullLink())
             .paginate(pagParams.getOffset(), pagParams.getLimit())
             .expand(opsParams.getUpstream(), opsParams.getDownstream())
             .filterByFields(opsParams.getFilterBy());
-    return opsProvCtrl.provLinks(project, paramBuilder, true);
+    return opsProvCtrl.provLinks(project, projectInode, paramBuilder, true);
   }
 }

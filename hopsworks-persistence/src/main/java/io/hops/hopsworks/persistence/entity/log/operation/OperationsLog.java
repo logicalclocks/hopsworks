@@ -107,12 +107,12 @@ public class OperationsLog implements Serializable {
     this.inodeId = dataset.getInodeId();
   }
 
-  public OperationsLog(Project project, OperationType opType) {
+  public OperationsLog(Project project, Long projectInodeId, OperationType opType) {
     this.opId = project.getId();
     this.opOn = OperationOn.Project;
     this.opType = opType;
     this.projectId = project.getId();
-    this.inodeId = project.getInode().getId();
+    this.inodeId = projectInodeId;
     this.datasetId = -1L;
   }
 

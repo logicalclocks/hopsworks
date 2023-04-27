@@ -25,49 +25,49 @@ describe "On #{ENV['OS']}" do
       @data_scientist = create_user()
       add_member_to_project(@project, @data_scientist[:email], "Data scientist")
       @read_only_dataset = create_dataset_by_name_checked(@project, "dataset_#{short_random_id}", permission: "READ_ONLY")
-      @read_only_dataset_group = "#{@project[:inode_name]}__#{@read_only_dataset[:inode_name]}"
-      @read_only_dataset_read_group = "#{@project[:inode_name]}__#{@read_only_dataset[:inode_name]}__read"
+      @read_only_dataset_group = "#{@project[:projectname]}__#{@read_only_dataset[:inode_name]}"
+      @read_only_dataset_read_group = "#{@project[:projectname]}__#{@read_only_dataset[:inode_name]}__read"
       @owners_only_dataset = create_dataset_by_name_checked(@project, "dataset_#{short_random_id}", permission: "EDITABLE_BY_OWNERS")
-      @owners_only_dataset_group = "#{@project[:inode_name]}__#{@owners_only_dataset[:inode_name]}"
-      @owners_only_dataset_read_group = "#{@project[:inode_name]}__#{@owners_only_dataset[:inode_name]}__read"
+      @owners_only_dataset_group = "#{@project[:projectname]}__#{@owners_only_dataset[:inode_name]}"
+      @owners_only_dataset_read_group = "#{@project[:projectname]}__#{@owners_only_dataset[:inode_name]}__read"
       @editable_dataset = create_dataset_by_name_checked(@project, "dataset_#{short_random_id}", permission: "EDITABLE")
-      @editable_dataset_group = "#{@project[:inode_name]}__#{@editable_dataset[:inode_name]}"
-      @editable_dataset_read_group = "#{@project[:inode_name]}__#{@editable_dataset[:inode_name]}__read"
+      @editable_dataset_group = "#{@project[:projectname]}__#{@editable_dataset[:inode_name]}"
+      @editable_dataset_read_group = "#{@project[:projectname]}__#{@editable_dataset[:inode_name]}__read"
       @data_owner1 = create_user()
       add_member_to_project(@project, @data_owner1[:email], "Data owner")
       @data_scientist1 = create_user()
       add_member_to_project(@project, @data_scientist1[:email], "Data scientist")
 
-      @data_owner_hdfs_username = "#{@project[:inode_name]}__#{@data_owner[:username]}"
-      @data_owner1_hdfs_username = "#{@project[:inode_name]}__#{@data_owner1[:username]}"
-      @data_scientist_hdfs_username = "#{@project[:inode_name]}__#{@data_scientist[:username]}"
-      @data_scientist1_hdfs_username = "#{@project[:inode_name]}__#{@data_scientist1[:username]}"
+      @data_owner_hdfs_username = "#{@project[:projectname]}__#{@data_owner[:username]}"
+      @data_owner1_hdfs_username = "#{@project[:projectname]}__#{@data_owner1[:username]}"
+      @data_scientist_hdfs_username = "#{@project[:projectname]}__#{@data_scientist[:username]}"
+      @data_scientist1_hdfs_username = "#{@project[:projectname]}__#{@data_scientist1[:username]}"
       @data_owners_no_project_owner = [@data_owner_hdfs_username, @data_owner1_hdfs_username]
-      @data_owners = ["#{@project[:inode_name]}__#{@user[:username]}", @data_owner_hdfs_username, @data_owner1_hdfs_username]
+      @data_owners = ["#{@project[:projectname]}__#{@user[:username]}", @data_owner_hdfs_username, @data_owner1_hdfs_username]
       @data_scientists = [@data_scientist_hdfs_username, @data_scientist1_hdfs_username]
       @All_users_no_project_owner = [@data_owner_hdfs_username, @data_owner1_hdfs_username,
                                      @data_scientist_hdfs_username, @data_scientist1_hdfs_username]
-      @All_users = ["#{@project[:inode_name]}__#{@user[:username]}", @data_owner_hdfs_username,
+      @All_users = ["#{@project[:projectname]}__#{@user[:username]}", @data_owner_hdfs_username,
                     @data_owner1_hdfs_username, @data_scientist_hdfs_username, @data_scientist1_hdfs_username]
 
       @project1 = create_project
       @shared_read_only_dataset = create_dataset_by_name_checked(@project1, "dataset_#{short_random_id}", permission: "READ_ONLY")
       request_access(@project1, @shared_read_only_dataset, @project)
       share_dataset(@project1, @shared_read_only_dataset[:inode_name], @project[:projectname], permission: "READ_ONLY")
-      @shared_read_only_dataset_group = "#{@project1[:inode_name]}__#{@shared_read_only_dataset[:inode_name]}"
-      @shared_read_only_dataset_read_group = "#{@project1[:inode_name]}__#{@shared_read_only_dataset[:inode_name]}__read"
+      @shared_read_only_dataset_group = "#{@project1[:projectname]}__#{@shared_read_only_dataset[:inode_name]}"
+      @shared_read_only_dataset_read_group = "#{@project1[:projectname]}__#{@shared_read_only_dataset[:inode_name]}__read"
 
       @shared_owners_only_dataset = create_dataset_by_name_checked(@project1, "dataset_#{short_random_id}", permission: "READ_ONLY")
       request_access(@project1, @shared_owners_only_dataset, @project)
       share_dataset(@project1, @shared_owners_only_dataset[:inode_name], @project[:projectname], permission: "EDITABLE_BY_OWNERS")
-      @shared_owners_only_dataset_group = "#{@project1[:inode_name]}__#{@shared_owners_only_dataset[:inode_name]}"
-      @shared_owners_only_dataset_read_group = "#{@project1[:inode_name]}__#{@shared_owners_only_dataset[:inode_name]}__read"
+      @shared_owners_only_dataset_group = "#{@project1[:projectname]}__#{@shared_owners_only_dataset[:inode_name]}"
+      @shared_owners_only_dataset_read_group = "#{@project1[:projectname]}__#{@shared_owners_only_dataset[:inode_name]}__read"
 
       @shared_editable_dataset = create_dataset_by_name_checked(@project1, "dataset_#{short_random_id}", permission: "READ_ONLY")
       request_access(@project1, @shared_editable_dataset, @project)
       share_dataset(@project1, @shared_editable_dataset[:inode_name], @project[:projectname], permission: "EDITABLE")
-      @shared_editable_dataset_group = "#{@project1[:inode_name]}__#{@shared_editable_dataset[:inode_name]}"
-      @shared_editable_dataset_read_group = "#{@project1[:inode_name]}__#{@shared_editable_dataset[:inode_name]}__read"
+      @shared_editable_dataset_group = "#{@project1[:projectname]}__#{@shared_editable_dataset[:inode_name]}"
+      @shared_editable_dataset_read_group = "#{@project1[:projectname]}__#{@shared_editable_dataset[:inode_name]}__read"
     end
     before(:each) do
       create_session(@project[:username], "Pass123")# login as project owner
@@ -86,21 +86,21 @@ describe "On #{ENV['OS']}" do
         test_editable_dataset(@project, @editable_dataset[:inode_name], @data_owner1, @data_scientist1)
       end
       it 'should fail to write to a read only shared dataset' do
-        test_read_only_dataset(@project, "#{@project1[:inode_name]}::#{@shared_read_only_dataset[:inode_name]}",
+        test_read_only_dataset(@project, "#{@project1[:projectname]}::#{@shared_read_only_dataset[:inode_name]}",
                                @data_owner, @data_scientist)
-        test_read_only_dataset(@project, "#{@project1[:inode_name]}::#{@shared_read_only_dataset[:inode_name]}",
+        test_read_only_dataset(@project, "#{@project1[:projectname]}::#{@shared_read_only_dataset[:inode_name]}",
                                @data_owner1, @data_scientist1)
       end
       it 'should only allow owners to write to an owner only shared dataset' do
-        test_owners_only_dataset(@project, "#{@project1[:inode_name]}::#{@shared_owners_only_dataset[:inode_name]}",
+        test_owners_only_dataset(@project, "#{@project1[:projectname]}::#{@shared_owners_only_dataset[:inode_name]}",
                                  @data_owner, @data_scientist)
-        test_owners_only_dataset(@project, "#{@project1[:inode_name]}::#{@shared_owners_only_dataset[:inode_name]}",
+        test_owners_only_dataset(@project, "#{@project1[:projectname]}::#{@shared_owners_only_dataset[:inode_name]}",
                                  @data_owner1, @data_scientist1)
       end
       it 'should allow any user to write to an editable shared dataset' do
-        test_editable_dataset(@project, "#{@project1[:inode_name]}::#{@shared_editable_dataset[:inode_name]}",
+        test_editable_dataset(@project, "#{@project1[:projectname]}::#{@shared_editable_dataset[:inode_name]}",
                               @data_owner, @data_scientist)
-        test_editable_dataset(@project, "#{@project1[:inode_name]}::#{@shared_editable_dataset[:inode_name]}",
+        test_editable_dataset(@project, "#{@project1[:projectname]}::#{@shared_editable_dataset[:inode_name]}",
                               @data_owner1, @data_scientist1)
       end
     end
@@ -119,8 +119,8 @@ describe "On #{ENV['OS']}" do
     context 'Change permission' do
       it 'should move data owner to read only group when changing permission from owner only to read only' do
         dataset = create_dataset_by_name_checked(@project, "dataset_#{short_random_id}", permission: "EDITABLE_BY_OWNERS")
-        read_group = "#{@project[:inode_name]}__#{dataset[:inode_name]}__read"
-        write_group = "#{@project[:inode_name]}__#{dataset[:inode_name]}"
+        read_group = "#{@project[:projectname]}__#{dataset[:inode_name]}__read"
+        write_group = "#{@project[:projectname]}__#{dataset[:inode_name]}"
         test_members_owners_only_dataset(@data_owners_no_project_owner, @data_scientists, write_group, read_group)
         update_dataset_permissions(@project, dataset[:inode_name], "READ_ONLY", datasetType: "&type=DATASET")
         expect_status_details(200)
@@ -128,8 +128,8 @@ describe "On #{ENV['OS']}" do
       end
       it 'should move data scientist to read only group when changing permission from editable to owner only' do
         dataset = create_dataset_by_name_checked(@project, "dataset_#{short_random_id}", permission: "EDITABLE")
-        read_group = "#{@project[:inode_name]}__#{dataset[:inode_name]}__read"
-        write_group = "#{@project[:inode_name]}__#{dataset[:inode_name]}"
+        read_group = "#{@project[:projectname]}__#{dataset[:inode_name]}__read"
+        write_group = "#{@project[:projectname]}__#{dataset[:inode_name]}"
         test_members_editable_dataset(@All_users_no_project_owner, write_group, read_group)
         update_dataset_permissions(@project, dataset[:inode_name], "EDITABLE_BY_OWNERS", datasetType: "&type=DATASET")
         expect_status_details(200)
@@ -137,8 +137,8 @@ describe "On #{ENV['OS']}" do
       end
       it 'should move members to read only group when changing permission from editable to read only' do
         dataset = create_dataset_by_name_checked(@project, "dataset_#{short_random_id}", permission: "EDITABLE")
-        read_group = "#{@project[:inode_name]}__#{dataset[:inode_name]}__read"
-        write_group = "#{@project[:inode_name]}__#{dataset[:inode_name]}"
+        read_group = "#{@project[:projectname]}__#{dataset[:inode_name]}__read"
+        write_group = "#{@project[:projectname]}__#{dataset[:inode_name]}"
         test_members_editable_dataset(@All_users_no_project_owner, write_group, read_group)
         update_dataset_permissions(@project, dataset[:inode_name], "READ_ONLY", datasetType: "&type=DATASET")
         expect_status_details(200)
@@ -146,8 +146,8 @@ describe "On #{ENV['OS']}" do
       end
       it 'should move members to write group when changing permission from read only to editable' do
         dataset = create_dataset_by_name_checked(@project, "dataset_#{short_random_id}", permission: "READ_ONLY")
-        read_group = "#{@project[:inode_name]}__#{dataset[:inode_name]}__read"
-        write_group = "#{@project[:inode_name]}__#{dataset[:inode_name]}"
+        read_group = "#{@project[:projectname]}__#{dataset[:inode_name]}__read"
+        write_group = "#{@project[:projectname]}__#{dataset[:inode_name]}"
         test_members_read_only_dataset(@All_users_no_project_owner, write_group, read_group)
         update_dataset_permissions(@project, dataset[:inode_name], "EDITABLE", datasetType: "&type=DATASET")
         expect_status_details(200)
@@ -227,25 +227,25 @@ describe "On #{ENV['OS']}" do
         add_member_to_project(project1, data_scientist1[:email], "Data scientist")
         add_member_to_project(project1, data_owner4[:email], "Data owner")
         add_member_to_project(project1, data_scientist4[:email], "Data scientist")
-        project1_owners = %W[#{project1[:inode_name]}__#{@user[:username]} #{project1[:inode_name]}__#{data_owner1[:username]} #{project1[:inode_name]}__#{data_owner4[:username]}]
-        project1_scientists = %W[#{project1[:inode_name]}__#{data_scientist1[:username]} #{project1[:inode_name]}__#{data_scientist4[:username]}]
+        project1_owners = %W[#{project1[:projectname]}__#{@user[:username]} #{project1[:projectname]}__#{data_owner1[:username]} #{project1[:projectname]}__#{data_owner4[:username]}]
+        project1_scientists = %W[#{project1[:projectname]}__#{data_scientist1[:username]} #{project1[:projectname]}__#{data_scientist4[:username]}]
         project1_users = project1_owners + project1_scientists
         add_member_to_project(project2, data_owner2[:email], "Data owner")
         add_member_to_project(project2, data_scientist2[:email], "Data scientist")
         add_member_to_project(project2, data_owner4[:email], "Data owner")
         add_member_to_project(project2, data_scientist4[:email], "Data scientist")
-        project2_owners = %W[#{project2[:inode_name]}__#{@user[:username]} #{project2[:inode_name]}__#{data_owner2[:username]} #{project2[:inode_name]}__#{data_owner4[:username]}]
-        project2_scientists = %W[#{project2[:inode_name]}__#{data_scientist2[:username]} #{project2[:inode_name]}__#{data_scientist4[:username]}]
+        project2_owners = %W[#{project2[:projectname]}__#{@user[:username]} #{project2[:projectname]}__#{data_owner2[:username]} #{project2[:projectname]}__#{data_owner4[:username]}]
+        project2_scientists = %W[#{project2[:projectname]}__#{data_scientist2[:username]} #{project2[:projectname]}__#{data_scientist4[:username]}]
         project2_users = project2_owners + project2_scientists
         add_member_to_project(project3, data_owner3[:email], "Data owner")
         add_member_to_project(project3, data_scientist3[:email], "Data scientist")
         add_member_to_project(project3, data_owner4[:email], "Data owner")
         add_member_to_project(project3, data_scientist4[:email], "Data scientist")
-        project3_owners = %W[#{project3[:inode_name]}__#{@user[:username]} #{project3[:inode_name]}__#{data_owner3[:username]} #{project3[:inode_name]}__#{data_owner4[:username]}]
-        project3_scientists = %W[#{project3[:inode_name]}__#{data_scientist3[:username]} #{project3[:inode_name]}__#{data_scientist4[:username]}]
+        project3_owners = %W[#{project3[:projectname]}__#{@user[:username]} #{project3[:projectname]}__#{data_owner3[:username]} #{project3[:projectname]}__#{data_owner4[:username]}]
+        project3_scientists = %W[#{project3[:projectname]}__#{data_scientist3[:username]} #{project3[:projectname]}__#{data_scientist4[:username]}]
         project3_users = project3_owners + project3_scientists
 
-        project4_owners = %W[#{project4[:inode_name]}__#{@user[:username]}]
+        project4_owners = %W[#{project4[:projectname]}__#{@user[:username]}]
         project4_scientists = %W[]
         project4_users = project3_owners + project3_scientists
 
@@ -336,7 +336,7 @@ describe "On #{ENV['OS']}" do
         change_member_role(@project, @data_owner[:email], "Data scientist")
         change_member_role(@project, @data_scientist[:email], "Data owner")
         @data_owners_no_project_owner = [@data_scientist_hdfs_username, @data_owner1_hdfs_username]
-        @data_owners = ["#{@project[:inode_name]}__#{@user[:username]}", @data_scientist_hdfs_username, @data_owner1_hdfs_username]
+        @data_owners = ["#{@project[:projectname]}__#{@user[:username]}", @data_scientist_hdfs_username, @data_owner1_hdfs_username]
         @data_scientists = [@data_owner_hdfs_username, @data_scientist1_hdfs_username]
       end
       it 'should move a data scientist to read group of an owner only dataset' do
@@ -357,28 +357,28 @@ describe "On #{ENV['OS']}" do
         @cleanup_published_dataset = create_dataset_by_name_checked(@project1, "dataset_#{short_random_id}",
                                                                     permission: "EDITABLE")
         publish_dataset_checked(@project1, @cleanup_published_dataset[:inode_name], datasetType: "DATASET")
-        chmod_hdfs("/Projects/#{@project1[:inode_name]}/#{@cleanup_published_dataset[:inode_name]}", 770)
+        chmod_hdfs("/Projects/#{@project1[:projectname]}/#{@cleanup_published_dataset[:inode_name]}", 770)
         test_dataset_permission(@project1, @cleanup_published_dataset[:inode_name], "rwxrwx---")
         @cleanup_owners_only_dataset = create_dataset_by_name_checked(@project1, "dataset_#{short_random_id}", permission: "EDITABLE_BY_OWNERS")
-        chmod_hdfs("/Projects/#{@project1[:inode_name]}/#{@cleanup_owners_only_dataset[:inode_name]}", 550)
+        chmod_hdfs("/Projects/#{@project1[:projectname]}/#{@cleanup_owners_only_dataset[:inode_name]}", 550)
         test_dataset_permission(@project1, @cleanup_owners_only_dataset[:inode_name], "r-xr-x---")
         @cleanup_editable_dataset = create_dataset_by_name_checked(@project1, "dataset_#{short_random_id}", permission: "EDITABLE")
-        chmod_hdfs("/Projects/#{@project1[:inode_name]}/#{@cleanup_editable_dataset[:inode_name]}", 550)
+        chmod_hdfs("/Projects/#{@project1[:projectname]}/#{@cleanup_editable_dataset[:inode_name]}", 550)
         test_dataset_permission(@project1, @cleanup_editable_dataset[:inode_name], "r-xr-x---")
         @cleanup_shared_dataset = create_dataset_by_name_checked(@project1, "dataset_#{short_random_id}", permission: "EDITABLE")
         request_access(@project1, @cleanup_shared_dataset, @project)
         share_dataset(@project1, @cleanup_shared_dataset[:inode_name], @project[:projectname], permission: "EDITABLE")
-        chmod_hdfs("/Projects/#{@project1[:inode_name]}/#{@cleanup_shared_dataset[:inode_name]}", 550)
+        chmod_hdfs("/Projects/#{@project1[:projectname]}/#{@cleanup_shared_dataset[:inode_name]}", 550)
         test_dataset_permission(@project1, @cleanup_shared_dataset[:inode_name], "r-xr-x---")
 
         @cleanup_data_owner = create_user()
         @cleanup_data_scientist = create_user()
         @cleanup_data_owner_remove = create_user()
         @cleanup_data_scientist_remove = create_user()
-        @project1_owners = %W[#{@project1[:inode_name]}__#{@cleanup_data_owner[:username]} #{@project1[:inode_name]}__#{@cleanup_data_owner_remove[:username]}]
-        @project_owners = %W[#{@project[:inode_name]}__#{@cleanup_data_owner[:username]} #{@project[:inode_name]}__#{@cleanup_data_owner_remove[:username]}]
-        @project1_scientist = %W[#{@project1[:inode_name]}__#{@cleanup_data_scientist[:username]} #{@project1[:inode_name]}__#{@cleanup_data_scientist_remove[:username]}]
-        @project_scientist = %W[#{@project[:inode_name]}__#{@cleanup_data_scientist[:username]} #{@project[:inode_name]}__#{@cleanup_data_scientist_remove[:username]}]
+        @project1_owners = %W[#{@project1[:projectname]}__#{@cleanup_data_owner[:username]} #{@project1[:projectname]}__#{@cleanup_data_owner_remove[:username]}]
+        @project_owners = %W[#{@project[:projectname]}__#{@cleanup_data_owner[:username]} #{@project[:projectname]}__#{@cleanup_data_owner_remove[:username]}]
+        @project1_scientist = %W[#{@project1[:projectname]}__#{@cleanup_data_scientist[:username]} #{@project1[:projectname]}__#{@cleanup_data_scientist_remove[:username]}]
+        @project_scientist = %W[#{@project[:projectname]}__#{@cleanup_data_scientist[:username]} #{@project[:projectname]}__#{@cleanup_data_scientist_remove[:username]}]
         create_member_in_table(@project1, @cleanup_data_owner, "Data owner")
         create_member_in_table(@project1, @cleanup_data_scientist, "Data scientist")
         create_member_in_table(@project, @cleanup_data_owner, "Data owner")
@@ -391,26 +391,26 @@ describe "On #{ENV['OS']}" do
         remove_member_from_table(@project, @cleanup_data_owner_remove)
         remove_member_from_table(@project1, @cleanup_data_scientist_remove)
         remove_member_from_table(@project, @cleanup_data_scientist_remove)
-        @cleanup_published_dataset_members = get_group_members("#{@project1[:inode_name]}__#{@cleanup_published_dataset[:inode_name]}",
-                                                               "#{@project1[:inode_name]}__#{@cleanup_published_dataset[:inode_name]}__read")
+        @cleanup_published_dataset_members = get_group_members("#{@project1[:projectname]}__#{@cleanup_published_dataset[:inode_name]}",
+                                                               "#{@project1[:projectname]}__#{@cleanup_published_dataset[:inode_name]}__read")
         expect(@cleanup_published_dataset_members[:write_group] & @project1_owners).to be_empty
         expect(@cleanup_published_dataset_members[:write_group] & @project1_scientist).to be_empty
         expect(@cleanup_published_dataset_members[:read_group] & @project1_owners).to match_array(@project1_owners.drop(1))
         expect(@cleanup_published_dataset_members[:read_group] & @project1_scientist).to match_array(@project1_scientist.drop(1))
-        @cleanup_owners_only_dataset_members = get_group_members("#{@project1[:inode_name]}__#{@cleanup_owners_only_dataset[:inode_name]}",
-                                                               "#{@project1[:inode_name]}__#{@cleanup_owners_only_dataset[:inode_name]}__read")
+        @cleanup_owners_only_dataset_members = get_group_members("#{@project1[:projectname]}__#{@cleanup_owners_only_dataset[:inode_name]}",
+                                                               "#{@project1[:projectname]}__#{@cleanup_owners_only_dataset[:inode_name]}__read")
         expect(@cleanup_owners_only_dataset_members[:write_group] & @project1_owners).to match_array(@project1_owners.drop(1))
         expect(@cleanup_owners_only_dataset_members[:write_group] & @project1_scientist).to be_empty
         expect(@cleanup_owners_only_dataset_members[:read_group] & @project1_owners).to be_empty
         expect(@cleanup_owners_only_dataset_members[:read_group] & @project1_scientist).to match_array(@project1_scientist.drop(1))
-        @cleanup_editable_dataset_members = get_group_members("#{@project1[:inode_name]}__#{@cleanup_editable_dataset[:inode_name]}",
-                                                               "#{@project1[:inode_name]}__#{@cleanup_editable_dataset[:inode_name]}__read")
+        @cleanup_editable_dataset_members = get_group_members("#{@project1[:projectname]}__#{@cleanup_editable_dataset[:inode_name]}",
+                                                               "#{@project1[:projectname]}__#{@cleanup_editable_dataset[:inode_name]}__read")
         expect(@cleanup_editable_dataset_members[:write_group] & @project1_owners).to match_array(@project1_owners.drop(1))
         expect(@cleanup_editable_dataset_members[:write_group] & @project1_scientist).to match_array(@project1_scientist.drop(1))
         expect(@cleanup_editable_dataset_members[:read_group] & @project1_owners).to be_empty
         expect(@cleanup_editable_dataset_members[:read_group] & @project1_scientist).to be_empty
-        @cleanup_shared_dataset_members = get_group_members("#{@project1[:inode_name]}__#{@cleanup_shared_dataset[:inode_name]}",
-                                                               "#{@project1[:inode_name]}__#{@cleanup_shared_dataset[:inode_name]}__read")
+        @cleanup_shared_dataset_members = get_group_members("#{@project1[:projectname]}__#{@cleanup_shared_dataset[:inode_name]}",
+                                                               "#{@project1[:projectname]}__#{@cleanup_shared_dataset[:inode_name]}__read")
         expect(@cleanup_shared_dataset_members[:write_group] & @project1_owners).to match_array(@project1_owners.drop(1))
         expect(@cleanup_shared_dataset_members[:write_group] & @project1_scientist).to match_array(@project1_scientist.drop(1))
         expect(@cleanup_shared_dataset_members[:read_group] & @project1_owners).to be_empty
@@ -422,14 +422,14 @@ describe "On #{ENV['OS']}" do
         expect(@cleanup_shared_dataset_members[:read_group] & @project_scientist).to be_empty
 
         do_permission_cleanup(@project1)
-        @cleanup_published_dataset_members = get_group_members("#{@project1[:inode_name]}__#{@cleanup_published_dataset[:inode_name]}",
-                                                               "#{@project1[:inode_name]}__#{@cleanup_published_dataset[:inode_name]}__read")
-        @cleanup_owners_only_dataset_members = get_group_members("#{@project1[:inode_name]}__#{@cleanup_owners_only_dataset[:inode_name]}",
-                                                                 "#{@project1[:inode_name]}__#{@cleanup_owners_only_dataset[:inode_name]}__read")
-        @cleanup_editable_dataset_members = get_group_members("#{@project1[:inode_name]}__#{@cleanup_editable_dataset[:inode_name]}",
-                                                              "#{@project1[:inode_name]}__#{@cleanup_editable_dataset[:inode_name]}__read")
-        @cleanup_shared_dataset_members = get_group_members("#{@project1[:inode_name]}__#{@cleanup_shared_dataset[:inode_name]}",
-                                                            "#{@project1[:inode_name]}__#{@cleanup_shared_dataset[:inode_name]}__read")
+        @cleanup_published_dataset_members = get_group_members("#{@project1[:projectname]}__#{@cleanup_published_dataset[:inode_name]}",
+                                                               "#{@project1[:projectname]}__#{@cleanup_published_dataset[:inode_name]}__read")
+        @cleanup_owners_only_dataset_members = get_group_members("#{@project1[:projectname]}__#{@cleanup_owners_only_dataset[:inode_name]}",
+                                                                 "#{@project1[:projectname]}__#{@cleanup_owners_only_dataset[:inode_name]}__read")
+        @cleanup_editable_dataset_members = get_group_members("#{@project1[:projectname]}__#{@cleanup_editable_dataset[:inode_name]}",
+                                                              "#{@project1[:projectname]}__#{@cleanup_editable_dataset[:inode_name]}__read")
+        @cleanup_shared_dataset_members = get_group_members("#{@project1[:projectname]}__#{@cleanup_shared_dataset[:inode_name]}",
+                                                            "#{@project1[:projectname]}__#{@cleanup_shared_dataset[:inode_name]}__read")
       end
       it "should fix permissions for published dataset" do
         test_dataset_permission(@project1, @cleanup_published_dataset[:inode_name], "r-xr-x---")
