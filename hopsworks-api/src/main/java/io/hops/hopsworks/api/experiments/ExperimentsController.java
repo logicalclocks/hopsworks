@@ -26,6 +26,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jupyter.JupyterController;
@@ -42,6 +43,7 @@ import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -82,6 +84,8 @@ public class ExperimentsController {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private DistributedFsService dfs;
+  @EJB
+  private InodeController inodeController;
   
   public void attachExperiment(Users user, Project project, String id, ExperimentDTO experimentSummary)
     throws DatasetException, ProvenanceException, MetadataException, ExperimentsException {
@@ -157,14 +161,15 @@ public class ExperimentsController {
   }
 
   public ProvStateDTO getExperiment(Project project, String mlId) throws ProvenanceException {
+    Inode projectInode = inodeController.getProjectRoot(project.getName());
     ProvStateParamBuilder provFilesParamBuilder = new ProvStateParamBuilder()
-        .filterByField(ProvStateParser.FieldsP.PROJECT_I_ID, project.getInode().getId())
+        .filterByField(ProvStateParser.FieldsP.PROJECT_I_ID, projectInode.getId())
         .filterByField(ProvStateParser.FieldsP.ML_TYPE, Provenance.MLType.EXPERIMENT.name())
         .filterByField(ProvStateParser.FieldsP.ML_ID, mlId)
         .hasXAttr(ExperimentsBuilder.EXPERIMENT_SUMMARY_XATTR_NAME)
         .withAppExpansion()
         .paginate(0, 1);
-    ProvStateDTO fileState = provenanceController.provFileStateList(project, provFilesParamBuilder);
+    ProvStateDTO fileState = provenanceController.provFileStateList(projectInode, provFilesParamBuilder);
     if (fileState != null && fileState.getItems() != null) {
       List<ProvStateDTO> experiments = fileState.getItems();
       if (experiments != null && !experiments.isEmpty()) {

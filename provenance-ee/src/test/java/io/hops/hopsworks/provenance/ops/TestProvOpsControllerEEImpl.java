@@ -48,6 +48,7 @@ public class TestProvOpsControllerEEImpl {
   private ProvOpsControllerIface provOpsController;
   private OpenSearchClientController client;
   private Project project;
+  private Inode projectInode;
   private Map map, map1, map2, map3, map4, map5, map6, map7, map8, map9;
   private Builder builder;
 
@@ -234,9 +235,9 @@ public class TestProvOpsControllerEEImpl {
 
     provOpsController = new ProvOpsControllerEEImpl(settings, client, provStateController);
 
-    Inode inode = new Inode(new InodePK());
-    inode.setId(1l);
-    project = new Project("test_project", inode);
+    projectInode = new Inode(new InodePK());
+    projectInode.setId(1l);
+    project = new Project("test_project");
   }
 
   private <O> List<Pair<Long, Try<O>>> searchResult(O result) {
@@ -328,7 +329,7 @@ public class TestProvOpsControllerEEImpl {
       .thenReturn(searchResult(new HashMap<>()));
   
     //act
-    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, paramBuilder, false);
+    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, projectInode, paramBuilder, false);
   
     //assert
     Mockito.verify(client, Mockito.times(expectedQueries.size()))
@@ -391,7 +392,7 @@ public class TestProvOpsControllerEEImpl {
     //endregion
 
     //act
-    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, paramBuilder, false);
+    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, projectInode, paramBuilder, false);
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
@@ -460,7 +461,7 @@ public class TestProvOpsControllerEEImpl {
     //endregion
 
     //act
-    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, paramBuilder, true);
+    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, projectInode, paramBuilder, true);
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
@@ -533,7 +534,7 @@ public class TestProvOpsControllerEEImpl {
     //endregion
 
     //act
-    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, paramBuilder, true);
+    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, projectInode, paramBuilder, true);
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
@@ -602,7 +603,7 @@ public class TestProvOpsControllerEEImpl {
     //endregion
 
     //act
-    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, paramBuilder, false);
+    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, projectInode, paramBuilder, false);
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
@@ -670,7 +671,7 @@ public class TestProvOpsControllerEEImpl {
     //endregion
 
     //act
-    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, paramBuilder, true);
+    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, projectInode, paramBuilder, true);
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
@@ -742,7 +743,7 @@ public class TestProvOpsControllerEEImpl {
     //endregion
 
     //act
-    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, paramBuilder, true);
+    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, projectInode, paramBuilder, true);
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
@@ -809,7 +810,7 @@ public class TestProvOpsControllerEEImpl {
     //endregion
 
     //act
-    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, paramBuilder, false);
+    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, projectInode, paramBuilder, false);
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
@@ -874,7 +875,7 @@ public class TestProvOpsControllerEEImpl {
     //endregion
 
     //act
-    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, paramBuilder, true);
+    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, projectInode, paramBuilder, true);
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
@@ -943,7 +944,7 @@ public class TestProvOpsControllerEEImpl {
     //endregion
 
     //act
-    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, paramBuilder, true);
+    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, projectInode, paramBuilder, true);
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
@@ -1056,7 +1057,7 @@ public class TestProvOpsControllerEEImpl {
     Mockito.when(client.search(Mockito.any(), Mockito.any())).thenReturn(Pair.with(1l, provStateDTOs));
 
     //act
-    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, paramBuilder, true);
+    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, projectInode, paramBuilder, true);
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
@@ -1186,7 +1187,7 @@ public class TestProvOpsControllerEEImpl {
     Mockito.when(client.search(Mockito.any(), Mockito.any())).thenReturn(Pair.with(1l, provStateDTOs));
 
     //act
-    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, paramBuilder, true);
+    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, projectInode, paramBuilder, true);
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
@@ -1298,7 +1299,7 @@ public class TestProvOpsControllerEEImpl {
     Mockito.when(client.search(Mockito.any(), Mockito.any())).thenReturn(Pair.with(1l, provStateDTOs));
 
     //act
-    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, paramBuilder, true);
+    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, projectInode, paramBuilder, true);
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
@@ -1409,7 +1410,7 @@ public class TestProvOpsControllerEEImpl {
     Mockito.when(client.search(Mockito.any(), Mockito.any())).thenReturn(Pair.with(1l, provStateDTOs));
 
     //act
-    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, paramBuilder, true);
+    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, projectInode, paramBuilder, true);
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
@@ -1500,7 +1501,7 @@ public class TestProvOpsControllerEEImpl {
     Mockito.when(client.search(Mockito.any(), Mockito.any())).thenReturn(Pair.with(1l, provStateDTOs));
 
     //act
-    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, paramBuilder, true);
+    ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, projectInode, paramBuilder, true);
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))

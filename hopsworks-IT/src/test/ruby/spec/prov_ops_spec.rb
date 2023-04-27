@@ -48,7 +48,7 @@ describe "On #{ENV['OS']}" do
         epipe_stop_restart do
           fg_id = create_cached_featuregroup_checked(@project[:id], fs_id, fg_name)
 
-          fg_ops = hive_file_prov_log_ops(project_name: @project[:inode_name], inode_name: "#{fg_name}_1")
+          fg_ops = hive_file_prov_log_ops(project_name: @project[:projectname], inode_name: "#{fg_name}_1")
           expect(fg_ops.length).to be >= 1
         end
 
@@ -74,7 +74,7 @@ describe "On #{ENV['OS']}" do
       begin
         epipe_stop_restart do
           td, td_name = create_hopsfs_training_dataset_checked(@project[:id], fs_id, connector)
-          td_ops = file_prov_log_ops(project_name: @project[:inode_name], inode_name: "#{td_name}_1")
+          td_ops = file_prov_log_ops(project_name: @project[:projectname], inode_name: "#{td_name}_1")
           expect(td_ops.length).to be >= 1
         end
 
@@ -157,10 +157,10 @@ describe "On #{ENV['OS']}" do
           subdir_path = "/apps/hive/warehouse/#{featurestore}/#{resource_dir}/#{subdir}"
           pp subdir_path if defined?(@debugOpt) && @debugOpt
           epipe_stop_restart do
-            record = FileProv.where("project_name": @project["inode_name"], "i_name": subdir)
+            record = FileProv.where("project_name": @project["projectname"], "i_name": subdir)
             expect(record.length).to eq 0
             mkdir(subdir_path, getHopsworksUser, getHopsworksUser, 777)
-            record = FileProv.where("project_name": @project["inode_name"], "i_name": subdir)
+            record = FileProv.where("project_name": @project["projectname"], "i_name": subdir)
             expect(record.length).to eq 1
           end
 
@@ -182,10 +182,10 @@ describe "On #{ENV['OS']}" do
         subdir_path = "/apps/hive/warehouse/#{featurestore}/#{resource_dir}/#{subdir}"
         pp subdir_path if defined?(@debugOpt) && @debugOpt
         epipe_stop_restart do
-          record = FileProv.where("project_name": @project["inode_name"], "i_name": subdir)
+          record = FileProv.where("project_name": @project["projectname"], "i_name": subdir)
           expect(record.length).to eq 0
           mkdir(subdir_path, getHopsworksUser, getHopsworksUser, 777)
-          record = FileProv.where("project_name": @project["inode_name"], "i_name": subdir)
+          record = FileProv.where("project_name": @project["projectname"], "i_name": subdir)
           expect(record.length).to eq 1
         end
 
@@ -208,10 +208,10 @@ describe "On #{ENV['OS']}" do
           subdir_path = "/Projects/#{@project[:projectname]}/#{dataset}/#{resource_dir}/#{subdir}"
           pp subdir_path if defined?(@debugOpt) && @debugOpt
           epipe_stop_restart do
-            record = FileProv.where("project_name": @project["inode_name"], "i_name": subdir)
+            record = FileProv.where("project_name": @project["projectname"], "i_name": subdir)
             expect(record.length).to eq 0
             mkdir(subdir_path, getHopsworksUser, getHopsworksUser, 777)
-            record = FileProv.where("project_name": @project["inode_name"], "i_name": subdir)
+            record = FileProv.where("project_name": @project["projectname"], "i_name": subdir)
             expect(record.length).to eq 1
           end
 
@@ -233,10 +233,10 @@ describe "On #{ENV['OS']}" do
         subdir_path = "/Projects/#{@project[:projectname]}/#{dataset}/#{resource_dir}/#{subdir}"
         pp subdir_path if defined?(@debugOpt) && @debugOpt
         epipe_stop_restart do
-          record = FileProv.where("project_name": @project["inode_name"], "i_name": subdir)
+          record = FileProv.where("project_name": @project["projectname"], "i_name": subdir)
           expect(record.length).to eq 0
           mkdir(subdir_path, getHopsworksUser, getHopsworksUser, 777)
-          record = FileProv.where("project_name": @project["inode_name"], "i_name": subdir)
+          record = FileProv.where("project_name": @project["projectname"], "i_name": subdir)
           expect(record.length).to eq 1
         end
 

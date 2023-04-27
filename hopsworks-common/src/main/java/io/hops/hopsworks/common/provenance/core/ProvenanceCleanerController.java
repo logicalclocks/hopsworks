@@ -88,7 +88,7 @@ public class ProvenanceCleanerController {
     if(inode == null) {
       return null;
     }
-    return projectFacade.findByInodeId(inode.getInodePK().getParentId(), inode.getInodePK().getName());
+    return projectFacade.findByName(inode.getInodePK().getName());
   }
   
   private void deleteProvIndex(String indexName) {

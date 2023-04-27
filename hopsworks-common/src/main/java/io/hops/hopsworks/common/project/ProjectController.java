@@ -353,15 +353,9 @@ public class ProjectController {
        * until this project is removed from the database
        */
       try {
-        project = createProject(projectName, owner, projectDTO.getDescription(), dfso);
+        project = createProject(projectName, owner, projectDTO.getDescription());
       } catch (EJBException ex) {
         LOGGER.log(Level.WARNING, null, ex);
-        Path dummy = new Path("/tmp/" + projectName);
-        try {
-          dfso.rm(dummy, true);
-        } catch (IOException e) {
-          LOGGER.log(Level.SEVERE, null, e);
-        }
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_EXISTS, Level.SEVERE, "project: " + projectName,
           ex.getMessage(), ex);
       }
@@ -426,16 +420,7 @@ public class ProjectController {
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_FOLDER_NOT_CREATED, Level.SEVERE,
           "project: " + projectName, ex.getMessage(), ex);
       }
-      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 5 (folders): {0}", System.currentTimeMillis() - startTime);
-      //update the project with the project folder inode
-      try {
-        setProjectInode(project, dfso);
-      } catch (IOException | EJBException ex) {
-        cleanup(project, projectCreationFutures, true, owner);
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_INODE_CREATION_ERROR, Level.SEVERE,
-          "project: " + projectName, ex.getMessage(), ex);
-      }
-      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 6 (inodes): {0}", System.currentTimeMillis() - startTime);
+      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 5 (inodes): {0}", System.currentTimeMillis() - startTime);
 
       //set payment and quotas
       try {
@@ -445,7 +430,7 @@ public class ProjectController {
         throw new ProjectException(RESTCodes.ProjectErrorCode.QUOTA_ERROR, Level.SEVERE, "project: " + project.getName()
           , ex.getMessage(), ex);
       }
-      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 7 (quotas): {0}", System.currentTimeMillis() - startTime);
+      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 6 (quotas): {0}", System.currentTimeMillis() - startTime);
 
       try {
         hdfsUsersController.addProjectFolderOwner(project, dfso);
@@ -455,14 +440,14 @@ public class ProjectController {
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_SET_PERMISSIONS_ERROR, Level.SEVERE,
           "project: " + projectName, ex.getMessage(), ex);
       }
-      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 8 (logs): {0}", System.currentTimeMillis() - startTime);
+      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 7 (logs): {0}", System.currentTimeMillis() - startTime);
 
       //Delete old project indices and kibana saved objects to avoid
       // inconsistencies
       try {
         openSearchController.deleteProjectIndices(project);
         openSearchController.deleteProjectSavedObjects(projectName);
-        LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 9 (opensearch cleanup): {0}",
+        LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 8 (opensearch cleanup): {0}",
             System.currentTimeMillis() - startTime);
       } catch (OpenSearchException ex){
         LOGGER.log(Level.FINE, "Error while cleaning old project indices", ex);
@@ -580,7 +565,7 @@ public class ProjectController {
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private Project createProject(String projectName, Users user,
-    String projectDescription, DistributedFileSystemOps dfso) throws ProjectException {
+    String projectDescription) throws ProjectException {
     if (user == null) {
       throw new IllegalArgumentException("User was not provided.");
     }
@@ -598,32 +583,12 @@ public class ProjectController {
     project.setDescription(projectDescription);
     project.setCreationStatus(CreationStatus.ONGOING);
 
-    //set a dumy node in the project until the creation of the project folder
-    Path dummy = new Path("/tmp/" + projectName);
-    try {
-      dfso.touchz(dummy);
-      project.setInode(inodeController.getInodeAtPath(dummy.toString()));
-    } catch (IOException ex) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_INODE_CREATION_ERROR, Level.SEVERE,
-        "Couldn't get the dummy Inode at: /tmp/" + projectName, ex.getMessage(), ex);
-    }
-
     //Persist project object
     this.projectFacade.persistProject(project);
     this.projectFacade.flushEm();
     usersController.increaseNumCreatedProjects(user.getUid());
     usersController.updateNumActiveProjects(project.getOwner().getUid());
     return project;
-  }
-
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private void setProjectInode(Project project, DistributedFileSystemOps dfso) throws IOException {
-    Inode projectInode = inodeController.getProjectRoot(project.getName());
-    project.setInode(projectInode);
-    this.projectFacade.mergeProject(project);
-    this.projectFacade.flushEm();
-    Path dumy = new Path("/tmp/" + project.getName());
-    dfso.rm(dumy, true);
   }
 
   private boolean existingProjectFolder(Project project) {
@@ -1193,16 +1158,6 @@ public class ProjectController {
           cleanupLogger.logError(ex.getMessage());
         }
 
-        // Change ownership of tmp file
-        Path dummy = new Path("/tmp/" + project.getName());
-        try {
-          changeOwnershipToSuperuser(dummy, dfso);
-          cleanupLogger.logSuccess("Changed ownership of dummy inode");
-        } catch (Exception ex) {
-          cleanupLogger.logError("Error when changing ownership of dummy inode during project cleanup");
-          cleanupLogger.logError(ex.getMessage());
-        }
-
         // Remove Kafka
         try {
           removeKafkaTopics(project);
@@ -1335,21 +1290,12 @@ public class ProjectController {
           cleanupLogger.logError(ex.getMessage());
         }
 
-        // remove dumy Inode
-        try {
-          dfso.rm(dummy, true);
-          cleanupLogger.logSuccess("Removed dummy Inode");
-        } catch (Exception ex) {
-          cleanupLogger.logError("Error when removing dummy Inode during project cleanup");
-          cleanupLogger.logError(ex.getMessage());
-        }
-
         // remove folder
         try {
-          removeProjectFolder(project.getName(), dfso);
-          cleanupLogger.logSuccess("Removed root Project folder");
+          removeProject(project.getName(), dfso);
+          cleanupLogger.logSuccess("Removed root Project folder and database entry");
         } catch (Exception ex) {
-          cleanupLogger.logError("Error when removing root Project dir during project cleanup");
+          cleanupLogger.logError("Error when removing root Project dir and database entry during project cleanup");
           cleanupLogger.logError(ex.getMessage());
         }
         
@@ -1372,29 +1318,14 @@ public class ProjectController {
 
         usersController.updateNumActiveProjects(project.getOwner().getUid());
       } else {
-        // Create /tmp/Project and add to database so we lock in case someone tries to create a Project
-        // with the same name at the same time
         cleanupLogger.logSuccess("Project is *NOT* in the database, going to remove as much as possible");
         Date now = DateUtils.localDateTime2Date(DateUtils.getNow());
         Users user = userFacade.findByEmail(userEmail);
         Project toDeleteProject = new Project(projectName, user, now, settings.getDefaultPaymentType());
         toDeleteProject.setKafkaMaxNumTopics(settings.getKafkaMaxNumTopics());
         toDeleteProject.setCreationStatus(CreationStatus.ONGOING);
-        Path tmpInodePath = new Path(File.separator + "tmp" + File.separator + projectName);
-        try {
-          if (!dfso.exists(tmpInodePath.toString())) {
-            dfso.touchz(tmpInodePath);
-          }
-          Inode tmpInode = inodeController.getInodeAtPath(tmpInodePath.toString());
-          if (tmpInode != null) {
-            toDeleteProject.setInode(tmpInode);
-            projectFacade.persistProject(toDeleteProject);
-            projectFacade.flushEm();
-            cleanupLogger.logSuccess("Created dummy Inode");
-          }
-        } catch (IOException ex) {
-          cleanupLogger.logError("Could not create dummy Inode, moving on unsafe");
-        }
+        projectFacade.persistProject(toDeleteProject);
+        projectFacade.flushEm();
 
         // Kill jobs
         List<HdfsUsers> projectHdfsUsers = hdfsUsersController.getAllProjectHdfsUsers(projectName);
@@ -1491,19 +1422,11 @@ public class ProjectController {
           cleanupLogger.logError(ex.getMessage());
         }
 
-        // Remove root project directory
+        // Remove root project directory and database entry
         try {
-          removeProjectFolder(projectName, dfso);
-          cleanupLogger.logSuccess("Removed root project directory");
-        } catch (IOException ex) {
-          cleanupLogger.logError(ex.getMessage());
-        }
-
-        // Remove /tmp/project
-        try {
-          dfso.rm(new Path(File.separator + "tmp" + File.separator + projectName), true);
-          cleanupLogger.logSuccess("Removed /tmp");
-        } catch (IOException ex) {
+          removeProject(projectName, dfso);
+          cleanupLogger.logSuccess("Removed root project directory and database entry");
+        } catch (IOException | ProjectException ex) {
           cleanupLogger.logError(ex.getMessage());
         }
       }
@@ -1716,9 +1639,6 @@ public class ProjectController {
       Path location = new Path(Utils.getProjectPath(project.getName()));
       changeOwnershipToSuperuser(location, dfso);
 
-      Path dumy = new Path("/tmp/" + project.getName());
-      changeOwnershipToSuperuser(dumy, dfso);
-
       //remove kafka topics
       removeKafkaTopics(project);
 
@@ -1782,9 +1702,6 @@ public class ProjectController {
       //delete project group and users
       removeGroupAndUsers(groupsToClean, usersToClean);
 
-      //remove dumy Inode
-      dfso.rm(dumy, true);
-
       // Remove servings
       try {
         servingController.deleteAll(project);
@@ -1796,8 +1713,8 @@ public class ProjectController {
       // JWT renewal monitors and materialized X.509
       airflowManager.onProjectRemoval(project);
 
-      //remove folder
-      removeProjectFolder(project.getName(), dfso);
+      //remove folder and from the database
+      removeProject(project.getName(), dfso);
 
       if (decreaseCreatedProj) {
         usersController.decrementNumProjectsCreated(project.getOwner().getUid());
@@ -1878,9 +1795,19 @@ public class ProjectController {
     hdfsUsersController.deleteUsers(users);
   }
 
-  private void removeProjectFolder(String projectName, DistributedFileSystemOps dfso) throws IOException {
+  private void removeProject(String projectName, DistributedFileSystemOps dfso) throws IOException, ProjectException {
     final Path location = new Path(Utils.getProjectPath(projectName));
-    dfso.rm(location, true);
+    if(dfso.rm(location, true)) {
+      //Only proceed removing project from database if Project folder was removed successfully
+      removeProjectFromDatabase(projectName);
+    } else {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_FOLDER_NOT_REMOVED, Level.FINE,
+        "project: " + projectName);
+    }
+  }
+
+  private void removeProjectFromDatabase(String projectName) {
+    projectFacade.removeProject(projectName);
   }
 
   /**
@@ -2342,7 +2269,8 @@ public class ProjectController {
   }
 
   public void logProject(Project project, OperationType type) {
-    operationsLogFacade.persist(new OperationsLog(project, type));
+    Inode inode = inodeController.getInodeAtPath(Utils.getProjectPath(project.getName()));
+    operationsLogFacade.persist(new OperationsLog(project, inode.getId(), type));
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)

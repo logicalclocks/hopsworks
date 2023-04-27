@@ -36,6 +36,7 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.collections.CollectionUtils;
@@ -93,7 +94,7 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
 
   public ProvOpsControllerEEImpl() {}
 
-  public ProvOpsDTO provFileOpsList(Project project, ProvOpsParamBuilder params)
+  public ProvOpsDTO provFileOpsList(Project project, Inode projectInode, ProvOpsParamBuilder params)
     throws ProvenanceException {
     if (!params.getAggregations().isEmpty()) {
       throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.UNSUPPORTED, Level.INFO,
@@ -105,7 +106,7 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
         "all searches should be paginated");
     }
 
-    ProvOpsDTO fileOps = provFileOpsBase(project.getInode().getId(),
+    ProvOpsDTO fileOps = provFileOpsBase(projectInode.getId(),
       params.getFileOpsFilterBy(), params.getFileOpsSortBy(),
       params.getPagination().getValue0(), params.getPagination().getValue1());
 
@@ -135,13 +136,13 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     return fileOps;
   }
 
-  public ProvOpsDTO provFileOpsCount(Project project, ProvOpsParamBuilder params)
+  public ProvOpsDTO provFileOpsCount(Project project, Inode projectInode, ProvOpsParamBuilder params)
     throws ProvenanceException {
     if (!params.getAggregations().isEmpty()) {
       throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.UNSUPPORTED, Level.INFO,
         "misuse of COUNT together with AGGREGATIONS - use either COUNT or AGGREGATIONS");
     }
-    return provFileOpsCount(project.getInode().getId(), params.getFileOpsFilterBy());
+    return provFileOpsCount(projectInode.getId(), params.getFileOpsFilterBy());
   }
 
   public ProvOpsDTO provFileOpsCount(Long projectIId, Map<ProvParser.Field, ProvParser.FilterVal> fileOpsFilters)
@@ -163,13 +164,13 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     }
   }
 
-  public ProvOpsDTO provFileOpsAggs(Project project, ProvOpsParamBuilder params)
+  public ProvOpsDTO provFileOpsAggs(Project project, Inode projectInode, ProvOpsParamBuilder params)
       throws ProvenanceException, GenericException {
     if(params.getAggregations().size() > 1) {
       throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
         "currently multiple aggregations in one request are not supported");
     }
-    Map<ProvOpsAggregations, List> aggregations = provFileOpsAggs(project.getInode().getId(),
+    Map<ProvOpsAggregations, List> aggregations = provFileOpsAggs(projectInode.getId(),
         params.getFileOpsFilterBy(), params.getAggregations());
     List<ProvOpsDTO> aggregationItems = new ArrayList<>();
     for(Map.Entry<ProvOpsAggregations, List> agg : aggregations.entrySet()) {
@@ -249,19 +250,19 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
    * @return
    * @throws ProvenanceException
    */
-  public ProvLinksDTO provLinks(Project project, ProvLinksParamBuilder params, boolean filterAlive)
+  public ProvLinksDTO provLinks(Project project, Inode projectInode, ProvLinksParamBuilder params, boolean filterAlive)
     throws ProvenanceException {
     HandlerFactory.AppIdMlIdMap linkHandlerFactory = new HandlerFactory.AppIdMlIdMap();
     if (params.isInArtifactDefined() || params.isOutArtifactDefined() || params.isAppIdDefined()) {
       ProvLinksDTO provLinksDTO;
       if (params.isAppIdDefined()) {
-        provLinksDTO = deepProvLinks(project, params, filterAlive, linkHandlerFactory, false);
+        provLinksDTO = deepProvLinks(project, projectInode, params, filterAlive, linkHandlerFactory, false);
       } else {
-        provLinksDTO = deepProvLinks(project, params, filterAlive, linkHandlerFactory, true);
+        provLinksDTO = deepProvLinks(project, projectInode, params, filterAlive, linkHandlerFactory, true);
       }
       return convertToInOut(provLinksDTO, params);
     } else if (params.isArtifactDefined()) {
-      return deepProvLinks(project, params, filterAlive, linkHandlerFactory, true);
+      return deepProvLinks(project, projectInode, params, filterAlive, linkHandlerFactory, true);
     } else {
       throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.BAD_REQUEST, Level.INFO,
               "query too vague - please define at least one of APP_ID, IN_ARTIFACT, OUT_ARTIFACT",
@@ -354,7 +355,7 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     }
   }
 
-  private Set<ProvStateDTO> getLinksAlive(Project project, Map<LinkTypes, List<ProvOpsDTO>> links)
+  private Set<ProvStateDTO> getLinksAlive(Inode projectInode, Map<LinkTypes, List<ProvOpsDTO>> links)
     throws ProvenanceException {
     ProvStateParamBuilder params1 = new ProvStateParamBuilder();
     ProvStateParamBuilder params2 = new ProvStateParamBuilder();
@@ -370,15 +371,15 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
       }
       params1.paginate(0, mlSize1);
       String index = Settings.FEATURESTORE_INDEX;
-      outAlive.addAll(stateCtrl.provFileState(project, params1.base, stateHandlerFactory, index).getValue1());
+      outAlive.addAll(stateCtrl.provFileState(projectInode, params1.base, stateHandlerFactory, index).getValue1());
     }
     if (mlSize2 > 0) {
       for (ProvOpsDTO link : links.get(LinkTypes.ML)) {
         params2.filterByField(ProvStateParser.FieldsP.ML_ID, link.getMlId());
       }
       params2.paginate(0, mlSize2);
-      String index = Provenance.getProjectIndex(project);
-      outAlive.addAll(stateCtrl.provFileState(project, params2.base, stateHandlerFactory, index).getValue1());
+      String index = Provenance.getProjectIndex(projectInode);
+      outAlive.addAll(stateCtrl.provFileState(projectInode, params2.base, stateHandlerFactory, index).getValue1());
     }
     return outAlive;
   }
@@ -428,12 +429,12 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
   }
 
   private List<Map<ProvParser.Field, ProvParser.FilterVal>> generateAppIdFilterFromMlIdFilter(Project project,
-      HandlerFactory<Map<String, AppState>, ProvLinksDTO.Builder> handlerFactory,
+      Inode projectInode, HandlerFactory<Map<String, AppState>, ProvLinksDTO.Builder> handlerFactory,
       List<Map<ProvParser.Field, ProvParser.FilterVal>> mlIdFilterList, Map<String, ProvLinksDTO> map,
       boolean filterAlive, StreamDirection direction)
           throws ProvenanceException {
     List<Map<ProvParser.Field, ProvParser.FilterVal>> filterList = new ArrayList();
-    for (ProvLinksDTO.Builder builder: multipleProvLinks(project.getInode().getId(), mlIdFilterList, handlerFactory)) {
+    for (ProvLinksDTO.Builder builder: multipleProvLinks(projectInode.getId(), mlIdFilterList, handlerFactory)) {
 
       boolean found = false;
       for (Map.Entry<String, ProvLinksDTO> app: builder.getAppLinks().entrySet()) {
@@ -454,7 +455,7 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
 
         Set<ProvStateDTO> alive = null;
         if (filterAlive) {
-          alive = getLinksAlive(project, splitInLinks(builder));
+          alive = getLinksAlive(projectInode, splitInLinks(builder));
         }
         Map<String, ProvOpsDTO> in = updateLive(provLinks.getIn(), alive);// remove dead
 
@@ -471,18 +472,18 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     return filterList;
   }
 
-  private Set<Pair<String, List<String>>> generateMlIdFromAppIdFilter(Project project,
-       HandlerFactory<Map<String, AppState>, ProvLinksDTO.Builder> handlerFactory,
+  private Set<Pair<String, List<String>>> generateMlIdFromAppIdFilter(
+       Inode projectInode, HandlerFactory<Map<String, AppState>, ProvLinksDTO.Builder> handlerFactory,
        List<Map<ProvParser.Field, ProvParser.FilterVal>> appIdFilterList, Map<String, ProvLinksDTO> map,
        boolean filterAlive, StreamDirection direction)
           throws ProvenanceException {
     Set<Pair<String, List<String>>> mlIdList = new HashSet<>();
     if (appIdFilterList.size() > 0) {
       for (ProvLinksDTO.Builder builder:
-              multipleProvLinks(project.getInode().getId(), appIdFilterList, handlerFactory)) {
+              multipleProvLinks(projectInode.getId(), appIdFilterList, handlerFactory)) {
         Set<ProvStateDTO> alive = null;
         if (filterAlive) {
-          alive = getLinksAlive(project, splitOutLinks(builder));
+          alive = getLinksAlive(projectInode, splitOutLinks(builder));
         }
         for (Map.Entry<String, ProvLinksDTO> app: builder.getAppLinks().entrySet()) {
           if (!map.containsKey(app.getKey())) { // do not query what has already been seen
@@ -512,11 +513,11 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     return mlIdList;
   }
 
-  private Pair<Integer, Set<Pair<String, List<String>>>> deepSearch(Project project, Set<Pair<String, List<String>>>
-      idList, HandlerFactory<Map<String, AppState>, ProvLinksDTO.Builder> handlerFactory,
-      Map<String, ProvLinksDTO> map, boolean startWithMlId, boolean onlyApps, boolean filterAlive,
-      StreamDirection direction, int allowedProvenanceGraphSize)
-          throws ProvenanceException {
+  private Pair<Integer, Set<Pair<String, List<String>>>> deepSearch(Project project, Inode projectInode,
+      Set<Pair<String, List<String>>> idList, HandlerFactory<Map<String, AppState>,
+      ProvLinksDTO.Builder> handlerFactory, Map<String, ProvLinksDTO> map, boolean startWithMlId, boolean onlyApps,
+      boolean filterAlive, StreamDirection direction, int allowedProvenanceGraphSize)
+      throws ProvenanceException {
     int oldMapSize = map.size();
     List<Map<ProvParser.Field, ProvParser.FilterVal>> appIdFilterList;
     if (startWithMlId) {
@@ -525,8 +526,8 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
               generateFilter(idList, onlyApps, ProvLinks.FieldsPF.ARTIFACT);
 
       // get all links where the provided mlId is the output
-      appIdFilterList = generateAppIdFilterFromMlIdFilter(project, handlerFactory, mlIdFilterList, map, filterAlive,
-              direction);
+      appIdFilterList = generateAppIdFilterFromMlIdFilter(project, projectInode, handlerFactory, mlIdFilterList, map,
+        filterAlive, direction);
 
       //todo remove region if on-demand fg is created with appId present
       //region on-demand fg
@@ -547,8 +548,8 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     }
 
     //generate the new mlIdList
-    Set<Pair<String, List<String>>> mlIdList = generateMlIdFromAppIdFilter(project, handlerFactory, appIdFilterList,
-            map, filterAlive, direction);
+    Set<Pair<String, List<String>>> mlIdList = generateMlIdFromAppIdFilter(projectInode, handlerFactory,
+      appIdFilterList, map, filterAlive, direction);
 
     // reduce the allowed prov graph size by the difference in map size
     int difference = map.size() - oldMapSize;
@@ -596,8 +597,8 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     }
   }
 
-  private Pair<Integer, Map<String, ProvLinksDTO>> deepUpstreamLinks(Project project, Set<Pair<String,
-      List<String>>> idList, boolean filterAlive, HandlerFactory<Map<String, AppState>,
+  private Pair<Integer, Map<String, ProvLinksDTO>> deepUpstreamLinks(Project project, Inode projectInode,
+      Set<Pair<String, List<String>>> idList, boolean filterAlive, HandlerFactory<Map<String, AppState>,
       ProvLinksDTO.Builder> handlerFactory, ProvLinksParamBuilder params, boolean startWithMlId,
       int allowedProvenanceGraphSize)
           throws ProvenanceException {
@@ -608,8 +609,8 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     StreamDirection direction = StreamDirection.Upstream;
 
     do {
-      Pair<Integer, Set<Pair<String, List<String>>>> result = deepSearch(project, idList, handlerFactory, map,
-              startWithMlId, params.isOnlyApps(), filterAlive, direction, allowedProvenanceGraphSize);
+      Pair<Integer, Set<Pair<String, List<String>>>> result = deepSearch(project, projectInode, idList, handlerFactory,
+        map, startWithMlId, params.isOnlyApps(), filterAlive, direction, allowedProvenanceGraphSize);
       allowedProvenanceGraphSize = result.getValue0();
       idList = result.getValue1();
 
@@ -625,17 +626,17 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     return new Pair(allowedProvenanceGraphSize, map);
   }
 
-  private Pair<Integer, List<ProvLinksDTO>> deepDownstreamLinks(Project project, Set<Pair<String, List<String>>> idList,
-      boolean filterAlive, HandlerFactory<Map<String, AppState>, ProvLinksDTO.Builder> handlerFactory,
-      ProvLinksParamBuilder params, Map<String, ProvLinksDTO> map, boolean startWithMlId,
-      int allowedProvenanceGraphSize)
+  private Pair<Integer, List<ProvLinksDTO>> deepDownstreamLinks(Project project, Inode projectInode,
+      Set<Pair<String, List<String>>> idList, boolean filterAlive, HandlerFactory<Map<String, AppState>,
+      ProvLinksDTO.Builder> handlerFactory, ProvLinksParamBuilder params, Map<String, ProvLinksDTO> map,
+      boolean startWithMlId, int allowedProvenanceGraphSize)
           throws ProvenanceException {
     int depth = params.getExpand().getValue1();
     StreamDirection direction = StreamDirection.Downstream;
 
     while (depth != 0 && idList.size() > 0 && allowedProvenanceGraphSize > 0) {
-      Pair<Integer, Set<Pair<String, List<String>>>> result = deepSearch(project, idList, handlerFactory, map,
-              startWithMlId, params.isOnlyApps(), filterAlive, direction, allowedProvenanceGraphSize);
+      Pair<Integer, Set<Pair<String, List<String>>>> result = deepSearch(project, projectInode, idList, handlerFactory,
+        map, startWithMlId, params.isOnlyApps(), filterAlive, direction, allowedProvenanceGraphSize);
       allowedProvenanceGraphSize = result.getValue0();
       idList = result.getValue1();
 
@@ -666,8 +667,9 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     return new Pair(allowedProvenanceGraphSize, provLinksDTOList);
   }
 
-  private ProvLinksDTO deepProvLinks(Project project, ProvLinksParamBuilder params, boolean filterAlive,
-      HandlerFactory<Map<String, AppState>, ProvLinksDTO.Builder> handlerFactory, boolean startWithMlId)
+  private ProvLinksDTO deepProvLinks(Project project, Inode projectInode, ProvLinksParamBuilder params,
+      boolean filterAlive, HandlerFactory<Map<String, AppState>, ProvLinksDTO.Builder> handlerFactory,
+      boolean startWithMlId)
           throws ProvenanceException {
     ProvLinksDTO provLinksDTO = new ProvLinksDTO();
 
@@ -676,10 +678,10 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
       filterSetPair.add(new Pair(filter, params.getFilterType()));
     }
 
-    Pair<Integer, Map<String, ProvLinksDTO>> upstreamResult = deepUpstreamLinks(project, filterSetPair, filterAlive,
-            handlerFactory, params, startWithMlId, settings.getProvenanceGraphMaxSize());
-    Pair<Integer, List<ProvLinksDTO>> downstreamResult = deepDownstreamLinks(project, filterSetPair, filterAlive,
-            handlerFactory, params, upstreamResult.getValue1(), startWithMlId, upstreamResult.getValue0());
+    Pair<Integer, Map<String, ProvLinksDTO>> upstreamResult = deepUpstreamLinks(project, projectInode, filterSetPair,
+            filterAlive, handlerFactory, params, startWithMlId, settings.getProvenanceGraphMaxSize());
+    Pair<Integer, List<ProvLinksDTO>> downstreamResult = deepDownstreamLinks(project, projectInode, filterSetPair,
+            filterAlive, handlerFactory, params, upstreamResult.getValue1(), startWithMlId, upstreamResult.getValue0());
 
     provLinksDTO.addItems(downstreamResult.getValue1());
     if (downstreamResult.getValue0() == 0) {

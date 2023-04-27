@@ -98,7 +98,6 @@ angular.module('hopsWorksApp')
               $scope.newProject = {
                 'projectName': self.projectName,
                 'description': self.projectDesc,
-                'status': 0,
                 'services': self.selectionProjectTypes
               };
               ProjectService.save($scope.newProject).$promise.then(

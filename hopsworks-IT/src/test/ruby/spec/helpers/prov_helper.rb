@@ -73,7 +73,9 @@ module ProvHelper
   end
 
   def prov_index(project)
-    project_inode = INode.where("partition_id": project[:partition_id],"parent_id": project[:inode_pid], "name": project[:inode_name]).first
+    projects_root_inode = INode.where(parent_id:1, name: "Projects")
+    expect(projects_root_inode.length).to eq(1), "inode not found for project: #{project[:projectname]}"
+    project_inode = INode.where(parent_id:projects_root_inode.first[:id], name: project[:projectname]).first
     "#{project_inode[:id]}__file_prov"
   end
 end

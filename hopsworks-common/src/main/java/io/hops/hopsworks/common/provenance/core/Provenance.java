@@ -16,7 +16,6 @@
 package io.hops.hopsworks.common.provenance.core;
 
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
-import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ProvenanceException;
@@ -101,8 +100,8 @@ public class Provenance {
     OUTPUT_REMOVED
   }
   
-  public static String getProjectIndex(Project project) {
-    return project.getInode().getId() + Settings.PROV_FILE_INDEX_SUFFIX;
+  public static String getProjectIndex(Inode projectInode) {
+    return projectInode.getId() + Settings.PROV_FILE_INDEX_SUFFIX;
   }
   
   public static ProvTypeDTO getDatasetProvCore(ProvTypeDTO projectProvCore, MLType type) {

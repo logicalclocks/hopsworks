@@ -31,6 +31,7 @@ import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.util.AccessController;
@@ -100,6 +101,8 @@ public class ExperimentsResource {
   private AccessController accessCtrl;
   @EJB
   private DatasetController datasetCtrl;
+  @EJB
+  private InodeController inodeController;
 
   private Project project;
   @Logged(logLevel = LogLevel.OFF)
@@ -150,7 +153,8 @@ public class ExperimentsResource {
     Users user = jwtHelper.getUserPrincipal(sc);
     if(fileState != null) {
       Map<Long, ExperimentsEndpointDTO> endpoints = new HashMap<>();
-      endpoints.put(project.getInode().getId(), experimentsController.getExperimentsEndpoint(project));
+      endpoints.put(inodeController.getProjectRoot(project.getName()).getId(),
+        experimentsController.getExperimentsEndpoint(project));
       ExperimentDTO dto = experimentsBuilder.build(uriInfo, resourceRequest, project, user, endpoints, fileState);
       if(dto == null) {
         throw new GenericException(RESTCodes.GenericErrorCode.NOT_AUTHORIZED_TO_ACCESS, Level.FINE);

@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.api.provenance.ops;
 
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.PaginationParams;
 import io.hops.hopsworks.common.provenance.ops.ProvOpsControllerIface;
 import io.hops.hopsworks.common.provenance.ops.ProvOpsParamBuilder;
@@ -22,9 +23,11 @@ import io.hops.hopsworks.common.provenance.ops.ProvOpsReturnType;
 import io.hops.hopsworks.common.provenance.ops.dto.ProvOpsDTO;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
 
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -36,6 +39,8 @@ import java.util.logging.Level;
 public class ProvOpsBuilder {
   @Inject
   private ProvOpsControllerIface opsProvCtrl;
+  @EJB
+  private InodeController inodeController;
   
   public ProvOpsDTO build(Project project, ProvOpsBeanParams opsParams, PaginationParams pagParams)
     throws ProvenanceException, GenericException {
@@ -52,15 +57,16 @@ public class ProvOpsBuilder {
   public ProvOpsDTO build(Project project, ProvOpsParamBuilder params, ProvOpsReturnType returnType)
     throws ProvenanceException, GenericException {
     ProvOpsDTO result;
+    Inode projectInode = inodeController.getProjectRoot(project.getName());
     switch(returnType){
       case LIST:
-        result = opsProvCtrl.provFileOpsList(project, params);
+        result = opsProvCtrl.provFileOpsList(project, projectInode, params);
         break;
       case COUNT:
-        result = opsProvCtrl.provFileOpsCount(project, params);
+        result = opsProvCtrl.provFileOpsCount(project, projectInode, params);
         break;
       case AGGREGATIONS:
-        result = opsProvCtrl.provFileOpsAggs(project, params);
+        result = opsProvCtrl.provFileOpsAggs(project, projectInode, params);
         break;
       default:
         throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_STATE, Level.FINE,

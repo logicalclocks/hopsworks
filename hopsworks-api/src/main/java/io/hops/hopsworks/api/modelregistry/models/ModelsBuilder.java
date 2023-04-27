@@ -34,6 +34,7 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.ProvParser;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.ops.ProvLinks;
@@ -55,6 +56,7 @@ import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
@@ -114,6 +116,8 @@ public class ModelsBuilder {
   private ModelUtils modelUtils;
   @EJB
   private TagBuilder tagsBuilder;
+  @EJB
+  private InodeController inodeController;
   
   public ModelDTO uri(ModelDTO dto, UriInfo uriInfo, Project userProject, Project modelRegistryProject) {
     dto.setHref(uriInfo.getBaseUriBuilder()
@@ -168,19 +172,21 @@ public class ModelsBuilder {
           //no endpoint - no results
           return dto;
         }
-
+        Inode paramProjectInode = inodeController.getProjectRoot(
+          provFilesParamBuilder.getValue1().getParentProject().getName());
         fileState = provenanceController.provFileStateList(
-                provFilesParamBuilder.getValue1().getParentProject(),
+          paramProjectInode,
                 provFilesParamBuilder.getValue0());
 
         List<ProvStateDTO> models = new LinkedList<>(fileState.getItems());
 
         dto.setCount(fileState.getCount());
         String modelsDatasetPath = modelUtils.getModelsDatasetPath(userProject, modelRegistryProject);
+        Inode userProjectInode = inodeController.getProjectRoot(userProject.getName());
         for(ProvStateDTO fileProvStateHit: models) {
           ModelDTO modelDTO
-            = build(uriInfo, resourceRequest, user, userProject, modelRegistryProject, fileProvStateHit,
-                  modelsDatasetPath);
+            = build(uriInfo, resourceRequest, user, userProject,
+            modelRegistryProject, fileProvStateHit, modelsDatasetPath);
           if(modelDTO != null) {
             dto.addItem(modelDTO);
           }
@@ -271,6 +277,7 @@ public class ModelsBuilder {
          */
 
         if(resourceRequest.contains(ResourceRequest.Name.TRAININGDATASETS)) {
+          Inode userProjectInode = inodeController.getProjectRoot(userProject.getName());
           if(modelSummary.getTrainingDataset() != null) {
             modelDTO.setTrainingDataset(modelSummary.getTrainingDataset());
           }
@@ -283,7 +290,7 @@ public class ModelsBuilder {
             .linkType(true)
             .onlyApps(true)
             .filterByFields(filterByFields);
-          ProvLinksDTO dto = provOpsController.provLinks(userProject, provLinksParamBuilder, true);
+          ProvLinksDTO dto = provOpsController.provLinks(userProject, userProjectInode, provLinksParamBuilder, true);
           if(dto != null) {
             List<ProvLinksDTO> provLinksDTOList = dto.getItems();
             if (provLinksDTOList != null && !provLinksDTOList.isEmpty()) {
@@ -371,8 +378,9 @@ public class ModelsBuilder {
       }
     }
     ModelRegistryDTO modelRegistryDTO = modelsController.getModelRegistry(modelRegistryProject);
+    Inode projectInode = inodeController.getProjectRoot(modelRegistryDTO.getParentProject().getName());
     provFilesParamBuilder
-            .filterByField(ProvStateParser.FieldsP.PROJECT_I_ID, modelRegistryDTO.getParentProject().getInode().getId())
+            .filterByField(ProvStateParser.FieldsP.PROJECT_I_ID, projectInode.getId())
             .filterByField(ProvStateParser.FieldsP.DATASET_I_ID, modelRegistryDTO.getDatasetInodeId());
     return Pair.with(provFilesParamBuilder, modelRegistryDTO);
   }

@@ -122,7 +122,8 @@ public class TestProjectProvenanceResource {
     @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
     @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response testGetIndexMapping() throws OpenSearchException {
-    String index = Provenance.getProjectIndex(project);
+    Inode projectInode = inodeCtrl.getProjectRoot(project.getName());
+    String index = Provenance.getProjectIndex(projectInode);
     Map<String, String> mapping = cache.mngIndexGetMapping(index, true);
     return Response.ok().entity(new OpenSearchIndexMappingDTO(index, mapping)).build();
   }

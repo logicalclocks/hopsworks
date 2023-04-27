@@ -41,7 +41,6 @@ package io.hops.hopsworks.persistence.entity.project;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
 import io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlert;
@@ -67,7 +66,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
@@ -106,9 +104,6 @@ import java.util.Map;
       query = "SELECT count(t) FROM Project t WHERE t.owner = :owner"),
   @NamedQuery(name = "Project.findByOwnerAndName",
       query = "SELECT t FROM Project t WHERE t.owner = :owner AND t.name = :name"),
-  @NamedQuery(name = "Project.findByInodeId",
-      query = "SELECT t FROM Project t WHERE t.inode.inodePK.parentId = :parentid "
-      + "AND t.inode.inodePK.name = :name"),
   @NamedQuery(name = "Project.findByNameCaseInsensitive",
       query = "SELECT t FROM Project t where LOWER(t.name) = LOWER(:name)")})
 public class Project implements Serializable {
@@ -205,18 +200,6 @@ public class Project implements Serializable {
   @Column(name = "creation_status")
   private CreationStatus creationStatus;
 
-  @JoinColumns({
-    @JoinColumn(name = "inode_pid",
-        referencedColumnName = "parent_id")
-    ,
-    @JoinColumn(name = "inode_name",
-        referencedColumnName = "name")
-    ,
-    @JoinColumn(name = "partition_id",
-        referencedColumnName = "partition_id")})
-  @OneToOne(optional = false)
-  private Inode inode;
-
   @JoinTable(name = "hopsworks.project_pythondeps",
       joinColumns
       = {
@@ -242,11 +225,6 @@ public class Project implements Serializable {
     this.name = name;
   }
 
-  public Project(String name, Inode inode) {
-    this(name);
-    this.inode = inode;
-  }
-
   public Project(String name, Users owner, Date timestamp, PaymentType paymentType) {
     this.name = name;
     this.owner = owner;
@@ -269,14 +247,6 @@ public class Project implements Serializable {
 
   public void setName(String name) {
     this.name = name;
-  }
-
-  public void setInode(Inode inode) {
-    this.inode = inode;
-  }
-
-  public Inode getInode() {
-    return this.inode;
   }
 
   public Users getOwner() {
@@ -555,7 +525,6 @@ public class Project implements Serializable {
         ", lastQuotaUpdate=" + lastQuotaUpdate +
         ", dockerImage='" + dockerImage + '\'' +
         ", creationStatus=" + creationStatus +
-        ", inode=" + inode +
         ", pythonDepCollection=" + pythonDepCollection +
         ", jupyterProjectCollection=" + jupyterProjectCollection +
         ", projectServiceAlerts=" + projectServiceAlerts +

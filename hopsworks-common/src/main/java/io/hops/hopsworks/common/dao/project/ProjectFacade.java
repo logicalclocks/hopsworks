@@ -42,6 +42,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -79,18 +81,6 @@ public class ProjectFacade extends AbstractFacade<Project> {
 
   public Project find(Integer id) {
     return em.find(Project.class, id);
-  }
-
-  public Project findByInodeId(Long parentId, String name) {
-    TypedQuery<Project> query = this.em.
-        createNamedQuery("Project.findByInodeId", Project.class).
-        setParameter("parentid", parentId).setParameter("name", name);
-
-    try {
-      return query.getSingleResult();
-    } catch (NoResultException e) {
-      return null;
-    }
   }
 
   /**
@@ -307,5 +297,13 @@ public class ProjectFacade extends AbstractFacade<Project> {
   public void changeKafkaQuota(Project project, int numTopics) {
     project.setKafkaMaxNumTopics(numTopics);
     em.merge(project);
+  }
+
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public void removeProject(String projectName) {
+    Project proj = this.findByName(projectName);
+    if(proj != null) {
+      em.remove(proj);
+    }
   }
 }

@@ -255,9 +255,10 @@ module ProjectHelper
   end
 
   def get_project_inode(project)
-    inode = INode.where(partition_id:project[:partition_id], parent_id:project[:inode_pid], name:project[:inode_name])
-    expect(inode.length).to eq(1), "inode not found for project: #{project[:inode_name]}"
-    inode.first
+    projects_root_inode = INode.where(parent_id:1, name: "Projects")
+    expect(projects_root_inode.length).to eq(1), "inode not found for project: #{project[:projectname]}"
+    project_inode = INode.where(parent_id:projects_root_inode.first[:id], name: project[:projectname])
+    project_inode.first
   end
 
   def create_member_in_table(project, user, role)
