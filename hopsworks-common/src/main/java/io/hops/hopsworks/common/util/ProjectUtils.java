@@ -190,15 +190,19 @@ public class ProjectUtils {
       ServiceDiscoveryException {
     com.logicalclocks.servicediscoverclient.service.Service registry = serviceDiscoveryController
         .getAnyAddressOfServiceWithDNSSRVOnly(HopsworksService.DOCKER_REGISTRY.getName());
+    Integer registryPort = registry.getPort();
     if(settings.isManagedDockerRegistry()){
       String registryUrl = registry.getAddress();
+      if (!registryPort.equals(443)) {
+        registryUrl = String.format("%s:%d", registryUrl, registryPort);
+      }
       String dockerNamespace = settings.getDockerNamespace();
       if(!dockerNamespace.isEmpty()){
         registryUrl += "/" + dockerNamespace;
       }
       return registryUrl;
     }
-    return registry.getName() + ":" + registry.getPort();
+    return registry.getName() + ":" + registryPort;
   }
   
   public String getRegistryAddress() throws ServiceDiscoveryException {
