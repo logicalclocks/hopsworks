@@ -44,9 +44,13 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
+import javax.ejb.Timeout;
+import javax.ejb.TimerConfig;
+import javax.ejb.TimerService;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.xml.parsers.DocumentBuilder;
@@ -79,10 +83,12 @@ import java.util.stream.Collectors;
 
 @Singleton
 @Startup
-@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class CloudManager {
   private static final Logger LOG = Logger.getLogger(CloudManager.class.getName());
 
+  @Resource
+  private TimerService timerService;
   @EJB
   private CloudClient cloudClient;
   @EJB
@@ -132,8 +138,11 @@ public class CloudManager {
       whitelistLog.append(h).append(" ");
     }
     LOG.log(Level.INFO, whitelistLog.toString());
+    timerService.createIntervalTimer(0, 3000, new TimerConfig("Cloud heartbeat", false));
   }
-  
+
+  @Timeout
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void heartbeat() {
     try {
       if (firstHeartbeat) {
@@ -157,7 +166,7 @@ public class CloudManager {
           //Yarn set vcores and memory at indexes 0 and 1 so index 2 will be gpus.
           allocatedGPUs = qs.getAllocatedResources().getResourceInformation(2).getValue();
         }
-
+        
         if (qs.getPendingResources().getResources().length > 2) {
           //we only have vcore, memory and gpus in our clusters.
           //Yarn set vcores and memory at indexes 0 and 1 so index 2 will be gpus.
@@ -166,12 +175,12 @@ public class CloudManager {
       }
       //send heartbeat to hopsworks-cloud
       HeartbeatRequest request = new HeartbeatRequest(new ArrayList<>(toSend.getDecommissioned()),
-          new ArrayList<>(toSend.getDecommissioning()), commandsStatus, firstHeartbeat, allocatedVcores, pendingVcores,
-          allocatedMemoryMB, pendingMemoryMB, allocatedGPUs, pendingGPUs
+        new ArrayList<>(toSend.getDecommissioning()), commandsStatus, firstHeartbeat, allocatedVcores, pendingVcores,
+        allocatedMemoryMB, pendingMemoryMB, allocatedGPUs, pendingGPUs
       );
       
       toSend = new DecommissionStatus();
-          
+      
       HeartbeatResponse response;
       try{
         response = cloudClient.sendHeartbeat(request);
@@ -179,18 +188,18 @@ public class CloudManager {
         firstHeartbeat = true;
         throw ex;
       }
-
+      
       for (Map.Entry<String, CommandStatus> commandStatus : commandsStatus.entrySet()) {
         if (CommandStatus.isFinal(commandStatus.getValue().getStatus())) {
           commandsStatus.remove(commandStatus.getKey());
         }
       }
-
+      
       Map<String, CloudNode> allNodesButHead = new HashMap<>(response.getWorkers().size());
       for (CloudNode worker : response.getWorkers()) {
         allNodesButHead.put(worker.getHost(), worker);
       }
-
+      
       addNewNodes(response);
       
       checkUsers(response.getBlockedUsers());
@@ -202,29 +211,29 @@ public class CloudManager {
       try {
         //check if the resource manager and the namenode are up
         Service rm = serviceDiscoveryController
-            .getAnyAddressOfServiceWithDNS(HopsworksService.RESOURCE_MANAGER.getName());
+          .getAnyAddressOfServiceWithDNS(HopsworksService.RESOURCE_MANAGER.getName());
         Service nm = serviceDiscoveryController
-            .getAnyAddressOfServiceWithDNS(HopsworksService.NAMENODE.getNameWithTag(NamenodeTags.rpc));
+          .getAnyAddressOfServiceWithDNS(HopsworksService.NAMENODE.getNameWithTag(NamenodeTags.rpc));
         
         final List<RemoveNodesCommand> removeNodesRequests = response.getCommands().stream()
-            .filter(cc -> cc.getType().equals(CloudCommandType.REMOVE_NODES))
-            .map(cc -> (RemoveNodesCommand) cc).collect(Collectors.toList());
+          .filter(cc -> cc.getType().equals(CloudCommandType.REMOVE_NODES))
+          .map(cc -> (RemoveNodesCommand) cc).collect(Collectors.toList());
         
         final List<DecommissionNodeCommand> decomissionNodeRequests = response.getCommands().stream()
-            .filter(cc -> cc.getType().equals(CloudCommandType.DECOMMISSION_NODE))
-            .map(cc -> (DecommissionNodeCommand) cc).collect(Collectors.toList());
+          .filter(cc -> cc.getType().equals(CloudCommandType.DECOMMISSION_NODE))
+          .map(cc -> (DecommissionNodeCommand) cc).collect(Collectors.toList());
         
         final List<BackupCommand> backupCommand = response.getCommands().stream()
-            .filter(cc -> cc.getType().equals(CloudCommandType.BACKUP) || 
-                    cc.getType().equals(CloudCommandType.RESTORE) || 
-                    cc.getType().equals(CloudCommandType.BACKUP_DONE) ||
-                    cc.getType().equals(CloudCommandType.DELETE_BACKUP))
-            .map(cc -> (BackupCommand) cc).collect(Collectors.toList());
+          .filter(cc -> cc.getType().equals(CloudCommandType.BACKUP) ||
+            cc.getType().equals(CloudCommandType.RESTORE) ||
+            cc.getType().equals(CloudCommandType.BACKUP_DONE) ||
+            cc.getType().equals(CloudCommandType.DELETE_BACKUP))
+          .map(cc -> (BackupCommand) cc).collect(Collectors.toList());
         
         backupService.handleBackup(backupCommand, commandsStatus);
         
         toSend = setAndGetDecommission(removeNodesRequests, allNodesButHead, decomissionNodeRequests);
-
+        
         if (firstHeartbeat) {
           firstHeartbeat = false;
         }
