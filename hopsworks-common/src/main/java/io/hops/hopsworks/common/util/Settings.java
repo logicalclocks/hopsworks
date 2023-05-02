@@ -3625,7 +3625,7 @@ public class Settings implements Serializable {
 
   public synchronized String getBaseDockerImagePythonName() {
     checkCache();
-    if(isManagedDockerRegistry()){
+    if(isManagedDockerRegistryOnManagedCloud()){
       return DOCKER_BASE_NON_PYTHON_IMAGE + ":" + DOCKER_BASE_IMAGE_PYTHON_NAME +
           "_" + HOPSWORKS_VERSION;
     }else{
@@ -3667,7 +3667,11 @@ public class Settings implements Serializable {
   private Boolean MANAGED_DOCKER_REGISTRY = false;
   public synchronized Boolean isManagedDockerRegistry(){
     checkCache();
-    return MANAGED_DOCKER_REGISTRY && isCloud();
+    return MANAGED_DOCKER_REGISTRY;
+  }
+
+  public synchronized Boolean isManagedDockerRegistryOnManagedCloud() {
+    return isManagedDockerRegistry() && isCloud();
   }
 
   public synchronized String getBaseNonPythonDockerImageWithNoTag(){

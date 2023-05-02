@@ -132,7 +132,7 @@ public class ProjectUtils {
    */
   private boolean isPythonDockerImage(String image) {
     Pattern pythonPattern;
-    if(settings.isManagedDockerRegistry()) {
+    if(settings.isManagedDockerRegistryOnManagedCloud()) {
       pythonPattern = Pattern.compile("^(base:python\\d{2}_\\d+[.]\\d+[.]\\d+(|-SNAPSHOT))$");
       Matcher pythonMatcher = pythonPattern.matcher(image);
       return pythonMatcher.matches();
@@ -191,6 +191,9 @@ public class ProjectUtils {
     com.logicalclocks.servicediscoverclient.service.Service registry = serviceDiscoveryController
         .getAnyAddressOfServiceWithDNSSRVOnly(HopsworksService.DOCKER_REGISTRY.getName());
     Integer registryPort = registry.getPort();
+    // In case of a ManagedDockerRegistry do not just use Consul domain name
+    // but instead get the resolved address **regardless** if it is on-prem
+    // or managed cloud
     if(settings.isManagedDockerRegistry()){
       String registryUrl = registry.getAddress();
       if (!registryPort.equals(443)) {
@@ -215,7 +218,7 @@ public class ProjectUtils {
     String initialImageTag =
         System.currentTimeMillis() + "-" + settings.getHopsworksVersion() +
             ".0";
-    if (settings.isManagedDockerRegistry()) {
+    if (settings.isManagedDockerRegistryOnManagedCloud()) {
       return settings.getBaseNonPythonDockerImageWithNoTag() + ":" +
           project.getName().toLowerCase() + "__" + initialImageTag;
     } else {
@@ -229,7 +232,7 @@ public class ProjectUtils {
   }
   
   public String getProjectNameFromDockerImageName(String imageName) {
-    if (settings.isManagedDockerRegistry()) {
+    if (settings.isManagedDockerRegistryOnManagedCloud()) {
       return imageName.split(":")[1].split("__")[0];
     } else {
       return getProjectDockerRepoName(imageName);

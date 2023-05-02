@@ -56,7 +56,7 @@ public class ManagedDockerRegistryMngr extends DockerRegistryMngrImpl implements
   @Override
   public List<String> deleteProjectImagesOnRegistry(String projectDockerImage)
           throws ServiceDiscoveryException, IOException {
-    if (settings.isManagedDockerRegistry()) {
+    if (settings.isManagedDockerRegistryOnManagedCloud()) {
       final String repoName
               = settings.getDockerNamespace() + "/"
               + settings.getBaseNonPythonDockerImageWithNoTag();
@@ -83,7 +83,7 @@ public class ManagedDockerRegistryMngr extends DockerRegistryMngrImpl implements
 
   @Override
   public void runRegistryGC() throws IOException {
-    if (settings.isManagedDockerRegistry()) {
+    if (settings.isManagedDockerRegistryOnManagedCloud()) {
       // do nothing, we use repository lifecycle policies for gc
     } else {
       super.runRegistryGC();
@@ -105,7 +105,7 @@ public class ManagedDockerRegistryMngr extends DockerRegistryMngrImpl implements
           throws IOException, ServiceDiscoveryException {
     LOG.info("Backing up images");
 
-    if (settings.isManagedDockerRegistry()) {
+    if (settings.isManagedDockerRegistryOnManagedCloud()) {
 
       Map<String, Future<ProcessResult>> result = new HashMap<>();
       final String repoName
@@ -150,7 +150,7 @@ public class ManagedDockerRegistryMngr extends DockerRegistryMngrImpl implements
   @Override
   public Map<String, Future<ProcessResult>> resotreImages(String backupId)
           throws IOException, ServiceDiscoveryException {
-    if (settings.isManagedDockerRegistry()) {
+    if (settings.isManagedDockerRegistryOnManagedCloud()) {
       Map<String, Future<ProcessResult>> result = new HashMap<>();
       final String repoName
               = settings.getDockerNamespace() + "/"
