@@ -24,6 +24,8 @@ import javax.annotation.PostConstruct;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
+import javax.ejb.Lock;
+import javax.ejb.LockType;
 import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -53,14 +55,17 @@ public class OpenSearchCache {
       .build();
   }
   
+  @Lock(LockType.READ)
   public void cacheMapping(String index, Map<String, String> mapping) {
     indexMappings.put(index, mapping);
   }
   
+  @Lock(LockType.READ)
   public Map<String, String> getMapping(String index) {
     return indexMappings.getIfPresent(index);
   }
   
+  @Lock(LockType.READ)
   public void clearMapping(String index) {
     indexMappings.invalidate(index);
   }
