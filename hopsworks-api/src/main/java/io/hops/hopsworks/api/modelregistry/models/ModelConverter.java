@@ -17,24 +17,23 @@
 package io.hops.hopsworks.api.modelregistry.models;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hops.hopsworks.api.modelregistry.models.dto.ModelDTO;
+import io.hops.hopsworks.common.util.DtoConverter;
 import io.hops.hopsworks.exceptions.ModelRegistryException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.Singleton;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 
-@Singleton
+@Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class ModelConverter {
-  final ObjectMapper objectMapper = new ObjectMapper();
+  @EJB
+  private DtoConverter dtoConverter;
   
   public byte[] marshalDescription(ModelDTO modelDTO) throws ModelRegistryException {
     String modelSummaryStr = writeValue(modelDTO);
@@ -47,7 +46,7 @@ public class ModelConverter {
   
   private ModelDTO readValue(String jsonConfig) throws ModelRegistryException {
     try {
-      return objectMapper.readValue(jsonConfig, ModelDTO.class);
+      return dtoConverter.readValue(jsonConfig, ModelDTO.class);
     } catch (JsonProcessingException e) {
       throw new ModelRegistryException(RESTCodes.ModelRegistryErrorCode.MODEL_MARSHALLING_FAILED, Level.FINE,
         "Failed to unmarshal value", "Failed to unmarshal value:" + jsonConfig, e);
@@ -57,7 +56,7 @@ public class ModelConverter {
   private String writeValue(ModelDTO modelDTO) throws ModelRegistryException {
     String jsonConfig;
     try {
-      jsonConfig = objectMapper.writeValueAsString(modelDTO);
+      jsonConfig = dtoConverter.writeValue(modelDTO);
     } catch (JsonProcessingException e) {
       throw new ModelRegistryException(RESTCodes.ModelRegistryErrorCode.MODEL_MARSHALLING_FAILED, Level.FINE,
         "Failed to marshal value", "Failed to unmarshal value:" + modelDTO, e);

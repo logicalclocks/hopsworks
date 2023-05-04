@@ -9,6 +9,8 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import io.hops.hopsworks.provenance.state.ProvStateControllerEE;
 
 import javax.annotation.PostConstruct;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
@@ -19,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 @Singleton
 @TransactionAttribute(TransactionAttributeType.NEVER)
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class KeywordsUsedCache {
   // This is a temporary cached used by Hopsworks to avoid hitting opensearch with each
   // Query. We use Guava cache with a single key instead of the memoize utilities, so that

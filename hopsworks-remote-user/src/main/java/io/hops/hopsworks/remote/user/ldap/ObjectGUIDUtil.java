@@ -3,9 +3,12 @@
  */
 package io.hops.hopsworks.remote.user.ldap;
 
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.Singleton;
 
 @Singleton
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class ObjectGUIDUtil {
 
   public ObjectGUIDUtil() {

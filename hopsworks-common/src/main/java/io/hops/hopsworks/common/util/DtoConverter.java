@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2023, Hopsworks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -13,33 +13,28 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.jwt;
+package io.hops.hopsworks.common.util;
 
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
-import javax.crypto.KeyGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.Singleton;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 
 @Singleton
+@TransactionAttribute(TransactionAttributeType.NEVER)
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
-public class SigningKeyGenerator {
+public class DtoConverter {
+  private final ObjectMapper objectMapper = new ObjectMapper();
   
-  private KeyGenerator keyGenerator;
+  public <T> T readValue(String jsonConfig, Class<T> resultClass) throws JsonProcessingException {
+    return objectMapper.readValue(jsonConfig, resultClass);
+  }
   
-  /**
-   * Generates a secret key for the given algorithm.
-   * @param algorithm
-   * @return base64Encoded string
-   * @throws NoSuchAlgorithmException 
-   */
-  public String getSigningKey(String algorithm) throws NoSuchAlgorithmException {
-    if (keyGenerator == null || !keyGenerator.getAlgorithm().equals(algorithm)) {
-      keyGenerator = KeyGenerator.getInstance(algorithm);
-    }
-    byte[] keyBytes = keyGenerator.generateKey().getEncoded();
-    String base64Encoded = Base64.getEncoder().encodeToString(keyBytes);
-    return base64Encoded;
+  public String writeValue(Object value) throws JsonProcessingException {
+    return objectMapper.writeValueAsString(value);
   }
 }
