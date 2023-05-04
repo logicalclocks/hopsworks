@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.transformationFunction;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.persistence.Basic;
@@ -26,7 +25,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -70,15 +68,6 @@ public class TransformationFunction implements Serializable  {
   @Basic(optional = false)
   @Column(name = "id")
   private Integer id;
-  @JoinColumns({
-      @JoinColumn(name = "inode_pid",
-          referencedColumnName = "parent_id"),
-      @JoinColumn(name = "inode_name",
-          referencedColumnName = "name"),
-      @JoinColumn(name = "partition_id",
-          referencedColumnName = "partition_id")})
-  @ManyToOne(optional = false)
-  private Inode inode;
   @Column(name = "name")
   private String name;
   @Column(name = "output_type")
@@ -110,14 +99,6 @@ public class TransformationFunction implements Serializable  {
 
   public void setId(Integer id) {
     this.id = id;
-  }
-
-  public Inode getInode() {
-    return inode;
-  }
-
-  public void setInode(Inode inode) {
-    this.inode = inode;
   }
 
   public String getName() {
