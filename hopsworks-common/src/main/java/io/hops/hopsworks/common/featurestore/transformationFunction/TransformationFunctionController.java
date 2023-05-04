@@ -29,12 +29,12 @@ import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
 import io.hops.hopsworks.persistence.entity.featurestore.transformationFunction.TransformationFunction;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -67,6 +67,7 @@ public class TransformationFunctionController {
   private FeaturestoreConnectorFacade featurestoreConnectorFacade;
 
   private static final String TRANSFORMATIONFUNCTIONS_FOLDER = "transformation_functions";
+  private static final String TRANSFORMATION_FUNCTION_FILE_TYPE = ".json";
 
   public TransformationFunctionController() {
   }
@@ -80,15 +81,14 @@ public class TransformationFunctionController {
                                          TransformationFunctionDTO transformationFunctionDTO)
       throws FeaturestoreException, IOException {
     verifyTransformationFunctionInput(transformationFunctionDTO);
-    Inode inode = create(user, project, featurestore, transformationFunctionDTO);
+    create(user, project, featurestore, transformationFunctionDTO);
     return transformationFunctionFacade.register(
         transformationFunctionDTO.getName(),
         transformationFunctionDTO.getOutputType(),
         transformationFunctionDTO.getVersion(),
         featurestore,
         new Date(),
-        user,
-        inode);
+        user);
   }
 
   public void registerBuiltInTransformationFunctions(Users user, Project project,
@@ -149,9 +149,10 @@ public class TransformationFunctionController {
 
   public String readContent(Users user, Project project, TransformationFunction transformationFunction)
       throws FeaturestoreException {
-    String path = inodeController.getPath(transformationFunction.getInode());
-
     DistributedFileSystemOps udfso = null;
+    String path = getFullPath(transformationFunction.getFeaturestore(), transformationFunction.getName(),
+        transformationFunction.getVersion()) + "/" + transformationFunction.getName()
+        + TRANSFORMATION_FUNCTION_FILE_TYPE;
     try {
       udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
       return udfso.cat(path);
@@ -163,7 +164,7 @@ public class TransformationFunctionController {
     }
   }
 
-  private Inode create(Users user, Project project, Featurestore featurestore,
+  private String create(Users user, Project project, Featurestore featurestore,
                        TransformationFunctionDTO transformationFunctionDTO)
       throws IOException, FeaturestoreException {
 
@@ -193,16 +194,17 @@ public class TransformationFunctionController {
     try {
       udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
       // Create the directory
-      Path dirPath = new Path(getOrCreatePath(featurestore, udfso),
-          getFeatureStoreEntityName(transformationFunctionDTO.getName(), transformationFunctionDTO.getVersion()));
+      Path dirPath = getFullPath(featurestore, transformationFunctionDTO.getName(),
+          transformationFunctionDTO.getVersion());
       if (!udfso.isDir(dirPath.toString())) {
-        udfso.mkdir(dirPath.toString());
+        udfso.mkdirs(dirPath, FsPermission.getDefault());
       }
 
-      Path filePath = new Path(dirPath, transformationFunctionDTO.getName() + ".json");
+      String fileName = transformationFunctionDTO.getName() + TRANSFORMATION_FUNCTION_FILE_TYPE;
+      Path filePath = new Path(dirPath, fileName);
       udfso.create(filePath, transformationFunctionDTO.getSourceCodeContent());
 
-      return inodeController.getInodeAtPath(filePath.toString());
+      return fileName;
     } finally {
       dfs.closeDfsClient(udfso);
     }
@@ -228,10 +230,11 @@ public class TransformationFunctionController {
     try {
       udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
 
-      String dirName = getFeatureStoreEntityName(transformationFunction.getName(), transformationFunction.getVersion());
-
       // Construct the directory path
-      Path dirPath = new Path(getOrCreatePath(featurestore, udfso), dirName);
+      Path dirPath = getFullPath(featurestore, transformationFunction.getName(), transformationFunction.getVersion());
+
+      // delete the record
+      transformationFunctionFacade.delete(transformationFunction);
 
       // delete json files
       udfso.rm(dirPath, true);
@@ -243,8 +246,11 @@ public class TransformationFunctionController {
     }
   }
 
-  private String getOrCreatePath(Featurestore featurestore,  DistributedFileSystemOps udfso)
-      throws IOException, FeaturestoreException {
+  public Path getFullPath(Featurestore featurestore, String name, Integer version) throws FeaturestoreException {
+    return new Path(getTransformationFunctionsDirPath(featurestore), getFeatureStoreEntityName(name, version));
+  }
+
+  public String getTransformationFunctionsDirPath(Featurestore featurestore) throws FeaturestoreException {
     String connectorName =
         featurestore.getProject().getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName();
     FeaturestoreConnector featurestoreConnector = featurestoreConnectorFacade
@@ -252,14 +258,8 @@ public class TransformationFunctionController {
         .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND,
             Level.FINE, "HOPSFS Connector: " + FeaturestoreConnectorType.HOPSFS.name()));
     Dataset trainingDatasetsFolder = featurestoreConnector.getHopsfsConnector().getHopsfsDataset();
-    String transformationFunctionDatasetPath = inodeController.getPath(trainingDatasetsFolder.getInode())
+    return inodeController.getPath(trainingDatasetsFolder.getInode())
         + "/" + TRANSFORMATIONFUNCTIONS_FOLDER;
-
-    // This is the case of an old project without TRANSFORMATIONFUNCTION dataset, create it.
-    if (!udfso.exists(transformationFunctionDatasetPath)) {
-      udfso.mkdir(transformationFunctionDatasetPath);
-    }
-    return transformationFunctionDatasetPath;
   }
 
   /**

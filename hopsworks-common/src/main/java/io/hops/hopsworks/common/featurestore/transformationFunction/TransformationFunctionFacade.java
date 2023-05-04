@@ -19,10 +19,11 @@ package io.hops.hopsworks.common.featurestore.transformationFunction;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.transformationFunction.TransformationFunction;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -52,14 +53,12 @@ public class TransformationFunctionFacade extends AbstractFacade<TransformationF
    * @param outputType
    * @param version
    * @param featurestore
-   * @param inode
    * @return
    */
   public TransformationFunction register(String name, String outputType, Integer version, Featurestore featurestore,
-                                         Date created, Users user, Inode inode) {
+                                         Date created, Users user) {
     TransformationFunction transformationFunction = new TransformationFunction();
     transformationFunction.setFeaturestore(featurestore);
-    transformationFunction.setInode(inode);
     transformationFunction.setName(name);
     transformationFunction.setOutputType(outputType);
     transformationFunction.setVersion(version);
@@ -170,6 +169,14 @@ public class TransformationFunctionFacade extends AbstractFacade<TransformationF
 
     setOffsetAndLim(offset, limit, query);
     return new AbstractFacade.CollectionInfo((Long) queryCount.getSingleResult(), query.getResultList());
+  }
+
+
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public void delete(TransformationFunction transformationFunction) {
+    if (transformationFunction != null) {
+      em.remove(em.merge(transformationFunction));
+    }
   }
 
   private void setFilter(Set<? extends FilterBy> filters, Query q) {
