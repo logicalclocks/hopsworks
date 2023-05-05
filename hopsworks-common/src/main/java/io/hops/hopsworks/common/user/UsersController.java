@@ -519,7 +519,6 @@ public class UsersController {
     return Optional.empty();
   }
 
-
   /**
    * Enables or disables two factor authentication.
    * The operation depends on the current status of the users two factor.
@@ -582,36 +581,6 @@ public class UsersController {
     userFacade.update(uid);
   }
 
-  public void changeAccountStatus(int id, String note, UserAccountStatus status) throws UserException {
-    Users p = userFacade.find(id);
-    if (p != null) {
-      if (UserAccountStatus.ACTIVATED_ACCOUNT.equals(status)) {
-        p.setFalseLogin(0);
-        if (p.getBbcGroupCollection() == null || p.getBbcGroupCollection().isEmpty()) {
-          BbcGroup group = bbcGroupFacade.findByGroupName("HOPS_USER");
-          List<BbcGroup> groups = new ArrayList<>();
-          groups.add(group);
-          p.setBbcGroupCollection(groups);
-        }
-      }
-      p.setNotes(note);
-      p.setStatus(status);
-      userFacade.update(p);
-  
-      // trigger user account handlers
-      UserAccountHandler.runUserAccountUpdateHandlers(userAccountHandlers, p);
-      
-      try {
-        emailBean.sendEmail(p.getEmail(), Message.RecipientType.TO, UserAccountsEmailMessages.ACCOUNT_STATUS_CHANGED,
-          UserAccountsEmailMessages.accountStatusChangeMessage(status.getUserStatus()));
-      } catch (MessagingException e) {
-      
-      }
-    } else {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
-    }
-  }
-
   public void updateSecret(Users user, String sec) {
     user.setSecret(sec);
     userFacade.update(user);
@@ -639,10 +608,6 @@ public class UsersController {
     userFacade.update(u);
   }
 
-  public boolean isUsernameTaken(String username) {
-    return (userFacade.findByEmail(username) != null);
-  }
-
   public boolean isUserInRole(Users user, String groupName) {
     if (user == null || groupName == null) {
       return false;
@@ -663,12 +628,6 @@ public class UsersController {
     return list;
   }
 
-  public void updateMaxNumProjs(Integer id, int maxNumProjs) {
-    Users user = userFacade.find(id);
-    user.setMaxNumProjects(maxNumProjs);
-    userFacade.update(user);
-  }
-  
   /**
    * Delete users. Will fail if the user is an initiator of an audit log.
    * @param u

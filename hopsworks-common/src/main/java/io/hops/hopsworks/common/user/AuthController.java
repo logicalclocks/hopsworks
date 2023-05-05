@@ -38,6 +38,7 @@
  */
 package io.hops.hopsworks.common.user;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.persistence.entity.certificates.UserCerts;
@@ -111,6 +112,16 @@ public class AuthController {
   private AccountAuditFacade accountAuditFacade;
   @Inject
   private PasswordRecovery passwordRecovery;
+
+  @VisibleForTesting
+  public void setUserFacade(UserFacade userFacade) {
+    this.userFacade = userFacade;
+  }
+
+  @VisibleForTesting
+  public void setEmailBean(EmailBean emailBean) {
+    this.emailBean = emailBean;
+  }
 
   private void validateUser(Users user) {
     if (user == null) {
@@ -584,13 +595,12 @@ public class AuthController {
    * @param user
    */
   public void registerFalseLogin(Users user) {
-    if (user != null) {
+    if (user != null && !isUserInRole(user, "AGENT")) {
       int count = user.getFalseLogin() + 1;
       user.setFalseLogin(count);
 
-      int allowedFalseLogins = isUserAgent(user)? Settings.ALLOWED_AGENT_FALSE_LOGINS : Settings.ALLOWED_FALSE_LOGINS;
       // block the user account if more than allowed false logins
-      if (count > allowedFalseLogins) {
+      if (count > Settings.ALLOWED_FALSE_LOGINS) {
         user.setStatus(UserAccountStatus.BLOCKED_ACCOUNT);
         try {
           emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO,
@@ -602,10 +612,6 @@ public class AuthController {
       // notify user about the false attempts
       userFacade.update(user);
     }
-  }
-  
-  private boolean isUserAgent(Users user) {
-    return isUserInRole(user,"AGENT");
   }
 
   /**
@@ -678,7 +684,8 @@ public class AuthController {
     }
   }
 
-  private boolean isUserInRole(Users user, String groupName) {
+  @VisibleForTesting
+  public boolean isUserInRole(Users user, String groupName) {
     if (user == null || groupName == null) {
       return false;
     }
