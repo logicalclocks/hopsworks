@@ -1976,7 +1976,6 @@ public class Settings implements Serializable {
   public static final int IS_OFFLINE = 0;
 
   public static final int ALLOWED_FALSE_LOGINS = 5;
-  public static final int ALLOWED_AGENT_FALSE_LOGINS = 20;
 
   public static final String KEYSTORE_SUFFIX = "__kstore.jks";
   public static final String TRUSTSTORE_SUFFIX = "__tstore.jks";
