@@ -55,11 +55,9 @@ public class KubeJobsMonitor implements JobsMonitor {
   private ExecutionUpdateController executionUpdateController;
   
   @Schedule(second = "*/5", minute = "*", hour = "*", info = "Kube Jobs Monitor")
-  public synchronized void monitor(Timer timer) {
+  public synchronized void monitorKubeJobs(Timer timer) {
     LOGGER.log(Level.FINE, "Running KubeJobsMonitor timer");
     try {
-
-      ;
       // Get all non-finished executions of type Python or Docker, if they don't exist in kubernetes, set them to failed
       List<Execution> pendingExecutions = executionFacade.findByTypesAndStates(
               Stream.of(JobType.DOCKER, JobType.PYTHON).collect(Collectors.toSet()),

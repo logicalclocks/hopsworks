@@ -20,7 +20,6 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
-import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
@@ -79,7 +78,6 @@ public class JobsJWTManager {
     }
   }
   
-  @Schedule(minute = "*/1", hour = "*", info = "Jobs JWT renew Manager")
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void monitorJWT() {
     // Get all JWTs for jobs, check creation date in Kubernetes and renew if necessary
@@ -124,7 +122,6 @@ public class JobsJWTManager {
     } catch (Exception ex) {
       LOG.log(Level.SEVERE, "Exception while fetching Job JWTs. Keep going on...", ex);
     }
-    
   }
   
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
