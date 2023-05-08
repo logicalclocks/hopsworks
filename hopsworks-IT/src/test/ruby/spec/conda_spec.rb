@@ -75,7 +75,7 @@ describe "On #{ENV['OS']}" do
             expect(CondaCommands.find_by(project_id: @project[:id])).to be nil
 
             # Install a library to create the new environment
-            install_library(@project[:id], ENV['PYTHON_VERSION'], 'beautifulsoup4', 'CONDA', conda_channel, lib_version: '4.9.0')
+            install_library(@project[:id], ENV['PYTHON_VERSION'], 'beautifulsoup4', 'CONDA', conda_channel, lib_version: '4.12.2')
 
             get_env_commands(@project[:id], ENV['PYTHON_VERSION'])
             expect(json_body[:count]).to be > 0
@@ -234,7 +234,7 @@ describe "On #{ENV['OS']}" do
             list_libraries(@project[:id], ENV['PYTHON_VERSION'])
             imageio_library = json_body[:items].detect { |library| library[:library] == "imageio" }
             expect(imageio_library[:packageSource]).to eq("PIP")
-            expect(imageio_library[:version]).to eq ("2.2.0")
+            expect(imageio_library[:version]).to eq ("2.28.1")
           end
           it 'uninstall libraries' do
             @project = create_env_and_update_project(@project, ENV['PYTHON_VERSION'])
@@ -438,7 +438,7 @@ describe "On #{ENV['OS']}" do
             expect(CondaCommands.find_by(project_id: @project[:id])).to be_nil
             @project = create_env_and_update_project(@project, ENV['PYTHON_VERSION'])
             # Install a library to create the new environment
-            install_library(@project[:id], ENV['PYTHON_VERSION'], 'htmlmin', 'CONDA', conda_channel, lib_version: '0.1.12')
+            install_library(@project[:id], ENV['PYTHON_VERSION'], 'tenacity', 'CONDA', conda_channel, lib_version: '8.2.2')
             # Wait until library is installed
             wait_for_running_command(@project[:id])
             @project = get_project_by_name(@project[:projectname])
@@ -469,7 +469,7 @@ describe "On #{ENV['OS']}" do
             wait_for do
               CondaCommands.where(["project_id = ? and op = ?", project[:id], "SYNC_BASE_ENV"]).empty?
             end
-            install_library(project[:id], ENV['PYTHON_VERSION'], 'dropbox', 'CONDA', conda_channel, lib_version: '10.2.0')
+            install_library(project[:id], ENV['PYTHON_VERSION'], 'dropbox', 'CONDA', conda_channel, lib_version: '11.14.0')
             project = get_project_by_name(project[:projectname])
             non_versioned_project_image = project.docker_image.rpartition('.').first
             wait_for_running_command(@project[:id])
@@ -495,11 +495,11 @@ describe "On #{ENV['OS']}" do
             create_env(@project, ENV['PYTHON_VERSION'])
 
             # Enabling anaconda will not create an environment yet
-            expect(check_if_img_exists_locally("python38:" + getVar('hopsworks_version').value)).to be true
+            expect(check_if_img_exists_locally("python310:" + getVar('hopsworks_version').value)).to be true
 
             delete_env(@project[:id], ENV['PYTHON_VERSION'])
             wait_for_running_command(@project[:id])
-            expect(check_if_img_exists_locally("python38:" + getVar('hopsworks_version').value)).to be true
+            expect(check_if_img_exists_locally("python310:" + getVar('hopsworks_version').value)).to be true
           end
           it 'create environment from yml with jupyter install true' do
             expect(CondaCommands.find_by(project_id: @project[:id])).to be_nil
@@ -536,7 +536,7 @@ describe "On #{ENV['OS']}" do
             list_libraries(@project[:id], ENV['PYTHON_VERSION'])
             imageio_library = json_body[:items].detect { |library| library[:library] == "imageio" }
             expect(imageio_library[:packageSource]).to eq("PIP")
-            expect(imageio_library[:version]).to eq ("2.2.0")
+            expect(imageio_library[:version]).to eq ("2.28.1")
           end
           it 'create environment from requirements.txt with jupyter install false' do
             expect(CondaCommands.find_by(project_id: @project[:id])).to be_nil
@@ -551,7 +551,7 @@ describe "On #{ENV['OS']}" do
             list_libraries(@project[:id], ENV['PYTHON_VERSION'])
             imageio_library = json_body[:items].detect { |library| library[:library] == "imageio" }
             expect(imageio_library[:packageSource]).to eq("PIP")
-            expect(imageio_library[:version]).to eq ("2.2.0")
+            expect(imageio_library[:version]).to eq ("2.28.1")
           end
           it 'check conflicts are empty' do
             expect(CondaCommands.find_by(project_id: @project[:id])).to be_nil
