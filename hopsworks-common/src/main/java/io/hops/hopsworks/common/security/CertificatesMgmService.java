@@ -40,22 +40,24 @@ package io.hops.hopsworks.common.security;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import io.hops.hopsworks.common.dao.certificates.CertsFacade;
-import io.hops.hopsworks.persistence.entity.command.Operation;
-import io.hops.hopsworks.persistence.entity.command.SystemCommand;
+import com.hazelcast.config.MapConfig;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.map.IMap;
+import com.hazelcast.topic.ITopic;
 import io.hops.hopsworks.common.dao.command.SystemCommandFacade;
-import io.hops.hopsworks.persistence.entity.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.message.MessageController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
+import io.hops.hopsworks.persistence.entity.command.Operation;
+import io.hops.hopsworks.persistence.entity.command.SystemCommand;
+import io.hops.hopsworks.persistence.entity.host.Hosts;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.AccessTimeout;
 import javax.ejb.Asynchronous;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
@@ -70,6 +72,7 @@ import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.attribute.PosixFileAttributeView;
@@ -94,8 +97,6 @@ public class CertificatesMgmService {
   @EJB
   private UserFacade userFacade;
   @EJB
-  private CertsFacade certsFacade;
-  @EJB
   private MessageController messageController;
   @EJB
   private SystemCommandFacade systemCommandFacade;
@@ -104,6 +105,10 @@ public class CertificatesMgmService {
   @Inject
   @Any
   private Instance<MasterPasswordHandler> handlers;
+  @Inject
+  private HazelcastInstance hazelcastInstance;
+  @EJB
+  private CertificateMasterPwdMgm certificateMasterPwdMgm;
   
   public enum UPDATE_STATUS {
     OK,
@@ -114,11 +119,50 @@ public class CertificatesMgmService {
   
   private File masterPasswordFile;
   private final Map<Class, MasterPasswordChangeResult> handlersResult = new HashMap<>();
+  // should be shared
   private Cache<Integer, UPDATE_STATUS> updateStatus;
   private Random rand;
+  private ITopic<String> masterPasswordUpdatedTopic;
 
   public CertificatesMgmService() {
   
+  }
+  
+  private static final String MAP_NAME = "certificatesMgmUpdateStatus";
+  public static final String PASSWORD_UPDATED_TOPIC_NAME = "masterPasswordUpdated";
+  
+  private void initHazelcast() {
+    if (hazelcastInstance != null) {
+      if (hazelcastInstance.getConfig().getMapConfigOrNull(MAP_NAME) == null) {
+        MapConfig mapConfig = new MapConfig(MAP_NAME);
+        mapConfig.setMaxIdleSeconds((int) TimeUnit.HOURS.toSeconds(12L));
+        hazelcastInstance.getConfig().addMapConfig(mapConfig);
+      }
+      masterPasswordUpdatedTopic = hazelcastInstance.getReliableTopic(PASSWORD_UPDATED_TOPIC_NAME);
+    } else {
+      updateStatus = CacheBuilder.newBuilder()
+        .maximumSize(100)
+        .expireAfterWrite(12L, TimeUnit.HOURS)
+        .build();
+    }
+  }
+  
+  private UPDATE_STATUS getIfPresentUpdateStatusCache(Integer key) {
+    if (hazelcastInstance != null) {
+      IMap<Integer, UPDATE_STATUS> map = hazelcastInstance.getMap(MAP_NAME);
+      return map.get(key);
+    } else {
+      return updateStatus.getIfPresent(key);
+    }
+  }
+  
+  private void putUpdateStatusCache(Integer key, UPDATE_STATUS val) {
+    if (hazelcastInstance != null) {
+      IMap<Integer, UPDATE_STATUS> map = hazelcastInstance.getMap(MAP_NAME);
+      map.put(key, val);
+    } else {
+      updateStatus.put(key, val);
+    }
   }
   
   @PostConstruct
@@ -164,11 +208,7 @@ public class CertificatesMgmService {
         throw new IllegalStateException("Wrong permissions for file " + masterPasswordFile.getAbsolutePath()
             + ", it should be 700");
       }
-      
-      updateStatus = CacheBuilder.newBuilder()
-          .maximumSize(100)
-          .expireAfterWrite(12L, TimeUnit.HOURS)
-          .build();
+      initHazelcast();
       rand = new Random();
     } catch (UnsupportedOperationException ex) {
       LOG.log(Level.WARNING, "Associated filesystem is not POSIX compliant. " +
@@ -181,9 +221,8 @@ public class CertificatesMgmService {
   }
 
   @Lock(LockType.READ)
-  @AccessTimeout(value = 3, unit = TimeUnit.SECONDS)
   public String getMasterEncryptionPassword() throws IOException {
-    return FileUtils.readFileToString(masterPasswordFile).trim();
+    return certificateMasterPwdMgm.getMasterEncryptionPassword(masterPasswordFile);
   }
   
   /**
@@ -194,30 +233,24 @@ public class CertificatesMgmService {
    * @throws EncryptionMasterPasswordException
    */
   @Lock(LockType.READ)
-  @AccessTimeout(value = 3, unit = TimeUnit.SECONDS)
   public void checkPassword(String providedPassword, String userRequestedEmail)
       throws IOException, EncryptionMasterPasswordException {
-    String sha = DigestUtils.sha256Hex(providedPassword);
-    if (!getMasterEncryptionPassword().equals(sha)) {
-      Users user = userFacade.findByEmail(userRequestedEmail);
-      String logMsg = "*** Attempt to change master encryption password with wrong credentials";
-      if (user != null) {
-        LOG.log(Level.INFO, logMsg + " by user <" + user.getUsername() + ">");
-      } else {
-        LOG.log(Level.INFO, logMsg);
-      }
-      throw new EncryptionMasterPasswordException("Provided password is incorrect");
-    }
+    certificateMasterPwdMgm.checkPassword(providedPassword, userRequestedEmail, masterPasswordFile, userFacade);
   }
   
+  // A put operation with the same operationId can only be initiated from the same node that created the operationId.
+  // Because initUpdateOperation is called before resetMasterEncryptionPassword which will update the state.
+  // So locking this locally in this singleton should be enough.
+  @Lock(LockType.WRITE)
   public Integer initUpdateOperation() {
     Integer operationId = rand.nextInt();
-    updateStatus.put(operationId, UPDATE_STATUS.WORKING);
+    putUpdateStatusCache(operationId, UPDATE_STATUS.WORKING);
     return operationId;
   }
   
+  @Lock(LockType.READ)
   public UPDATE_STATUS getOperationStatus(Integer operationId) {
-    UPDATE_STATUS status = updateStatus.getIfPresent(operationId);
+    UPDATE_STATUS status = getIfPresentUpdateStatusCache(operationId);
     return status != null ? status : UPDATE_STATUS.NOT_FOUND;
   }
   
@@ -227,35 +260,33 @@ public class CertificatesMgmService {
    * @param newMasterPasswd new master encryption password
    * @param userRequested User requested password change
    */
-  @SuppressWarnings("unchecked")
   @Asynchronous
   @Lock(LockType.WRITE)
-  @AccessTimeout(value = 500)
   public void resetMasterEncryptionPassword(Integer operationId, String newMasterPasswd, String userRequested) {
-    try {
-      String newDigest = DigestUtils.sha256Hex(newMasterPasswd);
-      callUpdateHandlers(newDigest);
-      updateMasterEncryptionPassword(newDigest);
-      StringBuilder successLog = gatherLogs();
-      sendSuccessfulMessage(successLog, userRequested);
-      updateStatus.put(operationId, UPDATE_STATUS.OK);
-      LOG.log(Level.INFO, "Master encryption password changed!");
-    } catch (EncryptionMasterPasswordException ex) {
-      String errorMsg = "*** Master encryption password update failed!!! Rolling back...";
-      LOG.log(Level.SEVERE, errorMsg, ex);
-      updateStatus.put(operationId, UPDATE_STATUS.FAILED);
-      callRollbackHandlers();
-      sendUnsuccessfulMessage(errorMsg + "\n" + ex.getMessage(), userRequested);
-    } catch (IOException ex) {
-      String errorMsg = "*** Failed to write new encryption password to file: " + masterPasswordFile.getAbsolutePath()
-          + ". Rolling back...";
-      LOG.log(Level.SEVERE, errorMsg, ex);
-      updateStatus.put(operationId, UPDATE_STATUS.FAILED);
-      callRollbackHandlers();
-      sendUnsuccessfulMessage(errorMsg + "\n" + ex.getMessage(), userRequested);
-    } finally {
-      handlersResult.clear();
+    MasterPasswordResetResult resetResult = certificateMasterPwdMgm.resetMasterEncryptionPassword(newMasterPasswd,
+      masterPasswordFile, handlers, handlersResult);
+    if (UPDATE_STATUS.OK.equals(resetResult.getUpdateStatus())) {
+      sendSuccessfulMessage(resetResult.getSuccessLog(), userRequested);
+      putUpdateStatusCache(operationId, UPDATE_STATUS.OK);
+      if (masterPasswordUpdatedTopic != null) {
+        // if publish fails the cluster will be in an inconsistent state until the password file is updated manually
+        // is it safe to send the password like this. Can external hazelcast subscribe to this message?
+        masterPasswordUpdatedTopic.publish(DigestUtils.sha256Hex(newMasterPasswd));
+      }
+    } else {
+      sendUnsuccessfulMessage(resetResult.getErrorLog(), userRequested);
+      putUpdateStatusCache(operationId, UPDATE_STATUS.FAILED);
     }
+  }
+  
+  /**
+   * Update local Master Encryption Password. Should only be used when a node gets password updated notification.
+   * @param newPassword
+   * @throws IOException
+   */
+  @Lock(LockType.WRITE)
+  public void updateMasterEncryptionPassword(String newPassword) throws IOException {
+    FileUtils.writeStringToFile(masterPasswordFile, newPassword, Charset.defaultCharset());
   }
   
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -267,42 +298,8 @@ public class CertificatesMgmService {
     }
   }
   
-  private void callUpdateHandlers(String newDigest) throws EncryptionMasterPasswordException, IOException {
-    for (MasterPasswordHandler handler : handlers) {
-      MasterPasswordChangeResult result = handler.perform(getMasterEncryptionPassword(), newDigest);
-      handlersResult.put(handler.getClass(), result);
-      if (result.getCause() != null) {
-        throw result.getCause();
-      }
-    }
-  }
-  
-  private void callRollbackHandlers() {
-    for (MasterPasswordHandler handler : handlers) {
-      MasterPasswordChangeResult result = handlersResult.get(handler.getClass());
-      if (result != null) {
-        handler.rollback(result);
-      }
-    }
-  }
-  
-  private StringBuilder gatherLogs() {
-    StringBuilder successLog = new StringBuilder();
-    for (MasterPasswordChangeResult result : handlersResult.values()) {
-      if (result.getSuccessLog() != null) {
-        successLog.append(result.getSuccessLog());
-        successLog.append("\n\n");
-      }
-    }
-    return successLog;
-  }
-  
-  private void updateMasterEncryptionPassword(String newPassword) throws IOException {
-    FileUtils.writeStringToFile(masterPasswordFile, newPassword);
-  }
-  
-  private void sendSuccessfulMessage(StringBuilder successLog, String userRequested) {
-    sendInbox(successLog.toString(), "Changed successfully", userRequested);
+  private void sendSuccessfulMessage(String successLog, String userRequested) {
+    sendInbox(successLog, "Changed successfully", userRequested);
   }
   
   private void sendUnsuccessfulMessage(String message, String userRequested) {

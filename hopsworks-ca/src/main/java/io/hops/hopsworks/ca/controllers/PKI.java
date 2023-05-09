@@ -39,6 +39,8 @@
 package io.hops.hopsworks.ca.controllers;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.cp.lock.FencedLock;
 import io.hops.hadoop.shaded.com.google.gson.Gson;
 import io.hops.hopsworks.ca.configuration.CAConf;
 import io.hops.hopsworks.ca.configuration.CAConfiguration;
@@ -48,14 +50,14 @@ import io.hops.hopsworks.ca.configuration.SubjectAlternativeName;
 import io.hops.hopsworks.ca.configuration.UsernamesConfiguration;
 import io.hops.hopsworks.ca.persistence.CRLFacade;
 import io.hops.hopsworks.ca.persistence.KeyFacade;
-import io.hops.hopsworks.ca.persistence.SerialNumberFacade;
 import io.hops.hopsworks.ca.persistence.PKICertificateFacade;
+import io.hops.hopsworks.ca.persistence.SerialNumberFacade;
 import io.hops.hopsworks.persistence.entity.pki.CAType;
+import io.hops.hopsworks.persistence.entity.pki.KeyIdentifier;
+import io.hops.hopsworks.persistence.entity.pki.PKICertificate;
 import io.hops.hopsworks.persistence.entity.pki.PKICertificateId;
 import io.hops.hopsworks.persistence.entity.pki.PKICrl;
 import io.hops.hopsworks.persistence.entity.pki.PKIKey;
-import io.hops.hopsworks.persistence.entity.pki.KeyIdentifier;
-import io.hops.hopsworks.persistence.entity.pki.PKICertificate;
 import io.hops.hopsworks.servicediscovery.HopsworksService;
 import io.hops.hopsworks.servicediscovery.Utilities;
 import io.hops.hopsworks.servicediscovery.tags.MysqlTags;
@@ -107,6 +109,7 @@ import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import javax.naming.InvalidNameException;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -151,6 +154,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.logging.Level;
@@ -169,6 +173,7 @@ public class PKI {
   private static final CRLReason REVOCATION_REASON = CRLReason.lookup(CRLReason.privilegeWithdrawn);
 
   private final AtomicBoolean CA_INITIALIZED = new AtomicBoolean(false);
+  
   private static final GeneralName[] EMTPY_GENERAL_NAMES = new GeneralName[0];
 
   @EJB
@@ -185,6 +190,8 @@ public class PKI {
   private CAConf caConf;
   @EJB
   private UsernamesConfiguration usernamesConfiguration;
+  @Inject
+  private HazelcastInstance hazelcastInstance;
 
   private KeyPairGenerator keyPairGenerator;
   private KeyFactory keyFactory;
@@ -193,6 +200,7 @@ public class PKI {
   private JcaPEMKeyConverter pemKeyConverter;
   private CAsConfiguration conf;
   private static final Map<CAType, X500Name> CA_SUBJECT_NAME = new HashMap<>(3);
+  private static final String CA_INIT_LOCK = "caInitLock";
 
   static {
     X500NameBuilder rootNameBuilder = new X500NameBuilder(BCStrictStyle.INSTANCE);
@@ -239,6 +247,26 @@ public class PKI {
       throw new RuntimeException("Failed to initialize PKI", ex);
     }
   }
+  
+  private FencedLock getLock() {
+    if (hazelcastInstance != null && hazelcastInstance.getCluster().getMembers().size() > 1) {
+      return hazelcastInstance.getCPSubsystem().getLock(CA_INIT_LOCK);
+    } else {
+      return null;
+    }
+  }
+  
+  private boolean lockIfHA() {
+    FencedLock lock = getLock();
+    return lock == null || lock.tryLock(3, TimeUnit.MINUTES);
+  }
+  
+  private void unlockIfHA() {
+    FencedLock lock = getLock();
+    if (lock != null) {
+      lock.unlock();
+    }
+  }
 
   public void configure() {
     conf = loadConfiguration();
@@ -267,13 +295,17 @@ public class PKI {
 
   protected void maybeInitializeCA() throws GeneralSecurityException, IOException, OperatorCreationException {
     if (!CA_INITIALIZED.getAndSet(true)) {
-      try {
-        LOGGER.log(Level.INFO, "Initializing CAs");
-        initializeCertificateAuthorities();
-      } catch (Exception ex) {
-        CA_INITIALIZED.set(false);
-        LOGGER.log(Level.SEVERE, "Error initializing CAs", ex);
-        throw ex;
+      if (lockIfHA()) {
+        try {
+          LOGGER.log(Level.INFO, "Initializing CAs");
+          initializeCertificateAuthorities();
+        } catch (Exception ex) {
+          CA_INITIALIZED.set(false);
+          LOGGER.log(Level.SEVERE, "Error initializing CAs", ex);
+          throw ex;
+        } finally {
+          unlockIfHA();
+        }
       }
     } else {
       LOGGER.log(Level.FINE, "CAs already initialized");
