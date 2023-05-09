@@ -256,6 +256,7 @@ public class FeaturestoreController {
     //Store featurestore metadata in Hopsworks
     Featurestore featurestore = new Featurestore();
     featurestore.setProject(project);
+    featurestore.setName(project.getName().toLowerCase());
     featurestore.setHiveDbId(hiveDbId);
     featurestore.setCreated(new Date());
     featurestoreFacade.persist(featurestore);

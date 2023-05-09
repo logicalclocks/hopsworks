@@ -57,6 +57,10 @@ public class Featurestore implements Serializable {
   @Basic(optional = false)
   @Column(name = "id")
   private Integer id;
+
+  @Basic(optional = false)
+  @Column(name = "name")
+  private String name;
   @JoinColumn(name = "project_id", referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Project project;
@@ -82,6 +86,14 @@ public class Featurestore implements Serializable {
 
   public void setId(Integer id) {
     this.id = id;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
   }
 
   public Project getProject() {
@@ -116,6 +128,7 @@ public class Featurestore implements Serializable {
     Featurestore that = (Featurestore) o;
     
     if (id != null  && !id.equals(that.id)) return false;
+    if (name != null && !name.equals(that.name)) return false;
     if (!project.equals(that.project)) return false;
     if (created != null && that.created != null && !created.equals(that.created)) return false;
     return hiveDbId.equals(that.hiveDbId);
@@ -125,6 +138,7 @@ public class Featurestore implements Serializable {
   public int hashCode() {
     int result = id != null ? id.hashCode() : 0;
     result = 31 * result + project.hashCode();
+    result = 31 * result + (name != null ? name.hashCode() : 0);
     result = 31 * result + (created != null ? created.hashCode() : 0);
     result = 31 * result + hiveDbId.hashCode();
     return result;
