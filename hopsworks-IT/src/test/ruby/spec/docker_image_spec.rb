@@ -57,6 +57,18 @@ describe "On #{ENV['OS']}" do
         expect(json_body[:isPreinstalledDockerImage]).to be true
       end
 
+      it 'docker python310 image release format should be recognized as preinstalled' do
+        set_docker_image(@project, "python310:3.3.0")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isPreinstalledDockerImage]).to be true
+      end
+
+      it 'docker python310 image snapshot format should be recognized as preinstalled' do
+        set_docker_image(@project, "python310:3.3.0-SNAPSHOT")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isPreinstalledDockerImage]).to be true
+      end
+
       it 'project unique docker image and tag release format should not be recognized as preinstalled' do
         set_docker_image(@project, @project[:projectname].downcase + ":1611136370296-2.0.0.0")
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
@@ -95,6 +107,18 @@ describe "On #{ENV['OS']}" do
 
       it 'older python38 docker image snapshot format should be old for this installation' do
         set_docker_image(@project, "python38:2.0.0-SNAPSHOT")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isOldDockerImage]).to be true
+      end
+
+      it 'older python310 docker image release format should be old for this installation' do
+        set_docker_image(@project, "python310:2.0.0")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isOldDockerImage]).to be true
+      end
+
+      it 'older python310 docker image snapshot format should be old for this installation' do
+        set_docker_image(@project, "python310:2.0.0-SNAPSHOT")
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
         expect(json_body[:isOldDockerImage]).to be true
       end
@@ -143,6 +167,18 @@ describe "On #{ENV['OS']}" do
         expect(json_body[:isPreinstalledDockerImage]).to be true
       end
 
+      it 'docker python310 image release format should be recognized as preinstalled' do
+        set_docker_image(@project, "base:python310_2.0.0")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isPreinstalledDockerImage]).to be true
+      end
+
+      it 'docker python310 image snapshot format should be recognized as preinstalled' do
+        set_docker_image(@project, "base:python310_2.0.0-SNAPSHOT")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isPreinstalledDockerImage]).to be true
+      end
+
       it 'project unique docker image and tag release format should not be recognized as preinstalled' do
         set_docker_image(@project, "base:" + @project[:projectname].downcase + "_" + "1611136370296-2.0.0.0")
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
@@ -181,6 +217,18 @@ describe "On #{ENV['OS']}" do
 
       it 'older python38 docker image snapshot format should be old for this installation' do
         set_docker_image(@project, "base:python38_2.0.0-SNAPSHOT")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isOldDockerImage]).to be true
+      end
+
+      it 'older python310 docker image release format should be old for this installation' do
+        set_docker_image(@project, "base:python310_2.0.0")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isOldDockerImage]).to be true
+      end
+
+      it 'older python310 docker image snapshot format should be old for this installation' do
+        set_docker_image(@project, "base:python310_2.0.0-SNAPSHOT")
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
         expect(json_body[:isOldDockerImage]).to be true
       end
