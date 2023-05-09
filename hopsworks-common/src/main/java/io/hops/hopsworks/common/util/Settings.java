@@ -280,9 +280,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_SERVING_MAX_GPUS_ALLOCATION = "kube_serving_max_gpus_allocation";
   private static final String VARIABLE_KUBE_SERVING_MAX_NUM_INSTANCES = "kube_serving_max_num_instances";
   private static final String VARIABLE_KUBE_SERVING_MIN_NUM_INSTANCES = "kube_serving_min_num_instances";
-  private static final String VARIABLE_KUBE_TAINTED_NODES = "kube_tainted_nodes";
-  private static final String VARIABLE_KUBE_TAINTED_NODES_MONITOR_INTERVAL =
-      "kube_node_taints_monitor_interval";
 
   /*
    * -------------------- Jupyter ---------------
@@ -411,7 +408,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_DOCKER_CGROUP_MONITOR_INTERVAL = "docker_cgroup_monitor_interval";
   private static final String VARIABLE_DOCKER_CGROUP_PARENT = "docker_cgroup_parent";
 
-  private static final String VARIABLE_PROMETHEUS_PORT = "prometheus_port";
 
   private static final String VARIABLE_SKIP_NAMESPACE_CREATION =
       "kube_skip_namespace_creation";
@@ -809,10 +805,7 @@ public class Settings implements Serializable {
       KUBE_SERVING_MIN_NUM_INSTANCES = setIntVar(VARIABLE_KUBE_SERVING_MIN_NUM_INSTANCES,
         KUBE_SERVING_MIN_NUM_INSTANCES);
       KUBE_KNATIVE_DOMAIN_NAME = setStrVar(VARIABLE_KUBE_KNATIVE_DOMAIN_NAME, KUBE_KNATIVE_DOMAIN_NAME);
-      KUBE_TAINTED_NODES = setStrVar(VARIABLE_KUBE_TAINTED_NODES, KUBE_TAINTED_NODES);
-      KUBE_TAINTED_NODES_MONITOR_INTERVAL = setStrVar(VARIABLE_KUBE_TAINTED_NODES_MONITOR_INTERVAL,
-          KUBE_TAINTED_NODES_MONITOR_INTERVAL);
-  
+
       HOPSWORKS_ENTERPRISE = setBoolVar(VARIABLE_HOPSWORKS_ENTERPRISE, HOPSWORKS_ENTERPRISE);
 
       JUPYTER_HOST = setStrVar(VARIABLE_JUPYTER_HOST, JUPYTER_HOST);
@@ -928,8 +921,6 @@ public class Settings implements Serializable {
           DOCKER_CGROUP_MONITOR_INTERVAL);
       DOCKER_CGROUP_PARENT = setStrVar(VARIABLE_DOCKER_CGROUP_PARENT, DOCKER_CGROUP_PARENT);
 
-      PROMETHEUS_PORT = setIntVar(VARIABLE_PROMETHEUS_PORT, PROMETHEUS_PORT);
-  
       SKIP_NAMESPACE_CREATION = setBoolVar(VARIABLE_SKIP_NAMESPACE_CREATION,
           SKIP_NAMESPACE_CREATION);
 
@@ -1732,12 +1723,6 @@ public class Settings implements Serializable {
     checkCache();
     return JUPYTER_WS_PING_INTERVAL_MS;
 
-  }
-
-  private Integer PROMETHEUS_PORT = 9089;
-  public synchronized Integer getPrometheusPort() {
-    checkCache();
-    return PROMETHEUS_PORT;
   }
 
   //Git
@@ -3159,19 +3144,6 @@ public class Settings implements Serializable {
   public synchronized String getKubeKnativeDomainName() {
     checkCache();
     return KUBE_KNATIVE_DOMAIN_NAME;
-  }
-
-  //comma seperated list of tainted nodes
-  private String KUBE_TAINTED_NODES = "";
-  public synchronized String getKubeTaintedNodes() {
-    checkCache();
-    return KUBE_TAINTED_NODES;
-  }
-
-  private String KUBE_TAINTED_NODES_MONITOR_INTERVAL = "30m";
-  public synchronized String getKubeTaintedMonitorInterval() {
-    checkCache();
-    return KUBE_TAINTED_NODES_MONITOR_INTERVAL;
   }
 
   private Boolean HOPSWORKS_ENTERPRISE = false;

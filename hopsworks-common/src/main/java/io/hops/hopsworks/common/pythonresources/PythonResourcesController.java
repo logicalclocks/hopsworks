@@ -19,11 +19,16 @@ import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
-import io.hops.hopsworks.common.util.PrometheusClient;
+import io.hops.hopsworks.common.proxies.client.HttpClient;
+import io.hops.hopsworks.common.proxies.client.NotRetryableClientProtocolException;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.servicediscovery.HopsworksService;
-import io.hops.hopsworks.servicediscovery.tags.GlassfishTags;
+import io.hops.hopsworks.servicediscovery.tags.PrometheusTags;
+import org.apache.http.HttpHost;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -32,14 +37,20 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import javax.inject.Inject;
+import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
+
+import static io.hops.hopsworks.common.pythonresources.PythonResourcesQueryController.CLUSTER_TOTAL_CPU_CAPACITY;
+import static io.hops.hopsworks.common.pythonresources.PythonResourcesQueryController.DOCKER_TOTAL_ALLOCATABLE_CPU_KEY;
+import static io.hops.hopsworks.common.pythonresources.PythonResourcesQueryController.DOCKER_TOTAL_ALLOCATABLE_MEMORY_KEY;
+import static io.hops.hopsworks.common.pythonresources.PythonResourcesQueryController.DOCKER_CURRENT_MEMORY_USAGE_KEY;
+import static io.hops.hopsworks.common.pythonresources.PythonResourcesQueryController.DOCKER_CURRENT_CPU_USAGE_KEY;
+import static io.hops.hopsworks.common.pythonresources.PythonResourcesQueryController.CLUSTER_TOTAL_MEMORY_CAPACITY;
+import static io.hops.hopsworks.common.pythonresources.PythonResourcesQueryController.CLUSTER_CURRENT_MEMORY_USAGE;
+import static io.hops.hopsworks.common.pythonresources.PythonResourcesQueryController.CLUSTER_CURRENT_CPU_USAGE;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -48,45 +59,31 @@ public class PythonResourcesController {
   private final static Logger LOGGER = Logger.getLogger(PythonResourcesController.class.getName());
 
   @EJB
-  private ServiceDiscoveryController serviceDiscoveryController;
-  @EJB
-  private PrometheusClient client;
+  private HttpClient httpClient;
   @EJB
   private Settings settings;
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
+  @Inject
+  private PythonResourcesQueryController pythonResourcesQueryController;
 
-  private static JSONObject pythonResources = new JSONObject();
-
-
-  private final String DOCKER_TOTAL_ALLOCATABLE_CPU_KEY = "docker_allocatable_cpu";
-  private final String DOCKER_CURRENT_CPU_USAGE_KEY = "docker_current_cpu_usage";
-  private final String DOCKER_TOTAL_ALLOCATABLE_MEMORY_KEY = "docker_total_memory";
-  private final String DOCKER_CURRENT_MEMORY_USAGE_KEY = "docker_current_memory_usage";
-  private final String CLUSTER_TOTAL_MEMORY_CAPACITY = "cluster_total_memory";
-  private final String CLUSTER_TOTAL_CPU_CAPACITY = "cluster_total_cpu";
-  private final String CLUSTER_CURRENT_MEMORY_USAGE = "cluster_current_memory_usage";
-  private final String CLUSTER_CURRENT_CPU_USAGE = "cluster_current_cpu_usage";
-
-  private Integer nodeExporterPort;
-  private String glassfishIp;
+  private Service prometheusService;
 
   @PostConstruct
   public void init() {
     try {
-      Service nodeExporterService =
-          serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
-              HopsworksService.NODE_EXPORTER.getName());
-      nodeExporterPort = nodeExporterService.getPort();
-      Service glassfishService = serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
-          HopsworksService.GLASSFISH.getNameWithTag(GlassfishTags.hopsworks));
-      glassfishIp = glassfishService.getAddress();
-    } catch (ServiceDiscoveryException e) {
-      LOGGER.log(Level.INFO, e.getMessage());
+      prometheusService = serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
+          HopsworksService.PROMETHEUS.getNameWithTag(PrometheusTags.prometheus));
+    } catch (ServiceDiscoveryException se) {
+      // Nothing to do
     }
   }
 
   public JSONObject getPythonResources() throws ServiceDiscoveryException {
-    Map<String, String>  pythonResourcesTypesQueries = updatePrometheusQueries();
-    pythonResourcesTypesQueries.forEach((key, query) -> getResourceValue(key, query));
+    JSONObject pythonResources = new JSONObject();
+
+    pythonResourcesQueryController.getPrometheusQueries()
+        .forEach((key, query) -> getResourceValue(key, query, pythonResources));
 
     pythonResources.put(CLUSTER_TOTAL_CPU_CAPACITY, 100);
     if (!settings.isDockerCgroupEnabled() || settings.getKubeInstalled()) {
@@ -99,9 +96,9 @@ public class PythonResourcesController {
     return pythonResources;
   }
 
-  private void getResourceValue(String resource, String query) {
+  private void getResourceValue(String resource, String query, JSONObject pythonResources) {
     try {
-      JSONObject queryResult = client.execute(query);
+      JSONObject queryResult = executeQuery(query);
       JSONArray resultObject = queryResult.getJSONObject("data").getJSONArray("result");
       if (resultObject.length() > 0) {
         pythonResources.put(resource, resultObject.getJSONObject(0).getJSONArray("value").getString(1));
@@ -113,100 +110,23 @@ public class PythonResourcesController {
     }
   }
 
-  private Map<String, String> updatePrometheusQueries() throws ServiceDiscoveryException {
-    if (nodeExporterPort == null) {
-      Service nodeExporterService =
-          serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
-              HopsworksService.NODE_EXPORTER.getName());
-      nodeExporterPort = nodeExporterService.getPort();
-    } else if (Strings.isNullOrEmpty(glassfishIp)) {
-      Service glassfishService = serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
-          HopsworksService.GLASSFISH.getNameWithTag(GlassfishTags.hopsworks));
-      glassfishIp = glassfishService.getAddress();
+  public JSONObject executeQuery(String query) throws ServiceException {
+    try {
+      HttpHost prometheusHost = new HttpHost(prometheusService.getName(), prometheusService.getPort(), "http");
+      HttpGet queryRequest = new HttpGet("/api/v1/query?query=" + URLEncoder.encode(query, "UTF-8"));
+
+      return httpClient.execute(prometheusHost, queryRequest, httpResponse -> {
+        int statusCode = httpResponse.getStatusLine().getStatusCode();
+        if (statusCode / 100 == 2) {
+          String response = EntityUtils.toString(httpResponse.getEntity());
+          return Strings.isNullOrEmpty(response) ? new JSONObject() : new JSONObject(response);
+        } else {
+          throw new NotRetryableClientProtocolException(httpResponse.toString());
+        }
+      });
+    } catch (IOException e) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.PROMETHEUS_QUERY_ERROR, Level.FINE,
+          "Failed to execute prometheus query " + query, e.getMessage());
     }
-
-    if (settings.isDockerCgroupEnabled() && !settings.getKubeInstalled()) {
-      //If cgroups are enabled we use metrics from cadvisor
-      Map<String, String> queries = getCadvisorQueries();
-      queries.putAll(getNodeExporterQueriesHeadNode());
-      return queries;
-    } else if (!settings.isDockerCgroupEnabled() && !settings.getKubeInstalled()) {
-      //cgroups not enabled and no kubernetes: only get headnode metrics
-      return getNodeExporterQueriesHeadNode();
-    } else {
-      //On kubernetes get from node exporter and exclude tainted nodes
-      return getNodeExporterQueriesKube();
-    }
-  }
-
-  private Map<String, String> getNodeExporterQueriesKube() {
-    String nodeQuery = getExcludedNodesInResourceQuery();
-    String nodeQueryNoAppend = nodeQuery.replaceAll(",", "");
-    return new HashMap<String, String>() {
-      {
-        put (CLUSTER_CURRENT_CPU_USAGE,
-            "100 - ((sum((avg by (instance) (rate(node_cpu_seconds_total{mode='idle'" + nodeQuery + "}[1m])) " +
-                "* 100)))/(count(node_memory_Active_bytes{" + nodeQueryNoAppend + "})))");
-        put(CLUSTER_CURRENT_MEMORY_USAGE, "sum(node_memory_Active_bytes{" + nodeQueryNoAppend + "})");
-        put(CLUSTER_TOTAL_MEMORY_CAPACITY, "sum(node_memory_MemTotal_bytes{" + nodeQueryNoAppend + "})");
-      }
-    };
-  }
-
-  private Map<String, String> getCadvisorQueries() {
-    final String dockerCgroupParent = settings.getDockerCgroupParent();
-    String cGroupParentForRegex = dockerCgroupParent.replaceAll("\\.", "\\\\\\\\.");
-    final String headNodeInstanceQuery = "instance='" + glassfishIp + ":" + nodeExporterPort + "'";
-    return new HashMap<String, String>() {
-      {
-        put(DOCKER_CURRENT_CPU_USAGE_KEY,
-            "sum(avg by (cpu) (rate(container_cpu_usage_seconds_total{id=~'.*/" + cGroupParentForRegex
-                + "/.*'}[60s]) * 100))");
-        put(DOCKER_TOTAL_ALLOCATABLE_CPU_KEY,
-            "(sum(container_spec_cpu_quota{id='/" + dockerCgroupParent + "'})/("
-                + settings.getDockerCgroupCpuPeriod()
-                + " * (count(count(node_cpu_seconds_total{" + headNodeInstanceQuery + "}) without (mode,instance,job))"
-                + "without (cpu))))*100");
-        put(DOCKER_CURRENT_MEMORY_USAGE_KEY, "sum(container_memory_working_set_bytes{id=~'.*/" + cGroupParentForRegex
-            + "/.*'})");
-        put(DOCKER_TOTAL_ALLOCATABLE_MEMORY_KEY, "container_spec_memory_limit_bytes{id='/" + dockerCgroupParent
-            + "'}");
-      }
-    };
-  }
-
-  private Map<String, String> getNodeExporterQueriesHeadNode() {
-    final String headNodeQuery = "instance='" + glassfishIp + ":" + nodeExporterPort + "'";
-    return new HashMap<String, String>() {
-      {
-        put(CLUSTER_CURRENT_CPU_USAGE,
-            "100 - ((sum((avg by (instance) (rate(node_cpu_seconds_total{mode='idle', " + headNodeQuery + "}[1m])) "
-                + "* 100)))/(count(node_memory_Active_bytes{" + headNodeQuery + "})))");
-        put(CLUSTER_CURRENT_MEMORY_USAGE, "sum(node_memory_Active_bytes{" + headNodeQuery + "})");
-        put(CLUSTER_TOTAL_MEMORY_CAPACITY, "sum(node_memory_MemTotal_bytes{" + headNodeQuery + "})");
-      }
-    };
-  }
-
-  private String getExcludedNodesInResourceQuery() {
-    if (!settings.getKubeInstalled()) {
-      return "";
-    }
-    String taintedNodesStr = settings.getKubeTaintedNodes();
-    List<String> nodes =
-        new ArrayList<>(Arrays.asList(taintedNodesStr.split(","))
-            .stream().filter(n -> !Strings.isNullOrEmpty(n)).collect(Collectors.toList()));
-    String taintedNodesQuery = "";
-    for (int i = 0; i < nodes.size(); i++) {
-      if (i == 0) {
-        taintedNodesQuery += ", instance !~ '";
-      }
-      if (i < nodes.size() - 1) {
-        taintedNodesQuery += nodes.get(i) + ":" + nodeExporterPort + "|";
-      } else {
-        taintedNodesQuery += nodes.get(i) + ":" + nodeExporterPort + "'";
-      }
-    }
-    return taintedNodesQuery;
   }
 }

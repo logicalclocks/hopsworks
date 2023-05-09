@@ -643,7 +643,6 @@ public class KubeClientService {
   }
 
   // Nodes
-  
   public List<Node> getNodeList() throws KubernetesClientException {
     return handleClientOp((client) -> client.nodes().list().getItems());
   }

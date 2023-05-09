@@ -16,7 +16,9 @@
 package io.hops.hopsworks.servicediscovery.tags;
 
 public enum PrometheusTags implements ServiceTags {
-  pushgateway("pushgateway");
+  pushgateway("pushgateway"),
+  prometheus("prometheus"),
+  alertmanager("alertmanager");
 
   private final String value;
 
