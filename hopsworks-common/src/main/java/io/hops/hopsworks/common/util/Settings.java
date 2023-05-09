@@ -3620,7 +3620,7 @@ public class Settings implements Serializable {
     return result.substring(0, result.length() - 1);
   }
 
-  private String DOCKER_BASE_IMAGE_PYTHON_NAME = "python38";
+  private String DOCKER_BASE_IMAGE_PYTHON_NAME = "python310";
 
   public synchronized String getBaseDockerImagePythonName() {
     checkCache();
@@ -3632,7 +3632,7 @@ public class Settings implements Serializable {
     }
   }
 
-  private String DOCKER_BASE_IMAGE_PYTHON_VERSION = "3.8";
+  private String DOCKER_BASE_IMAGE_PYTHON_VERSION = "3.10";
 
   public synchronized String getDockerBaseImagePythonVersion() {
     checkCache();

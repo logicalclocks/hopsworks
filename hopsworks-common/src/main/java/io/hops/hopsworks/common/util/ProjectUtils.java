@@ -133,11 +133,11 @@ public class ProjectUtils {
   private boolean isPythonDockerImage(String image) {
     Pattern pythonPattern;
     if(settings.isManagedDockerRegistryOnManagedCloud()) {
-      pythonPattern = Pattern.compile("^(base:python\\d{2}_\\d+[.]\\d+[.]\\d+(|-SNAPSHOT))$");
+      pythonPattern = Pattern.compile("^(base:python\\d{2,3}_\\d+[.]\\d+[.]\\d+(|-SNAPSHOT))$");
       Matcher pythonMatcher = pythonPattern.matcher(image);
       return pythonMatcher.matches();
     } else {
-      pythonPattern = Pattern.compile("^(python\\d{2}:\\d+[.]\\d+[.]\\d+(|-SNAPSHOT))$");
+      pythonPattern = Pattern.compile("^(python\\d{2,3}:\\d+[.]\\d+[.]\\d+(|-SNAPSHOT))$");
       Matcher pythonMatcher = pythonPattern.matcher(image);
       return pythonMatcher.matches();
     }
