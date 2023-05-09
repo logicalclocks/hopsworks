@@ -306,6 +306,8 @@ public class PKI {
         } finally {
           unlockIfHA();
         }
+      } else {
+        LOGGER.log(Level.WARNING, "Timed out waiting for lock to initializing CAs");
       }
     } else {
       LOGGER.log(Level.FINE, "CAs already initialized");
