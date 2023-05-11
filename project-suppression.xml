@@ -44,16 +44,6 @@
   </suppress>
   <suppress>
     <notes><![CDATA[
-   file name: hadoop-client-runtime-*.jar (shaded: net.minidev:accessors-smart:1.3)
-   ]]></notes>
-    <packageUrl regex="true">^pkg:maven/net\.minidev/accessors\-smart@.*$</packageUrl>
-    <cpe>cpe:/a:json-smart_project:json-smart-v1</cpe>
-    <cpe>cpe:/a:json_smart_project:json_smart</cpe>
-    <cve>CVE-2021-27568</cve>
-    <cve>CVE-2021-31684</cve>
-  </suppress>
-  <suppress>
-    <notes><![CDATA[
    file name: org.eclipse.egit.github.core-2.1.5.jar
    ]]></notes>
     <packageUrl regex="true">^pkg:maven/org\.eclipse\.mylyn\.github/org\.eclipse\.egit\.github\.core@.*$</packageUrl>
@@ -132,15 +122,6 @@
   </suppress>
   <suppress>
     <notes><![CDATA[
-   file name: hadoop-client-runtime-*.jar (shaded: org.eclipse.jetty:jetty-*:9.3.24.v20180605)
-   ]]></notes>
-    <packageUrl regex="true">^pkg:maven/org\.eclipse\.jetty/jetty\-*.*$</packageUrl>
-    <cpe>cpe:/a:eclipse:jetty</cpe>
-    <cpe>cpe:/a:jetty:jetty</cpe>
-    <cve>CVE-2021-28165</cve>
-  </suppress>
-  <suppress>
-    <notes><![CDATA[
    file name: zookeeper-3.4.14.jar
    ]]></notes>
     <packageUrl regex="true">^pkg:maven/org\.apache\.zookeeper/zookeeper\-*.*$</packageUrl>
@@ -186,13 +167,6 @@
     <notes><![CDATA[file name: avatica-metrics-1.22.0.jar]]></notes>
     <packageUrl regex="true">^pkg:maven/org\.apache\.calcite\.avatica/avatica\-metrics@.*$</packageUrl>
     <cve>CVE-2022-39135</cve>
-  </suppress>
-  <suppress>
-    <notes><![CDATA[
-   file name: snakeyaml-1.26.jar
-   ]]></notes>
-    <packageUrl regex="true">^pkg:maven/org\.yaml/snakeyaml@1\.26$</packageUrl>
-    <cve>CVE-2022-1471</cve>
   </suppress>
   <suppress>
     <notes><![CDATA[
