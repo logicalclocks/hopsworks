@@ -37,7 +37,7 @@ import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.audit.logger.annotation.Secret;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.remote.user.RemoteUserFacade;
-import io.hops.hopsworks.common.dao.user.UserDTO;
+import io.hops.hopsworks.common.dao.user.UsersDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.remote.RemoteUserDTO;
 import io.hops.hopsworks.common.remote.RemoteUserHelper;
@@ -367,7 +367,7 @@ public class UsersAdminResource {
   
   private Response createUser(String email, String password, String givenName, String surname, int maxNumProjects,
     String role, UserAccountStatus status, UriInfo uriInfo) throws UserException {
-    UserDTO newUser = new UserDTO();
+    UsersDTO newUser = new UsersDTO();
     newUser.setEmail(email);
     newUser.setFirstName(givenName);
     newUser.setLastName(surname);

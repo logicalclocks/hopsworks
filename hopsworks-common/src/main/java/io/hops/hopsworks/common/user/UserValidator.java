@@ -40,8 +40,8 @@
 package io.hops.hopsworks.common.user;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.user.UsersDTO;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.UserException;
 
@@ -95,7 +95,7 @@ public class UserValidator {
     return true;
   }
 
-  public boolean isValidNewUser(UserDTO newUser) throws UserException {
+  public boolean isValidNewUser(UsersDTO newUser) throws UserException {
     isValidEmail(newUser.getEmail());
     isValidPassword(newUser.getChosenPassword(), newUser.getRepeatedPassword());
     if (userBean.findByEmail(newUser.getEmail()) != null) {
@@ -107,7 +107,7 @@ public class UserValidator {
     return true;
   }
   
-  public void isValidNewUser(UserDTO newUser, boolean checkPassword) throws UserException {
+  public void isValidNewUser(UsersDTO newUser, boolean checkPassword) throws UserException {
     isValidEmail(newUser.getEmail());
     if (checkPassword) {
       isValidPassword(newUser.getChosenPassword(), newUser.getRepeatedPassword());

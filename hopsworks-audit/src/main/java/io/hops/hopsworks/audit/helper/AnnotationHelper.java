@@ -20,7 +20,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.audit.auditor.annotation.AuditTarget;
 import io.hops.hopsworks.audit.logger.annotation.Caller;
-import io.hops.hopsworks.common.dao.user.UserDTO;
+import io.hops.hopsworks.common.dao.user.UsersDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.util.HttpUtil;
 import io.hops.hopsworks.common.util.Settings;
@@ -222,7 +222,7 @@ public class AnnotationHelper {
         user = (Users) userIdentifier;
         break;
       case USER_DTO:
-        user = userFacade.findByEmail(((UserDTO) userIdentifier).getEmail());
+        user = userFacade.findByEmail(((UsersDTO) userIdentifier).getEmail());
         break;
       case REQ:
         user = getUserFromReq(userIdentifier);
@@ -246,7 +246,7 @@ public class AnnotationHelper {
         break;
       case USER_DTO:
         caller = new CallerIdentifier();
-        caller.setEmail(((UserDTO) userIdentifier).getEmail());
+        caller.setEmail(((UsersDTO) userIdentifier).getEmail());
         break;
       case USERS:
         caller = new CallerIdentifier();

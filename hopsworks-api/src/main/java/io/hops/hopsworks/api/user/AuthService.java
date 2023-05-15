@@ -54,7 +54,7 @@ import io.hops.hopsworks.audit.logger.annotation.Caller;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.audit.logger.annotation.Secret;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
-import io.hops.hopsworks.common.dao.user.UserDTO;
+import io.hops.hopsworks.common.dao.user.UsersDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.QrCode;
@@ -343,7 +343,7 @@ public class AuthService {
   @Consumes(MediaType.APPLICATION_JSON)
   @JWTNotRequired
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.REGISTRATION, message = "Register new user")
-  public Response register(@Caller(UserIdentifier.USER_DTO) @AuditTarget(UserIdentifier.USER_DTO) UserDTO newUser,
+  public Response register(@Caller(UserIdentifier.USER_DTO) @AuditTarget(UserIdentifier.USER_DTO) UsersDTO newUser,
     @Context HttpServletRequest req) throws UserException {
     if (settings.isRegistrationDisabled()) {
       throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_REGISTRATION_ERROR, Level.FINE, "Registration not " +

@@ -43,10 +43,10 @@ import com.google.common.base.Strings;
 import com.google.zxing.WriterException;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
+import io.hops.hopsworks.common.dao.user.UsersDTO;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
-import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.audit.AccountAudit;
@@ -122,7 +122,7 @@ public class UsersController {
   @Any
   private Instance<UserAccountHandler> userAccountHandlers;
   
-  public QrCode registerUser(UserDTO newUser, String validationKeyUrl) throws UserException {
+  public QrCode registerUser(UsersDTO newUser, String validationKeyUrl) throws UserException {
     if (newUser.getEmail() != null && !newUser.getEmail().isEmpty()) {
       newUser.setEmail(newUser.getEmail().toLowerCase());
     }
@@ -155,7 +155,7 @@ public class UsersController {
     return qrCode;
   }
   
-  public Users registerUser(UserDTO newUser, String role, UserAccountStatus accountStatus, UserAccountType accountType)
+  public Users registerUser(UsersDTO newUser, String role, UserAccountStatus accountStatus, UserAccountType accountType)
     throws UserException {
     if (!Strings.isNullOrEmpty(newUser.getEmail())) {
       newUser.setEmail(newUser.getEmail().toLowerCase());
@@ -244,7 +244,7 @@ public class UsersController {
    * @param accountType
    * @return
    */
-  public Users createNewUser(UserDTO newUser, UserAccountStatus accountStatus, UserAccountType accountType) {
+  public Users createNewUser(UsersDTO newUser, UserAccountStatus accountStatus, UserAccountType accountType) {
     String otpSecret = securityUtils.calculateSecretKey();
     String activationKey = securityUtils.generateSecureRandomString();
     String uname = generateUsername(newUser.getEmail());
