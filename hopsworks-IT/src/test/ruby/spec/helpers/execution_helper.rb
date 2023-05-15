@@ -13,6 +13,10 @@
  You should have received a copy of the GNU Affero General Public License along with this program.
  If not, see <https://www.gnu.org/licenses/>.
 =end
+
+TERMINAL_EXECUTION_FINAL_STATUS = ["SUCCEEDED", "KILLED", "FAILED"]
+TERMINAL_EXECUTION_STATE = ["FINISHED", "FAILED", "KILLED", "INITIALIZATION_FAILED", "APP_MASTER_START_FAILED", "FRAMEWORK_FAILURE"]
+
 module ExecutionHelper
 
   def get_executions(project_id, job_name, query: "", expected_status: 200)
@@ -124,7 +128,8 @@ module ExecutionHelper
 
   def is_execution_active(execution_dto)
     state = execution_dto[:state]
-    !(state == "FINISHED" || state == "FAILED" || state == "KILLED" || state == "INITIALIZATION_FAILED")
+    finalStatus = execution_dto[:finalStatus]
+    not (TERMINAL_EXECUTION_STATE.include?(state) && TERMINAL_EXECUTION_FINAL_STATUS.include?(finalStatus))
   end
 
   #job_type: SPARK/PYTHON maybe later DOCKER
