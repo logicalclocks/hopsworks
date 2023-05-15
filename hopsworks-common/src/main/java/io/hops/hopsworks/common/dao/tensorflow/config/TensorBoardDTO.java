@@ -17,8 +17,8 @@
 package io.hops.hopsworks.common.dao.tensorflow.config;
 
 import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.common.dao.user.UsersDTO;
 import io.hops.hopsworks.persistence.entity.tensorflow.TensorBoard;
-import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.project.ProjectDTO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -42,7 +42,7 @@ public class TensorBoardDTO extends RestDTO<TensorBoardDTO> {
 
   private ProjectDTO project;
 
-  private UserDTO user;
+  private UsersDTO user;
 
   public TensorBoardDTO(){
 
@@ -104,11 +104,11 @@ public class TensorBoardDTO extends RestDTO<TensorBoardDTO> {
     this.project = project;
   }
 
-  public UserDTO getUser() {
+  public UsersDTO getUser() {
     return user;
   }
 
-  public void setUser(UserDTO user) {
+  public void setUser(UsersDTO user) {
     this.user = user;
   }
 }

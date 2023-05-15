@@ -45,7 +45,7 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
-import io.hops.hopsworks.common.dao.user.UserDTO;
+import io.hops.hopsworks.common.dao.user.UsersDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.QrCode;
@@ -326,7 +326,7 @@ public class AuthService {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @JWTNotRequired
-  public Response register(UserDTO newUser, @Context HttpServletRequest req) throws UserException {
+  public Response register(UsersDTO newUser, @Context HttpServletRequest req) throws UserException {
     if (settings.isRegistrationDisabled()) {
       throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_REGISTRATION_ERROR, Level.FINE, "Registration not " +
         "allowed.");
