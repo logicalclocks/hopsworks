@@ -44,7 +44,7 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class UserDTO {
+public class UsersDTO {
 
   private String username;
   private String email;
@@ -64,10 +64,10 @@ public class UserDTO {
   private int numActiveProjects;
   private int numRemainingProjects;
 
-  public UserDTO() {
+  public UsersDTO() {
   }
 
-  public UserDTO(Users user) {
+  public UsersDTO(Users user) {
     this.username = user.getUsername();
     this.email = user.getEmail();
     this.firstName = user.getFname();

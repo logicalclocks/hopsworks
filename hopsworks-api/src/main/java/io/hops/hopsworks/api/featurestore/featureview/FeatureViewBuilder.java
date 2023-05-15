@@ -21,7 +21,7 @@ import io.hops.hopsworks.api.featurestore.FsQueryBuilder;
 import io.hops.hopsworks.api.featurestore.tag.FeatureStoreTagUri;
 import io.hops.hopsworks.api.tags.TagBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.user.UserDTO;
+import io.hops.hopsworks.common.dao.user.UsersDTO;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
@@ -186,7 +186,7 @@ public class FeatureViewBuilder {
     featureViewDTO.setFeaturestoreName(featureView.getFeaturestore().getProject().getName());
     featureViewDTO.setDescription(featureView.getDescription());
     featureViewDTO.setCreated(featureView.getCreated());
-    featureViewDTO.setCreator(new UserDTO(featureView.getCreator()));
+    featureViewDTO.setCreator(new UsersDTO(featureView.getCreator()));
     featureViewDTO.setVersion(featureView.getVersion());
     featureViewDTO.setName(featureView.getName());
     featureViewDTO.setId(featureView.getId());

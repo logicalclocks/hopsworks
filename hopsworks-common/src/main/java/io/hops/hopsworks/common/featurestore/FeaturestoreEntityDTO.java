@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.Nulls;
 import io.hops.hopsworks.common.api.RestDTO;
-import io.hops.hopsworks.common.dao.user.UserDTO;
+import io.hops.hopsworks.common.dao.user.UsersDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewDTO;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsConfigDTO;
@@ -47,7 +47,7 @@ public abstract class FeaturestoreEntityDTO<T> extends RestDTO<T> {
   private String featurestoreName;
   private String description;
   private Date created;
-  private UserDTO creator;
+  private UsersDTO creator;
   private Integer version;
   private String name;
   private Integer id;
@@ -62,7 +62,7 @@ public abstract class FeaturestoreEntityDTO<T> extends RestDTO<T> {
                                Integer version, Integer id, StatisticsConfigDTO statisticsConfig) {
     this.featurestoreId = featurestoreId;
     this.created = created;
-    this.creator = new UserDTO();
+    this.creator = new UsersDTO();
     this.creator.setFirstName(creator.getFname());
     this.creator.setLastName(creator.getLname());
     this.creator.setEmail(creator.getEmail());
@@ -85,7 +85,7 @@ public abstract class FeaturestoreEntityDTO<T> extends RestDTO<T> {
     return created;
   }
   
-  public UserDTO getCreator() {
+  public UsersDTO getCreator() {
     return creator;
   }
   
@@ -149,7 +149,7 @@ public abstract class FeaturestoreEntityDTO<T> extends RestDTO<T> {
     this.created = created;
   }
   
-  public void setCreator(UserDTO creator) {
+  public void setCreator(UsersDTO creator) {
     this.creator = creator;
   }
   
