@@ -17,7 +17,7 @@
 package io.hops.hopsworks.api.alert.silence;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.alert.AlertManager;
+import io.hops.hopsworks.alert.AMClient;
 import io.hops.hopsworks.alert.exception.AlertManagerAccessControlException;
 import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
 import io.hops.hopsworks.alerting.api.alert.dto.PostableSilence;
@@ -52,7 +52,7 @@ public class SilenceBuilder {
   private static final Logger LOGGER = Logger.getLogger(SilenceResource.class.getName());
 
   @EJB
-  private AlertManager alertManager;
+  private AMClient alertManager;
 
   public SilenceDTO uri(SilenceDTO dto, UriInfo uriInfo) {
     dto.setHref(uriInfo.getAbsolutePathBuilder()

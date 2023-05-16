@@ -17,7 +17,7 @@
 package io.hops.hopsworks.api.alert.receiver;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.alert.AlertManager;
+import io.hops.hopsworks.alert.AMClient;
 import io.hops.hopsworks.alert.AlertManagerConfiguration;
 import io.hops.hopsworks.alert.exception.AlertManagerAccessControlException;
 import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
@@ -54,6 +54,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -66,7 +67,7 @@ public class ReceiverBuilder {
   private static final Logger LOGGER = Logger.getLogger(ReceiverResource.class.getName());
 
   @EJB
-  private AlertManager alertManager;
+  private AMClient alertManager;
   @EJB
   private AlertManagerConfiguration alertManagerConfiguration;
 
@@ -356,25 +357,26 @@ public class ReceiverBuilder {
   }
 
   public GlobalReceiverDefaults build() throws AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException {
-    AlertManagerConfig alertManagerConfig = alertManagerConfiguration.read();
+    Optional<AlertManagerConfig> alertManagerConfig = alertManagerConfiguration.read();
     GlobalReceiverDefaults globalReceiverDefaults = new GlobalReceiverDefaults();
-    if (alertManagerConfig.getGlobal() != null) {
-      globalReceiverDefaults.setEmailConfigured(!Strings.isNullOrEmpty(alertManagerConfig.getGlobal().getSmtpFrom()) &&
-          !Strings.isNullOrEmpty(alertManagerConfig.getGlobal().getSmtpSmarthost()));
+    if (alertManagerConfig.isPresent() && alertManagerConfig.get().getGlobal() != null) {
+      globalReceiverDefaults.setEmailConfigured(
+        !Strings.isNullOrEmpty(alertManagerConfig.get().getGlobal().getSmtpFrom()) &&
+          !Strings.isNullOrEmpty(alertManagerConfig.get().getGlobal().getSmtpSmarthost()));
       globalReceiverDefaults
-          .setSlackConfigured(!Strings.isNullOrEmpty(alertManagerConfig.getGlobal().getSlackApiUrl()));
+        .setSlackConfigured(!Strings.isNullOrEmpty(alertManagerConfig.get().getGlobal().getSlackApiUrl()));
       globalReceiverDefaults
-          .setPagerdutyConfigured(!Strings.isNullOrEmpty(alertManagerConfig.getGlobal().getPagerdutyUrl()));
+        .setPagerdutyConfigured(!Strings.isNullOrEmpty(alertManagerConfig.get().getGlobal().getPagerdutyUrl()));
       globalReceiverDefaults
-          .setOpsgenieConfigured(!Strings.isNullOrEmpty(alertManagerConfig.getGlobal().getOpsgenieApiKey()));
+        .setOpsgenieConfigured(!Strings.isNullOrEmpty(alertManagerConfig.get().getGlobal().getOpsgenieApiKey()));
       globalReceiverDefaults.setPushoverConfigured(true);
       globalReceiverDefaults
-          .setVictoropsConfigured(!Strings.isNullOrEmpty(alertManagerConfig.getGlobal().getVictoropsApiUrl()) &&
-              !Strings.isNullOrEmpty(alertManagerConfig.getGlobal().getVictoropsApiKey()));
+        .setVictoropsConfigured(!Strings.isNullOrEmpty(alertManagerConfig.get().getGlobal().getVictoropsApiUrl()) &&
+          !Strings.isNullOrEmpty(alertManagerConfig.get().getGlobal().getVictoropsApiKey()));
       globalReceiverDefaults.setWebhookConfigured(true);
       globalReceiverDefaults
-          .setWechatConfigured(!Strings.isNullOrEmpty(alertManagerConfig.getGlobal().getWechatApiUrl()) &&
-              !Strings.isNullOrEmpty(alertManagerConfig.getGlobal().getWechatApiSecret()));
+        .setWechatConfigured(!Strings.isNullOrEmpty(alertManagerConfig.get().getGlobal().getWechatApiUrl()) &&
+          !Strings.isNullOrEmpty(alertManagerConfig.get().getGlobal().getWechatApiSecret()));
     }
     return globalReceiverDefaults;
   }

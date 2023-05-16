@@ -20,7 +20,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.hops.hopsworks.alert.AMClient;
+import io.hops.hopsworks.alert.AMConfigUpdater;
 import io.hops.hopsworks.alert.AlertManagerConfiguration;
+import io.hops.hopsworks.alert.FixReceiversTimer;
 import io.hops.hopsworks.alert.dao.AlertManagerConfigFacade;
 import io.hops.hopsworks.alert.dao.AlertReceiverFacade;
 import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
@@ -36,6 +39,7 @@ import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigCtrlCreateExcepti
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigFileNotFoundException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigReadException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigUpdateException;
+import io.hops.hopsworks.alerting.exceptions.AlertManagerResponseException;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertManagerConfigEntity;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertReceiver;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertSeverity;
@@ -59,15 +63,21 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
+import javax.ejb.EJBException;
+import javax.transaction.RollbackException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.verify;
 
 public class TestAlertManagerConfigTimer {
   private final static Logger LOGGER = Logger.getLogger(TestAlertManagerConfigTimer.class.getName());
@@ -79,8 +89,11 @@ public class TestAlertManagerConfigTimer {
   private AlertReceiverFacade alertReceiverFacade;
   private AlertManagerConfiguration alertManagerConfiguration;
   private String alertManagerConfigDBPath;
+  private AMClient amClient;
+  private AMConfigUpdater amConfigUpdater;
+  private FixReceiversTimer fixReceiversTimer;
 
-  private Random random = new Random();
+  private final Random random = new Random();
 
   private AlertManagerConfig read(File configFile) throws AlertManagerConfigReadException {
     ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
@@ -186,14 +199,16 @@ public class TestAlertManagerConfigTimer {
 
   @Before
   public void setUp()
-      throws ServiceDiscoveryException, AlertManagerConfigFileNotFoundException, AlertManagerConfigReadException,
-      JsonProcessingException {
-    String alertmanagerConfigPath = TestAlertManagerConfigTimer.class.getResource("/alertmanager.yml").getPath();
-    alertManagerConfigDBPath = TestAlertManagerConfigTimer.class.getResource("/alertmanagerDB.yml").getPath();
+    throws ServiceDiscoveryException, AlertManagerConfigFileNotFoundException, AlertManagerConfigReadException,
+    JsonProcessingException, AlertManagerUnreachableException, AlertManagerResponseException,
+    AlertManagerClientCreateException {
+    String alertmanagerConfigPath = Objects.requireNonNull(
+      TestAlertManagerConfigTimer.class.getResource("/alertmanager.yml")).getPath();
+    alertManagerConfigDBPath = Objects.requireNonNull(
+      TestAlertManagerConfigTimer.class.getResource("/alertmanagerDB.yml")).getPath();
     client = Mockito.mock(AlertManagerClient.class);
     alertManagerConfigController = new AlertManagerConfigController.Builder()
         .withConfigPath(alertmanagerConfigPath)
-        .withClient(client)
         .build();
     alertManagerConfigFacade = Mockito.mock(AlertManagerConfigFacade.class);
     Mockito.doAnswer((Answer<Void>) invocation -> {
@@ -203,56 +218,60 @@ public class TestAlertManagerConfigTimer {
     }).when(alertManagerConfigFacade).save(Mockito.any());
     Mockito.doAnswer((Answer<Void>) invocation -> {
       Object[] args = invocation.getArguments();
+      LOGGER.log(Level.INFO, "Save to database: {0}.", args);
+      return null;
+    }).when(alertManagerConfigFacade).saveToDatabase(Mockito.any());
+    Mockito.doAnswer((Answer<Void>) invocation -> {
+      Object[] args = invocation.getArguments();
       LOGGER.log(Level.INFO, "Update database: {0}.", args);
       return null;
     }).when(alertManagerConfigFacade).update(Mockito.any());
+
+    amClient = new AMClient(client);
     AlertManagerConfig alertManagerConfig = read(new File(alertManagerConfigDBPath));
     AlertManagerConfigEntity alertManagerConfigEntity = new AlertManagerConfigEntity();
     alertManagerConfigEntity.setId(1);
     alertManagerConfigEntity.setCreated(new Date());
     alertManagerConfigEntity.setContent(toJson(alertManagerConfig));
-    Mockito.when(alertManagerConfigFacade.getLatest()).thenReturn(Optional.of(alertManagerConfigEntity));
+    Mockito.doAnswer((Answer<Optional<AlertManagerConfigEntity>>) invocation -> {
+      Object[] args = invocation.getArguments();
+      LOGGER.log(Level.INFO, "Get Latest config: {0}.", args);
+      return Optional.of(alertManagerConfigEntity);
+    }).when(alertManagerConfigFacade).getLatest();
+    Mockito.doAnswer((Answer<Optional<AlertManagerConfig>>) invocation -> {
+      Object[] args = invocation.getArguments();
+      LOGGER.log(Level.INFO, "Read config: {0}.", args);
+      return Optional.of(alertManagerConfig);
+    }).when(alertManagerConfigFacade).read(Mockito.any());
     alertReceiverFacade = Mockito.mock(AlertReceiverFacade.class);
     List<AlertReceiver> receivers = createReceivers();
     Mockito.when(alertReceiverFacade.findAll()).thenReturn(receivers);
     Mockito.doAnswer((Answer<Optional<AlertReceiver>>) invocation -> {
       Object[] args = invocation.getArguments();
-      Optional<AlertReceiver> alertReceiver =
-          receivers.stream().filter(receiver -> receiver.getName().equals(args[0])).findFirst();
-      return alertReceiver;
+      return receivers.stream().filter(receiver -> receiver.getName().equals(args[0])).findFirst();
     }).when(alertReceiverFacade).findByName(Mockito.any());
-    alertManagerConfiguration = new AlertManagerConfiguration(client, alertManagerConfigController,
-        alertManagerConfigFacade, alertReceiverFacade);
-    alertManagerConfigBackup = alertManagerConfigController.read();
+    amConfigUpdater = new AMConfigUpdater();
+    alertManagerConfiguration = new AlertManagerConfiguration(alertManagerConfigController, alertManagerConfigFacade,
+      amClient, amConfigUpdater);
+    fixReceiversTimer = new FixReceiversTimer(alertManagerConfigFacade, alertReceiverFacade, alertManagerConfiguration);
+      alertManagerConfigBackup = alertManagerConfigController.read();
     alertManagerConfigBackupDB = read(new File(alertManagerConfigDBPath));
+
   }
 
   @Test
-  public void testRestoreBackup()
-      throws AlertManagerUnreachableException, AlertManagerConfigCtrlCreateException, AlertManagerConfigUpdateException,
-      IOException, AlertManagerConfigReadException, AlertManagerClientCreateException {
-    Mockito.doAnswer((Answer<Void>) invocation -> {
-      Object[] args = invocation.getArguments();
-      if (args != null && args.length > 0 && args[0] != null) {
-        AlertManagerConfigEntity alertManagerConfigEntity = (AlertManagerConfigEntity) args[0];
-        AlertManagerConfig alertManagerConfig = fromJson(alertManagerConfigEntity.getContent());
-        LOGGER.log(Level.INFO, "Update database routes={0}, receivers={1}.",
-            new Object[] {alertManagerConfig.getRoute().getRoutes().size(), alertManagerConfig.getReceivers().size()});
-        Assert.assertEquals(15, alertManagerConfig.getRoute().getRoutes().size());
-        Assert.assertEquals(9, alertManagerConfig.getReceivers().size());
-      }
-      return null;
-    }).when(alertManagerConfigFacade).update(Mockito.any());
+  public void testRestoreBackup() throws AlertManagerConfigCtrlCreateException, AlertManagerConfigUpdateException,
+      IOException, AlertManagerConfigReadException {
+    Mockito.doAnswer((Answer<Void>) invocation -> null).when(alertManagerConfigFacade).update(Mockito.any());
     alertManagerConfiguration.restoreFromBackup();
     AlertManagerConfig alertManagerConfig = alertManagerConfigController.read();
-    Assert.assertEquals(15, alertManagerConfig.getRoute().getRoutes().size());
-    Assert.assertEquals(9, alertManagerConfig.getReceivers().size());
+    Assert.assertEquals(13, alertManagerConfig.getRoute().getRoutes().size());
+    Assert.assertEquals(6, alertManagerConfig.getReceivers().size());
   }
 
   @Test
-  public void testBackupToDb()
-      throws AlertManagerUnreachableException, AlertManagerConfigCtrlCreateException, AlertManagerConfigUpdateException,
-      IOException, AlertManagerConfigReadException, AlertManagerClientCreateException {
+  public void testBackupToDb() throws AlertManagerConfigCtrlCreateException, AlertManagerConfigUpdateException,
+      IOException, AlertManagerConfigReadException {
     Mockito.doAnswer((Answer<Void>) invocation -> {
       Object[] args = invocation.getArguments();
       if (args != null && args.length > 0 && args[0] != null) {
@@ -270,9 +289,8 @@ public class TestAlertManagerConfigTimer {
   }
 
   @Test
-  public void testGlobalFromBackup()
-      throws AlertManagerConfigReadException, IOException, AlertManagerUnreachableException,
-      AlertManagerConfigCtrlCreateException, AlertManagerConfigUpdateException, AlertManagerClientCreateException {
+  public void testGlobalFromBackup() throws AlertManagerConfigReadException, IOException,
+      AlertManagerConfigCtrlCreateException, AlertManagerConfigUpdateException {
     AlertManagerConfig alertManagerConfig = read(new File(alertManagerConfigDBPath));
     alertManagerConfig.getGlobal().setSlackApiUrl("https://hooks.slack.com/services/1234567/ASEDWRFDE/XXXXXXXXXXXXXX");
     AlertManagerConfigEntity alertManagerConfigEntity = new AlertManagerConfigEntity();
@@ -283,16 +301,45 @@ public class TestAlertManagerConfigTimer {
     alertManagerConfiguration.restoreFromBackup();
     AlertManagerConfig alertManagerConfig1 = alertManagerConfigController.read();
     Assert.assertEquals("https://hooks.slack.com/services/1234567/ASEDWRFDE/XXXXXXXXXXXXXX",
-        alertManagerConfig1.getGlobal().getSlackApiUrl());
+      alertManagerConfig1.getGlobal().getSlackApiUrl());
   }
 
   @Test
-  public void testReceiverFix()
-      throws AlertManagerUnreachableException, AlertManagerConfigCtrlCreateException, AlertManagerConfigUpdateException,
-      IOException, AlertManagerConfigReadException, AlertManagerClientCreateException {
-    alertManagerConfiguration.runFixConfig();
+  public void testReceiverFix() throws IOException, AlertManagerConfigReadException, AlertManagerUnreachableException,
+    AlertManagerConfigUpdateException, AlertManagerConfigCtrlCreateException, AlertManagerClientCreateException {
+    fixReceiversTimer.runFixConfig();
+    verify(alertManagerConfigFacade).saveToDatabase(argThat(config -> {
+      try {
+        AlertManagerConfig alertManagerConfig = fromJson(config);
+        Assert.assertEquals(22, alertManagerConfig.getRoute().getRoutes().size());
+        Assert.assertEquals(6, alertManagerConfig.getReceivers().size());
+      } catch (IOException ignored) {
+        Assert.fail("");
+      }
+      return true;
+    }));
+
     AlertManagerConfig alertManagerConfig = alertManagerConfigController.read();
-    Assert.assertEquals(15, alertManagerConfig.getRoute().getRoutes().size());
+    Assert.assertEquals(22, alertManagerConfig.getRoute().getRoutes().size());
+    Assert.assertEquals(6, alertManagerConfig.getReceivers().size());
+  }
+
+  @Test
+  public void testWriteAndReload() throws AlertManagerConfigReadException {
+    AlertManagerConfig alertManagerConfig = alertManagerConfigController.read();
+    Assert.assertEquals(3, alertManagerConfig.getRoute().getRoutes().size());
+    Assert.assertEquals(5, alertManagerConfig.getReceivers().size());
+
+    Mockito.doThrow(new EJBException(new RollbackException())).when(alertManagerConfigFacade)
+      .saveToDatabase(Mockito.any());
+    try {
+      alertManagerConfiguration.writeAndReload(alertManagerConfig);
+      Assert.fail("Should throw exception");
+    } catch (Exception ignored) {
+    }
+
+    alertManagerConfig = alertManagerConfigController.read();
+    Assert.assertEquals(13, alertManagerConfig.getRoute().getRoutes().size());
     Assert.assertEquals(6, alertManagerConfig.getReceivers().size());
   }
 

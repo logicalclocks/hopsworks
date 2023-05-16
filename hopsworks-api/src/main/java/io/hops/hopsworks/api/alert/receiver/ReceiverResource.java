@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.api.alert.receiver;
 
-import io.hops.hopsworks.alert.AlertManager;
+import io.hops.hopsworks.alert.AMClient;
 import io.hops.hopsworks.alert.AlertManagerConfiguration;
 import io.hops.hopsworks.alert.exception.AlertManagerAccessControlException;
 import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
@@ -82,7 +82,7 @@ public class ReceiverResource {
   @EJB
   private AlertManagerConfiguration alertManagerConfiguration;
   @EJB
-  private AlertManager alertManager;
+  private AMClient alertManager;
 
   private Integer projectId;
   private String projectName;

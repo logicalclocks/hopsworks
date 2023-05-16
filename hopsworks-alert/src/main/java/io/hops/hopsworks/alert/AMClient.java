@@ -68,8 +68,8 @@ import java.util.stream.Collectors;
 @Singleton
 @Lock(LockType.READ)
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-public class AlertManager {
-  private final static Logger LOGGER = Logger.getLogger(AlertManager.class.getName());
+public class AMClient {
+  private final static Logger LOGGER = Logger.getLogger(AMClient.class.getName());
 
   private AlertManagerClient client;
   private Exception initException;
@@ -96,6 +96,14 @@ public class AlertManager {
       Settings.clearCache();
       tryBuildClient();
     }
+  }
+
+  public AMClient() {
+  }
+
+  //For test
+  public AMClient(AlertManagerClient client) {
+    this.client = client;
   }
 
   void registerSuccess(){
@@ -126,14 +134,14 @@ public class AlertManager {
     }
     TimerConfig config = new TimerConfig();
     config.setInfo("Retry client");
+    config.setPersistent(false);
     timerService.createSingleActionTimer(duration, config);
   }
 
   @PreDestroy
   public void preDestroy() {
-    client.close();
-    for (Timer timer : timerService.getTimers()) {
-      timer.cancel();
+    if (client != null) {
+      client.close();
     }
   }
 
@@ -150,6 +158,10 @@ public class AlertManager {
       }
       throw new AlertManagerClientCreateException("Failed to instantiate AlertManagerClient");
     }
+  }
+
+  public AlertManagerClient getClient() {
+    return client;
   }
 
   public Response healthy()

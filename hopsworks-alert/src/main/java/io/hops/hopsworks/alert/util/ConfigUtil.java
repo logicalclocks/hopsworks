@@ -15,6 +15,8 @@
  */
 package io.hops.hopsworks.alert.util;
 
+import com.google.common.base.Strings;
+import io.hops.hopsworks.alerting.config.dto.Receiver;
 import io.hops.hopsworks.alerting.config.dto.Route;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.FeatureGroupAlert;
@@ -28,6 +30,49 @@ import java.util.List;
 import java.util.Map;
 
 public class ConfigUtil {
+
+  public static void fixReceiverName(Receiver receiver, Project project) {
+    if (receiver.getName() != null && !receiver.getName()
+      .startsWith(Constants.RECEIVER_NAME_PREFIX.replace(Constants.PROJECT_PLACE_HOLDER, project.getName()))) {
+      receiver.setName(Constants.RECEIVER_NAME_FORMAT.replace(Constants.PROJECT_PLACE_HOLDER, project.getName())
+        .replace(Constants.RECEIVER_NAME_PLACE_HOLDER, receiver.getName()));
+    }
+  }
+
+  public static void fixRoute(Route route, Project project) {
+    if ((route.getMatch() == null || route.getMatch().isEmpty()) &&
+      (route.getMatchRe() == null || route.getMatchRe().isEmpty())) {
+      route.setMatch(new HashMap<>());
+      route.getMatch().put(Constants.ALERT_TYPE_LABEL, AlertType.PROJECT_ALERT.getValue());
+      route.getMatch().put(Constants.LABEL_PROJECT, project.getName());
+    } else {
+      if (route.getMatch() != null && !route.getMatch().isEmpty()) {
+        route.getMatch().put(Constants.ALERT_TYPE_LABEL, AlertType.PROJECT_ALERT.getValue());
+        route.getMatch().put(Constants.LABEL_PROJECT, project.getName());
+      }
+      if (route.getMatchRe() != null && !route.getMatchRe().isEmpty()) {
+        route.getMatchRe().put(Constants.ALERT_TYPE_LABEL, AlertType.PROJECT_ALERT.getValue());
+        route.getMatchRe().put(Constants.LABEL_PROJECT, project.getName());
+      }
+    }
+  }
+
+  public static boolean isRouteInProject(Route route, Project project) {
+    return !Strings.isNullOrEmpty(route.getReceiver()) && route.getReceiver()
+      .startsWith(Constants.RECEIVER_NAME_PREFIX.replace(Constants.PROJECT_PLACE_HOLDER, project.getName())) &&
+      ((route.getMatch() != null && route.getMatch().get(Constants.LABEL_PROJECT) != null &&
+        route.getMatch().get(Constants.LABEL_PROJECT).equals(project.getName())) ||
+        (route.getMatchRe() != null && route.getMatchRe().get(Constants.LABEL_PROJECT) != null &&
+          route.getMatchRe().get(Constants.LABEL_PROJECT).equals(project.getName())));
+  }
+
+  public static boolean isRouteGlobal(Route route) {
+    return (route.getMatch() != null && route.getMatch().get(Constants.ALERT_TYPE_LABEL) != null &&
+      AlertType.fromValue(route.getMatch().get(Constants.ALERT_TYPE_LABEL)).isGlobal()) ||
+      (route.getMatchRe() != null && route.getMatchRe().get(Constants.ALERT_TYPE_LABEL) != null &&
+        AlertType.fromValue(route.getMatchRe().get(Constants.ALERT_TYPE_LABEL)).isGlobal());
+  }
+
   public static Map<String, String> getMatch(ProjectServiceAlert alert) {
     Project project = alert.getProject();
     Map<String, String> match = new HashMap<>();
