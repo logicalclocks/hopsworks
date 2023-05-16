@@ -39,7 +39,10 @@
 
 package io.hops.hopsworks.common.jupyter;
 
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.DockerJobConfiguration;
@@ -119,6 +122,10 @@ public class LocalHostJupyterProcessMgr extends JupyterManagerImpl implements Ju
   private ProjectUtils projectUtils;
   @EJB
   private HdfsUsersController hdfsUsersController;
+  @EJB
+  private CertificateMaterializer certificateMaterializer;
+  @EJB
+  private DistributedFsService dfsService;
   
   private String jupyterHost;
   
@@ -134,8 +141,8 @@ public class LocalHostJupyterProcessMgr extends JupyterManagerImpl implements Ju
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public JupyterDTO startJupyterServer(Project project, Users user, String secretConfig,
-                                       JupyterSettings js, String allowOrigin) throws ServiceException, JobException {
-    
+                                       JupyterSettings js, String allowOrigin) throws ServiceException, JobException,
+      IOException {
     String prog = settings.getSudoersDir() + "/jupyter.sh";
     
     Integer port = ThreadLocalRandom.current().nextInt(40000, 59999);
@@ -144,6 +151,11 @@ public class LocalHostJupyterProcessMgr extends JupyterManagerImpl implements Ju
         .generateConfiguration(project, secretConfig, user, hdfsUser, js, port, allowOrigin);
     String secretDir = settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret();
     DockerJobConfiguration dockerJobConfiguration = (DockerJobConfiguration)js.getDockerConfig();
+    DistributedFileSystemOps dfso = dfsService.getDfsOps();
+
+    // materialize certificates before starting the server
+    HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), user.getUsername(),
+        settings.getHdfsTmpCertDir(), dfso, certificateMaterializer, settings, jp.getCertificatesDir());
 
     String token = TokenGenerator.generateToken(TOKEN_LENGTH);
     String cid = "";
@@ -173,6 +185,8 @@ public class LocalHostJupyterProcessMgr extends JupyterManagerImpl implements Ju
             .addCommand(projectUtils.getFullDockerImageName(project, false))
             .addCommand(String.valueOf(dockerJobConfiguration.getResourceConfig().getMemory()))
             .addCommand(String.valueOf(dockerJobConfiguration.getResourceConfig().getCores()))
+            .addCommand(js.getBaseDir())
+            .addCommand(settings.getJupyterRemoteFsManager().getDriver())
             .redirectErrorStream(true)
             .setCurrentWorkingDirectory(new File(jp.getNotebookPath()))
             .setWaitTimeout(60L, TimeUnit.SECONDS)
@@ -194,6 +208,10 @@ public class LocalHostJupyterProcessMgr extends JupyterManagerImpl implements Ju
       } catch (Exception ex) {
         LOGGER.log(Level.SEVERE, "Problem executing shell script to start Jupyter server", ex);
         maxTries--;
+      } finally {
+        if (dfso != null) {
+          dfsService.closeDfsClient(dfso);
+        }
       }
     }
 

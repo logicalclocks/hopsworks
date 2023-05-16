@@ -44,7 +44,18 @@ import com.logicalclocks.servicediscoverclient.service.Service;
 import freemarker.template.TemplateException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.jobs.JobController;
+import io.hops.hopsworks.common.jupyter.JupyterContentsManager;
+import io.hops.hopsworks.common.jupyter.HopsfsMountRemoteDriver;
+import io.hops.hopsworks.common.jupyter.HDFSContentsRemoteDriver;
+import io.hops.hopsworks.common.jupyter.RemoteFSDriver;
+import io.hops.hopsworks.common.jupyter.RemoteFSDriverType;
 import io.hops.hopsworks.common.serving.ServingConfig;
+import io.hops.hopsworks.common.util.templates.jupyter.JupyterNotebookConfigTemplate;
+import io.hops.hopsworks.common.util.templates.jupyter.JupyterNotebookConfigTemplateBuilder;
+import io.hops.hopsworks.common.util.templates.jupyter.KernelTemplate;
+import io.hops.hopsworks.common.util.templates.jupyter.KernelTemplateBuilder;
+import io.hops.hopsworks.common.util.templates.jupyter.SparkMagicConfigTemplate;
+import io.hops.hopsworks.common.util.templates.jupyter.SparkMagicConfigTemplateBuilder;
 import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.DockerJobConfiguration;
@@ -55,16 +66,9 @@ import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
-import io.hops.hopsworks.common.jupyter.JupyterContentsManager;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SparkConfigurationUtil;
 import io.hops.hopsworks.common.util.TemplateEngine;
-import io.hops.hopsworks.common.util.templates.jupyter.JupyterNotebookConfigTemplate;
-import io.hops.hopsworks.common.util.templates.jupyter.JupyterNotebookConfigTemplateBuilder;
-import io.hops.hopsworks.common.util.templates.jupyter.KernelTemplate;
-import io.hops.hopsworks.common.util.templates.jupyter.KernelTemplateBuilder;
-import io.hops.hopsworks.common.util.templates.jupyter.SparkMagicConfigTemplate;
-import io.hops.hopsworks.common.util.templates.jupyter.SparkMagicConfigTemplateBuilder;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -253,7 +257,12 @@ public class JupyterConfigFilesGenerator {
         .setHopsworksPublicHost(settings.getHopsworksPublicHost())
         .setAllocatedNotebookMBs(dockerJobConfiguration.getResourceConfig().getMemory())
         .setAllocatedNotebookCores(dockerJobConfiguration.getResourceConfig().getCores());
-
+    RemoteFSDriverType remoteFSDriverType = settings.getJupyterRemoteFsManager();
+    RemoteFSDriver remoteFSDriver = new HopsfsMountRemoteDriver();
+    if (remoteFSDriverType == RemoteFSDriverType.HDFS_CONTENTS_MANAGER) {
+      remoteFSDriver = getHDFSContentsRemoteDriverConfig(js, hdfsUser);
+    }
+    builder.setRemoteFSDriver(remoteFSDriver);
     if(settings.isPythonKernelEnabled()) {
       builder.setWhiteListedKernels("'" + pythonKernelName(project.getPythonEnvironment().getPythonVersion()) +
         "', 'pysparkkernel', 'sparkkernel', 'sparkrkernel'");
@@ -263,8 +272,10 @@ public class JupyterConfigFilesGenerator {
 
     JupyterNotebookConfigTemplate template = builder.build();
 
-    Map<String, Object> dataModel = new HashMap<>(1);
+    Map<String, Object> dataModel = new HashMap<>(3);
     dataModel.put("conf", template);
+    dataModel.put(HDFSContentsRemoteDriver.class.getSimpleName(), HDFSContentsRemoteDriver.class);
+    dataModel.put(HopsfsMountRemoteDriver.class.getSimpleName(), HopsfsMountRemoteDriver.class);
     try {
       templateEngine.template(JupyterNotebookConfigTemplate.TEMPLATE_NAME, dataModel, out);
     } catch (TemplateException ex) {
@@ -343,6 +354,15 @@ public class JupyterConfigFilesGenerator {
     }
   }
 
+  private HDFSContentsRemoteDriver getHDFSContentsRemoteDriverConfig(JupyterSettings jupyterSettings, String hdfsUser)
+      throws ServiceDiscoveryException {
+    Service namenode = serviceDiscoveryController
+        .getAnyAddressOfServiceWithDNS(HopsworksService.NAMENODE.getNameWithTag(NamenodeTags.rpc));
+    JupyterContentsManager jcm = JupyterContentsManager.HDFS_CONTENTS_MANAGER;
+    return new HDFSContentsRemoteDriver(namenode.getAddress(), String.valueOf(namenode.getPort()), hdfsUser,
+        jcm.getClassName(), jupyterSettings.getBaseDir());
+  }
+
   // returns true if one of the conf files were created anew 
   private void createConfigFiles(JupyterPaths jp, Users user, Project project,
                                  Integer port, JupyterSettings js, String allowOrigin)
@@ -350,11 +370,11 @@ public class JupyterConfigFilesGenerator {
     String confDirPath = jp.getConfDirPath();
     String kernelsDir = jp.getKernelsDir();
     String certsDir = jp.getCertificatesDir();
-    File jupyter_config_file = new File(confDirPath, JupyterNotebookConfigTemplate.FILE_NAME);
-    File sparkmagic_config_file = new File(confDirPath, SparkMagicConfigTemplate.FILE_NAME);
+    File jupyterConfigFile = new File(confDirPath, JupyterNotebookConfigTemplate.FILE_NAME);
+    File sparkmagicConfigFile = new File(confDirPath, SparkMagicConfigTemplate.FILE_NAME);
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
-    
-    if (!jupyter_config_file.exists()) {
+
+    if (!jupyterConfigFile.exists()) {
       String pythonKernelName = pythonKernelName(project.getPythonEnvironment().getPythonVersion());
       String pythonKernelPath = pythonKernelPath(kernelsDir, pythonKernelName);
       File pythonKernelFile = new File(pythonKernelPath, KernelTemplate.FILE_NAME);
@@ -364,14 +384,14 @@ public class JupyterConfigFilesGenerator {
       try (Writer out = new FileWriter(pythonKernelFile, false)) {
         createJupyterKernelConfig(out, project, js, hdfsUser);
       }
-  
-      try (Writer out = new FileWriter(jupyter_config_file, false)) {
+
+      try (Writer out = new FileWriter(jupyterConfigFile, false)) {
         createJupyterNotebookConfig(out, project, hdfsUser, port, js, certsDir, allowOrigin);
       }
     }
-    
-    if (!sparkmagic_config_file.exists()) {
-      try (Writer out = new FileWriter(sparkmagic_config_file, false)) {
+
+    if (!sparkmagicConfigFile.exists()) {
+      try (Writer out = new FileWriter(sparkmagicConfigFile, false)) {
         createSparkMagicConfig(out, project, user, js, hdfsUser, confDirPath);
       }
     }

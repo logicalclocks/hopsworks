@@ -51,9 +51,8 @@ import io.hops.hopsworks.common.dao.jupyter.config.JupyterDTO;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.jupyter.NotebookDTO;
 import io.hops.hopsworks.common.jupyter.JupyterManager;
+import io.hops.hopsworks.common.jupyter.RemoteFSDriverType;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.jobs.spark.SparkController;
@@ -61,9 +60,7 @@ import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.jupyter.JupyterJWTManager;
 import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.common.livy.LivyMsg;
-import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.user.UsersController;
-import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -144,10 +141,6 @@ public class JupyterService {
   private Settings settings;
   @EJB
   private LivyController livyController;
-  @EJB
-  private CertificateMaterializer certificateMaterializer;
-  @EJB
-  private DistributedFsService dfsService;
   @EJB
   private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
   @EJB
@@ -258,6 +251,17 @@ public class JupyterService {
 
     Users user = jWTHelper.getUserPrincipal(sc);
     JupyterSettings js = jupyterSettingsFacade.findByProjectUser(project, user.getEmail());
+    RemoteFSDriverType driver = settings.getJupyterRemoteFsManager();
+    // if we are using hopsfsmount the base dir is the project path
+    String baseDir = js.getBaseDir();
+    String projectPath = Utils.getProjectPath(project.getName());
+    if (driver == RemoteFSDriverType.HDFS_CONTENTS_MANAGER && projectPath.equals(baseDir)) {
+      // we should put back the default base dir, the jupyter dataset
+      baseDir = Utils.getProjectPath(project.getName()) + Settings.ServiceDataset.JUPYTER.getName();
+    } else if (driver == RemoteFSDriverType.HOPSFS_MOUNT) {
+      baseDir = projectPath;
+    }
+    js.setBaseDir(baseDir);
     js.setPrivateDir(settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret());
     js.setMode(JupyterMode.JUPYTER_LAB);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(js).build();
@@ -327,12 +331,15 @@ public class JupyterService {
 
     String configSecret = DigestUtils.sha256Hex(Integer.toString(ThreadLocalRandom.current().nextInt()));
     JupyterDTO dto = null;
-    DistributedFileSystemOps dfso = dfsService.getDfsOps();
     String allowOriginHost = uriInfo.getBaseUri().getHost();
     int allowOriginPort = uriInfo.getBaseUri().getPort();
     String allowOriginPortStr = allowOriginPort != -1 ? ":" + allowOriginPort : "";
     String allowOrigin = settings.getJupyterOriginScheme() + "://" + allowOriginHost + allowOriginPortStr;
     try {
+      RemoteFSDriverType remoteFSDriverType = settings.getJupyterRemoteFsManager();
+      if (remoteFSDriverType == RemoteFSDriverType.HOPSFS_MOUNT) {
+        jupyterSettings.setBaseDir(Utils.getProjectPath(project.getName()));
+      }
       jupyterSettingsFacade.update(jupyterSettings);
 
       //Inspect dependencies
@@ -341,8 +348,6 @@ public class JupyterService {
       dto = jupyterManager.startJupyterServer(project, hopsworksUser, configSecret, jupyterSettings, allowOrigin);
       jupyterJWTManager.materializeJWT(hopsworksUser, project, jupyterSettings, dto.getCid(), dto.getPort(),
           JUPYTER_JWT_AUD);
-      HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), hopsworksUser.getUsername(),
-          settings.getHdfsTmpCertDir(), dfso, certificateMaterializer, settings, dto.getCertificatesDir());
       jupyterManager.waitForStartup(project, hopsworksUser);
     } catch (ServiceException | TimeoutException ex) {
       if (dto != null) {
@@ -356,10 +361,6 @@ public class JupyterService {
       }
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_MATERIALIZATION_ERROR, Level.SEVERE,
           ex.getMessage(), null, ex);
-    } finally {
-      if (dfso != null) {
-        dfsService.closeDfsClient(dfso);
-      }
     }
 
     try {

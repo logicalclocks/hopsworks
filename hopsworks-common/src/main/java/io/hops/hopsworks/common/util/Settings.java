@@ -46,6 +46,7 @@ import com.hazelcast.topic.Message;
 import com.hazelcast.topic.MessageListener;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.jupyter.RemoteFSDriverType;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.exceptions.ProvenanceException;
@@ -286,6 +287,10 @@ public class Settings implements Serializable {
    */
   private static final String VARIABLE_JUPYTER_HOST = "jupyter_host";
   private static final String VARIABLE_JUPYTER_ORIGIN_SCHEME = "jupyter_origin_scheme";
+  private static final String VARIABLE_JUPYTER_REMOTE_FS_DRIVER = "jupyter_remote_fs_driver";
+  private static final String VARIABLE_APPLY_HOPSFSMOUNT_APPARMOR_PROFILE_KUBE =
+      "apply_hopsfsmount_apparmor_profile_kube";
+  private static final String VARIABLE_HOPSFSMOUNT_APPARMOR_PROFILE = "hopsfsmount_apparmor_profile";
 
   private static final String VARIABLE_ENABLE_JUPYTER_PYTHON_KERNEL_NON_KUBERNETES =
     "enable_jupyter_python_kernel_non_kubernetes";
@@ -637,6 +642,10 @@ public class Settings implements Serializable {
       HOPSWORKS_USER = setVar(VARIABLE_HOPSWORKS_USER, HOPSWORKS_USER);
       JUPYTER_GROUP = setVar(VARIABLE_JUPYTER_GROUP, JUPYTER_GROUP);
       JUPYTER_ORIGIN_SCHEME = setVar(VARIABLE_JUPYTER_ORIGIN_SCHEME, JUPYTER_ORIGIN_SCHEME);
+      JUPYTER_REMOTE_FS_DRIVER = setVar(VARIABLE_JUPYTER_REMOTE_FS_DRIVER, JUPYTER_REMOTE_FS_DRIVER);
+      APPLY_HOPSFSMOUNT_APPARMOR_PROFILE_KUBE = setBoolVar(VARIABLE_APPLY_HOPSFSMOUNT_APPARMOR_PROFILE_KUBE,
+          APPLY_HOPSFSMOUNT_APPARMOR_PROFILE_KUBE);
+      HOPSFSMOUNT_APPARMOR_PROFILE = setVar(VARIABLE_HOPSFSMOUNT_APPARMOR_PROFILE, HOPSFSMOUNT_APPARMOR_PROFILE);
       HDFS_SUPERUSER = setVar(VARIABLE_HDFS_SUPERUSER, HDFS_SUPERUSER);
       SPARK_USER = setVar(VARIABLE_SPARK_USER, SPARK_USER);
       SPARK_DIR = setDirVar(VARIABLE_SPARK_DIR, SPARK_DIR);
@@ -1722,7 +1731,24 @@ public class Settings implements Serializable {
   public synchronized long getJupyterWSPingInterval() {
     checkCache();
     return JUPYTER_WS_PING_INTERVAL_MS;
+  }
 
+  private String JUPYTER_REMOTE_FS_DRIVER = "hdfscontentsmanager";
+  public synchronized RemoteFSDriverType getJupyterRemoteFsManager() {
+    checkCache();
+    return RemoteFSDriverType.fromString(JUPYTER_REMOTE_FS_DRIVER);
+  }
+
+  private boolean APPLY_HOPSFSMOUNT_APPARMOR_PROFILE_KUBE = true;
+  public synchronized boolean getApplyHopsfsMountApparmor() {
+    checkCache();
+    return APPLY_HOPSFSMOUNT_APPARMOR_PROFILE_KUBE;
+  }
+
+  private String HOPSFSMOUNT_APPARMOR_PROFILE = "hopsworks-hopsfsmount-docker";
+  public synchronized String getHopsfsMountApparmorProfile() {
+    checkCache();
+    return HOPSFSMOUNT_APPARMOR_PROFILE;
   }
 
   //Git
@@ -1792,7 +1818,6 @@ public class Settings implements Serializable {
     checkCache();
     return DOCKER_CGROUP_PARENT;
   }
-
 
   // Service key rotation interval
   private static final String JUPYTER_SHUTDOWN_TIMER_INTERVAL = "jupyter_shutdown_timer_interval";

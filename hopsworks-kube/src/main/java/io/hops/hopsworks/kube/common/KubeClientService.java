@@ -708,7 +708,7 @@ public class KubeClientService {
       resources.addToLimits("nvidia.com/gpu", new QuantityBuilder()
           .withAmount(Double.toString(limitResources.getGpus())).build());
     }
-    
+
     // requests: only in deployments
     if (requestedResources != null) {
       // validate requested resources
