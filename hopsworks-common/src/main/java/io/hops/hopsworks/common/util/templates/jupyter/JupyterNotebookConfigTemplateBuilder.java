@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.util.templates.jupyter;
 
+import io.hops.hopsworks.common.jupyter.RemoteFSDriver;
 import io.hops.hopsworks.persistence.entity.project.Project;
 
 public class JupyterNotebookConfigTemplateBuilder {
@@ -42,6 +43,8 @@ public class JupyterNotebookConfigTemplateBuilder {
   private String hopsworksPublicHost;
   private Integer allocatedNotebookMBs;
   private Double allocatedNotebookCores;
+
+  private RemoteFSDriver remoteFSDriver;
   
   private JupyterNotebookConfigTemplateBuilder() {}
   
@@ -236,7 +239,7 @@ public class JupyterNotebookConfigTemplateBuilder {
     this.hopsworksPublicHost = hopsworksPublicHost;
     return this;
   }
-  
+
   public JupyterNotebookConfigTemplate build() {
     return new JupyterNotebookConfigTemplate(this);
   }
@@ -256,6 +259,13 @@ public class JupyterNotebookConfigTemplateBuilder {
 
   public JupyterNotebookConfigTemplateBuilder setAllocatedNotebookCores(Double allocatedNotebookCores) {
     this.allocatedNotebookCores = allocatedNotebookCores;
+    return this;
+  }
+
+  public RemoteFSDriver getRemoteFSDriver() { return remoteFSDriver; }
+
+  public JupyterNotebookConfigTemplateBuilder setRemoteFSDriver(RemoteFSDriver driver) {
+    this.remoteFSDriver = driver;
     return this;
   }
 }

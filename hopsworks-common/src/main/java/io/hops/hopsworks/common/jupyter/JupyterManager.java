@@ -24,13 +24,15 @@ import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
+import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 public interface JupyterManager {
   
   JupyterDTO startJupyterServer(Project project, Users user, String secretConfig,
-                                JupyterSettings js, String allowOrigin) throws ServiceException, JobException;
+                                JupyterSettings js, String allowOrigin) throws ServiceException, JobException,
+      IOException;
   
   String getJupyterHome(Project project, Users user, String secret) throws ServiceException;
   
