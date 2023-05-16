@@ -83,6 +83,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -263,8 +265,17 @@ public class CertificatesMgmService {
   @Asynchronous
   @Lock(LockType.WRITE)
   public void resetMasterEncryptionPassword(Integer operationId, String newMasterPasswd, String userRequested) {
-    MasterPasswordResetResult resetResult = certificateMasterPwdMgm.resetMasterEncryptionPassword(newMasterPasswd,
-      masterPasswordFile, handlers, handlersResult);
+    Future<MasterPasswordResetResult> futureResetResult =
+      certificateMasterPwdMgm.resetMasterEncryptionPassword(newMasterPasswd, masterPasswordFile, handlers,
+        handlersResult);
+    MasterPasswordResetResult resetResult;
+    try {
+      resetResult = futureResetResult.get();
+    } catch (InterruptedException | ExecutionException e) {
+      sendUnsuccessfulMessage(e.getMessage(), userRequested);
+      putUpdateStatusCache(operationId, UPDATE_STATUS.FAILED);
+      return;
+    }
     if (UPDATE_STATUS.OK.equals(resetResult.getUpdateStatus())) {
       sendSuccessfulMessage(resetResult.getSuccessLog(), userRequested);
       putUpdateStatusCache(operationId, UPDATE_STATUS.OK);

@@ -23,6 +23,8 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 
 import javax.ejb.AccessTimeout;
+import javax.ejb.AsyncResult;
+import javax.ejb.Asynchronous;
 import javax.ejb.Lock;
 import javax.ejb.LockType;
 import javax.ejb.Singleton;
@@ -32,6 +34,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.Map;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -66,30 +69,33 @@ public class CertificateMasterPwdMgm implements Serializable {
   }
   
   @SuppressWarnings("unchecked")
+  @Asynchronous
   @Lock(LockType.WRITE)
   @AccessTimeout(value = 500)
-  public MasterPasswordResetResult resetMasterEncryptionPassword(String newMasterPasswd, File masterPasswordFile,
-      Instance<MasterPasswordHandler> handlers, Map<Class, MasterPasswordChangeResult> handlersResult) {
+  public Future<MasterPasswordResetResult> resetMasterEncryptionPassword(String newMasterPasswd,
+      File masterPasswordFile, Instance<MasterPasswordHandler> handlers,
+      Map<Class, MasterPasswordChangeResult> handlersResult) {
     try {
       String newDigest = DigestUtils.sha256Hex(newMasterPasswd);
       callUpdateHandlers(newDigest, masterPasswordFile, handlers, handlersResult);
       updateMasterEncryptionPassword(newDigest, masterPasswordFile);
       StringBuilder successLog = gatherLogs(handlersResult);
       LOGGER.log(Level.INFO, "Master encryption password changed!");
-      return new MasterPasswordResetResult(CertificatesMgmService.UPDATE_STATUS.OK, successLog.toString(), null);
+      return new AsyncResult<>(new MasterPasswordResetResult(CertificatesMgmService.UPDATE_STATUS.OK,
+        successLog.toString(), null));
     } catch (EncryptionMasterPasswordException ex) {
       String errorMsg = "*** Master encryption password update failed!!! Rolling back...";
       LOGGER.log(Level.SEVERE, errorMsg, ex);
       callRollbackHandlers(handlers, handlersResult);
-      return new MasterPasswordResetResult(CertificatesMgmService.UPDATE_STATUS.FAILED, null,
-        errorMsg + "\n" + ex.getMessage());
+      return new AsyncResult<>(new MasterPasswordResetResult(CertificatesMgmService.UPDATE_STATUS.FAILED, null,
+        errorMsg + "\n" + ex.getMessage()));
     } catch (IOException ex) {
       String errorMsg = "*** Failed to write new encryption password to file: " + masterPasswordFile.getAbsolutePath()
         + ". Rolling back...";
       LOGGER.log(Level.SEVERE, errorMsg, ex);
       callRollbackHandlers(handlers, handlersResult);
-      return new MasterPasswordResetResult(CertificatesMgmService.UPDATE_STATUS.FAILED, null,
-        errorMsg + "\n" + ex.getMessage());
+      return new AsyncResult<>(new MasterPasswordResetResult(CertificatesMgmService.UPDATE_STATUS.FAILED, null,
+        errorMsg + "\n" + ex.getMessage()));
     } finally {
       handlersResult.clear();
     }

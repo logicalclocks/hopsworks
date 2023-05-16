@@ -66,8 +66,8 @@ describe "On #{ENV['OS']}" do
               { content_type: 'application/x-www-form-urlencoded'}
           expect_status_details(201)
           opId = json_body[:successMessage]
-          get "#{ENV['HOPSWORKS_API']}/admin/encryptionPass/#{opId}"
           wait_for do
+            get "#{ENV['HOPSWORKS_API']}/admin/encryptionPass/#{opId}"
             response.code == 200
           end
         end
