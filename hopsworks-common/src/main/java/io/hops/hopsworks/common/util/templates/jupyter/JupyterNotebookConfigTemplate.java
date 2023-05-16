@@ -16,13 +16,14 @@
 
 package io.hops.hopsworks.common.util.templates.jupyter;
 
+import io.hops.hopsworks.common.jupyter.RemoteFSDriver;
+
 public class JupyterNotebookConfigTemplate extends JupyterTemplate {
   public static final String TEMPLATE_NAME = "jupyter_notebook_config_template.py";
   public static final String FILE_NAME = "jupyter_notebook_config.py";
   
   private final String namenodeIp;
   private final String namenodePort;
-  private final String contentsManager;
   private final String hopsworksEndpoint;
   private final String elasticEndpoint;
   private final Integer port;
@@ -40,12 +41,12 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
   private final String hopsworksPublicHost;
   private final Integer allocatedNotebookMBs;
   private final Double allocatedNotebookCores;
+  private final RemoteFSDriver remoteFSDriver;
   
   public JupyterNotebookConfigTemplate(JupyterNotebookConfigTemplateBuilder builder) {
     super(builder.getHdfsUser(), builder.getHadoopHome(), builder.getProject());
     this.namenodeIp = builder.getNamenodeIp();
     this.namenodePort = builder.getNamenodePort();
-    this.contentsManager = builder.getContentsManager();
     this.hopsworksEndpoint = builder.getHopsworksEndpoint();
     this.elasticEndpoint = builder.getElasticEndpoint();
     this.port = builder.getPort();
@@ -63,6 +64,7 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
     this.hopsworksPublicHost = builder.getHopsworksPublicHost();
     this.allocatedNotebookMBs = builder.getAllocatedNotebookMBs();
     this.allocatedNotebookCores = builder.getAllocatedNotebookCores();
+    this.remoteFSDriver = builder.getRemoteFSDriver();
   }
   
   public String getNamenodeIp() {
@@ -72,11 +74,7 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
   public String getNamenodePort() {
     return namenodePort;
   }
-  
-  public String getContentsManager() {
-    return contentsManager;
-  }
-  
+
   public String getHopsworksEndpoint() {
     return hopsworksEndpoint;
   }
@@ -144,4 +142,6 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
   public Double getAllocatedNotebookCores() {
     return allocatedNotebookCores;
   }
+
+  public RemoteFSDriver getRemoteFSDriver() { return remoteFSDriver; }
 }

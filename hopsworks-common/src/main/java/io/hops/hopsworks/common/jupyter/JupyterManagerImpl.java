@@ -48,7 +48,7 @@ public abstract class JupyterManagerImpl implements JupyterManager {
   private OSProcessExecutor osProcessExecutor;
   
   public abstract JupyterDTO startJupyterServer(Project project, Users user, String secretConfig,
-    JupyterSettings js, String allowOrigin) throws ServiceException, JobException;
+    JupyterSettings js, String allowOrigin) throws ServiceException, JobException, IOException;
   
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public String getJupyterHome(Project project, Users user, String secret) throws ServiceException {
