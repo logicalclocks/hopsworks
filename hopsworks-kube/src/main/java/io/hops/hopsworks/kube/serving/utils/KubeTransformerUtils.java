@@ -149,12 +149,13 @@ public class KubeTransformerUtils {
   private Container buildTransformerContainer(Project project, Users user, Serving serving)
     throws ServiceDiscoveryException, ApiKeyException {
     
-    List<EnvVar> envVars = buildEnvironmentVariables(project, user, serving);
     List<VolumeMount> volumeMounts = kubePredictorUtils.buildVolumeMounts();
   
     DeployableComponentResources transformerResources = serving.getTransformerResources();
     ResourceRequirements resourceRequirements = kubeClientService.
       buildResourceRequirements(transformerResources.getLimits(), transformerResources.getRequests());
+    
+    List<EnvVar> envVars = buildEnvironmentVariables(project, user, serving, resourceRequirements);
     
     return new ContainerBuilder()
       .withName("transformer")
@@ -167,8 +168,8 @@ public class KubeTransformerUtils {
       .build();
   }
   
-  private List<EnvVar> buildEnvironmentVariables(Project project, Users user, Serving serving)
-    throws ServiceDiscoveryException, ApiKeyException {
+  private List<EnvVar> buildEnvironmentVariables(Project project, Users user, Serving serving,
+    ResourceRequirements resourceRequirements) throws ServiceDiscoveryException, ApiKeyException {
     List<EnvVar> envVars = new ArrayList<>();
     
     // Transformer launcher
@@ -178,6 +179,8 @@ public class KubeTransformerUtils {
     envVars.add(new EnvVarBuilder().withName("IS_TRANSFORMER").withValue("true").build());
     envVars.add(new EnvVarBuilder()
       .withName("PYTHONPATH").withValue(settings.getAnacondaProjectDir() + "/bin/python").build());
+    envVars.add(new EnvVarBuilder().withName("NVIDIA_VISIBLE_DEVICES")
+      .withValue(kubeClientService.getNvidiaVisibleDevices(resourceRequirements)).build());
     
     // HSFS and HOPS
     envVars.add(new EnvVarBuilder()
