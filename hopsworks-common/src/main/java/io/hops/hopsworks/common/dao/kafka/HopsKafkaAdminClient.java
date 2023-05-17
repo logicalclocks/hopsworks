@@ -15,8 +15,10 @@
  */
 package io.hops.hopsworks.common.dao.kafka;
 
-import io.hops.hopsworks.common.kafka.KafkaBrokers;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.KafkaTags;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
@@ -39,12 +41,11 @@ import javax.ejb.TransactionAttributeType;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Properties;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Singleton
-@DependsOn("KafkaBrokers")
+@DependsOn("ServiceDiscoveryController")
 @ConcurrencyManagement(ConcurrencyManagementType.CONTAINER)
 public class HopsKafkaAdminClient {
   
@@ -53,14 +54,17 @@ public class HopsKafkaAdminClient {
   @EJB
   private BaseHadoopClientsService baseHadoopService;
   @EJB
-  private KafkaBrokers kafkaBrokers;
-  
+  private ServiceDiscoveryController serviceDiscoveryController;
+
+  private String brokerFQDN;
   private AdminClient adminClient;
-  
+
   @PostConstruct
   private void init() {
     try {
       LOG.log(Level.FINE, "Initializing Kafka client");
+      brokerFQDN = serviceDiscoveryController.constructServiceAddressWithPort(
+          HopsworksService.KAFKA.getNameWithTag(KafkaTags.broker));
       initClient();
     } catch (Exception e) {
       LOG.log(Level.WARNING, "Kafka is currently unavailable. Will periodically retry to connect");
@@ -79,12 +83,7 @@ public class HopsKafkaAdminClient {
       }
     }
     Properties props = new Properties();
-    Set<String> brokers = kafkaBrokers.getInternalKafkaBrokers();
-    //Keep only INTERNAL protocol brokers
-    brokers.removeIf(seed -> seed.split(KafkaConst.COLON_SEPARATOR)[0]
-      .equalsIgnoreCase(KafkaConst.KAFKA_BROKER_EXTERNAL_PROTOCOL));
-    String brokerAddress = brokers.iterator().next().split("://")[1];
-    props.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerAddress);
+    props.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerFQDN);
     props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, KafkaConst.KAFKA_SECURITY_PROTOCOL);
     props.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, baseHadoopService.getSuperTrustStorePath());
     props.setProperty(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, baseHadoopService.getSuperTrustStorePassword());
@@ -136,5 +135,4 @@ public class HopsKafkaAdminClient {
       return adminClient.describeTopics(topics);
     }
   }
-  
 }

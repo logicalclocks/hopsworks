@@ -26,8 +26,6 @@ import io.hops.hopsworks.servicediscovery.HopsworksService;
 import io.hops.hopsworks.servicediscovery.tags.ZooKeeperTags;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
 
 import javax.annotation.PostConstruct;
@@ -41,7 +39,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -79,11 +76,6 @@ public class KafkaBrokers {
   }
 
   @Lock(LockType.READ)
-  public Set<String> getInternalKafkaBrokers() {
-    return this.internalKafkaBrokers;
-  }
-
-  @Lock(LockType.READ)
   public String getKafkaBrokersString() {
     if (!internalKafkaBrokers.isEmpty()) {
       return StringUtils.join(internalKafkaBrokers, ",");
@@ -92,23 +84,10 @@ public class KafkaBrokers {
   }
 
   @Lock(LockType.READ)
-  public Optional<String> getAnyKafkaBroker() {
-    return internalKafkaBrokers.stream()
-        .filter(StringUtils::isNoneEmpty)
-        .findAny();
-  }
-  
-  @Lock(LockType.READ)
   public Set<String> getBrokerEndpoints(String protocol) throws IOException, KeeperException, InterruptedException {
     try {
       String zkConnectionString = getZookeeperConnectionString();
-      final ZooKeeper zk = new ZooKeeper(zkConnectionString, Settings.ZOOKEEPER_SESSION_TIMEOUT_MS,
-          new Watcher() {
-            @Override
-            public void process(WatchedEvent watchedEvent) {
-              // NOOP
-            }
-          });
+      final ZooKeeper zk = new ZooKeeper(zkConnectionString, Settings.ZOOKEEPER_SESSION_TIMEOUT_MS, watchedEvent -> {});
       try {
         return zk.getChildren("/brokers/ids", false).stream()
             .map(bi -> getBrokerInfo(zk, bi))

@@ -21,6 +21,7 @@ import io.hops.hopsworks.servicediscovery.tags.FlinkTags;
 import io.hops.hopsworks.servicediscovery.tags.FlyingDuckTags;
 import io.hops.hopsworks.servicediscovery.tags.GlassfishTags;
 import io.hops.hopsworks.servicediscovery.tags.HiveTags;
+import io.hops.hopsworks.servicediscovery.tags.KafkaTags;
 import io.hops.hopsworks.servicediscovery.tags.LogstashTags;
 import io.hops.hopsworks.servicediscovery.tags.MysqlTags;
 import io.hops.hopsworks.servicediscovery.tags.NamenodeTags;
@@ -64,6 +65,8 @@ public class HopsworksService<T extends ServiceTags> {
       FlyingDuckTags.values());
   public static final HopsworksService<OpenSearchTags> OPENSEARCH = HopsworksService.of("elastic",
       OpenSearchTags.values());
+
+  public static final HopsworksService<KafkaTags> KAFKA = HopsworksService.of("kafka", KafkaTags.values());
 
   private final String name;
   private final T[] tags;

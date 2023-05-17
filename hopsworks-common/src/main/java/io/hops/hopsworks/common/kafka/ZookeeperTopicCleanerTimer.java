@@ -39,15 +39,8 @@
 
 package io.hops.hopsworks.common.kafka;
 
-import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.kafka.HopsKafkaAdminClient;
-import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.kafka.ProjectTopics;
-import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.ZooKeeper;
 
 import javax.ejb.EJB;
 import javax.ejb.Schedule;
@@ -55,13 +48,11 @@ import javax.ejb.Singleton;
 import javax.ejb.Timer;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Periodically sync zookeeper with the database for
@@ -70,8 +61,7 @@ import java.util.logging.Logger;
 @Singleton
 public class ZookeeperTopicCleanerTimer {
 
-  private final static Logger LOGGER = Logger.getLogger(
-      ZookeeperTopicCleanerTimer.class.getName());
+  private final static Logger LOGGER = Logger.getLogger(ZookeeperTopicCleanerTimer.class.getName());
   
   private final static String offsetTopic = "__consumer_offsets";
   
@@ -79,13 +69,9 @@ public class ZookeeperTopicCleanerTimer {
   private EntityManager em;
 
   @EJB
-  private ServiceDiscoveryController serviceDiscoveryController;
-  @EJB
   private KafkaBrokers kafkaBrokers;
   @EJB
   private HopsKafkaAdminClient hopsKafkaAdminClient;
-
-  private ZooKeeper zk = null;
 
   // Run once per hour 
   @Schedule(minute = "0", hour = "*", info="Zookeeper Topic Cleaner")
@@ -93,33 +79,12 @@ public class ZookeeperTopicCleanerTimer {
     LOGGER.log(Level.FINE, "Running ZookeeperTopicCleanerTimer.");
 
     try {
-      String zkConnectionString = kafkaBrokers.getZookeeperConnectionString();
-      Set<String> zkTopics = new HashSet<>();
-      try {
-        zk = new ZooKeeper(zkConnectionString, Settings.ZOOKEEPER_SESSION_TIMEOUT_MS, new ZookeeperWatcher());
-        List<String> topics = zk.getChildren("/brokers/topics", false);
-        zkTopics.addAll(topics);
-      } catch (IOException ex) {
-        LOGGER.log(Level.SEVERE, "Unable to find the zookeeper server: ", ex.toString());
-      } catch (KeeperException | InterruptedException ex) {
-        LOGGER.log(Level.SEVERE, "Cannot retrieve topic list from Zookeeper", ex);
-      } finally {
-        if (zk != null) {
-          try {
-            zk.close();
-          } catch (InterruptedException ex) {
-            LOGGER.log(Level.SEVERE, "Unable to close zookeeper connection", ex);
-          }
-          zk = null;
-        }
-      }
-
-      List<ProjectTopics> dbProjectTopics = em.createNamedQuery("ProjectTopics.findAll").getResultList();
-      Set<String> dbTopics = new HashSet<>();
-
-      for (ProjectTopics pt : dbProjectTopics) {
-        dbTopics.add(pt.getTopicName());
-      }
+      Set<String> zkTopics = hopsKafkaAdminClient.listTopics().names().get();
+      Set<String> dbTopics = em.createNamedQuery("ProjectTopics.findAll", ProjectTopics.class)
+          .getResultList()
+          .stream()
+          .map(ProjectTopics::getTopicName)
+          .collect(Collectors.toSet());
 
       /*
        * To remove topics from zookeeper which do not exist in database. This
@@ -147,9 +112,7 @@ public class ZookeeperTopicCleanerTimer {
           LOGGER.log(Level.SEVERE, "Error dropping topics from Kafka", ex);
         }
       }
-    } catch (ServiceDiscoveryException ex) {
-      LOGGER.log(Level.SEVERE, "Could not discover Zookeeper server addresses", ex);
-    } catch (Exception ex) {
+    }  catch (Exception ex) {
       LOGGER.log(Level.SEVERE, "Got an exception while cleaning up kafka topics", ex);
     }
   }
@@ -169,13 +132,6 @@ public class ZookeeperTopicCleanerTimer {
         kafkaBrokers.getBrokerEndpoints(KafkaBrokers.KAFKA_BROKER_PROTOCOL_INTERNAL));
     } catch (Exception ex) {
       LOGGER.log(Level.SEVERE, null, ex);
-    }
-  }
-
-  private class ZookeeperWatcher implements Watcher {
-
-    @Override
-    public void process(WatchedEvent we) {
     }
   }
 }
