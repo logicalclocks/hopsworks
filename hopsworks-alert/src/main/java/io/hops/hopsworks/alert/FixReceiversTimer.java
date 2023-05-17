@@ -16,6 +16,7 @@
 package io.hops.hopsworks.alert;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import io.hops.hopsworks.alert.dao.AlertManagerConfigFacade;
 import io.hops.hopsworks.alert.dao.AlertReceiverFacade;
 import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
@@ -63,6 +64,7 @@ public class FixReceiversTimer implements Serializable {
   }
 
   //For test
+  @VisibleForTesting
   public FixReceiversTimer(AlertManagerConfigFacade alertManagerConfigFacade,
     AlertReceiverFacade alertReceiverFacade, AlertManagerConfiguration alertManagerConfiguration) {
     this.alertManagerConfigFacade = alertManagerConfigFacade;

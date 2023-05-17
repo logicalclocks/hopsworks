@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.alert;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.alert.exception.AlertManagerAccessControlException;
 import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
@@ -102,6 +103,7 @@ public class AMClient {
   }
 
   //For test
+  @VisibleForTesting
   public AMClient(AlertManagerClient client) {
     this.client = client;
   }
