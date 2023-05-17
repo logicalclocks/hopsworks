@@ -129,8 +129,7 @@
     <json-schema.version>1.12.1</json-schema.version>
     <jsoup.version>1.15.3</jsoup.version>
     <junit.version>4.13.2</junit.version>
-    <kafka-clients.version>2.3.0</kafka-clients.version>
-    <kafka_2.11.version>2.3.0</kafka_2.11.version>
+    <kafka.version>3.4.0</kafka.version>
     <kubernetes-client.version>6.5.1</kubernetes-client.version>
     <lambdista-try.version>0.3.1</lambdista-try.version>
     <libthrift.version>0.15.0</libthrift.version>
@@ -149,7 +148,7 @@
     <spnego.version>7.0</spnego.version>
     <swagger-annotations.version>1.6.2</swagger-annotations.version>
     <swagger.jersey2.jaxrs.version>1.6.2</swagger.jersey2.jaxrs.version>
-    <zookeeper.version>3.4.14</zookeeper.version>
+    <zookeeper.version>3.7.1</zookeeper.version>
   </properties>
 
   <dependencyManagement>
@@ -753,26 +752,7 @@
       <dependency>
         <groupId>org.apache.kafka</groupId>
         <artifactId>kafka-clients</artifactId>
-        <version>${kafka-clients.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.kafka</groupId>
-        <artifactId>kafka_2.11</artifactId>
-        <version>${kafka_2.11.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.fasterxml.jackson.module</groupId>
-            <artifactId>jackson-module-scala_2.11</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-csv</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jdk8</artifactId>
-          </exclusion>
-        </exclusions>
+        <version>${kafka.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.thrift</groupId>

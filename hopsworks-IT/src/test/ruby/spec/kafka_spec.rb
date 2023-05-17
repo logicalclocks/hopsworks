@@ -36,7 +36,7 @@ describe "On #{ENV['OS']}" do
           json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/kafka/clusterinfo?external=true"
           expect_status_details(200)
           clusterinfo = JSON.parse(json_result)
-          expect(clusterinfo["brokers"][0].split(//).last(4).join).to eql("9092")
+          expect(clusterinfo["brokers"][0].split(//).last(4).join).to eql("9092").or eql("9093")
         end
       end
     end
