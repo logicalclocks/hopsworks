@@ -50,6 +50,7 @@ public class ClientWrapper implements Closeable {
   private static final Logger LOGGER = Logger.getLogger(ClientWrapper.class.getName());
   private final Client client;
   private final WebTarget webTarget;
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
   public ClientWrapper(Client client, URI target) {
     this.client = client;
@@ -102,7 +103,6 @@ public class ClientWrapper implements Closeable {
   }
 
   private <T> Entity<String> toEntity(T pojo) {
-    ObjectMapper objectMapper = new ObjectMapper();
     try {
       return Entity.json(objectMapper.writeValueAsString(pojo));
     } catch (JsonProcessingException e) {
@@ -111,7 +111,6 @@ public class ClientWrapper implements Closeable {
   }
 
   private <T> Entity<String> toEntity(List<T> pojo) {
-    ObjectMapper objectMapper = new ObjectMapper();
     try {
       return Entity.json(objectMapper.writeValueAsString(pojo));
     } catch (JsonProcessingException e) {
@@ -121,7 +120,6 @@ public class ClientWrapper implements Closeable {
 
   private <T> T getResponse(Response response, Class<T> type) {
     if (response.hasEntity()) {
-      ObjectMapper objectMapper = new ObjectMapper();
       T content;
       try {
         content = objectMapper.readValue(response.readEntity(String.class), type);
@@ -137,7 +135,6 @@ public class ClientWrapper implements Closeable {
   private <T> List<T> getResponseList(Response response, Class<T> clazz) {
     if (response.hasEntity()) {
       //because GenericType<List<T>> creates dependency conflict.
-      ObjectMapper objectMapper = new ObjectMapper();
       List<T> content;
       TypeFactory t = objectMapper.getTypeFactory();
       try {
