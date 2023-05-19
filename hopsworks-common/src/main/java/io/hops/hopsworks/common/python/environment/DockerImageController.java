@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.common.python.environment;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.python.library.LibraryInstaller;
@@ -53,7 +54,7 @@ public class DockerImageController {
   @EJB
   private OSProcessExecutor osProcessExecutor;
   
-  //testing
+  @VisibleForTesting
   public DockerImageController(Settings settings,
                                ProjectUtils projectUtils,
                                OSProcessExecutor osProcessExecutor) {
