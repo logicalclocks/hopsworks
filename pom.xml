@@ -92,7 +92,6 @@
     <awssdk.version>2.17.19</awssdk.version>
     <bcpkix-jdk15on.version>1.69</bcpkix-jdk15on.version>
     <bcprov-jdk15on.version>1.69</bcprov-jdk15on.version>
-    <bijection-avro_2.12.version>0.9.6</bijection-avro_2.12.version>
     <caffeine.version>2.8.0</caffeine.version>
     <calcite-core.version>1.32.0</calcite-core.version>
     <calcite-server.version>1.32.0</calcite-server.version>
@@ -258,11 +257,6 @@
         <groupId>com.nimbusds</groupId>
         <artifactId>oauth2-oidc-sdk</artifactId>
         <version>${oauth2-oidc-sdk.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.twitter</groupId>
-        <artifactId>bijection-avro_2.12</artifactId>
-        <version>${bijection-avro_2.12.version}</version>
       </dependency>
       <dependency>
         <groupId>commons-fileupload</groupId>
