@@ -16,8 +16,6 @@
 
 package io.hops.hopsworks.common.serving.inference.logger;
 
-import com.twitter.bijection.Injection;
-import com.twitter.bijection.avro.GenericAvroCodecs;
 import io.hops.hopsworks.common.dao.kafka.KafkaConst;
 import io.hops.hopsworks.common.kafka.KafkaBrokers;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -28,7 +26,10 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -41,6 +42,7 @@ import javax.annotation.PostConstruct;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
@@ -97,8 +99,7 @@ public class KafkaInferenceLogger implements InferenceLogger {
     
     //Get the schema for the topic and the serializer
     Schema avroSchema = new Schema.Parser().parse(serving.getKafkaTopic().getSubjects().getSchema().getSchema());
-    Injection<GenericRecord, byte[]> recordSerializer = GenericAvroCodecs.toBinary(avroSchema);
-  
+
     //Get the version of the schema
     int schemaVersion = serving.getKafkaTopic().getSubjects().getVersion();
     
@@ -109,14 +110,16 @@ public class KafkaInferenceLogger implements InferenceLogger {
     populateInfererenceRecord(serving, inferenceRequest, responseHttpCode, inferenceResponse, inferenceRecord,
       schemaVersion);
 
-    // Serialize record to byte
-    byte[] inferenceRecordBytes = recordSerializer.apply(inferenceRecord);
+    // Serialize record to byte array and send it to kafka
+    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+      DatumWriter<GenericData.Record> writer = new GenericDatumWriter<>(avroSchema);
+      Encoder encoder = EncoderFactory.get().binaryEncoder(out, null);
+      writer.write(inferenceRecord, encoder);
+      encoder.flush();
 
-    // Push the record to the topic
-    ProducerRecord<String, byte[]> inferenceKakfaRecord = new ProducerRecord<>(
-        serving.getKafkaTopic().getTopicName(), inferenceRecordBytes);
-
-    try {
+      // Push the record to the topic
+      ProducerRecord<String, byte[]> inferenceKakfaRecord = new ProducerRecord<>(
+          serving.getKafkaTopic().getTopicName(), out.toByteArray());
       kafkaProducer.send(inferenceKakfaRecord);
     } catch (Exception e) {
       LOGGER.log(Level.FINE, "Cannot write to topic: " + serving.getKafkaTopic().getTopicName(), e);
