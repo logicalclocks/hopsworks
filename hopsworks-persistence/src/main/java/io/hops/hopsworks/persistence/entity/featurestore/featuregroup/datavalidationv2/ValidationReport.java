@@ -17,8 +17,6 @@
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2;
 
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
-
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -29,16 +27,15 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Collection;
@@ -79,15 +76,10 @@ public class ValidationReport implements Serializable {
   @Column(name = "statistics")
   private String statistics;
 
-  @JoinColumns({
-    @JoinColumn(name = "inode_pid",
-        referencedColumnName = "parent_id"),
-    @JoinColumn(name = "inode_name",
-        referencedColumnName = "name"),
-    @JoinColumn(name = "partition_id",
-        referencedColumnName = "partition_id")})
-  @OneToOne(optional = false)
-  private Inode inode;
+  @Basic
+  @Column(name = "file_name")
+  @Size(max = 255)
+  private String fileName;
 
   @Basic
   @Column(name = "meta")
@@ -141,12 +133,12 @@ public class ValidationReport implements Serializable {
     this.meta = meta;
   }
 
-  public Inode getInode() {
-    return inode;
+  public String getFileName() {
+    return fileName;
   }
 
-  public void setInode(Inode inode) {
-    this.inode = inode;
+  public void setFileName(String fileName) {
+    this.fileName = fileName;
   }
 
   public String getEvaluationParameters() {
@@ -189,7 +181,6 @@ public class ValidationReport implements Serializable {
     Collection<ValidationResult> validationResults) {
     this.validationResults = validationResults;
   }
-
 
   @Override
   public boolean equals(Object o) {

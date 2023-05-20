@@ -1655,7 +1655,10 @@ public class RESTCodes {
     CONNECTION_CHECKER_ERROR(220, "Failure in testing connection for storage connector",
       Response.Status.BAD_REQUEST),
     ERROR_CREATING_ONLINE_FEATURESTORE_KAFKA_OFFSET_TABLE(221, "An error occurred when trying to " +
-            "create the kafka offset table for an online feature store", Response.Status.INTERNAL_SERVER_ERROR);
+            "create the kafka offset table for an online feature store", Response.Status.INTERNAL_SERVER_ERROR),
+    ERROR_CONSTRUCTING_VALIDATION_REPORT_DIRECTORY_PATH(222,
+        "An error occurred while constructing validation report directory path",
+        Response.Status.INTERNAL_SERVER_ERROR);
 
     private int code;
     private String message;

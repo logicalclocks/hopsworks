@@ -22,11 +22,12 @@ import io.hops.hopsworks.common.dao.AbstractFacade.CollectionInfo;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.ValidationReportController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.ValidationReportDTO;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.results.ValidationResultDTO;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationReport;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationResult;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -35,6 +36,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriInfo;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Stateless
@@ -45,8 +47,6 @@ public class ValidationReportBuilder {
   private ValidationReportController validationReportController;
   @EJB
   private ValidationResultBuilder validationResultBuilder;
-  @EJB
-  private InodeController inodeController;
 
 
   public ValidationReportDTO uri(ValidationReportDTO dto, UriInfo uriInfo, Project project, 
@@ -64,14 +64,22 @@ public class ValidationReportBuilder {
     Featuregroup featuregroup, ValidationReport validationReport) {
     ValidationReportDTO dto = new ValidationReportDTO();
     uri(dto, uriInfo, project, featuregroup);
-
+    Optional<Dataset> validationDatasetOptional = validationReportController.getValidationDataset(project);
+    String path = "";
+    // the validation dataset will probably always be there if we have the validation reports in db
+    if (validationDatasetOptional.isPresent()) {
+      Path validationReportDir = validationReportController
+          .getValidationReportDirFullPath(featuregroup, validationDatasetOptional.get());
+      Path validationReportFileFullPath = new Path(validationReportDir, validationReport.getFileName());
+      path = validationReportFileFullPath.toString();
+    }
     dto.setMeta(validationReport.getMeta());
     dto.setId(validationReport.getId());
     dto.setSuccess(validationReport.getSuccess());
     dto.setStatistics(validationReport.getStatistics());
     dto.setValidationTime(validationReport.getValidationTime());
     dto.setEvaluationParameters(validationReport.getEvaluationParameters());
-    dto.setFullReportPath(inodeController.getPath(validationReport.getInode()));
+    dto.setFullReportPath(path);
     dto.setIngestionResult(validationReport.getIngestionResult());
 
     List<ValidationResultDTO> validationResultDTOs = new ArrayList<>();

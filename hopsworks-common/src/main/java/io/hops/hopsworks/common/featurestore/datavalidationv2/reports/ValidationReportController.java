@@ -44,7 +44,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalida
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.IngestionResult;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationReport;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationResult;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlert;
 import io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlertStatus;
@@ -52,6 +51,7 @@ import io.hops.hopsworks.persistence.entity.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -204,24 +204,29 @@ public class ValidationReportController {
   }
 
   public void deleteValidationReportById(Users user, Integer validationReportId) throws FeaturestoreException {
-    Optional<ValidationReport> validationReport = validationReportFacade.findById(validationReportId);
-    if (!validationReport.isPresent()) {
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.VALIDATION_REPORT_NOT_FOUND, Level.WARNING,
-        String.format("ValidationReport with id : %d was not found causing delete to fail", validationReportId));
-    }
-    deleteSingleReportInode(user, validationReport.get());
+    ValidationReport validationReport = validationReportFacade.findById(validationReportId).orElseThrow(() ->
+        new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.VALIDATION_REPORT_NOT_FOUND, Level.WARNING,
+        String.format("ValidationReport with id : %d was not found causing delete to fail", validationReportId)));
+    validationReportFacade.delete(validationReport);
+    deleteValidationReportFile(user, validationReport);
   }
 
-  private void deleteSingleReportInode(Users user, ValidationReport validationReport)
+  private void deleteValidationReportFile(Users user, ValidationReport validationReport)
     throws FeaturestoreException {
     Featuregroup featuregroup = validationReport.getFeaturegroup();
     Project project = featuregroup.getFeaturestore().getProject();
+    Optional<Dataset> validationDatasetOptional = getValidationDataset(project);
+    if (!validationDatasetOptional.isPresent()) {
+      return;
+    }
+    Path validationDirFullPath = getValidationReportDirFullPath(validationReport.getFeaturegroup(),
+        validationDatasetOptional.get());
+    Path validationFileFullPath = new Path(validationDirFullPath, validationReport.getFileName());
     DistributedFileSystemOps udfso = null;
     try {
       udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
       // delete json files
-      udfso.rm(inodeController.getPath(validationReport.getInode()), false);
+      udfso.rm(validationFileFullPath, false);
     } catch (IOException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_DELETING_ON_DISK_VALIDATION_REPORT,
         Level.WARNING, "", e.getMessage(), e);
@@ -233,13 +238,17 @@ public class ValidationReportController {
   public void deleteFeaturegroupDataValidationDir(Users user, Featuregroup featuregroup)
     throws FeaturestoreException {
     Project project = featuregroup.getFeaturestore().getProject();
+    Optional<Dataset> validationDataset = getValidationDataset(project);
+    if (!validationDataset.isPresent()) {
+      return;
+    }
     DistributedFileSystemOps udfso = null;
     try {
       udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
-      Dataset dataValidationDir = getOrCreateDataValidationDataset(project, user);
+      Dataset dataValidationDir = validationDataset.get();
       Path targetDir = new Path(datasetController.getDatasetPath(dataValidationDir), featuregroup.getName());
       udfso.rm(targetDir, true);
-    } catch (DatasetException | HopsSecurityException | IOException e) {
+    } catch (IOException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_DELETING_ON_DISK_VALIDATION_REPORT,
         Level.WARNING, "", e.getMessage(), e);
     } finally {
@@ -274,8 +283,8 @@ public class ValidationReportController {
     report.setValidationTime(validationTime);
 
     // Dump the whole report to a file. 
-    Inode reportInode = registerValidationReportToDisk(user, featuregroup, reportDTO, validationTime);
-    report.setInode(reportInode);
+    String validationReportFileName = registerValidationReportToDisk(user, featuregroup, reportDTO, validationTime);
+    report.setFileName(validationReportFileName);
 
     List<ValidationResult> results = new ArrayList<ValidationResult>();
 
@@ -287,32 +296,14 @@ public class ValidationReportController {
     return report;
   }
 
-  private Inode registerValidationReportToDisk(Users user, Featuregroup featuregroup,
+  private String registerValidationReportToDisk(Users user, Featuregroup featuregroup,
     ValidationReportDTO reportDTO, Date validationTime) throws FeaturestoreException {
     DistributedFileSystemOps udfso = null;
-    Project project = featuregroup.getFeaturestore().getProject();
-
     JSONObject reportJSON = convertValidationReportDTOToJson(reportDTO);
 
     try {
-      udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
-
-      // Dataset is confusing terminology. Get path to on_disk dataValidationDir
-      Dataset dataValidationDir = getOrCreateDataValidationDataset(project, user);
-
-      // All validation report attached to a particular featuregroup version will be stored in same directory
-      Path reportDirPath = new Path(datasetController.getDatasetPath(dataValidationDir), featuregroup.getName());
-      if (!udfso.isDir(reportDirPath.toString())) {
-        udfso.mkdir(reportDirPath.toString());
-      }
-      reportDirPath = new Path(reportDirPath, featuregroup.getVersion().toString());
-      if (!udfso.isDir(reportDirPath.toString())) {
-        udfso.mkdir(reportDirPath.toString());
-      }
-      reportDirPath = new Path(reportDirPath, "ValidationReports");
-      if (!udfso.isDir(reportDirPath.toString())) {
-        udfso.mkdir(reportDirPath.toString());
-      }
+      udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(featuregroup.getFeaturestore().getProject(), user));
+      Path reportDirPath = createValidationReportDirPath(user, featuregroup);
       SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HHmmss");
       formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
       String fileName = String.format("validation_report_%s.json", formatter.format(validationTime));
@@ -322,28 +313,52 @@ public class ValidationReportController {
           Level.SEVERE, String.format("Validation report with file name %s already exists.", fileName));
       }
       udfso.create(reportPath, reportJSON.toString());
-      
-      return inodeController.getInodeAtPath(reportPath.toString());
-    } catch (DatasetException | HopsSecurityException | IOException e) {
+      return fileName;
+    } catch (FeaturestoreException | IOException  e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_SAVING_ON_DISK_VALIDATION_REPORT,
         Level.WARNING, e.getMessage());
     } finally {
       dfs.closeDfsClient(udfso);
     }
-
   }
 
-  private Dataset getOrCreateDataValidationDataset(Project project, Users user)
-    throws DatasetException, HopsSecurityException {
-    Optional<Dataset> dataValidationDataset = project.getDatasetCollection().stream()
-      .filter(d -> d.getName().equals(Settings.ServiceDataset.DATAVALIDATION.getName()))
-      .findFirst();
-    // This is the case of an old project without DATAVALIDATION dataset, create it.
-    if (dataValidationDataset.isPresent()) {
-      return dataValidationDataset.get();
-    } else {
-      return createDataValidationDataset(project, user);
+  public Path createValidationReportDirPath(Users user, Featuregroup featuregroup)
+      throws FeaturestoreException {
+    DistributedFileSystemOps udfso = null;
+    Project project = featuregroup.getFeaturestore().getProject();
+    try {
+      udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
+
+      Optional<Dataset> validationReportOptional =
+          getValidationDataset(featuregroup.getFeaturestore().getProject());
+      Dataset validationDataset = validationReportOptional.get();
+      if (!validationReportOptional.isPresent()) {
+        createDataValidationDataset(project, user);
+      }
+      // create recursively
+      Path fullPath = getValidationReportDirFullPath(featuregroup, validationDataset);
+      udfso.mkdirs(fullPath, FsPermission.getDefault());
+      return fullPath;
+    } catch (DatasetException | HopsSecurityException | IOException e) {
+      throw new FeaturestoreException(
+          RESTCodes.FeaturestoreErrorCode.ERROR_CONSTRUCTING_VALIDATION_REPORT_DIRECTORY_PATH, Level.WARNING,
+          e.getMessage());
+    } finally {
+      dfs.closeDfsClient(udfso);
     }
+  }
+
+  public Path getValidationReportDirFullPath(Featuregroup featuregroup, Dataset dataValidationDir) {
+    // Dataset is confusing terminology. Get path to on_disk dataValidationDir
+    Path reportDirPath = new Path(datasetController.getDatasetPath(dataValidationDir), featuregroup.getName());
+    reportDirPath = new Path(reportDirPath, featuregroup.getVersion().toString());
+    return new Path(reportDirPath, "ValidationReports");
+  }
+
+  public Optional<Dataset> getValidationDataset(Project project) {
+    return project.getDatasetCollection().stream()
+        .filter(d -> d.getName().equals(Settings.ServiceDataset.DATAVALIDATION.getName()))
+        .findFirst();
   }
 
   private Dataset createDataValidationDataset(Project project, Users user)

@@ -119,6 +119,13 @@ public class ValidationReportFacade extends AbstractFacade<ValidationReport> {
     return latestReport;
   }
 
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public void delete(ValidationReport validationReport) {
+    if (validationReport != null) {
+      em.remove(em.merge(validationReport));
+    }
+  }
+
   private void setFilter(Set<? extends AbstractFacade.FilterBy> filter, Query q) {
     if (filter == null || filter.isEmpty()) {
       return;
