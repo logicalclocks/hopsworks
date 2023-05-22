@@ -38,16 +38,17 @@
  */
 package io.hops.hopsworks.api.agent;
 
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.agent.AgentController;
 import io.hops.hopsworks.common.dao.command.HeartbeatReplyDTO;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.command.SystemCommand;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -69,7 +70,7 @@ import java.util.logging.Logger;
 
 @Path("/agentresource")
 @Stateless
-@RolesAllowed({"HOPS_ADMIN", "AGENT"})
+@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "AGENT"})
 @Api(value = "Agent Service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class AgentResource {
