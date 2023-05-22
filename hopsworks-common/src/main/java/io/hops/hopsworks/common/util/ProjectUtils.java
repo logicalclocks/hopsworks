@@ -200,6 +200,12 @@ public class ProjectUtils {
     }
     return registry.getName() + ":" + registry.getPort();
   }
+  
+  public String getRegistryAddress() throws ServiceDiscoveryException {
+    com.logicalclocks.servicediscoverclient.service.Service registry = serviceDiscoveryController
+      .getAnyAddressOfServiceWithDNSSRVOnly(HopsworksService.DOCKER_REGISTRY.getName());
+    return registry.getAddress();
+  }
 
   public String getInitialDockerImageName(Project project) {
     String initialImageTag =
