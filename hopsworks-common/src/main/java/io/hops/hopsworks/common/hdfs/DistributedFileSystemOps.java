@@ -59,6 +59,7 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.fs.Options;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.AclEntry;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -330,6 +331,18 @@ public class DistributedFileSystemOps {
    */
   public void moveWithinHdfs(Path source, Path destination) throws IOException {
     dfs.rename(source, destination);
+  }
+  
+  /**
+   * Move source to destination.
+   * @param source
+   * @param destination
+   * @param overwrite
+   * @throws IOException
+   */
+  public void moveWithinHdfs(Path source, Path destination, boolean overwrite) throws IOException {
+    Options.Rename renameOption = overwrite ? Options.Rename.OVERWRITE : Options.Rename.NONE;
+    dfs.rename(source, destination, renameOption);
   }
 
   /**

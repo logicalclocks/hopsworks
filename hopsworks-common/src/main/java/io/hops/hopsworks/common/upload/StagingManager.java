@@ -39,47 +39,75 @@
 
 package io.hops.hopsworks.common.upload;
 
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.util.Settings;
-import java.io.File;
+import org.apache.hadoop.fs.Path;
+
 import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import javax.ejb.DependsOn;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
-import org.apache.commons.lang.RandomStringUtils;
-import com.google.common.io.Files;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Basically provides a temporary folder in which to stage uploaded files.
  */
 @Singleton
 @DependsOn("Settings")
-//should be removed after upload is fixed
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class StagingManager {
-
-  private File stagingFolder;
+  private static final Logger LOGGER = Logger.getLogger(StagingManager.class.getName());
+  private Path hdfsStagingFolder;
 
   @EJB
   private Settings settings;
+  @EJB
+  private DistributedFsService dfs;
 
   @PostConstruct
   public void init() {
-    String path = RandomStringUtils.randomAlphanumeric(8);
-    stagingFolder = new File(settings.getStagingDir() + "/" + path);
-    stagingFolder.mkdirs();
+    hdfsStagingFolder = new Path(settings.getUploadStagingDir());
+    createStagingDir(hdfsStagingFolder);
   }
-
+  
+  private void createStagingDir(Path stagingDir) {
+    DistributedFileSystemOps dfsOps = null;
+    try {
+      dfsOps = dfs.getDfsOps();
+      if (!dfsOps.exists(stagingDir) && !isRootDir(stagingDir.toString())) {
+        boolean created = dfsOps.mkdirs(stagingDir, dfsOps.getParentPermission(stagingDir));
+        if (!created) {
+          LOGGER.log(Level.WARNING, "Failed to create upload staging dir. Path: {0}", stagingDir.toString());
+        }
+      }
+    } catch (IOException e) {
+      LOGGER.log(Level.WARNING, "Failed to create upload staging dir. Path: {0}", stagingDir.toString());
+    } finally {
+      if (dfsOps != null) {
+        dfs.closeDfsClient(dfsOps);
+      }
+    }
+  }
+  
   public String getStagingPath() {
-    if (stagingFolder == null) {
-      stagingFolder = Files.createTempDir();
+    // if hdfs staging dir is set to Projects return empty b/c upload path will contain /Projects
+    if (isRootDir(hdfsStagingFolder.toString())) {
+      return "";
     }
-    return stagingFolder.getAbsolutePath();
+    //If staging dir not created or changes recreate
+    if (hdfsStagingFolder == null || !hdfsStagingFolder.equals(new Path(settings.getUploadStagingDir()))) {
+      hdfsStagingFolder = new Path(settings.getUploadStagingDir());
+      createStagingDir(hdfsStagingFolder);
+    }
+    return hdfsStagingFolder.toString();
   }
-
-  @PreDestroy
-  public void removeTmpDir() {
-    if (stagingFolder != null) {
-      stagingFolder.delete();
-    }
+  
+  private boolean isRootDir(String path) {
+    return path.equals(Settings.DIR_ROOT) || path.equals("/" + Settings.DIR_ROOT);
   }
 }
