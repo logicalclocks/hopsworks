@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.common.provenance.core;
 
+import io.hops.hopsworks.common.util.PayaraClusterManager;
 import io.hops.hopsworks.common.util.Settings;
 import org.javatuples.Pair;
 
@@ -43,6 +44,8 @@ public class ProvenanceCleaner {
   private Settings settings;
   @EJB
   private ProvenanceCleanerController cleanerCtrl;
+  @EJB
+  private PayaraClusterManager payaraClusterManager;
   @Resource
   TimerService timerService;
   private Timer timer;
@@ -66,6 +69,9 @@ public class ProvenanceCleaner {
   @Timeout
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   private void timeout(Timer timer) {
+    if (!payaraClusterManager.amIThePrimary()) {
+      return;
+    }
     int cleanupSize = settings.getProvCleanupSize();
     if(cleanupSize == 0) {
       return;

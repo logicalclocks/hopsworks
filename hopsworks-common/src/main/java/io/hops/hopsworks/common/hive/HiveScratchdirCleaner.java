@@ -17,6 +17,7 @@
 
 package io.hops.hopsworks.common.hive;
 
+import io.hops.hopsworks.common.util.PayaraClusterManager;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -33,12 +34,14 @@ import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.ejb.DependsOn;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.Timeout;
+import javax.ejb.Timer;
 import javax.ejb.TimerService;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -67,6 +70,8 @@ public class HiveScratchdirCleaner {
   private YarnClientService yarnService;
   @EJB
   private YarnApplicationstateFacade yarnApplicationstateFacade;
+  @EJB
+  private PayaraClusterManager payaraClusterManager;
   @Resource
   private TimerService timerService;
 
@@ -74,6 +79,7 @@ public class HiveScratchdirCleaner {
 
   private Set<String> applicationTypeSet = null;
   private EnumSet<YarnApplicationState> applicationStateEnumSet = null;
+  private Timer timer;
 
   @PostConstruct
   private void init() {
@@ -89,12 +95,22 @@ public class HiveScratchdirCleaner {
         intervalTimeunit.name());
 
     intervalValue = intervalTimeunit.toMillis(intervalValue);
-    timerService.createTimer(intervalValue, intervalValue, "Hive scratchdir cleaner");
+    timer = timerService.createTimer(intervalValue, intervalValue, "Hive scratchdir cleaner");
+  }
+  
+  @PreDestroy
+  private void destroyTimer() {
+    if (timer != null) {
+      timer.cancel();
+    }
   }
 
   @Timeout
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void doCleanUp() {
+    if (!payaraClusterManager.amIThePrimary()) {
+      return;
+    }
     YarnClientWrapper yarnClientWrapper = null;
     DistributedFileSystemOps dfso = null;
     try {
