@@ -15,8 +15,11 @@
  */
 package io.hops.hopsworks.common.dao.kafka;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
+import io.hops.hopsworks.exceptions.KafkaException;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.servicediscovery.HopsworksService;
 import io.hops.hopsworks.servicediscovery.tags.KafkaTags;
 import org.apache.kafka.clients.CommonClientConfigs;
@@ -29,23 +32,16 @@ import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.config.SslConfigs;
 
-import javax.annotation.PostConstruct;
-import javax.ejb.AccessTimeout;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.DependsOn;
 import javax.ejb.EJB;
-import javax.ejb.Singleton;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import java.time.Duration;
+import javax.ejb.Stateless;
 import java.util.Collection;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@Singleton
-@DependsOn("ServiceDiscoveryController")
+@Stateless
 @ConcurrencyManagement(ConcurrencyManagementType.CONTAINER)
 public class HopsKafkaAdminClient {
   
@@ -56,34 +52,11 @@ public class HopsKafkaAdminClient {
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
 
-  private String brokerFQDN;
-  private AdminClient adminClient;
-
-  @PostConstruct
-  private void init() {
-    try {
-      LOG.log(Level.FINE, "Initializing Kafka client");
-      brokerFQDN = serviceDiscoveryController.constructServiceAddressWithPort(
-          HopsworksService.KAFKA.getNameWithTag(KafkaTags.broker));
-      initClient();
-    } catch (Exception e) {
-      LOG.log(Level.WARNING, "Kafka is currently unavailable. Will periodically retry to connect");
-    }
-  }
-  
-  @AccessTimeout(value = 5000)
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  private void initClient() {
-    if (adminClient != null) {
-      try {
-        LOG.log(Level.FINE, "Will attempt to close current kafka client");
-        adminClient.close(Duration.ofSeconds(3));
-      } catch (Exception e) {
-        LOG.log(Level.WARNING, "Could not close adminClient, will continue with initialization", e);
-      }
-    }
+  private AdminClient initClient() throws ServiceDiscoveryException {
     Properties props = new Properties();
-    props.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerFQDN);
+    props.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
+        serviceDiscoveryController.constructServiceFQDNWithPort(
+            (HopsworksService.KAFKA.getNameWithTag(KafkaTags.broker))));
     props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, KafkaConst.KAFKA_SECURITY_PROTOCOL);
     props.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, baseHadoopService.getSuperTrustStorePath());
     props.setProperty(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, baseHadoopService.getSuperTrustStorePassword());
@@ -93,46 +66,42 @@ public class HopsKafkaAdminClient {
     props.setProperty(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG,
       KafkaConst.KAFKA_ENDPOINT_IDENTIFICATION_ALGORITHM);
     LOG.log(Level.FINE, "Will attempt to initialize current kafka client");
-    adminClient = AdminClient.create(props);
+    return AdminClient.create(props);
   }
   
-  public ListTopicsResult listTopics() {
-    try {
+  public ListTopicsResult listTopics() throws KafkaException {
+    try (AdminClient adminClient = initClient()) {
       return adminClient.listTopics();
     } catch (Exception e) {
-      LOG.log(Level.WARNING, "Kafka cluster is unavailable", e);
-      initClient();
-      return adminClient.listTopics();
+      throw new KafkaException(
+          RESTCodes.KafkaErrorCode.BROKER_METADATA_ERROR, Level.WARNING, e.getMessage(), e.getMessage(), e);
     }
   }
   
-  public CreateTopicsResult createTopics(Collection<NewTopic> newTopics) {
-    try {
+  public CreateTopicsResult createTopics(Collection<NewTopic> newTopics) throws KafkaException {
+    try (AdminClient adminClient = initClient()) {
       return adminClient.createTopics(newTopics);
     } catch (Exception e) {
-      LOG.log(Level.WARNING, "Kafka cluster is unavailable", e);
-      initClient();
-      return adminClient.createTopics(newTopics);
+      throw new KafkaException(
+          RESTCodes.KafkaErrorCode.TOPIC_CREATION_FAILED, Level.WARNING, e.getMessage(), e.getMessage(), e);
     }
   }
   
-  public DeleteTopicsResult deleteTopics(Collection<String> topics) {
-    try {
+  public DeleteTopicsResult deleteTopics(Collection<String> topics) throws KafkaException {
+    try (AdminClient adminClient = initClient()){
       return adminClient.deleteTopics(topics);
     } catch (Exception e) {
-      LOG.log(Level.WARNING, "Kafka cluster is unavailable", e);
-      initClient();
-      return adminClient.deleteTopics(topics);
+      throw new KafkaException(
+          RESTCodes.KafkaErrorCode.TOPIC_DELETION_FAILED, Level.WARNING, e.getMessage(), e.getMessage(), e);
     }
   }
   
-  public DescribeTopicsResult describeTopics(Collection<String> topics) {
-    try {
+  public DescribeTopicsResult describeTopics(Collection<String> topics) throws KafkaException {
+    try (AdminClient adminClient = initClient()){
       return adminClient.describeTopics(topics);
     } catch (Exception e) {
-      LOG.log(Level.WARNING, "Kafka cluster is unavailable", e);
-      initClient();
-      return adminClient.describeTopics(topics);
+      throw new KafkaException(
+          RESTCodes.KafkaErrorCode.BROKER_METADATA_ERROR, Level.WARNING, e.getMessage(), e.getMessage(), e);
     }
   }
 }
