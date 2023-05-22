@@ -49,12 +49,17 @@ module JupyterHelper
     expect_status_details(expected_status)
   end
 
-  def create_notebook(jupyter_port)
-    json_result = post "/hopsworks-api/jupyter/#{jupyter_port}/api/contents", {type: "notebook", path: ""}
+  def create_notebook(jupyter_port, path="")
+    notebook_name = SecureRandom.alphanumeric(10) + ".ipynb"
+    payload = {
+      'name' => notebook_name,
+      'format' => 'json',
+      'type' => 'notebook'
+    }
+    json_result = post "/hopsworks-api/jupyter/#{jupyter_port}/api/contents/" + path, payload.to_json
     expect_status_details(201)
     parsed_json = JSON.parse(json_result)
-    temp_name = parsed_json["name"]
-
+    temp_name = parsed_json["path"]
     return temp_name
   end
 
