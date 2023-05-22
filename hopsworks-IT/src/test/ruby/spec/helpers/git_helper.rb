@@ -162,7 +162,7 @@ module GitHelper
     dsname = repository_path.gsub("/Projects/#{project[:projectname]}", "")
     #upload a file
     uploadFile(project, "#{dsname}", "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
-    expect_status_details(204)
+    expect_status_details(200)
     #make commit
     commit_message = "Rspec Test commit"
     commit_config = {
@@ -296,7 +296,7 @@ module GitHelper
     dsname = repo_full_path.gsub("/Projects/#{project[:projectname]}", "")
     if action == "add"
       uploadFile(project, "#{dsname}", "#{ENV['PROJECT_DIR']}/tools/upload_example/#{filename}")
-      expect_status_details(204)
+      expect_status_details(200)
     elsif action == "delete"
       delete_dataset(project, "#{dsname}/#{filename}", datasetType: "?type=DATASET")
       expect_status_details(204)
