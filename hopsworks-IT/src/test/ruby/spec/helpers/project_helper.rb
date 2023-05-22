@@ -168,7 +168,7 @@ module ProjectHelper
 
   def force_remove(project)
     with_admin_session
-    delete "#{ENV['HOPSWORKS_API']}/admin/projects/#{project[:projectname]}?force=true"
+    delete "#{ENV['HOPSWORKS_API']}/admin/projects/#{project[:id]}?force=true"
     pp "Force removed project:#{project[:projectname]}. Response: #{response.code}"
   end
 

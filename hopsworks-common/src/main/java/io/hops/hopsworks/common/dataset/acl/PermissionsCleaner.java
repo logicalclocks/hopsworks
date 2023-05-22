@@ -35,6 +35,8 @@ public class PermissionsCleaner {
   @Schedule(minute = "*/15", hour = "*", info = "Fix dataset permissions timer")
   public void fixDatasetPermissions(Timer timer) {
     counter = permissionsFixer.fixPermissions(counter, System.currentTimeMillis());
-    LOGGER.log(Level.INFO, "Fix permissions triggered by timer counter={0}", counter);
+    if (counter > 0) {
+      LOGGER.log(Level.INFO, "Fix permissions triggered by timer counter={0}", counter);
+    }
   }
 }

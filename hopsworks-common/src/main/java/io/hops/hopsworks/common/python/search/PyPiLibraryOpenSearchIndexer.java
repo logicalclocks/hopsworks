@@ -17,8 +17,12 @@
 package io.hops.hopsworks.common.python.search;
 
 import io.hops.hopsworks.common.opensearch.OpenSearchClientController;
+import io.hops.hopsworks.common.util.PayaraClusterManager;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.OpenSearchException;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.opensearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.opensearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.opensearch.action.bulk.BulkRequest;
@@ -27,9 +31,6 @@ import org.opensearch.client.GetAliasesResponse;
 import org.opensearch.client.indices.CreateIndexRequest;
 import org.opensearch.client.indices.GetIndexTemplatesResponse;
 import org.opensearch.cluster.health.ClusterHealthStatus;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -41,10 +42,11 @@ import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.Timeout;
 import javax.ejb.Timer;
-import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.util.OptionalLong;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -61,43 +63,94 @@ public class PyPiLibraryOpenSearchIndexer {
   private OpenSearchClientController openSearchClientCtrl;
   @EJB
   private Settings settings;
+  @EJB
+  private PayaraClusterManager payaraClusterManager;
   @Resource
   private TimerService timerService;
+  private Timer timer;
 
   private boolean isIndexed = false;
-
-  private static final Logger LOGGER = Logger.getLogger(
-      PyPiLibraryOpenSearchIndexer.class.getName());
+  
+  private static final Logger LOGGER = Logger.getLogger(PyPiLibraryOpenSearchIndexer.class.getName());
 
   @Lock(LockType.WRITE)
-  public void setIndexed(boolean indexed) {
-    this.isIndexed = indexed;
+  public void updateIndexed() {
+    if(settings.isPyPiIndexerTimerEnabled()) {
+      GetAliasesResponse pypiAlias;
+      try {
+        pypiAlias = openSearchClientCtrl.getAliases(Settings.OPENSEARCH_PYPI_LIBRARIES_ALIAS);
+        this.isIndexed = !pypiAlias.getAliases().isEmpty();
+      } catch (OpenSearchException e) {
+        LOGGER.log(Level.SEVERE, "Exception occurred trying to get indices.", e);
+      }
+    }
   }
 
   public boolean isIndexed() {
+    if (!this.isIndexed) {
+      this.updateIndexed();
+    }
     return this.isIndexed;
   }
 
   @PostConstruct
   public void init() {
-    scheduleTimer(0);
-  }
-
-  private void scheduleTimer(long duration) {
     if(settings.isPyPiIndexerTimerEnabled()) {
-      timerService.createSingleActionTimer(duration, new TimerConfig("PyPi Search Indexer", false));
+      timer = timerService.createTimer(0, 600000L, "PyPi Search Indexer");
     } else {
       LOGGER.log(Level.INFO, "PyPi Indexer is disabled, will not index libraries in opensearch");
     }
+  }
+  
+  private String getTimeStampFromIndex(String index) {
+    return index.replace(Settings.OPENSEARCH_PYPI_LIBRARIES_INDEX_PATTERN_PREFIX, "");
+  }
+  
+  private long getRecentIndex(Set<String> keySet) {
+    if (keySet.size() > 1) {
+      LOGGER.log(Level.WARNING, "Found more than one index for Alias: {0}", Settings.OPENSEARCH_PYPI_LIBRARIES_ALIAS);
+    }
+    OptionalLong index = keySet.stream().map(this::getTimeStampFromIndex).mapToLong(Long::parseLong).max();
+    return index.orElse(0L);
+  }
+  
+  private long getIndexAge() {
+    try {
+      GetAliasesResponse pypiAlias = openSearchClientCtrl.getAliases(Settings.OPENSEARCH_PYPI_LIBRARIES_ALIAS);
+      // Delete pypi index and reload ear to force trigger a pypi reindex.
+      if (pypiAlias != null && pypiAlias.getAliases() != null && !pypiAlias.getAliases().isEmpty()) {
+        long lastIndexed = getRecentIndex(pypiAlias.getAliases().keySet());
+        long interval = System.currentTimeMillis() - lastIndexed;
+        LOGGER.log(Level.FINE, "PyPi Alias last indexed: {0} HOURS ago", TimeUnit.MILLISECONDS.toHours(interval));
+        return interval;
+      }
+    } catch (OpenSearchException e) {
+      LOGGER.log(Level.WARNING, "Failed to get PyPi Alias: {0}", e.getMessage());
+    }
+    return Long.MAX_VALUE;
+  }
+  
+  private boolean shouldIndex() {
+    if (payaraClusterManager.amIThePrimary()) {
+      String rawInterval = settings.getPyPiIndexerTimerInterval();
+      Long intervalValue = settings.getConfTimeValue(rawInterval);
+      TimeUnit intervalTimeunit = settings.getConfTimeTimeUnit(rawInterval);
+      long interval = intervalTimeunit.toMillis(intervalValue);
+      long lastIndexed = getIndexAge();
+      //if last indexed is longer that interval
+      return lastIndexed > interval;
+    }
+    return false;
   }
 
   @Timeout
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void execute(Timer timer) throws OpenSearchException {
-    long errorRescheduleTimeout = 600000;
-    
+    if (!shouldIndex()) {
+      return;
+    }
     LOGGER.log(Level.INFO, "Running PyPi Indexer");
-  
+    
     try {
       ClusterHealthResponse clusterHealthResponse = openSearchClientCtrl.clusterHealthGet();
       GetIndexTemplatesResponse templateResponse =
@@ -105,17 +158,14 @@ public class PyPiLibraryOpenSearchIndexer {
     
       //If OpenSearch is down or template not in OpenSearch reschedule the timer
       if(clusterHealthResponse.getStatus().equals(ClusterHealthStatus.RED)) {
-        scheduleTimer(errorRescheduleTimeout);
         LOGGER.log(Level.INFO, "OpenSearch currently down, rescheduling indexing for pypi libraries");
         return;
       } else if(templateResponse.getIndexTemplates().isEmpty()) {
-        scheduleTimer(errorRescheduleTimeout);
         LOGGER.log(Level.INFO, "OpenSearch template " + Settings.OPENSEARCH_PYPI_LIBRARIES_ALIAS +
           " currently missing, rescheduling indexing for pypi libraries");
         return;
       }
     } catch(Exception e) {
-      scheduleTimer(errorRescheduleTimeout);
       LOGGER.log(Level.SEVERE, "Exception occurred trying to index pypi libraries, rescheduling timer", e);
       return;
     }
@@ -124,10 +174,6 @@ public class PyPiLibraryOpenSearchIndexer {
 
     try {
       GetAliasesResponse pypiAlias = openSearchClientCtrl.getAliases(Settings.OPENSEARCH_PYPI_LIBRARIES_ALIAS);
-    
-      if(!pypiAlias.getAliases().isEmpty()) {
-        this.setIndexed(true);
-      }
     
       String[] indicesToDelete = openSearchClientCtrl.mngIndicesGetBySimplifiedRegex(
         Settings.OPENSEARCH_PYPI_LIBRARIES_INDEX_REGEX);
@@ -176,7 +222,6 @@ public class PyPiLibraryOpenSearchIndexer {
         String currentSearchIndex = pypiAlias.getAliases().keySet().iterator().next();
         openSearchClientCtrl.aliasSwitchIndex(Settings.OPENSEARCH_PYPI_LIBRARIES_ALIAS, currentSearchIndex, newIndex);
       }
-      this.setIndexed(true);
     
       LOGGER.log(Level.INFO, "Finished indexing");
     
@@ -186,16 +231,10 @@ public class PyPiLibraryOpenSearchIndexer {
       }
     } catch(Exception ex) {
       LOGGER.log(Level.SEVERE, "Indexing pypi libraries failed", ex);
-      scheduleTimer(errorRescheduleTimeout);
       if(openSearchClientCtrl.mngIndexExists(newIndex)) {
         DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest().indices(newIndex);
         openSearchClientCtrl.mngIndexDelete(deleteIndexRequest);
       }
-      return;
     }
-    String rawInterval = settings.getPyPiIndexerTimerInterval();
-    Long intervalValue = settings.getConfTimeValue(rawInterval);
-    TimeUnit intervalTimeunit = settings.getConfTimeTimeUnit(rawInterval);
-    scheduleTimer(intervalTimeunit.toMillis(intervalValue));
   }
 }

@@ -109,6 +109,11 @@
       <artifactId>bcpkix-jdk15on</artifactId>
     </dependency>
     <dependency>
+      <groupId>fish.payara.extras</groupId>
+      <artifactId>payara-embedded-web</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
