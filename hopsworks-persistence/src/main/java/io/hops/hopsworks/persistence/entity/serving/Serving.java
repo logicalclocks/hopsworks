@@ -479,11 +479,11 @@ public class Serving implements Serializable {
     result = 31 * result + name.hashCode();
     result = 31 * result + (description != null ? description.hashCode() : 0);
     result = 31 * result + modelPath.hashCode();
-    result = 31 * result + predictor.hashCode();
-    result = 31 * result + transformer.hashCode();
+    result = 31 * result + (predictor != null ? predictor.hashCode() : 0);
+    result = 31 * result + (transformer != null ? transformer.hashCode() : 0);
     result = 31 * result + modelVersion.hashCode();
     result = 31 * result + (modelFramework != null ? modelFramework.hashCode() : 0);
-    result = 31 * result + artifactVersion.hashCode();
+    result = 31 * result + (artifactVersion != null ? artifactVersion.hashCode() : 0);
     result = 31 * result + (optimized ? 1 : 0);
     result = 31 * result + (instances != null ? instances.hashCode() : 0);
     result = 31 * result + (transformerInstances != null ? transformerInstances.hashCode() : 0);
