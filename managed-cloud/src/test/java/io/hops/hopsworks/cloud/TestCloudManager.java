@@ -445,9 +445,60 @@ public class TestCloudManager {
     Assert.assertEquals("host1", nodes.getValue());
     Mockito.verify(dfsOps).refreshNodes();
   }
-  
-  
-  
+
+  @Test
+  public void testDecommissionNodesThatDoNotExistInCloud() throws Exception {
+    Map<String, CloudNode> workers = new HashMap<>();
+    CloudNode cloudNode1 = new CloudNode("id1", "host1", "10.0.0.1", 0, "type1", "running", CloudNodeType.Worker);
+    CloudNode cloudNode2 = new CloudNode("id2", "host2", "10.0.0.2", 0, "type1", "running", CloudNodeType.Worker);
+    workers.put("host1", cloudNode1);
+    workers.put("host2", cloudNode2);
+
+    CloudManager cloudManager = Mockito.spy(CloudManager.class);
+    Mockito.doNothing().when(cloudManager).execute(Mockito.any(), Mockito.any());
+    Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
+    cloudManager.settings = Mockito.mock(Settings.class);
+    Mockito.when(cloudManager.settings.getCloudType()).thenReturn(Settings.CLOUD_TYPES.AWS);
+
+    List<NodeReport> nodeReports = new ArrayList<>();
+    nodeReports.add(NodeReport.newInstance(NodeId.newInstance("host1", 0), NodeState.RUNNING,
+        "10.0.0.1", "rackName", null, null, 0, null, 0));
+    nodeReports.add(NodeReport.newInstance(NodeId.newInstance("host2", 0), NodeState.RUNNING,
+        "10.0.0.2", "rackName", null, null, 0, null, 0));
+    nodeReports.add(NodeReport.newInstance(NodeId.newInstance("host3", 0), NodeState.RUNNING,
+        "10.0.0.3", "rackName", null, null, 0, null, 0));
+    YarnClient yarnClient = Mockito.mock(YarnClient.class);
+    Mockito.when(yarnClient.getNodeReports()).thenReturn(nodeReports);
+
+    Map<String, Integer> nodesToRemove = new HashMap<>();
+    nodesToRemove.put("type1", 2);
+    RemoveNodesCommand request = new RemoveNodesCommand("1", nodesToRemove);
+    List<RemoveNodesCommand> removeCommands = new ArrayList<>();
+    removeCommands.add(request);
+
+    List<DecommissionNodeCommand> decomCommands = new ArrayList<>();
+
+    DistributedFileSystemOps dfsOps = Mockito.mock(DistributedFileSystemOps.class);
+    HostsController hostsController = Mockito.mock(HostsController.class);
+    CAProxy caProxy = Mockito.mock(CAProxy.class);
+    Configuration conf = new Configuration();
+
+    DecommissionStatus status = cloudManager.setAndGetDecommission(removeCommands, workers, yarnClient, dfsOps, conf,
+        caProxy, hostsController, decomCommands);
+    Collection<CloudNode> decommissioning = status.getDecommissioning();
+    // Decommissioning should not contain host3 because Cloud does not know about it
+    Assert.assertEquals(2, decommissioning.size());
+    Assert.assertTrue(decommissioning.contains(cloudNode1));
+    Assert.assertTrue(decommissioning.contains(cloudNode2));
+
+    ArgumentCaptor<String[]> argCaptor = ArgumentCaptor.forClass(String[].class);
+    Mockito.verify(cloudManager, Mockito.times(3)).execute(Mockito.any(RMAdminCLI.class), argCaptor.capture());
+    List<String[]> arguments = argCaptor.getAllValues();
+    // First time should be when removing host3
+    String[] removeNodeArgument = arguments.get(0);
+    Assert.assertArrayEquals(new String[]{"-removeNodes", "host3"}, removeNodeArgument);
+  }
+
   @Test
   public void testDecomissionRequest() throws IOException, TransformerException, TransformerConfigurationException,
       ParserConfigurationException, Exception {

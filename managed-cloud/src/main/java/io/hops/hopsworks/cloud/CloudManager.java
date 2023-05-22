@@ -75,6 +75,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
@@ -440,13 +441,19 @@ public class CloudManager {
       nodes.addAll(decommissioning.keySet());
             
       toDecom.forEach((host, worker) -> {
-        if (workerPerType.get(worker.getInstanceType()).get(Status.NOPRESENT) != null && workerPerType.get(worker.
-            getInstanceType()).get(Status.NOPRESENT).contains(worker)) {
+        // worker can be null when the node momentarily exists in Yarn but Cloud
+        // has removed it and does not know about it. It is ok if we add null
+        // in decommissioning because we filter for null values before sending it
+        // back to hopsworks-cloud
+        if (worker != null &&
+            workerPerType.get(worker.getInstanceType()).get(Status.NOPRESENT) != null &&
+            workerPerType.get(worker.getInstanceType()).get(Status.NOPRESENT).contains(worker)) {
           //if the node selected to be decommisined is not present in yarn it is directly decommissioned without
           //decommissioning phase
           decommissioned.put(host, worker);
-        } else if (workerPerType.get(worker.getInstanceType()).get(Status.UNUSABLE) != null && workerPerType.get(worker.
-            getInstanceType()).get(Status.UNUSABLE).contains(worker)) {
+        } else if (worker != null &&
+            workerPerType.get(worker.getInstanceType()).get(Status.UNUSABLE) != null &&
+            workerPerType.get(worker.getInstanceType()).get(Status.UNUSABLE).contains(worker)) {
           //if the node is unusable it is directly decommissioned without decommissioning phase
           decommissioned.put(host, worker);
         } else {
@@ -499,7 +506,10 @@ public class CloudManager {
           }
         }
       }
-      return new DecommissionStatus(decommissioning.values(), decommissioned.values());
+      return new DecommissionStatus(
+          decommissioning.values().stream().filter(Objects::nonNull).collect(Collectors.toSet()),
+          decommissioned.values()
+      );
     } catch (InterruptedException ex){
       throw ex;
     } catch (Exception ex) {
