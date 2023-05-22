@@ -201,7 +201,7 @@ public class KafkaController {
     
     // create the topic in kafka
     try {
-      if (createTopicInKafka(topicDto).get(3000, TimeUnit.MILLISECONDS) == null) {
+      if (createTopicInKafka(topicDto).get(6000, TimeUnit.MILLISECONDS) == null) {
         throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS_IN_ZOOKEEPER, Level.INFO,
           "topic name: " + topicDto.getName());
       }
