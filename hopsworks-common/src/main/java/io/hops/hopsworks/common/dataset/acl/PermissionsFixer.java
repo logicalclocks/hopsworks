@@ -83,7 +83,7 @@ public class PermissionsFixer {
     for (int i = index; i < projectList.size(); i++) {
       Project project = projectList.get(i);
       fixPermissions(project);
-      index = i;
+      index++;
       if (startTime > 0 && System.currentTimeMillis() - startTime > 300000) {
         break;
       }

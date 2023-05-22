@@ -71,6 +71,11 @@
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
     </dependency>
+    <dependency>
+      <groupId>fish.payara.extras</groupId>
+      <artifactId>payara-embedded-web</artifactId>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
 
   <build>

@@ -45,19 +45,6 @@ module DatasetHelper
     end
   end
 
-  def wait_for
-    timeout = 30
-    start = Time.now
-    x = yield
-    until x
-      if Time.now - start > timeout
-        raise "Timed out waiting for Dataset action to finish. Timeout #{timeout} sec"
-      end
-      sleep(1)
-      x = yield
-    end
-  end
-
   def uploadFile(project, dsname, filePath)
     file_size = File.size(filePath)
     file_name = File.basename(filePath)
@@ -804,10 +791,22 @@ module DatasetHelper
   end
 
   def do_permission_cleanup(project)
-    with_admin_session
-    post "#{ENV['HOPSWORKS_API']}/admin/projects/#{project[:id]}/fix-permission"
-    expect_status_details(204)
-    create_session(project[:username], "Pass123")
+    begin
+      with_admin_session
+      post "#{ENV['HOPSWORKS_API']}/admin/projects/#{project[:id]}/fix-permission"
+      #If permission cleaner timer is running we will get a timeout, so wait 6min(timer will run for 5min in worst case)
+      if response.code == 500
+        wait_for_me_time(timeout=360, delay=10) do
+          post "#{ENV['HOPSWORKS_API']}/admin/projects/#{project[:id]}/fix-permission"
+          pp "fix-permission response: #{response.code}"
+          { 'success' => response.code == 204}
+        end
+      end
+      expect_status_details(204)
+    ensure
+      #if we fail here we still need to change user
+      create_session(project[:username], "Pass123")
+    end
   end
 
   def test_dataset_permission(project, datasetName, permission)

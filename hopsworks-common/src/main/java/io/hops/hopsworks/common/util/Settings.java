@@ -2780,6 +2780,7 @@ public class Settings implements Serializable {
   }
 
   public synchronized boolean isLdapGroupMappingSyncEnabled() {
+    checkCache();
     return LDAP_GROUP_MAPPING_SYNC_ENABLED;
   }
 

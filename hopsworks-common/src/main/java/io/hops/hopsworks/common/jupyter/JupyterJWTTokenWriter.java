@@ -40,6 +40,7 @@ public interface JupyterJWTTokenWriter {
     PosixFilePermission.GROUP_WRITE,
     PosixFilePermission.GROUP_EXECUTE);
   
+  //TODO should have a token reader
   default void writeToken(Settings settings, JupyterJWT jupyterJWT) throws IOException {
     FileUtils.writeStringToFile(jupyterJWT.tokenFile.toFile(), jupyterJWT.token);
     

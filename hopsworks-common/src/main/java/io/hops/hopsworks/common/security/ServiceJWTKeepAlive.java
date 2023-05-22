@@ -144,11 +144,12 @@ public class ServiceJWTKeepAlive {
           renewIdx++;
           Long backoffTimeout = backOff.getBackOffInMillis();
           if (backoffTimeout != -1) {
-            LOGGER.log(Level.WARNING, "Failed to renew service JWT, retrying in " + backoffTimeout + " ms");
+            LOGGER.log(Level.WARNING, "Failed to renew service JWT, retrying in {0} ms. {1}",
+              new Object[]{backoffTimeout, ex.getMessage()});
             TimeUnit.MILLISECONDS.sleep(backoffTimeout);
           } else {
             backOff.reset();
-            throw new JWTException("Cannot renew service JWT");
+            throw new JWTException("Cannot renew service JWT", ex);
           }
         }
       }

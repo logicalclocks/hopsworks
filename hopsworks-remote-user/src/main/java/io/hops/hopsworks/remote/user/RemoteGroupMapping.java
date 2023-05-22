@@ -8,13 +8,14 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.remote.user.RemoteUser;
-import io.hops.hopsworks.persistence.entity.remote.user.RemoteUserStatus;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.remote.user.ldap.LdapRealm;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.AccessTimeout;
 import javax.ejb.Asynchronous;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
@@ -28,6 +29,7 @@ import java.util.logging.Logger;
 @Singleton
 @AccessTimeout(value = 5, unit = TimeUnit.SECONDS)
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class RemoteGroupMapping {
   private final static Logger LOGGER = Logger.getLogger(RemoteGroupMapping.class.getName());
   
@@ -41,33 +43,24 @@ public class RemoteGroupMapping {
   private UserFacade userFacade;
   @EJB
   private Settings settings;
+  @EJB
+  private GroupMappingProcessor groupMappingProcessor;
   
   public void syncMapping() {
-    List<RemoteUser> remoteUsers = remoteUserFacade.findAll();
-    for (RemoteUser remoteUser : remoteUsers) {
-      try {
-        syncMapping(remoteUser, null);
-      } catch (UserException e) {
-      }
+    if (!settings.isLdapGroupMappingSyncEnabled()) {
+      return;
     }
-  }
-  
-  @Asynchronous
-  public void syncMappingAsync() {
-    List<RemoteUser> remoteUsers = remoteUserFacade.findAll();
-    for (RemoteUser remoteUser : remoteUsers) {
-      try {
-        syncMapping(remoteUser, null);
-      } catch (UserException e) {
-      }
-    }
+    groupMappingProcessor.syncMapping(ldapRealm, remoteUserGroupMapper, remoteUserFacade);
   }
 
   @Asynchronous
   public void syncUserMappingAsync(RemoteUser user, List<String> groups) {
+    if (!settings.isLdapGroupMappingSyncEnabled()) {
+      return;
+    }
     try {
       LOGGER.log(Level.FINE, "Synchronizing remote user " + user + " groups with Projects");
-      syncMapping(user, groups);
+      groupMappingProcessor.syncMapping(user, groups, ldapRealm, remoteUserGroupMapper, remoteUserFacade);
       LOGGER.log(Level.FINE, "Finished synchronizing remote user " + user + " groups with Projects");
     } catch (UserException ex) {
       LOGGER.log(Level.SEVERE, "Failed to synchronize remote user " + user + " groups with Projects", ex);
@@ -78,42 +71,12 @@ public class RemoteGroupMapping {
     if (!settings.isLdapGroupMappingSyncEnabled()) {
       return;
     }
-    if (remoteUser == null) {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "Remote user not found");
-    }
-    try {
-      if (groups == null) {
-        groups = ldapRealm.getUserGroups(remoteUser);
-      }
-      //if the user is not active but exists reactivate
-      if (groups != null && !groups.isEmpty() && (RemoteUserStatus.DELETED.equals(remoteUser.getStatus()) ||
-        RemoteUserStatus.DEACTIVATED.equals(remoteUser.getStatus()))) {
-        setStatus(remoteUser, RemoteUserStatus.ACTIVE);
-      }
-      remoteUserGroupMapper.mapRemoteGroupToProject(remoteUser.getUid(), groups);
-      remoteUserGroupMapper.cleanRemoteGroupToProjectMapping(remoteUser.getUid(), groups);
-    } catch (NamingException e) {
-      if (RemoteUserStatus.ACTIVE.equals(remoteUser.getStatus())) {
-        setStatus(remoteUser, RemoteUserStatus.DELETED);
-        LOGGER.log(Level.INFO, "Failed to get user groups from LDAP. Marked user {0} as deleted. {1}",
-          new Object[]{remoteUser.getUid().getUsername(), e.getMessage()});
-      } else {
-        LOGGER.log(Level.INFO, "Failed to get user groups from LDAP. {0}", e.getMessage());
-      }
-    }
+    groupMappingProcessor.syncMapping(remoteUser, groups, ldapRealm, remoteUserGroupMapper, remoteUserFacade);
   }
   
   
   public void removeFromAllProjects(RemoteUser remoteUser) throws UserException {
-    if (remoteUser == null) {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "Remote user not found");
-    }
-    if (RemoteUserStatus.ACTIVE.equals(remoteUser.getStatus())) {
-      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_DELETION_ERROR, Level.FINE,
-        "Remote user is still active.");
-    }
-    remoteUserGroupMapper.removeFromAllProjects(remoteUser.getUid());
-    setStatus(remoteUser, RemoteUserStatus.DEACTIVATED);
+    groupMappingProcessor.removeFromAllProjects(remoteUser, remoteUserGroupMapper, remoteUserFacade);
   }
   
   public List<String> getGroups(String email) throws NamingException, UserException {
@@ -126,10 +89,5 @@ public class RemoteGroupMapping {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "Remote user not found");
     }
     return ldapRealm.getUserGroups(remoteUser);
-  }
-  
-  private void setStatus(RemoteUser remoteUser, RemoteUserStatus status) {
-    remoteUser.setStatus(status);
-    remoteUserFacade.update(remoteUser);
   }
 }
