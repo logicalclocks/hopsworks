@@ -133,7 +133,6 @@ public class AuthService {
   
   @GET
   @Path("session")
-  @RolesAllowed({"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @Produces(MediaType.APPLICATION_JSON)
   public Response session(@Context HttpServletRequest req) {
