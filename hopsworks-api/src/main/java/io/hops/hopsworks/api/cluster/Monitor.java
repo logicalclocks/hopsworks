@@ -136,8 +136,9 @@ public class Monitor {
 
   @GET
   @Path("/hosts")
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"}) //return the password in the host object
+  //return the password in the host object
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
   public Response getHosts(@Context SecurityContext sc) {
     List<Hosts> list = hostEjb.findAll();
     GenericEntity<List<Hosts>> hosts = new GenericEntity<List<Hosts>>(list) {
@@ -147,8 +148,9 @@ public class Monitor {
 
   @GET
   @Path("/hosts/{hostId}")
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"}) //return the password in the host object
+  //return the password in the host object
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
   public Response getHosts(@PathParam("hostId") String hostId, @Context SecurityContext sc) {
     Optional<Hosts> optional = hostEjb.findByHostname(hostId);
     if (optional.isPresent()) {
@@ -163,9 +165,9 @@ public class Monitor {
 
   @POST
   @Path("/groups/{groupName}")
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
   public Response serviceOp(@PathParam("groupName") String groupName, ServicesActionDTO action,
     @Context SecurityContext sc) throws GenericException {
     String result = hostServicesController.groupOp(groupName, action.getAction());
@@ -176,9 +178,9 @@ public class Monitor {
 
   @POST
   @Path("/groups/{groupName}/services/{serviceName}")
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
   public Response serviceOp(@PathParam("groupName") String groupName, @PathParam("serviceName") String serviceName,
       ServicesActionDTO action, @Context SecurityContext sc) throws GenericException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
@@ -188,9 +190,9 @@ public class Monitor {
 
   @POST
   @Path("/groups/{groupName}/services/{serviceName}/hosts/{hostId}")
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
   public Response serviceOnHostOp(@PathParam("groupName") String groupName,
     @PathParam("serviceName") String serviceName,
     @PathParam("hostId") String hostId, ServicesActionDTO action, @Context SecurityContext sc)
