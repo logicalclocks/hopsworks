@@ -233,7 +233,7 @@ public class KafkaController {
     return pt;
   }
   
-  private KafkaFuture<CreateTopicsResult> createTopicInKafka(TopicDTO topicDTO) {
+  private KafkaFuture<CreateTopicsResult> createTopicInKafka(TopicDTO topicDTO) throws KafkaException {
     return hopsKafkaAdminClient.listTopics().names().thenApply(
       set -> {
         if (set.contains(topicDTO.getName())) {
@@ -251,7 +251,8 @@ public class KafkaController {
       });
   }
   
-  private KafkaFuture<List<PartitionDetailsDTO>> getTopicDetailsFromKafkaCluster(String topicName) {
+  private KafkaFuture<List<PartitionDetailsDTO>> getTopicDetailsFromKafkaCluster(String topicName)
+      throws KafkaException{
     return hopsKafkaAdminClient.describeTopics(Collections.singleton(topicName))
       .all()
       .thenApply((map) -> map.getOrDefault(topicName, null))
@@ -279,9 +280,8 @@ public class KafkaController {
       });
   }
   
-  public KafkaFuture<List<PartitionDetailsDTO>> getTopicDetails(Project project, String topicName) throws
-    KafkaException {
-  
+  public KafkaFuture<List<PartitionDetailsDTO>> getTopicDetails(Project project, String topicName)
+      throws KafkaException {
     projectTopicsFacade.findTopicByNameAndProject(project, topicName).orElseThrow(() ->
       new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "topic: " + topicName)
     );

@@ -1621,11 +1621,10 @@ public class ProjectController {
   }
 
   private void removeProjectInt(Project project, List<HdfsUsers> usersToClean,
-      List<HdfsGroups> groupsToClean, List<Future<?>> projectCreationFutures,
-      boolean decreaseCreatedProj, Users owner)
-    throws IOException, InterruptedException, HopsSecurityException,
-    ServiceException, ProjectException,
-    GenericException, TensorBoardException, FeaturestoreException {
+                                List<HdfsGroups> groupsToClean, List<Future<?>> projectCreationFutures,
+                                boolean decreaseCreatedProj, Users owner)
+      throws IOException, InterruptedException, HopsSecurityException, ServiceException, ProjectException,
+      GenericException, TensorBoardException, KafkaException, FeaturestoreException {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
@@ -1761,7 +1760,7 @@ public class ProjectController {
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private void removeKafkaTopics(Project project) {
+  private void removeKafkaTopics(Project project) throws KafkaException {
     List<ProjectTopics> topics = projectTopicsFacade.findTopicsByProject(project);
   
     List<String> topicNameList = topics.stream()
