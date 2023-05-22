@@ -15,12 +15,28 @@
  */
 package io.hops.hopsworks.common.python.environment;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Future;
 
 public interface DockerRegistryMngr {
 
-  void gc() throws IOException, ServiceException, ProjectException;
+  void deleteProjectDockerImage(String projectDockerImage)
+    throws ServiceException, ProjectException, IOException, ServiceDiscoveryException;
+  
+  void runRegistryGC() throws ServiceException;
+  
+  Map<String, Future<ProcessResult>> backupImages(String backupId)
+    throws IOException, ServiceDiscoveryException, ServiceException;
+  
+  Map<String, Future<ProcessResult>> restoreImages(String backupId)
+    throws IOException, ServiceDiscoveryException, ServiceException;
+  
+  List<String> deleteBackup(String backupId) throws IOException, ServiceDiscoveryException;
 }
