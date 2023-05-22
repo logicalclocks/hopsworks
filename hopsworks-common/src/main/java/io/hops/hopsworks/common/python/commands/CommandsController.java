@@ -49,17 +49,15 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Stateless
-@TransactionAttribute(TransactionAttributeType.NEVER)
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class CommandsController {
-  
   private static final Logger LOGGER = Logger.getLogger(CommandsController.class.getName());
+  private static final Pattern BRACKET_PATTERN = Pattern.compile("^(.*\\[.*\\])$");
+  
   @EJB
   private CondaCommandFacade condaCommandFacade;
   @EJB
-  private Settings settings;
-  @EJB
   private ProjectFacade projectFacade;
-  private static final Pattern BRACKET_PATTERN = Pattern.compile("^(.*\\[.*\\])$");
   @EJB
   private LibraryController libraryController;
 
@@ -233,6 +231,15 @@ public class CommandsController {
       return true;
     }
     return false;
+  }
+  
+  public void failAllOngoing() {
+    List<CondaCommands> targetList = condaCommandFacade.findByStatus(CondaStatus.ONGOING);
+    targetList.forEach(cc -> {
+      cc.setStatus(CondaStatus.FAILED);
+      cc.setErrorMsg("Could not run conda command due to internal server error. Please try again.");
+      condaCommandFacade.update(cc);
+    });
   }
 }
 

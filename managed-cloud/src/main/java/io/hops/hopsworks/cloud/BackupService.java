@@ -11,6 +11,7 @@ import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.python.environment.DockerRegistryMngr;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.python.CondaCommands;
 import io.hops.hopsworks.persistence.entity.python.CondaStatus;
 
@@ -74,7 +75,7 @@ public class BackupService {
               waitingBackupCommands.add(command);
             }
           } else if (command.getType().equals(CloudCommandType.RESTORE)) {
-            processes = registry.resotreImages(command.getBackupId());
+            processes = registry.restoreImages(command.getBackupId());
           } else if (command.getType().equals(CloudCommandType.BACKUP_DONE)) {
             if (ongoingBackupCommands.isEmpty()) {
               //if there are several backups in parallel we should get out of
@@ -96,7 +97,7 @@ public class BackupService {
             ongoingBackup.put(command.getId(), processes);
             ongoingBackupCommands.put(command.getId(), command);
           }
-        } catch (IOException | ServiceDiscoveryException ex) {
+        } catch (IOException | ServiceDiscoveryException | ServiceException ex) {
           commandsStatus.put(command.getId(), new CommandStatus(CommandStatus.CLOUD_COMMAND_STATUS.FAILED,
                   "Backup with id " + command.getBackupId() + " failed to execute " + ex.getLocalizedMessage()));
         }
@@ -111,7 +112,7 @@ public class BackupService {
           processes = registry.backupImages(command.getBackupId());
           ongoingBackup.put(command.getId(), processes);
           ongoingBackupCommands.put(command.getId(), command);
-        } catch (IOException | ServiceDiscoveryException ex) {
+        } catch (IOException | ServiceDiscoveryException | ServiceException ex) {
           commandsStatus.put(command.getId(), new CommandStatus(CommandStatus.CLOUD_COMMAND_STATUS.FAILED,
                   "Backup with id " + command.getBackupId() + " failed to execute " + ex.getLocalizedMessage()));
         }

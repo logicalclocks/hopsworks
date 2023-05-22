@@ -27,14 +27,16 @@ import java.util.concurrent.Future;
 
 public interface DockerRegistryMngr {
 
-  void gc() throws IOException, ServiceException, ProjectException;
+  void deleteProjectDockerImage(String projectDockerImage)
+    throws ServiceException, ProjectException, IOException, ServiceDiscoveryException;
   
-  public Map<String, Future<ProcessResult>> backupImages(String backupId) 
-          throws IOException, ServiceDiscoveryException;
+  void runRegistryGC() throws ServiceException;
   
-  public Map<String, Future<ProcessResult>> resotreImages(String backupId) 
-          throws IOException, ServiceDiscoveryException;
+  Map<String, Future<ProcessResult>> backupImages(String backupId)
+    throws IOException, ServiceDiscoveryException, ServiceException;
   
-  public List<String> deleteBackup(String backupId)
-          throws IOException, ServiceDiscoveryException;
+  Map<String, Future<ProcessResult>> restoreImages(String backupId)
+    throws IOException, ServiceDiscoveryException, ServiceException;
+  
+  List<String> deleteBackup(String backupId) throws IOException, ServiceDiscoveryException;
 }

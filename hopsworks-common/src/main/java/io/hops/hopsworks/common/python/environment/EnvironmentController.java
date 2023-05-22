@@ -16,7 +16,6 @@
 package io.hops.hopsworks.common.python.environment;
 
 import com.google.common.base.Strings;
-import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -24,10 +23,6 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.python.commands.CommandsController;
-import io.hops.hopsworks.common.python.library.LibraryController;
-import io.hops.hopsworks.common.util.OSProcessExecutor;
-import io.hops.hopsworks.common.util.ProcessDescriptor;
-import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.PythonException;
@@ -37,7 +32,6 @@ import io.hops.hopsworks.persistence.entity.python.CondaCommands;
 import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
 import io.hops.hopsworks.persistence.entity.python.CondaOp;
 import io.hops.hopsworks.persistence.entity.python.CondaStatus;
-import io.hops.hopsworks.persistence.entity.python.PythonDep;
 import io.hops.hopsworks.persistence.entity.python.PythonEnvironment;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -51,11 +45,9 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -73,8 +65,6 @@ public class EnvironmentController {
   @EJB
   private ProjectUtils projectUtils;
   @EJB
-  private LibraryController libraryController;
-  @EJB
   private CondaCommandFacade condaCommandFacade;
   @EJB
   private CommandsController commandsController;
@@ -83,7 +73,7 @@ public class EnvironmentController {
   @EJB
   private DistributedFsService dfs;
   @EJB
-  private OSProcessExecutor osProcessExecutor;
+  private DockerImageController dockerImageController;
 
   private static final Logger LOGGER = Logger.getLogger(EnvironmentController.class.getName());
 
@@ -129,30 +119,6 @@ public class EnvironmentController {
         project.getDockerImage().equals(settings.getBaseDockerImagePythonName())) {
       createProjectDockerImage(project, user);
     }
-  }
-
-  public Project updateInstalledDependencies(Project project) throws ServiceException, IOException, PythonException {
-    String dockerImage = null;
-    try {
-      dockerImage = projectUtils.getFullDockerImageName(project, false);
-    } catch (ServiceDiscoveryException e) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_DISCOVERY_ERROR, Level.SEVERE, null,
-          e.getMessage(), e);
-    }
-
-    String condaListOutput = libraryController.condaList(dockerImage);
-    // Update installed dependencies
-    Collection<PythonDep> projectDeps = libraryController.parseCondaList(condaListOutput);
-    projectDeps = libraryController.addOngoingOperations(project.getCondaCommandsCollection(), projectDeps);
-    project.setPythonDepCollection(projectDeps);
-
-    // Update PIP conflicts
-    String pipConflictStr = getPipConflicts(dockerImage);
-    setPipConflicts(project, pipConflictStr);
-
-    projectFacade.update(project);
-    projectFacade.flushEm();
-    return project;
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -365,56 +331,6 @@ public class EnvironmentController {
       if (udfso != null) {
         dfs.closeDfsClient(udfso);
       }
-    }
-  }
-
-  public void setPipConflicts(Project project, String conflictStr) {
-    if (Strings.isNullOrEmpty(conflictStr)) {
-      project.getPythonEnvironment().setJupyterConflicts(false);
-      project.getPythonEnvironment().setConflicts(null);
-      return;
-    }
-
-    ArrayList<String> conflicts = new ArrayList<>();
-    String[] lines = conflictStr.split("\n");
-    for (String conflictLine : lines) {
-      conflicts.add(conflictLine.split("\\s+")[0].trim());
-    }
-
-    if (conflicts.isEmpty()) {
-      project.getPythonEnvironment().setJupyterConflicts(false);
-      project.getPythonEnvironment().setConflicts(null);
-    } else {
-      project.getPythonEnvironment().setConflicts(conflictStr.substring(0, Math.min(conflictStr.length(), 12000)));
-      project.getPythonEnvironment().setJupyterConflicts(
-          Settings.JUPYTER_DEPENDENCIES.stream().anyMatch(conflicts::contains));
-    }
-  }
-
-  public String getPipConflicts(String dockerImage) throws IOException, PythonException {
-    String prog = settings.getSudoersDir() + "/dockerImage.sh";
-
-    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-        .addCommand("/usr/bin/sudo")
-        .addCommand(prog)
-        .addCommand("check")
-        .addCommand(dockerImage)
-        .redirectErrorStream(true)
-        .setWaitTimeout(300L, TimeUnit.SECONDS)
-        .build();
-
-    ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
-//From https://github.com/pypa/pip/blob/27d8687144bf38cdaeeb1d81aa72c892b1d0ab88/src/pip/_internal/commands/check.py#L35
-    if (processResult.getExitCode() == 0) {
-      return "";
-    } else if (processResult.getStdout() != null &&
-        (processResult.getStdout().contains("which is not installed")
-            || processResult.getStdout().contains("has requirement"))) {
-      return processResult.getStdout();
-    } else {
-      throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_PIP_CHECK_FAILED,
-          Level.SEVERE, "Failed to run pip check: "
-          + (Strings.isNullOrEmpty(processResult.getStdout()) ? "" : processResult.getStdout()));
     }
   }
 }

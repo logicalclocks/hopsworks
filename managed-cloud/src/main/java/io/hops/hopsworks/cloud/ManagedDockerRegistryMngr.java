@@ -4,12 +4,9 @@
 package io.hops.hopsworks.cloud;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.proxies.client.HttpClient;
+import io.hops.hopsworks.common.python.environment.DockerImageController;
 import io.hops.hopsworks.common.python.environment.DockerRegistryMngr;
 import io.hops.hopsworks.common.python.environment.DockerRegistryMngrImpl;
-import io.hops.hopsworks.common.util.OSProcessExecutor;
-import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
@@ -23,11 +20,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import io.hops.hopsworks.common.dataset.FolderNameValidator;
+import io.hops.hopsworks.exceptions.ServiceException;
 
 @Stateless
 @ManagedStereotype
@@ -47,15 +44,11 @@ public class ManagedDockerRegistryMngr extends DockerRegistryMngrImpl implements
   @EJB
   private ACRClientService acrClient;
   @EJB
-  private OSProcessExecutor osProcessExecutor;
-  @EJB
-  private HttpClient httpClient;
-  @EJB
-  private ProjectFacade projectFacade;
+  private DockerImageController dockerImageController;
 
   @Override
   public List<String> deleteProjectImagesOnRegistry(String projectDockerImage)
-          throws ServiceDiscoveryException, IOException {
+    throws ServiceDiscoveryException, IOException, ServiceException {
     if (settings.isManagedDockerRegistryOnManagedCloud()) {
       final String repoName
               = settings.getDockerNamespace() + "/"
@@ -82,7 +75,7 @@ public class ManagedDockerRegistryMngr extends DockerRegistryMngrImpl implements
   }
 
   @Override
-  public void runRegistryGC() throws IOException {
+  public void runRegistryGC() throws ServiceException {
     if (settings.isManagedDockerRegistryOnManagedCloud()) {
       // do nothing, we use repository lifecycle policies for gc
     } else {
@@ -90,7 +83,7 @@ public class ManagedDockerRegistryMngr extends DockerRegistryMngrImpl implements
     }
   }
 
-  private List<String> getImageTags(String repoName, String filter) throws IOException, ServiceDiscoveryException {
+  private List<String> getImageTags(String repoName, String filter) throws ServiceDiscoveryException, ServiceException {
     if (settings.getCloudType() == Settings.CLOUD_TYPES.AZURE) {
       return acrClient.getImageTags(repoName, filter);
     } else if (settings.getCloudType() == Settings.CLOUD_TYPES.AWS) {
@@ -102,7 +95,7 @@ public class ManagedDockerRegistryMngr extends DockerRegistryMngrImpl implements
 
   @Override
   public Map<String, Future<ProcessResult>> backupImages(String backupId)
-          throws IOException, ServiceDiscoveryException {
+    throws IOException, ServiceDiscoveryException, ServiceException {
     LOG.info("Backing up images");
 
     if (settings.isManagedDockerRegistryOnManagedCloud()) {
@@ -125,19 +118,8 @@ public class ManagedDockerRegistryMngr extends DockerRegistryMngrImpl implements
           //same time as the project environment
           String targetTag = "__backup_" + backupId + "_" + tag;
           String baseImage = settings.getBaseNonPythonDockerImageWithNoTag() + ":" + tag;
-          String targetImange = settings.getBaseNonPythonDockerImageWithNoTag() + ":" + targetTag;
-          String prog = settings.getSudoersDir() + "/dockerImage.sh";
-          ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-                  .addCommand("/usr/bin/sudo")
-                  .addCommand(prog)
-                  .addCommand("tag")
-                  .addCommand(projectUtils.getRegistryURL() + "/" + baseImage)
-                  .addCommand(projectUtils.getRegistryURL() + "/" + targetImange)
-                  .redirectErrorStream(true)
-                  .setWaitTimeout(10, TimeUnit.MINUTES)
-                  .build();
-
-          result.put(targetImange, osProcessExecutor.submit(processDescriptor));
+          String targetImage = settings.getBaseNonPythonDockerImageWithNoTag() + ":" + targetTag;
+          result.put(targetImage, dockerImageController.tag(baseImage, targetImage));
         }
       }
 
@@ -148,8 +130,8 @@ public class ManagedDockerRegistryMngr extends DockerRegistryMngrImpl implements
   }
 
   @Override
-  public Map<String, Future<ProcessResult>> resotreImages(String backupId)
-          throws IOException, ServiceDiscoveryException {
+  public Map<String, Future<ProcessResult>> restoreImages(String backupId)
+    throws IOException, ServiceDiscoveryException, ServiceException {
     if (settings.isManagedDockerRegistryOnManagedCloud()) {
       Map<String, Future<ProcessResult>> result = new HashMap<>();
       final String repoName
@@ -157,38 +139,23 @@ public class ManagedDockerRegistryMngr extends DockerRegistryMngrImpl implements
               + settings.getBaseNonPythonDockerImageWithNoTag();
       List<String> tags = getImageTags(repoName, "__backup_" + backupId + "_");
 
-      String projectNameRegex = FolderNameValidator.getProjectNameRegexStr(settings.getReservedProjectNames());
-
       for (String tag : tags) {
-
         //if the tag match a backup tag for this backup retag the image to the expected project image
         String targetTag = tag.replaceFirst("__backup_" + backupId + "_", "");
         String baseImage = settings.getBaseNonPythonDockerImageWithNoTag() + ":" + tag;
-        String targetImange = settings.getBaseNonPythonDockerImageWithNoTag() + ":" + targetTag;
-        String prog = settings.getSudoersDir() + "/dockerImage.sh";
-        ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-                .addCommand("/usr/bin/sudo")
-                .addCommand(prog)
-                .addCommand("tag")
-                .addCommand(projectUtils.getRegistryURL() + "/" + baseImage)
-                .addCommand(projectUtils.getRegistryURL() + "/" + targetImange)
-                .redirectErrorStream(true)
-                .setWaitTimeout(10, TimeUnit.MINUTES)
-                .build();
-
-        result.put(targetImange, osProcessExecutor.submit(processDescriptor));
-
+        String targetImage = settings.getBaseNonPythonDockerImageWithNoTag() + ":" + targetTag;
+        result.put(targetImage, dockerImageController.tag(baseImage, targetImage));
       }
 
       return result;
     } else {
-      return super.resotreImages(backupId);
+      return super.restoreImages(backupId);
     }
   }
 
   @Override
   public List<String> deleteBackup(String backupId)
-          throws IOException, ServiceDiscoveryException {
+          throws ServiceDiscoveryException {
     LOG.info("Deleting backing up " + backupId);
     final String repoName
             = settings.getDockerNamespace() + "/"

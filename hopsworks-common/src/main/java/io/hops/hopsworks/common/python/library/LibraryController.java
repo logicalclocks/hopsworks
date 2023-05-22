@@ -392,32 +392,6 @@ public class LibraryController {
     return projectDeps;
   }
 
-  public String condaList(String dockerImage) throws IOException {
-
-    String prog = settings.getSudoersDir() + "/dockerImage.sh";
-
-    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-      .addCommand("/usr/bin/sudo")
-      .addCommand(prog)
-      .addCommand("list")
-      .addCommand(dockerImage)
-      .redirectErrorStream(true)
-      .setWaitTimeout(30, TimeUnit.MINUTES)
-      .build();
-
-    ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
-    if (processResult.getExitCode() != 0) {
-      String errorMsg = "Could not list libraries in the docker image. " +
-        "Try to retry the command or recreate the environment" +
-        "\n Exit code: " + processResult.getExitCode() +
-        "\nout: " + processResult.getStdout() +
-        "\nerr: " + processResult.getStderr() + "||\n";
-      throw new IOException(errorMsg);
-    } else {
-      return processResult.getStdout();
-    }
-  }
-
   public boolean isPyPiIndexed() {
     return this.pypiIndexer.isIndexed();
   }

@@ -9,6 +9,7 @@ import io.hops.hopsworks.cloud.dao.heartbeat.commands.CommandStatus;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.python.environment.DockerRegistryMngr;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.python.CondaCommands;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -27,7 +28,8 @@ import org.mockito.Mockito;
 public class TestBackupService {
 
   @Test
-  public void testBackupError() throws InterruptedException, ExecutionException, IOException, ServiceDiscoveryException {
+  public void testBackupError()
+    throws InterruptedException, ExecutionException, IOException, ServiceDiscoveryException, ServiceException {
     Settings mockSettings = Mockito.mock(Settings.class);
 
     DockerRegistryMngr mockDockerRegistryMngr = Mockito.mock(DockerRegistryMngr.class);
