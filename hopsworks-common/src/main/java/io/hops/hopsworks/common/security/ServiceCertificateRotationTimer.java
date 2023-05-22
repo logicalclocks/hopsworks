@@ -38,9 +38,11 @@
  */
 package io.hops.hopsworks.common.security;
 
+import io.hops.hopsworks.common.util.PayaraClusterManager;
 import io.hops.hopsworks.common.util.Settings;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.ejb.DependsOn;
 import javax.ejb.EJB;
@@ -68,6 +70,9 @@ public class ServiceCertificateRotationTimer {
   private Settings settings;
   @EJB
   private CertificatesMgmService certificatesMgmService;
+  @EJB
+  private PayaraClusterManager payaraClusterManager;
+  private Timer timer;
   
   @PostConstruct
   public void init() {
@@ -79,12 +84,22 @@ public class ServiceCertificateRotationTimer {
     
     intervalValue = intervalTimeunit.toMillis(intervalValue);
     if (settings.isServiceKeyRotationEnabled()) {
-      timerService.createTimer(intervalValue, intervalValue, "Service certificate rotation");
+      timer = timerService.createTimer(intervalValue, intervalValue, "Service certificate rotation");
+    }
+  }
+  
+  @PreDestroy
+  private void destroyTimer() {
+    if (timer != null) {
+      timer.cancel();
     }
   }
   
   @Timeout
   public void rotate(Timer timer) {
+    if (!payaraClusterManager.amIThePrimary()) {
+      return;
+    }
     LOG.log(Level.FINEST, "Rotating service certificates");
     try {
       certificatesMgmService.issueServiceKeyRotationCommand();

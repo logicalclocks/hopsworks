@@ -24,6 +24,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hosts.HostsController;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.proxies.CAProxy;
+import io.hops.hopsworks.common.util.PayaraClusterManager;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
@@ -44,11 +45,13 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.Timeout;
+import javax.ejb.Timer;
 import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
 import javax.ejb.TransactionAttribute;
@@ -110,6 +113,8 @@ public class CloudManager {
   private ServiceDiscoveryController serviceDiscoveryController;
   @EJB
   private BackupService backupService;
+  @EJB
+  private PayaraClusterManager payaraClusterManager;
 
   private DecommissionStatus toSend = new DecommissionStatus();
   final Set<CloudNode> decommissionedNodes = new HashSet<>();
@@ -119,6 +124,7 @@ public class CloudManager {
   private boolean shouldLookForMissingNodes = false;
   private boolean isJwtSet = false;
   private final Set<String> blacklistHostnamesToRemove = new HashSet<>();
+  private Timer timer;
   
   @PostConstruct
   public void init() {
@@ -139,12 +145,22 @@ public class CloudManager {
       whitelistLog.append(h).append(" ");
     }
     LOG.log(Level.INFO, whitelistLog.toString());
-    timerService.createIntervalTimer(0, 3000, new TimerConfig("Cloud heartbeat", false));
+    timer = timerService.createIntervalTimer(0, 3000, new TimerConfig("Cloud heartbeat", false));
+  }
+  
+  @PreDestroy
+  private void destroyTimer() {
+    if (timer != null) {
+      timer.cancel();
+    }
   }
 
   @Timeout
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void heartbeat() {
+    if (!payaraClusterManager.amIThePrimary()) {
+      return;
+    }
     try {
       if (firstHeartbeat) {
         beginningOfHeartbeat = Instant.now();

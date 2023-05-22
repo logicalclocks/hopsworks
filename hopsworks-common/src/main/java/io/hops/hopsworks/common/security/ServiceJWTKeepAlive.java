@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.security;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.util.DateUtils;
+import io.hops.hopsworks.common.util.PayaraClusterManager;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.JWTController;
 import io.hops.hopsworks.jwt.exception.JWTException;
@@ -27,6 +28,7 @@ import org.apache.hadoop.util.BackOff;
 import org.apache.hadoop.util.ExponentialBackOff;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.ejb.DependsOn;
 import javax.ejb.EJB;
@@ -35,6 +37,7 @@ import javax.ejb.LockType;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.Timeout;
+import javax.ejb.Timer;
 import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
 import javax.ejb.TransactionAttribute;
@@ -66,8 +69,11 @@ public class ServiceJWTKeepAlive {
   private Settings settings;
   @EJB
   private JWTController jwtController;
+  @EJB
+  private PayaraClusterManager payaraClusterManager;
   @Resource
   private TimerService timerService;
+  private Timer timer;
 
   private String hostname;
   private BackOff backOff;
@@ -87,13 +93,23 @@ public class ServiceJWTKeepAlive {
     // Do not whirl like a sufi
     long interval = Math.min(10000,
         Math.max(500L, settings.getServiceJWTLifetimeMS() / 2));
-    timerService.createIntervalTimer(5000L, interval, new TimerConfig("Service JWT renewer", false));
+    timer = timerService.createIntervalTimer(5000L, interval, new TimerConfig("Service JWT renewer", false));
+  }
+  
+  @PreDestroy
+  private void destroyTimer() {
+    if (timer != null) {
+      timer.cancel();
+    }
   }
   
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   @Timeout
   @Lock(LockType.WRITE)
   public void renewServiceToken() {
+    if (!payaraClusterManager.amIThePrimary()) {
+      return;
+    }
     try {
       doRenew(false);
     } catch (Exception ex) {

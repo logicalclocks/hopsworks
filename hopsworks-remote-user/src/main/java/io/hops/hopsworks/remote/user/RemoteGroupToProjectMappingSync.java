@@ -4,6 +4,7 @@
 package io.hops.hopsworks.remote.user;
 
 import com.google.common.annotations.VisibleForTesting;
+import io.hops.hopsworks.common.util.PayaraClusterManager;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -33,6 +34,8 @@ public class RemoteGroupToProjectMappingSync {
   private RemoteGroupMapping remoteGroupMapping;
   @EJB
   private Settings settings;
+  @EJB
+  private PayaraClusterManager payaraClusterManager;
   @Resource
   TimerService timerService;
 
@@ -80,6 +83,10 @@ public class RemoteGroupToProjectMappingSync {
   
   @Timeout
   public void performTimeout(Timer timer) {
+    //Only one node will perform timeout. semaphore is per node
+    if (!payaraClusterManager.amIThePrimary()) {
+      return;
+    }
     if (semaphore.compareAndSet(true, false)) {
       try {
         LOGGER.log(Level.FINE, "Running Remote Group To Project Member Mapping synchronization");

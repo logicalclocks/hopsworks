@@ -38,11 +38,13 @@
  */
 package io.hops.hopsworks.common.jupyter;
 
+import io.hops.hopsworks.common.util.PayaraClusterManager;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.util.Settings;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.ejb.DependsOn;
 import javax.ejb.EJB;
@@ -75,8 +77,11 @@ public class JupyterNotebookCleaner {
   private JupyterController jupyterController;
   @EJB
   private Settings settings;
+  @EJB
+  private PayaraClusterManager payaraClusterManager;
   @Resource
   private TimerService timerService;
+  private Timer timer;
 
   @PostConstruct
   public void init() {
@@ -84,12 +89,25 @@ public class JupyterNotebookCleaner {
     Long intervalValue = settings.getConfTimeValue(rawInterval);
     TimeUnit intervalTimeunit = settings.getConfTimeTimeUnit(rawInterval);
     intervalValue = intervalTimeunit.toMillis(intervalValue);
-    timerService.createIntervalTimer(intervalValue, intervalValue, new TimerConfig("Jupyter Notebook Cleaner", false));
+    timer = timerService.createIntervalTimer(intervalValue, intervalValue,
+      new TimerConfig("Jupyter Notebook Cleaner", false));
+  }
+  
+  @PreDestroy
+  private void destroyTimer() {
+    if (timer != null) {
+      timer.cancel();
+    }
   }
 
   @Timeout
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void execute(Timer timer) {
+    // This should return false only if clustered. And in clustered jupyter should only run on kube.
+    // So it should be ok to run this timer on any node.
+    if (!payaraClusterManager.amIThePrimary()) {
+      return;
+    }
     try {
       LOGGER.log(Level.FINE, "Running JupyterNotebookCleaner.");
       // 1. Get all Running Jupyter Notebook Servers

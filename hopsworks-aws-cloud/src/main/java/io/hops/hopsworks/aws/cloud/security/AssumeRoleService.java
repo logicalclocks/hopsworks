@@ -35,6 +35,7 @@ public class AssumeRoleService {
   
   @PostConstruct
   public void init() {
+    // InstanceProfile Credentials should be on all payara nodes in HA.
     if (isAWSCloud()) {//Will need a redeploy if variable is changed
       stsClient = StsClient.builder()
         .credentialsProvider(InstanceProfileCredentialsProvider.create())

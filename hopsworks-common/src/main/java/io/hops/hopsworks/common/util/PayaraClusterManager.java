@@ -87,7 +87,7 @@ public class PayaraClusterManager {
       return oldestMember.localMember();
     } catch (Exception ex) {
       // To not expunge timers
-      LOGGER.log(Level.SEVERE, "Error checking if node is primary. {0}", ex);
+      LOGGER.log(Level.SEVERE, "Error checking if node is primary. ", ex);
     }
     return true;
   }

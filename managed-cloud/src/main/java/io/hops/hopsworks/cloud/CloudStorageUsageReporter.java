@@ -5,15 +5,18 @@ package io.hops.hopsworks.cloud;
 
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.util.PayaraClusterManager;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.protocol.LastUpdatedContentSummary;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.Timeout;
+import javax.ejb.Timer;
 import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
 import javax.ejb.TransactionAttribute;
@@ -34,17 +37,30 @@ public class CloudStorageUsageReporter {
   private CloudClient cloudClient;
   @EJB
   private DistributedFsService dfs;
+  @EJB
+  private PayaraClusterManager payaraClusterManager;
+  private Timer timer;
 
   @PostConstruct
   public void init() {
     LOG.log(Level.INFO, "Hopsworks@Cloud - Initializing CloudStorageUsageReporter");
-    timerService.createIntervalTimer(0, 15 * 60 * 1000,
+    timer = timerService.createIntervalTimer(0, 15 * 60 * 1000,
             new TimerConfig("Cloud storage usage reporter", false));
+  }
+  
+  @PreDestroy
+  private void destroyTimer() {
+    if (timer != null) {
+      timer.cancel();
+    }
   }
 
   @Timeout
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void reportStorageUsage() {
+    if (!payaraClusterManager.amIThePrimary()) {
+      return;
+    }
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();

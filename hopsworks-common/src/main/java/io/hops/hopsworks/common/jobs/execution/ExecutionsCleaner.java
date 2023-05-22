@@ -17,11 +17,13 @@
 package io.hops.hopsworks.common.jobs.execution;
 
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
+import io.hops.hopsworks.common.util.PayaraClusterManager;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import org.javatuples.Pair;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.ejb.AccessTimeout;
 import javax.ejb.DependsOn;
@@ -54,17 +56,27 @@ public class ExecutionsCleaner {
   private Settings settings;
   @EJB
   private ExecutionFacade executionFacade;
+  @EJB
+  private PayaraClusterManager payaraClusterManager;
   @Resource
   private TimerService timerService;
+  private Timer timer;
 
   @PostConstruct
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void init() {
     batchSize = settings.getExecutionsCleanerBatchSize();
-    timerService.createIntervalTimer(10L,
+    timer = timerService.createIntervalTimer(10L,
                                      settings.getExecutionsCleanerInterval(),
                                      new TimerConfig("ExecutionCleaner",
                                      false));
+  }
+  
+  @PreDestroy
+  private void destroyTimer() {
+    if (timer != null) {
+      timer.cancel();
+    }
   }
 
   /**
@@ -85,6 +97,9 @@ public class ExecutionsCleaner {
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   @Timeout
   public void deleteOrphanExecutions(Timer timer) {
+    if (!payaraClusterManager.amIThePrimary()) {
+      return;
+    }
     try {
       LOG.log(Level.FINE, "deleteOrphanExecutions start");
       List<Execution> executions = executionFacade.findOrphaned(new Pair<>(0, batchSize));
