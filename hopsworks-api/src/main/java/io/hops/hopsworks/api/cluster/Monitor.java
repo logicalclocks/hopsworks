@@ -54,7 +54,6 @@ import io.hops.hopsworks.persistence.entity.host.Hosts;
 import io.hops.hopsworks.persistence.entity.kagent.HostServices;
 import io.swagger.annotations.Api;
 
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -147,8 +146,9 @@ public class Monitor {
 
   @GET
   @Path("/hosts")
-  @RolesAllowed({"HOPS_ADMIN"}) //return the password in the host object
+  //return the password in the host object
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
   public Response getHosts(@Context HttpServletRequest req, @Context SecurityContext sc) {
     List<Hosts> list = hostEjb.findAll();
     GenericEntity<List<Hosts>> hosts = new GenericEntity<List<Hosts>>(list) {
@@ -158,8 +158,9 @@ public class Monitor {
 
   @GET
   @Path("/hosts/{hostId}")
-  @RolesAllowed({"HOPS_ADMIN"}) //return the password in the host object
+  //return the password in the host object
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
   public Response getHosts(@PathParam("hostId") String hostId,
                            @Context HttpServletRequest req,
                            @Context SecurityContext sc) {
@@ -176,9 +177,9 @@ public class Monitor {
 
   @POST
   @Path("/groups/{groupName}")
-  @RolesAllowed({"HOPS_ADMIN"})
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
   public Response serviceOp(@PathParam("groupName") String groupName,
                             ServicesActionDTO action,
                             @Context HttpServletRequest req,
@@ -191,9 +192,9 @@ public class Monitor {
 
   @POST
   @Path("/groups/{groupName}/services/{serviceName}")
-  @RolesAllowed({"HOPS_ADMIN"})
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
   public Response serviceOp(@PathParam("groupName") String groupName,
                             @PathParam("serviceName") String serviceName,
                             ServicesActionDTO action,
@@ -206,9 +207,9 @@ public class Monitor {
 
   @POST
   @Path("/groups/{groupName}/services/{serviceName}/hosts/{hostId}")
-  @RolesAllowed({"HOPS_ADMIN"})
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
   public Response serviceOnHostOp(@PathParam("groupName") String groupName,
                                   @PathParam("serviceName") String serviceName,
                                   @PathParam("hostId") String hostId,
