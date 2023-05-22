@@ -42,6 +42,7 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
+import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.ejb.Lock;
 import javax.ejb.LockType;
@@ -447,6 +448,15 @@ public class AlertManager {
       }
     }
     return postAlerts(postableAlerts);
+  }
+
+  @Asynchronous
+  public void asyncPostAlerts(List<PostableAlert> postableAlerts) {
+    try {
+      postAlerts(postableAlerts);
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Could not send alert", e);
+    }
   }
 
   public Response postAlerts(List<PostableAlert> postableAlerts)

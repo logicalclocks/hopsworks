@@ -39,8 +39,11 @@
 
 package io.hops.hopsworks.common.project;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.hops.hopsworks.alert.AlertManager;
 import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
+import io.hops.hopsworks.alerting.api.alert.dto.PostableAlert;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerClientCreateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigCtrlCreateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigReadException;
@@ -83,7 +86,6 @@ import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.jupyter.JupyterController;
-import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.kafka.SubjectsCompatibilityController;
 import io.hops.hopsworks.common.kafka.SubjectsController;
 import io.hops.hopsworks.common.message.MessageController;
@@ -189,8 +191,10 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -252,8 +256,6 @@ public class ProjectController {
   @EJB
   private SubjectsCompatibilityController subjectsCompatibilityController;
   @EJB
-  private KafkaController kafkaController;
-  @EJB
   private TensorBoardController tensorBoardController;
   @EJB
   private OpenSearchController openSearchController;
@@ -300,10 +302,23 @@ public class ProjectController {
   private HopsFSProvenanceController fsProvController;
   @EJB
   private AlertController alertController;
+  @EJB
+  private AlertManager alertManager;
   @Inject
   @Any
   private Instance<ProjectTeamRoleHandler> projectTeamRoleHandlers;
-  
+
+  public Project createProject(ProjectDTO projectDTO, Users owner) throws DatasetException,
+      GenericException, KafkaException, ProjectException, UserException, HopsSecurityException, ServiceException,
+      FeaturestoreException, OpenSearchException, SchemaException, IOException {
+    try {
+      return createProjectInternal(projectDTO, owner);
+    } catch (RESTException e) {
+      sendProjectCreationFailAlert(owner, projectDTO.getProjectName(), e.getDevMsg());
+      throw e;
+    }
+  }
+
   /**
    * Creates a new project(project), the related DIR, the different services in
    * the project, and the master of the
@@ -317,7 +332,8 @@ public class ProjectController {
    * @param owner
    * @return
    */
-  public Project createProject(ProjectDTO projectDTO, Users owner) throws DatasetException,
+  @VisibleForTesting
+  protected Project createProjectInternal(ProjectDTO projectDTO, Users owner) throws DatasetException,
     GenericException, KafkaException, ProjectException, UserException, HopsSecurityException, ServiceException,
     FeaturestoreException, OpenSearchException, SchemaException, IOException {
 
@@ -349,7 +365,7 @@ public class ProjectController {
        * until this project is removed from the database
        */
       try {
-        project = createProject(projectName, owner, projectDTO.getDescription());
+        project = createProjectDbMetadata(projectName, owner, projectDTO.getDescription());
       } catch (EJBException ex) {
         LOGGER.log(Level.WARNING, null, ex);
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_EXISTS, Level.SEVERE, "project: " + projectName,
@@ -383,13 +399,6 @@ public class ProjectController {
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_CREATION_ERROR, Level.SEVERE,
           "project: " + project.getName() +
             "owner: " + owner.getUsername(), ex.getMessage(), ex);
-      }
-
-      String username = hdfsUsersController.getHdfsUserName(project, owner);
-      if (username == null || username.isEmpty()) {
-        cleanup(project, projectCreationFutures, true, owner);
-        throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.SEVERE,
-          "project: " + project.getName() + "owner: " + owner.getUsername());
       }
 
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 4 (certs): {0}", System.currentTimeMillis() - startTime);
@@ -549,8 +558,8 @@ public class ProjectController {
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private Project createProject(String projectName, Users user,
-    String projectDescription) throws ProjectException {
+  private Project createProjectDbMetadata(String projectName, Users user, String projectDescription)
+      throws ProjectException {
     if (user == null) {
       throw new IllegalArgumentException("User was not provided.");
     }
@@ -1028,6 +1037,19 @@ public class ProjectController {
       return projectPath;
     }
     return null;
+  }
+
+  @VisibleForTesting
+  protected void sendProjectCreationFailAlert(Users user, String projectName, String exceptionMsg) {
+    Map<String, String> alertLabels = new HashMap<>();
+    // the alert type is hardcoded in chef so we can hardcode it here as well.
+    alertLabels.put("type", "system-alert");
+    Map<String, String> alertAnnotations = new HashMap<>();
+    alertAnnotations.put("summary", "Project creation failed");
+    alertAnnotations.put("description",
+        "User " + user.getEmail() + " failed to create project: " + projectName + ". Error: " + exceptionMsg);
+    PostableAlert alert = new PostableAlert(alertLabels, alertAnnotations);
+    alertManager.asyncPostAlerts(Arrays.asList(alert));
   }
 
   /**
@@ -2432,5 +2454,10 @@ public class ProjectController {
 
   public void removeProjectDefaultJobConfiguration(Project project, JobType type) {
     projectJobConfigurationFacade.removeDefaultJobConfig(project, type);
+  }
+
+  @VisibleForTesting
+  public void setAlertManager(AlertManager alertManager) {
+    this.alertManager = alertManager;
   }
 }
