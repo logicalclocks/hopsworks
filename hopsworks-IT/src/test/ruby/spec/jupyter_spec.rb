@@ -57,6 +57,10 @@ describe "On #{ENV['OS']}" do
         end
 
         python_versions = [ENV['PYTHON_VERSION']]
+        jupyter_home = ""
+        if driver == "hopsfsmount"
+          jupyter_home = "Jupyter"
+        end
         python_versions.each do |version|
           it 'should get recent jupyter notebooks' do
             start_jupyter(@project)
@@ -66,7 +70,7 @@ describe "On #{ENV['OS']}" do
 
             kernel_id = ""
             auth_token(token) do
-              temp_name = create_notebook(port)
+              temp_name = create_notebook(port, jupyter_home)
               update_notebook(port, get_code_content, temp_name)
               _, kernel_id = create_notebook_session(port, temp_name, temp_name)
             end
@@ -142,7 +146,7 @@ describe "On #{ENV['OS']}" do
                 config.headers["Authorization"] = "token #{token}"
               end
 
-              temp_name = create_notebook(port)
+              temp_name = create_notebook(port, jupyter_home)
               notebook_json = read_notebook("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/#{notebook_name}")
 
               update_notebook(port, notebook_json, temp_name)
