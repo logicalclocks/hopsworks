@@ -264,7 +264,8 @@ public class CertificatesMgmService {
    */
   @Asynchronous
   @Lock(LockType.WRITE)
-  public void resetMasterEncryptionPassword(Integer operationId, String newMasterPasswd, String userRequested) {
+  public void resetMasterEncryptionPassword(Integer operationId, String newMasterPasswd, String userRequested)
+    throws ExecutionException, InterruptedException {
     Future<MasterPasswordResetResult> futureResetResult =
       certificateMasterPwdMgm.resetMasterEncryptionPassword(newMasterPasswd, masterPasswordFile, handlers,
         handlersResult);
@@ -274,7 +275,7 @@ public class CertificatesMgmService {
     } catch (InterruptedException | ExecutionException e) {
       sendUnsuccessfulMessage(e.getMessage(), userRequested);
       putUpdateStatusCache(operationId, UPDATE_STATUS.FAILED);
-      return;
+      throw e;
     }
     if (UPDATE_STATUS.OK.equals(resetResult.getUpdateStatus())) {
       sendSuccessfulMessage(resetResult.getSuccessLog(), userRequested);
