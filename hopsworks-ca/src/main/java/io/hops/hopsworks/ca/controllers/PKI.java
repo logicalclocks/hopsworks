@@ -255,10 +255,10 @@ public class PKI {
       return null;
     }
   }
-  
-  private boolean lockIfHA() {
-    FencedLock lock = getLock();
-    return lock == null || lock.tryLock(3, TimeUnit.MINUTES);
+
+  public void configure() {
+    conf = loadConfiguration();
+    overrideCAX500Names(conf);
   }
 
   protected static final CAsConfiguration EMPTY_CONFIGURATION = new CAsConfiguration(null, null, null);
