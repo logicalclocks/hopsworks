@@ -159,12 +159,12 @@ public class CommandsController {
   }
   
   public void updateCondaCommandStatus(int commandId, CondaStatus condaStatus, String arg,
-                                       CondaOp opType) throws ServiceException, ProjectException {
+                                       CondaOp opType) throws ProjectException {
     updateCondaCommandStatus(commandId, condaStatus, arg, opType, null);
   }
   
   public void updateCondaCommandStatus(int commandId, CondaStatus condaStatus, String arg, CondaOp opType,
-                                       String errorMessage) throws ServiceException, ProjectException {
+                                       String errorMessage) throws ProjectException {
     CondaCommands cc = condaCommandFacade.findCondaCommand(commandId);
     if (cc != null) {
       if (condaStatus == CondaStatus.SUCCESS) {

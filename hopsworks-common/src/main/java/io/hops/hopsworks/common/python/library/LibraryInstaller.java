@@ -41,6 +41,7 @@ import io.hops.hopsworks.persistence.entity.python.PythonDep;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -224,16 +225,35 @@ public class LibraryInstaller {
           } catch (Throwable ex) {
             LOG.log(Level.WARNING, "Could not execute command with ID: " + cc.getId(), ex);
             commandsController.updateCondaCommandStatus(
-                cc.getId(), CondaStatus.FAILED, cc.getArg(), cc.getOp(), ex.getMessage());
+                cc.getId(), CondaStatus.FAILED, cc.getArg(), cc.getOp(), errorMsg(ex));
             continue;
           }
           commandsController.updateCondaCommandStatus(
               cc.getId(), CondaStatus.SUCCESS, cc.getArg(), cc.getOp());
-        } catch (ServiceException | ProjectException ex) {
+        } catch (ProjectException ex) {
           LOG.log(Level.WARNING, "Could not update command with ID: " + cc.getId(), ex);
         }
       }
     }
+  }
+  
+  private String errorMsg(Throwable ex) {
+    return errorMsg(ex, "");
+  }
+  
+  private String errorMsg(Throwable ex, String prefix) {
+    String errorMsg = ex.getMessage();
+    if(errorMsg == null) {
+      errorMsg = ExceptionUtils.getStackTrace(ex);
+    }
+    if(errorMsg == null) {
+      errorMsg = "Command failed due to exception:" + ex.getClass().getSimpleName();
+    }
+    errorMsg = prefix + errorMsg;
+    if(errorMsg.length() > 10000) {
+      errorMsg = errorMsg.substring(0, 10000);
+    }
+    return errorMsg;
   }
   
   private void createNewImage(CondaCommands cc)
@@ -473,20 +493,15 @@ public class LibraryInstaller {
             LOG.log(Level.WARNING,
               "Could not complete docker registry cleanup for: " + cc, ex);
             try {
-              commandsController
-                .updateCondaCommandStatus(cc.getId(), CondaStatus.FAILED,
-                  cc.getArg(), cc.getOp(),
-                  "Could not complete docker registry cleanup: " +
-                    ex.getMessage());
-            } catch (ServiceException | ProjectException e) {
+              commandsController.updateCondaCommandStatus(cc.getId(), CondaStatus.FAILED,
+                cc.getArg(), cc.getOp(), errorMsg(ex, "Could not complete docker registry cleanup: "));
+            } catch (ProjectException e) {
               LOG.log(Level.WARNING,
                 "Could not change conda command status to NEW.", e);
             }
           }
         }
-        commandsController
-          .updateCondaCommandStatus(cc.getId(), CondaStatus.SUCCESS,
-            cc.getArg(), cc.getOp());
+        commandsController.updateCondaCommandStatus(cc.getId(), CondaStatus.SUCCESS, cc.getArg(), cc.getOp());
       }
     } finally {
       // Run docker gc in cli
