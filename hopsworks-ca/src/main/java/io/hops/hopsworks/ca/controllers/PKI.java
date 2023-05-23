@@ -284,7 +284,7 @@ public class PKI {
   protected void maybeInitializeCA() throws GeneralSecurityException, IOException, OperatorCreationException {
     if (!CA_INITIALIZED.getAndSet(true)) {
       FencedLock lock = getLock();
-      if(lock != null && lock.tryLock(3, TimeUnit.MINUTES)) {
+      if(lock == null || lock.tryLock(3, TimeUnit.MINUTES)) {
         try {
           LOGGER.log(Level.INFO, "Initializing CAs");
           initializeCertificateAuthorities();
@@ -293,7 +293,9 @@ public class PKI {
           LOGGER.log(Level.SEVERE, "Error initializing CAs", ex);
           throw ex;
         } finally {
-          lock.unlock();
+          if (lock != null) {
+            lock.unlock();
+          }
         }
       } else {
         CA_INITIALIZED.set(false);
