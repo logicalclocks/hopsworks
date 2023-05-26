@@ -256,6 +256,7 @@ public class FeaturegroupController {
 
     //Persist specific feature group metadata (cached fg or on-demand fg)
     OnDemandFeaturegroup onDemandFeaturegroup = null;
+    boolean isSpine = false;
     CachedFeaturegroup cachedFeaturegroup = null;
     StreamFeatureGroup streamFeatureGroup = null;
   
@@ -268,9 +269,16 @@ public class FeaturegroupController {
     } else if (featuregroupDTO instanceof StreamFeatureGroupDTO){
       streamFeatureGroup = streamFeatureGroupController.createStreamFeatureGroup(featurestore,
         (StreamFeatureGroupDTO) featuregroupDTO, project, user);
-    } else {
-      onDemandFeaturegroup = onDemandFeaturegroupController.createOnDemandFeaturegroup(featurestore,
-          (OnDemandFeaturegroupDTO) featuregroupDTO, project, user);
+    } else if (featuregroupDTO instanceof OnDemandFeaturegroupDTO){
+      OnDemandFeaturegroupDTO onDemandFeaturegroupDTO = (OnDemandFeaturegroupDTO) featuregroupDTO;
+      if (onDemandFeaturegroupDTO.getSpine()) {
+        isSpine = true;
+        onDemandFeaturegroup = onDemandFeaturegroupController.createSpineGroup(featurestore,
+          onDemandFeaturegroupDTO, project, user);
+      } else {
+        onDemandFeaturegroup = onDemandFeaturegroupController.createOnDemandFeaturegroup(featurestore,
+          onDemandFeaturegroupDTO, project, user);
+      }
     }
 
     //Persist basic feature group metadata
@@ -278,7 +286,8 @@ public class FeaturegroupController {
       cachedFeaturegroup, streamFeatureGroup, onDemandFeaturegroup);
   
     // online feature group needs to be set up after persisting metadata in order to get feature group id
-    if (settings.isOnlineFeaturestore() && featuregroup.isOnlineEnabled()) {
+    // don't setup online storage for spine group for now
+    if (settings.isOnlineFeaturestore() && featuregroup.isOnlineEnabled() && !isSpine) {
       onlineFeaturegroupController.setupOnlineFeatureGroup(featurestore, featuregroup, featuresNoHudi, project, user);
     } else if (featuregroupDTO instanceof StreamFeatureGroupDTO && !featuregroupDTO.getOnlineEnabled()) {
       streamFeatureGroupController.setupOfflineStreamFeatureGroup(project, featuregroup, featuresNoHudi);
@@ -329,9 +338,12 @@ public class FeaturegroupController {
         streamFeatureGroupDTO.setFeaturestoreName(featurestoreName);
         return streamFeatureGroupDTO;
       case ON_DEMAND_FEATURE_GROUP:
-        FeaturestoreStorageConnectorDTO storageConnectorDTO =
+        FeaturestoreStorageConnectorDTO storageConnectorDTO = null;
+        if (!featuregroup.getOnDemandFeaturegroup().isSpine()) {
+          storageConnectorDTO =
             connectorController.convertToConnectorDTO(user, project,
-                    featuregroup.getOnDemandFeaturegroup().getFeaturestoreConnector());
+              featuregroup.getOnDemandFeaturegroup().getFeaturestoreConnector());
+        }
 
         OnDemandFeaturegroupDTO onDemandFeaturegroupDTO =
           onDemandFeaturegroupController.convertOnDemandFeatureGroupToDTO(featurestoreName, featuregroup,
@@ -630,7 +642,8 @@ public class FeaturegroupController {
         onDemandFeaturegroupController
             .removeOnDemandFeaturegroup(featuregroup.getFeaturestore(), featuregroup, project, user);
         // Delete mysql table and metadata
-        if (settings.isOnlineFeaturestore() && featuregroup.isOnlineEnabled()) {
+        if (settings.isOnlineFeaturestore() && featuregroup.isOnlineEnabled()
+            && !featuregroup.getOnDemandFeaturegroup().isSpine()) {
           onlineFeaturegroupController.disableOnlineFeatureGroup(featuregroup, project, user);
         }
         break;
@@ -757,13 +770,16 @@ public class FeaturegroupController {
     
     if (featuregroupDTO instanceof CachedFeaturegroupDTO) {
       featuregroup.setFeaturegroupType(FeaturegroupType.CACHED_FEATURE_GROUP);
-    } else if (featuregroupDTO instanceof  StreamFeatureGroupDTO) {
+    } else if (featuregroupDTO instanceof StreamFeatureGroupDTO) {
       featuregroup.setFeaturegroupType(FeaturegroupType.STREAM_FEATURE_GROUP);
       // if its stream feature group create delta streamer job
       StreamFeatureGroupDTO streamFeatureGroupDTO = (StreamFeatureGroupDTO) featuregroupDTO;
       fsJobManagerController.setupHudiDeltaStreamerJob(project, user, featuregroup,
         streamFeatureGroupDTO.getDeltaStreamerJobConf());
     } else {
+      if (onDemandFeaturegroup != null && onDemandFeaturegroup.isSpine()) {
+        featuregroupDTO.setOnlineEnabled(true);
+      }
       featuregroup.setFeaturegroupType(FeaturegroupType.ON_DEMAND_FEATURE_GROUP);
     }
 

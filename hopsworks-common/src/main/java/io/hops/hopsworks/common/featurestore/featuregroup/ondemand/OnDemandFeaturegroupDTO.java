@@ -46,6 +46,8 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
   // on-demand feature group.
   // In the future we should consider expanding the concept of options also to cached feature groups.
   private List<OnDemandOptionDTO> options;
+  
+  private Boolean spine = false;
 
   public OnDemandFeaturegroupDTO() {
     super();
@@ -59,7 +61,7 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
     this.storageConnector = storageConnectorDTO;
     this.dataFormat = featuregroup.getOnDemandFeaturegroup().getDataFormat();
     this.path = featuregroup.getOnDemandFeaturegroup().getPath();
-
+    this.spine = featuregroup.getOnDemandFeaturegroup().isSpine();
     this.options = featuregroup.getOnDemandFeaturegroup().getOptions().stream()
         .map(o -> new OnDemandOptionDTO(o.getName(), o.getValue()))
         .collect(Collectors.toList());
@@ -77,7 +79,7 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
     this.storageConnector = storageConnectorDTO;
     this.dataFormat = featuregroup.getOnDemandFeaturegroup().getDataFormat();
     this.path = featuregroup.getOnDemandFeaturegroup().getPath();
-
+    this.spine = featuregroup.getOnDemandFeaturegroup().isSpine();
     this.options = featuregroup.getOnDemandFeaturegroup().getOptions().stream()
         .map(o -> new OnDemandOptionDTO(o.getName(), o.getValue()))
         .collect(Collectors.toList());
@@ -121,5 +123,13 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
 
   public void setOptions(List<OnDemandOptionDTO> options) {
     this.options = options;
+  }
+  
+  public Boolean getSpine() {
+    return spine;
+  }
+  
+  public void setSpine(Boolean spine) {
+    this.spine = spine;
   }
 }
