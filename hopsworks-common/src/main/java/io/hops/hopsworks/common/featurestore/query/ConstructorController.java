@@ -350,11 +350,14 @@ public class ConstructorController {
     List<OnDemandFeatureGroupAliasDTO> aliases = new ArrayList<>();
 
     if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
-      FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO =
+      FeaturestoreStorageConnectorDTO storageConnectorDTO = null;
+      if (!query.getFeaturegroup().getOnDemandFeaturegroup().isSpine()) {
+        storageConnectorDTO =
           storageConnectorController.convertToConnectorDTO(user, project,
-              query.getFeaturegroup().getOnDemandFeaturegroup().getFeaturestoreConnector());
+            query.getFeaturegroup().getOnDemandFeaturegroup().getFeaturestoreConnector());
+      }
       OnDemandFeaturegroupDTO onDemandFeaturegroupDTO =
-          new OnDemandFeaturegroupDTO(query.getFeaturegroup(), featurestoreStorageConnectorDTO);
+          new OnDemandFeaturegroupDTO(query.getFeaturegroup(), storageConnectorDTO);
       try {
         String path = featuregroupController.getFeatureGroupLocation(query.getFeaturegroup());
         onDemandFeaturegroupDTO.setLocation(featurestoreUtils.prependNameNode(path));

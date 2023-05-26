@@ -24,6 +24,7 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeatureGroupCommitController;
+import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.query.filter.Filter;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterController;
@@ -131,6 +132,7 @@ public class QueryController {
       boolean pitEnabled)
       throws FeaturestoreException {
     checkNestedJoin(queryDTO);
+    checkSpineLeftSide(queryDTO);
     Integer fgId = queryDTO.getLeftFeatureGroup().getId();
     Featuregroup fg = fgLookup.get(fgId);
 
@@ -201,6 +203,20 @@ public class QueryController {
           throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.NESTED_JOIN_NOT_ALLOWED,
               Level.SEVERE,
               "Nested join is not supported.");
+        }
+      }
+    }
+  }
+
+  void checkSpineLeftSide(QueryDTO queryDTO) throws FeaturestoreException {
+    if (queryDTO.getJoins() != null) {
+      for (JoinDTO join : queryDTO.getJoins()) {
+        if (join.getQuery().getLeftFeatureGroup() instanceof OnDemandFeaturegroupDTO
+            && ((OnDemandFeaturegroupDTO) join.getQuery().getLeftFeatureGroup()).getSpine()) {
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.SPINE_GROUP_ON_RIGHT_SIDE_OF_JOIN_NOT_ALLOWED,
+            Level.SEVERE,
+            "Using a spine group on the right side of the join is not supported. Spine groups should be used only for" +
+              " labels on the left side.");
         }
       }
     }
@@ -317,10 +333,7 @@ public class QueryController {
       throws FeaturestoreException {
     List<Feature> featureList = new ArrayList<>();
 
-    if (requestedFeatures == null || requestedFeatures.isEmpty()) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_DOES_NOT_EXIST,
-          Level.FINE, String.format("No feature is selected from feature group %s.", fg.getName()));
-    } else if (requestedFeatures.size() == 1 && requestedFeatures.get(0).getName().equals(ALL_FEATURES)) {
+    if (requestedFeatures.size() == 1 && requestedFeatures.get(0).getName().equals(ALL_FEATURES)) {
       // Users can specify * to request all the features in a specific feature group
       featureList.addAll(availableFeatures);
     } else {
@@ -525,14 +538,6 @@ public class QueryController {
         .filter(f -> !f.isLabel() || withLabel)
         .collect(Collectors.toList());
 
-    // remove join if it contains only with label feature and withLabel is false.
-    // Otherwise `validateFeatures` will be failed when constructing query string because no feature is contained in
-    // that join.
-    Set<Featuregroup> labelOnlyFgs = featureView.getFeatures().stream().map(TrainingDatasetFeature::getFeatureGroup)
-        .collect(Collectors.toSet());
-    labelOnlyFgs.removeAll(tdFeatures.stream().map(TrainingDatasetFeature::getFeatureGroup)
-        .collect(Collectors.toSet()));
-    joins.removeIf(join -> labelOnlyFgs.contains(join.getFeatureGroup()));
     return trainingDatasetController.getQuery(
         joins, tdFeatures, featureView.getFilters(), project, user, isHiveEngine, extraFilters);
   }

@@ -149,7 +149,18 @@ public class OnDemandFeaturegroupController {
               .collect(Collectors.toList()));
     }
 
-
+    onDemandFeaturegroupFacade.persist(onDemandFeaturegroup);
+    return onDemandFeaturegroup;
+  }
+  
+  public OnDemandFeaturegroup createSpineGroup(Featurestore featurestore,
+    OnDemandFeaturegroupDTO onDemandFeaturegroupDTO, Project project, Users user) throws FeaturestoreException {
+    OnDemandFeaturegroup onDemandFeaturegroup = new OnDemandFeaturegroup();
+    onDemandFeaturegroup.setDescription(onDemandFeaturegroupDTO.getDescription());
+    onDemandFeaturegroup.setFeatures(convertOnDemandFeatures(onDemandFeaturegroupDTO, onDemandFeaturegroup));
+    onDemandFeaturegroup.setSpine(onDemandFeaturegroupDTO.getSpine());
+    onDemandFeaturegroup.setInode(createFile(project, user, featurestore, onDemandFeaturegroupDTO));
+  
     onDemandFeaturegroupFacade.persist(onDemandFeaturegroup);
     return onDemandFeaturegroup;
   }

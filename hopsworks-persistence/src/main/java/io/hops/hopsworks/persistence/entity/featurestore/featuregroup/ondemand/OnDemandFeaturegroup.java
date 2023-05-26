@@ -75,7 +75,9 @@ public class OnDemandFeaturegroup implements Serializable {
   private Collection<OnDemandFeature> features;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "onDemandFeaturegroup")
   private Collection<OnDemandOption> options;
-
+  
+  @Column(name = "spine")
+  private boolean spine;
   @JoinColumns({
       @JoinColumn(name = "inode_pid", referencedColumnName = "parent_id"),
       @JoinColumn(name = "inode_name", referencedColumnName = "name"),
@@ -153,6 +155,14 @@ public class OnDemandFeaturegroup implements Serializable {
 
   public void setOptions(Collection<OnDemandOption> options) {
     this.options = options;
+  }
+
+  public boolean isSpine() {
+    return spine;
+  }
+
+  public void setSpine(boolean spline) {
+    this.spine = spline;
   }
 
   @Override

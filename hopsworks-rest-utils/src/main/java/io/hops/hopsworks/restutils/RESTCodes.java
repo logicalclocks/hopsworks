@@ -1660,7 +1660,9 @@ public class RESTCodes {
             "create the kafka offset table for an online feature store", Response.Status.INTERNAL_SERVER_ERROR),
     ERROR_CONSTRUCTING_VALIDATION_REPORT_DIRECTORY_PATH(222,
         "An error occurred while constructing validation report directory path",
-        Response.Status.INTERNAL_SERVER_ERROR);
+        Response.Status.INTERNAL_SERVER_ERROR),
+    SPINE_GROUP_ON_RIGHT_SIDE_OF_JOIN_NOT_ALLOWED(223, "Spine groups cannot be used on the right side" +
+      "of a feature view join.", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;
