@@ -19,26 +19,18 @@ package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.dao.AbstractFacade.CollectionInfo;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
-import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HiveTbls;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.sql.Timestamp;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -51,35 +43,34 @@ public class FeatureGroupCommitController {
   private FeatureGroupCommitFacade featureGroupCommitFacade;
   @EJB
   private FeaturestoreActivityFacade fsActivityFacade;
-  @EJB
-  private InodeController inodeController;
 
-  private static final String HOODIE_METADATA_DIR = ".hoodie";
-  private static final String HOODIE_COMMIT_METADATA_FILE = ".commit";
   private static final Logger LOGGER = Logger.getLogger(FeatureGroupCommitController.class.getName());
 
-  public FeatureGroupCommit createHudiFeatureGroupCommit(Users user, Featuregroup featuregroup, String commitDateString,
+  public FeatureGroupCommit createHudiFeatureGroupCommit(Users user, Featuregroup featuregroup,
                                                          Long commitTime, Long rowsUpdated, Long rowsInserted,
-                                                         Long rowsDeleted, Integer validationId)
-      throws FeaturestoreException {
-    // Compute HUDI commit path
-    String commitPath = computeHudiCommitPath(featuregroup, commitDateString);
-
-    Inode inode = inodeController.getInodeAtPath(commitPath);
+                                                         Long rowsDeleted, Integer validationId,
+                                                         Long lastActiveCommitTime) {
     // commit id will be timestamp
     FeatureGroupCommit featureGroupCommit = new FeatureGroupCommit(featuregroup.getId(), commitTime);
-    featureGroupCommit.setInode(inode);
     featureGroupCommit.setCommittedOn(new Timestamp(commitTime));
     featureGroupCommit.setNumRowsUpdated(rowsUpdated);
     featureGroupCommit.setNumRowsInserted(rowsInserted);
     featureGroupCommit.setNumRowsDeleted(rowsDeleted);
+    featureGroupCommit.setArchived(false);
 
     // Find validation
     if (validationId != null && validationId > 0) {
       // we might want to add back GE validation tracking here
     }
 
+    // write the current commit on the database
     featureGroupCommit = featureGroupCommitFacade.update(featureGroupCommit);
+
+    if (lastActiveCommitTime != null) {
+      // mark archived commits
+      featureGroupCommitFacade.markArchived(featuregroup.getId(), new Timestamp(lastActiveCommitTime));
+    }
+
     fsActivityFacade.logCommitActivity(user, featuregroup, featureGroupCommit);
 
     return featureGroupCommit;
@@ -108,21 +99,20 @@ public class FeatureGroupCommitController {
     }
   }
 
-  protected String computeHudiCommitPath(Featuregroup featuregroup, String commitDateString) {
-    // Check if CommitDateString matches pattern to "yyyyMMddHHmmss"
-    try {
-      SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-      dateFormat.parse(commitDateString).getTime();
-    } catch (ParseException e) {
-      LOGGER.log(Level.SEVERE, "Unable to recognize provided HUDI commitDateString ", e);
-    }
+  // Commits for a feature group are unbounded. We can't rely on the database to clean it up
+  // the transaction might be too big. Hence, before removing the feature group, we need to remove all the existing
+  // commit metadata. In batches
+  public void deleteFeatureGroupCommits(Featuregroup featuregroup) {
+    while (true) {
+      List<FeatureGroupCommit> featureGroupCommits =
+          featureGroupCommitFacade.getCommitDetails(featuregroup.getId(), AbstractFacade.BATCH_SIZE, 0, null)
+              .getItems();
 
-    HiveTbls hiveTbls = featuregroup.getFeaturegroupType().equals(FeaturegroupType.STREAM_FEATURE_GROUP) ?
-      featuregroup.getStreamFeatureGroup().getHiveTbls(): featuregroup.getCachedFeaturegroup().getHiveTbls();
-    String dbLocation = hiveTbls.getSdId().getLocation();
-    Path commitMetadataPath = new Path(HOODIE_METADATA_DIR,commitDateString
-        + HOODIE_COMMIT_METADATA_FILE);
-    Path commitPath = new Path(dbLocation, commitMetadataPath);
-    return commitPath.toString();
+      if (!featureGroupCommits.isEmpty()) {
+        featureGroupCommitFacade.removeBatch(featureGroupCommits);
+      } else {
+        break;
+      }
+    }
   }
 }

@@ -53,6 +53,8 @@ import java.util.Set;
 
 public abstract class AbstractFacade<T> {
 
+  public static Integer BATCH_SIZE = 100;
+
   private final Class<T> entityClass;
 
   public AbstractFacade(Class<T> entityClass) {
@@ -74,6 +76,14 @@ public abstract class AbstractFacade<T> {
       return;
     }
     getEntityManager().remove(getEntityManager().merge(entity));
+    getEntityManager().flush();
+  }
+
+  public void removeBatch(List<T> entities) {
+    for (T item : entities) {
+      getEntityManager().remove(getEntityManager().merge(item));
+    }
+
     getEntityManager().flush();
   }
 

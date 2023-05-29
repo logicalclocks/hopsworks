@@ -73,6 +73,7 @@ public class CommitBuilder {
       commitDTO.setRowsUpdated(featureGroupCommit.getNumRowsUpdated());
       commitDTO.setRowsInserted(featureGroupCommit.getNumRowsInserted());
       commitDTO.setRowsDeleted(featureGroupCommit.getNumRowsDeleted());
+      commitDTO.setArchived(featureGroupCommit.getArchived());
     }
     return commitDTO;
   }

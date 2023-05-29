@@ -100,13 +100,12 @@ public class CommitResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response commitFeatureGroup(@Context UriInfo uriInfo, CommitDTO commitDTO,
                                      @Context HttpServletRequest req,
-                                     @Context SecurityContext sc)
-      throws FeaturestoreException {
+                                     @Context SecurityContext sc) {
     Users user = jwtHelper.getUserPrincipal(sc);
     FeatureGroupCommit featureGroupCommit =
-        featureGroupCommitController.createHudiFeatureGroupCommit(user, featuregroup, commitDTO.getCommitDateString(),
+        featureGroupCommitController.createHudiFeatureGroupCommit(user, featuregroup,
             commitDTO.getCommitTime(), commitDTO.getRowsUpdated(), commitDTO.getRowsInserted(),
-            commitDTO.getRowsDeleted(), commitDTO.getValidationId());
+            commitDTO.getRowsDeleted(), commitDTO.getValidationId(), commitDTO.getLastActiveCommitTime());
     CommitDTO builtCommitDTO = commitBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.COMMITS),
             project, featuregroup, featureGroupCommit);
     return Response.ok().entity(builtCommitDTO).build();
@@ -125,7 +124,6 @@ public class CommitResource {
                                         @BeanParam CommitBeanParam commitBeanParam,
                                         @Context HttpServletRequest req,
                                         @Context SecurityContext sc) {
-
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.COMMITS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());

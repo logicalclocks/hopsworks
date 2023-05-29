@@ -145,18 +145,17 @@ describe "On #{ENV['OS']}" do
         it "should be able to get the latest statistics commit for a stream feature group" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result, featuregroup_name = create_stream_featuregroup(project.id, featurestore_id, backfill_offline: true,
+          json_result, _ = create_stream_featuregroup(project.id, featurestore_id, backfill_offline: true,
                                                       commit_time: 1597990088000)
           parsed_json = JSON.parse(json_result)
           featuregroup_id = parsed_json["id"]
-          featuregroup_version = parsed_json["version"]
           expect_status_details(200)
 
           create_statistics_commit(project.id, featurestore_id, "featuregroups", featuregroup_id,
                                                       commit_time: 1597990088000)
           expect_status_details(200)
 
-          backfill_stream_featuregroup(featurestore_id, featuregroup_id, featuregroup_version, featuregroup_name, 1598990088000)
+          backfill_stream_featuregroup(featurestore_id, featuregroup_id, 1598990088000)
           expect_status_details(200)
           create_statistics_commit(project.id, featurestore_id, "featuregroups", featuregroup_id, commit_time: 1598990088000)
           expect_status_details(200)

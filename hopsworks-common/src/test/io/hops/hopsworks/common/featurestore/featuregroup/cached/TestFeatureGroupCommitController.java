@@ -65,13 +65,4 @@ public class TestFeatureGroupCommitController {
     fg1.setFeaturestore(fs);
     fg1.setCachedFeaturegroup(cachedFeaturegroup);
   }
-
-  @Test
-  public void testComputeHudiCommitPath() {
-    String expected =
-        "hopsfs://namenode.service.consul:8020/apps/hive/warehouse/test_proj_featurestore.db/fg1_1/.hoodie/20201021000000.commit";
-    String hudiCommitPath = featureGroupCommitController.computeHudiCommitPath(fg1, "20201021000000");
-
-    Assert.assertEquals(expected, hudiCommitPath);
-  }
 }
