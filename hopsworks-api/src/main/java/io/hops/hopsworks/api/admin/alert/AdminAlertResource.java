@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.api.admin.alert;
 
-import io.hops.hopsworks.alert.AlertManager;
+import io.hops.hopsworks.alert.AMClient;
 import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerClientCreateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerResponseException;
@@ -73,7 +73,7 @@ public class AdminAlertResource {
   @EJB
   private AlertBuilder alertBuilder;
   @EJB
-  private AlertManager alertManager;
+  private AMClient alertManager;
   @Inject
   private ManagementResource managementResource;
   @Inject

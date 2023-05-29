@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.common.project;
 
-import io.hops.hopsworks.alert.AlertManager;
+import io.hops.hopsworks.alert.AMClient;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -36,7 +36,7 @@ public class TestProjectController {
         new ProjectException(
             RESTCodes.ProjectErrorCode.PROJECT_FOLDER_NOT_CREATED, Level.SEVERE, exceptionUsrMsg, exceptionDevMsg))
         .when(projectController).createProjectInternal(Mockito.any(), Mockito.any());
-    AlertManager alertManager = Mockito.mock(AlertManager.class);
+    AMClient alertManager = Mockito.mock(AMClient.class);
     Mockito.doNothing().when(alertManager).asyncPostAlerts(Mockito.any());
 
     projectController.setAlertManager(alertManager);

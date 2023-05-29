@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2021, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2023, Hopsworks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -15,26 +15,38 @@
  */
 package io.hops.hopsworks.alert;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
+import javax.ejb.Startup;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Startup
 @Singleton
-public class FixAlertManagerConfigTimer {
-  private final static Logger LOGGER = Logger.getLogger(FixAlertManagerConfigTimer.class.getName());
+public class RestoreAlertManagerConfigTimer {
+  private final static Logger LOGGER = Logger.getLogger(RestoreAlertManagerConfigTimer.class.getName());
 
   @EJB
   private AlertManagerConfiguration alertManagerConfiguration;
 
-  @Schedule(persistent = false, hour = "*")
-  public void timer() {
+  @PostConstruct
+  public void init() {
+    try {
+      alertManagerConfiguration.restoreFromDb();
+    } catch (Exception e) {
+      LOGGER.log(Level.WARNING, "Failed to restore Alert Manager config from database backup. " + e.getMessage());
+    }
+  }
+
+  @Schedule(persistent = false, hour = "*", info = "Restore Alert Manager config from backup.")
+  public void restoreAlertManagerConfigTimer() {
     try {
       alertManagerConfiguration.restoreFromBackup();
-      alertManagerConfiguration.runFixConfig();
     } catch (Exception e) {
-      LOGGER.log(Level.INFO, "Failed to fix Alert Manager config from backup. " + e.getMessage());
+      LOGGER.log(Level.WARNING, "Failed to fix Alert Manager config from backup. " + e.getMessage());
+      e.printStackTrace();
     }
   }
 }

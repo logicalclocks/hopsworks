@@ -40,7 +40,7 @@ import java.util.Date;
     schema = "")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "AlertManagerConfigEntity.findAll",
+  @NamedQuery(name = "AlertManagerConfigEntity.findAllSortedByCreated",
       query = "SELECT a FROM AlertManagerConfigEntity a ORDER BY a.created DESC")
   ,
     @NamedQuery(name = "AlertManagerConfigEntity.findById",

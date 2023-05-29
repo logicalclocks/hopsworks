@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.api.alert.silence;
 
-import io.hops.hopsworks.alert.AlertManager;
+import io.hops.hopsworks.alert.AMClient;
 import io.hops.hopsworks.alert.exception.AlertManagerAccessControlException;
 import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
 import io.hops.hopsworks.alerting.api.alert.dto.SilenceID;
@@ -69,7 +69,7 @@ public class SilenceResource {
   @EJB
   private SilenceBuilder silenceBuilder;
   @EJB
-  private AlertManager alertManager;
+  private AMClient alertManager;
   @EJB
   private ProjectController projectController;
   @EJB

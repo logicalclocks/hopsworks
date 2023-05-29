@@ -335,19 +335,27 @@ module AlertHelper
 
   def create_silences(project, silence)
     post "#{@@alert_silence_resource}" % {projectId: project[:id]}, silence.to_json
+    # --cluster.gossip-interval value: cluster message propagation speed (default "200ms")
+    sleep(2)
   end
 
   def create_silences_checked(project, silence)
     post "#{@@alert_silence_resource}" % {projectId: project[:id]}, silence.to_json
     expect_status_details(201)
+    # --cluster.gossip-interval value: cluster message propagation speed (default "200ms")
+    sleep(2)
   end
 
   def update_silences(project, id, silence)
     put "#{@@alert_silence_resource}/#{id}" % {projectId: project[:id]}, silence.to_json
+    # --cluster.gossip-interval value: cluster message propagation speed (default "200ms")
+    sleep(2)
   end
 
   def delete_silences(project, id)
     delete "#{@@alert_silence_resource}/#{id}" % {projectId: project[:id]}
+    # --cluster.gossip-interval value: cluster message propagation speed (default "200ms")
+    sleep(2)
   end
 
   def get_routes(project, query: "")
@@ -410,19 +418,23 @@ module AlertHelper
 
   def create_silences_admin(silence)
     post "#{@@admin_alert_silence_resource}", silence.to_json
+    sleep(2)
   end
 
   def create_silences_admin_checked(silence)
     post "#{@@admin_alert_silence_resource}", silence.to_json
     expect_status_details(201)
+    sleep(2)
   end
 
   def update_silences_admin(id, silence)
     put "#{@@admin_alert_silence_resource}/#{id}", silence.to_json
+    sleep(2)
   end
 
   def delete_silences_admin(id)
     delete "#{@@admin_alert_silence_resource}/#{id}"
+    sleep(2)
   end
 
   def get_routes_admin(query: "")

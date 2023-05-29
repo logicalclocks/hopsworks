@@ -16,9 +16,7 @@
 
 package io.hops.hopsworks.alerting.api;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.alerting.api.alert.dto.Alert;
@@ -34,225 +32,79 @@ import io.hops.hopsworks.alerting.exceptions.AlertManagerResponseException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerServerException;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
 import java.io.Closeable;
-import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class AlertManagerClient implements Closeable {
   private static final Logger LOGGER = Logger.getLogger(AlertManagerClient.class.getName());
-  private Client client;
-  private WebTarget webTarget;
+  private final ClientWrapper clientWrapper;
+  private final List<ClientWrapper> peerClients;
 
-  public enum RequestMethod {
-    GET, POST, PUT, DELETE;
+  public AlertManagerClient(Client client, URI target, List<URI> peers) {
+    this.clientWrapper = new ClientWrapper(client, target);
+    this.peerClients =
+      peers.stream().map(p -> new ClientWrapper(ClientBuilder.newClient(), p)).collect(Collectors.toList());
   }
 
-  public AlertManagerClient(Client client, URI target) {
-    this.client = client;
-    this.webTarget = client.target(target);
+  @VisibleForTesting
+  public AlertManagerClient(ClientWrapper clientWrapper, List<ClientWrapper> peerClients) {
+    this.clientWrapper = clientWrapper;
+    this.peerClients = peerClients;
   }
 
   @Override
   public void close() {
-    if (this.client != null) {
-      this.client.close();
+    if (this.clientWrapper != null) {
+      this.clientWrapper.close();
     }
-  }
-
-  private void checkResponse(Response response) throws AlertManagerResponseException {
-    Response.Status.Family statusFamily = response.getStatusInfo().getFamily();
-    if (statusFamily.equals(Response.Status.Family.CLIENT_ERROR) ||
-        statusFamily.equals(Response.Status.Family.SERVER_ERROR)) {
-      String output = response.hasEntity() ? ": " + response.readEntity(String.class) : "";
-      throw new AlertManagerResponseException(response.getStatusInfo().getReasonPhrase() + output);
+    for (ClientWrapper client : this.peerClients) {
+      client.close();
     }
-  }
-
-  private Response sendRequest(Invocation.Builder invocationBuilder, RequestMethod method, Entity<String> entity)
-      throws AlertManagerServerException, AlertManagerResponseException {
-    Response response = null;
-    try {
-      switch (method) {
-        case GET:
-          response = invocationBuilder.get();
-          break;
-        case POST:
-          response = invocationBuilder.post(entity);
-          break;
-        case DELETE:
-          response = invocationBuilder.delete();
-          break;
-      }
-    } catch (Exception e) {
-      throw new AlertManagerServerException(e.getMessage());
-    }
-    checkResponse(response);
-    return response;
-  }
-
-  private <T> Entity<String> toEntity(T pojo) {
-    ObjectMapper objectMapper = new ObjectMapper();
-    try {
-      return Entity.json(objectMapper.writeValueAsString(pojo));
-    } catch (JsonProcessingException e) {
-      throw new IllegalStateException("Failed to write json");
-    }
-  }
-
-  private <T> Entity<String> toEntity(List<T> pojo) {
-    ObjectMapper objectMapper = new ObjectMapper();
-    try {
-      return Entity.json(objectMapper.writeValueAsString(pojo));
-    } catch (JsonProcessingException e) {
-      throw new IllegalStateException("Failed to write json");
-    }
-  }
-
-  private <T> T getResponse(Response response, Class<T> type) {
-    if (response.hasEntity()) {
-      ObjectMapper objectMapper = new ObjectMapper();
-      T content;
-      try {
-        content = objectMapper.readValue(response.readEntity(String.class), type);
-      } catch (IOException e) {
-        throw new IllegalStateException("Failed to read response");
-      }
-      return content;
-    } else {
-      throw new IllegalStateException("Failed to read response");
-    }
-  }
-
-  private <T> List<T> getResponseList(Response response, Class<T> clazz) {
-    if (response.hasEntity()) {
-      //because GenericType<List<T>> creates dependency conflict.
-      ObjectMapper objectMapper = new ObjectMapper();
-      List<T> content;
-      TypeFactory t = objectMapper.getTypeFactory();
-      try {
-        content = objectMapper
-            .readValue(response.readEntity(String.class), t.constructCollectionType(ArrayList.class, clazz));
-      } catch (IOException e) {
-        throw new IllegalStateException("Failed to read response");
-      }
-      return content;
-    } else {
-      throw new IllegalStateException("Failed to read response");
-    }
-  }
-
-  private WebTarget setQueryParams(WebTarget webTarget, Boolean active, Boolean silenced, Boolean inhibited,
-      Boolean unprocessed, Set<String> filters, String receiver) {
-    if (active != null) {
-      webTarget = webTarget.queryParam("active", active);
-    }
-    if (silenced != null) {
-      webTarget = webTarget.queryParam("silenced", silenced);
-    }
-    if (inhibited != null) {
-      webTarget = webTarget.queryParam("inhibited", inhibited);
-    }
-    if (unprocessed != null) {
-      webTarget = webTarget.queryParam("unprocessed", unprocessed);
-    }
-    webTarget = setFilters(webTarget, filters);
-    if (!Strings.isNullOrEmpty(receiver)) {
-      webTarget = webTarget.queryParam("receiver", receiver);
-    }
-    return webTarget;
-  }
-
-  private WebTarget setFilters(WebTarget webTarget, Set<String> filters) {
-    if (filters != null && !filters.isEmpty()) {
-      for (String filter : filters) {
-        webTarget = webTarget.queryParam("filter", filter);
-      }
-    }
-    return webTarget;
   }
 
   public Response healthy() throws AlertManagerResponseException, AlertManagerServerException {
-    WebTarget wt = webTarget.path(Settings.MANAGEMENT_API_HEALTH);
-    LOGGER.log(Level.FINE, "Sending request healthy to: {0}", wt.toString());
-    return sendRequest(wt.request(), RequestMethod.GET, null);
+    return this.clientWrapper.healthy();
   }
 
   public Response ready() throws AlertManagerResponseException, AlertManagerServerException {
-    WebTarget wt = webTarget.path(Settings.MANAGEMENT_API_READY);
-    LOGGER.log(Level.FINE, "Sending request ready to: {0}", wt.toString());
-    return sendRequest(wt.request(), RequestMethod.GET, null);
+    return this.clientWrapper.ready();
   }
 
   public Response reload() throws AlertManagerResponseException, AlertManagerServerException {
-    WebTarget wt = webTarget.path(Settings.MANAGEMENT_API_RELOAD);
-    LOGGER.log(Level.FINE, "Sending request reload to: {0}", wt.toString());
-    return sendRequest(wt.request(), RequestMethod.POST, Entity.json(""));
+    return this.clientWrapper.reload();
   }
 
   public AlertmanagerStatus getStatus() throws AlertManagerResponseException, AlertManagerServerException {
-    WebTarget wt = webTarget.path(Settings.ALERTS_API_STATUS);
-    LOGGER.log(Level.FINE, "Sending request getStatus to: {0}", wt.toString());
-    AlertmanagerStatus alertmanagerStatus =
-        getResponse(sendRequest(wt.request(MediaType.APPLICATION_JSON), RequestMethod.GET, null),
-            AlertmanagerStatus.class);
-    return alertmanagerStatus;
+    return this.clientWrapper.getStatus();
   }
 
   public List<ReceiverName> getReceivers() throws AlertManagerResponseException, AlertManagerServerException {
-    WebTarget wt = webTarget.path(Settings.ALERTS_API_RECEIVERS);
-    LOGGER.log(Level.FINE, "Sending request getReceivers to: {0}", wt.toString());
-    List<ReceiverName> receiver =
-        getResponseList(sendRequest(wt.request(MediaType.APPLICATION_JSON), RequestMethod.GET, null),
-            ReceiverName.class);
-    return receiver;
+    return this.clientWrapper.getReceivers();
   }
 
-  public List<Silence> getSilences() throws AlertManagerResponseException, AlertManagerServerException {
-    return getSilences(null);
-  }
-
-  public List<Silence> getSilences(Set<String> filters)
-      throws AlertManagerResponseException, AlertManagerServerException {
-    WebTarget wt = webTarget.path(Settings.ALERTS_API_SILENCES);
-    wt = setFilters(wt, filters);
-    LOGGER.log(Level.FINE, "Sending request getSilences to: {0}", wt.toString());
-    List<Silence> silences =
-        getResponseList(sendRequest(wt.request(MediaType.APPLICATION_JSON), RequestMethod.GET, null), Silence.class);
-    return silences;
+  public List<Silence> getSilences(Set<String> filters) throws AlertManagerResponseException,
+      AlertManagerServerException {
+    return this.clientWrapper.getSilences(filters);
   }
 
   public Silence getSilence(String uuid) throws AlertManagerResponseException, AlertManagerServerException {
-    WebTarget wt = webTarget.path(Settings.ALERTS_API_SILENCE).path(uuid);
-    LOGGER.log(Level.FINE, "Sending request getSilence to: {0}", wt.toString());
-    Silence silence =
-        getResponse(sendRequest(wt.request(MediaType.APPLICATION_JSON), RequestMethod.GET, null), Silence.class);
-    return silence;
+    return this.clientWrapper.getSilence(uuid);
   }
 
-  public SilenceID postSilences(PostableSilence postableSilence)
-      throws AlertManagerResponseException, AlertManagerServerException {
-    WebTarget wt = webTarget.path(Settings.ALERTS_API_SILENCES);
-    LOGGER.log(Level.FINE, "Sending request postSilences to: {0}", wt.toString());
-    SilenceID silenceID =
-        getResponse(sendRequest(wt.request(MediaType.APPLICATION_JSON), RequestMethod.POST, toEntity(postableSilence)),
-        SilenceID.class);
-    return silenceID;
+  public SilenceID postSilences(PostableSilence postableSilence) throws AlertManagerResponseException,
+      AlertManagerServerException {
+    return this.clientWrapper.postSilences(postableSilence);
   }
 
   public Response deleteSilence(String uuid) throws AlertManagerResponseException, AlertManagerServerException {
-    WebTarget wt = webTarget.path(Settings.ALERTS_API_SILENCE).path(uuid);
-    LOGGER.log(Level.FINE, "Sending request deleteSilence to: {0}", wt.toString());
-    return sendRequest(wt.request(MediaType.APPLICATION_JSON), RequestMethod.DELETE, null);
+    return this.clientWrapper.deleteSilence(uuid);
   }
 
   public List<Alert> getAlerts() throws AlertManagerResponseException, AlertManagerServerException {
@@ -260,34 +112,128 @@ public class AlertManagerClient implements Closeable {
   }
 
   public List<Alert> getAlerts(Boolean active, Boolean silenced, Boolean inhibited, Boolean unprocessed,
-      Set<String> filters, String receiver)
-      throws AlertManagerResponseException, AlertManagerServerException {
-    WebTarget wt = webTarget.path(Settings.ALERTS_API_ALERTS);
-    wt = setQueryParams(wt, active, silenced, inhibited, unprocessed, filters, receiver);
-    LOGGER.log(Level.FINE, "Sending request getAlerts to: {0}", wt.toString());
-    List<Alert> alerts =
-        getResponseList(sendRequest(wt.request(MediaType.APPLICATION_JSON), RequestMethod.GET, null), Alert.class);
-    return alerts;
+      Set<String> filters, String receiver) throws AlertManagerResponseException, AlertManagerServerException {
+    List<Alert> localAlerts = null;
+    AlertManagerResponseException alertManagerResponseException = null;
+    AlertManagerServerException alertManagerServerException = null;
+    try {
+      localAlerts = this.clientWrapper.getAlerts(active, silenced, inhibited, unprocessed, filters, receiver);
+    } catch (AlertManagerResponseException e) {
+      alertManagerResponseException = e;
+      LOGGER.log(Level.WARNING, "Could not get alert from {0}. {1}",
+        new Object[]{this.clientWrapper.toString(), e.getMessage()});
+    } catch (AlertManagerServerException e) {
+      alertManagerServerException = e;
+      LOGGER.log(Level.WARNING, "Could not get alert from {0}. {1}",
+        new Object[]{this.clientWrapper.toString(), e.getMessage()});
+    }
+    for (ClientWrapper client : this.peerClients) {
+      try {
+        if (localAlerts == null) {
+          localAlerts = client.getAlerts(active, silenced, inhibited, unprocessed, filters, receiver);
+        } else {
+          localAlerts.addAll(client.getAlerts(active, silenced, inhibited, unprocessed, filters, receiver));
+        }
+      } catch (AlertManagerResponseException e) {
+        alertManagerResponseException = e;
+        LOGGER.log(Level.WARNING, "Could not get alert from {0}. {1}", new Object[]{client.toString(), e.getMessage()});
+      } catch (AlertManagerServerException e) {
+        alertManagerServerException = e;
+        LOGGER.log(Level.WARNING, "Could not get alert from {0}. {1}", new Object[]{client.toString(), e.getMessage()});
+      }
+    }
+    //If there is a response so throw response exception
+    if (localAlerts == null && alertManagerResponseException != null) {
+      throw alertManagerResponseException;
+    }
+    if (localAlerts == null && alertManagerServerException != null) {
+      throw alertManagerServerException;
+    }
+    return localAlerts;
   }
 
   public Response postAlerts(List<PostableAlert> postableAlerts)
       throws AlertManagerResponseException, AlertManagerServerException {
-    WebTarget wt = webTarget.path(Settings.ALERTS_API_ALERTS);
-    LOGGER.log(Level.FINE, "Sending request postAlerts to: {0}", wt.toString());
-    return sendRequest(wt.request(MediaType.APPLICATION_JSON), RequestMethod.POST, toEntity(postableAlerts));
+    Response response = null;
+    AlertManagerResponseException alertManagerResponseException = null;
+    AlertManagerServerException alertManagerServerException = null;
+    try {
+      response = this.clientWrapper.postAlerts(postableAlerts);
+    } catch (AlertManagerResponseException e) {
+      alertManagerResponseException = e;
+      LOGGER.log(Level.WARNING, "Could not post alert to {0}. {1}",
+        new Object[]{this.clientWrapper.toString(), e.getMessage()});
+    } catch (AlertManagerServerException e) {
+      alertManagerServerException = e;
+      LOGGER.log(Level.WARNING, "Could not post alert to {0}. {1}",
+        new Object[]{this.clientWrapper.toString(), e.getMessage()});
+    }
+    for (ClientWrapper client : this.peerClients) {
+      try {
+        response = client.postAlerts(postableAlerts);
+      } catch (AlertManagerResponseException e) {
+        alertManagerResponseException = e;
+        LOGGER.log(Level.WARNING, "Could not post alert to {0}. {1}", new Object[]{client.toString(), e.getMessage()});
+      } catch (AlertManagerServerException e) {
+        alertManagerServerException = e;
+        LOGGER.log(Level.WARNING, "Could not post alert to {0}. {1}", new Object[]{client.toString(), e.getMessage()});
+      }
+    }
+    //If there is a response so throw response exception
+    if (response == null && alertManagerResponseException != null) {
+      throw alertManagerResponseException;
+    }
+    if (response == null && alertManagerServerException != null) {
+      throw alertManagerServerException;
+    }
+    return response;
   }
 
   public List<AlertGroup> getAlertGroups(Boolean active, Boolean silenced, Boolean inhibited, Set<String> filters,
-      String receiver) throws AlertManagerResponseException, AlertManagerServerException {
-    WebTarget wt = webTarget.path(Settings.ALERTS_API_ALERTS_GROUPS);
-    wt = setQueryParams(wt, active, silenced, inhibited, null, filters, receiver);
-    LOGGER.log(Level.FINE, "Sending request getAlertGroups to: {0}", wt.toString());
-    return getResponseList(sendRequest(wt.request(MediaType.APPLICATION_JSON), RequestMethod.GET, null),
-        AlertGroup.class);
+    String receiver) throws AlertManagerResponseException, AlertManagerServerException {
+    List<AlertGroup> localAlertGroups = null;
+    AlertManagerResponseException alertManagerResponseException = null;
+    AlertManagerServerException alertManagerServerException = null;
+    try {
+      localAlertGroups = this.clientWrapper.getAlertGroups(active, silenced, inhibited, filters, receiver);
+    } catch (AlertManagerResponseException e) {
+      alertManagerResponseException = e;
+      LOGGER.log(Level.WARNING, "Could not get Alert Groups from {0}. {1}",
+        new Object[]{this.clientWrapper.toString(), e.getMessage()});
+    } catch (AlertManagerServerException e) {
+      alertManagerServerException = e;
+      LOGGER.log(Level.WARNING, "Could not get Alert Groups from {0}. {1}",
+        new Object[]{this.clientWrapper.toString(), e.getMessage()});
+    }
+    for (ClientWrapper client : this.peerClients) {
+      try {
+        if (localAlertGroups == null) {
+          localAlertGroups = client.getAlertGroups(active, silenced, inhibited, filters, receiver);
+        } else {
+          localAlertGroups.addAll(client.getAlertGroups(active, silenced, inhibited, filters, receiver));
+        }
+      } catch (AlertManagerResponseException e) {
+        alertManagerResponseException = e;
+        LOGGER.log(Level.WARNING, "Could not get Alert Groups from {0}. {1}",
+          new Object[]{client.toString(), e.getMessage()});
+      } catch (AlertManagerServerException e) {
+        alertManagerServerException = e;
+        LOGGER.log(Level.WARNING, "Could not get Alert Groups from {0}. {1}",
+          new Object[]{client.toString(), e.getMessage()});
+      }
+    }
+    //If there is a response so throw response exception
+    if (localAlertGroups == null && alertManagerResponseException != null) {
+      throw alertManagerResponseException;
+    }
+    if (localAlertGroups == null && alertManagerServerException != null) {
+      throw alertManagerServerException;
+    }
+    return localAlertGroups;
   }
 
   public static class Builder {
-    private Client client;
+    private final Client client;
     private String serviceFQDN;
     private String serviceDN;
     private boolean isHttps;
@@ -319,14 +265,18 @@ public class AlertManagerClient implements Closeable {
 
     public AlertManagerClient build() throws ServiceDiscoveryException {
       URI target;
+      List<URI> peers;
       if (Strings.isNullOrEmpty(this.serviceFQDN) && Strings.isNullOrEmpty(this.serviceDN)) {
         target = Settings.getAlertManagerAddress();
+        peers = Settings.getAlertManagerPeers();
       } else if (Strings.isNullOrEmpty(this.serviceFQDN)) {
         target = Settings.getAlertManagerAddressByDN(this.serviceDN, this.isHttps);
+        peers = Settings.getAlertManagerPeersByDN(this.serviceDN, this.isHttps);
       } else {
         target = Settings.getAlertManagerAddressByFQDN(this.serviceFQDN, this.isHttps);
+        peers = Settings.getAlertManagerPeersByFQDN(this.serviceFQDN, this.isHttps);
       }
-      return new AlertManagerClient(this.client, target);
+      return new AlertManagerClient(this.client, target, peers);
     }
   }
 }

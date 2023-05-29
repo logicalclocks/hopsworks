@@ -46,7 +46,7 @@ describe "On #{ENV['OS']}" do
     context 'with authentication' do
       before :all do
         with_valid_project
-        create_silences(@project, create_silence(@project))
+        create_silences_checked(@project, create_silence(@project))
         @project1 = @project
         get_silences(@project1)
         @silence = json_body[:items][0]
