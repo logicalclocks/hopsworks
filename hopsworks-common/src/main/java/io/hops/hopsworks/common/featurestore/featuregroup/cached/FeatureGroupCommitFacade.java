@@ -138,6 +138,13 @@ public class FeatureGroupCommitFacade extends AbstractFacade<FeatureGroupCommit>
     return new CollectionInfo((Long) queryCount.getSingleResult(), query.getResultList());
   }
 
+  public void markArchived(Integer featureGroupId, Timestamp lastActiveCommitTime) {
+    em.createNamedQuery("FeatureGroupCommit.updateArchived")
+        .setParameter("featureGroupId", featureGroupId)
+        .setParameter("lastActiveCommitTime", lastActiveCommitTime)
+        .executeUpdate();
+  }
+
   /**
    * Gets the entity manager of the facade
    *

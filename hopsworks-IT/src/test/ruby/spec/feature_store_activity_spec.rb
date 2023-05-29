@@ -79,11 +79,6 @@ describe "On #{ENV['OS']}" do
                                                                                  time_travel_format: "HUDI")
       parsed_json = JSON.parse(json_result)
       feature_group_id = parsed_json["id"]
-      feature_group_version = parsed_json["version"]
-      path = "/apps/hive/warehouse/#{@project['projectname'].downcase}_featurestore.db/#{feature_group_name}_#{feature_group_version}"
-      hoodie_path = path + "/.hoodie"
-      mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
-      touchz(hoodie_path + "/20201024221125.commit", getHopsworksUser, getHopsworksUser)
       commit_metadata = {commitDateString:20201024221125,commitTime:1603577485000,rowsInserted:4,rowsUpdated:2,rowsDeleted:0}
       commit_cached_featuregroup(@project[:id], featurestore_id, feature_group_id, commit_metadata: commit_metadata)
 

@@ -32,23 +32,27 @@ public class CommitDTO extends RestDTO<CommitDTO> {
   private Long rowsUpdated;
   private Long rowsDeleted;
   private Integer validationId;
+  private Boolean archived;
+  // This parameter is currently not sent back to the client
+  private Long lastActiveCommitTime;
 
   public CommitDTO() {
   }
 
   public CommitDTO(Long commitID, String commitDateString, Long commitTime, Long rowsInserted,
-                   Long rowsUpdated, Long rowsDeleted) {
+                   Long rowsUpdated, Long rowsDeleted, Boolean archived) {
     this.commitID = commitID;
     this.commitDateString = commitDateString;
     this.commitTime = commitTime;
     this.rowsInserted = rowsInserted;
     this.rowsUpdated = rowsUpdated;
     this.rowsDeleted = rowsDeleted;
+    this.archived = archived;
   }
 
   public CommitDTO(Long commitID, String commitDateString, Long commitTime, Long rowsInserted,
-                   Long rowsUpdated, Long rowsDeleted, Integer validationId) {
-    this(commitID, commitDateString, commitTime, rowsInserted, rowsUpdated, rowsDeleted);
+                   Long rowsUpdated, Long rowsDeleted, Boolean archived, Integer validationId) {
+    this(commitID, commitDateString, commitTime, rowsInserted, rowsUpdated, rowsDeleted, archived);
     this.validationId = validationId;
   }
 
@@ -108,10 +112,34 @@ public class CommitDTO extends RestDTO<CommitDTO> {
     this.validationId = validationId;
   }
 
+  public Boolean getArchived() {
+    return archived;
+  }
+
+  public void setArchived(Boolean archived) {
+    this.archived = archived;
+  }
+
+  public Long getLastActiveCommitTime() {
+    return lastActiveCommitTime;
+  }
+
+  public void setLastActiveCommitTime(Long lastActiveCommitTime) {
+    this.lastActiveCommitTime = lastActiveCommitTime;
+  }
+
   @Override
   public String toString() {
-    return "CommitDTO{" + "commitID=" + commitID + ", commitDateString=" + commitDateString + ", rowsInserted="
-        + rowsInserted + ", rowsUpdated=" + rowsUpdated + ", rowsDeleted=" + rowsDeleted
-        + ", validationId=" + validationId + "}";
+    return "CommitDTO{" +
+        "commitID=" + commitID +
+        ", commitDateString='" + commitDateString + '\'' +
+        ", commitTime=" + commitTime +
+        ", rowsInserted=" + rowsInserted +
+        ", rowsUpdated=" + rowsUpdated +
+        ", rowsDeleted=" + rowsDeleted +
+        ", validationId=" + validationId +
+        ", archived=" + archived +
+        ", lastActiveCommitTime=" + lastActiveCommitTime +
+        '}';
   }
 }

@@ -178,17 +178,13 @@ module FeaturestoreHelper
       parsed_json = JSON.parse(json_result)
       featuregroup_id = parsed_json["id"]
       featuregroup_version = parsed_json["version"]
-      backfill_stream_featuregroup(featurestore_id, featuregroup_id, featuregroup_version, featuregroup_name, commit_time)
+      backfill_stream_featuregroup(featurestore_id, featuregroup_id, commit_time)
     end
 
     return json_result, featuregroup_name
   end
 
-  def backfill_stream_featuregroup(featurestore_id, featuregroup_id, featuregroup_version, featuregroup_name, commit_time)
-      path = "/apps/hive/warehouse/#{@project['projectname'].downcase}_featurestore.db/#{featuregroup_name}_#{featuregroup_version}"
-      hoodie_path = path + "/.hoodie"
-      mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
-
+  def backfill_stream_featuregroup(featurestore_id, featuregroup_id, commit_time)
       if commit_time.nil?
         time = Time.now
         commit_time = time.to_i * 1000
@@ -197,7 +193,6 @@ module FeaturestoreHelper
         commit_date_str = Time.at(commit_time / 1000).strftime("%Y%m%d%H%M%S")
       end
 
-      touchz(hoodie_path + "/#{commit_date_str}.commit", getHopsworksUser, getHopsworksUser)
       commit_metadata = {commitDateString:commit_date_str,commitTime:commit_time,rowsInserted:4,rowsUpdated:0,rowsDeleted:0}
       commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
   end
@@ -984,6 +979,7 @@ module FeaturestoreHelper
     commit_metadata = commit_metadata == nil ?
                           {commitDateString:Time.at(Time.now.to_i).strftime("%Y%m%d%H%M%S"),rowsInserted:4,rowsUpdated:0,rowsDeleted:0} : commit_metadata
     post endpoint, commit_metadata.to_json
+    expect_status_details(200)
   end
 
   def trainingdataset_exists(project_id, name, version: 1, fs_id: nil, fs_project_id: nil)

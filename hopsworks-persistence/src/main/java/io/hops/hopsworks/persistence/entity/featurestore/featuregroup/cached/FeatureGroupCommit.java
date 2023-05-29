@@ -16,14 +16,11 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached;
 
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
-
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
-import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -50,8 +47,13 @@ import java.sql.Timestamp;
     @NamedQuery(name = "FeatureGroupCommit.findLatestCommit",
         query = "SELECT fgc FROM FeatureGroupCommit fgc WHERE fgc.committedOn IN (SELECT MAX(fgc.committedOn) FROM " +
             "FeatureGroupCommit fgc WHERE fgc.featureGroupCommitPK.featureGroupId = :featureGroupId) " +
-            "AND fgc.featureGroupCommitPK.featureGroupId = :featureGroupId")
-     })
+            "AND fgc.featureGroupCommitPK.featureGroupId = :featureGroupId"),
+    @NamedQuery(name = "FeatureGroupCommit.updateArchived",
+        query = "UPDATE FeatureGroupCommit fgc SET fgc.archived = true " +
+            "WHERE fgc.featureGroupCommitPK.featureGroupId = :featureGroupId AND " +
+            "fgc.committedOn < :lastActiveCommitTime"),
+    }
+)
 
 public class FeatureGroupCommit implements Serializable {
 
@@ -70,16 +72,9 @@ public class FeatureGroupCommit implements Serializable {
   private Long numRowsInserted;
   @Column(name = "num_rows_deleted")
   private Long numRowsDeleted;
-  @NotNull
-  @JoinColumns({
-      @JoinColumn(name = "inode_pid",
-          referencedColumnName = "parent_id"),
-      @JoinColumn(name = "inode_name",
-          referencedColumnName = "name"),
-      @JoinColumn(name = "partition_id",
-          referencedColumnName = "partition_id")})
-  @ManyToOne(optional = false)
-  private Inode inode;
+
+  @Column(name = "archived")
+  private Boolean archived;
 
   public FeatureGroupCommit() {}
 
@@ -96,14 +91,6 @@ public class FeatureGroupCommit implements Serializable {
 
   public void setFeatureGroupCommitPK(FeatureGroupCommitPK featureGroupCommitPK) {
     this.featureGroupCommitPK = featureGroupCommitPK;
-  }
-
-  public Inode getInode() {
-    return inode;
-  }
-
-  public void setInode(Inode inode) {
-    this.inode = inode;
   }
 
   public Long getCommittedOn() {
@@ -136,6 +123,14 @@ public class FeatureGroupCommit implements Serializable {
 
   public void setNumRowsDeleted(Long numRowsDeleted) {
     this.numRowsDeleted = numRowsDeleted;
+  }
+
+  public Boolean getArchived() {
+    return archived;
+  }
+
+  public void setArchived(Boolean archived) {
+    this.archived = archived;
   }
 
   @Override

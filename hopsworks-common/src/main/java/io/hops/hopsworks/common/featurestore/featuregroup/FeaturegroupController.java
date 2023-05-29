@@ -27,6 +27,7 @@ import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupFacade;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeatureGroupCommitController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
@@ -66,6 +67,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreAc
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HivePartitions;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.stream.StreamFeatureGroup;
@@ -146,6 +148,8 @@ public class FeaturegroupController {
   private FsJobManagerController fsJobManagerController;
   @EJB
   private FeatureGroupLinkController featureGroupLinkController;
+  @EJB
+  private FeatureGroupCommitController featureGroupCommitController;
 
   /**
    * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
@@ -597,6 +601,10 @@ public class FeaturegroupController {
     }
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
+        if (featuregroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) {
+          // Delete existing commits if it's a hudi feature group
+          featureGroupCommitController.deleteFeatureGroupCommits(featuregroup);
+        }
         // Delete hive_table will cascade to cached_featuregroup_table which will cascade to feature_group table
         cachedFeaturegroupController.dropHiveFeaturegroup(featuregroup, project, user);
         // Delete mysql table and metadata
@@ -605,6 +613,8 @@ public class FeaturegroupController {
         }
         break;
       case STREAM_FEATURE_GROUP:
+        // Delete existing commits if it's a hudi feature group
+        featureGroupCommitController.deleteFeatureGroupCommits(featuregroup);
         // Delete hive_table will cascade to stream_featuregroup_table which will cascade to feature_group table
         cachedFeaturegroupController.dropHiveFeaturegroup(featuregroup, project, user);
         // Delete mysql table and metadata
