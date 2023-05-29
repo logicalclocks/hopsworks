@@ -87,6 +87,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -147,6 +148,9 @@ public class SystemAdminService {
         ex.getMessage(), ex);
     } catch (IOException ex) {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.MASTER_ENCRYPTION_PASSWORD_ACCESS_ERROR,
+        Level.SEVERE, null, ex.getMessage(), ex);
+    } catch (ExecutionException | InterruptedException ex) {
+      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.MASTER_ENCRYPTION_PASSWORD_RESET_ERROR,
         Level.SEVERE, null, ex.getMessage(), ex);
     }
   }
