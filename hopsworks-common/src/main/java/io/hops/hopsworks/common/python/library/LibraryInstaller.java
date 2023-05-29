@@ -40,6 +40,7 @@ import io.hops.hopsworks.persistence.entity.python.CondaStatus;
 import io.hops.hopsworks.persistence.entity.python.PythonDep;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.restutils.RESTException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -243,6 +244,9 @@ public class LibraryInstaller {
   
   private String errorMsg(Throwable ex, String prefix) {
     String errorMsg = ex.getMessage();
+    if(errorMsg == null && ex instanceof RESTException) {
+      errorMsg = ((RESTException) ex).getUsrMsg();
+    }
     if(errorMsg == null) {
       errorMsg = ExceptionUtils.getStackTrace(ex);
     }
@@ -278,9 +282,7 @@ public class LibraryInstaller {
       try {
         FileUtils.deleteDirectory(cwd);
       } catch (IOException e) {
-        String errorMsg = "Failed removing docker file";
-        throw new ServiceException(RESTCodes.ServiceErrorCode.LOCAL_FILESYSTEM_ERROR, Level.INFO,
-          errorMsg, errorMsg, e);
+        LOG.log(Level.WARNING, "Failed removing docker file - " + cc.getId(), e.getMessage());
       }
     }
   }
@@ -341,9 +343,7 @@ public class LibraryInstaller {
       try {
         FileUtils.deleteDirectory(cwd);
       } catch (IOException e) {
-        String errorMsg = "Failed removing docker file";
-        throw new ServiceException(RESTCodes.ServiceErrorCode.LOCAL_FILESYSTEM_ERROR, Level.INFO,
-          errorMsg, errorMsg, e);
+        LOG.log(Level.WARNING, "Failed removing docker file - " + cc.getId(), e.getMessage());
       }
     }
   }
@@ -362,9 +362,7 @@ public class LibraryInstaller {
       try {
         FileUtils.deleteDirectory(cwd);
       } catch (IOException e) {
-        String errorMsg = "Failed removing docker file";
-        throw new ServiceException(RESTCodes.ServiceErrorCode.LOCAL_FILESYSTEM_ERROR, Level.INFO,
-          errorMsg, errorMsg, e);
+        LOG.log(Level.WARNING, "Failed removing docker file - " + cc.getId(), e.getMessage());
       }
     }
   }
