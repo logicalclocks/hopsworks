@@ -79,9 +79,12 @@ public class Constants {
   public final static Integer TEST_ALERT_FG_VERSION = 1;
   
   public final static String DEFAULT_EMAIL_HTML = "{{ template \"hopsworks.email.default.html\" . }}";
-  public final static String DEFAULT_SLACK_ICON_URL = "https://gravatar.com/avatar/e3fb1c1d58b043af5e3a6a645b7f569f";
+  public final static String DEFAULT_SLACK_ICON_URL = "https://uploads-ssl.webflow.com/5f6353590bb01cacbcecfbac/" +
+    "633ed0f0ed7662f8621ce701_Hopsworks%20Logo%20Social%20.png";
   public final static String DEFAULT_SLACK_TEXT = "{{ template \"hopsworks.slack.default.text\" . }}";
   public final static String DEFAULT_SLACK_TITLE = "{{ template \"hopsworks.slack.default.title\" . }}";
+  
+  public final static String AM_CONFIG_UPDATED_TOPIC_NAME = "alertmanager_config_updated";
   
   public enum TimerType {
     CLIENT,

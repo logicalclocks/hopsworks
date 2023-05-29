@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.api.admin.alert.management;
 
-import io.hops.hopsworks.alert.AlertManager;
+import io.hops.hopsworks.alert.AMClient;
 import io.hops.hopsworks.alert.AlertManagerConfiguration;
 import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
 import io.hops.hopsworks.alerting.api.alert.dto.AlertmanagerStatus;
@@ -59,6 +59,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -72,7 +73,7 @@ public class ManagementResource {
   private static final Logger LOGGER = Logger.getLogger(ManagementResource.class.getName());
   
   @EJB
-  private AlertManager alertManager;
+  private AMClient alertManager;
   @EJB
   private AlertManagerConfiguration alertManagerConfiguration;
   @EJB
@@ -128,9 +129,9 @@ public class ManagementResource {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
   public Response getConfig(@Context HttpServletRequest req, @Context SecurityContext sc) throws AlertException {
     try {
-      AlertManagerConfig alertManagerConfig = alertManagerConfiguration.read();
-      return Response.ok().entity(alertManagerConfig).build();
-    } catch (AlertManagerConfigCtrlCreateException | AlertManagerConfigReadException e) {
+      Optional<AlertManagerConfig> alertManagerConfig = alertManagerConfiguration.read();
+      return Response.ok().entity(alertManagerConfig.orElse(null)).build();
+    } catch (AlertManagerConfigReadException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_READ_CONFIGURATION, Level.FINE, e.getMessage());
     }
   }
@@ -146,8 +147,8 @@ public class ManagementResource {
     try {
       AlertManagerConfig alertManagerConfig = toAlertManagerConfig(config);
       alertManagerConfiguration.writeAndReload(alertManagerConfig);
-      alertManagerConfig = alertManagerConfiguration.read();
-      return Response.ok().entity(alertManagerConfig).build();
+      Optional<AlertManagerConfig> optionalAlertManagerConfig = alertManagerConfiguration.read();
+      return Response.ok().entity(optionalAlertManagerConfig.orElse(null)).build();
     } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException |
         AlertManagerConfigReadException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_READ_CONFIGURATION, Level.FINE, e.getMessage());
@@ -188,6 +189,18 @@ public class ManagementResource {
     } catch (AlertManagerResponseException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.RESPONSE_ERROR, Level.FINE, e.getMessage());
     }
+  }
+  
+  @POST
+  @Path("reload-config")
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response reloadConfig(@Context HttpServletRequest req, @Context SecurityContext sc) throws AlertException {
+    try {
+      alertManagerConfiguration.restoreFromDb();
+    } catch (AlertManagerConfigUpdateException e) {
+      throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_UPDATE_AM_CONFIG, Level.FINE, e.getMessage());
+    }
+    return Response.ok().build();
   }
   
   @PUT

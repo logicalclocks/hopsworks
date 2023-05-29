@@ -77,6 +77,7 @@ import io.hops.hopsworks.persistence.entity.util.FormatUtils;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -143,6 +144,7 @@ public class AuthService {
   @GET
   @Path("session")
   @Logged(logLevel = LogLevel.FINE)
+  @RolesAllowed({"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @Produces(MediaType.APPLICATION_JSON)
   public Response session(@Context HttpServletRequest req) {

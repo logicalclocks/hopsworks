@@ -41,7 +41,7 @@ package io.hops.hopsworks.common.project;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
-import io.hops.hopsworks.alert.AlertManager;
+import io.hops.hopsworks.alert.AMClient;
 import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
 import io.hops.hopsworks.alerting.api.alert.dto.PostableAlert;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerClientCreateException;
@@ -304,7 +304,7 @@ public class ProjectController {
   @EJB
   private AlertController alertController;
   @EJB
-  private AlertManager alertManager;
+  private AMClient alertManager;
   @Inject
   @Any
   private Instance<ProjectTeamRoleHandler> projectTeamRoleHandlers;
@@ -2474,7 +2474,7 @@ public class ProjectController {
   }
 
   @VisibleForTesting
-  public void setAlertManager(AlertManager alertManager) {
+  public void setAlertManager(AMClient alertManager) {
     this.alertManager = alertManager;
   }
 }

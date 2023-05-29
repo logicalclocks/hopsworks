@@ -18,7 +18,10 @@ package io.hops.hopsworks.test.config;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.alerting.api.AlertManagerClient;
+import io.hops.hopsworks.alerting.api.ClientWrapper;
+import io.hops.hopsworks.alerting.api.alert.dto.PostableAlert;
 import io.hops.hopsworks.alerting.config.AlertManagerConfigController;
+import io.hops.hopsworks.alerting.config.ConfigUpdater;
 import io.hops.hopsworks.alerting.config.dto.AlertManagerConfig;
 import io.hops.hopsworks.alerting.config.dto.EmailConfig;
 import io.hops.hopsworks.alerting.config.dto.PagerdutyConfig;
@@ -29,6 +32,7 @@ import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigFileNotFoundExcep
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigReadException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigUpdateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerDuplicateEntryException;
+import io.hops.hopsworks.alerting.exceptions.AlertManagerException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerNoSuchElementException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerResponseException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerServerException;
@@ -44,6 +48,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 public class TestAlertManagerConfigController {
   private AlertManagerClient client;
   private AlertManagerConfig alertManagerConfigBackup;
@@ -51,110 +58,111 @@ public class TestAlertManagerConfigController {
   
   @Before
   public void setUp()
-      throws ServiceDiscoveryException, AlertManagerConfigFileNotFoundException, AlertManagerConfigReadException {
+    throws ServiceDiscoveryException, AlertManagerConfigFileNotFoundException, AlertManagerConfigReadException,
+    AlertManagerServerException, AlertManagerResponseException {
     client = Mockito.mock(AlertManagerClient.class);
+    Mockito.when(client.reload()).thenReturn(Response.ok().build());
     alertManagerConfigController = new AlertManagerConfigController.Builder()
-        .withConfigPath(TestAlertManagerConfigController.class.getResource("/alertmanager.yml").getPath())
-        .withClient(client)
-        .build();
+      .withConfigPath(TestAlertManagerConfigController.class.getResource("/alertmanager.yml").getPath())
+      .build();
     alertManagerConfigBackup = alertManagerConfigController.read();
   }
   
   @Test
-  public void testAddReceiverValidation() throws AlertManagerResponseException, AlertManagerServerException {
-    Mockito.when(client.reload()).thenReturn(Response.ok().build());
+  public void testAddReceiverValidation() {
     List<EmailConfig> emailConfigList = new ArrayList<>();
     Receiver receiver = new Receiver();
     
     Assert.assertThrows(IllegalArgumentException.class, () -> {
-      alertManagerConfigController.addReceiver(receiver);
+      AlertManagerConfig alertManagerConfig = alertManagerConfigController.read();
+      ConfigUpdater.addReceiver(alertManagerConfig, receiver);
     });
     
     Receiver receiver1 = new Receiver("team-Z-email")
-        .withEmailConfigs(emailConfigList);
+      .withEmailConfigs(emailConfigList);
     
     Assert.assertThrows(IllegalArgumentException.class, () -> {
-      alertManagerConfigController.addReceiver(receiver1);
+      AlertManagerConfig alertManagerConfig = alertManagerConfigController.read();
+      ConfigUpdater.addReceiver(alertManagerConfig, receiver1);
     });
   }
   
   @Test
   public void testAddReceiverEmail()
-      throws AlertManagerConfigUpdateException, AlertManagerDuplicateEntryException, AlertManagerResponseException,
-      AlertManagerServerException, AlertManagerConfigReadException {
-    Mockito.when(client.reload()).thenReturn(Response.ok().build());
+    throws AlertManagerConfigUpdateException, AlertManagerDuplicateEntryException, AlertManagerServerException,
+    AlertManagerConfigReadException {
     List<EmailConfig> emailConfigList = new ArrayList<>();
     emailConfigList.add(new EmailConfig("team-Z+alerts@example.org"));
     Receiver receiver = new Receiver("team-Z-email")
-        .withEmailConfigs(emailConfigList);
-    AlertManagerConfig config = alertManagerConfigController.addReceiver(receiver);
-    alertManagerConfigController.writeAndReload(config);
+      .withEmailConfigs(emailConfigList);
+    AlertManagerConfig alertManagerConfig = alertManagerConfigController.read();
+    AlertManagerConfig config = ConfigUpdater.addReceiver(alertManagerConfig, receiver);
+    alertManagerConfigController.writeAndReload(config, client);
     
-    AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
-    Assert.assertTrue(alertManagerConfig.getReceivers().contains(receiver));
+    AlertManagerConfig updatedAlertManagerConfig = this.alertManagerConfigController.read();
+    Assert.assertTrue(updatedAlertManagerConfig.getReceivers().contains(receiver));
   }
   
   @Test
-  public void testAddDuplicateReceiver() throws AlertManagerResponseException, AlertManagerServerException {
-    Mockito.when(client.reload()).thenReturn(Response.ok().build());
+  public void testAddDuplicateReceiver() {
     List<EmailConfig> emailConfigList = new ArrayList<>();
     emailConfigList.add(new EmailConfig("ermias@kth.se"));
     Receiver receiver = new Receiver("team-X-mails")
-        .withEmailConfigs(emailConfigList);
+      .withEmailConfigs(emailConfigList);
     Assert.assertThrows(AlertManagerDuplicateEntryException.class, () -> {
-      alertManagerConfigController.addReceiver(receiver);
+      AlertManagerConfig alertManagerConfig = alertManagerConfigController.read();
+      ConfigUpdater.addReceiver(alertManagerConfig, receiver);
     });
   }
   
   @Test
   public void testAddReceiverSlack()
-      throws AlertManagerConfigUpdateException, AlertManagerDuplicateEntryException, AlertManagerResponseException,
-      AlertManagerServerException, AlertManagerConfigReadException {
-    Mockito.when(client.reload()).thenReturn(Response.ok().build());
+    throws AlertManagerConfigUpdateException, AlertManagerDuplicateEntryException, AlertManagerServerException,
+    AlertManagerConfigReadException {
     List<SlackConfig> slackConfigs = new ArrayList<>();
     slackConfigs.add(new SlackConfig("https://hooks.slack.com/services/1234567890/0987654321", "#general")
-        .withIconEmoji("https://gravatar.com/avatar/e3fb1c1d58b043af5e3a6a645b7f569f")
-        .withTitle("{{ template \"hopsworks.title\" . }}")
-        .withText("{{ template \"hopsworks.text\" . }}"));
+      .withIconEmoji("https://gravatar.com/avatar/e3fb1c1d58b043af5e3a6a645b7f569f")
+      .withTitle("{{ template \"hopsworks.title\" . }}")
+      .withText("{{ template \"hopsworks.text\" . }}"));
     Receiver receiver = new Receiver("team-Z-slack")
-        .withSlackConfigs(slackConfigs);
-    AlertManagerConfig config = alertManagerConfigController.addReceiver(receiver);
-    alertManagerConfigController.writeAndReload(config);
+      .withSlackConfigs(slackConfigs);
+    AlertManagerConfig alertManagerConfig = alertManagerConfigController.read();
+    AlertManagerConfig config = ConfigUpdater.addReceiver(alertManagerConfig, receiver);
+    alertManagerConfigController.writeAndReload(config, client);
     
-    AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
-    Assert.assertTrue(alertManagerConfig.getReceivers().contains(receiver));
+    AlertManagerConfig updatedAlertManagerConfig = this.alertManagerConfigController.read();
+    Assert.assertTrue(updatedAlertManagerConfig.getReceivers().contains(receiver));
   }
   
   @Test
-  public void testAddEmailValidation() throws AlertManagerResponseException, AlertManagerServerException {
-    Mockito.when(client.reload()).thenReturn(Response.ok().build());
+  public void testAddEmailValidation() {
     EmailConfig emailConfig = new EmailConfig();
     
     Assert.assertThrows(IllegalArgumentException.class, () -> {
-      alertManagerConfigController.addEmailToReceiver("team-X-mails", emailConfig);
+      AlertManagerConfig alertManagerConfig = alertManagerConfigController.read();
+      ConfigUpdater.addEmailToReceiver(alertManagerConfig, "team-X-mails", emailConfig);
     });
   }
   
   @Test
   public void testAddEmailToReceiver()
-      throws AlertManagerConfigUpdateException, AlertManagerDuplicateEntryException, AlertManagerNoSuchElementException,
-      AlertManagerResponseException, AlertManagerServerException, AlertManagerConfigReadException {
-    Mockito.when(client.reload()).thenReturn(Response.ok().build());
+    throws AlertManagerConfigUpdateException, AlertManagerDuplicateEntryException, AlertManagerNoSuchElementException,
+    AlertManagerServerException, AlertManagerConfigReadException {
     EmailConfig emailConfig = new EmailConfig("team-X+alerts@example.org");
     Receiver receiver = new Receiver("team-X-mails");
-    AlertManagerConfig config = alertManagerConfigController.addEmailToReceiver("team-X-mails", emailConfig);
-    alertManagerConfigController.writeAndReload(config);
+    AlertManagerConfig alertManagerConfig = alertManagerConfigController.read();
+    AlertManagerConfig config = ConfigUpdater.addEmailToReceiver(alertManagerConfig, "team-X-mails", emailConfig);
+    alertManagerConfigController.writeAndReload(config, client);
     
-    AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
-    int index = alertManagerConfig.getReceivers().indexOf(receiver);
-    Receiver updatedReceiver = alertManagerConfig.getReceivers().get(index);
+    AlertManagerConfig updatedAlertManagerConfig = this.alertManagerConfigController.read();
+    int index = updatedAlertManagerConfig.getReceivers().indexOf(receiver);
+    Receiver updatedReceiver = updatedAlertManagerConfig.getReceivers().get(index);
     Assert.assertTrue(updatedReceiver.getEmailConfigs().contains(emailConfig));
   }
   
   @Test
   public void testRemoveEmailFromReceiver() throws AlertManagerNoSuchElementException, AlertManagerConfigReadException,
-      AlertManagerConfigUpdateException, AlertManagerResponseException, AlertManagerServerException {
-    Mockito.when(client.reload()).thenReturn(Response.ok().build());
+    AlertManagerConfigUpdateException, AlertManagerServerException {
     EmailConfig emailConfig = new EmailConfig("team-X@example.se");
     Receiver receiver = new Receiver("team-X-mails");
     
@@ -162,9 +170,9 @@ public class TestAlertManagerConfigController {
     int index = alertManagerConfig.getReceivers().indexOf(receiver);
     Receiver updatedReceiver = alertManagerConfig.getReceivers().get(index);
     Assert.assertTrue(updatedReceiver.getEmailConfigs().contains(emailConfig));
-  
-    AlertManagerConfig config = alertManagerConfigController.removeEmailFromReceiver("team-X-mails", emailConfig);
-    alertManagerConfigController.writeAndReload(config);
+    
+    AlertManagerConfig config = ConfigUpdater.removeEmailFromReceiver(alertManagerConfig, "team-X-mails", emailConfig);
+    alertManagerConfigController.writeAndReload(config, client);
     
     alertManagerConfig = this.alertManagerConfigController.read();
     index = alertManagerConfig.getReceivers().indexOf(receiver);
@@ -173,60 +181,61 @@ public class TestAlertManagerConfigController {
   }
   
   @Test
-  public void testAddDuplicateEmailToReceiver() throws AlertManagerResponseException, AlertManagerServerException {
-    Mockito.when(client.reload()).thenReturn(Response.ok().build());
+  public void testAddDuplicateEmailToReceiver() {
     EmailConfig emailConfig = new EmailConfig("team-X@example.se");
     Assert.assertThrows(AlertManagerDuplicateEntryException.class, () -> {
-      alertManagerConfigController.addEmailToReceiver("team-X-mails", emailConfig);
+      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
+      ConfigUpdater.addEmailToReceiver(alertManagerConfig, "team-X-mails", emailConfig);
     });
   }
   
   @Test
-  public void testAddSlackToReceiverValidation() throws AlertManagerResponseException, AlertManagerServerException {
-    Mockito.when(client.reload()).thenReturn(Response.ok().build());
+  public void testAddSlackToReceiverValidation() {
     SlackConfig slackConfig = new SlackConfig("https://hooks.slack.com/services/1234567890/0987654321", null);
     
     Assert.assertThrows(IllegalArgumentException.class, () -> {
-      alertManagerConfigController.addSlackToReceiver("slack_general", slackConfig);
+      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
+      ConfigUpdater.addSlackToReceiver(alertManagerConfig, "slack_general", slackConfig);
     });
     
     SlackConfig slackConfig1 = new SlackConfig(null, "#general");
     
     Assert.assertThrows(IllegalArgumentException.class, () -> {
-      alertManagerConfigController.addSlackToReceiver("slack_general", slackConfig1);
+      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
+      ConfigUpdater.addSlackToReceiver(alertManagerConfig, "slack_general", slackConfig1);
     });
     
     SlackConfig slackConfig2 = new SlackConfig();
     
     Assert.assertThrows(IllegalArgumentException.class, () -> {
-      alertManagerConfigController.addSlackToReceiver("slack_general", slackConfig2);
+      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
+      ConfigUpdater.addSlackToReceiver(alertManagerConfig, "slack_general", slackConfig2);
     });
   }
   
   @Test
   public void testAddSlackToReceiver()
-      throws AlertManagerConfigUpdateException, AlertManagerDuplicateEntryException, AlertManagerNoSuchElementException,
-      AlertManagerConfigReadException, AlertManagerResponseException, AlertManagerServerException {
-    Mockito.when(client.reload()).thenReturn(Response.ok().build());
+    throws AlertManagerConfigUpdateException, AlertManagerDuplicateEntryException, AlertManagerNoSuchElementException,
+    AlertManagerConfigReadException, AlertManagerServerException {
     SlackConfig slackConfig = new SlackConfig("https://hooks.slack.com/services/1234567890/0987654321", "#general")
-        .withIconEmoji("https://gravatar.com/avatar/e3fb1c1d58b043af5e3a6a645b7f569f")
-        .withTitle("{{ template \"hopsworks.title\" . }}")
-        .withText("{{ template \"hopsworks.text\" . }}");
+      .withIconEmoji("https://gravatar.com/avatar/e3fb1c1d58b043af5e3a6a645b7f569f")
+      .withTitle("{{ template \"hopsworks.title\" . }}")
+      .withText("{{ template \"hopsworks.text\" . }}");
     Receiver receiver = new Receiver("slack_general");
-    AlertManagerConfig config = alertManagerConfigController.addSlackToReceiver("slack_general", slackConfig);
-    alertManagerConfigController.writeAndReload(config);
-    
     AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
-    int index = alertManagerConfig.getReceivers().indexOf(receiver);
-    Receiver updatedReceiver = alertManagerConfig.getReceivers().get(index);
+    AlertManagerConfig config = ConfigUpdater.addSlackToReceiver(alertManagerConfig, "slack_general", slackConfig);
+    alertManagerConfigController.writeAndReload(config, client);
+    
+    AlertManagerConfig updatedAlertManagerConfig = this.alertManagerConfigController.read();
+    int index = updatedAlertManagerConfig.getReceivers().indexOf(receiver);
+    Receiver updatedReceiver = updatedAlertManagerConfig.getReceivers().get(index);
     Assert.assertTrue(updatedReceiver.getSlackConfigs().contains(slackConfig));
   }
   
   @Test
   public void testRemoveSlackFromReceiver()
-      throws AlertManagerConfigUpdateException, AlertManagerNoSuchElementException, AlertManagerConfigReadException,
-      AlertManagerResponseException, AlertManagerServerException {
-    Mockito.when(client.reload()).thenReturn(Response.ok().build());
+    throws AlertManagerConfigUpdateException, AlertManagerNoSuchElementException, AlertManagerConfigReadException,
+    AlertManagerServerException {
     SlackConfig slackConfig = new SlackConfig("https://hooks.slack.com/services/12345678901/0987654321", "#offtopic");
     Receiver receiver = new Receiver("slack_general");
     
@@ -234,9 +243,9 @@ public class TestAlertManagerConfigController {
     int index = alertManagerConfig.getReceivers().indexOf(receiver);
     Receiver updatedReceiver = alertManagerConfig.getReceivers().get(index);
     Assert.assertTrue(updatedReceiver.getSlackConfigs().contains(slackConfig));
-  
-    AlertManagerConfig config = alertManagerConfigController.removeSlackFromReceiver("slack_general", slackConfig);
-    alertManagerConfigController.writeAndReload(config);
+    
+    AlertManagerConfig config = ConfigUpdater.removeSlackFromReceiver(alertManagerConfig, "slack_general", slackConfig);
+    alertManagerConfigController.writeAndReload(config, client);
     
     alertManagerConfig = this.alertManagerConfigController.read();
     index = alertManagerConfig.getReceivers().indexOf(receiver);
@@ -246,31 +255,32 @@ public class TestAlertManagerConfigController {
   
   @Test
   public void testAddPagerdutyToReceiverValidation() throws AlertManagerResponseException, AlertManagerServerException {
-    Mockito.when(client.reload()).thenReturn(Response.ok().build());
     PagerdutyConfig pagerdutyConfig = new PagerdutyConfig().withServiceKey("serviceKey");
     pagerdutyConfig.setRoutingKey("routingKey");
     Assert.assertThrows(IllegalArgumentException.class, () -> {
-      alertManagerConfigController.addPagerdutyToReceiver("team-DB-pager", pagerdutyConfig);
+      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
+      ConfigUpdater.addPagerdutyToReceiver(alertManagerConfig, "team-DB-pager", pagerdutyConfig);
     });
     
     PagerdutyConfig pagerdutyConfig1 = new PagerdutyConfig().withServiceKey("<team-DB-key>");
     Assert.assertThrows(AlertManagerDuplicateEntryException.class, () -> {
-      alertManagerConfigController.addPagerdutyToReceiver("team-DB-pager", pagerdutyConfig1);
+      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
+      ConfigUpdater.addPagerdutyToReceiver(alertManagerConfig, "team-DB-pager", pagerdutyConfig1);
     });
   }
   
   @Test
   public void testAddPagerdutyToReceiver()
-      throws AlertManagerConfigUpdateException, AlertManagerDuplicateEntryException, AlertManagerNoSuchElementException,
-      AlertManagerConfigReadException, AlertManagerResponseException, AlertManagerServerException {
-    Mockito.when(client.reload()).thenReturn(Response.ok().build());
+    throws AlertManagerConfigUpdateException, AlertManagerDuplicateEntryException, AlertManagerNoSuchElementException,
+    AlertManagerConfigReadException, AlertManagerServerException {
     PagerdutyConfig pagerdutyConfig = new PagerdutyConfig().withServiceKey("serviceKey");
-    
+    AlertManagerConfig alertManagerConfig = alertManagerConfigController.read();
     Receiver receiver = new Receiver("team-DB-pager");
-    AlertManagerConfig config = alertManagerConfigController.addPagerdutyToReceiver("team-DB-pager", pagerdutyConfig);
-    alertManagerConfigController.writeAndReload(config);
+    AlertManagerConfig config = ConfigUpdater.addPagerdutyToReceiver(alertManagerConfig, "team-DB-pager",
+      pagerdutyConfig);
+    alertManagerConfigController.writeAndReload(config, client);
     
-    AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
+    alertManagerConfig = this.alertManagerConfigController.read();
     int index = alertManagerConfig.getReceivers().indexOf(receiver);
     Receiver updatedReceiver = alertManagerConfig.getReceivers().get(index);
     Assert.assertTrue(updatedReceiver.getPagerdutyConfigs().contains(pagerdutyConfig));
@@ -278,9 +288,7 @@ public class TestAlertManagerConfigController {
   
   @Test
   public void testRemovePagerdutyFromReceiver() throws AlertManagerConfigReadException,
-      AlertManagerNoSuchElementException, AlertManagerConfigUpdateException, AlertManagerResponseException,
-      AlertManagerServerException {
-    Mockito.when(client.reload()).thenReturn(Response.ok().build());
+    AlertManagerNoSuchElementException, AlertManagerConfigUpdateException, AlertManagerServerException {
     PagerdutyConfig pagerdutyConfig = new PagerdutyConfig().withServiceKey("<team-DB-key>");
     Receiver receiver = new Receiver("team-DB-pager");
     
@@ -288,9 +296,10 @@ public class TestAlertManagerConfigController {
     int index = alertManagerConfig.getReceivers().indexOf(receiver);
     Receiver updatedReceiver = alertManagerConfig.getReceivers().get(index);
     Assert.assertTrue(updatedReceiver.getPagerdutyConfigs().contains(pagerdutyConfig));
-  
-    AlertManagerConfig config = alertManagerConfigController.removePagerdutyFromReceiver("team-DB-pager", pagerdutyConfig);
-    alertManagerConfigController.writeAndReload(config);
+    
+    AlertManagerConfig config =
+      ConfigUpdater.removePagerdutyFromReceiver(alertManagerConfig, "team-DB-pager", pagerdutyConfig);
+    alertManagerConfigController.writeAndReload(config, client);
     
     alertManagerConfig = this.alertManagerConfigController.read();
     index = alertManagerConfig.getReceivers().indexOf(receiver);
@@ -299,30 +308,28 @@ public class TestAlertManagerConfigController {
   }
   
   @Test
-  public void testAddDuplicateSlackToReceiver() throws AlertManagerResponseException, AlertManagerServerException {
-    Mockito.when(client.reload()).thenReturn(Response.ok().build());
+  public void testAddDuplicateSlackToReceiver() {
     SlackConfig slackConfig =
-        new SlackConfig("https://hooks.slack.com/services/12345678901/e3fb1c1d58b043af5e3a6a645b7f569f", "#general")
-            .withIconEmoji("https://gravatar.com/avatar/e3fb1c1d58b043af5e3a6a645b7f569f")
-            .withTitle("{{ template \"hopsworks.title\" . }}")
-            .withText("{{ template \"hopsworks.text\" . }}");
+      new SlackConfig("https://hooks.slack.com/services/12345678901/e3fb1c1d58b043af5e3a6a645b7f569f", "#general")
+        .withIconEmoji("https://gravatar.com/avatar/e3fb1c1d58b043af5e3a6a645b7f569f")
+        .withTitle("{{ template \"hopsworks.title\" . }}")
+        .withText("{{ template \"hopsworks.text\" . }}");
     Assert.assertThrows(AlertManagerDuplicateEntryException.class, () -> {
-      alertManagerConfigController.addSlackToReceiver("slack_general", slackConfig);
+      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
+      ConfigUpdater.addSlackToReceiver(alertManagerConfig, "slack_general", slackConfig);
     });
   }
   
   @Test
   public void testRemoveReceiver()
-      throws AlertManagerConfigReadException, AlertManagerConfigUpdateException, AlertManagerResponseException,
-      AlertManagerServerException {
-    Mockito.when(client.reload()).thenReturn(Response.ok().build());
+    throws AlertManagerConfigReadException, AlertManagerConfigUpdateException, AlertManagerServerException {
     Receiver receiver = new Receiver("team-Y-mails");
     
     AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
     Assert.assertTrue(alertManagerConfig.getReceivers().contains(receiver));
-  
-    AlertManagerConfig config = alertManagerConfigController.removeReceiver("team-Y-mails", true);
-    alertManagerConfigController.writeAndReload(config);
+    
+    AlertManagerConfig config = ConfigUpdater.removeReceiver(alertManagerConfig, "team-Y-mails", true);
+    alertManagerConfigController.writeAndReload(config, client);
     
     alertManagerConfig = this.alertManagerConfigController.read();
     Assert.assertFalse(alertManagerConfig.getReceivers().contains(receiver));
@@ -330,18 +337,17 @@ public class TestAlertManagerConfigController {
   
   @Test
   public void testUpdateReceiver()
-      throws AlertManagerConfigUpdateException, AlertManagerDuplicateEntryException, AlertManagerNoSuchElementException,
-      AlertManagerConfigReadException, AlertManagerResponseException, AlertManagerServerException {
-    Mockito.when(client.reload()).thenReturn(Response.ok().build());
+    throws AlertManagerConfigUpdateException, AlertManagerDuplicateEntryException, AlertManagerNoSuchElementException,
+    AlertManagerConfigReadException, AlertManagerServerException {
     EmailConfig emailConfig = new EmailConfig("team-Y+alerts@example.org");
     List<EmailConfig> emailConfigList = new ArrayList<>();
     emailConfigList.add(emailConfig);
     Receiver receiver = new Receiver("team-Y-mail").withEmailConfigs(emailConfigList);
-  
-    AlertManagerConfig config = alertManagerConfigController.updateReceiver("team-Y-mails", receiver);
-    alertManagerConfigController.writeAndReload(config);
-    
     AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
+    AlertManagerConfig config = ConfigUpdater.updateReceiver(alertManagerConfig, "team-Y-mails", receiver);
+    alertManagerConfigController.writeAndReload(config, client);
+    
+    alertManagerConfig = this.alertManagerConfigController.read();
     int index = alertManagerConfig.getReceivers().indexOf(receiver);
     Assert.assertTrue(index > -1);
     Receiver updatedReceiver = alertManagerConfig.getReceivers().get(index);
@@ -349,29 +355,30 @@ public class TestAlertManagerConfigController {
   }
   
   @Test
-  public void testUpdateReceiverDuplicate() throws AlertManagerResponseException, AlertManagerServerException {
-    Mockito.when(client.reload()).thenReturn(Response.ok().build());
+  public void testUpdateReceiverDuplicate() {
     EmailConfig emailConfig = new EmailConfig("team-Y+alerts@example.org");
     List<EmailConfig> emailConfigList = new ArrayList<>();
     emailConfigList.add(emailConfig);
     Receiver receiver = new Receiver("team-X-mails").withEmailConfigs(emailConfigList);
     
     Assert.assertThrows(AlertManagerDuplicateEntryException.class, () -> {
-      alertManagerConfigController.updateReceiver("team-Y-mails", receiver);
+      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
+      ConfigUpdater.updateReceiver(alertManagerConfig, "team-Y-mails", receiver);
     });
   }
   
   @Test
   public void testUpdateReceiverRollback() throws AlertManagerResponseException, AlertManagerServerException,
-      AlertManagerConfigReadException {
+    AlertManagerConfigReadException {
     Mockito.when(client.reload()).thenThrow(AlertManagerResponseException.class);
     List<EmailConfig> emailConfigList = new ArrayList<>();
     emailConfigList.add(new EmailConfig("team-Z+alerts@example.org"));
     Receiver receiver = new Receiver("team-Z-email").withEmailConfigs(emailConfigList);
     
     Assert.assertThrows(AlertManagerConfigUpdateException.class, () -> {
-      AlertManagerConfig config = alertManagerConfigController.addReceiver(receiver);
-      alertManagerConfigController.writeAndReload(config);
+      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
+      AlertManagerConfig config = ConfigUpdater.addReceiver(alertManagerConfig, receiver);
+      alertManagerConfigController.writeAndReload(config, client);
     });
     
     AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
@@ -380,15 +387,16 @@ public class TestAlertManagerConfigController {
   
   @Test
   public void testUpdateReceiverRollbackServerException()
-      throws AlertManagerResponseException, AlertManagerServerException, AlertManagerConfigReadException {
+    throws AlertManagerResponseException, AlertManagerServerException, AlertManagerConfigReadException {
     Mockito.when(client.reload()).thenThrow(AlertManagerServerException.class);
     List<EmailConfig> emailConfigList = new ArrayList<>();
     emailConfigList.add(new EmailConfig("team-Z+alerts@example.org"));
     Receiver receiver = new Receiver("team-Z-email").withEmailConfigs(emailConfigList);
     
     Assert.assertThrows(AlertManagerServerException.class, () -> {
-      AlertManagerConfig config = alertManagerConfigController.addReceiver(receiver);
-      alertManagerConfigController.writeAndReload(config);
+      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
+      AlertManagerConfig config = ConfigUpdater.addReceiver(alertManagerConfig, receiver);
+      alertManagerConfigController.writeAndReload(config, client);
     });
     
     AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
@@ -396,52 +404,49 @@ public class TestAlertManagerConfigController {
   }
   
   @Test
-  public void testAddRouteValidate() throws AlertManagerResponseException, AlertManagerServerException {
-    Mockito.when(client.reload()).thenReturn(Response.ok().build());
+  public void testAddRouteValidate() {
     Map<String, String> matches = new HashMap<>();
     Route route = new Route();
     Assert.assertThrows(IllegalArgumentException.class, () -> {
-      alertManagerConfigController.addRoute(route);
+      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
+      ConfigUpdater.addRoute(alertManagerConfig, route);
     });
     Route route1 = new Route("team-X-mails").withMatch(matches);
     Assert.assertThrows(IllegalArgumentException.class, () -> {
-      alertManagerConfigController.addRoute(route1);
+      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
+      ConfigUpdater.addRoute(alertManagerConfig, route1);
     });
   }
   
   @Test
   public void testAddRoute() throws AlertManagerConfigUpdateException, AlertManagerDuplicateEntryException,
-      AlertManagerResponseException, AlertManagerServerException, AlertManagerConfigReadException,
-      AlertManagerNoSuchElementException {
-    Mockito.when(client.reload()).thenReturn(Response.ok().build());
+    AlertManagerServerException, AlertManagerConfigReadException, AlertManagerNoSuchElementException {
     Map<String, String> matches = new HashMap<>();
     matches.put("project", "project3");
     Route route = new Route("team-X-mails").withMatch(matches);
-  
-    AlertManagerConfig config = alertManagerConfigController.addRoute(route);
-    alertManagerConfigController.writeAndReload(config);
-    
     AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
+    AlertManagerConfig config = ConfigUpdater.addRoute(alertManagerConfig, route);
+    alertManagerConfigController.writeAndReload(config, client);
+    
+    alertManagerConfig = this.alertManagerConfigController.read();
     Assert.assertTrue(alertManagerConfig.getRoute().getRoutes().contains(route));
   }
   
   @Test
-  public void testAddRouteDuplicate() throws AlertManagerResponseException, AlertManagerServerException {
-    Mockito.when(client.reload()).thenReturn(Response.ok().build());
+  public void testAddRouteDuplicate() {
     Map<String, String> matches = new HashMap<>();
     matches.put("project", "project1");
     Route route = new Route("slack_general").withMatch(matches);
     
     Assert.assertThrows(AlertManagerDuplicateEntryException.class, () -> {
-      alertManagerConfigController.addRoute(route);
+      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
+      ConfigUpdater.addRoute(alertManagerConfig, route);
     });
   }
   
   @Test
   public void testUpdateRoute() throws AlertManagerConfigUpdateException, AlertManagerDuplicateEntryException,
-      AlertManagerNoSuchElementException, AlertManagerConfigReadException, AlertManagerServerException,
-      AlertManagerResponseException {
-    Mockito.when(client.reload()).thenReturn(Response.ok().build());
+    AlertManagerNoSuchElementException, AlertManagerConfigReadException, AlertManagerServerException {
     Map<String, String> matches = new HashMap<>();
     matches.put("severity", "critical");
     Route routeToUpdate = new Route("team-Y-mails").withMatch(matches);
@@ -449,18 +454,16 @@ public class TestAlertManagerConfigController {
     matches = new HashMap<>();
     matches.put("project", "project3");
     Route route = new Route("team-Y-mails").withMatch(matches);
-  
-    AlertManagerConfig config = alertManagerConfigController.updateRoute(routeToUpdate, route);
-    alertManagerConfigController.writeAndReload(config);
-    
     AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
+    AlertManagerConfig config = ConfigUpdater.updateRoute(alertManagerConfig, routeToUpdate, route);
+    alertManagerConfigController.writeAndReload(config, client);
+    
+    alertManagerConfig = this.alertManagerConfigController.read();
     Assert.assertTrue(alertManagerConfig.getRoute().getRoutes().contains(route));
   }
   
   @Test
-  public void testUpdateRouteDuplicate() throws AlertManagerResponseException, AlertManagerServerException {
-    Mockito.when(client.reload()).thenReturn(Response.ok().build());
-    
+  public void testUpdateRouteDuplicate() {
     Map<String, String> matches = new HashMap<>();
     matches.put("severity", "critical");
     Route routeToUpdate = new Route("team-Y-mails").withMatch(matches);
@@ -469,27 +472,141 @@ public class TestAlertManagerConfigController {
     matches.put("project", "project1");
     Route route = new Route("slack_general").withMatch(matches);
     Assert.assertThrows(AlertManagerDuplicateEntryException.class, () -> {
-      alertManagerConfigController.updateRoute(routeToUpdate, route);
+      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
+      ConfigUpdater.updateRoute(alertManagerConfig, routeToUpdate, route);
     });
   }
   
   @Test
   public void testRemoveRoute()
-      throws AlertManagerConfigReadException, AlertManagerConfigUpdateException, AlertManagerResponseException,
-      AlertManagerServerException {
-    Mockito.when(client.reload()).thenReturn(Response.ok().build());
+    throws AlertManagerConfigReadException, AlertManagerConfigUpdateException, AlertManagerServerException {
     Map<String, String> matches = new HashMap<>();
     matches.put("project", "project1");
     Route route = new Route("slack_general").withMatch(matches);
     
     AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
     Assert.assertTrue(alertManagerConfig.getRoute().getRoutes().contains(route));
-  
-    AlertManagerConfig config = alertManagerConfigController.removeRoute(route);
-    alertManagerConfigController.writeAndReload(config);
+    
+    AlertManagerConfig config = ConfigUpdater.removeRoute(alertManagerConfig, route);
+    alertManagerConfigController.writeAndReload(config, client);
     
     alertManagerConfig = this.alertManagerConfigController.read();
     Assert.assertFalse(alertManagerConfig.getRoute().getRoutes().contains(route));
+  }
+  
+  @Test
+  public void testPostAlert() throws AlertManagerException {
+    List<PostableAlert> postableAlerts = new ArrayList<>();
+    ClientWrapper clientWrapper = Mockito.mock(ClientWrapper.class);
+    Mockito.when(clientWrapper.postAlerts(postableAlerts)).thenReturn(Response.ok().build());
+    List<ClientWrapper> peerClients = new ArrayList<>();
+    ClientWrapper clientWrapper1 = Mockito.mock(ClientWrapper.class);
+    Mockito.when(clientWrapper1.postAlerts(postableAlerts)).thenReturn(Response.ok().build());
+    peerClients.add(clientWrapper1);
+    ClientWrapper clientWrapper2 = Mockito.mock(ClientWrapper.class);
+    Mockito.when(clientWrapper2.postAlerts(postableAlerts)).thenReturn(Response.ok().build());
+    peerClients.add(clientWrapper2);
+    
+    AlertManagerClient client = new AlertManagerClient(clientWrapper, peerClients);
+    client.postAlerts(postableAlerts);
+    
+    verify(clientWrapper, times(1)).postAlerts(postableAlerts);
+    verify(clientWrapper1, times(1)).postAlerts(postableAlerts);
+    verify(clientWrapper2, times(1)).postAlerts(postableAlerts);
+  }
+  
+  @Test
+  public void testPostAlertOnlyOne() throws AlertManagerException {
+    List<PostableAlert> postableAlerts = new ArrayList<>();
+    ClientWrapper clientWrapper = Mockito.mock(ClientWrapper.class);
+    Mockito.when(clientWrapper.postAlerts(postableAlerts)).thenThrow(new AlertManagerResponseException());
+    List<ClientWrapper> peerClients = new ArrayList<>();
+    ClientWrapper clientWrapper1 = Mockito.mock(ClientWrapper.class);
+    Mockito.when(clientWrapper1.postAlerts(postableAlerts)).thenReturn(Response.ok().build());
+    peerClients.add(clientWrapper1);
+    ClientWrapper clientWrapper2 = Mockito.mock(ClientWrapper.class);
+    Mockito.when(clientWrapper2.postAlerts(postableAlerts)).thenThrow(new AlertManagerResponseException());
+    peerClients.add(clientWrapper2);
+    
+    AlertManagerClient client = new AlertManagerClient(clientWrapper, peerClients);
+    client.postAlerts(postableAlerts);
+    
+    verify(clientWrapper, times(1)).postAlerts(postableAlerts);
+    verify(clientWrapper1, times(1)).postAlerts(postableAlerts);
+    verify(clientWrapper2, times(1)).postAlerts(postableAlerts);
+  }
+  
+  @Test
+  public void testPostAlertResponseFailure() throws AlertManagerException {
+    List<PostableAlert> postableAlerts = new ArrayList<>();
+    ClientWrapper clientWrapper = Mockito.mock(ClientWrapper.class);
+    Mockito.when(clientWrapper.postAlerts(postableAlerts)).thenThrow(new AlertManagerResponseException());
+    
+    List<ClientWrapper> peerClients = new ArrayList<>();
+    ClientWrapper clientWrapper1 = Mockito.mock(ClientWrapper.class);
+    Mockito.when(clientWrapper1.postAlerts(postableAlerts)).thenThrow(new AlertManagerResponseException());
+    peerClients.add(clientWrapper1);
+    ClientWrapper clientWrapper2 = Mockito.mock(ClientWrapper.class);
+    Mockito.when(clientWrapper2.postAlerts(postableAlerts)).thenThrow(new AlertManagerResponseException());
+    peerClients.add(clientWrapper2);
+    
+    AlertManagerClient client = new AlertManagerClient(clientWrapper, peerClients);
+    Assert.assertThrows(AlertManagerResponseException.class, () -> {
+      client.postAlerts(postableAlerts);
+    });
+    
+    verify(clientWrapper, times(1)).postAlerts(postableAlerts);
+    verify(clientWrapper1, times(1)).postAlerts(postableAlerts);
+    verify(clientWrapper2, times(1)).postAlerts(postableAlerts);
+  }
+  
+  @Test
+  public void testPostAlertServiceFailure() throws AlertManagerException {
+    List<PostableAlert> postableAlerts = new ArrayList<>();
+    ClientWrapper clientWrapper = Mockito.mock(ClientWrapper.class);
+    Mockito.when(clientWrapper.postAlerts(postableAlerts)).thenThrow(new AlertManagerServerException());
+    
+    List<ClientWrapper> peerClients = new ArrayList<>();
+    ClientWrapper clientWrapper1 = Mockito.mock(ClientWrapper.class);
+    Mockito.when(clientWrapper1.postAlerts(postableAlerts)).thenThrow(new AlertManagerServerException());
+    peerClients.add(clientWrapper1);
+    ClientWrapper clientWrapper2 = Mockito.mock(ClientWrapper.class);
+    Mockito.when(clientWrapper2.postAlerts(postableAlerts)).thenThrow(new AlertManagerServerException());
+    peerClients.add(clientWrapper2);
+    
+    AlertManagerClient client = new AlertManagerClient(clientWrapper, peerClients);
+    Assert.assertThrows(AlertManagerServerException.class, () -> {
+      client.postAlerts(postableAlerts);
+    });
+    
+    verify(clientWrapper, times(1)).postAlerts(postableAlerts);
+    verify(clientWrapper1, times(1)).postAlerts(postableAlerts);
+    verify(clientWrapper2, times(1)).postAlerts(postableAlerts);
+  }
+  
+  @Test
+  public void testPostAlertResponseAndServiceFailure() throws AlertManagerException {
+    List<PostableAlert> postableAlerts = new ArrayList<>();
+    ClientWrapper clientWrapper = Mockito.mock(ClientWrapper.class);
+    Mockito.when(clientWrapper.postAlerts(postableAlerts)).thenThrow(new AlertManagerServerException());
+    
+    List<ClientWrapper> peerClients = new ArrayList<>();
+    ClientWrapper clientWrapper1 = Mockito.mock(ClientWrapper.class);
+    Mockito.when(clientWrapper1.postAlerts(postableAlerts)).thenThrow(new AlertManagerServerException());
+    peerClients.add(clientWrapper1);
+    ClientWrapper clientWrapper2 = Mockito.mock(ClientWrapper.class);
+    Mockito.when(clientWrapper2.postAlerts(postableAlerts)).thenThrow(new AlertManagerResponseException());
+    peerClients.add(clientWrapper2);
+    
+    AlertManagerClient client = new AlertManagerClient(clientWrapper, peerClients);
+    //If there is a Response should throw Response exception
+    Assert.assertThrows(AlertManagerResponseException.class, () -> {
+      client.postAlerts(postableAlerts);
+    });
+    
+    verify(clientWrapper, times(1)).postAlerts(postableAlerts);
+    verify(clientWrapper1, times(1)).postAlerts(postableAlerts);
+    verify(clientWrapper2, times(1)).postAlerts(postableAlerts);
   }
   
   @After

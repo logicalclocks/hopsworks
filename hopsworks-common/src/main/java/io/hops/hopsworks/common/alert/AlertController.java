@@ -16,7 +16,7 @@
 package io.hops.hopsworks.common.alert;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.alert.AlertManager;
+import io.hops.hopsworks.alert.AMClient;
 import io.hops.hopsworks.alert.AlertManagerConfiguration;
 import io.hops.hopsworks.alert.dao.AlertReceiverFacade;
 import io.hops.hopsworks.alert.exception.AlertManagerAccessControlException;
@@ -67,7 +67,7 @@ import java.util.logging.Logger;
 public class AlertController {
   private static final Logger LOGGER = Logger.getLogger(AlertController.class.getName());
   @EJB
-  private AlertManager alertManager;
+  private AMClient alertManager;
   @EJB
   private AlertManagerConfiguration alertManagerConfiguration;
   @EJB
@@ -274,6 +274,7 @@ public class AlertController {
   public void cleanProjectAlerts(Project project) throws AlertManagerConfigCtrlCreateException,
       AlertManagerConfigReadException, AlertManagerUnreachableException, AlertManagerResponseException,
       AlertManagerClientCreateException, AlertManagerConfigUpdateException {
+    //TODO: clean silences
     alertManagerConfiguration.cleanProject(project);
   }
   

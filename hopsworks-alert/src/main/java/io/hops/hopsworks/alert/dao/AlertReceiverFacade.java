@@ -16,6 +16,7 @@
 package io.hops.hopsworks.alert.dao;
 
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertReceiver;
+import org.json.JSONObject;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -64,5 +65,24 @@ public class AlertReceiverFacade {
     } catch (NoResultException e) {
       return Optional.empty();
     }
+  }
+  
+  public void saveReceiverToDatabase(String oldName, String newName, JSONObject jsonObject) {
+    AlertReceiver alertReceiver;
+    Optional<AlertReceiver> optionalAlertReceiver = findByName(oldName);
+    if (optionalAlertReceiver.isPresent()) {
+      alertReceiver = optionalAlertReceiver.get();
+      alertReceiver.setName(newName);
+      alertReceiver.setConfig(jsonObject);
+      update(alertReceiver);
+    } else {
+      alertReceiver = new AlertReceiver(newName, jsonObject);
+      save(alertReceiver);
+    }
+  }
+  
+  public void removeReceiverFromDatabase(String name) {
+    Optional<AlertReceiver> optionalAlertReceiver = findByName(name);
+    optionalAlertReceiver.ifPresent(this::remove);
   }
 }
