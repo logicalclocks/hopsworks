@@ -44,7 +44,7 @@ public class CloudStorageUsageReporter {
   @PostConstruct
   public void init() {
     LOG.log(Level.INFO, "Hopsworks@Cloud - Initializing CloudStorageUsageReporter");
-    timer = timerService.createIntervalTimer(0, 15 * 60 * 1000,
+    timer = timerService.createIntervalTimer(0, 15 * 60 * 1000L,
             new TimerConfig("Cloud storage usage reporter", false));
   }
   

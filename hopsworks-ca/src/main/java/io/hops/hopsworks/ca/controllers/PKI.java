@@ -255,18 +255,6 @@ public class PKI {
       return null;
     }
   }
-  
-  private boolean lockIfHA() {
-    FencedLock lock = getLock();
-    return lock == null || lock.tryLock(3, TimeUnit.MINUTES);
-  }
-  
-  private void unlockIfHA() {
-    FencedLock lock = getLock();
-    if (lock != null) {
-      lock.unlock();
-    }
-  }
 
   public void configure() {
     conf = loadConfiguration();
@@ -295,7 +283,8 @@ public class PKI {
 
   protected void maybeInitializeCA() throws GeneralSecurityException, IOException, OperatorCreationException {
     if (!CA_INITIALIZED.getAndSet(true)) {
-      if(lockIfHA()) {
+      FencedLock lock = getLock();
+      if(lock == null || lock.tryLock(3, TimeUnit.MINUTES)) {
         try {
           LOGGER.log(Level.INFO, "Initializing CAs");
           initializeCertificateAuthorities();
@@ -304,7 +293,9 @@ public class PKI {
           LOGGER.log(Level.SEVERE, "Error initializing CAs", ex);
           throw ex;
         } finally {
-          unlockIfHA();
+          if (lock != null ) {
+            lock.unlock();
+          }
         }
       } else {
         CA_INITIALIZED.set(false);

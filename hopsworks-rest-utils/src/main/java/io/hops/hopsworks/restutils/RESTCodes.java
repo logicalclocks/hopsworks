@@ -863,7 +863,9 @@ public class RESTCodes {
     CERTIFICATE_REVOKATION_ERROR(16, "Error revoking the certificate", Response.Status.INTERNAL_SERVER_ERROR),
     CERTIFICATE_NOT_FOUND(17, "Could not find the certificate", Response.Status.BAD_REQUEST),
     CERTIFICATE_REVOKATION_USER_ERR(18, "Error revoking the certificate", Response.Status.BAD_REQUEST),
-    CERTIFICATE_SIGN_USER_ERR(19, "Error signing the certificate", Response.Status.BAD_REQUEST);
+    CERTIFICATE_SIGN_USER_ERR(19, "Error signing the certificate", Response.Status.BAD_REQUEST),
+    MASTER_ENCRYPTION_PASSWORD_RESET_ERROR(20, "Error resetting master encryption password.",
+      Response.Status.INTERNAL_SERVER_ERROR);
     
     private Integer code;
     private String message;
