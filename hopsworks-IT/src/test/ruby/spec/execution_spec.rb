@@ -114,11 +114,11 @@ describe "On #{ENV['OS']}" do
             start_execution(@project[:id], job_name)
             execution_id = json_body[:id]
             #wait till it's finished and start second execution
-            wait_for_execution_completed(@project[:id], job_name, execution_id, "ACCEPTED")
+            wait_for_execution_active(@project[:id], job_name, execution_id, "ACCEPTED", "appId")
             #start execution
             start_execution(@project[:id], job_name)
             execution_id = json_body[:id]
-            wait_for_execution_completed(@project[:id], job_name, execution_id, "ACCEPTED")
+            wait_for_execution_active(@project[:id], job_name, execution_id, "ACCEPTED", "appId")
 
             # Delete job
             delete_job(@project[:id], job_name)
