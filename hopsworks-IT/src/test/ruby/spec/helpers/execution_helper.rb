@@ -88,14 +88,12 @@ module ExecutionHelper
     begin
       wait_result = wait_for_me_time do
         get_execution(project_id, job_name, execution_id)
-        unless is_execution_active(json_body)
-          expect(json_body[:state]).to eq(expected_end_state), "job completed with state:#{json_body[:state]}"
-        end
-        found_state = json_body[:state].eql? expected_end_state
+        execution_finished = !is_execution_active(json_body)
         pp "waiting execution completed - state:#{json_body[:state]}" if defined?(@debugOpt) && @debugOpt
-        { 'success' => found_state, 'msg' => "expected:#{expected_end_state} found:#{json_body[:state]}", "result" => json_body}
+        { 'success' => execution_finished, 'msg' => "expected:#{expected_end_state} found:#{json_body[:state]}", "result" => json_body}
       end
       expect(wait_result["success"]).to be(true), wait_result["msg"]
+      expect(wait_result["result"][:state]).to eq(expected_end_state), "job completed with state:#{json_body[:state]}"
       expect(wait_result["result"][:finalStatus]).to eq(expected_final_status) unless expected_final_status.nil?
     rescue StandardError => error
       wait_for_me_time(timeout=5, delay=5) do
