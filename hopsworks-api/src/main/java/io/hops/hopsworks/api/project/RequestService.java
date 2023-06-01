@@ -132,11 +132,11 @@ public class RequestService {
     Inode inode = inodes.findById(requestDTO.getInodeId());
     //requested project
     Project proj = datasetCtrl.getOwningProject(inode);
-    Dataset ds = datasetFacade.findByProjectAndInode(proj, inode);
+    Dataset ds = datasetFacade.findByProjectAndName(proj, inode.getInodePK().getName());
 
     //requesting project
     Project project = projectFacade.find(requestDTO.getProjectId());
-    Dataset dsInRequesting = datasetFacade.findByProjectAndInode(project, inode);
+    Dataset dsInRequesting = datasetFacade.findByProjectAndName(project, inode.getInodePK().getName());
 
     if (dsInRequesting != null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, Level.INFO);
@@ -154,7 +154,7 @@ public class RequestService {
             getOwner().getLname() + ", \n\n"
             + user.getFname() + " " + user.getLname()
             + " wants access to a dataset in a project you own. \n\n"
-            + "Dataset name: " + ds.getInode().getInodePK().getName() + "\n"
+            + "Dataset name: " + ds.getName() + "\n"
             + "Project name: " + proj.getName() + "\n";
 
     if(!Strings.isNullOrEmpty(requestDTO.getMessageContent())) {
@@ -181,7 +181,7 @@ public class RequestService {
       String message = "Hi " + to.getFname() + "<br>"
               + "I would like to request access to a dataset in a project you own. <br>"
               + "Project name: " + proj.getName() + "<br>"
-              + "Dataset name: " + ds.getInode().getInodePK().getName() + "<br>"
+              + "Dataset name: " + ds.getName() + "<br>"
               + "To be shared with my project: " + project.getName() + ".<br>"
               + "Thank you in advance.";
 
@@ -209,7 +209,7 @@ public class RequestService {
     try {
       emailBean.sendEmail(proj.getOwner().getEmail(), RecipientType.TO,
               "Access request for dataset "
-              + ds.getInode().getInodePK().getName(), msg);
+              + ds.getName(), msg);
     } catch (MessagingException ex) {
       json.setErrorMsg("Could not send e-mail to " + project.getOwner().
               getEmail());

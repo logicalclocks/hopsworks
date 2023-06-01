@@ -16,11 +16,13 @@
 
 package io.hops.hopsworks.common.featurestore.transformationFunction;
 
+import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -60,11 +62,15 @@ public class TransformationFunctionController {
   @EJB
   private InodeController inodeController;
   @EJB
+  private DatasetController datasetController;
+  @EJB
   private DistributedFsService dfs;
   @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
   private FeaturestoreConnectorFacade featurestoreConnectorFacade;
+  @EJB
+  private Settings settings;
 
   private static final String TRANSFORMATIONFUNCTIONS_FOLDER = "transformation_functions";
   private static final String TRANSFORMATION_FUNCTION_FILE_TYPE = ".json";
@@ -258,8 +264,8 @@ public class TransformationFunctionController {
         .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND,
             Level.FINE, "HOPSFS Connector: " + FeaturestoreConnectorType.HOPSFS.name()));
     Dataset trainingDatasetsFolder = featurestoreConnector.getHopsfsConnector().getHopsfsDataset();
-    return inodeController.getPath(trainingDatasetsFolder.getInode())
-        + "/" + TRANSFORMATIONFUNCTIONS_FOLDER;
+    Path datasetPath = Utils.getDatasetPath(trainingDatasetsFolder, settings);
+    return datasetPath.toString() + "/" + TRANSFORMATIONFUNCTIONS_FOLDER;
   }
 
   /**

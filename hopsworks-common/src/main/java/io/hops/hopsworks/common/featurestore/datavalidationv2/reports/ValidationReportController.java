@@ -30,6 +30,7 @@ import io.hops.hopsworks.common.featurestore.datavalidationv2.results.Validation
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.util.Settings;
@@ -101,6 +102,8 @@ public class ValidationReportController {
   private FeaturestoreActivityFacade fsActivityFacade;
   @EJB
   private ValidationResultController validationResultController;
+  @EJB
+  private Settings settings;
 
   /////////////////////////////////////////////////////
   ////// VALIDATION REPORT CRUD
@@ -246,7 +249,7 @@ public class ValidationReportController {
     try {
       udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
       Dataset dataValidationDir = validationDataset.get();
-      Path targetDir = new Path(datasetController.getDatasetPath(dataValidationDir), featuregroup.getName());
+      Path targetDir = new Path(Utils.getDatasetPath(dataValidationDir, settings), featuregroup.getName());
       udfso.rm(targetDir, true);
     } catch (IOException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_DELETING_ON_DISK_VALIDATION_REPORT,
@@ -350,7 +353,7 @@ public class ValidationReportController {
 
   public Path getValidationReportDirFullPath(Featuregroup featuregroup, Dataset dataValidationDir) {
     // Dataset is confusing terminology. Get path to on_disk dataValidationDir
-    Path reportDirPath = new Path(datasetController.getDatasetPath(dataValidationDir), featuregroup.getName());
+    Path reportDirPath = new Path(Utils.getDatasetPath(dataValidationDir, settings), featuregroup.getName());
     reportDirPath = new Path(reportDirPath, featuregroup.getVersion().toString());
     return new Path(reportDirPath, "ValidationReports");
   }

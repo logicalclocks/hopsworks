@@ -20,14 +20,17 @@ import io.hops.hopsworks.common.dao.dataset.DatasetSharedWithFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.opensearch.FeaturestoreDocType;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import org.apache.hadoop.fs.Path;
 import org.javatuples.Pair;
 
 import javax.ejb.EJB;
@@ -62,6 +65,10 @@ public class DatasetAccessController {
   private DatasetSharedWithFacade dsSharedWithFacade;
   @EJB
   private TrainingDatasetController tdCtrl;
+  @EJB
+  private Settings settings;
+  @EJB
+  private InodeController inodeController;
   
   private String getDatasetType(DatasetSharedWith ds) {
     Project parentProject = ds.getDataset().getProject();
@@ -188,9 +195,11 @@ public class DatasetAccessController {
   
   private void checkSharedDatasetsAccess(Users user, Dataset dataset, ProjectsCollector collector,
     ShortLivedCache cache) {
-    if(cache.sharedWithProjectsCache.containsKey(dataset.getInodeId())) {
+    Path datasetPath = Utils.getDatasetPath(dataset, settings);
+    Inode datasetInode = inodeController.getInodeAtPath(datasetPath.toString());
+    if(cache.sharedWithProjectsCache.containsKey(datasetInode.getId())) {
       //cached
-      Set<Integer> projectIds  = cache.sharedWithProjectsCache.get(dataset.getInodeId());
+      Set<Integer> projectIds  = cache.sharedWithProjectsCache.get(datasetInode.getId());
       for(Integer projectId : projectIds) {
         Pair<Project, String> projectAux = getProjectWithCache(user, projectId, cache);
         if(projectAux != null && projectAux.getValue1() != null) {
@@ -201,7 +210,7 @@ public class DatasetAccessController {
       //not yet cached
       List<DatasetSharedWith> dsSharedWith = dsSharedWithFacade.findByDataset(dataset);
       Set<Integer> projectIds = new HashSet<>();
-      cache.sharedWithProjectsCache.put(dataset.getInodeId(), projectIds);
+      cache.sharedWithProjectsCache.put(datasetInode.getId(), projectIds);
       for(DatasetSharedWith ds : dsSharedWith) {
         projectIds.add(ds.getProject().getId());
         Pair<Project, String> projectAux = getProjectWithCache(user, ds.getProject(), cache);
@@ -220,11 +229,11 @@ public class DatasetAccessController {
       if(datasetInode == null) {
         return null;
       }
-      Dataset dataset = datasetFacade.findByProjectAndInode(project, datasetInode);
+      Dataset dataset = datasetFacade.findByProjectAndName(project, datasetInode.getInodePK().getName());
       if(dataset == null) {
         return null;
       }
-      cache.datasetCache.put(dataset.getInodeId(), dataset);
+      cache.datasetCache.put(datasetInode.getId(), dataset);
       return dataset;
     }
   }

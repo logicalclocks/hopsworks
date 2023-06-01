@@ -280,7 +280,8 @@ public class DatasetResource {
           resourceRequest = new ResourceRequest(ResourceRequest.Name.DATASET);
           Dataset ds = datasetController.getByProjectAndFullPath(project, datasetPath.getFullPath().toString());
           datasetHelper.updateDataset(project, datasetPath, ds);
-          datasetPath.setInode(ds.getInode());
+          Inode inode = inodeController.getInodeAtPath(datasetPath.getFullPath().toString());
+          datasetPath.setInode(inode);
           DatasetDTO dto = datasetBuilder.build(uriInfo, resourceRequest, user, datasetPath, null, null, false);
           return Response.created(dto.getHref()).entity(dto).build();
         } else {
@@ -372,12 +373,14 @@ public class DatasetResource {
       case PUBLISH:
         checkIfDataOwner(project, user);
         datasetPath = datasetHelper.getDatasetPathIfFileExist(project, path, datasetType);
-        datasetController.shareWithCluster(project, datasetPath.getDataset(), user, datasetPath.getFullPath());
+        datasetController.shareWithCluster(project, datasetPath.getDataset(), datasetPath.getInode(),
+          user, datasetPath.getFullPath());
         break;
       case UNPUBLISH:
         checkIfDataOwner(project, user);
         datasetPath = datasetHelper.getDatasetPathIfFileExist(project, path, datasetType);
-        datasetController.unshareFromCluster(project, datasetPath.getDataset(), user, datasetPath.getFullPath());
+        datasetController.unshareFromCluster(project, datasetPath.getDataset(), datasetPath.getInode(), user,
+          datasetPath.getFullPath());
         break;
       case IMPORT:
         checkIfDataOwner(project, user);

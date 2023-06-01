@@ -27,11 +27,13 @@ import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewMode;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.state.ProvStateParamBuilder;
@@ -46,6 +48,7 @@ import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ModelRegistryException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
@@ -53,6 +56,7 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.hadoop.fs.Path;
 import org.javatuples.Pair;
 import org.opensearch.search.sort.SortOrder;
 
@@ -103,6 +107,8 @@ public class ModelsBuilder {
   private TagBuilder tagsBuilder;
   @EJB
   private InodeController inodeController;
+  @EJB
+  private DatasetController datasetController;
   
   public ModelDTO uri(ModelDTO dto, UriInfo uriInfo, Project userProject, Project modelRegistryProject) {
     dto.setHref(uriInfo.getBaseUriBuilder()
@@ -167,7 +173,6 @@ public class ModelsBuilder {
 
         dto.setCount(fileState.getCount());
         String modelsDatasetPath = modelUtils.getModelsDatasetPath(userProject, modelRegistryProject);
-        Inode userProjectInode = inodeController.getProjectRoot(userProject.getName());
         for(ProvStateDTO fileProvStateHit: models) {
           ModelDTO modelDTO
             = build(uriInfo, resourceRequest, user, userProject,
@@ -304,13 +309,18 @@ public class ModelsBuilder {
         provFilesParamBuilder.filterByField(ProvStateParser.FieldsP.USER_ID, hdfsUsers.getId().toString());
       }
     }
-    ModelRegistryDTO modelRegistryDTO = modelsController.getModelRegistry(modelRegistryProject);
-    Inode projectInode = inodeController.getProjectRoot(modelRegistryDTO.getParentProject().getName());
+    Inode projectInode = inodeController.getProjectRoot(modelRegistryProject.getName());
+    Dataset modelsDataset = datasetController.getByName(modelRegistryProject, Settings.HOPS_MODELS_DATASET);
+    Path modelsDatasetPath = Utils.getDatasetPath(modelsDataset, settings);
+    Inode modelsDatasetInode = inodeController.getProjectDatasetInode(projectInode, modelsDatasetPath.toString(),
+      modelsDataset);
+    ModelRegistryDTO modelRegistryDTO = ModelRegistryDTO.fromDataset(modelRegistryProject, modelsDatasetInode);
     provFilesParamBuilder
             .filterByField(ProvStateParser.FieldsP.PROJECT_I_ID, projectInode.getId())
             .filterByField(ProvStateParser.FieldsP.DATASET_I_ID, modelRegistryDTO.getDatasetInodeId());
     return Pair.with(provFilesParamBuilder, modelRegistryDTO);
   }
+
 
   private void buildSortOrder(ProvStateParamBuilder provFilesParamBuilder, Set<? extends AbstractFacade.SortBy> sort) {
     if(sort != null) {

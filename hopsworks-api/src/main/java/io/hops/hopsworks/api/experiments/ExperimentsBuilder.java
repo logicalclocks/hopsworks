@@ -27,6 +27,7 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.state.ProvStateController;
@@ -49,6 +50,7 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.hadoop.fs.Path;
 import org.javatuples.Pair;
 import org.json.JSONObject;
 import org.opensearch.search.sort.SortOrder;
@@ -299,7 +301,9 @@ public class ExperimentsBuilder {
         "Provided project cannot be accessed"));
     Dataset dataset = datasetCtrl.getByName(sharingProject, Settings.HOPS_EXPERIMENTS_DATASET);
     if(dataset != null && accessCtrl.hasAccess(userProject, dataset)) {
-      return ExperimentsEndpointDTO.fromDataset(dataset);
+      Path modelsDatasetPath = Utils.getDatasetPath(dataset, settings);
+      Inode modelsDatasetInode = inodeController.getInodeAtPath(modelsDatasetPath.toString());
+      return ExperimentsEndpointDTO.fromDataset(sharingProject, modelsDatasetInode);
     }
     throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
       "Provided Endpoint cannot be accessed");

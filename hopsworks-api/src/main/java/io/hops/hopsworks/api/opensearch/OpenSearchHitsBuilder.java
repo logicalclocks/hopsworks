@@ -210,13 +210,15 @@ public class OpenSearchHitsBuilder {
       openSearchDatasetDTO.setItems(new ArrayList<>());
     }
     if (item.getDatasetIId() != null) {
-      Dataset dataset = datasetController.getDatasetByInodeId(item.getDatasetIId());
+      Inode datasetInode = inodeFacade.findById(item.getDatasetIId());
+      Project project = projectFacade.findById(item.getParentProjectId()).get();
+      Dataset dataset = datasetController.getDatasetByName(project, datasetInode.getInodePK().getName());
       if (dataset != null) {
         item.setParentProjectName(dataset.getProject().getName());
-        item.setSize(dataset.getInode().getSize());
+        item.setSize(datasetInode.getSize());
         item.setDatasetId(dataset.getId());
         item.setPublicDatasetId(dataset.getPublicDsId());
-        item.setModificationTime(new Date(dataset.getInode().getModificationTime().longValue()));
+        item.setModificationTime(new Date(datasetInode.getModificationTime().longValue()));
         item.setAccessProjects(accessProject(dataset, user));
       }
     }
@@ -240,11 +242,13 @@ public class OpenSearchHitsBuilder {
       openSearchInodeDTO.setItems(new ArrayList<>());
     }
     if (item.getParentDatasetIId() != null) {
-      Dataset dataset = datasetController.getDatasetByInodeId(item.getParentDatasetIId());
+      Inode datasetInode = inodeFacade.findById(item.getParentDatasetIId());
+      Project project = projectFacade.findById(item.getParentProjectId()).get();
+      Dataset dataset = datasetController.getDatasetByName(project, datasetInode.getInodePK().getName());
       if (dataset != null) {
         item.setParentDatasetId(dataset.getId());
         item.setParentDatasetName(dataset.getName());
-        item.setModificationTime(new Date(dataset.getInode().getModificationTime().longValue()));
+        item.setModificationTime(new Date(datasetInode.getModificationTime().longValue()));
       }
     }
     if (item.getInodeId() != null) {
