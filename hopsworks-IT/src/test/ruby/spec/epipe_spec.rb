@@ -35,7 +35,7 @@ describe "On #{ENV['OS']}" do
     it 'create op for deleted inode (recovery) - skip op' do
       project_i_id = get_project_inode(@project1)[:id]
       td = get_dataset(@project1, "#{@project1[:projectname]}_Training_Datasets")
-      td_i = get_dataset_inode(td)
+      td_i = get_dataset_inode(@project1, td)
       2.times do
         epipe_stop_restart do
           FileProv.create(inode_id:12345, inode_operation:"CREATE", io_logical_time:1, io_timestamp:123456789,
@@ -53,7 +53,7 @@ describe "On #{ENV['OS']}" do
     it 'delete op for deleted inode (recovery) - perform without issue' do
       project_i_id = get_project_inode(@project1)[:id]
       td = get_dataset(@project1, "#{@project1[:projectname]}_Training_Datasets")
-      td_i = get_dataset_inode(td)
+      td_i = get_dataset_inode(@project1, td)
       2.times do
         epipe_stop_restart do
           FileProv.create(inode_id:12345, inode_operation:"DELETE", io_logical_time:1, io_timestamp:123456789,
@@ -71,7 +71,7 @@ describe "On #{ENV['OS']}" do
     it 'xattr op for deleted node (recovery) skip op' do
       project_i_id = get_project_inode(@project1)[:id]
       td = get_dataset(@project1, "#{@project1[:projectname]}_Training_Datasets")
-      td_i = get_dataset_inode(td)
+      td_i = get_dataset_inode(@project1, td)
       2.times do
         epipe_stop_restart do
           FileProv.create(inode_id:12345, inode_operation:"XATTR_DELETE", io_logical_time:1, io_timestamp:123456789,

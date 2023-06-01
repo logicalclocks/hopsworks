@@ -45,6 +45,7 @@ import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.PythonException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -103,6 +104,8 @@ public class ExperimentsResource {
   private DatasetController datasetCtrl;
   @EJB
   private InodeController inodeController;
+  @EJB
+  private Settings settings;
 
   private Project project;
   @Logged(logLevel = LogLevel.OFF)
@@ -153,8 +156,13 @@ public class ExperimentsResource {
     Users user = jwtHelper.getUserPrincipal(sc);
     if(fileState != null) {
       Map<Long, ExperimentsEndpointDTO> endpoints = new HashMap<>();
-      endpoints.put(inodeController.getProjectRoot(project.getName()).getId(),
-        experimentsController.getExperimentsEndpoint(project));
+      Inode projectInode = inodeController.getProjectRoot(project.getName());
+      Dataset experimentsDataset = datasetCtrl.getByName(project, Settings.HOPS_EXPERIMENTS_DATASET);
+      org.apache.hadoop.fs.Path experimentsDatasetPath = Utils.getDatasetPath(experimentsDataset, settings);
+      Inode experimentsDatasetInode = inodeController.getProjectDatasetInode(projectInode,
+        experimentsDatasetPath.toString(), experimentsDataset);
+      endpoints.put(projectInode.getId(),
+        ExperimentsEndpointDTO.fromDataset(project, experimentsDatasetInode));
       ExperimentDTO dto = experimentsBuilder.build(uriInfo, resourceRequest, project, user, endpoints, fileState);
       if(dto == null) {
         throw new GenericException(RESTCodes.GenericErrorCode.NOT_AUTHORIZED_TO_ACCESS, Level.FINE);

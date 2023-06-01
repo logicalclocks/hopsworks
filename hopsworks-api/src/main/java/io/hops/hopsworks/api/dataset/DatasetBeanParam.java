@@ -33,8 +33,7 @@ public class DatasetBeanParam {
   private final Set<DatasetSharedWithSortBy> sharedWithSortBySet;
   @QueryParam("filter_by")
   @ApiParam(value =
-    "ex. filter_by=id:1, filter_by=modification_time:date (allowed date formats yyyy-MM-dd'T'HH:mm:ss.SSSZ or " +
-      "yyyy-MM-dd)",
+    "ex. filter_by=id:1",
     allowableValues = "id:1, id:2, id:3",
     allowMultiple = true)
   private Set<DatasetFilterBy> filter;

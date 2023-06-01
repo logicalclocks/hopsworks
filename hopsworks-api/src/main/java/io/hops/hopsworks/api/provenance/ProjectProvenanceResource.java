@@ -35,6 +35,8 @@ import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
+import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.provenance.core.dto.ProvDatasetDTO;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
@@ -52,6 +54,7 @@ import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
@@ -108,6 +111,10 @@ public class ProjectProvenanceResource {
   private DatasetController datasetCtrl;
   @EJB
   private DatasetHelper datasetHelper;
+  @EJB
+  private Settings settings;
+  @EJB
+  private InodeController inodeController;
 
   private Project project;
 
@@ -263,7 +270,9 @@ public class ProjectProvenanceResource {
     } else {
       throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_STATE, Level.FINE, "access type not defined");
     }
-    DatasetPath targetEndpointPath = datasetHelper.getTopLevelDatasetPath(project, targetEndpoint);
+    org.apache.hadoop.fs.Path datasetPath = Utils.getDatasetPath(targetEndpoint, settings);
+    Inode targetEndpointInode = inodeController.getInodeAtPath(datasetPath.toString());
+    DatasetPath targetEndpointPath = datasetHelper.getTopLevelDatasetPath(project, targetEndpoint, targetEndpointInode);
     ProvArtifactUsageParentDTO status
         = usageBuilder.buildAccessible(uriInfo, user, targetEndpointPath, artifactId, params.getUsageType());
     return Response.ok().entity(status).build();

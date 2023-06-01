@@ -195,7 +195,7 @@ public class DatasetController {
     if (success) {
       try {
         ds = inodes.findByInodePK(parent, dataSetName, HopsUtils.dataSetPartitionId(parent, dataSetName));
-        newDS = new Dataset(ds, project, permission);
+        newDS = new Dataset(project, ds.getInodePK().getName(), permission);
         newDS.setSearchable(isSearchable(metaStatus.getMetaStatus()));
         if (datasetDescription != null) {
           newDS.setDescription(datasetDescription);
@@ -208,7 +208,7 @@ public class DatasetController {
         Dataset logDs = getByProjectAndDsName(project,null, dataSetName);
         //set the dataset meta enabled(or prov). Support 3 level indexing
         fsProvController.updateDatasetProvType(logDs, metaStatus, dfso);
-        logDataset(project, logDs, OperationType.Add);
+        logDataset(project, logDs, ds, OperationType.Add);
       } catch (Exception e) {
         try {
           dfso.rm(new Path(dsPath), true); //if dataset persist fails rm ds folder.
@@ -289,7 +289,8 @@ public class DatasetController {
    * @throws java.io.IOException
    */
   public boolean deleteDatasetDir(Dataset dataset, Path location, DistributedFileSystemOps udfso) throws IOException {
-    OperationsLog log = new OperationsLog(dataset, OperationType.Delete);
+    Inode datasetInodeId = inodeController.getInodeAtPath(location.toString());
+    OperationsLog log = new OperationsLog(dataset, datasetInodeId.getId(), OperationType.Delete);
     boolean success = udfso.rm(location, true);
     if (success) {
       operationsLogFacade.persist(log);
@@ -439,26 +440,11 @@ public class DatasetController {
     }
   }
 
-  public void logDataset(Project project, Dataset dataset, OperationType type) {
+  public void logDataset(Project project, Dataset dataset, Inode datasetInode, OperationType type) {
     if (dataset.isShared(project) || !dataset.isSearchable()) {
       return;
     }
-    operationsLogFacade.persist(new OperationsLog(dataset, type));
-  }
-
-  public Path getDatasetPath(Dataset ds) {
-    Path path = null;
-    switch (ds.getDsType()) {
-      case DATASET:
-        Project owningProject = getOwningProject(ds);
-        path = new Path(Utils.getProjectPath(owningProject.getName()), ds.getInode().getInodePK().getName());
-        break;
-      case FEATURESTORE:
-      case HIVEDB:
-        path = new Path(settings.getHiveWarehouse(), ds.getInode().getInodePK().getName());
-    }
-
-    return path;
+    operationsLogFacade.persist(new OperationsLog(dataset, datasetInode.getId(), type));
   }
 
   public Project getOwningProject(Dataset ds) {
@@ -517,12 +503,8 @@ public class DatasetController {
     return false;
   }
 
-  public Dataset getDatasetByInodeId(Long inodeId) {
-    Inode inode = inodes.findById(inodeId);
-    if(inode == null) {
-      return null;
-    }
-    return datasetFacade.findByInode(inode);
+  public Dataset getDatasetByName(Project project, String name) {
+    return datasetFacade.findByProjectAndName(project, name);
   }
 
   /**
@@ -575,16 +557,8 @@ public class DatasetController {
     return result;
   }
 
-  public Dataset getByProjectAndInodeId(Project project, Long dsInodeId) throws DatasetException {
-    Inode inode = inodes.findById(dsInodeId);
-    if(inode == null) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
-    }
-    return getByProjectAndInode(project, inode);
-  }
-
   public Dataset getByProjectAndInode(Project project, Inode inode) {
-    Dataset dataset = datasetFacade.findByInode(inode);
+    Dataset dataset = datasetFacade.findByProjectAndName(project, inode.getInodePK().getName());
     if (dataset != null && !dataset.getProject().equals(project)) { //not owned by project check shared
       DatasetSharedWith datasetSharedWith = datasetSharedWithFacade.findByProjectAndDataset(project, dataset);
       if (datasetSharedWith == null) {
@@ -599,9 +573,10 @@ public class DatasetController {
     if (project == null || inode == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE, "path: " + fullPath);
     }
-    Dataset dataset = datasetFacade.findByProjectAndInode(project, inode);
-    if (dataset == null) { // not owned by project check shared
-      dataset = datasetFacade.findByInode(inode);
+    Dataset dataset = datasetFacade.findByProjectAndName(project, inode.getInodePK().getName());
+    Project owningProject = getOwningProject(inode);
+    if (!project.getName().equals(owningProject.getName())) { // not owned by project check shared
+      dataset = datasetFacade.findByProjectAndName(owningProject, inode.getInodePK().getName());
       if (dataset == null) {
         throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE, "path: " + fullPath);
       }
@@ -768,7 +743,7 @@ public class DatasetController {
     Inode projectInode = inodeController.getProjectRoot(project.getName());
     String trainingDatasetName = project.getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName();
     Inode inode = inodes.findByParentAndName(projectInode, trainingDatasetName);
-    return datasetFacade.findByProjectAndInode(project, inode);
+    return datasetFacade.findByProjectAndName(project, inode.getInodePK().getName());
   }
 
   private void shareFeatureStoreServiceDataset(Users user, Project project, Project targetProject,
@@ -786,7 +761,7 @@ public class DatasetController {
   private Dataset getFeatureStoreServiceDataset(Project project, Settings.ServiceDataset serviceDataset) {
     Inode projectInode = inodeController.getProjectRoot(project.getName());
     Inode inode = inodes.findByParentAndName(projectInode, serviceDataset.getName());
-    return datasetFacade.findByProjectAndInode(project, inode);
+    return datasetFacade.findByProjectAndName(project, inode.getInodePK().getName());
   }
 
   private DatasetSharedWith shareInternal(Project targetProject, Dataset ds,
@@ -1129,6 +1104,9 @@ public class DatasetController {
         }
         if (isDataset) {
           success = deleteDatasetDir(dataset, fullPath, dfso);
+          if(success) {
+            datasetFacade.removeDataset(dataset);
+          }
         } else {
           success = dfso.rm(fullPath, true);
         }
@@ -1426,7 +1404,8 @@ public class DatasetController {
     }
   }
 
-  public void shareWithCluster(Project project, Dataset dataset, Users user, Path path) throws DatasetException {
+  public void shareWithCluster(Project project, Dataset dataset, Inode datasetInode, Users user, Path path)
+    throws DatasetException {
     if (dataset.isPublicDs()) {
       return;
     }
@@ -1435,12 +1414,13 @@ public class DatasetController {
     }
     dataset.setPublicDs(SharedState.CLUSTER.state);
     makeImmutable(dataset, project, user, path);//will update dataset
-    logDataset(project, dataset, OperationType.Update);
+    logDataset(project, dataset, datasetInode, OperationType.Update);
     activityFacade.persistActivity(ActivityFacade.SHARED_DATA + dataset.getName() + " with cluster ",
       project, user, ActivityFlag.DATASET);
   }
 
-  public void unshareFromCluster(Project project, Dataset dataset, Users user, Path path) throws DatasetException {
+  public void unshareFromCluster(Project project, Dataset dataset, Inode datasetInode, Users user, Path path)
+    throws DatasetException {
     if (!dataset.isPublicDs()) {
       return;
     }
@@ -1455,7 +1435,7 @@ public class DatasetController {
     }
     dataset.setPublicDsState(SharedState.PRIVATE);
     datasetFacade.merge(dataset);
-    logDataset(project, dataset, OperationType.Update);
+    logDataset(project, dataset, datasetInode, OperationType.Update);
     activityFacade.persistActivity(ActivityFacade.UNSHARED_DATA + dataset.getName() + " from cluster ",
       project, user, ActivityFlag.DATASET);
   }

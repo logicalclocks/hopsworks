@@ -16,6 +16,8 @@
 package io.hops.hopsworks.common.hdfs.inode;
 
 import io.hops.common.Pair;
+import io.hops.hopsworks.persistence.entity.dataset.Dataset;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.hdfs.Utils;
@@ -93,6 +95,23 @@ public class InodeController {
    */
   public Inode getProjectRoot(String name) {
     return getInode(Utils.getProjectPath(name));
+  }
+
+  /**
+   * Get the Inode representing a top-level dataset in the project with
+   * given name.
+   * <p/>
+   * @param projectInode
+   * @param datasetPath
+   * @param dataset
+   * @return The sought for Inode, or null if this Inode does not exist.
+   */
+  public Inode getProjectDatasetInode(Inode projectInode, String datasetPath, Dataset dataset) {
+    if(dataset.getDsType().equals(DatasetType.FEATURESTORE) || dataset.getDsType().equals(DatasetType.HIVEDB)) {
+      return getInodeAtPath(datasetPath);
+    } else {
+      return getInode(projectInode, 3, new String[]{dataset.getName()});
+    }
   }
   
   /**

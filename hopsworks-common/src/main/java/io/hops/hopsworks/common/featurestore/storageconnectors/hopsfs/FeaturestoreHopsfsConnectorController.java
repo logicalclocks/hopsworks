@@ -18,7 +18,9 @@ package io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
@@ -43,7 +45,8 @@ public class FeaturestoreHopsfsConnectorController {
   private InodeController inodeController;
   @EJB
   private DatasetController datasetController;
-
+  @EJB
+  private Settings settings;
   /**
    * Creates a HOPSFS storage connector for a feature store
    *
@@ -94,7 +97,7 @@ public class FeaturestoreHopsfsConnectorController {
     FeaturestoreHopsfsConnectorDTO featurestoreHopsfsConnectorDTO = new
         FeaturestoreHopsfsConnectorDTO(featurestoreConnector);
     featurestoreHopsfsConnectorDTO.setHopsfsPath(
-        inodeController.getPath(featurestoreConnector.getHopsfsConnector().getHopsfsDataset().getInode()));
+        Utils.getDatasetPath(featurestoreConnector.getHopsfsConnector().getHopsfsDataset(), settings).toString());
     return featurestoreHopsfsConnectorDTO;
   }
 }

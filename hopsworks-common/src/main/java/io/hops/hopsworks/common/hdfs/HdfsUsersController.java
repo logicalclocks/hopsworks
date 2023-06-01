@@ -320,7 +320,7 @@ public class HdfsUsersController {
     if (project == null || ds == null) {
       return null;
     }
-    return project.getName() + USER_NAME_DELIMITER + ds.getInode().getInodePK().getName();
+    return project.getName() + USER_NAME_DELIMITER + ds.getName();
   }
   
   /**
@@ -359,7 +359,7 @@ public class HdfsUsersController {
     if (dataset == null) {
       return null;
     }
-    return dataset.getProject().getName() + USER_NAME_DELIMITER + dataset.getInode().getInodePK().getName();
+    return dataset.getProject().getName() + USER_NAME_DELIMITER + dataset.getName();
   }
   
   

@@ -42,6 +42,7 @@ import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
@@ -58,7 +59,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -86,6 +86,8 @@ public class ExperimentsController {
   private DistributedFsService dfs;
   @EJB
   private InodeController inodeController;
+  @EJB
+  private Settings settings;
   
   public void attachExperiment(Users user, Project project, String id, ExperimentDTO experimentSummary)
     throws DatasetException, ProvenanceException, MetadataException, ExperimentsException {
@@ -203,12 +205,13 @@ public class ExperimentsController {
   }
   
   public List<ExperimentsEndpointDTO> getExperimentsEndpoints(Project project) {
-    return datasetController.getAllByName(project, Settings.HOPS_EXPERIMENTS_DATASET).stream()
-      .map(ExperimentsEndpointDTO::fromDataset)
-      .collect(Collectors.toCollection(ArrayList::new));
-  }
-  
-  public ExperimentsEndpointDTO getExperimentsEndpoint(Project project) throws DatasetException {
-    return ExperimentsEndpointDTO.fromDataset(datasetController.getByName(project, Settings.HOPS_EXPERIMENTS_DATASET));
+    List<Dataset> datasets = datasetController.getAllByName(project, Settings.HOPS_EXPERIMENTS_DATASET);
+    List<ExperimentsEndpointDTO> experimentsEndpointDTOS = new ArrayList<>();
+    for(Dataset dataset: datasets) {
+      Path experimentsDatasetPath = Utils.getDatasetPath(dataset, settings);
+      Inode experimentsDatasetInode = inodeController.getInodeAtPath(experimentsDatasetPath.toString());
+      experimentsEndpointDTOS.add(ExperimentsEndpointDTO.fromDataset(dataset.getProject(), experimentsDatasetInode));
+    }
+    return experimentsEndpointDTOS;
   }
 }

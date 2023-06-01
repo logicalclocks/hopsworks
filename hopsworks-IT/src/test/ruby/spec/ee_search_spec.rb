@@ -284,7 +284,7 @@ describe "On #{ENV['OS']}" do
         featurestore_name = @project1[:projectname].downcase + "_featurestore.db"
         featurestore1 = get_dataset(@project1, featurestore_name)
         training_dataset_name = @project1[:projectname] + "_Training_Datasets"
-        request_access_by_dataset(featurestore1, @project2)
+        request_access_by_dataset(@project1, featurestore1, @project2)
         share_dataset_checked(@project1, featurestore_name, @project2[:projectname], datasetType: "FEATURESTORE")
         accept_dataset_checked(@project2, "#{@project1[:projectname]}::#{training_dataset_name}", datasetType: "DATASET")
         @fgs1 = featuregroups_setup(@project1)

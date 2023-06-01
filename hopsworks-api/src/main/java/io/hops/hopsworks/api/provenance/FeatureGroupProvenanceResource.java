@@ -20,14 +20,19 @@ import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
+import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.explicit.ProvExplicitLink;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -42,6 +47,10 @@ public class FeatureGroupProvenanceResource extends ProvenanceResource<Featuregr
   private FeaturestoreController featurestoreController;
   @EJB
   private FeaturegroupController featureGroupController;
+  @EJB
+  private Settings settings;
+  @EJB
+  private InodeController inodeController;
   
   private Featurestore featureStore;
   private Integer featureGroupId;
@@ -79,6 +88,8 @@ public class FeatureGroupProvenanceResource extends ProvenanceResource<Featuregr
   @Override
   protected DatasetPath getArtifactDatasetPath() throws FeaturestoreException, DatasetException {
     Dataset targetEndpoint = featurestoreController.getProjectFeaturestoreDataset(featureStore.getProject());
-    return datasetHelper.getTopLevelDatasetPath(project, targetEndpoint);
+    Path targetEndpointPath = Utils.getDatasetPath(targetEndpoint, settings);
+    Inode targetEndpointInode = inodeController.getInodeAtPath(targetEndpointPath.toString());
+    return datasetHelper.getTopLevelDatasetPath(project, targetEndpoint, targetEndpointInode);
   }
 }

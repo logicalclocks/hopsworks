@@ -1796,14 +1796,18 @@ public class ProjectController {
   private void fixSharedDatasets(Project project, DistributedFileSystemOps dfso) throws IOException {
     List<DatasetSharedWith> sharedDataSets = datasetSharedWithFacade.findByProject(project);
     for (DatasetSharedWith dataSet : sharedDataSets) {
-      String owner = dataSet.getDataset().getInode().getHdfsUser().getName();
-      String group = dataSet.getDataset().getInode().getHdfsGroup().getName();
-      List<Inode> children = new ArrayList<>();
-      inodeController.getAllChildren(dataSet.getDataset().getInode(), children);
-      for (Inode child : children) {
-        if (child.getHdfsUser().getName().startsWith(project.getName() + "__")) {
-          Path childPath = new Path(inodeController.getPath(child));
-          dfso.setOwner(childPath, owner, group);
+      Inode sharedDsInode = inodeController.getInodeAtPath(Utils.getDatasetPath(dataSet.getDataset(),
+        settings).toString());
+      if(sharedDsInode != null) {
+        String owner = sharedDsInode.getHdfsUser().getName();
+        String group = sharedDsInode.getHdfsGroup().getName();
+        List<Inode> children = new ArrayList<>();
+        inodeController.getAllChildren(sharedDsInode, children);
+        for (Inode child : children) {
+          if (child.getHdfsUser().getName().startsWith(project.getName() + "__")) {
+            Path childPath = new Path(inodeController.getPath(child));
+            dfso.setOwner(childPath, owner, group);
+          }
         }
       }
     }
@@ -2024,7 +2028,7 @@ public class ProjectController {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "project: " + name);
     }
     //find the project as an inode from hops database
-    Inode inode = inodeController.getInodeAtPath(Utils.getProjectPath(name));
+    Inode projectInode = inodeController.getInodeAtPath(Utils.getProjectPath(name));
 
     List<ProjectTeam> projectTeam = projectTeamFacade.findMembersByProject(
       project);
@@ -2034,22 +2038,38 @@ public class ProjectController {
     for (ProjectServiceEnum s : projectServices) {
       services.add(s.toString());
     }
-    Inode parent;
     List<InodeView> kids = new ArrayList<>();
 
     Collection<Dataset> dsInProject = project.getDatasetCollection();
     Collection<DatasetSharedWith> dsSharedWithProject = project.getDatasetSharedWithCollection();
     for (Dataset ds : dsInProject) {
-      parent = inodes.findParent(ds.getInode());
-      kids.add(new InodeView(parent, ds, inodeController.getPath(ds.getInode())));
+      if(ds.getDsType().equals(DatasetType.DATASET)) {
+        Path datasetPath = Utils.getDatasetPath(ds, settings);
+        Inode dsInode = inodeController.getProjectDatasetInode(projectInode, datasetPath.toString(), ds);
+        kids.add(new InodeView(projectInode, dsInode, ds, datasetPath.toString()));
+      } else {
+        Path datasetPath = Utils.getDatasetPath(ds, settings);
+        Inode dsInode = inodeController.getInodeAtPath(datasetPath.toString());
+        kids.add(new InodeView(projectInode, dsInode, ds, datasetPath.toString()));
+      }
     }
     for (DatasetSharedWith ds : dsSharedWithProject) {
-      parent = inodes.findParent(ds.getDataset().getInode());
-      kids.add(new InodeView(parent, ds, inodeController.getPath(ds.getDataset().getInode())));
+      if(ds.getDataset().getDsType().equals(DatasetType.DATASET)) {
+        Inode sharedProjectInode = inodeController.getProjectRoot(ds.getProject().getName());
+        Path datasetPath = Utils.getDatasetPath(ds.getDataset(), settings);
+        Inode dsInode = inodeController.getProjectDatasetInode(sharedProjectInode, datasetPath.toString(),
+          ds.getDataset());
+        kids.add(new InodeView(sharedProjectInode, dsInode, ds, datasetPath.toString()));
+      } else {
+        Path datasetPath = Utils.getDatasetPath(ds.getDataset(), settings);
+        Inode dsInode = inodeController.getInodeAtPath(datasetPath.toString());
+        Inode parent = inodes.findParent(dsInode);
+        kids.add(new InodeView(parent, dsInode, ds, datasetPath.toString()));
+      }
     }
 
     //send the project back to client
-    return new ProjectDTO(project, inode.getId(), services, projectTeam, kids,
+    return new ProjectDTO(project, projectInode.getId(), services, projectTeam, kids,
         projectUtils.dockerImageIsPreinstalled(project.getDockerImage()),
             projectUtils.isOldDockerImage(project.getDockerImage()));
   }

@@ -92,6 +92,19 @@ public final class Utils {
       return "/" + Settings.DIR_ROOT + "/" + dataset.getProject().getName() + "/" + dataset.getName() + "/";
     }
   }
+
+  public static Path getDatasetPath(Dataset ds, Settings settings) {
+    Path path = null;
+    switch (ds.getDsType()) {
+      case DATASET:
+        path = new Path(Utils.getProjectPath(ds.getProject().getName()), ds.getName());
+        break;
+      case FEATURESTORE:
+      case HIVEDB:
+        path = new Path(settings.getHiveWarehouse(), ds.getName());
+    }
+    return path;
+  }
   
   /**
    * Assemble the log output path of Hopsworks jobs.

@@ -40,9 +40,7 @@
 package io.hops.hopsworks.persistence.entity.dataset;
 
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import org.apache.hadoop.fs.permission.FsPermission;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.Basic;
@@ -55,7 +53,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -67,7 +64,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import java.io.Serializable;
 import java.util.Collection;
-
 
 @Entity
 @Table(name = "dataset",
@@ -81,14 +77,11 @@ import java.util.Collection;
     @NamedQuery(name = "Dataset.findById",
       query = "SELECT d FROM Dataset d WHERE d.id = :id")
   ,
-    @NamedQuery(name = "Dataset.findByInode",
-      query = "SELECT d FROM Dataset d WHERE d.inode = :inode")
-  ,
     @NamedQuery(name = "Dataset.findByProject",
       query = "SELECT d FROM Dataset d WHERE d.project = :project")
   ,
-    @NamedQuery(name = "Dataset.findByProjectAndInode",
-      query = "SELECT d FROM Dataset d WHERE d.project = :project AND d.inode = :inode")
+  @NamedQuery(name = "Dataset.findByProjectAndName",
+    query = "SELECT d FROM Dataset d WHERE d.project = :project AND d.name = :name")
   ,
     @NamedQuery(name = "Dataset.findBySearchable",
       query = "SELECT d FROM Dataset d WHERE d.searchable = :searchable")
@@ -118,22 +111,8 @@ public class Dataset implements Serializable {
   @Basic(optional = false)
   @Column(name = "id")
   private Integer id;
-  @JoinColumns({
-    @JoinColumn(name = "inode_pid",
-      referencedColumnName = "parent_id"),
-    @JoinColumn(name = "inode_name",
-      referencedColumnName = "name"),
-    @JoinColumn(name = "partition_id",
-      referencedColumnName = "partition_id")})
-  @ManyToOne(optional = false)
-  private Inode inode;
   @Basic(optional = false)
-  @Column(name = "inode_id")
-  private Long inodeId;
-  @Basic(optional = false)
-  @Column(name = "inode_name",
-    updatable = false,
-    insertable = false)
+  @Column(name = "inode_name")
   private String name;
   @Size(max = 2000)
   @Column(name = "description")
@@ -181,26 +160,19 @@ public class Dataset implements Serializable {
     this.id = id;
   }
   
-  public Dataset(Integer id, Inode inode) {
+  public Dataset(Integer id, String name) {
     this.id = id;
-    this.inode = inode;
-    this.name = inode.getInodePK().getName();
-    this.inodeId = inode.getId();
+    this.name = name;
   }
   
-  public Dataset(Inode inode, Project project, DatasetAccessPermission permission) {
-    this.inode = inode;
+  public Dataset(Project project, String name, DatasetAccessPermission permission) {
     this.project = project;
-    this.name = inode.getInodePK().getName();
-    this.inodeId = inode.getId();
+    this.name = name;
     this.permission = permission;
   }
   
   public Dataset(Dataset ds, Project project){
-    this.inode = ds.getInode();
     this.project = project;
-    this.name = ds.getInode().getInodePK().getName();
-    this.inodeId = ds.getInode().getId();
     this.searchable = ds.isSearchable();
     this.description = ds.getDescription();
     this.publicDs = ds.getPublicDs();
@@ -214,16 +186,6 @@ public class Dataset implements Serializable {
 
   public void setId(Integer id) {
     this.id = id;
-  }
-  
-  public Inode getInode() {
-    return inode;
-  }
-  
-  public void setInode(Inode inode) {
-    this.inode = inode;
-    this.inodeId = inode.getId();
-    this.name = inode.getInodePK().getName();
   }
   
   public String getName() {
@@ -327,15 +289,6 @@ public class Dataset implements Serializable {
   
   public boolean isShared(Project project) {
     return !this.project.equals(project);
-  }
-  
-  public Long getInodeId() {
-    return this.getInode().getId();
-  }
-  
-  public DatasetPermissions getFilePermissions() {
-    FsPermission fsPermission = new FsPermission(this.inode.getPermission());
-    return DatasetPermissions.fromFilePermissions(fsPermission);
   }
   
   public DatasetAccessPermission getPermission() {

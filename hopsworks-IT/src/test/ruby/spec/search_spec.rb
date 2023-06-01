@@ -103,8 +103,8 @@ describe "On #{ENV['OS']}" do
       tds[2] = {}
       tds[2][:name] = "td_something3"
       td3_features = [
-          { name: "dog", featuregroup: "fg", version: 1, type: "INT", description: "testfeaturedescription"},
-          { name: "feature2", featuregroup: "fg", version: 1, type: "INT", description: "testfeaturedescription"}
+          { name: "dog", featuregroup: "fg", type: "INT"},
+          { name: "feature2", featuregroup: "fg", type: "INT"}
       ]
       td_json, _ = create_hopsfs_training_dataset_checked(project[:id], featurestore_id, connector, name: tds[2][:name], features: td3_features)
       tds[2][:id] = td_json[:id]
@@ -180,7 +180,7 @@ describe "On #{ENV['OS']}" do
 
       def get_td_features(fg_name, fg_features)
         td_features = Array.new(fg_features.size()) do |i|
-          { name:  fg_features[i][:name], featureGroupFeatureName: fg_name, version: 1, type: "INT", description: "" }
+          { name:  fg_features[i][:name], featureGroupFeatureName: fg_name, type: "INT" }
         end
         return td_features
       end

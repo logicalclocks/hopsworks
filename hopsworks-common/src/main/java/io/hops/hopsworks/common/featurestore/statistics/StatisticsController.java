@@ -22,6 +22,7 @@ import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeatureGroupCom
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.util.Settings;
@@ -74,6 +75,8 @@ public class StatisticsController {
   private FeatureGroupCommitController featureGroupCommitCommitController;
   @EJB
   private FeaturestoreActivityFacade fsActivityFacade;
+  @EJB
+  private Settings settings;
 
   public String readStatisticsContent(Project project, Users user, FeaturestoreStatistic statistic)
       throws FeaturestoreException {
@@ -181,7 +184,7 @@ public class StatisticsController {
       Dataset statistics = getOrCreateStatisticsDataset(project, user);
 
       // Create the directory
-      Path subDir = new Path(datasetController.getDatasetPath(statistics), entitySubDir);
+      Path subDir = new Path(Utils.getDatasetPath(statistics, settings), entitySubDir);
       if (!udfso.isDir(subDir.toString())) {
         udfso.mkdir(subDir.toString());
       }
@@ -233,7 +236,7 @@ public class StatisticsController {
       Dataset statistics = getOrCreateStatisticsDataset(project, user);
 
       // Construct the directory path
-      Path subDir = new Path(datasetController.getDatasetPath(statistics), entitySubDir);
+      Path subDir = new Path(Utils.getDatasetPath(statistics, settings), entitySubDir);
       Path dirPath = new Path(subDir, dirName);
 
       // delete json files

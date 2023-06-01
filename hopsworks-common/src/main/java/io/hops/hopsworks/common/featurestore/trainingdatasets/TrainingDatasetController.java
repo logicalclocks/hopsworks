@@ -173,6 +173,8 @@ public class TrainingDatasetController {
   private FilterController filterController;
   @Inject
   private FsJobManagerController fsJobManagerController;
+  @Inject
+  private Settings settings;
 
   /**
    * Gets all trainingDatasets for a particular featurestore and project
@@ -376,7 +378,7 @@ public class TrainingDatasetController {
     // we allow specifying the path in the training dataset dir, but it is not really used, this option will be
     // deprecated for hopsfs training datasets.
     String trainingDatasetPath = getTrainingDatasetPath(
-        inodeController.getPath(trainingDatasetsFolder.getInode()),
+        Utils.getDatasetPath(trainingDatasetsFolder, settings).toString(),
         trainingDatasetDTO.getName(), trainingDatasetDTO.getVersion());
 
     DistributedFileSystemOps udfso = null;
@@ -423,9 +425,9 @@ public class TrainingDatasetController {
       case EXTERNAL_TRAINING_DATASET:
         return null;
       default: {
-        String trainingDatasetRootPath = getTrainingDatasetPath(inodeController.getPath(
-            getHopsFsConnector(trainingDataset).getHopsfsConnector().getHopsfsDataset().getInode()),
-            trainingDataset.getName(), trainingDataset.getVersion());
+        String trainingDatasetRootPath = getTrainingDatasetPath(
+          Utils.getDatasetPath(getHopsFsConnector(trainingDataset).getHopsfsConnector().getHopsfsDataset(),
+            settings).toString(), trainingDataset.getName(), trainingDataset.getVersion());
 
         String username = hdfsUsersBean.getHdfsUserName(trainingDataset.getFeaturestore().getProject(), user);
 

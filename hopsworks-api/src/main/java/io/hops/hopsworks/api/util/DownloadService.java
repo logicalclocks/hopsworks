@@ -66,6 +66,7 @@ import io.hops.hopsworks.jwt.exception.VerificationException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetPermissions;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
@@ -92,6 +93,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.javatuples.Pair;
 
 @Logged
@@ -247,7 +249,11 @@ public class DownloadService {
     String projectUsername = hdfsUsersController.getHdfsUserName(project, user);
 
     Dataset ds = datasetPath.getDataset();
-    if (ds.isShared(project) && ds.getFilePermissions().equals(DatasetPermissions.OWNER_ONLY) && !ds.isPublicDs()) {
+    Inode dsInode = datasetPath.getInode();
+    FsPermission fsPermission = new FsPermission(dsInode.getPermission());
+
+    if (!ds.isPublicDs() && ds.isShared(project) &&
+      DatasetPermissions.fromFilePermissions(fsPermission).equals(DatasetPermissions.OWNER_ONLY)) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.FINE);
     }
 

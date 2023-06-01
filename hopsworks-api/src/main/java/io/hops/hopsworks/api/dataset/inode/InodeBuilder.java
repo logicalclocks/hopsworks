@@ -141,7 +141,8 @@ public class InodeBuilder {
     uri(dto, uriInfo);
     expand(dto, resourceRequest);
     if (dto.isExpand()) {
-      dto.setAttributes(inodeAttributeBuilder.build(new InodeAttributeDTO(), resourceRequest, inode, null, null));
+      dto.setAttributes(inodeAttributeBuilder.build(new InodeAttributeDTO(), resourceRequest, inode,
+        datasetPath.getFullPath().getParent().toString(), null));
       dto.setTags(tagsBuilder.build(new InodeTagUri(uriInfo), resourceRequest, user, datasetPath));
       setZipState(dto, inode);
     }
@@ -155,7 +156,8 @@ public class InodeBuilder {
     uri(dto, uriInfo);
     expand(dto, resourceRequest);
     if (dto.isExpand()) {
-      dto.setAttributes(inodeAttributeBuilder.build(new InodeAttributeDTO(), resourceRequest, inode, null, null));
+      dto.setAttributes(inodeAttributeBuilder.build(new InodeAttributeDTO(), resourceRequest, inode,
+        datasetPath.getFullPath().getParent().toString(), null));
       dto.setTags(tagsBuilder.build(new InodeTagUri(uriInfo), resourceRequest, user, datasetPath));
     }
     List<String> ext = Stream.of(FilePreviewImageTypes.values())

@@ -44,7 +44,6 @@ import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
-import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -100,7 +99,7 @@ public class ProvUsageBuilder {
     usage.setProjectId(targetEndpoint.getDataset().getProject().getId());
     usage.setProjectName(targetEndpoint.getDataset().getProject().getName());
     
-    ProvOpsParamBuilder params = getBasicUsageOpsParams(targetEndpoint.getDataset(), artifactId);
+    ProvOpsParamBuilder params = getBasicUsageOpsParams(targetEndpoint, artifactId);
     ProvOpsDTO ops = opsBuilder.build(targetEndpoint.getDataset().getProject(), params, ProvOpsReturnType.AGGREGATIONS);
     Optional<ProvOpsDTO> aggregation = ops.getItems().stream()
       .filter(agg -> agg.getAggregation() != null
@@ -141,7 +140,7 @@ public class ProvUsageBuilder {
     return usage;
   }
   
-  private ProvOpsParamBuilder getBasicUsageOpsParams(Dataset targetEndpoint, String artifactId)
+  private ProvOpsParamBuilder getBasicUsageOpsParams(DatasetPath targetEndpoint, String artifactId)
     throws ProvenanceException {
     return new ProvOpsParamBuilder()
       .filterByField(ProvOps.FieldsP.ML_ID, artifactId)
