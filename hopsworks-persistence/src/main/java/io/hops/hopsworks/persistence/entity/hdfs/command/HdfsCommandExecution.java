@@ -15,7 +15,6 @@
  */
 package io.hops.hopsworks.persistence.entity.hdfs.command;
 
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 
 import javax.persistence.Basic;
@@ -27,11 +26,9 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -52,8 +49,8 @@ import java.util.Objects;
     query = "SELECT c FROM HdfsCommandExecution c WHERE c.id = :id"),
   @NamedQuery(name = "HdfsCommandExecution.findByExecution",
     query = "SELECT c FROM HdfsCommandExecution c WHERE c.execution = :execution"),
-  @NamedQuery(name = "HdfsCommandExecution.findBySrcInode",
-    query = "SELECT c FROM HdfsCommandExecution c WHERE c.srcInode = :srcInode")})
+  @NamedQuery(name = "HdfsCommandExecution.findBySrcPath",
+    query = "SELECT c FROM HdfsCommandExecution c WHERE c.srcPath = :srcPath")})
 public class HdfsCommandExecution {
 
   @Id
@@ -75,24 +72,20 @@ public class HdfsCommandExecution {
   @Column(name = "submitted")
   @Temporal(TemporalType.TIMESTAMP)
   private Date submitted;
-  @JoinColumns({
-    @JoinColumn(name = "src_inode_pid",
-      referencedColumnName = "parent_id"),
-    @JoinColumn(name = "src_inode_name",
-      referencedColumnName = "name"),
-    @JoinColumn(name = "src_inode_partition_id",
-      referencedColumnName = "partition_id")})
-  @OneToOne(optional = false)
-  private Inode srcInode;
 
+  @Column(name = "src_path",
+    nullable = false,
+    length = 1000)
+  private String srcPath;
+  
   public HdfsCommandExecution() {
   }
-
-  public HdfsCommandExecution(Execution execution, Command command, Inode srcInode) {
+  
+  public HdfsCommandExecution(Execution execution, Command command, String srcPath) {
     this.execution = execution;
     this.command = command;
     this.submitted = new Date();
-    this.srcInode = srcInode;
+    this.srcPath = srcPath;
   }
 
   public Integer getId() {
@@ -126,13 +119,13 @@ public class HdfsCommandExecution {
   public void setSubmitted(Date submitted) {
     this.submitted = submitted;
   }
-
-  public Inode getSrcInode() {
-    return srcInode;
+  
+  public String getSrcPath() {
+    return srcPath;
   }
-
-  public void setSrcInode(Inode srcInode) {
-    this.srcInode = srcInode;
+  
+  public void setSrcPath(String srcPath) {
+    this.srcPath = srcPath;
   }
 
   @Override
@@ -159,7 +152,7 @@ public class HdfsCommandExecution {
       ", execution=" + execution +
       ", command=" + command +
       ", submitted=" + submitted +
-      ", srcInode=" + srcInode +
+      ", srcPath=" + srcPath +
       '}';
   }
 }

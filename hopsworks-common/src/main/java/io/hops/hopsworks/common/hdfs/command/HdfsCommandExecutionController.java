@@ -26,7 +26,6 @@ import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.hdfs.command.Command;
 import io.hops.hopsworks.persistence.entity.hdfs.command.HdfsCommandExecution;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobFinalStatus;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
@@ -63,10 +62,12 @@ public class HdfsCommandExecutionController {
 
   private final static String JOB_NAME = "hdfs_file_operations";
 
-  public HdfsCommandExecution setupAndStartJob(Users user, Project project, Command command, Inode srcInode, Path src,
-         Path dest, ArchiveFormat format, boolean overwrite)
+  
+  public HdfsCommandExecution setupAndStartJob(Users user, Project project, Command command, Path src, Path dest,
+                                               ArchiveFormat format, boolean overwrite)
          throws JobException, ProjectException, ServiceException, GenericException {
-    Optional<HdfsCommandExecution> hdfsCommandExecutionOptional = hdfsCommandExecutionFacade.findBySrc(srcInode);
+    Optional<HdfsCommandExecution> hdfsCommandExecutionOptional =
+      hdfsCommandExecutionFacade.findBySrcPath(src.toString());
     if (hdfsCommandExecutionOptional.isPresent() &&
       JobFinalStatus.UNDEFINED.equals(hdfsCommandExecutionOptional.get().getExecution().getFinalStatus())) {
       throw new JobException(RESTCodes.JobErrorCode.JOB_START_FAILED, Level.FINE,
@@ -80,9 +81,10 @@ public class HdfsCommandExecutionController {
       hdfsCommandExecution.setCommand(command);
       hdfsCommandExecution.setExecution(execution);
       hdfsCommandExecution.setSubmitted(new Date());
+      hdfsCommandExecution.setSrcPath(src.toString());
       hdfsCommandExecutionFacade.update(hdfsCommandExecution);
     } else {
-      HdfsCommandExecution hdfsCommandExecution = new HdfsCommandExecution(execution, command, srcInode);
+      HdfsCommandExecution hdfsCommandExecution = new HdfsCommandExecution(execution, command, src.toString());
       hdfsCommandExecutionFacade.save(hdfsCommandExecution);
     }
     return hdfsCommandExecutionFacade.findByExecution(execution)
