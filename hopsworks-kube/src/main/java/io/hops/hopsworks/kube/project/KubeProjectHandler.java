@@ -36,7 +36,6 @@ public class KubeProjectHandler implements ProjectHandler {
         kubeClientService.createProjectNamespace(project);
       }
       kubeProjectConfigMaps.createConfigMaps(project);
-      kubeProjectSecrets.createSecrets(project);
     } catch (Exception e) {
       String usrMsg = "";
       if (e instanceof EJBException && ((EJBException) e).getCausedByException() instanceof KubernetesClientException) {
@@ -51,8 +50,20 @@ public class KubeProjectHandler implements ProjectHandler {
   }
 
   @Override
-  public void postCreate(Project project) throws Exception {
-
+  public void postCreate(Project project) throws EJBException {
+    try {
+      kubeProjectSecrets.createSecrets(project);
+    } catch (Exception e) {
+      String usrMsg = "";
+      if (e instanceof EJBException && ((EJBException) e).getCausedByException() instanceof KubernetesClientException) {
+        if (((KubernetesClientException) ((EJBException) e).getCausedByException()).getCode() == 409) {
+          usrMsg = "Environment is not cleaned up yet. Please retry in a few seconds. If error persists, contact an " +
+            "administrator. Reason: " +
+            ((KubernetesClientException) ((EJBException) e).getCausedByException()).getStatus().getMessage();
+        }
+      }
+      throw new EJBException(usrMsg, e);
+    }
   }
 
   @Override

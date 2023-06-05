@@ -138,7 +138,7 @@ public class KubeKServeInferenceController {
         String.format("Serving API Key not found for user ", user.getUsername()));
     }
     String secretName = kubeApiKeyUtils.getServingApiKeySecretName(apiKey.get().getPrefix());
-    String rawSecret = kubeApiKeyUtils.getServingApiKeyValueFromKubeSecret(secretName);
+    String rawSecret = kubeApiKeyUtils.getServingApiKeyValueFromKubeSecret(username, secretName);
     // replace auth header and verb
     return KubeApiKeyUtils.AUTH_HEADER_API_KEY_PREFIX + rawSecret;
   }

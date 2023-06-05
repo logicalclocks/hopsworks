@@ -58,7 +58,7 @@ public class KubeServingConfig implements ServingConfig {
           "Serving API key for user " + user.getUsername() + " not found");
       }
       String secretName = kubeApiKeyUtils.getServingApiKeySecretName(apiKey.get().getPrefix());
-      String secret = kubeApiKeyUtils.getServingApiKeyValueFromKubeSecret(secretName);
+      String secret = kubeApiKeyUtils.getServingApiKeyValueFromKubeSecret(user.getUsername(), secretName);
       envVars.put("SERVING_API_KEY", secret);
     }
     

@@ -128,7 +128,7 @@ public class KubeApiKeyUtils {
     }
     if (rawSecret == null) {
       String secretName = getServingApiKeySecretName(apiKey.get().getPrefix());
-      rawSecret = getServingApiKeyValueFromKubeSecret(secretName);
+      rawSecret = getServingApiKeyValueFromKubeSecret(user.getUsername(), secretName);
     }
     
     // copy it to the project namespace
@@ -177,10 +177,25 @@ public class KubeApiKeyUtils {
       apiKey.getModified());
   }
   
-  public String getServingApiKeyValueFromKubeSecret(String secretName)
-    throws ApiKeyException {
-    // get secret from hops-system
-    Secret secret = kubeClientService.getSecret(KubeServingUtils.HOPS_SYSTEM_NAMESPACE, secretName);
+  public String getServingApiKeyValueFromKubeSecret(String username, String secretName) throws ApiKeyException {
+    Secret secret = null;
+    int retry = 15;
+    do {
+      try {
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        logger.log(INFO,
+          "Cannot wait before retrieving the serving API key secret for user " + username);
+        // ignore it, and try fetching the secret anyways
+      }
+      // get secret from hops-system
+      secret = kubeClientService.getSecret(KubeServingUtils.HOPS_SYSTEM_NAMESPACE, secretName);
+      if (secret != null) {
+        break;
+      }
+      logger.info("Cannot find serving API key secret for user " + username + " (retries left: " + retry + ").");
+    } while (retry-- > 0);
+    
     if (secret == null) {
       throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_NOT_FOUND, Level.SEVERE,
         "Serving API key secret with name " + secretName + " not found in hops-system");
