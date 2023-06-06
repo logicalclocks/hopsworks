@@ -26,7 +26,9 @@ public enum SqlCondition {
   EQUALS(SqlStdOperatorTable.EQUALS),
   NOT_EQUALS(SqlStdOperatorTable.NOT_EQUALS),
   IN(SqlStdOperatorTable.IN),
-  LIKE(SqlStdOperatorTable.LIKE);
+  LIKE(SqlStdOperatorTable.LIKE),
+  IS(SqlStdOperatorTable.IS_NULL);
+  
   
   public final org.apache.calcite.sql.SqlOperator operator;
   

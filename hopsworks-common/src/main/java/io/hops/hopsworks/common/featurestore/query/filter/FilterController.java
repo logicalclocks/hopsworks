@@ -27,6 +27,7 @@ import io.hops.hopsworks.common.featurestore.query.Query;
 import io.hops.hopsworks.common.featurestore.query.QueryController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlCondition;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -161,9 +162,14 @@ public class FilterController {
   FilterValue convertFilterValue(String value,
       Map<Integer, List<Feature>> availableFeatureLookup) throws FeaturestoreException {
 
+    // can be null value when it's not a feature object
+    if (value == null) {
+      return new FilterValue(null);
+    }
+
     try {
       FeatureGroupFeatureDTO featureDto = objectMapper.readValue(value, FeatureGroupFeatureDTO.class);
-      // value can be "null"
+      // serialized value can be "null"
       if (featureDto == null) {
         return new FilterValue("null");
       }
@@ -203,8 +209,12 @@ public class FilterController {
     return feature.orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_DOES_NOT_EXIST,
         Level.FINE, "Filtered feature: `" + featureDTO.getName() + "` not found in any of the feature groups."));
   }
-
+  
   public SqlNode generateFilterLogicNode(FilterLogic filterLogic, boolean online) {
+    return generateFilterLogicNode(filterLogic, online, true);
+  }
+  
+  public SqlNode generateFilterLogicNode(FilterLogic filterLogic, boolean online, boolean checkForInNull) {
     if (filterLogic.getType() == SqlFilterLogic.SINGLE) {
       if (filterLogic.getLeftFilter().getFeatures().size() > 1) {
         // NOTE: this is currently only the case when the Filter is coming from the PreparedStatementBuilder
@@ -212,19 +222,24 @@ public class FilterController {
         // as the ? placeholder is hard coded in `generateFilterNodeList`
         return generateFilterNodeList(filterLogic.getLeftFilter(), online);
       } else {
-        return generateFilterNode(filterLogic.getLeftFilter(), online);
+        return generateFilterNode(filterLogic.getLeftFilter(), online, checkForInNull);
       }
     } else {
-      SqlNode leftNode = filterLogic.getLeftFilter() != null ? generateFilterNode(filterLogic.getLeftFilter(), online) :
+      SqlNode leftNode = filterLogic.getLeftFilter() != null ?
+        generateFilterNode(filterLogic.getLeftFilter(), online, checkForInNull) :
           generateFilterLogicNode(filterLogic.getLeftLogic(), online);
       SqlNode rightNode = filterLogic.getRightFilter() != null ?
-          generateFilterNode(filterLogic.getRightFilter(), online) :
+          generateFilterNode(filterLogic.getRightFilter(), online, checkForInNull) :
           generateFilterLogicNode(filterLogic.getRightLogic(), online);
       return filterLogic.getType().operator.createCall(SqlParserPos.ZERO, leftNode, rightNode);
     }
   }
-
+  
   public SqlNode generateFilterNode(Filter filter, boolean online) {
+    return generateFilterNode(filter, online, true);
+  }
+
+  public SqlNode generateFilterNode(Filter filter, boolean online, boolean checkForInNull) {
     SqlNode sqlNode;
     Feature feature = filter.getFeatures().get(0);
     if (feature.getDefaultValue() == null) {
@@ -239,14 +254,26 @@ public class FilterController {
     }
 
     SqlNode filterValue;
-    Object json = new JSONTokener(filter.getValue().makeSqlValue()).nextValue();
+    Object json = null;
+    if (filter.getValue().makeSqlValue() != null) {
+      json = new JSONTokener(filter.getValue().makeSqlValue()).nextValue();
+    }
     if (json instanceof JSONArray) {
       // Array
       List<SqlNode> operandList = new ArrayList<>();
       // Using gson, as casting "json" to JSONArray results in exception
       for (Object item : new Gson().fromJson(filter.getValue().getValue(), List.class)) {
+        // if item is null skip generating regular IN statement, but instead wrap in extra conjunction
+        if (item == null && checkForInNull) {
+          FilterLogic wrappedIn = new FilterLogic(SqlFilterLogic.OR, filter, new Filter(filter.getFeatures(),
+            SqlCondition.IS, (String) null));
+          return generateFilterLogicNode(wrappedIn, online, false);
+        }
         // Item would not be json of FeatureDTO object, so it is ok to create FilterValue from string value of item
-        operandList.add(getSQLNode(filter.getFeatures().get(0).getType(), new FilterValue(item.toString())));
+        // skip null values since they are handled by adding the OR construct
+        if (item != null) {
+          operandList.add(getSQLNode(filter.getFeatures().get(0).getType(), new FilterValue(item.toString())));
+        }
       }
       filterValue = new SqlNodeList(operandList, SqlParserPos.ZERO);
     } else {
@@ -254,6 +281,10 @@ public class FilterController {
       filterValue = getSQLNode(feature.getType(), filter.getValue());
     }
 
+    if (Arrays.asList(SqlCondition.EQUALS, SqlCondition.IS).contains(filter.getCondition())
+      && filter.getValue().getValue() == null) {
+      return SqlCondition.IS.operator.createCall(SqlParserPos.ZERO, sqlNode);
+    }
     return filter.getCondition().operator.createCall(SqlParserPos.ZERO, sqlNode, filterValue);
   }
 
@@ -264,6 +295,9 @@ public class FilterController {
   protected SqlNode getSQLNode(String type, FilterValue value) {
     if (value.isFeatureValue()) {
       return new SqlIdentifier(value.makeSqlValue(), SqlParserPos.ZERO);
+    }
+    if (value.makeSqlValue() == null) {
+      return SqlLiteral.createNull(SqlParserPos.ZERO);
     }
     if (type.equalsIgnoreCase("string")) {
       return SqlLiteral.createCharString(value.makeSqlValue(), SqlParserPos.ZERO);
