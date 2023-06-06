@@ -469,6 +469,28 @@ public class TestFilterController {
   }
 
   @Test
+  public void testGenerateFilterNodeStringArrayTypeWithNull() {
+    Filter filter = new Filter(Arrays.asList(fg1Features.get(0)), SqlCondition.IN, "[null, \"cd\"]");
+    
+    String result = filterController.generateFilterNode(filter, false).toSqlString(new SparkSqlDialect(SqlDialect
+      .EMPTY_CONTEXT)).getSql();
+    
+    String expected = "`fg1`.`fg1_pk` IN ('cd') OR `fg1`.`fg1_pk` IS NULL";
+    Assert.assertEquals(expected, result);
+  }
+  
+  @Test
+  public void testGenerateFilterNodeStringIsNull() {
+    Filter filter = new Filter(Arrays.asList(fg1Features.get(0)), SqlCondition.EQUALS, (String) null);
+    
+    String result = filterController.generateFilterNode(filter, false).toSqlString(new SparkSqlDialect(SqlDialect
+      .EMPTY_CONTEXT)).getSql();
+    
+    String expected = "`fg1`.`fg1_pk` IS NULL";
+    Assert.assertEquals(expected, result);
+  }
+  
+  @Test
   public void testGenerateFilterNodeNumericType() {
     Filter filter = new Filter(Arrays.asList(fg2Features.get(1)), SqlCondition.NOT_EQUALS, "10");
   
