@@ -294,8 +294,10 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
     environment.add(new EnvVarBuilder().withName("HADOOP_HOME").withValue(hadoopHome).build());
     environment.add(new EnvVarBuilder().withName("ANACONDA_ENV").withValue(anacondaEnv).build());
     environment.add(new EnvVarBuilder().withName("PYTHONHASHSEED").withValue("0").build());
-    environment.add(new EnvVarBuilder().withName("NVIDIA_VISIBLE_DEVICES")
-      .withValue(kubeClientService.getNvidiaVisibleDevices(resourceRequirements)).build());
+    String nvidiaVisibleDevices = kubeClientService.getNvidiaVisibleDevices(resourceRequirements);
+    if (nvidiaVisibleDevices != null) {
+      environment.add(new EnvVarBuilder().withName("NVIDIA_VISIBLE_DEVICES").withValue(nvidiaVisibleDevices).build());
+    }
     environment.add(new EnvVarBuilder().withName("BASE_DIR").withValue(jupyterSettings.getBaseDir()).build());
     environment.add(new EnvVarBuilder().withName("IS_TLS").withValue(String.valueOf(settings.getHopsRpcTls())).build());
     environment.add(new EnvVarBuilder().withName("NAMENODE_IP").withValue(hdfsService.getAddress()).build());

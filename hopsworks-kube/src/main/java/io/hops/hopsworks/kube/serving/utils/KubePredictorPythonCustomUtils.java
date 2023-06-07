@@ -217,9 +217,11 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
       .withValue(String.valueOf(serving.getModelVersion())).build());
     envVars.add(new EnvVarBuilder().withName("ARTIFACT_VERSION")
       .withValue(String.valueOf(serving.getArtifactVersion())).build());
-
-    envVars.add(new EnvVarBuilder().withName("NVIDIA_VISIBLE_DEVICES")
-      .withValue(kubeClientService.getNvidiaVisibleDevices(resourceRequirements)).build());
+    
+    String nvidiaVisibleDevices = kubeClientService.getNvidiaVisibleDevices(resourceRequirements);
+    if (nvidiaVisibleDevices != null) {
+      envVars.add(new EnvVarBuilder().withName("NVIDIA_VISIBLE_DEVICES").withValue(nvidiaVisibleDevices).build());
+    }
     
     return envVars;
   }

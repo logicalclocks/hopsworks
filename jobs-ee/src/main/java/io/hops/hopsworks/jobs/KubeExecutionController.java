@@ -644,8 +644,11 @@ public class KubeExecutionController extends AbstractExecutionController impleme
         environment.add(new EnvVarBuilder().withName("APP_ARGS").withValue(execution.getArgs()).build());
         environment.add(new EnvVarBuilder().withName("APP_FILES")
           .withValue(((PythonJobConfiguration)dockerJobConfiguration).getFiles()).build());
-        environment.add(new EnvVarBuilder().withName("NVIDIA_VISIBLE_DEVICES")
-          .withValue(kubeClientService.getNvidiaVisibleDevices(resourceRequirements)).build());
+        String nvidiaVisibleDevices = kubeClientService.getNvidiaVisibleDevices(resourceRequirements);
+        if (nvidiaVisibleDevices != null) {
+          environment.add(new EnvVarBuilder().withName("NVIDIA_VISIBLE_DEVICES")
+            .withValue(nvidiaVisibleDevices).build());
+        }
         
         // serving env vars
         if (settings.getKubeKServeInstalled()) {

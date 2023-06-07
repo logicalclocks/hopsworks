@@ -179,8 +179,10 @@ public class KubeTransformerUtils {
     envVars.add(new EnvVarBuilder().withName("IS_TRANSFORMER").withValue("true").build());
     envVars.add(new EnvVarBuilder()
       .withName("PYTHONPATH").withValue(settings.getAnacondaProjectDir() + "/bin/python").build());
-    envVars.add(new EnvVarBuilder().withName("NVIDIA_VISIBLE_DEVICES")
-      .withValue(kubeClientService.getNvidiaVisibleDevices(resourceRequirements)).build());
+    String nvidiaVisibleDevices = kubeClientService.getNvidiaVisibleDevices(resourceRequirements);
+    if (nvidiaVisibleDevices != null) {
+      envVars.add(new EnvVarBuilder().withName("NVIDIA_VISIBLE_DEVICES").withValue(nvidiaVisibleDevices).build());
+    }
     
     // HSFS and HOPS
     envVars.add(new EnvVarBuilder()

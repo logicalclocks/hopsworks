@@ -241,8 +241,10 @@ public class KubePredictorPythonUtils {
     envVars.add(new EnvVarBuilder().withName("SCRIPT_NAME")
       .withValue(kubePredictorUtils.getPredictorFileName(serving, true)).build());
     envVars.add(new EnvVarBuilder().withName("IS_KUBE").withValue("true").build());
-    envVars.add(new EnvVarBuilder().withName("NVIDIA_VISIBLE_DEVICES")
-      .withValue(kubeClientService.getNvidiaVisibleDevices(resourceRequirements)).build());
+    String nvidiaVisibleDevices = kubeClientService.getNvidiaVisibleDevices(resourceRequirements);
+    if (nvidiaVisibleDevices != null) {
+      envVars.add(new EnvVarBuilder().withName("NVIDIA_VISIBLE_DEVICES").withValue(nvidiaVisibleDevices).build());
+    }
     
     // HSFS and HOPS
     envVars.add(new EnvVarBuilder()

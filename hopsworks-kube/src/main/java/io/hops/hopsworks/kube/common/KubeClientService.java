@@ -812,7 +812,10 @@ public class KubeClientService {
     }
 
     if(gpuLimits > 0 || gpuRequested > 0) {
-      return "all"; //use nvidia-container-runtime
+      // If we set it to 'all', the first GPU slice will always be used in MIG setups.
+      // If we don't set it, k8s-device-plugin will choose a suitable MIG device and set this variable, which is the
+      // desired case.
+      return null; // ignore nvidia visible devices env variable.
     } else {
       return "void"; //same behaviour as runc (default container runtime) - i.e no access to GPUs
     }
