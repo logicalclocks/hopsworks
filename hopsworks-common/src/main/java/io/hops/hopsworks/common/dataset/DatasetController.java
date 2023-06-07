@@ -690,9 +690,8 @@ public class DatasetController {
   public void unzip(Project project, Users user, Path path, Path destPath) throws DatasetException {
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
     checkFileExists(path, hdfsUser);
-    Inode srcInode = inodeController.getInodeAtPath(path.toString());
     try {
-      hdfsCommandExecutionController.setupAndStartJob(user, project, Command.EXTRACT, srcInode, path, destPath,
+      hdfsCommandExecutionController.setupAndStartJob(user, project, Command.EXTRACT, path, destPath,
         null, false); // set format to null, so it can be inferred from file name extension
     } catch (JobException | GenericException | ServiceException | ProjectException e) {
       String userMsg = e.getUsrMsg() != null ? e.getUsrMsg() : "";
@@ -704,9 +703,8 @@ public class DatasetController {
   public void zip(Project project, Users user, Path path, Path destPath) throws DatasetException {
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
     checkFileExists(path, hdfsUser);
-    Inode srcInode = inodeController.getInodeAtPath(path.toString());
     try {
-      hdfsCommandExecutionController.setupAndStartJob(user, project, Command.COMPRESS, srcInode, path, destPath,
+      hdfsCommandExecutionController.setupAndStartJob(user, project, Command.COMPRESS, path, destPath,
         ArchiveFormat.ZIP, false);
     } catch (JobException | GenericException | ServiceException | ProjectException e) {
       String userMsg = e.getUsrMsg() != null ? e.getUsrMsg() : "";

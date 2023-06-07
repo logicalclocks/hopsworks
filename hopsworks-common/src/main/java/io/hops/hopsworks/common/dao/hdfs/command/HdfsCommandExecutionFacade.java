@@ -17,7 +17,6 @@ package io.hops.hopsworks.common.dao.hdfs.command;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.persistence.entity.hdfs.command.HdfsCommandExecution;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 
 import javax.ejb.Stateless;
@@ -44,10 +43,10 @@ public class HdfsCommandExecutionFacade extends AbstractFacade<HdfsCommandExecut
     return entityManager;
   }
   
-  public Optional<HdfsCommandExecution> findBySrc(Inode srcInode) {
+  public Optional<HdfsCommandExecution> findBySrcPath(String srcPath) {
     TypedQuery<HdfsCommandExecution>
-      query = entityManager.createNamedQuery("HdfsCommandExecution.findBySrcInode", HdfsCommandExecution.class)
-      .setParameter("srcInode", srcInode);
+      query = entityManager.createNamedQuery("HdfsCommandExecution.findBySrcPath", HdfsCommandExecution.class)
+      .setParameter("srcPath", srcPath);
     try {
       return Optional.of(query.getSingleResult());
     } catch (NoResultException e) {

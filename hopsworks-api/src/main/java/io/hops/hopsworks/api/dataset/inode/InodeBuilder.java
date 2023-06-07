@@ -115,7 +115,7 @@ public class InodeBuilder {
       dto.setAttributes(inodeAttributeBuilder.build(new InodeAttributeDTO(), resourceRequest, inode, parentPath,
         dirOwner));
       dto.setTags(tagsBuilder.build(new InodeTagUri(uriInfo), resourceRequest, user, datasetPath));
-      setZipState(dto, inode);
+      setZipState(dto);
     }
     return dto;
   }
@@ -144,7 +144,7 @@ public class InodeBuilder {
       dto.setAttributes(inodeAttributeBuilder.build(new InodeAttributeDTO(), resourceRequest, inode,
         datasetPath.getFullPath().getParent().toString(), null));
       dto.setTags(tagsBuilder.build(new InodeTagUri(uriInfo), resourceRequest, user, datasetPath));
-      setZipState(dto, inode);
+      setZipState(dto);
     }
     return dto;
   }
@@ -262,8 +262,9 @@ public class InodeBuilder {
     return dto;
   }
   
-  private void setZipState(InodeDTO dto, Inode inode) {
-    Optional<HdfsCommandExecution> hdfsCommandExecution = hdfsCommandExecutionFacade.findBySrc(inode);
+  private void setZipState(InodeDTO dto) {
+    Optional<HdfsCommandExecution> hdfsCommandExecution =
+      hdfsCommandExecutionFacade.findBySrcPath(dto.getAttributes().getPath());
     ZipState zipState = ZipState.NONE;
     if (hdfsCommandExecution.isPresent()) {
       dto.setHdfsCommand(new HdfsCommandDTO(hdfsCommandExecution.get(), dto.getAttributes().getPath()));
