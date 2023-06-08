@@ -37,5 +37,13 @@ public class ExecutorPoolManager {
     } catch (Exception e) {
       LOGGER.log(Level.SEVERE, "Error initializing jupyter executor service", e);
     }
+  
+    ManagedExecutorService hopsExecutorService;
+    try {
+      hopsExecutorService = InitialContext.doLookup("concurrent/hopsExecutorService");
+      hopsExecutorService.submit(() -> LOGGER.log(Level.INFO, "Initialized hops executor service"));
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Error initializing hops executor service", e);
+    }
   }
 }
