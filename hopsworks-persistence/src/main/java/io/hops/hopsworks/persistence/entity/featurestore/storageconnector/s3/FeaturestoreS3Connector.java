@@ -63,7 +63,13 @@ public class FeaturestoreS3Connector implements Serializable {
     @JoinColumn(name = "key_secret_name", referencedColumnName = "secret_name")})
   @ManyToOne(cascade = CascadeType.ALL)
   private Secret secret;
-
+  @Column(name = "arguments", length = 2000)
+  private String arguments;
+  
+  public String getArguments() {
+    return arguments;
+  }
+  
   public static long getSerialVersionUID() {
     return serialVersionUID;
   }
@@ -110,6 +116,10 @@ public class FeaturestoreS3Connector implements Serializable {
     this.secret = secret;
   }
 
+  public void setArguments(String arguments) {
+    this.arguments = arguments;
+  }
+  
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

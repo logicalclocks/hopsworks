@@ -86,7 +86,17 @@ describe "On #{ENV['OS']}" do
           project = get_project
           create_session(project[:username], "Pass123")
           featurestore_id = get_featurestore_id(project.id)
-          json_result, connector_name = create_s3_connector(project.id, featurestore_id, bucket: "testbucket")
+          arguments= [
+            {
+              "name": "key1",
+              "value": "option1"
+            },
+            {
+              "name": "key2",
+              "value": "option2"
+            }
+          ]
+          json_result, connector_name = create_s3_connector(project.id, featurestore_id, bucket: "testbucket", arguments: arguments)
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
           expect(parsed_json.key?("id")).to be true
@@ -100,6 +110,10 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["name"] == connector_name).to be true
           expect(parsed_json["storageConnectorType"] == "S3").to be true
           expect(parsed_json["bucket"] == "testbucket").to be true
+          expect(parsed_json['arguments'][0]['name']).to eql('key1')
+          expect(parsed_json['arguments'][0]['value']).to eql('option1')
+          expect(parsed_json['arguments'][1]['name']).to eql('key2')
+          expect(parsed_json['arguments'][1]['value']).to eql('option2')
           create_session(project[:username], "Pass123")
         end
 
@@ -389,10 +403,19 @@ describe "On #{ENV['OS']}" do
 
           parsed_json1 = JSON.parse(json_result1)
           expect_status_details(201)
-
+          arguments = [
+            {
+              "name": "key1",
+              "value": "option1"
+            },
+            {
+              "name": "key2",
+              "value": "option2"
+            }
+          ]
           json_result2, _ = update_s3_connector(project.id, featurestore_id, connector_name,
                                                               access_key: "testdifferent", secret_key: "test",
-                                                              bucket: "testbucket2")
+                                                              bucket: "testbucket2", arguments: arguments)
           parsed_json2 = JSON.parse(json_result2)
 
           expect(parsed_json2.key?("id")).to be true
@@ -406,6 +429,10 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json2["storageConnectorType"] == "S3").to be true
           expect(parsed_json2["bucket"] == "testbucket2").to be true
           expect(parsed_json2["accessKey"]).to eql("testdifferent")
+          expect(parsed_json2['arguments'][0]['name']).to eql('key1')
+          expect(parsed_json2['arguments'][0]['value']).to eql('option1')
+          expect(parsed_json2['arguments'][1]['name']).to eql('key2')
+          expect(parsed_json2['arguments'][1]['value']).to eql('option2')
         end
 
         it "should be able to update JDBC connector in the featurestore" do
