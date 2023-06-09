@@ -85,6 +85,7 @@ public class FeaturestoreS3ConnectorController {
     featurestoreS3Connector.setServerEncryptionKey(featurestoreS3ConnectorDTO.getServerEncryptionKey());
     featurestoreS3Connector.setIamRole(featurestoreS3ConnectorDTO.getIamRole());
     setSecret(user, featurestoreS3ConnectorDTO, featurestoreS3Connector, featurestore);
+    featurestoreS3Connector.setArguments(storageConnectorUtil.fromOptions(featurestoreS3ConnectorDTO.getArguments()));
     return featurestoreS3Connector;
   }
   
@@ -143,6 +144,8 @@ public class FeaturestoreS3ConnectorController {
         featurestoreS3Connector.setServerEncryptionKey(null);
       }
     }
+    // update arguments
+    featurestoreS3Connector.setArguments(storageConnectorUtil.fromOptions(featurestoreS3ConnectorDTO.getArguments()));
 
     //verify if key or iam role is set
     verifyKeyAndIAMRole(featurestoreS3Connector.getIamRole(), featurestoreS3Connector.getSecret());
@@ -349,6 +352,8 @@ public class FeaturestoreS3ConnectorController {
         featurestoreConnector.getS3Connector().getSecret(), FeaturestoreS3ConnectorAccessAndSecretKey.class);
       setAccessAndSecretKeysInDTO(featurestoreS3ConnectorDTO, accessAndSecretKey);
     }
+    featurestoreS3ConnectorDTO.setArguments(
+      storageConnectorUtil.toOptions(featurestoreConnector.getS3Connector().getArguments()));
     return featurestoreS3ConnectorDTO;
   }
 

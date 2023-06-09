@@ -18,12 +18,14 @@ package io.hops.hopsworks.common.featurestore.storageconnectors.s3;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
+import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3ConnectorEncryptionAlgorithm;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.List;
 
 /**
  * DTO containing the human-readable information of a S3 connection for a feature store, can be converted to JSON or
@@ -44,6 +46,7 @@ public class FeaturestoreS3ConnectorDTO extends FeaturestoreStorageConnectorDTO 
   private String serverEncryptionKey;
   private String iamRole;
   private String sessionToken;
+  private List<OptionDTO> arguments;
   
   public FeaturestoreS3ConnectorDTO() {
   }
@@ -120,6 +123,14 @@ public class FeaturestoreS3ConnectorDTO extends FeaturestoreStorageConnectorDTO 
   
   public void setSessionToken(String sessionToken) {
     this.sessionToken = sessionToken;
+  }
+  
+  public List<OptionDTO> getArguments() {
+    return arguments;
+  }
+  
+  public void setArguments(List<OptionDTO> arguments) {
+    this.arguments = arguments;
   }
   
   @Override

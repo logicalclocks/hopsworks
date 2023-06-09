@@ -112,7 +112,7 @@ module StorageConnectorHelper
   end
 
   def create_s3_connector(project_id, featurestore_id, encryption_algorithm: nil, encryption_key: nil,
-                          access_key: nil, secret_key: nil, bucket: "test")
+                          access_key: nil, secret_key: nil, bucket: "test", arguments: nil)
     type = "featurestoreS3ConnectorDTO"
     storageConnectorType = "S3"
     create_s3_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors"
@@ -138,11 +138,16 @@ module StorageConnectorHelper
       json_data["secretKey"] = secret_key
     end
 
+    unless arguments.nil?
+      json_data["arguments"] = arguments
+    end
+
     json_result = post create_s3_connector_endpoint, json_data.to_json
     [json_result, s3_connector_name]
   end
 
-  def update_s3_connector(project_id, featurestore_id, connector_name, access_key: nil, secret_key: nil, bucket: "test")
+  def update_s3_connector(project_id, featurestore_id, connector_name, access_key: nil, secret_key: nil, bucket:
+        "test", arguments: nil)
     type = "featurestoreS3ConnectorDTO"
     storageConnectorType = "S3"
     update_s3_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/#{connector_name}"
@@ -158,6 +163,9 @@ module StorageConnectorHelper
     end
     unless access_key.nil?
       json_data["accessKey"] = access_key
+    end
+    unless arguments.nil?
+      json_data["arguments"] = arguments
     end
     json_result = put update_s3_connector_endpoint, json_data.to_json
     [json_result, connector_name]
