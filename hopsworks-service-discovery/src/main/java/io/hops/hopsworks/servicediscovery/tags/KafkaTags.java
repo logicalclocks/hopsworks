@@ -18,7 +18,8 @@ package io.hops.hopsworks.servicediscovery.tags;
 
 public enum KafkaTags implements ServiceTags {
 
-  broker("broker");
+  broker("broker"),
+  monitoring("monitoring");
 
   private final String value;
 

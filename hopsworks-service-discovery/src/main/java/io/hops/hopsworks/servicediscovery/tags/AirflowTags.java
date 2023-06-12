@@ -16,7 +16,8 @@
 package io.hops.hopsworks.servicediscovery.tags;
 
 public enum AirflowTags implements ServiceTags {
-  ui("ui");
+  ui("ui"),
+  monitoring("monitoring");
 
   private final String value;
 

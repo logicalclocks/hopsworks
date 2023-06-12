@@ -16,7 +16,8 @@
 package io.hops.hopsworks.servicediscovery.tags;
 
 public enum GlassfishTags implements ServiceTags {
-  hopsworks("hopsworks");
+  hopsworks("hopsworks"),
+  monitoring("monitoring");
 
   private final String value;
 

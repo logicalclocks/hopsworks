@@ -15,13 +15,12 @@
  */
 package io.hops.hopsworks.servicediscovery.tags;
 
-public enum MysqlTags implements ServiceTags {
-  onlinefs("onlinefs"),
+public enum RdrsTags implements ServiceTags {
   monitoring("monitoring");
 
   private final String value;
 
-  MysqlTags(String value) {
+  RdrsTags(String value) {
     this.value = value;
   }
 

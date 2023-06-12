@@ -79,7 +79,8 @@ public class UsernamesConfiguration {
     ONLINEFS("onlinefs"),
     ELASTIC("elastic"),
     FLYINGDUCK("flyingduck"),
-    KAGENT("kagent");
+    KAGENT("kagent"),
+    MYSQL("mysql");
 
     private final String _default;
 
