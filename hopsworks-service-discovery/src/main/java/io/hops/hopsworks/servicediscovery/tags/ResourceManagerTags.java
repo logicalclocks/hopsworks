@@ -17,7 +17,8 @@ package io.hops.hopsworks.servicediscovery.tags;
 
 public enum ResourceManagerTags implements ServiceTags {
   rpc("rpc"),
-  https("https");
+  https("https"),
+  monitoring("monitoring");
 
   private final String value;
   ResourceManagerTags(String value) {

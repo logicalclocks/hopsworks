@@ -533,12 +533,13 @@ public class TestCertificateSigning extends PKIMocking {
     X509Certificate cert = converter.getCertificate(holder);
     Collection<List<?>> sans = cert.getSubjectAlternativeNames();
 
-    Assert.assertEquals(6, sans.size());
+    Assert.assertEquals(7, sans.size());
     // 2 is the code for SAN dnsName
     Assert.assertTrue(containsSAN(cert, "host1", 2));
     Assert.assertTrue(containsSAN(cert, "namenode.service.consul", 2));
     Assert.assertTrue(containsSAN(cert, "rpc.namenode.service.consul", 2));
     Assert.assertTrue(containsSAN(cert, "http.namenode.service.consul", 2));
+    Assert.assertTrue(containsSAN(cert, "monitoring.namenode.service.consul", 2));
     Assert.assertTrue(containsSAN(cert, "sparkhistoryserver.service.consul", 2));
     Assert.assertTrue(containsSAN(cert, "h0.hopsworks.ai", 2));
 
@@ -566,12 +567,13 @@ public class TestCertificateSigning extends PKIMocking {
     cert = converter.getCertificate(holder);
     sans = cert.getSubjectAlternativeNames();
 
-    Assert.assertEquals(6, sans.size());
+    Assert.assertEquals(7, sans.size());
     // 2 is the code for SAN dnsName
     Assert.assertTrue(containsSAN(cert, "host1", 2));
     Assert.assertTrue(containsSAN(cert, "resourcemanager.service.consul", 2));
     Assert.assertTrue(containsSAN(cert, "rpc.resourcemanager.service.consul", 2));
     Assert.assertTrue(containsSAN(cert, "https.resourcemanager.service.consul", 2));
+    Assert.assertTrue(containsSAN(cert, "monitoring.resourcemanager.service.consul", 2));
     Assert.assertTrue(containsSAN(cert, "y0.hopsworks.ai", 2));
     Assert.assertTrue(containsSAN(cert, "y1.hopsworks.ai", 2));
 

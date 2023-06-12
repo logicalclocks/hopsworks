@@ -954,6 +954,10 @@ public class PKI {
         return convertToGeneralNames(HopsworksService.FLYING_DUCK.domains(), true);
       case "kagent":
         return convertToGeneralNames(HopsworksService.DOCKER_REGISTRY.domains(), true);
+      case "mysql":
+        return convertToGeneralNames(mergeSets(
+            HopsworksService.MYSQL.domains(),
+            HopsworksService.RDRS.domains()), true);
       default:
         return EMTPY_GENERAL_NAMES;
     }

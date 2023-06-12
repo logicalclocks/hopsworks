@@ -18,7 +18,8 @@ package io.hops.hopsworks.servicediscovery.tags;
 public enum HiveTags implements ServiceTags {
   hiveserver2_plain("hiveserver2-plain"),
   hiveserver2_tls("hiveserver2-tls"),
-  metastore("metastore");
+  metastore("metastore"),
+  monitoring("monitoring");
 
   private final String value;
 

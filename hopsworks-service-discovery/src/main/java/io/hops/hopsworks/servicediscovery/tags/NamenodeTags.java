@@ -17,7 +17,8 @@ package io.hops.hopsworks.servicediscovery.tags;
 
 public enum NamenodeTags implements ServiceTags {
   rpc("rpc"),
-  http("http");
+  http("http"),
+  monitoring("monitoring");
 
   private final String value;
 

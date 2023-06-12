@@ -28,6 +28,7 @@ import io.hops.hopsworks.servicediscovery.tags.NamenodeTags;
 import io.hops.hopsworks.servicediscovery.tags.NoTags;
 import io.hops.hopsworks.servicediscovery.tags.OpenSearchTags;
 import io.hops.hopsworks.servicediscovery.tags.PrometheusTags;
+import io.hops.hopsworks.servicediscovery.tags.RdrsTags;
 import io.hops.hopsworks.servicediscovery.tags.ResourceManagerTags;
 import io.hops.hopsworks.servicediscovery.tags.ServiceTags;
 import io.hops.hopsworks.servicediscovery.tags.ZooKeeperTags;
@@ -67,6 +68,7 @@ public class HopsworksService<T extends ServiceTags> {
       OpenSearchTags.values());
 
   public static final HopsworksService<KafkaTags> KAFKA = HopsworksService.of("kafka", KafkaTags.values());
+  public static final HopsworksService<RdrsTags> RDRS = HopsworksService.of("rdrs", RdrsTags.values());
 
   private final String name;
   private final T[] tags;
