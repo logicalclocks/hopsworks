@@ -5,11 +5,13 @@
 package io.hops.hopsworks.featurestore.tags;
 
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
+import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.common.featurestore.tag.FeatureStoreTagControllerIface;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.integrations.EnterpriseStereotype;
 import io.hops.hopsworks.common.tags.AttachTagResult;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
@@ -36,6 +38,8 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
 
   @EJB
   private FeaturegroupController featuregroupController;
+  @EJB
+  private FeatureViewController featureViewController;
   @EJB
   private InodeController inodeController;
   @EJB
@@ -97,9 +101,9 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
    */
   @Override
   public Map<String, String> getAll(Project accessProject, Users user, Featurestore featureStore,
-      FeatureView featureView)
-      throws DatasetException, MetadataException, SchematizedTagException {
-    String path = inodeController.getPath(featureView.getInode());
+                                    FeatureView featureView)
+      throws DatasetException, MetadataException, SchematizedTagException, FeaturestoreException {
+    String path = featureViewController.getLocation(featureView);
     return tagsController.getAll(accessProject, user, path);
   }
 
@@ -164,8 +168,8 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
    */
   @Override
   public String get(Project accessProject, Users user, Featurestore featureStore, FeatureView featureView, String name)
-      throws DatasetException, MetadataException, SchematizedTagException {
-    String path = inodeController.getPath(featureView.getInode());
+      throws DatasetException, MetadataException, SchematizedTagException, FeaturestoreException {
+    String path = featureViewController.getLocation(featureView);
     return tagsController.get(accessProject, user, path, name);
   }
 
@@ -231,8 +235,8 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
   @Override
   public AttachTagResult upsert(Project project, Users user, Featurestore featureStore, FeatureView featureView,
                                 String name, String value)
-      throws MetadataException, SchematizedTagException {
-    String path = inodeController.getPath(featureView.getInode());
+      throws MetadataException, SchematizedTagException, FeaturestoreException {
+    String path = featureViewController.getLocation(featureView);
     return tagsController.upsert(project, user, path, name, value);
   }
   
@@ -295,8 +299,8 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
   @Override
   public AttachTagResult upsert(Project project, Users user, Featurestore featureStore, FeatureView featureView,
                                 Map<String, String> newTags)
-      throws MetadataException, SchematizedTagException {
-    String path = inodeController.getPath(featureView.getInode());
+      throws MetadataException, SchematizedTagException, FeaturestoreException {
+    String path = featureViewController.getLocation(featureView);
     return tagsController.upsert(project, user, path, newTags);
   }
 
@@ -352,8 +356,8 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
    */
   @Override
   public void deleteAll(Project accessProject, Users user, Featurestore featureStore, FeatureView featureView)
-      throws DatasetException, MetadataException, SchematizedTagException {
-    String path = inodeController.getPath(featureView.getInode());
+      throws DatasetException, MetadataException, SchematizedTagException, FeaturestoreException {
+    String path = featureViewController.getLocation(featureView);
     tagsController.deleteAll(accessProject, user, path);
   }
 
@@ -414,8 +418,8 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
    */
   @Override
   public void delete(Project accessProject, Users user, Featurestore featureStore, FeatureView featureView, String name)
-      throws DatasetException, MetadataException, SchematizedTagException {
-    String path = inodeController.getPath(featureView.getInode());
+      throws DatasetException, MetadataException, SchematizedTagException, FeaturestoreException {
+    String path = featureViewController.getLocation(featureView);
     tagsController.delete(accessProject, user, path, name);
   }
 }

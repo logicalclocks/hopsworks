@@ -394,7 +394,7 @@ public class ProvExplicitControllerEEImpl implements ProvExplicitControllerIface
   private void traverseUpstreamTrainingDatasets(Project accessProject,
                                                 TraverseCollector collector,
                                                 TraverseCollector other)
-    throws DatasetException {
+          throws DatasetException, FeaturestoreException {
     if(collector.trainingDatasets.isEmpty()) {
       return;
     }
@@ -490,7 +490,7 @@ public class ProvExplicitControllerEEImpl implements ProvExplicitControllerIface
   private void traverseDownstreamFeatureViews(Project accessProject,
                                               TraverseCollector collector,
                                               TraverseCollector other)
-    throws DatasetException {
+          throws DatasetException, FeaturestoreException {
     if(collector.featureGroups.isEmpty()) {
       return;
     }

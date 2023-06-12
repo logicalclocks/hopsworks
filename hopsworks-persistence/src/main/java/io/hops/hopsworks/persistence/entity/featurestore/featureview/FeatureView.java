@@ -22,7 +22,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.Trainin
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFeature;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFilter;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetJoin;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.persistence.Basic;
@@ -33,7 +32,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -102,12 +100,6 @@ public class FeatureView implements Serializable {
   private Collection<FeaturestoreActivity> activities;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "featureView")
   private Collection<TrainingDataset> trainingDatasets;
-  @JoinColumns({
-      @JoinColumn(name = "inode_pid", referencedColumnName = "parent_id"),
-      @JoinColumn(name = "inode_name", referencedColumnName = "name"),
-      @JoinColumn(name = "partition_id", referencedColumnName = "partition_id")})
-  @ManyToOne(optional = false)
-  private Inode inode;
 
   public FeatureView() {
   }
@@ -211,14 +203,6 @@ public class FeatureView implements Serializable {
   public void setTrainingDatasets(
       Collection<TrainingDataset> trainingDatasets) {
     this.trainingDatasets = trainingDatasets;
-  }
-
-  public Inode getInode() {
-    return inode;
-  }
-
-  public void setInode(Inode inode) {
-    this.inode = inode;
   }
 
   @Override

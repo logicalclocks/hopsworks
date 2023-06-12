@@ -55,7 +55,7 @@ public class FeatureViewTagResource extends FeatureStoreTagResource {
   }
 
   @Override
-  protected DatasetPath getDatasetPath() throws DatasetException {
+  protected DatasetPath getDatasetPath() throws DatasetException, FeaturestoreException {
     return datasetHelper.getDatasetPath(project, featureViewController.getLocation(featureView),
         DatasetType.DATASET);
   }

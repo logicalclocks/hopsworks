@@ -9,13 +9,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
+import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.common.featurestore.keyword.KeywordControllerIface;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturestoreXAttrsConstants;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.common.integrations.EnterpriseStereotype;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -55,9 +55,9 @@ public class KeywordController implements KeywordControllerIface {
   @EJB
   private TrainingDatasetController trainingDatasetController;
   @EJB
-  private KeywordsUsedCache keywordsUsedCache;
+  private FeatureViewController featureViewController;
   @EJB
-  private InodeController inodeController;
+  private KeywordsUsedCache keywordsUsedCache;
 
   private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -151,16 +151,12 @@ public class KeywordController implements KeywordControllerIface {
     } else if (trainingDataset != null) {
       path = trainingDatasetController.getTrainingDatasetInodePath(trainingDataset);
     } else if (featureView != null) {
-      path = getFeatureViewLocation(featureView);
+      path =  featureViewController.getLocation(featureView);
     } else {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.KEYWORD_ERROR, Level.FINE,
           "Error fetching keyword path");
     }
     return path;
-  }
-
-  private String getFeatureViewLocation(FeatureView featureView) throws FeaturestoreException {
-    return inodeController.getPath(featureView.getInode());
   }
 
   private void validateKeywords(List<String> keywords) throws FeaturestoreException {
