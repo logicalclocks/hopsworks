@@ -213,6 +213,20 @@ public class DistributedFileSystemOps {
     return dfs.mkdir(location, FsPermission.getDefault());
   }
 
+
+  /**
+   * Create a new directory and its parent directory on the given path.
+   * <p/>
+   * @param location The path to the new folder, its name included.
+   * @param filePermission
+   * @return True if successful.
+   * <p/>
+   * @throws java.io.IOException
+   */
+  public boolean mkdirs(String location, final FsPermission filePermission) throws IOException {
+    return mkdirs(new Path(location), filePermission);
+  }
+
   /**
    * Create a new directory and its parent directory on the given path.
    * <p/>

@@ -26,9 +26,7 @@ import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetFac
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.provenance.explicit.FeatureViewLinkController;
 import io.hops.hopsworks.common.util.Settings;
@@ -39,10 +37,8 @@ import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivityMeta;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
-import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFeature;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
@@ -71,13 +67,9 @@ public class FeatureViewController {
   @EJB
   private FeatureViewFacade featureViewFacade;
   @EJB
-  private InodeController inodeController;
-  @EJB
   private Settings settings;
   @EJB
   private DistributedFsService dfs;
-  @EJB
-  private HdfsUsersController hdfsUsersBean;
   @EJB
   private FeaturestoreConnectorFacade featurestoreConnectorFacade;
   @EJB
@@ -130,28 +122,13 @@ public class FeatureViewController {
           "Name of the feature view collides with an existing training dataset name : " + featureView.getName());
     }
 
-    String connectorName =
-        featurestore.getProject().getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName();
-    FeaturestoreConnector featurestoreConnector =
-        featurestoreConnectorFacade.findByFeaturestoreName(featurestore, connectorName)
-          .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND,
-            Level.FINE, "HOPSFS Connector: " + connectorName));
-
-    Dataset datasetsFolder = featurestoreConnector.getHopsfsConnector().getHopsfsDataset();
-
-
     DistributedFileSystemOps udfso = null;
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
     try {
-      Path path = new Path(String.format(PATH_TO_FEATURE_VIEW, Utils.getDatasetPath(datasetsFolder, settings),
-          featureView.getName(), featureView.getVersion()));
+      String path = getLocation(featureView);
 
-      udfso = dfs.getDfsOps(username);
+      udfso = dfs.getDfsOps(project, user);
       udfso.mkdirs(path, FsPermission.getDefault());
 
-      Inode inode = inodeController.getInodeAtPath(path.toString());
-
-      featureView.setInode(inode);
       featureView = featureViewFacade.update(featureView);
 
       // Log the metadata operation
@@ -170,8 +147,20 @@ public class FeatureViewController {
     }
   }
 
-  public String getLocation(FeatureView featureView) {
-    return inodeController.getPath(featureView.getInode());
+  public String getLocation(FeatureView featureView) throws FeaturestoreException {
+    Featurestore featurestore = featureView.getFeaturestore();
+    String connectorName =
+            featurestore.getProject().getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName();
+
+    Dataset datasetsFolder =
+            featurestoreConnectorFacade.findByFeaturestoreName(featurestore, connectorName)
+                    .orElseThrow(() ->
+                            new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND,
+                            Level.FINE, "HOPSFS Connector: " + connectorName))
+                    .getHopsfsConnector().getHopsfsDataset();
+
+    return String.format(PATH_TO_FEATURE_VIEW, Utils.getDatasetPath(datasetsFolder, settings),
+                    featureView.getName(), featureView.getVersion());
   }
 
   public List<FeatureView> getAll() {
@@ -225,11 +214,10 @@ public class FeatureViewController {
       featurestoreUtils.verifyFeatureViewDataOwnerOrSelf(user, project, fv,
           FeaturestoreUtils.ActionMessage.DELETE_FEATURE_VIEW);
     }
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
     for (FeatureView fv: featureViews) {
       trainingDatasetController.delete(user, project, featurestore, fv);
       featureViewFacade.remove(fv);
-      removeFeatureViewDir(username, fv);
+      removeFeatureViewDir(project, user, fv);
       //Delete associated jobs
       fsJobManagerController.deleteJobs(project, user, fv);
       activityFacade.persistActivity(ActivityFacade.DELETED_FEATURE_VIEW + fv.getName(),
@@ -237,8 +225,8 @@ public class FeatureViewController {
     }
   }
 
-  private void removeFeatureViewDir(String username, FeatureView featureView) throws FeaturestoreException {
-    DistributedFileSystemOps udfso = dfs.getDfsOps(username);
+  private void removeFeatureViewDir(Project project, Users user, FeatureView featureView) throws FeaturestoreException {
+    DistributedFileSystemOps udfso = dfs.getDfsOps(project, user);
     try {
       udfso.rm(getLocation(featureView), true);
     } catch (IOException e) {
