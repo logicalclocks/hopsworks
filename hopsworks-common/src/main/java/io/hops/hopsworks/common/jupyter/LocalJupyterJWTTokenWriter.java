@@ -16,12 +16,36 @@
 
 package io.hops.hopsworks.common.jupyter;
 
+import io.hops.hadoop.shaded.org.apache.commons.io.FileUtils;
+import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.integrations.LocalhostStereotype;
+import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import static io.hops.hopsworks.common.jupyter.JupyterJWTManager.TOKEN_FILE_NAME;
 
 @Stateless
 @LocalhostStereotype
 public class LocalJupyterJWTTokenWriter implements JupyterJWTTokenWriter {
-
+  @EJB
+  private JupyterSettingsFacade jupyterSettingsFacade;
+  @EJB
+  private Settings settings;
+  
+  @Override
+  public String readToken(Project project, Users user) throws IOException {
+    JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project, user.getEmail());
+    Path tokenFile = Paths.get(settings.getStagingDir(), Settings.PRIVATE_DIRS, jupyterSettings.getSecret(),
+      TOKEN_FILE_NAME);
+    return FileUtils.readFileToString(tokenFile.toFile(), Charset.defaultCharset());
+  }
 }

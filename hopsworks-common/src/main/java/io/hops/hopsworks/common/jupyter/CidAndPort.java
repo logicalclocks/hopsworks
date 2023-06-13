@@ -16,9 +16,11 @@
 
 package io.hops.hopsworks.common.jupyter;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class CidAndPort {
+public class CidAndPort implements Serializable {
+  private static final long serialVersionUID = -7736027812979433344L;
   String cid;
   Integer port;
 

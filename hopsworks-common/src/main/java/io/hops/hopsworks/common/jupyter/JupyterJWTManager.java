@@ -18,19 +18,14 @@ package io.hops.hopsworks.common.jupyter;
 
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import io.hops.hopsworks.persistence.entity.airflow.MaterializedJWT;
 import io.hops.hopsworks.common.dao.airflow.MaterializedJWTFacade;
-import io.hops.hopsworks.persistence.entity.airflow.MaterializedJWTID;
-import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
-import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
-import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.DateUtils;
+import io.hops.hopsworks.common.util.PayaraClusterManager;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.Constants;
@@ -38,8 +33,13 @@ import io.hops.hopsworks.jwt.JWTController;
 import io.hops.hopsworks.jwt.SignatureAlgorithm;
 import io.hops.hopsworks.jwt.exception.InvalidationException;
 import io.hops.hopsworks.jwt.exception.JWTException;
+import io.hops.hopsworks.persistence.entity.airflow.MaterializedJWT;
+import io.hops.hopsworks.persistence.entity.airflow.MaterializedJWTID;
+import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
+import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.apache.commons.io.FileUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -63,7 +63,6 @@ import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -71,7 +70,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -85,24 +83,6 @@ import static java.util.logging.Level.WARNING;
 public class JupyterJWTManager {
   private static final Logger LOG = Logger.getLogger(JupyterJWTManager.class.getName());
   public static final String TOKEN_FILE_NAME = "token.jwt";
-  
-  private final TreeSet<JupyterJWT> jupyterJWTs = new TreeSet<>(new Comparator<JupyterJWT>() {
-    @Override
-    public int compare(JupyterJWT t0, JupyterJWT t1) {
-      if (t0.equals(t1)) {
-        return 0;
-      } else {
-        if (t0.expiration.isBefore(t1.expiration)) {
-          return -1;
-        } else if (t0.expiration.isAfter(t1.expiration)) {
-          return 1;
-        }
-        return 0;
-      }
-    }
-  });
-  
-  private final HashMap<CidAndPort, JupyterJWT> pidAndPortToJWT = new HashMap<>();
 
   @EJB
   private Settings settings;
@@ -126,6 +106,10 @@ public class JupyterJWTManager {
   private JupyterJWTTokenWriter jwtTokenWriter;
   @Resource
   private TimerService timerService;
+  @EJB
+  private PayaraClusterManager payaraClusterManager;
+  @EJB
+  private JupyterJWTCache jupyterJWTCache;
   
   @PostConstruct
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -140,16 +124,18 @@ public class JupyterJWTManager {
   }
 
   private void addToken(JupyterJWT jupyterJWT) {
-    jupyterJWTs.add(jupyterJWT);
-    pidAndPortToJWT.put(jupyterJWT.pidAndPort, jupyterJWT);
+    jupyterJWTCache.add(jupyterJWT);
   }
 
   private void removeToken(CidAndPort pidAndPort) {
-    JupyterJWT jupyterJWT = pidAndPortToJWT.remove(pidAndPort);
-    jupyterJWTs.remove(jupyterJWT);
+    jupyterJWTCache.remove(pidAndPort);
   }
   
   protected void recover() {
+    //only one node should do the recovery. If a node is restarted it will not be the primary.
+    if (!payaraClusterManager.amIThePrimary()) {
+      return;
+    }
     LOG.log(INFO, "Starting Jupyter JWT manager recovery");
     List<MaterializedJWT> failed2recover = new ArrayList<>();
     
@@ -187,11 +173,12 @@ public class JupyterJWTManager {
       JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project, user.getEmail());
       
       Path tokenFile = constructTokenFilePath(jupyterSettings);
+      
       String token = null;
-      JupyterJWT jupyterJWT = null;
+      JupyterJWT jupyterJWT;
       CidAndPort pidAndPort = new CidAndPort(jupyterProject.getCid(), jupyterProject.getPort());
       try {
-        token = FileUtils.readFileToString(tokenFile.toFile());
+        token = jwtTokenWriter.readToken(project, user);
         DecodedJWT decodedJWT = jwtController.verifyToken(token, settings.getJWTIssuer());
         jupyterJWT = new JupyterJWT(project, user, DateUtils.date2LocalDateTime(decodedJWT.getExpiresAt()), pidAndPort);
         jupyterJWT.token = token;
@@ -199,7 +186,7 @@ public class JupyterJWTManager {
         LOG.log(Level.FINE, "Successfully read existing JWT from local filesystem");
       } catch (IOException | JWTException | JWTDecodeException ex) {
         LOG.log(Level.FINE, "Could not recover Jupyter JWT from local filesystem, generating new!", ex);
-        // JWT does not exist or it is not valid any longer
+        // JWT does not exist, or it is not valid any longer
         // We should create a new one
         String[] audience = new String[]{"api"};
         LocalDateTime expirationDate = LocalDateTime.now().plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
@@ -304,26 +291,28 @@ public class JupyterJWTManager {
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   @Timeout
   public void monitorJWT() {
+    if (!payaraClusterManager.amIThePrimary()) {
+      return;
+    }
     // Renew the rest of them
-    Set<JupyterJWT> renewedJWTs = new HashSet<>(this.jupyterJWTs.size());
-    Iterator<JupyterJWT> jupyterJWTs = this.jupyterJWTs.iterator();
+    Set<JupyterJWT> renewedJWTs = new HashSet<>(jupyterJWTCache.getSize());
+    Iterator<JupyterJWTDTO> jupyterJWTs = jupyterJWTCache.getMaybeExpired();
     LocalDateTime now = DateUtils.getNow();
     try {
 
       while (jupyterJWTs.hasNext()) {
-        JupyterJWT element = jupyterJWTs.next();
+        JupyterJWTDTO element = jupyterJWTs.next();
         // Elements are sorted by their expiration date.
         // If element N does not need to be renewed neither does N+1
         if (element.maybeRenew(now)) {
           LocalDateTime newExpirationDate = now.plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
           String newToken = null;
           try {
-            newToken = jwtController.renewToken(element.token, DateUtils.localDateTime2Date(newExpirationDate),
+            newToken = jwtController.renewToken(element.getToken(), DateUtils.localDateTime2Date(newExpirationDate),
                 DateUtils.localDateTime2Date(now), true, new HashMap<>(3));
-
-            JupyterJWT renewedJWT = new JupyterJWT(element.project, element.user, newExpirationDate,
-              element.pidAndPort);
-            renewedJWT.tokenFile = element.tokenFile;
+            JupyterJWT renewedJWT = new JupyterJWT(element.getProject(), element.getUser(), newExpirationDate,
+              element.getPidAndPort());
+            renewedJWT.tokenFile = Paths.get(element.getTokenFile());
             renewedJWT.token = newToken;
             jwtTokenWriter.writeToken(settings, renewedJWT);
             renewedJWTs.add(renewedJWT);
@@ -357,7 +346,7 @@ public class JupyterJWTManager {
   @Lock(LockType.WRITE)
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void cleanJWT(String cid, Integer port) {
-    Optional<JupyterJWT> optional = Optional.ofNullable(pidAndPortToJWT.get(new CidAndPort(cid, port)));
+    Optional<JupyterJWT> optional = jupyterJWTCache.get(new CidAndPort(cid, port));
 
     if (!optional.isPresent()) {
       LOG.log(WARNING, "JupyterJWT not found for cid " + cid + " and port " + port);

@@ -19,6 +19,8 @@ package io.hops.hopsworks.common.jwt;
 import io.hops.hopsworks.common.jobs.ExecutionJWT;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.hops.hopsworks.jwt.exception.VerificationException;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -27,6 +29,9 @@ import java.util.Set;
 
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public interface JWTTokenWriter {
+  
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  String readToken(Project project, Users user);
   
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   void writeToken(ServiceJWT serviceJWT);
