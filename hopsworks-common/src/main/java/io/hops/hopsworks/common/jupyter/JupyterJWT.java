@@ -37,6 +37,14 @@ public final class JupyterJWT extends ServiceJWT {
     this.pidAndPort = pidAndPort;
   }
   
+  public JupyterJWT(Project project, Users user, LocalDateTime expiration, CidAndPort pidAndPort, String token,
+    Path tokenFile) {
+    super(project, user, expiration);
+    this.pidAndPort = pidAndPort;
+    this.tokenFile = tokenFile;
+    this.token = token;
+  }
+  
   @Override
   public boolean equals(Object o) {
     if (this == o) {

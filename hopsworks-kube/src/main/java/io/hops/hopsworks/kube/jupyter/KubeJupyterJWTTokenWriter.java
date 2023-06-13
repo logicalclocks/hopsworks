@@ -10,6 +10,8 @@ import io.hops.hopsworks.common.jupyter.JupyterJWTTokenWriter;
 import io.hops.hopsworks.common.jwt.JWTTokenWriter;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.kube.common.KubeStereotype;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -26,14 +28,17 @@ public class KubeJupyterJWTTokenWriter implements JupyterJWTTokenWriter {
   private JWTTokenWriter kubeJWTTokenWriter;
   
   @Override
+  public String readToken(Project project, Users user) throws IOException {
+    return kubeJWTTokenWriter.readToken(project, user);
+  }
+  
+  @Override
   public void writeToken(Settings settings, JupyterJWT jupyterJWT) throws IOException {
-    JupyterJWTTokenWriter.super.writeToken(settings, jupyterJWT);
     kubeJWTTokenWriter.writeToken(jupyterJWT);
   }
   
   @Override
   public void deleteToken(JupyterJWT jupyterJWT) throws KubernetesClientException {
-    JupyterJWTTokenWriter.super.deleteToken(jupyterJWT);
     kubeJWTTokenWriter.deleteToken(jupyterJWT);
   }
 }

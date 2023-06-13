@@ -19,11 +19,14 @@ import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.hops.hopsworks.jwt.exception.VerificationException;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.nio.charset.Charset;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -52,6 +55,16 @@ public class KubeJWTTokenWriter implements JWTTokenWriter {
   private JWTController jwtController;
   @EJB
   private Settings settings;
+  
+  
+  @Override
+  public String readToken(Project project, Users user) {
+    logger.log(INFO, "Getting JWT secret for project " + project.getName() + " and user " + user.getUsername());
+    String kubeProjectNS = kubeClientService.getKubeProjectName(project);
+    String kubeProjectSecretName = kubeClientService.getKubeDeploymentName(kubeProjectNS, user) + JWT_SUFFIX;
+    Secret secret = kubeClientService.getSecret(kubeProjectNS, kubeProjectSecretName);
+    return new String(Base64.getDecoder().decode(secret.getData().get(TOKEN_FILE_NAME)), Charset.defaultCharset());
+  }
   
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)

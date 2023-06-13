@@ -18,6 +18,8 @@ package io.hops.hopsworks.common.jwt;
 
 import io.hops.hopsworks.common.integrations.LocalhostStereotype;
 import io.hops.hopsworks.common.jobs.ExecutionJWT;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -30,6 +32,11 @@ import java.util.Set;
 @LocalhostStereotype
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class LocalJWTTokenWriter implements JWTTokenWriter {
+  @Override
+  public String readToken(Project project, Users user) {
+    return null;
+  }
+  
   @Override
   public void writeToken(ServiceJWT serviceJWT) {
   
