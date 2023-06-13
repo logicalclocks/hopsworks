@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 
@@ -54,7 +55,7 @@ public class FeatureGroupTagResource extends FeatureStoreTagResource {
   }
   
   @Override
-  protected DatasetPath getDatasetPath() throws DatasetException {
+  protected DatasetPath getDatasetPath() throws DatasetException, FeaturestoreException {
     return datasetHelper.getDatasetPath(project, featuregroupController.getFeatureGroupLocation(featureGroup),
       DatasetType.FEATURESTORE);
   }

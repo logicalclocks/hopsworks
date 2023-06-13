@@ -33,7 +33,7 @@ import java.util.Map;
 public interface FeatureStoreTagControllerIface {
   
   Map<String, String> getAll(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup)
-    throws DatasetException, MetadataException;
+          throws DatasetException, MetadataException, FeaturestoreException;
   
   Map<String, String> getAll(Project project, Users user, Featurestore featureStore, TrainingDataset trainingDataset)
     throws DatasetException, MetadataException, SchematizedTagException;
@@ -42,7 +42,7 @@ public interface FeatureStoreTagControllerIface {
       throws DatasetException, MetadataException, SchematizedTagException, FeaturestoreException;
   
   String get(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup, String name)
-    throws DatasetException, MetadataException, SchematizedTagException;
+          throws DatasetException, MetadataException, SchematizedTagException, FeaturestoreException;
   
   String get(Project project, Users user, Featurestore featureStore, TrainingDataset trainingDataset, String name)
     throws DatasetException, MetadataException, SchematizedTagException;
@@ -52,7 +52,7 @@ public interface FeatureStoreTagControllerIface {
   
   AttachTagResult upsert(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup,
                          String name, String value)
-    throws MetadataException, SchematizedTagException;
+          throws MetadataException, SchematizedTagException, FeaturestoreException;
   
   AttachTagResult upsert(Project project, Users user, Featurestore featureStore, TrainingDataset trainingDataset,
                          String name, String value)
@@ -64,7 +64,7 @@ public interface FeatureStoreTagControllerIface {
   
   AttachTagResult upsert(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup,
                          Map<String, String> tags)
-    throws MetadataException, SchematizedTagException;
+          throws MetadataException, SchematizedTagException, FeaturestoreException;
   
   AttachTagResult upsert(Project project, Users user, Featurestore featureStore, TrainingDataset trainingDataset,
                          Map<String, String> tags)
@@ -75,7 +75,7 @@ public interface FeatureStoreTagControllerIface {
       throws MetadataException, SchematizedTagException, FeaturestoreException;
   
   void deleteAll(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup)
-    throws DatasetException, MetadataException;
+          throws DatasetException, MetadataException, FeaturestoreException;
   
   void deleteAll(Project project, Users user, Featurestore featureStore, TrainingDataset trainingDataset)
     throws DatasetException, MetadataException, SchematizedTagException;
@@ -84,7 +84,7 @@ public interface FeatureStoreTagControllerIface {
       throws DatasetException, MetadataException, SchematizedTagException, FeaturestoreException;
   
   void delete(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup, String name)
-    throws DatasetException, MetadataException;
+          throws DatasetException, MetadataException, FeaturestoreException;
   
   void delete(Project project, Users user, Featurestore featureStore, TrainingDataset trainingDataset, String name)
     throws DatasetException, MetadataException, SchematizedTagException;

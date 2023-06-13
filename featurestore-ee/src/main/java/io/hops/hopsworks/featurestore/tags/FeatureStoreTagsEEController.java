@@ -58,7 +58,7 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
   @Override
   public Map<String, String> getAll(Project accessProject, Users user, Featurestore featureStore,
                                     Featuregroup featureGroup)
-    throws DatasetException, MetadataException {
+          throws DatasetException, MetadataException, FeaturestoreException {
     String path = featuregroupController.getFeatureGroupLocation(featureGroup);
     return tagsController.getAll(accessProject, user, path);
   }
@@ -122,7 +122,7 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
   @Override
   public String get(Project accessProject, Users user, Featurestore featureStore, Featuregroup featureGroup,
                     String name)
-    throws DatasetException, MetadataException, SchematizedTagException {
+          throws DatasetException, MetadataException, SchematizedTagException, FeaturestoreException {
   
     String path = featuregroupController.getFeatureGroupLocation(featureGroup);
     return tagsController.get(accessProject, user, path, name);
@@ -188,7 +188,7 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
   @Override
   public AttachTagResult upsert(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup,
                                 String name, String value)
-    throws MetadataException, SchematizedTagException {
+          throws MetadataException, SchematizedTagException, FeaturestoreException {
   
     String path = featuregroupController.getFeatureGroupLocation(featureGroup);
     return tagsController.upsert(project, user, path, name, value);
@@ -254,7 +254,7 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
   @Override
   public AttachTagResult upsert(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup,
                                 Map<String, String> newTags)
-    throws MetadataException, SchematizedTagException {
+          throws MetadataException, SchematizedTagException, FeaturestoreException {
   
     String path = featuregroupController.getFeatureGroupLocation(featureGroup);
     return tagsController.upsert(project, user, path, newTags);
@@ -315,7 +315,7 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
    */
   @Override
   public void deleteAll(Project accessProject, Users user, Featurestore featureStore, Featuregroup featureGroup)
-    throws MetadataException, DatasetException {
+          throws MetadataException, DatasetException, FeaturestoreException {
   
     String path = featuregroupController.getFeatureGroupLocation(featureGroup);
     tagsController.deleteAll(accessProject, user, path);
@@ -374,7 +374,7 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
   @Override
   public void delete(Project accessProject, Users user, Featurestore featureStore, Featuregroup featureGroup,
                      String name)
-    throws MetadataException, DatasetException {
+          throws MetadataException, DatasetException, FeaturestoreException {
   
     String path = featuregroupController.getFeatureGroupLocation(featureGroup);
     tagsController.delete(accessProject, user, path, name);
