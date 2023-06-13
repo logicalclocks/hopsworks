@@ -114,7 +114,6 @@ public abstract class FeatureStoreTagResource {
                          @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name,
                          @ApiParam(value = "Value to set for the tag") String value)
           throws MetadataException, SchematizedTagException, DatasetException, FeaturestoreException {
-
     Users user = jwtHelper.getUserPrincipal(sc);
     AttachTagResult result = tagController.upsert(user, getDatasetPath(), name, value);
     FeatureStoreTagUri tagUri = new FeatureStoreTagUri(uriInfo, featureStore.getId(), getItemType(), getItemId());

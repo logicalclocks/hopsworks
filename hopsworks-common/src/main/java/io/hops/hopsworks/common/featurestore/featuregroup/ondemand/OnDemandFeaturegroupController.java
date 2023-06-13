@@ -27,9 +27,7 @@ import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConne
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.KafkaException;
@@ -45,7 +43,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.O
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandOption;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -81,10 +78,6 @@ public class OnDemandFeaturegroupController {
   private FeaturestoreFacade featurestoreFacade;
   @EJB
   private DistributedFsService distributedFsService;
-  @EJB
-  private HdfsUsersController hdfsUsersController;
-  @EJB
-  private InodeController inodeController;
   @EJB
   private OnlineFeaturegroupController onlineFeatureGroupController;
   @EJB
@@ -132,13 +125,14 @@ public class OnDemandFeaturegroupController {
           "Data format required when specifying " + connector.getConnectorType() + " storage connectors");
     }
 
+    createFile(project, user, featurestore, onDemandFeaturegroupDTO);
+
     //Persist on-demand featuregroup
     OnDemandFeaturegroup onDemandFeaturegroup = new OnDemandFeaturegroup();
     onDemandFeaturegroup.setDescription(onDemandFeaturegroupDTO.getDescription());
     onDemandFeaturegroup.setFeaturestoreConnector(connector);
     onDemandFeaturegroup.setQuery(onDemandFeaturegroupDTO.getQuery());
     onDemandFeaturegroup.setFeatures(convertOnDemandFeatures(onDemandFeaturegroupDTO, onDemandFeaturegroup));
-    onDemandFeaturegroup.setInode(createFile(project, user, featurestore, onDemandFeaturegroupDTO));
     onDemandFeaturegroup.setDataFormat(onDemandFeaturegroupDTO.getDataFormat());
     onDemandFeaturegroup.setPath(onDemandFeaturegroupDTO.getPath());
 
@@ -154,13 +148,15 @@ public class OnDemandFeaturegroupController {
   }
   
   public OnDemandFeaturegroup createSpineGroup(Featurestore featurestore,
-    OnDemandFeaturegroupDTO onDemandFeaturegroupDTO, Project project, Users user) throws FeaturestoreException {
+                                               OnDemandFeaturegroupDTO onDemandFeaturegroupDTO,
+                                               Project project, Users user) throws FeaturestoreException {
+    createFile(project, user, featurestore, onDemandFeaturegroupDTO);
+
     OnDemandFeaturegroup onDemandFeaturegroup = new OnDemandFeaturegroup();
     onDemandFeaturegroup.setDescription(onDemandFeaturegroupDTO.getDescription());
     onDemandFeaturegroup.setFeatures(convertOnDemandFeatures(onDemandFeaturegroupDTO, onDemandFeaturegroup));
     onDemandFeaturegroup.setSpine(onDemandFeaturegroupDTO.getSpine());
-    onDemandFeaturegroup.setInode(createFile(project, user, featurestore, onDemandFeaturegroupDTO));
-  
+
     onDemandFeaturegroupFacade.persist(onDemandFeaturegroup);
     return onDemandFeaturegroup;
   }
@@ -224,8 +220,6 @@ public class OnDemandFeaturegroupController {
     }
     // finally merge in database
     onDemandFeaturegroupFacade.updateMetadata(onDemandFeaturegroup);
-  
-  
   }
   
   private void updateOnDemandFeatures(OnDemandFeaturegroup onDemandFeaturegroup,
@@ -276,14 +270,11 @@ public class OnDemandFeaturegroupController {
    */
   public void removeOnDemandFeaturegroup(Featurestore featurestore, Featuregroup featuregroup,
                                          Project project, Users user) throws FeaturestoreException {
-    String username = hdfsUsersController.getHdfsUserName(project, user);
-    DistributedFileSystemOps udfso = null;
-
-    // this is here for old feature groups that don't have a file
     onDemandFeaturegroupFacade.remove(featuregroup.getOnDemandFeaturegroup());
 
+    DistributedFileSystemOps udfso = null;
     try {
-      udfso = distributedFsService.getDfsOps(username);
+      udfso = distributedFsService.getDfsOps(project, user);
       udfso.rm(getFilePath(featurestore, featuregroup.getName(), featuregroup.getVersion()), false);
     } catch (IOException | URISyntaxException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_ON_DEMAND_FEATUREGROUP,
@@ -307,16 +298,13 @@ public class OnDemandFeaturegroupController {
     return features;
   }
 
-  private Inode createFile(Project project, Users user, Featurestore featurestore,
+  private void createFile(Project project, Users user, Featurestore featurestore,
                            OnDemandFeaturegroupDTO onDemandFeaturegroupDTO) throws FeaturestoreException {
-    String username = hdfsUsersController.getHdfsUserName(project, user);
-
-    Path path = null;
     DistributedFileSystemOps udfso = null;
     try {
-      path = getFilePath(featurestore, onDemandFeaturegroupDTO.getName(), onDemandFeaturegroupDTO.getVersion());
+      Path path = getFilePath(featurestore, onDemandFeaturegroupDTO.getName(), onDemandFeaturegroupDTO.getVersion());
 
-      udfso = distributedFsService.getDfsOps(username);
+      udfso = distributedFsService.getDfsOps(project, user);
       udfso.touchz(path);
     } catch (IOException | URISyntaxException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_ON_DEMAND_FEATUREGROUP,
@@ -324,8 +312,15 @@ public class OnDemandFeaturegroupController {
     } finally {
       distributedFsService.closeDfsClient(udfso);
     }
+  }
 
-    return inodeController.getInodeAtPath(path.toString());
+  public String getFeatureGroupLocation(Featuregroup featuregroup) throws FeaturestoreException {
+    try {
+      return getFilePath(featuregroup.getFeaturestore(), featuregroup.getName(), featuregroup.getVersion()).toString();
+    } catch (URISyntaxException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_GET_FEATURE_GROUP_METADATA,
+              Level.SEVERE, "", e.getMessage(), e);
+    }
   }
 
   private Path getFilePath(Featurestore featurestore, String name, Integer version) throws URISyntaxException {

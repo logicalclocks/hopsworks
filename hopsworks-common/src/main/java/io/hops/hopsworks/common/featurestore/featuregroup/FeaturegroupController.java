@@ -847,7 +847,7 @@ public class FeaturegroupController {
   }
 
 
-  public String getFeatureGroupLocation(Featuregroup featureGroup) {
+  public String getFeatureGroupLocation(Featuregroup featureGroup) throws FeaturestoreException {
     // Cached feature groups also have a `location` field.
     // the issue is that the host is slightly different due to a configuration of Hive
     // so here we resolve only the path based on the indoe
@@ -856,7 +856,7 @@ public class FeaturegroupController {
     } else if (featureGroup.getFeaturegroupType() == FeaturegroupType.STREAM_FEATURE_GROUP) {
       return inodeController.getPath(featureGroup.getStreamFeatureGroup().getHiveTbls().getSdId().getInode());
     } else {
-      return inodeController.getPath(featureGroup.getOnDemandFeaturegroup().getInode());
+      return onDemandFeaturegroupController.getFeatureGroupLocation(featureGroup);
     }
   }
 
