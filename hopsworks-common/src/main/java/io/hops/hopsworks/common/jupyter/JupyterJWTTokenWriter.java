@@ -18,6 +18,8 @@ package io.hops.hopsworks.common.jupyter;
 
 import com.google.common.collect.ImmutableSet;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.commons.io.FileUtils;
 
 import java.io.IOException;
@@ -40,7 +42,8 @@ public interface JupyterJWTTokenWriter {
     PosixFilePermission.GROUP_WRITE,
     PosixFilePermission.GROUP_EXECUTE);
   
-  //TODO should have a token reader
+  String readToken(Project project, Users user) throws IOException;
+  
   default void writeToken(Settings settings, JupyterJWT jupyterJWT) throws IOException {
     FileUtils.writeStringToFile(jupyterJWT.tokenFile.toFile(), jupyterJWT.token);
     
