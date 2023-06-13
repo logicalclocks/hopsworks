@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.datavalidationv2.suites;
 
 import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.expectations.ExpectationDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.Expectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ExpectationSuite;
@@ -40,7 +41,7 @@ public class ExpectationSuiteDTO extends RestDTO<ExpectationSuiteDTO> {
   private String dataAssetType = null;
   private String expectationSuiteName;
   private List<ExpectationDTO> expectations;
-  private String meta = "{\"great_expectations_version\": \"0.14.12\"}";
+  private String meta = FeaturestoreConstants.GREAT_EXPECTATIONS_META;
   private String geCloudId = null;
   private ValidationIngestionPolicy validationIngestionPolicy = ValidationIngestionPolicy.ALWAYS;
   private boolean runValidation = true;

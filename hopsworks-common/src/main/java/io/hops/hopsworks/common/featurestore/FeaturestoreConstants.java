@@ -157,4 +157,5 @@ public class FeaturestoreConstants {
   public static final String UNEXPECTED_PERCENT_KEY = "unexpected_percent";
   public static final String PARTIAL_UNEXPECTED_LIST_KEY = "partial_unexpected_list";
   public static final String UNEXPECTED_PERCENT_NONMISSING_KEY = "unexpected_percent_nonmissing";
+  public static final String GREAT_EXPECTATIONS_META = "{\"great_expectations_version\": \"0.14.13\"}";
 }
