@@ -450,6 +450,36 @@ public class TestFeatureGroupInputValidation {
   }
 
   @Test
+  public void testVerifyOnlineOfflineTypeMatchStringMediumText() throws Exception {
+    // Arrange
+    CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO();
+    featuregroupDTO.setOnlineEnabled(true);
+    List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
+    FeatureGroupFeatureDTO featureGroupFeatureDTO = new FeatureGroupFeatureDTO("part_param", "STRING");
+    featureGroupFeatureDTO.setOnlineType("MEDIUMTEXT");
+    newSchema.add(featureGroupFeatureDTO);
+    featuregroupDTO.setFeatures(newSchema);
+
+    // Act
+    featureGroupInputValidation.verifyOnlineOfflineTypeMatch(featuregroupDTO);
+  }
+
+  @Test
+  public void testVerifyOnlineOfflineTypeMatchStringLongText() throws Exception {
+    // Arrange
+    CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO();
+    featuregroupDTO.setOnlineEnabled(true);
+    List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
+    FeatureGroupFeatureDTO featureGroupFeatureDTO = new FeatureGroupFeatureDTO("part_param", "STRING");
+    featureGroupFeatureDTO.setOnlineType("LONGTEXT");
+    newSchema.add(featureGroupFeatureDTO);
+    featuregroupDTO.setFeatures(newSchema);
+
+    // Act
+    featureGroupInputValidation.verifyOnlineOfflineTypeMatch(featuregroupDTO);
+  }
+
+  @Test
   public void testVerifyOnlineOfflineTypeMatchArrayVarbinary() throws Exception {
     // Arrange
     CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO();
@@ -480,6 +510,36 @@ public class TestFeatureGroupInputValidation {
   }
 
   @Test
+  public void testVerifyOnlineOfflineTypeMatchArrayMediumBlob() throws Exception {
+    // Arrange
+    CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO();
+    featuregroupDTO.setOnlineEnabled(true);
+    List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
+    FeatureGroupFeatureDTO featureGroupFeatureDTO = new FeatureGroupFeatureDTO("part_param", "ARRAY");
+    featureGroupFeatureDTO.setOnlineType("MEDIUMBLOB");
+    newSchema.add(featureGroupFeatureDTO);
+    featuregroupDTO.setFeatures(newSchema);
+
+    // Act
+    featureGroupInputValidation.verifyOnlineOfflineTypeMatch(featuregroupDTO);
+  }
+
+  @Test
+  public void testVerifyOnlineOfflineTypeMatchArrayLongBlob() throws Exception {
+    // Arrange
+    CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO();
+    featuregroupDTO.setOnlineEnabled(true);
+    List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
+    FeatureGroupFeatureDTO featureGroupFeatureDTO = new FeatureGroupFeatureDTO("part_param", "ARRAY");
+    featureGroupFeatureDTO.setOnlineType("LONGBLOB");
+    newSchema.add(featureGroupFeatureDTO);
+    featuregroupDTO.setFeatures(newSchema);
+
+    // Act
+    featureGroupInputValidation.verifyOnlineOfflineTypeMatch(featuregroupDTO);
+  }
+
+  @Test
   public void testVerifyOnlineOfflineTypeMatchStructVarbinary() throws Exception {
     // Arrange
     CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO();
@@ -502,6 +562,36 @@ public class TestFeatureGroupInputValidation {
     List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
     FeatureGroupFeatureDTO featureGroupFeatureDTO = new FeatureGroupFeatureDTO("part_param", "STRUCT");
     featureGroupFeatureDTO.setOnlineType("BLOB");
+    newSchema.add(featureGroupFeatureDTO);
+    featuregroupDTO.setFeatures(newSchema);
+
+    // Act
+    featureGroupInputValidation.verifyOnlineOfflineTypeMatch(featuregroupDTO);
+  }
+
+  @Test
+  public void testVerifyOnlineOfflineTypeMatchStructMediumBlob() throws Exception {
+    // Arrange
+    CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO();
+    featuregroupDTO.setOnlineEnabled(true);
+    List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
+    FeatureGroupFeatureDTO featureGroupFeatureDTO = new FeatureGroupFeatureDTO("part_param", "STRUCT");
+    featureGroupFeatureDTO.setOnlineType("MEDIUMBLOB");
+    newSchema.add(featureGroupFeatureDTO);
+    featuregroupDTO.setFeatures(newSchema);
+
+    // Act
+    featureGroupInputValidation.verifyOnlineOfflineTypeMatch(featuregroupDTO);
+  }
+
+  @Test
+  public void testVerifyOnlineOfflineTypeMatchStructLongBlob() throws Exception {
+    // Arrange
+    CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO();
+    featuregroupDTO.setOnlineEnabled(true);
+    List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
+    FeatureGroupFeatureDTO featureGroupFeatureDTO = new FeatureGroupFeatureDTO("part_param", "STRUCT");
+    featureGroupFeatureDTO.setOnlineType("LONGBLOB");
     newSchema.add(featureGroupFeatureDTO);
     featuregroupDTO.setFeatures(newSchema);
 

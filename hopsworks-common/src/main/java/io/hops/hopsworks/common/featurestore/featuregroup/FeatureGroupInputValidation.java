@@ -160,15 +160,21 @@ public class FeatureGroupInputValidation {
         }
   
         if (offlineType.equals("string") &&
-          (onlineType.startsWith("varchar") || onlineType.equals("text"))) {
+                (onlineType.startsWith("varchar") ||
+                  onlineType.equals("text") ||
+                  onlineType.equals("mediumtext") ||
+                  onlineType.equals("longtext"))) {
           continue;
         }
 
         if ((offlineType.startsWith("array") ||
-          offlineType.startsWith("struct") ||
-          offlineType.startsWith("binary") ||
-          offlineType.startsWith("map")) &&
-          (onlineType.startsWith("varbinary") || onlineType.equals("blob"))) {
+                offlineType.startsWith("struct") ||
+                offlineType.startsWith("binary") ||
+                offlineType.startsWith("map")) &&
+                (onlineType.startsWith("varbinary") ||
+                        onlineType.equals("blob") ||
+                        onlineType.equals("mediumblob") ||
+                        onlineType.equals("longblob"))) {
           continue;
         }
         
