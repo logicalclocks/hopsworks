@@ -84,9 +84,9 @@ public class GitOpExecutionFacade extends AbstractFacade<GitOpExecutionFacade> {
   }
 
   public GitOpExecution create(GitCommandConfiguration gitCommandConfiguration, Users user, GitRepository repository,
-                               String secret) {
+                               String secret, String hostname) {
     GitOpExecution gitOpExecution = new GitOpExecution(gitCommandConfiguration, new Date(), user, repository,
-        GitOpExecutionState.INITIALIZING, secret);
+        GitOpExecutionState.INITIALIZING, secret, hostname);
     gitOpExecution.setExecutionStart(System.currentTimeMillis());
     em.persist(gitOpExecution);
     em.flush();

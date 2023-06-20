@@ -73,6 +73,28 @@ public class PayaraClusterManager {
       Optional.ofNullable(cluster.getUnderlyingHazelcastService().getMemberGroup()) : Optional.empty();
   }
   
+  public Optional<Member> getLocalMember() {
+    // No hazelcast or none HA
+    if (hazelcastInstance == null || hazelcastInstance.getCluster().getMembers().size() < 2) {
+      return Optional.empty();
+    }
+    Iterator<Member> iterator = hazelcastInstance.getCluster().getMembers().iterator();
+    Member localMember;
+    while (iterator.hasNext()) {
+      localMember = iterator.next();
+      if (localMember.localMember()) {
+        return Optional.of(localMember);
+      }
+    }
+    return Optional.empty();
+  }
+  
+  public String getLocalIp() {
+    Optional<Member> localMember = getLocalMember();
+    //If no hazelcast or none HA return localhost
+    return localMember.isPresent() ? localMember.get().getAddress().getHost() : "localhost";
+  }
+  
   public boolean amIThePrimary() {
     try {
       if (hazelcastInstance == null || hazelcastInstance.getCluster().getMembers().size() < 2) {
