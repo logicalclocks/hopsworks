@@ -29,6 +29,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.common.util.PayaraClusterManager;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GitOpException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -82,6 +83,8 @@ public class GitExecutionController {
   private GitCommandConfigurationValidator commandConfigurationValidator;
   @EJB
   private GitContainerArgumentsWriter argumentsWriter;
+  @EJB
+  private PayaraClusterManager payaraClusterManager;
 
   /**
    * initializes the execution of all git commands
@@ -109,10 +112,12 @@ public class GitExecutionController {
     lockRepository(repository.getId());
     GitOpExecution gitOpExecution = null;
     DistributedFileSystemOps  udfso = null;
+    String localMemberIp = payaraClusterManager.getLocalIp();
     try {
       udfso = dfsService.getDfsOps(hdfsUsername);
       GitPaths gitPaths = prepareCommandExecution(project, hopsworksUser, udfso, configSecret);
-      gitOpExecution = gitOpExecutionFacade.create(gitCommandConfiguration, hopsworksUser, repository, configSecret);
+      gitOpExecution = gitOpExecutionFacade.create(gitCommandConfiguration, hopsworksUser, repository, configSecret,
+        localMemberIp);
       argumentsWriter.createArgumentFile(gitOpExecution, gitPaths, authSecrets);
       gitCommandExecutor.execute(gitOpExecution, gitPaths);
       return gitOpExecution;
