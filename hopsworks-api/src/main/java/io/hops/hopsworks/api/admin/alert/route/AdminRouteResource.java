@@ -17,9 +17,7 @@
 package io.hops.hopsworks.api.admin.alert.route;
 
 import io.hops.hopsworks.alert.AlertManagerConfiguration;
-import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
 import io.hops.hopsworks.alerting.config.dto.Route;
-import io.hops.hopsworks.alerting.exceptions.AlertManagerClientCreateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigCtrlCreateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigReadException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigUpdateException;
@@ -116,15 +114,12 @@ public class AdminRouteResource {
     Route route = routeDTO.toRoute();
     try {
       alertManagerConfiguration.addRoute(route);
-    } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException |
-        AlertManagerConfigReadException e) {
+    } catch (AlertManagerConfigCtrlCreateException | AlertManagerConfigReadException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_READ_CONFIGURATION, Level.FINE, e.getMessage());
     } catch (AlertManagerDuplicateEntryException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.RECEIVER_EXIST, Level.FINE, e.getMessage());
     } catch (AlertManagerConfigUpdateException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_UPDATE_AM_CONFIG, Level.FINE, e.getMessage());
-    } catch (AlertManagerClientCreateException e) {
-      throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_CONNECT, Level.FINE, e.getMessage());
     } catch (AlertManagerNoSuchElementException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.RECEIVER_NOT_FOUND, Level.FINE, e.getMessage());
     }
@@ -152,15 +147,12 @@ public class AdminRouteResource {
     Route updatedRoute = route.toRoute();
     try {
       alertManagerConfiguration.updateRoute(routeToUpdate, updatedRoute);
-    } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException |
-        AlertManagerConfigReadException e) {
+    } catch (AlertManagerConfigCtrlCreateException | AlertManagerConfigReadException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_READ_CONFIGURATION, Level.FINE, e.getMessage());
     } catch (AlertManagerDuplicateEntryException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.RECEIVER_EXIST, Level.FINE, e.getMessage());
     } catch (AlertManagerConfigUpdateException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_UPDATE_AM_CONFIG, Level.FINE, e.getMessage());
-    } catch (AlertManagerClientCreateException e) {
-      throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_CONNECT, Level.FINE, e.getMessage());
     } catch (AlertManagerNoSuchElementException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.ROUTE_NOT_FOUND, Level.FINE, e.getMessage());
     }
@@ -181,13 +173,10 @@ public class AdminRouteResource {
         new Route(receiver).withMatch(routeBuilder.toMap(match)).withMatchRe(routeBuilder.toMap(matchRe));
     try {
       alertManagerConfiguration.removeRoute(routeToDelete);
-    } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException |
-        AlertManagerConfigReadException e) {
+    } catch (AlertManagerConfigCtrlCreateException | AlertManagerConfigReadException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_READ_CONFIGURATION, Level.FINE, e.getMessage());
     } catch (AlertManagerConfigUpdateException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_UPDATE_AM_CONFIG, Level.FINE, e.getMessage());
-    } catch (AlertManagerClientCreateException e) {
-      throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_CONNECT, Level.FINE, e.getMessage());
     }
     return Response.noContent().build();
   }

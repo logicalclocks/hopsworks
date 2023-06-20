@@ -33,6 +33,10 @@ import java.util.List;
 
 public class ConfigUpdater {
 
+  //private constructor to hide the implicit public one.
+  private ConfigUpdater() {
+  }
+
   public static AlertManagerConfig updateGlobal(AlertManagerConfig alertManagerConfig, Global global) {
     ConfigValidator.validate(global);
     alertManagerConfig.setGlobal(global);
@@ -94,7 +98,7 @@ public class ConfigUpdater {
   }
 
   public static AlertManagerConfig updateReceiver(AlertManagerConfig alertManagerConfig, String name, Receiver receiver)
-    throws AlertManagerNoSuchElementException, AlertManagerDuplicateEntryException, AlertManagerConfigReadException {
+    throws AlertManagerNoSuchElementException, AlertManagerDuplicateEntryException {
     ConfigValidator.validate(receiver);
     int index = getIndexOfReceiver(alertManagerConfig, name);
     if (!name.equals(receiver.getName()) && alertManagerConfig.getReceivers().contains(receiver)) {
@@ -112,14 +116,13 @@ public class ConfigUpdater {
         routesToDelete.add(route);
       }
     }
-    if (routesToDelete.size() > 0) {
+    if (routesToDelete.isEmpty()) {
       alertManagerConfig.getRoute().getRoutes().removeAll(routesToDelete);
     }
     return alertManagerConfig;
   }
 
-  public static AlertManagerConfig removeReceiver(AlertManagerConfig alertManagerConfig, String name, boolean cascade)
-    throws AlertManagerConfigReadException {
+  public static AlertManagerConfig removeReceiver(AlertManagerConfig alertManagerConfig, String name, boolean cascade) {
     int index = alertManagerConfig.getReceivers() == null ? -1 :
       alertManagerConfig.getReceivers().indexOf(new Receiver(name));
     if (index > -1) {
@@ -133,8 +136,7 @@ public class ConfigUpdater {
   }
 
   public static AlertManagerConfig addRoute(AlertManagerConfig alertManagerConfig, Route route)
-    throws AlertManagerDuplicateEntryException, AlertManagerConfigReadException,
-    AlertManagerNoSuchElementException {
+      throws AlertManagerDuplicateEntryException, AlertManagerNoSuchElementException {
     ConfigValidator.validate(route);
     getIndexOfReceiver(alertManagerConfig, route.getReceiver());//check if receiver exists
     if (alertManagerConfig.getRoute() == null) {
@@ -151,7 +153,7 @@ public class ConfigUpdater {
   }
 
   public static AlertManagerConfig updateRoute(AlertManagerConfig alertManagerConfig, Route routeToUpdate, Route route)
-    throws AlertManagerNoSuchElementException, AlertManagerDuplicateEntryException, AlertManagerConfigReadException {
+      throws AlertManagerNoSuchElementException, AlertManagerDuplicateEntryException {
     ConfigValidator.validate(route);
     getIndexOfReceiver(alertManagerConfig, route.getReceiver());//check if receiver exists
     int index = getIndexOfRoute(alertManagerConfig, routeToUpdate);
@@ -163,8 +165,7 @@ public class ConfigUpdater {
     return alertManagerConfig;
   }
 
-  public static AlertManagerConfig removeRoute(AlertManagerConfig alertManagerConfig, Route route)
-    throws AlertManagerConfigUpdateException, AlertManagerConfigReadException {
+  public static AlertManagerConfig removeRoute(AlertManagerConfig alertManagerConfig, Route route) {
     int index = alertManagerConfig.getRoute().getRoutes() == null ? -1 :
       alertManagerConfig.getRoute().getRoutes().indexOf(route);
     if (index > -1) {

@@ -116,16 +116,15 @@ public class AlertManagerClient implements Closeable {
     List<Alert> localAlerts = null;
     AlertManagerResponseException alertManagerResponseException = null;
     AlertManagerServerException alertManagerServerException = null;
+    String errorMsg = "Could not get alert from {0}. {1}";
     try {
       localAlerts = this.clientWrapper.getAlerts(active, silenced, inhibited, unprocessed, filters, receiver);
     } catch (AlertManagerResponseException e) {
       alertManagerResponseException = e;
-      LOGGER.log(Level.WARNING, "Could not get alert from {0}. {1}",
-        new Object[]{this.clientWrapper.toString(), e.getMessage()});
+      LOGGER.log(Level.WARNING, errorMsg, new Object[]{this.clientWrapper, e.getMessage()});
     } catch (AlertManagerServerException e) {
       alertManagerServerException = e;
-      LOGGER.log(Level.WARNING, "Could not get alert from {0}. {1}",
-        new Object[]{this.clientWrapper.toString(), e.getMessage()});
+      LOGGER.log(Level.WARNING, errorMsg, new Object[]{this.clientWrapper, e.getMessage()});
     }
     for (ClientWrapper client : this.peerClients) {
       try {
@@ -136,10 +135,10 @@ public class AlertManagerClient implements Closeable {
         }
       } catch (AlertManagerResponseException e) {
         alertManagerResponseException = e;
-        LOGGER.log(Level.WARNING, "Could not get alert from {0}. {1}", new Object[]{client.toString(), e.getMessage()});
+        LOGGER.log(Level.WARNING, errorMsg, new Object[]{client.toString(), e.getMessage()});
       } catch (AlertManagerServerException e) {
         alertManagerServerException = e;
-        LOGGER.log(Level.WARNING, "Could not get alert from {0}. {1}", new Object[]{client.toString(), e.getMessage()});
+        LOGGER.log(Level.WARNING, errorMsg, new Object[]{client.toString(), e.getMessage()});
       }
     }
     //If there is a response so throw response exception
@@ -157,26 +156,25 @@ public class AlertManagerClient implements Closeable {
     Response response = null;
     AlertManagerResponseException alertManagerResponseException = null;
     AlertManagerServerException alertManagerServerException = null;
+    String errorMsg = "Could not post alert to {0}. {1}";
     try {
       response = this.clientWrapper.postAlerts(postableAlerts);
     } catch (AlertManagerResponseException e) {
       alertManagerResponseException = e;
-      LOGGER.log(Level.WARNING, "Could not post alert to {0}. {1}",
-        new Object[]{this.clientWrapper.toString(), e.getMessage()});
+      LOGGER.log(Level.WARNING, errorMsg, new Object[]{this.clientWrapper, e.getMessage()});
     } catch (AlertManagerServerException e) {
       alertManagerServerException = e;
-      LOGGER.log(Level.WARNING, "Could not post alert to {0}. {1}",
-        new Object[]{this.clientWrapper.toString(), e.getMessage()});
+      LOGGER.log(Level.WARNING, errorMsg, new Object[]{this.clientWrapper, e.getMessage()});
     }
     for (ClientWrapper client : this.peerClients) {
       try {
         response = client.postAlerts(postableAlerts);
       } catch (AlertManagerResponseException e) {
         alertManagerResponseException = e;
-        LOGGER.log(Level.WARNING, "Could not post alert to {0}. {1}", new Object[]{client.toString(), e.getMessage()});
+        LOGGER.log(Level.WARNING, errorMsg, new Object[]{client, e.getMessage()});
       } catch (AlertManagerServerException e) {
         alertManagerServerException = e;
-        LOGGER.log(Level.WARNING, "Could not post alert to {0}. {1}", new Object[]{client.toString(), e.getMessage()});
+        LOGGER.log(Level.WARNING, errorMsg, new Object[]{client, e.getMessage()});
       }
     }
     //If there is a response so throw response exception
@@ -194,16 +192,15 @@ public class AlertManagerClient implements Closeable {
     List<AlertGroup> localAlertGroups = null;
     AlertManagerResponseException alertManagerResponseException = null;
     AlertManagerServerException alertManagerServerException = null;
+    String errorMsg = "Could not get Alert Groups from {0}. {1}";
     try {
       localAlertGroups = this.clientWrapper.getAlertGroups(active, silenced, inhibited, filters, receiver);
     } catch (AlertManagerResponseException e) {
       alertManagerResponseException = e;
-      LOGGER.log(Level.WARNING, "Could not get Alert Groups from {0}. {1}",
-        new Object[]{this.clientWrapper.toString(), e.getMessage()});
+      LOGGER.log(Level.WARNING, errorMsg, new Object[]{this.clientWrapper, e.getMessage()});
     } catch (AlertManagerServerException e) {
       alertManagerServerException = e;
-      LOGGER.log(Level.WARNING, "Could not get Alert Groups from {0}. {1}",
-        new Object[]{this.clientWrapper.toString(), e.getMessage()});
+      LOGGER.log(Level.WARNING, errorMsg, new Object[]{this.clientWrapper, e.getMessage()});
     }
     for (ClientWrapper client : this.peerClients) {
       try {
@@ -214,12 +211,10 @@ public class AlertManagerClient implements Closeable {
         }
       } catch (AlertManagerResponseException e) {
         alertManagerResponseException = e;
-        LOGGER.log(Level.WARNING, "Could not get Alert Groups from {0}. {1}",
-          new Object[]{client.toString(), e.getMessage()});
+        LOGGER.log(Level.WARNING, errorMsg, new Object[]{client, e.getMessage()});
       } catch (AlertManagerServerException e) {
         alertManagerServerException = e;
-        LOGGER.log(Level.WARNING, "Could not get Alert Groups from {0}. {1}",
-          new Object[]{client.toString(), e.getMessage()});
+        LOGGER.log(Level.WARNING, errorMsg, new Object[]{client, e.getMessage()});
       }
     }
     //If there is a response so throw response exception

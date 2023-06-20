@@ -26,7 +26,7 @@ import java.util.logging.Logger;
 @Startup
 @Singleton
 public class RestoreAlertManagerConfigTimer {
-  private final static Logger LOGGER = Logger.getLogger(RestoreAlertManagerConfigTimer.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(RestoreAlertManagerConfigTimer.class.getName());
 
   @EJB
   private AlertManagerConfiguration alertManagerConfiguration;
@@ -36,7 +36,7 @@ public class RestoreAlertManagerConfigTimer {
     try {
       alertManagerConfiguration.restoreFromDb();
     } catch (Exception e) {
-      LOGGER.log(Level.WARNING, "Failed to restore Alert Manager config from database backup. " + e.getMessage());
+      LOGGER.log(Level.WARNING, "Failed to restore Alert Manager config from database backup. {0}", e.getMessage());
     }
   }
 
@@ -45,7 +45,7 @@ public class RestoreAlertManagerConfigTimer {
     try {
       alertManagerConfiguration.restoreFromBackup();
     } catch (Exception e) {
-      LOGGER.log(Level.WARNING, "Failed to fix Alert Manager config from backup. " + e.getMessage());
+      LOGGER.log(Level.WARNING, "Failed to fix Alert Manager config from backup. {0}", e.getMessage());
       e.printStackTrace();
     }
   }

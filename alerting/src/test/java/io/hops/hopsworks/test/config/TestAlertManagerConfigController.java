@@ -57,9 +57,8 @@ public class TestAlertManagerConfigController {
   private AlertManagerConfigController alertManagerConfigController;
   
   @Before
-  public void setUp()
-    throws ServiceDiscoveryException, AlertManagerConfigFileNotFoundException, AlertManagerConfigReadException,
-    AlertManagerServerException, AlertManagerResponseException {
+  public void setUp() throws AlertManagerConfigFileNotFoundException, AlertManagerConfigReadException,
+      AlertManagerServerException, AlertManagerResponseException {
     client = Mockito.mock(AlertManagerClient.class);
     Mockito.when(client.reload()).thenReturn(Response.ok().build());
     alertManagerConfigController = new AlertManagerConfigController.Builder()
@@ -69,21 +68,19 @@ public class TestAlertManagerConfigController {
   }
   
   @Test
-  public void testAddReceiverValidation() {
+  public void testAddReceiverValidation() throws AlertManagerConfigReadException {
     List<EmailConfig> emailConfigList = new ArrayList<>();
     Receiver receiver = new Receiver();
-    
+    AlertManagerConfig alertManagerConfig = alertManagerConfigController.read();
     Assert.assertThrows(IllegalArgumentException.class, () -> {
-      AlertManagerConfig alertManagerConfig = alertManagerConfigController.read();
       ConfigUpdater.addReceiver(alertManagerConfig, receiver);
     });
     
     Receiver receiver1 = new Receiver("team-Z-email")
       .withEmailConfigs(emailConfigList);
-    
+    AlertManagerConfig alertManagerConfig1 = alertManagerConfigController.read();
     Assert.assertThrows(IllegalArgumentException.class, () -> {
-      AlertManagerConfig alertManagerConfig = alertManagerConfigController.read();
-      ConfigUpdater.addReceiver(alertManagerConfig, receiver1);
+      ConfigUpdater.addReceiver(alertManagerConfig1, receiver1);
     });
   }
   
@@ -104,13 +101,13 @@ public class TestAlertManagerConfigController {
   }
   
   @Test
-  public void testAddDuplicateReceiver() {
+  public void testAddDuplicateReceiver() throws AlertManagerConfigReadException {
     List<EmailConfig> emailConfigList = new ArrayList<>();
     emailConfigList.add(new EmailConfig("ermias@kth.se"));
     Receiver receiver = new Receiver("team-X-mails")
       .withEmailConfigs(emailConfigList);
+    AlertManagerConfig alertManagerConfig = alertManagerConfigController.read();
     Assert.assertThrows(AlertManagerDuplicateEntryException.class, () -> {
-      AlertManagerConfig alertManagerConfig = alertManagerConfigController.read();
       ConfigUpdater.addReceiver(alertManagerConfig, receiver);
     });
   }
@@ -135,11 +132,10 @@ public class TestAlertManagerConfigController {
   }
   
   @Test
-  public void testAddEmailValidation() {
+  public void testAddEmailValidation() throws AlertManagerConfigReadException {
     EmailConfig emailConfig = new EmailConfig();
-    
+    AlertManagerConfig alertManagerConfig = alertManagerConfigController.read();
     Assert.assertThrows(IllegalArgumentException.class, () -> {
-      AlertManagerConfig alertManagerConfig = alertManagerConfigController.read();
       ConfigUpdater.addEmailToReceiver(alertManagerConfig, "team-X-mails", emailConfig);
     });
   }
@@ -181,35 +177,32 @@ public class TestAlertManagerConfigController {
   }
   
   @Test
-  public void testAddDuplicateEmailToReceiver() {
+  public void testAddDuplicateEmailToReceiver() throws AlertManagerConfigReadException {
     EmailConfig emailConfig = new EmailConfig("team-X@example.se");
+    AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
     Assert.assertThrows(AlertManagerDuplicateEntryException.class, () -> {
-      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
       ConfigUpdater.addEmailToReceiver(alertManagerConfig, "team-X-mails", emailConfig);
     });
   }
   
   @Test
-  public void testAddSlackToReceiverValidation() {
+  public void testAddSlackToReceiverValidation() throws AlertManagerConfigReadException {
     SlackConfig slackConfig = new SlackConfig("https://hooks.slack.com/services/1234567890/0987654321", null);
-    
+    AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
     Assert.assertThrows(IllegalArgumentException.class, () -> {
-      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
       ConfigUpdater.addSlackToReceiver(alertManagerConfig, "slack_general", slackConfig);
     });
     
     SlackConfig slackConfig1 = new SlackConfig(null, "#general");
-    
+    AlertManagerConfig alertManagerConfig1 = this.alertManagerConfigController.read();
     Assert.assertThrows(IllegalArgumentException.class, () -> {
-      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
-      ConfigUpdater.addSlackToReceiver(alertManagerConfig, "slack_general", slackConfig1);
+      ConfigUpdater.addSlackToReceiver(alertManagerConfig1, "slack_general", slackConfig1);
     });
     
     SlackConfig slackConfig2 = new SlackConfig();
-    
+    AlertManagerConfig alertManagerConfig2 = this.alertManagerConfigController.read();
     Assert.assertThrows(IllegalArgumentException.class, () -> {
-      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
-      ConfigUpdater.addSlackToReceiver(alertManagerConfig, "slack_general", slackConfig2);
+      ConfigUpdater.addSlackToReceiver(alertManagerConfig2, "slack_general", slackConfig2);
     });
   }
   
@@ -254,18 +247,18 @@ public class TestAlertManagerConfigController {
   }
   
   @Test
-  public void testAddPagerdutyToReceiverValidation() throws AlertManagerResponseException, AlertManagerServerException {
+  public void testAddPagerdutyToReceiverValidation() throws AlertManagerConfigReadException {
     PagerdutyConfig pagerdutyConfig = new PagerdutyConfig().withServiceKey("serviceKey");
     pagerdutyConfig.setRoutingKey("routingKey");
+    AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
     Assert.assertThrows(IllegalArgumentException.class, () -> {
-      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
       ConfigUpdater.addPagerdutyToReceiver(alertManagerConfig, "team-DB-pager", pagerdutyConfig);
     });
     
     PagerdutyConfig pagerdutyConfig1 = new PagerdutyConfig().withServiceKey("<team-DB-key>");
+    AlertManagerConfig alertManagerConfig1 = this.alertManagerConfigController.read();
     Assert.assertThrows(AlertManagerDuplicateEntryException.class, () -> {
-      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
-      ConfigUpdater.addPagerdutyToReceiver(alertManagerConfig, "team-DB-pager", pagerdutyConfig1);
+      ConfigUpdater.addPagerdutyToReceiver(alertManagerConfig1, "team-DB-pager", pagerdutyConfig1);
     });
   }
   
@@ -308,14 +301,14 @@ public class TestAlertManagerConfigController {
   }
 
   @Test
-  public void testAddDuplicateSlackToReceiver() {
+  public void testAddDuplicateSlackToReceiver() throws AlertManagerConfigReadException {
     SlackConfig slackConfig =
       new SlackConfig("https://hooks.slack.com/services/12345678901/e3fb1c1d58b043af5e3a6a645b7f569f", "#general")
         .withIconEmoji("https://gravatar.com/avatar/e3fb1c1d58b043af5e3a6a645b7f569f")
         .withTitle("{{ template \"hopsworks.title\" . }}")
         .withText("{{ template \"hopsworks.text\" . }}");
+    AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
     Assert.assertThrows(AlertManagerDuplicateEntryException.class, () -> {
-      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
       ConfigUpdater.addSlackToReceiver(alertManagerConfig, "slack_general", slackConfig);
     });
   }
@@ -353,68 +346,66 @@ public class TestAlertManagerConfigController {
     Receiver updatedReceiver = alertManagerConfig.getReceivers().get(index);
     Assert.assertTrue(updatedReceiver.getEmailConfigs().contains(emailConfig));
   }
-  
+
   @Test
-  public void testUpdateReceiverDuplicate() {
+  public void testUpdateReceiverDuplicate() throws AlertManagerConfigReadException {
     EmailConfig emailConfig = new EmailConfig("team-Y+alerts@example.org");
     List<EmailConfig> emailConfigList = new ArrayList<>();
     emailConfigList.add(emailConfig);
     Receiver receiver = new Receiver("team-X-mails").withEmailConfigs(emailConfigList);
-    
+    AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
     Assert.assertThrows(AlertManagerDuplicateEntryException.class, () -> {
-      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
       ConfigUpdater.updateReceiver(alertManagerConfig, "team-Y-mails", receiver);
     });
   }
-  
+
   @Test
   public void testUpdateReceiverRollback() throws AlertManagerResponseException, AlertManagerServerException,
-    AlertManagerConfigReadException {
+      AlertManagerConfigReadException, AlertManagerDuplicateEntryException {
     Mockito.when(client.reload()).thenThrow(AlertManagerResponseException.class);
     List<EmailConfig> emailConfigList = new ArrayList<>();
     emailConfigList.add(new EmailConfig("team-Z+alerts@example.org"));
     Receiver receiver = new Receiver("team-Z-email").withEmailConfigs(emailConfigList);
-    
+    AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
+    AlertManagerConfig config = ConfigUpdater.addReceiver(alertManagerConfig, receiver);
     Assert.assertThrows(AlertManagerConfigUpdateException.class, () -> {
-      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
-      AlertManagerConfig config = ConfigUpdater.addReceiver(alertManagerConfig, receiver);
       alertManagerConfigController.writeAndReload(config, client);
     });
-    
-    AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
-    Assert.assertFalse(alertManagerConfig.getReceivers().contains(receiver));
+
+    AlertManagerConfig alertManagerConfig1 = this.alertManagerConfigController.read();
+    Assert.assertFalse(alertManagerConfig1.getReceivers().contains(receiver));
   }
-  
+
   @Test
   public void testUpdateReceiverRollbackServerException()
-    throws AlertManagerResponseException, AlertManagerServerException, AlertManagerConfigReadException {
+    throws AlertManagerResponseException, AlertManagerServerException, AlertManagerConfigReadException,
+    AlertManagerDuplicateEntryException {
     Mockito.when(client.reload()).thenThrow(AlertManagerServerException.class);
     List<EmailConfig> emailConfigList = new ArrayList<>();
     emailConfigList.add(new EmailConfig("team-Z+alerts@example.org"));
     Receiver receiver = new Receiver("team-Z-email").withEmailConfigs(emailConfigList);
-    
+    AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
+    AlertManagerConfig config = ConfigUpdater.addReceiver(alertManagerConfig, receiver);
     Assert.assertThrows(AlertManagerServerException.class, () -> {
-      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
-      AlertManagerConfig config = ConfigUpdater.addReceiver(alertManagerConfig, receiver);
       alertManagerConfigController.writeAndReload(config, client);
     });
-    
-    AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
-    Assert.assertFalse(alertManagerConfig.getReceivers().contains(receiver));
+
+    AlertManagerConfig alertManagerConfig1 = this.alertManagerConfigController.read();
+    Assert.assertFalse(alertManagerConfig1.getReceivers().contains(receiver));
   }
 
   @Test
-  public void testAddRouteValidate() {
+  public void testAddRouteValidate() throws AlertManagerConfigReadException {
     Map<String, String> matches = new HashMap<>();
     Route route = new Route();
+    AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
     Assert.assertThrows(IllegalArgumentException.class, () -> {
-      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
       ConfigUpdater.addRoute(alertManagerConfig, route);
     });
     Route route1 = new Route("team-X-mails").withMatch(matches);
+    AlertManagerConfig alertManagerConfig1 = this.alertManagerConfigController.read();
     Assert.assertThrows(IllegalArgumentException.class, () -> {
-      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
-      ConfigUpdater.addRoute(alertManagerConfig, route1);
+      ConfigUpdater.addRoute(alertManagerConfig1, route1);
     });
   }
 
@@ -433,13 +424,12 @@ public class TestAlertManagerConfigController {
   }
 
   @Test
-  public void testAddRouteDuplicate() {
+  public void testAddRouteDuplicate() throws AlertManagerConfigReadException {
     Map<String, String> matches = new HashMap<>();
     matches.put("project", "project1");
     Route route = new Route("slack_general").withMatch(matches);
-
+    AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
     Assert.assertThrows(AlertManagerDuplicateEntryException.class, () -> {
-      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
       ConfigUpdater.addRoute(alertManagerConfig, route);
     });
   }
@@ -463,7 +453,7 @@ public class TestAlertManagerConfigController {
   }
 
   @Test
-  public void testUpdateRouteDuplicate() {
+  public void testUpdateRouteDuplicate() throws AlertManagerConfigReadException {
     Map<String, String> matches = new HashMap<>();
     matches.put("severity", "critical");
     Route routeToUpdate = new Route("team-Y-mails").withMatch(matches);
@@ -471,8 +461,9 @@ public class TestAlertManagerConfigController {
     matches = new HashMap<>();
     matches.put("project", "project1");
     Route route = new Route("slack_general").withMatch(matches);
+    AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
+
     Assert.assertThrows(AlertManagerDuplicateEntryException.class, () -> {
-      AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
       ConfigUpdater.updateRoute(alertManagerConfig, routeToUpdate, route);
     });
   }

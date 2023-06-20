@@ -21,6 +21,8 @@ import com.google.common.base.Strings;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class HttpConfig {
+  private static final String ERROR_MSG = "`basic_auth`, `bearer_token` and `bearer_token_file` options are mutually" +
+    " exclusive.";
   @JsonAlias({"basic_auth"})
   private BasicAuth basicAuth;
   @JsonAlias({"bearer_token"})
@@ -45,8 +47,7 @@ public class HttpConfig {
 
   public HttpConfig withBasicAuth(BasicAuth basicAuth) {
     if (!Strings.isNullOrEmpty(this.bearerToken) || !Strings.isNullOrEmpty(this.bearerTokenFile)) {
-      throw new IllegalStateException(
-        "`basic_auth`, `bearer_token` and `bearer_token_file` options are mutually exclusive.");
+      throw new IllegalStateException(ERROR_MSG);
     }
     this.basicAuth = basicAuth;
     return this;
@@ -62,8 +63,7 @@ public class HttpConfig {
 
   public HttpConfig withBearerToken(String bearerToken) {
     if (this.basicAuth != null || !Strings.isNullOrEmpty(this.bearerTokenFile)) {
-      throw new IllegalStateException(
-        "`basic_auth`, `bearer_token` and `bearer_token_file` options are mutually exclusive.");
+      throw new IllegalStateException(ERROR_MSG);
     }
     this.bearerToken = bearerToken;
     return this;
@@ -79,8 +79,7 @@ public class HttpConfig {
 
   public HttpConfig withBearerTokenFile(String bearerTokenFile) {
     if (this.basicAuth != null || !Strings.isNullOrEmpty(this.bearerToken)) {
-      throw new IllegalStateException(
-        "`basic_auth`, `bearer_token` and `bearer_token_file` options are mutually exclusive.");
+      throw new IllegalStateException(ERROR_MSG);
     }
     this.bearerTokenFile = bearerTokenFile;
     return this;

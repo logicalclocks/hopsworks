@@ -94,7 +94,7 @@ describe "On #{ENV['OS']}" do
         expect_status_details(200)
       end
       it "should update inhibit" do
-        update_inhibit_admin(get_inhibit_rules_admin)
+        update_inhibit_admin({"postableInhibitRulesDTOs":get_inhibit_rules_admin})
         expect_status_details(200)
       end
     end

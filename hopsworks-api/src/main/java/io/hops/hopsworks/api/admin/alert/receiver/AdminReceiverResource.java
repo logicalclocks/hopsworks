@@ -113,7 +113,7 @@ public class AdminReceiverResource {
   @ApiOperation(value = "Check if default receiver configured.", response = GlobalReceiverDefaults.class)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
   public Response getDefaults(@Context UriInfo uriInfo, @Context SecurityContext sc)
-      throws AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException {
+      throws AlertManagerConfigReadException {
     return Response.ok().entity(receiverBuilder.build()).build();
   }
 
@@ -219,15 +219,12 @@ public class AdminReceiverResource {
     Receiver receiver = receiverBuilder.build(postableReceiverDTO, defaultTemplate, true);
     try {
       alertManagerConfiguration.updateReceiver(name, receiver);
-    } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException |
-        AlertManagerConfigReadException e) {
+    } catch (AlertManagerConfigCtrlCreateException | AlertManagerConfigReadException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_READ_CONFIGURATION, Level.FINE, e.getMessage());
     } catch (AlertManagerDuplicateEntryException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.RECEIVER_EXIST, Level.FINE, e.getMessage());
     } catch (AlertManagerConfigUpdateException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_UPDATE_AM_CONFIG, Level.FINE, e.getMessage());
-    } catch (AlertManagerClientCreateException e) {
-      throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_CONNECT, Level.FINE, e.getMessage());
     } catch (AlertManagerNoSuchElementException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.RECEIVER_NOT_FOUND, Level.FINE, e.getMessage());
     }
@@ -242,17 +239,14 @@ public class AdminReceiverResource {
   @ApiOperation(value = "Delete receiver by name.")
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
   public Response deleteById(@PathParam("name") String name,
-      @QueryParam("cascade") @DefaultValue("false") Boolean cascade, @Context UriInfo uriInfo,
-      @Context SecurityContext sc) throws AlertException {
+                             @QueryParam("cascade") @DefaultValue("false") Boolean cascade, @Context UriInfo uriInfo,
+                             @Context SecurityContext sc) throws AlertException {
     try {
       alertManagerConfiguration.removeReceiver(name, cascade);
-    } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException |
-        AlertManagerConfigReadException e) {
+    } catch (AlertManagerConfigCtrlCreateException | AlertManagerConfigReadException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_READ_CONFIGURATION, Level.FINE, e.getMessage());
     } catch (AlertManagerConfigUpdateException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_UPDATE_AM_CONFIG, Level.FINE, e.getMessage());
-    } catch (AlertManagerClientCreateException e) {
-      throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_CONNECT, Level.FINE, e.getMessage());
     }
     return Response.noContent().build();
   }

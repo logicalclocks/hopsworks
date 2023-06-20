@@ -24,7 +24,6 @@ import com.hazelcast.topic.ITopic;
 import io.hops.hopsworks.alert.dao.AlertManagerConfigFacade;
 import io.hops.hopsworks.alert.dao.AlertReceiverFacade;
 import io.hops.hopsworks.alert.exception.AlertManagerAccessControlException;
-import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
 import io.hops.hopsworks.alert.util.ConfigUtil;
 import io.hops.hopsworks.alert.util.Constants;
 import io.hops.hopsworks.alert.util.JsonObjectHelper;
@@ -36,7 +35,6 @@ import io.hops.hopsworks.alerting.config.dto.Global;
 import io.hops.hopsworks.alerting.config.dto.InhibitRule;
 import io.hops.hopsworks.alerting.config.dto.Receiver;
 import io.hops.hopsworks.alerting.config.dto.Route;
-import io.hops.hopsworks.alerting.exceptions.AlertManagerClientCreateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigCtrlCreateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigReadException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigUpdateException;
@@ -86,7 +84,7 @@ public class AlertManagerConfiguration {
   @EJB
   private AMClient amClient;
   @EJB
-  private transient AlertReceiverFacade alertReceiverFacade;
+  private AlertReceiverFacade alertReceiverFacade;
 
   public AlertManagerConfiguration() {
   }
@@ -155,8 +153,7 @@ public class AlertManagerConfiguration {
       try {
         alertManagerConfigController.writeAndReload(alertManagerConfig, amClient.getClient());
       } catch (AlertManagerServerException e) {
-        LOGGER.log(Level.SEVERE, "AlertManager server unreachable. {0}", e.getMessage());
-        throw new AlertManagerConfigUpdateException(e);
+        throw new AlertManagerConfigUpdateException("AlertManager server unreachable.", e);
       }
     }
   }
@@ -179,7 +176,6 @@ public class AlertManagerConfiguration {
   }
 
   public void writeAndReload(AlertManagerConfig alertManagerConfig) throws AlertManagerConfigUpdateException,
-      AlertManagerConfigCtrlCreateException, AlertManagerUnreachableException, AlertManagerClientCreateException,
       AlertManagerConfigReadException {
     if (alertManagerConfig != null) {
       amConfigUpdater.writeAndReload(alertManagerConfigController, amClient.getClient(), alertManagerConfig,
@@ -217,14 +213,13 @@ public class AlertManagerConfiguration {
   }
 
   @Lock(LockType.READ)
-  public Global getGlobal() throws AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException {
+  public Global getGlobal() throws AlertManagerConfigReadException {
     Optional<AlertManagerConfig> alertManagerConfig = read();
     return alertManagerConfig.map(AlertManagerConfig::getGlobal).orElse(null);
   }
 
   public void updateGlobal(Global global) throws AlertManagerConfigCtrlCreateException,
-      AlertManagerClientCreateException, AlertManagerUnreachableException, AlertManagerConfigReadException,
-      AlertManagerConfigUpdateException {
+      AlertManagerConfigReadException, AlertManagerConfigUpdateException {
     doSanityCheck();
     amConfigUpdater.updateGlobal(alertManagerConfigController, amClient.getClient(), global, alertManagerConfigFacade);
     // broadcast to all nodes
@@ -232,14 +227,13 @@ public class AlertManagerConfiguration {
   }
 
   @Lock(LockType.READ)
-  public List<String> getTemplates() throws AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException {
+  public List<String> getTemplates() throws AlertManagerConfigReadException {
     Optional<AlertManagerConfig> alertManagerConfig = read();
     return alertManagerConfig.map(AlertManagerConfig::getTemplates).orElse(null);
   }
 
   public void updateTemplates(List<String> templates) throws AlertManagerConfigCtrlCreateException,
-      AlertManagerClientCreateException, AlertManagerUnreachableException, AlertManagerConfigReadException,
-      AlertManagerConfigUpdateException {
+      AlertManagerConfigReadException, AlertManagerConfigUpdateException {
     doSanityCheck();
     amConfigUpdater.updateTemplates(alertManagerConfigController, amClient.getClient(), templates,
       alertManagerConfigFacade);
@@ -248,13 +242,13 @@ public class AlertManagerConfiguration {
   }
 
   @Lock(LockType.READ)
-  public Route getGlobalRoute() throws AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException {
+  public Route getGlobalRoute() throws AlertManagerConfigReadException {
     Optional<AlertManagerConfig> alertManagerConfig = read();
     return alertManagerConfig.map(AlertManagerConfig::getRoute).orElse(null);
   }
 
-  public void updateRoute(Route route) throws AlertManagerConfigCtrlCreateException, AlertManagerClientCreateException,
-      AlertManagerUnreachableException, AlertManagerConfigReadException, AlertManagerConfigUpdateException {
+  public void updateRoute(Route route) throws AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException,
+      AlertManagerConfigUpdateException {
     doSanityCheck();
     amConfigUpdater.updateGlobalRoute(alertManagerConfigController, amClient.getClient(), route,
       alertManagerConfigFacade);
@@ -263,15 +257,13 @@ public class AlertManagerConfiguration {
   }
 
   @Lock(LockType.READ)
-  public List<InhibitRule> getInhibitRules() throws AlertManagerConfigCtrlCreateException,
-      AlertManagerConfigReadException {
+  public List<InhibitRule> getInhibitRules() throws AlertManagerConfigReadException {
     Optional<AlertManagerConfig> alertManagerConfig = read();
     return alertManagerConfig.map(AlertManagerConfig::getInhibitRules).orElse(null);
   }
 
   public void updateInhibitRules(List<InhibitRule> inhibitRules) throws AlertManagerConfigCtrlCreateException,
-      AlertManagerClientCreateException, AlertManagerUnreachableException, AlertManagerConfigReadException,
-      AlertManagerConfigUpdateException {
+      AlertManagerConfigReadException, AlertManagerConfigUpdateException {
     doSanityCheck();
     amConfigUpdater.updateInhibitRules(alertManagerConfigController, amClient.getClient(), inhibitRules,
       alertManagerConfigFacade);
@@ -280,16 +272,14 @@ public class AlertManagerConfiguration {
   }
 
   @Lock(LockType.READ)
-  public Receiver getReceiver(String name, Project project)
-      throws AlertManagerConfigCtrlCreateException, AlertManagerNoSuchElementException,
+  public Receiver getReceiver(String name, Project project) throws AlertManagerNoSuchElementException,
       AlertManagerAccessControlException, AlertManagerConfigReadException {
     checkPermission(name, project, true);
     return getReceiver(name);
   }
 
   @Lock(LockType.READ)
-  public Receiver getReceiver(String name) throws AlertManagerConfigCtrlCreateException,
-      AlertManagerNoSuchElementException, AlertManagerConfigReadException {
+  public Receiver getReceiver(String name) throws AlertManagerNoSuchElementException, AlertManagerConfigReadException {
     Optional<AlertManagerConfig> alertManagerConfig = read();
     if (alertManagerConfig.isPresent()) {
       int index = ConfigUpdater.getIndexOfReceiver(alertManagerConfig.get(), name);
@@ -299,15 +289,13 @@ public class AlertManagerConfiguration {
   }
 
   public void addReceiver(Receiver receiver, Project project) throws AlertManagerDuplicateEntryException,
-      AlertManagerConfigUpdateException, AlertManagerConfigCtrlCreateException, AlertManagerUnreachableException,
-      AlertManagerClientCreateException, AlertManagerConfigReadException {
+      AlertManagerConfigUpdateException, AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException {
     ConfigUtil.fixReceiverName(receiver, project);
     addReceiver(receiver);
   }
 
   public void addReceiver(Receiver receiver) throws AlertManagerDuplicateEntryException,
-      AlertManagerConfigUpdateException, AlertManagerConfigCtrlCreateException, AlertManagerUnreachableException,
-      AlertManagerClientCreateException, AlertManagerConfigReadException {
+      AlertManagerConfigUpdateException, AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException {
     doSanityCheck();
     amConfigUpdater.addReceiver(alertManagerConfigController, amClient.getClient(), receiver,
       alertManagerConfigFacade, alertReceiverFacade);
@@ -327,8 +315,7 @@ public class AlertManagerConfiguration {
 
   public void updateReceiver(String name, Receiver receiver, Project project) throws AlertManagerNoSuchElementException,
       AlertManagerDuplicateEntryException, AlertManagerConfigUpdateException, AlertManagerConfigCtrlCreateException,
-      AlertManagerUnreachableException, AlertManagerClientCreateException, AlertManagerAccessControlException,
-      AlertManagerConfigReadException {
+      AlertManagerAccessControlException, AlertManagerConfigReadException {
     checkPermission(name, project, false);
     ConfigUtil.fixReceiverName(receiver, project);
     updateReceiver(name, receiver);
@@ -336,7 +323,7 @@ public class AlertManagerConfiguration {
 
   public void updateReceiver(String name, Receiver receiver) throws AlertManagerNoSuchElementException,
       AlertManagerDuplicateEntryException, AlertManagerConfigUpdateException, AlertManagerConfigCtrlCreateException,
-      AlertManagerUnreachableException, AlertManagerClientCreateException, AlertManagerConfigReadException {
+      AlertManagerConfigReadException {
     doSanityCheck();
     amConfigUpdater.updateReceiver(alertManagerConfigController, amClient.getClient(), name, receiver,
       alertManagerConfigFacade, alertReceiverFacade);
@@ -345,15 +332,13 @@ public class AlertManagerConfiguration {
   }
 
   public void removeReceiver(String name, Project project, boolean cascade) throws AlertManagerConfigUpdateException,
-      AlertManagerConfigCtrlCreateException, AlertManagerUnreachableException, AlertManagerClientCreateException,
-      AlertManagerAccessControlException, AlertManagerConfigReadException {
+      AlertManagerConfigCtrlCreateException, AlertManagerAccessControlException, AlertManagerConfigReadException {
     checkPermission(name, project, false);
     removeReceiver(name, cascade);
   }
 
-  public void removeReceiver(String name, boolean cascade)
-      throws AlertManagerConfigUpdateException, AlertManagerConfigCtrlCreateException, AlertManagerUnreachableException,
-      AlertManagerClientCreateException, AlertManagerConfigReadException {
+  public void removeReceiver(String name, boolean cascade) throws AlertManagerConfigUpdateException,
+      AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException {
     doSanityCheck();
     boolean remover = amConfigUpdater.removeReceiver(alertManagerConfigController, amClient.getClient(), name,
       cascade, alertManagerConfigFacade, alertReceiverFacade);
@@ -364,14 +349,11 @@ public class AlertManagerConfiguration {
   }
 
   @Lock(LockType.READ)
-  public List<Route> getRoutes(Project project) throws AlertManagerConfigCtrlCreateException,
-      AlertManagerConfigReadException {
+  public List<Route> getRoutes(Project project) throws AlertManagerConfigReadException {
     List<Route> projectRoutes = new ArrayList<>();
     List<Route> routeList = getRoutes();
     for (Route route : routeList) {
-      if (ConfigUtil.isRouteInProject(route, project)) {
-        projectRoutes.add(route);
-      } else if (ConfigUtil.isRouteGlobal(route)) {
+      if (ConfigUtil.isRouteGlobal(route) || ConfigUtil.isRouteInProject(route, project)) {
         projectRoutes.add(route);
       }
     }
@@ -379,14 +361,13 @@ public class AlertManagerConfiguration {
   }
 
   @Lock(LockType.READ)
-  public List<Route> getRoutes() throws AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException {
+  public List<Route> getRoutes() throws AlertManagerConfigReadException {
     Optional<AlertManagerConfig> alertManagerConfig = read();
     return alertManagerConfig.map(AlertManagerConfig::getRoute).orElse(new Route()).getRoutes();
   }
 
   @Lock(LockType.READ)
-  public Route getRoute(Route route, Project project)
-      throws AlertManagerAccessControlException, AlertManagerNoSuchElementException,
+  public Route getRoute(Route route, Project project) throws AlertManagerNoSuchElementException,
       AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException {
     if (project != null) {
       return getRoute(route.getReceiver(), route.getMatch(), route.getMatchRe(), project);
@@ -427,10 +408,9 @@ public class AlertManagerConfiguration {
     return null;
   }
 
-  public void addRoute(Route route, Project project)
-      throws AlertManagerDuplicateEntryException, AlertManagerConfigUpdateException,
-      AlertManagerConfigCtrlCreateException, AlertManagerUnreachableException, AlertManagerClientCreateException,
-      AlertManagerAccessControlException, AlertManagerConfigReadException, AlertManagerNoSuchElementException {
+  public void addRoute(Route route, Project project) throws AlertManagerDuplicateEntryException,
+      AlertManagerConfigUpdateException, AlertManagerConfigCtrlCreateException, AlertManagerAccessControlException,
+      AlertManagerConfigReadException, AlertManagerNoSuchElementException {
     ConfigUtil.fixRoute(route, project);
     if (!Strings.isNullOrEmpty(route.getReceiver()) && !route.getReceiver()
         .startsWith(Constants.RECEIVER_NAME_PREFIX.replace(Constants.PROJECT_PLACE_HOLDER, project.getName()))) {
@@ -442,8 +422,7 @@ public class AlertManagerConfiguration {
 
   public void addRoute(Route route)
       throws AlertManagerDuplicateEntryException, AlertManagerConfigUpdateException, AlertManagerConfigReadException,
-      AlertManagerConfigCtrlCreateException, AlertManagerUnreachableException, AlertManagerClientCreateException,
-      AlertManagerNoSuchElementException {
+      AlertManagerConfigCtrlCreateException, AlertManagerNoSuchElementException {
     doSanityCheck();
     amConfigUpdater.addRoute(alertManagerConfigController, amClient.getClient(), route, alertManagerConfigFacade);
     // broadcast to all nodes
@@ -458,8 +437,8 @@ public class AlertManagerConfiguration {
 
   public void updateRoute(Route routeToUpdate, Route route, Project project)
       throws AlertManagerNoSuchElementException, AlertManagerDuplicateEntryException,
-      AlertManagerConfigUpdateException, AlertManagerConfigCtrlCreateException, AlertManagerUnreachableException,
-      AlertManagerClientCreateException, AlertManagerAccessControlException, AlertManagerConfigReadException {
+      AlertManagerConfigUpdateException, AlertManagerConfigCtrlCreateException, AlertManagerAccessControlException,
+      AlertManagerConfigReadException {
     if ((route.getMatch() == null || route.getMatch().isEmpty()) &&
         (route.getMatchRe() == null || route.getMatchRe().isEmpty())) {
       throw new AlertManagerNoSuchElementException("Need to set match or matchRe to find a route.");
@@ -471,8 +450,7 @@ public class AlertManagerConfiguration {
 
   public void updateRoute(Route routeToUpdate, Route route)
       throws AlertManagerNoSuchElementException, AlertManagerDuplicateEntryException, AlertManagerConfigUpdateException,
-      AlertManagerConfigCtrlCreateException, AlertManagerUnreachableException,
-    AlertManagerClientCreateException, AlertManagerConfigReadException {
+      AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException {
     doSanityCheck();
     amConfigUpdater.updateRoute(alertManagerConfigController, amClient.getClient(), routeToUpdate, route,
       alertManagerConfigFacade);
@@ -480,9 +458,8 @@ public class AlertManagerConfiguration {
     broadcast("Alert Manager Config route updated");
   }
 
-  public void removeRoute(Route route, Project project)
-      throws AlertManagerConfigUpdateException, AlertManagerConfigCtrlCreateException, AlertManagerUnreachableException,
-      AlertManagerClientCreateException, AlertManagerAccessControlException, AlertManagerConfigReadException {
+  public void removeRoute(Route route, Project project) throws AlertManagerConfigUpdateException,
+      AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException {
     List<Route> routes = getRoutes(project);
     if (!routes.isEmpty() && routes.contains(route)) {
       removeRoute(route);
@@ -490,7 +467,7 @@ public class AlertManagerConfiguration {
   }
 
   public void removeRoute(Route route) throws AlertManagerConfigUpdateException, AlertManagerConfigCtrlCreateException,
-      AlertManagerUnreachableException, AlertManagerClientCreateException, AlertManagerConfigReadException {
+      AlertManagerConfigReadException {
     doSanityCheck();
     boolean remover = amConfigUpdater.removeRoute(alertManagerConfigController, amClient.getClient(), route,
       alertManagerConfigFacade);

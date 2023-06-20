@@ -66,15 +66,12 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Api(value = "Alert Receiver Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ReceiverResource {
-
-  private static final Logger LOGGER = Logger.getLogger(ReceiverResource.class.getName());
-
+  
   @EJB
   private ReceiverBuilder receiverBuilder;
   @EJB
@@ -148,7 +145,7 @@ public class ReceiverResource {
   public Response getDefaults(@Context UriInfo uriInfo,
                               @Context HttpServletRequest req,
                               @Context SecurityContext sc)
-      throws AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException {
+      throws AlertManagerConfigReadException {
     return Response.ok().entity(receiverBuilder.build()).build();
   }
 
@@ -171,15 +168,12 @@ public class ReceiverResource {
     validateReceiverOneConfig(receiver);
     try {
       alertManagerConfiguration.addReceiver(receiver, getProject());
-    } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException|
-        AlertManagerConfigReadException e) {
+    } catch (AlertManagerConfigCtrlCreateException | AlertManagerConfigReadException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_READ_CONFIGURATION, Level.FINE, e.getMessage());
     } catch (AlertManagerDuplicateEntryException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.RECEIVER_EXIST, Level.FINE, e.getMessage());
     } catch (AlertManagerConfigUpdateException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_UPDATE_AM_CONFIG, Level.FINE, e.getMessage());
-    } catch (AlertManagerClientCreateException e) {
-      throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_CONNECT, Level.FINE, e.getMessage());
     } catch (IllegalArgumentException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, e.getMessage());
     }
@@ -210,15 +204,12 @@ public class ReceiverResource {
     validateReceiverOneConfig(receiver);
     try {
       alertManagerConfiguration.updateReceiver(name, receiver, getProject());
-    } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException|
-        AlertManagerConfigReadException e) {
+    } catch (AlertManagerConfigCtrlCreateException | AlertManagerConfigReadException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_READ_CONFIGURATION, Level.FINE, e.getMessage());
     } catch (AlertManagerDuplicateEntryException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.RECEIVER_EXIST, Level.FINE, e.getMessage());
     } catch (AlertManagerConfigUpdateException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_UPDATE_AM_CONFIG, Level.FINE, e.getMessage());
-    } catch (AlertManagerClientCreateException e) {
-      throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_CONNECT, Level.FINE, e.getMessage());
     } catch (AlertManagerNoSuchElementException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.RECEIVER_NOT_FOUND, Level.FINE, e.getMessage());
     } catch (AlertManagerAccessControlException e) {

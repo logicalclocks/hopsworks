@@ -116,6 +116,7 @@ public class PostableRouteDTO {
       .withGroupBy(this.getGroupBy())
       .withGroupWait(this.getGroupWait())
       .withGroupInterval(this.getGroupInterval())
+      .withRepeatInterval(this.getRepeatInterval())
       .withRoutes(this.getRoutes())
       .withContinue(this.getContinue())
       .withMatch(this.getMatch() != null? this.getMatch().stream()
