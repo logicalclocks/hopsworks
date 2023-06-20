@@ -40,12 +40,21 @@
 package io.hops.hopsworks.common.kafka;
 
 import io.hops.hopsworks.common.dao.kafka.HopsKafkaAdminClient;
+import io.hops.hopsworks.common.util.PayaraClusterManager;
 import io.hops.hopsworks.persistence.entity.kafka.ProjectTopics;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Schedule;
+import javax.ejb.ScheduleExpression;
 import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.ejb.Timeout;
 import javax.ejb.Timer;
+import javax.ejb.TimerConfig;
+import javax.ejb.TimerService;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.util.Set;
@@ -58,6 +67,7 @@ import java.util.stream.Collectors;
  * Periodically sync zookeeper with the database for
  * <p>
  */
+@Startup
 @Singleton
 public class ZookeeperTopicCleanerTimer {
 
@@ -72,10 +82,32 @@ public class ZookeeperTopicCleanerTimer {
   private KafkaBrokers kafkaBrokers;
   @EJB
   private HopsKafkaAdminClient hopsKafkaAdminClient;
+  @EJB
+  private PayaraClusterManager payaraClusterManager;
+  @Resource
+  private TimerService timerService;
+  private Timer timer;
+
+  @PostConstruct
+  public void init() {
+    ScheduleExpression schedule = new ScheduleExpression();
+    schedule.hour("*");
+    timer = timerService.createCalendarTimer(schedule, new TimerConfig("Zookeeper Topic Cleaner", false));
+  }
+
+  @PreDestroy
+  public void destroy() {
+    if (timer != null) {
+      timer.cancel();
+    }
+  }
 
   // Run once per hour 
-  @Schedule(minute = "0", hour = "*", info="Zookeeper Topic Cleaner")
+  @Timeout
   public void execute(Timer timer) {
+    if (!payaraClusterManager.amIThePrimary()) {
+      return;
+    }
     LOGGER.log(Level.FINE, "Running ZookeeperTopicCleanerTimer.");
 
     try {
