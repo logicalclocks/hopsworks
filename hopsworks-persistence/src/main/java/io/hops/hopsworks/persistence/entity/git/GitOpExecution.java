@@ -119,16 +119,23 @@ public class GitOpExecution implements Serializable {
   @Column(name = "config_secret")
   private String configSecret;
 
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1, max = 128)
+  @Column(name = "host_ip")
+  private String hostIp;
+
   public GitOpExecution(){}
 
   public GitOpExecution(GitCommandConfiguration gitCommandConfiguration, Date submissionTime, Users user,
-                        GitRepository repository, GitOpExecutionState state, String configSecret) {
+                        GitRepository repository, GitOpExecutionState state, String configSecret, String hostIp) {
     this.submissionTime = submissionTime;
     this.user = user;
     this.gitCommandConfiguration = gitCommandConfiguration;
     this.state = state;
     this.repository = repository;
     this.configSecret = configSecret;
+    this.hostIp = hostIp;
   }
 
   public Integer getId() { return id; }
@@ -164,6 +171,14 @@ public class GitOpExecution implements Serializable {
   public String getConfigSecret() { return configSecret; }
 
   public void setConfigSecret(String configSecret) { this.configSecret = configSecret; }
+
+  public String getHostIp() {
+    return hostIp;
+  }
+
+  public void setHostIp(String hostIp) {
+    this.hostIp = hostIp;
+  }
 
   @Override
   public int hashCode() {
