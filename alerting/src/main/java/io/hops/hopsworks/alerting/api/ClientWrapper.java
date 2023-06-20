@@ -48,6 +48,7 @@ import java.util.logging.Logger;
 
 public class ClientWrapper implements Closeable {
   private static final Logger LOGGER = Logger.getLogger(ClientWrapper.class.getName());
+  private static final String ERROR_RESPONSE = "Failed to read response";
   private final Client client;
   private final WebTarget webTarget;
   private final ObjectMapper objectMapper = new ObjectMapper();
@@ -92,6 +93,8 @@ public class ClientWrapper implements Closeable {
         case DELETE:
           response = invocationBuilder.delete();
           break;
+        default:
+          throw new AlertManagerResponseException("Method not supported");
       }
     } catch (Exception e) {
       throw new AlertManagerServerException(e.getMessage());
@@ -124,11 +127,11 @@ public class ClientWrapper implements Closeable {
       try {
         content = objectMapper.readValue(response.readEntity(String.class), type);
       } catch (IOException e) {
-        throw new IllegalStateException("Failed to read response");
+        throw new IllegalStateException(ERROR_RESPONSE);
       }
       return content;
     } else {
-      throw new IllegalStateException("Failed to read response");
+      throw new IllegalStateException(ERROR_RESPONSE);
     }
   }
   
@@ -141,11 +144,11 @@ public class ClientWrapper implements Closeable {
         content = objectMapper
           .readValue(response.readEntity(String.class), t.constructCollectionType(ArrayList.class, clazz));
       } catch (IOException e) {
-        throw new IllegalStateException("Failed to read response");
+        throw new IllegalStateException(ERROR_RESPONSE);
       }
       return content;
     } else {
-      throw new IllegalStateException("Failed to read response");
+      throw new IllegalStateException(ERROR_RESPONSE);
     }
   }
   
@@ -181,32 +184,32 @@ public class ClientWrapper implements Closeable {
   
   public Response healthy() throws AlertManagerResponseException, AlertManagerServerException {
     WebTarget wt = webTarget.path(Settings.MANAGEMENT_API_HEALTH);
-    LOGGER.log(Level.FINE, "Sending request healthy to: {0}", wt.toString());
+    LOGGER.log(Level.FINE, "Sending request healthy to: {0}", wt);
     return sendRequest(wt.request(), RequestMethod.GET, null);
   }
   
   public Response ready() throws AlertManagerResponseException, AlertManagerServerException {
     WebTarget wt = webTarget.path(Settings.MANAGEMENT_API_READY);
-    LOGGER.log(Level.FINE, "Sending request ready to: {0}", wt.toString());
+    LOGGER.log(Level.FINE, "Sending request ready to: {0}", wt);
     return sendRequest(wt.request(), RequestMethod.GET, null);
   }
   
   public Response reload() throws AlertManagerResponseException, AlertManagerServerException {
     WebTarget wt = webTarget.path(Settings.MANAGEMENT_API_RELOAD);
-    LOGGER.log(Level.FINE, "Sending request reload to: {0}", wt.toString());
+    LOGGER.log(Level.FINE, "Sending request reload to: {0}", wt);
     return sendRequest(wt.request(), RequestMethod.POST, Entity.json(""));
   }
   
   public AlertmanagerStatus getStatus() throws AlertManagerResponseException, AlertManagerServerException {
     WebTarget wt = webTarget.path(Settings.ALERTS_API_STATUS);
-    LOGGER.log(Level.FINE, "Sending request getStatus to: {0}", wt.toString());
+    LOGGER.log(Level.FINE, "Sending request getStatus to: {0}", wt);
     return getResponse(sendRequest(wt.request(MediaType.APPLICATION_JSON), RequestMethod.GET, null),
       AlertmanagerStatus.class);
   }
   
   public List<ReceiverName> getReceivers() throws AlertManagerResponseException, AlertManagerServerException {
     WebTarget wt = webTarget.path(Settings.ALERTS_API_RECEIVERS);
-    LOGGER.log(Level.FINE, "Sending request getReceivers to: {0}", wt.toString());
+    LOGGER.log(Level.FINE, "Sending request getReceivers to: {0}", wt);
     return getResponseList(sendRequest(wt.request(MediaType.APPLICATION_JSON), RequestMethod.GET, null),
       ReceiverName.class);
   }
@@ -219,20 +222,20 @@ public class ClientWrapper implements Closeable {
       throws AlertManagerResponseException, AlertManagerServerException {
     WebTarget wt = webTarget.path(Settings.ALERTS_API_SILENCES);
     wt = setFilters(wt, filters);
-    LOGGER.log(Level.FINE, "Sending request getSilences to: {0}", wt.toString());
+    LOGGER.log(Level.FINE, "Sending request getSilences to: {0}", wt);
     return getResponseList(sendRequest(wt.request(MediaType.APPLICATION_JSON), RequestMethod.GET, null), Silence.class);
   }
   
   public Silence getSilence(String uuid) throws AlertManagerResponseException, AlertManagerServerException {
     WebTarget wt = webTarget.path(Settings.ALERTS_API_SILENCE).path(uuid);
-    LOGGER.log(Level.FINE, "Sending request getSilence to: {0}", wt.toString());
+    LOGGER.log(Level.FINE, "Sending request getSilence to: {0}", wt);
     return getResponse(sendRequest(wt.request(MediaType.APPLICATION_JSON), RequestMethod.GET, null), Silence.class);
   }
   
   public SilenceID postSilences(PostableSilence postableSilence) throws AlertManagerResponseException,
       AlertManagerServerException {
     WebTarget wt = webTarget.path(Settings.ALERTS_API_SILENCES);
-    LOGGER.log(Level.FINE, "Sending request postSilences to: {0}", wt.toString());
+    LOGGER.log(Level.FINE, "Sending request postSilences to: {0}", wt);
     return getResponse(
       sendRequest(wt.request(MediaType.APPLICATION_JSON), RequestMethod.POST, toEntity(postableSilence)),
       SilenceID.class);
@@ -240,7 +243,7 @@ public class ClientWrapper implements Closeable {
   
   public Response deleteSilence(String uuid) throws AlertManagerResponseException, AlertManagerServerException {
     WebTarget wt = webTarget.path(Settings.ALERTS_API_SILENCE).path(uuid);
-    LOGGER.log(Level.FINE, "Sending request deleteSilence to: {0}", wt.toString());
+    LOGGER.log(Level.FINE, "Sending request deleteSilence to: {0}", wt);
     return sendRequest(wt.request(MediaType.APPLICATION_JSON), RequestMethod.DELETE, null);
   }
   
@@ -252,14 +255,14 @@ public class ClientWrapper implements Closeable {
       Set<String> filters, String receiver) throws AlertManagerResponseException, AlertManagerServerException {
     WebTarget wt = webTarget.path(Settings.ALERTS_API_ALERTS);
     wt = setQueryParams(wt, active, silenced, inhibited, unprocessed, filters, receiver);
-    LOGGER.log(Level.FINE, "Sending request getAlerts to: {0}", wt.toString());
+    LOGGER.log(Level.FINE, "Sending request getAlerts to: {0}", wt);
     return getResponseList(sendRequest(wt.request(MediaType.APPLICATION_JSON), RequestMethod.GET, null), Alert.class);
   }
   
   public Response postAlerts(List<PostableAlert> postableAlerts)
       throws AlertManagerResponseException, AlertManagerServerException {
     WebTarget wt = webTarget.path(Settings.ALERTS_API_ALERTS);
-    LOGGER.log(Level.FINE, "Sending request postAlerts to: {0}", wt.toString());
+    LOGGER.log(Level.FINE, "Sending request postAlerts to: {0}", wt);
     return sendRequest(wt.request(MediaType.APPLICATION_JSON), RequestMethod.POST, toEntity(postableAlerts));
   }
   
@@ -267,7 +270,7 @@ public class ClientWrapper implements Closeable {
       String receiver) throws AlertManagerResponseException, AlertManagerServerException {
     WebTarget wt = webTarget.path(Settings.ALERTS_API_ALERTS_GROUPS);
     wt = setQueryParams(wt, active, silenced, inhibited, null, filters, receiver);
-    LOGGER.log(Level.FINE, "Sending request getAlertGroups to: {0}", wt.toString());
+    LOGGER.log(Level.FINE, "Sending request getAlertGroups to: {0}", wt);
     return getResponseList(sendRequest(wt.request(MediaType.APPLICATION_JSON), RequestMethod.GET, null),
       AlertGroup.class);
   }

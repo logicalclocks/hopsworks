@@ -45,14 +45,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class AlertBuilder {
-  
-  private static final Logger LOGGER = Logger.getLogger(AlertBuilder.class.getName());
   
   @EJB
   private AMClient alertManager;
@@ -89,8 +86,8 @@ public class AlertBuilder {
   }
   
   private UriBuilder addQuery(UriBuilder builder, Map<String, String> labels) {
-    for (String label : labels.keySet()) {
-      builder = builder.queryParam("filter", label + "=" + labels.get(label));
+    for (Map.Entry<String, String> label : labels.entrySet()) {
+      builder = builder.queryParam("filter", label.getKey() + "=" + label.getValue());
     }
     return builder;
   }

@@ -32,14 +32,15 @@ public class Responder {
     this.id = id;
     this.name = name;
     this.username = username;
+    String errorMsg = "Exactly one of id, name or username fields should be defined.";
     if (!Strings.isNullOrEmpty(id) && (!Strings.isNullOrEmpty(name) || !Strings.isNullOrEmpty(username))) {
-      throw new IllegalStateException("Exactly one of id, name or username fields should be defined.");
+      throw new IllegalStateException(errorMsg);
     }
     if (!Strings.isNullOrEmpty(name) && (!Strings.isNullOrEmpty(id) || !Strings.isNullOrEmpty(username))) {
-      throw new IllegalStateException("Exactly one of id, name or username fields should be defined.");
+      throw new IllegalStateException(errorMsg);
     }
     if (!Strings.isNullOrEmpty(username) && (!Strings.isNullOrEmpty(name) || !Strings.isNullOrEmpty(id))) {
-      throw new IllegalStateException("Exactly one of id, name or username fields should be defined.");
+      throw new IllegalStateException(errorMsg);
     }
   }
   

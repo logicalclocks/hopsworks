@@ -66,16 +66,12 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Logged
 @Api(value = "Receiver Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class AdminReceiverResource {
-  
-  private static final Logger LOGGER = Logger.getLogger(AdminReceiverResource.class.getName());
-  
   @EJB
   private ReceiverBuilder receiverBuilder;
   @EJB
@@ -122,7 +118,7 @@ public class AdminReceiverResource {
   public Response getDefaults(@Context UriInfo uriInfo,
                               @Context HttpServletRequest req,
                               @Context SecurityContext sc)
-      throws AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException {
+      throws AlertManagerConfigReadException {
     return Response.ok().entity(receiverBuilder.build()).build();
   }
   
@@ -233,15 +229,12 @@ public class AdminReceiverResource {
     Receiver receiver = receiverBuilder.build(postableReceiverDTO, defaultTemplate, true);
     try {
       alertManagerConfiguration.updateReceiver(name, receiver);
-    } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException |
-        AlertManagerConfigReadException e) {
+    } catch (AlertManagerConfigCtrlCreateException | AlertManagerConfigReadException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_READ_CONFIGURATION, Level.FINE, e.getMessage());
     } catch (AlertManagerDuplicateEntryException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.RECEIVER_EXIST, Level.FINE, e.getMessage());
     } catch (AlertManagerConfigUpdateException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_UPDATE_AM_CONFIG, Level.FINE, e.getMessage());
-    } catch (AlertManagerClientCreateException e) {
-      throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_CONNECT, Level.FINE, e.getMessage());
     } catch (AlertManagerNoSuchElementException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.RECEIVER_NOT_FOUND, Level.FINE, e.getMessage());
     }
@@ -262,13 +255,10 @@ public class AdminReceiverResource {
                              @Context SecurityContext sc) throws AlertException {
     try {
       alertManagerConfiguration.removeReceiver(name, cascade);
-    } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException |
-        AlertManagerConfigReadException e) {
+    } catch (AlertManagerConfigCtrlCreateException | AlertManagerConfigReadException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_READ_CONFIGURATION, Level.FINE, e.getMessage());
     } catch (AlertManagerConfigUpdateException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_UPDATE_AM_CONFIG, Level.FINE, e.getMessage());
-    } catch (AlertManagerClientCreateException e) {
-      throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_CONNECT, Level.FINE, e.getMessage());
     }
     return Response.noContent().build();
   }

@@ -17,6 +17,7 @@ package io.hops.hopsworks.alert;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import fish.payara.cluster.Clustered;
 import io.hops.hopsworks.alert.dao.AlertManagerConfigFacade;
 import io.hops.hopsworks.alert.dao.AlertReceiverFacade;
@@ -45,8 +46,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * This Clustered Singleton is used as a write lock on Alert manager configuration.
@@ -55,13 +54,15 @@ import java.util.logging.Logger;
 @Clustered
 @Singleton
 public class AMConfigUpdater implements Serializable {
-  private final static Logger LOGGER = Logger.getLogger(AMConfigUpdater.class.getName());
+
   //needed b/c Hazelcast assigns serialVersionUID on deployment and will throw HazelcastSerializationException
   //if the UID is different from the one in cache (local class incompatible: stream classdesc serialVersionUID = xxx,
   //local class serialVersionUID = xxx)
   private static final long serialVersionUID = 7243440946325768353L;
   
+  @VisibleForTesting
   public AMConfigUpdater() {
+    // here for testing.
   }
   
   public void updateAlertManagerConfig(AlertManagerConfigController alertManagerConfigController,
@@ -70,8 +71,7 @@ public class AMConfigUpdater implements Serializable {
     try {
       alertManagerConfigController.writeAndReload(alertManagerConfig, client);
     } catch (AlertManagerServerException e) {
-      LOGGER.log(Level.SEVERE, "AlertManager server unreachable. {0}", e.getMessage());
-      throw new AlertManagerConfigUpdateException(e);
+      throw new AlertManagerConfigUpdateException("AlertManager server unreachable.", e);
     }
   }
   

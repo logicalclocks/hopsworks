@@ -500,7 +500,7 @@ module AlertHelper
   end
 
   def get_inhibit_rules_admin
-    return {"postableInhibitRulesDTOs": [@@inhibit_rules.clone]}
+    return [@@inhibit_rules.clone]
   end
 
   def get_config_admin

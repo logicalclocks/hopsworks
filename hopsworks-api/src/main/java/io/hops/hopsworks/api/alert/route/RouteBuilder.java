@@ -17,7 +17,6 @@
 package io.hops.hopsworks.api.alert.route;
 
 import io.hops.hopsworks.alert.AlertManagerConfiguration;
-import io.hops.hopsworks.alert.exception.AlertManagerAccessControlException;
 import io.hops.hopsworks.alerting.config.dto.Route;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigCtrlCreateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigReadException;
@@ -44,13 +43,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class RouteBuilder {
-  
-  private static final Logger LOGGER = Logger.getLogger(RouteResource.class.getName());
   
   @EJB
   private AlertManagerConfiguration alertManagerConfiguration;
@@ -155,8 +151,6 @@ public class RouteBuilder {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_READ_CONFIGURATION, Level.FINE, e.getMessage());
     } catch (AlertManagerNoSuchElementException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.ROUTE_NOT_FOUND, Level.FINE, e.getMessage());
-    } catch (AlertManagerAccessControlException e) {
-      throw new AlertException(RESTCodes.AlertErrorCode.ACCESS_CONTROL_EXCEPTION, Level.FINE, e.getMessage());
     }
     return build(uriInfo, resourceRequest, route);
   }
@@ -186,7 +180,7 @@ public class RouteBuilder {
         } else {
           routes = alertManagerConfiguration.getRoutes();
         }
-      } catch (AlertManagerConfigReadException | AlertManagerConfigCtrlCreateException e) {
+      } catch (AlertManagerConfigReadException e) {
         throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_READ_CONFIGURATION, Level.FINE, e.getMessage());
       }
       dto.setCount((long) routes.size());

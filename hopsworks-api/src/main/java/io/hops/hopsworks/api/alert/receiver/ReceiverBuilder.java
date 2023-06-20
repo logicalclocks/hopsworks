@@ -33,7 +33,6 @@ import io.hops.hopsworks.alerting.config.dto.VictoropsConfig;
 import io.hops.hopsworks.alerting.config.dto.WebhookConfig;
 import io.hops.hopsworks.alerting.config.dto.WechatConfig;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerClientCreateException;
-import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigCtrlCreateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigReadException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerNoSuchElementException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerResponseException;
@@ -57,14 +56,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ReceiverBuilder {
-  
-  private static final Logger LOGGER = Logger.getLogger(ReceiverResource.class.getName());
   
   @EJB
   private AMClient alertManager;
@@ -141,7 +137,7 @@ public class ReceiverBuilder {
       } else {
         receiver = alertManagerConfiguration.getReceiver(name);
       }
-    } catch (AlertManagerConfigReadException | AlertManagerConfigCtrlCreateException e) {
+    } catch (AlertManagerConfigReadException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_READ_CONFIGURATION, Level.FINE, e.getMessage());
     } catch (AlertManagerNoSuchElementException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.RECEIVER_NOT_FOUND, Level.FINE, e.getMessage());
@@ -356,7 +352,7 @@ public class ReceiverBuilder {
     return null;
   }
   
-  public GlobalReceiverDefaults build() throws AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException {
+  public GlobalReceiverDefaults build() throws AlertManagerConfigReadException {
     Optional<AlertManagerConfig> alertManagerConfig = alertManagerConfiguration.read();
     GlobalReceiverDefaults globalReceiverDefaults = new GlobalReceiverDefaults();
     if (alertManagerConfig.isPresent() && alertManagerConfig.get().getGlobal() != null) {

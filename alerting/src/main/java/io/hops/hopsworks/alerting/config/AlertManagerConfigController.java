@@ -22,7 +22,6 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.google.common.base.Strings;
-import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.alerting.api.AlertManagerClient;
 import io.hops.hopsworks.alerting.config.dto.AlertManagerConfig;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigFileNotFoundException;
@@ -33,10 +32,8 @@ import io.hops.hopsworks.alerting.exceptions.AlertManagerServerException;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.Logger;
 
 public class AlertManagerConfigController {
-  private static final Logger LOGGER = Logger.getLogger(AlertManagerConfigController.class.getName());
   private static final String CONFIG_FILE_PATH = "/srv/hops/alertmanager/alertmanager/alertmanager.yml";
   
   private final File configFile;
@@ -129,8 +126,7 @@ public class AlertManagerConfigController {
       return configFile;
     }
     
-    public AlertManagerConfigController build()
-        throws ServiceDiscoveryException, AlertManagerConfigFileNotFoundException {
+    public AlertManagerConfigController build() throws AlertManagerConfigFileNotFoundException {
       return new AlertManagerConfigController(getConfigFile());
     }
   }

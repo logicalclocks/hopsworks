@@ -37,7 +37,7 @@ import java.util.logging.Logger;
 @Singleton
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class AMConfigMessageListener {
-  private final static Logger LOGGER = Logger.getLogger(AMConfigMessageListener.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(AMConfigMessageListener.class.getName());
   private ITopic<String> configUpdatedTopic;
   private UUID msgListenerId;
   

@@ -28,6 +28,10 @@ import java.util.List;
 
 public class ConfigValidator {
   
+  //private constructor to hide the implicit public one.
+  private ConfigValidator() {
+  }
+  
   public static void validate(Global global) {
     if (global == null) {
       throw new IllegalArgumentException("Global config can not be null.");
