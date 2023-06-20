@@ -19,14 +19,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import io.hops.hopsworks.alert.dao.AlertManagerConfigFacade;
 import io.hops.hopsworks.alert.dao.AlertReceiverFacade;
-import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
 import io.hops.hopsworks.alert.util.ConfigUtil;
 import io.hops.hopsworks.alert.util.Constants;
 import io.hops.hopsworks.alerting.config.dto.AlertManagerConfig;
 import io.hops.hopsworks.alerting.config.dto.Receiver;
 import io.hops.hopsworks.alerting.config.dto.Route;
-import io.hops.hopsworks.alerting.exceptions.AlertManagerClientCreateException;
-import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigCtrlCreateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigReadException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigUpdateException;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertReceiver;
@@ -39,7 +36,6 @@ import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -49,16 +45,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Singleton
-public class FixReceiversTimer implements Serializable {
-  private final static Logger LOGGER = Logger.getLogger(FixReceiversTimer.class.getName());
-  private static final long serialVersionUID = 3302197432816982668L;
+public class FixReceiversTimer {
+  private static final Logger LOGGER = Logger.getLogger(FixReceiversTimer.class.getName());
 
   @EJB
-  private transient AlertManagerConfigFacade alertManagerConfigFacade;
+  private AlertManagerConfigFacade alertManagerConfigFacade;
   @EJB
-  private transient AlertReceiverFacade alertReceiverFacade;
+  private AlertReceiverFacade alertReceiverFacade;
   @EJB
-  private transient AlertManagerConfiguration alertManagerConfiguration;
+  private AlertManagerConfiguration alertManagerConfiguration;
 
   public FixReceiversTimer() {
   }
@@ -78,7 +73,7 @@ public class FixReceiversTimer implements Serializable {
       runFixConfig();
       LOGGER.log(Level.FINE, "Fix Alert Manager config receivers from backup.");
     } catch (Exception e) {
-      LOGGER.log(Level.INFO, "Failed to fix Alert Manager config from backup. " + e.getMessage());
+      LOGGER.log(Level.INFO, "Failed to fix Alert Manager config from backup. {0}", e.getMessage());
     }
   }
 
@@ -216,8 +211,7 @@ public class FixReceiversTimer implements Serializable {
     return alertManagerConfig.getRoute().getRoutes();
   }
 
-  public void runFixConfig() throws AlertManagerConfigReadException, IOException, AlertManagerUnreachableException,
-    AlertManagerConfigUpdateException, AlertManagerConfigCtrlCreateException, AlertManagerClientCreateException {
+  public void runFixConfig() throws AlertManagerConfigReadException, IOException, AlertManagerConfigUpdateException {
     ObjectMapper objectMapper = new ObjectMapper();
     Optional<AlertManagerConfig> alertManagerConfig = read(objectMapper);
     if (alertManagerConfig.isPresent()) {

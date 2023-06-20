@@ -145,13 +145,10 @@ public class ManagementResource {
       alertManagerConfiguration.writeAndReload(alertManagerConfig);
       Optional<AlertManagerConfig> optionalAlertManagerConfig = alertManagerConfiguration.read();
       return Response.ok().entity(optionalAlertManagerConfig.orElse(null)).build();
-    } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException |
-        AlertManagerConfigReadException e) {
+    } catch (AlertManagerConfigReadException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_READ_CONFIGURATION, Level.FINE, e.getMessage());
     } catch (AlertManagerConfigUpdateException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_UPDATE_AM_CONFIG, Level.FINE, e.getMessage());
-    } catch (AlertManagerClientCreateException e) {
-      throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_CONNECT, Level.FINE, e.getMessage());
     } catch (IllegalArgumentException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, e.getMessage());
     }
@@ -161,7 +158,7 @@ public class ManagementResource {
     return new AlertManagerConfig()
         .withGlobal(config.getGlobal())
         .withTemplates(config.getTemplates())
-        .withInhibitRules(toInhibitRules(config.getInhibitRules()))
+        .withInhibitRules(config.getInhibitRules())
         .withReceivers(toReceivers(config.getReceivers()))
         .withRoute(config.getRoute().toRoute());
   }
@@ -210,13 +207,10 @@ public class ManagementResource {
     try {
       alertManagerConfiguration.updateGlobal(global);
       dto = alertManagerConfiguration.getGlobal();
-    } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException |
-        AlertManagerConfigReadException e) {
+    } catch (AlertManagerConfigCtrlCreateException | AlertManagerConfigReadException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_READ_CONFIGURATION, Level.FINE, e.getMessage());
     } catch (AlertManagerConfigUpdateException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_UPDATE_AM_CONFIG, Level.FINE, e.getMessage());
-    } catch (AlertManagerClientCreateException e) {
-      throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_CONNECT, Level.FINE, e.getMessage());
     } catch (IllegalArgumentException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, e.getMessage());
     }
@@ -234,13 +228,10 @@ public class ManagementResource {
       alertManagerConfiguration.updateTemplates(templates.getTemplates());
       List<String> t = alertManagerConfiguration.getTemplates();
       dto.setTemplates(t);
-    } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException |
-        AlertManagerConfigReadException e) {
+    } catch (AlertManagerConfigCtrlCreateException | AlertManagerConfigReadException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_READ_CONFIGURATION, Level.FINE, e.getMessage());
     } catch (AlertManagerConfigUpdateException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_UPDATE_AM_CONFIG, Level.FINE, e.getMessage());
-    } catch (AlertManagerClientCreateException e) {
-      throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_CONNECT, Level.FINE, e.getMessage());
     } catch (IllegalArgumentException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, e.getMessage());
     }
@@ -259,13 +250,10 @@ public class ManagementResource {
     try {
       alertManagerConfiguration.updateRoute(route);
       dto = alertManagerConfiguration.getGlobalRoute();
-    } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException |
-        AlertManagerConfigReadException e) {
+    } catch (AlertManagerConfigCtrlCreateException | AlertManagerConfigReadException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_READ_CONFIGURATION, Level.FINE, e.getMessage());
     } catch (AlertManagerConfigUpdateException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_UPDATE_AM_CONFIG, Level.FINE, e.getMessage());
-    } catch (AlertManagerClientCreateException e) {
-      throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_CONNECT, Level.FINE, e.getMessage());
     } catch (IllegalArgumentException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, e.getMessage());
     }
@@ -285,13 +273,10 @@ public class ManagementResource {
       alertManagerConfiguration.updateInhibitRules(inhibitRules);
       List<InhibitRule> i = alertManagerConfiguration.getInhibitRules();
       dto.setInhibitRules(i);
-    } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException |
-        AlertManagerConfigReadException e) {
+    } catch (AlertManagerConfigCtrlCreateException | AlertManagerConfigReadException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_READ_CONFIGURATION, Level.FINE, e.getMessage());
     } catch (AlertManagerConfigUpdateException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_UPDATE_AM_CONFIG, Level.FINE, e.getMessage());
-    } catch (AlertManagerClientCreateException e) {
-      throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_CONNECT, Level.FINE, e.getMessage());
     } catch (IllegalArgumentException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, e.getMessage());
     }
@@ -299,10 +284,15 @@ public class ManagementResource {
   }
 
   private List<InhibitRule> toInhibitRules(PostableInhibitRulesDTOList postableInhibitRulesDTOList) {
-    if (postableInhibitRulesDTOList != null && postableInhibitRulesDTOList.getPostableInhibitRulesDTOs() != null &&
-        !postableInhibitRulesDTOList.getPostableInhibitRulesDTOs().isEmpty()) {
-      return postableInhibitRulesDTOList.getPostableInhibitRulesDTOs().stream().map(this::toInhibitRule)
-          .collect(Collectors.toList());
+    if (postableInhibitRulesDTOList != null) {
+      return toInhibitRules(postableInhibitRulesDTOList.getPostableInhibitRulesDTOs());
+    }
+    return null;
+  }
+
+  private List<InhibitRule> toInhibitRules(List<PostableInhibitRulesDTO> postableInhibitRulesDTOList) {
+    if (postableInhibitRulesDTOList != null && !postableInhibitRulesDTOList.isEmpty()) {
+      return postableInhibitRulesDTOList.stream().map(this::toInhibitRule).collect(Collectors.toList());
     }
     return null;
   }

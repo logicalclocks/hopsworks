@@ -70,7 +70,7 @@ import java.util.stream.Collectors;
 @Lock(LockType.READ)
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class AMClient {
-  private final static Logger LOGGER = Logger.getLogger(AMClient.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(AMClient.class.getName());
 
   private AlertManagerClient client;
   private Exception initException;

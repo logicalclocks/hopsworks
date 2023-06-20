@@ -16,6 +16,7 @@
 package io.hops.hopsworks.api.admin.alert.management;
 
 import io.hops.hopsworks.alerting.config.dto.Global;
+import io.hops.hopsworks.alerting.config.dto.InhibitRule;
 import io.hops.hopsworks.api.alert.receiver.PostableReceiverDTO;
 import io.hops.hopsworks.api.alert.route.PostableRouteDTO;
 
@@ -27,7 +28,7 @@ public class PostableAlertManagerConfig {
   private Global global;
   private List<String> templates;
   private PostableRouteDTO route;
-  private PostableInhibitRulesDTOList inhibitRules;
+  private List<InhibitRule> inhibitRules;
   private List<PostableReceiverDTO> receivers;
 
   public PostableAlertManagerConfig() {
@@ -57,11 +58,11 @@ public class PostableAlertManagerConfig {
     this.route = route;
   }
 
-  public PostableInhibitRulesDTOList getInhibitRules() {
+  public List<InhibitRule> getInhibitRules() {
     return inhibitRules;
   }
 
-  public void setInhibitRules(PostableInhibitRulesDTOList inhibitRules) {
+  public void setInhibitRules(List<InhibitRule> inhibitRules) {
     this.inhibitRules = inhibitRules;
   }
 
