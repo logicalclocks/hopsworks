@@ -84,7 +84,7 @@ public class GitCommitsFacade extends AbstractFacade<GitCommit> {
 
   public GitCommit create(GitCommit commit) {
     if(!Strings.isNullOrEmpty(commit.getMessage()) && commit.getMessage().length() > 1000) {
-      commit.setMessage(commit.getMessage().substring(0, 996) + "...");
+      commit.setMessage(commit.getMessage().substring(0, 995) + "...");
     }
     super.save(commit);
     em.flush();
