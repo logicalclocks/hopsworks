@@ -23,12 +23,17 @@ import io.hops.hopsworks.persistence.entity.git.GitOpExecution;
 import io.hops.hopsworks.persistence.entity.git.GitRepository;
 import io.hops.hopsworks.persistence.entity.git.config.GitOpExecutionState;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
 import javax.ejb.DependsOn;
 import javax.ejb.EJB;
-import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
+import javax.ejb.Timeout;
 import javax.ejb.Timer;
+import javax.ejb.TimerConfig;
+import javax.ejb.TimerService;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -52,9 +57,29 @@ public class GitTimeoutCommandsMonitor {
   private GitCommandOperationUtil gitCommandOperationUtil;
   @EJB
   private Settings settings;
+
+  @Resource
+  private TimerService timerService;
+  private Timer timer;
   
-  @Schedule(minute = "*/1", hour = "*", info = "Git Commands Monitor timer")
+  @PostConstruct
+  public void init() {
+    //number of milliseconds that must elapse between timer expiration notifications
+    long intervalDuration = 60000L; // 1 min
+    timer = timerService.createIntervalTimer(0, intervalDuration, new TimerConfig("Git Commands Monitor timer",
+      false));
+  }
+  
+  @PreDestroy
+  public void destroy() {
+    if (timer != null) {
+      timer.cancel();
+    }
+  }
+  
+  @Timeout
   public void gitCommandMonitor(Timer timer) {
+    //Should run on all
     LOGGER.log(Level.FINE, "Running GitTimeoutCommandsMonitor");
     Collection<GitRepository> repositories = gitRepositoryFacade.findAllWithOngoingOperations();
     for (GitRepository repository : repositories) {

@@ -15,12 +15,14 @@
  */
 package io.hops.hopsworks.common.jwt;
 
+import io.hops.hopsworks.common.util.PayaraClusterManager;
 import io.hops.hopsworks.jwt.Constants;
 import io.hops.hopsworks.jwt.JWTController;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
-import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.Timeout;
@@ -38,11 +40,31 @@ public class OneTimeJWTRotation {
 
   @EJB
   private JWTController jWTController;
+  @EJB
+  private PayaraClusterManager payaraClusterManager;
   @Resource
   TimerService timerService;
+  private Timer timer;
+  @PostConstruct
+  public void init() {
+    //number of milliseconds that must elapse between timer expiration notifications
+    long intervalDuration = 24*3600000L; // 24 hour
+    timer = timerService.createIntervalTimer(0, intervalDuration, new TimerConfig("Mark old JWT signing keys for " +
+      "deletion", false));
+  }
   
-  @Schedule(info = "Mark old JWT signing keys")
+  @PreDestroy
+  public void destroy() {
+    if (timer != null) {
+      timer.cancel();
+    }
+  }
+  
+  @Timeout
   public void markOldSigningKeys() {
+    if (!payaraClusterManager.amIThePrimary()) {
+      return;
+    }
     boolean marked = jWTController.markOldSigningKeys();
     if (marked) {
       //(60000 + 60000)*2 = 240000 milliseconds = 4 min

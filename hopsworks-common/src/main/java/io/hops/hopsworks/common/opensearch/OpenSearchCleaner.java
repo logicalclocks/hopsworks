@@ -38,17 +38,25 @@
  */
 package io.hops.hopsworks.common.opensearch;
 
+import io.hops.hopsworks.common.util.PayaraClusterManager;
 import io.hops.hopsworks.common.util.Settings;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
-import javax.ejb.Schedule;
 import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.ejb.Timeout;
 import javax.ejb.Timer;
+import javax.ejb.TimerConfig;
+import javax.ejb.TimerService;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Startup
 @Singleton
 public class OpenSearchCleaner {
 
@@ -58,14 +66,37 @@ public class OpenSearchCleaner {
   OpenSearchClientController elasticClientCtrl;
   @EJB
   Settings settings;
+  @EJB
+  private PayaraClusterManager payaraClusterManager;
+  @Resource
+  private TimerService timerService;
+  private Timer timer;
+  
+  @PostConstruct
+  public void init() {
+    //number of milliseconds that must elapse between timer expiration notifications
+    long intervalDuration = 24*3600000L; // 24 hours
+    timer = timerService.createIntervalTimer(0, intervalDuration, new TimerConfig("OpenSearch Cleaner timer",
+      false));
+  }
+  
+  @PreDestroy
+  public void destroy() {
+    if (timer != null) {
+      timer.cancel();
+    }
+  }
 
   /**
    * Periodically remove job/notebooks log indexes. Runs once per day and removed indices older than 7 days.
    *
    * @param timer timer
    */
-  @Schedule(minute = "0", hour = "1", info = "OpenSearch Cleaner timer")
+  @Timeout
   public void deleteLogIndices(Timer timer) {
+    if (!payaraClusterManager.amIThePrimary()) {
+      return;
+    }
     LOGGER.log(Level.INFO, "Running OpenSearchCleaner.");
     //Get all log indices
     try {

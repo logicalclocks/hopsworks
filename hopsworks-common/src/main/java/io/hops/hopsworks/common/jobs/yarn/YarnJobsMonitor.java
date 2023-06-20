@@ -42,6 +42,7 @@ package io.hops.hopsworks.common.jobs.yarn;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.jobs.JobsMonitor;
 import io.hops.hopsworks.common.jobs.execution.ExecutionUpdateController;
+import io.hops.hopsworks.common.util.PayaraClusterManager;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
@@ -53,11 +54,17 @@ import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
 import javax.ejb.DependsOn;
 import javax.ejb.EJB;
-import javax.ejb.Schedule;
 import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.ejb.Timeout;
 import javax.ejb.Timer;
+import javax.ejb.TimerConfig;
+import javax.ejb.TimerService;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
@@ -70,6 +77,7 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Startup
 @Singleton
 @DependsOn("Settings")
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -87,18 +95,38 @@ public class YarnJobsMonitor implements JobsMonitor {
   private YarnExecutionFinalizer execFinalizer;
   @EJB
   private YarnClientService ycs;
-
+  @EJB
+  private PayaraClusterManager payaraClusterManager;
+  @Resource
+  private TimerService timerService;
+  private Timer timer;
+  
+  @PostConstruct
+  public void init() {
+    //number of milliseconds that must elapse between timer expiration notifications
+    long intervalDuration = 5000L; // 5 sec
+    timer = timerService.createIntervalTimer(0, intervalDuration, new TimerConfig("Yarn job monitor timer",
+      false));
+  }
+  
+  @PreDestroy
+  public void destroy() {
+    if (timer != null) {
+      timer.cancel();
+    }
+  }
+  
   private int maxStatusPollRetry;
 
   Map<String, YarnMonitor> monitors = new HashMap<>();
   Map<String, Integer> failures = new HashMap<>();
   private final Map<ApplicationId, Future<Execution>> copyLogsFutures = new HashMap<>();
   
-  @Schedule(second = "*/5",
-    minute = "*",
-    hour = "*",
-    info = "Yarn job monitor timer")
+  @Timeout
   public synchronized void yarnJobMonitor(Timer timer) {
+    if (!payaraClusterManager.amIThePrimary()) {
+      return;
+    }
     try {
       Map<String, Execution> executions = new HashMap<>();
       List<Execution> execs = executionFacade.findNotFinished();

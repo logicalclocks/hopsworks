@@ -16,6 +16,7 @@ import io.hops.hopsworks.common.jobs.ExecutionJWT;
 import io.hops.hopsworks.common.jobs.JobsMonitor;
 import io.hops.hopsworks.common.jobs.execution.ExecutionUpdateController;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
+import io.hops.hopsworks.common.util.PayaraClusterManager;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
@@ -23,10 +24,16 @@ import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobFinalS
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
-import javax.ejb.Schedule;
 import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.ejb.Timeout;
 import javax.ejb.Timer;
+import javax.ejb.TimerConfig;
+import javax.ejb.TimerService;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.HashMap;
@@ -37,6 +44,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Startup
 @Singleton
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class KubeJobsMonitor implements JobsMonitor {
@@ -53,9 +61,32 @@ public class KubeJobsMonitor implements JobsMonitor {
   private DistributedFsService dfs;
   @EJB
   private ExecutionUpdateController executionUpdateController;
+  @EJB
+  private PayaraClusterManager payaraClusterManager;
+  @Resource
+  private TimerService timerService;
+  private Timer timer;
   
-  @Schedule(second = "*/5", minute = "*", hour = "*", info = "Kube Jobs Monitor")
+  @PostConstruct
+  public void init() {
+    //number of milliseconds that must elapse between timer expiration notifications
+    long intervalDuration = 5000L; // 5 sec
+    timer = timerService.createIntervalTimer(0, intervalDuration, new TimerConfig("Kube Jobs Monitor",
+      false));
+  }
+  
+  @PreDestroy
+  public void destroy() {
+    if (timer != null) {
+      timer.cancel();
+    }
+  }
+  
+  @Timeout
   public synchronized void monitorKubeJobs(Timer timer) {
+    if (!payaraClusterManager.amIThePrimary()) {
+      return;
+    }
     LOGGER.log(Level.FINE, "Running KubeJobsMonitor timer");
     try {
       // Get all non-finished executions of type Python or Docker, if they don't exist in kubernetes, set them to failed
