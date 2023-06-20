@@ -92,7 +92,7 @@ public class GitTimeoutCommandsMonitor {
       if (optional.isPresent()) {
         GitOpExecution execution = optional.get();
         //we need all GitOpExecution to check for repository with a pid but no execution. So check host here
-        if (execution.getHostIp().equals(localMemberIp)) {
+        if (execution.getHostname().equals(localMemberIp)) {
           long timeElapsed = System.currentTimeMillis() - execution.getExecutionStart();
           if (timeElapsed > (settings.getGitJwtExpMs() + BONUS_TIME)) {
             //kill this container
