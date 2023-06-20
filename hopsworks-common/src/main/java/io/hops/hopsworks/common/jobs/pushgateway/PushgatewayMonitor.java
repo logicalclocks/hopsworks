@@ -20,6 +20,7 @@ import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryExcept
 import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.proxies.client.HttpClient;
+import io.hops.hopsworks.common.util.PayaraClusterManager;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import io.hops.hopsworks.servicediscovery.HopsworksService;
@@ -32,11 +33,17 @@ import org.apache.http.HttpHost;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
 import javax.ejb.DependsOn;
 import javax.ejb.EJB;
-import javax.ejb.Schedule;
 import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.ejb.Timeout;
 import javax.ejb.Timer;
+import javax.ejb.TimerConfig;
+import javax.ejb.TimerService;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -48,6 +55,7 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+@Startup
 @Singleton
 @DependsOn("Settings")
 public class PushgatewayMonitor {
@@ -63,9 +71,32 @@ public class PushgatewayMonitor {
   private ServiceDiscoveryController serviceDiscoveryController;
   @EJB
   private YarnClientService ycs;
+  @EJB
+  private PayaraClusterManager payaraClusterManager;
+  @Resource
+  private TimerService timerService;
+  private Timer timer;
 
-  @Schedule(second = "0", minute = "*", hour = "*", info = "Prometheus push gateway timer")
+  @PostConstruct
+  public void init() {
+    //number of milliseconds that must elapse between timer expiration notifications
+    long intervalDuration = 60000L; // 1 min
+    timer = timerService.createIntervalTimer(0, intervalDuration, new TimerConfig("Prometheus push gateway timer",
+      false));
+  }
+
+  @PreDestroy
+  public void destroy() {
+    if (timer != null) {
+      timer.cancel();
+    }
+  }
+
+  @Timeout
   public synchronized void monitor(Timer timer) {
+    if (!payaraClusterManager.amIThePrimary()) {
+      return;
+    }
     try {
       PushgatewayResults results = scrapeMetrics();
       Set<String> activeApplications = getActiveApplications(results);

@@ -18,19 +18,27 @@ package io.hops.hopsworks.common.dao.maggy;
 import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.common.livy.LivyMsg;
 import io.hops.hopsworks.common.livy.LivyMsg.Session;
+import io.hops.hopsworks.common.util.PayaraClusterManager;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.maggy.MaggyDriver;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
+import javax.ejb.EJB;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.ejb.Timeout;
+import javax.ejb.Timer;
+import javax.ejb.TimerConfig;
+import javax.ejb.TimerService;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ejb.EJB;
-import javax.ejb.Schedule;
-import javax.ejb.Singleton;
-import javax.ejb.Timer;
 
+@Startup
 @Singleton
 public class MaggyCleaner {
 
@@ -42,10 +50,33 @@ public class MaggyCleaner {
   private MaggyFacade maggyFacade;
   @EJB
   private Settings settings;
+  @EJB
+  private PayaraClusterManager payaraClusterManager;
+  @Resource
+  private TimerService timerService;
+  private Timer timer;
+
+  @PostConstruct
+  public void init() {
+    //number of milliseconds that must elapse between timer expiration notifications
+    long intervalDuration = 3600000L; // 1 hour
+    timer = timerService.createIntervalTimer(0, intervalDuration, new TimerConfig("Maggy Cleaner timer",
+      false));
+  }
+
+  @PreDestroy
+  public void destroy() {
+    if (timer != null) {
+      timer.cancel();
+    }
+  }
 
   // Run once per hour. Only one node in HA should run this, so it needs to be persistent = true.
-  @Schedule(hour = "*", info = "Maggy Cleaner timer")
+  @Timeout
   public void maggyCleaner(Timer timer) {
+    if (!payaraClusterManager.amIThePrimary()) {
+      return;
+    }
     try {
       // Get all Running Maggy Drivers
       List<MaggyDriver> drivers = maggyFacade.getAllDrivers();

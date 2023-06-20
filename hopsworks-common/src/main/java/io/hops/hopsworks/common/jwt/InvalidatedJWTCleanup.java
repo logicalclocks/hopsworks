@@ -15,13 +15,19 @@
  */
 package io.hops.hopsworks.common.jwt;
 
+import io.hops.hopsworks.common.util.PayaraClusterManager;
 import io.hops.hopsworks.jwt.JWTController;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
-import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
+import javax.ejb.Timeout;
 import javax.ejb.Timer;
+import javax.ejb.TimerConfig;
+import javax.ejb.TimerService;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -34,9 +40,33 @@ public class InvalidatedJWTCleanup {
 
   @EJB
   private JWTController jWTController;
+  @EJB
+  private PayaraClusterManager payaraClusterManager;
+  @Resource
+  private TimerService timerService;
+  private Timer timer;
+
+  @PostConstruct
+  public void init() {
+    //number of milliseconds that must elapse between timer expiration notifications
+    long intervalDuration = 24*3600000L; // 24 hour
+    timer = timerService.createIntervalTimer(0, intervalDuration, new TimerConfig("Invalidated JWT cleanup",
+      false));
+  }
   
-  @Schedule(info = "Invalidated JWT cleanup")
+  @PreDestroy
+  public void destroy() {
+    if (timer != null) {
+      timer.cancel();
+    }
+  }
+
+  @Timeout
   public void cleanInvalidatedJwt(Timer timer) {
+    if (!payaraClusterManager.amIThePrimary()) {
+      return;
+    }
+
     try {
       int count = jWTController.cleanupInvalidTokens();
       LOGGER.log(Level.INFO, "{0} timer event: {1}, removed {2} tokens.",
