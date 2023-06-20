@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.common.dao.git;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.persistence.entity.git.GitCommit;
 import io.hops.hopsworks.persistence.entity.git.GitRepository;
@@ -82,6 +83,9 @@ public class GitCommitsFacade extends AbstractFacade<GitCommit> {
   }
 
   public GitCommit create(GitCommit commit) {
+    if(!Strings.isNullOrEmpty(commit.getMessage()) && commit.getMessage().length() > 1000) {
+      commit.setMessage(commit.getMessage().substring(0, 995) + "...");
+    }
     super.save(commit);
     em.flush();
     return commit;
