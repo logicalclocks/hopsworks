@@ -121,7 +121,7 @@ public class GitOpExecution implements Serializable {
 
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1, max = 128)
+  @Size(min = 1, max = 64)
   @Column(name = "host_ip")
   private String hostIp;
 
