@@ -19,8 +19,13 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.Predicates;
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.util.DateUtils;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 
+import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -39,6 +44,10 @@ public class JupyterJWTCache {
   private static final String MAP_NAME = "jupyterJWTMap";
   @Inject
   private HazelcastInstance hazelcastInstance;
+  @EJB
+  private ProjectFacade projectFacade;
+  @EJB
+  private UserFacade userFacade;
   
   private final TreeSet<JupyterJWTDTO> jupyterJWTs = new TreeSet<>((t0, t1) -> {
     if (t0.equals(t1)) {
@@ -70,9 +79,11 @@ public class JupyterJWTCache {
       IMap<CidAndPort, JupyterJWTDTO> pidAndPortToJWTMap = hazelcastInstance.getMap(MAP_NAME);
       JupyterJWTDTO jupyterJWTDTO = pidAndPortToJWTMap.get(pidAndPort);
       if (jupyterJWTDTO != null) {
+        Project project = projectFacade.find(jupyterJWTDTO.getProjectId());
+        Users user = userFacade.find(jupyterJWTDTO.getUserId());
         return Optional.of(
-          new JupyterJWT(jupyterJWTDTO.getProject(), jupyterJWTDTO.getUser(), jupyterJWTDTO.getExpiration(),
-            pidAndPort, jupyterJWTDTO.getToken(), Paths.get(jupyterJWTDTO.getTokenFile())));
+          new JupyterJWT(project, user, jupyterJWTDTO.getExpiration(), pidAndPort, jupyterJWTDTO.getToken(),
+            Paths.get(jupyterJWTDTO.getTokenFile())));
       }
       return Optional.empty();
     } else {

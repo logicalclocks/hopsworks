@@ -48,6 +48,7 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.DockerResourcesConfiguration;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.Asynchronous;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
@@ -95,6 +96,11 @@ public class KubeClientService {
   private KubernetesClient client = null;
   private com.google.common.base.Supplier<List<String>> nodeIPListCache;
 
+  @PostConstruct
+  public void init() {
+    nodeIPListCache = Suppliers.memoizeWithExpiration(this::getReadyNodeIpListInternal, 10, TimeUnit.SECONDS);
+  }
+  
   // Namespaces
   
   public void createProjectNamespace(Project project)
@@ -903,7 +909,5 @@ public class KubeClientService {
         break;
       default:
     }
-
-    nodeIPListCache = Suppliers.memoizeWithExpiration(this::getReadyNodeIpListInternal, 10, TimeUnit.SECONDS);
   }
 }
