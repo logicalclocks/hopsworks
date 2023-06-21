@@ -136,7 +136,9 @@ public class TestAvroSchemaConstructorController {
   public void testToAvroStruct() throws Exception {
     String hiveType = "struct<label:int,value:array<int>>";
     Schema result = avroSchemaConstructorController.toAvro(hiveType, true, "");
-    Assert.assertEquals("[\"null\",{\"type\":\"record\",\"name\":\"r335499193\",\"fields\":[{\"name\":\"LABEL\",\"type\":[\"null\",\"int\"]},{\"name\":\"VALUE\",\"type\":[\"null\",{\"type\":\"array\",\"items\":[\"null\",\"int\"]}]}]}]", result.toString());
+    Assert.assertEquals("[\"null\",{\"type\":\"record\",\"name\":\"r471026777\",\"fields\":[{\"name\":\"label\"," +
+      "\"type\":[\"null\",\"int\"]},{\"name\":\"value\",\"type\":[\"null\",{\"type\":\"array\",\"items\":[\"null\"," +
+      "\"int\"]}]}]}]", result.toString());
   }
   
   @Test
@@ -156,9 +158,9 @@ public class TestAvroSchemaConstructorController {
   @Test
   public void testConstructSchema() throws Exception {
     List<FeatureGroupFeatureDTO> schema = new ArrayList<>();
-    schema.add(new FeatureGroupFeatureDTO("feature0", "INT", ""));
-    schema.add(new FeatureGroupFeatureDTO("feature1", "MAP<STRING,ARRAY<INT>>", ""));
-    schema.add(new FeatureGroupFeatureDTO("feature2", "STRUCT<label:INT,value:BINARY>", ""));
+    schema.add(new FeatureGroupFeatureDTO("feature0", "int", ""));
+    schema.add(new FeatureGroupFeatureDTO("feature1", "map<string,array<int>>", ""));
+    schema.add(new FeatureGroupFeatureDTO("feature2", "struct<label:int,value:binary>", ""));
     String result = avroSchemaConstructorController.constructSchema("fg", "fs", schema);
     Assert.assertEquals("{\n" +
       "  \"type\" : \"record\",\n" +
@@ -180,17 +182,124 @@ public class TestAvroSchemaConstructorController {
       "    \"name\" : \"feature2\",\n" +
       "    \"type\" : [ \"null\", {\n" +
       "      \"type\" : \"record\",\n" +
-      "      \"name\" : \"r1656394250\",\n" +
+      "      \"name\" : \"r933962134\",\n" +
       "      \"namespace\" : \"feature2\",\n" +
       "      \"fields\" : [ {\n" +
-      "        \"name\" : \"LABEL\",\n" +
+      "        \"name\" : \"label\",\n" +
       "        \"type\" : [ \"null\", \"int\" ]\n" +
       "      }, {\n" +
-      "        \"name\" : \"VALUE\",\n" +
+      "        \"name\" : \"value\",\n" +
       "        \"type\" : [ \"null\", \"bytes\" ]\n" +
       "      } ]\n" +
       "    } ]\n" +
       "  } ]\n" +
-      "}", result);
+      "}",
+      result);
+  }
+
+  @Test
+  public void testConstructSchemaOverlyComplexFeatures() throws Exception {
+    List<FeatureGroupFeatureDTO> schema = new ArrayList<>();
+    schema.add(new FeatureGroupFeatureDTO("feature3", "struct<label1:string,value:struct<label2:string,value2:int>>",
+      ""));
+    schema.add(new FeatureGroupFeatureDTO("feature4", "struct<label3:string,value3:array<string>>", ""));
+    schema.add(new FeatureGroupFeatureDTO("feature5", "struct<key:string,item1:struct<subkey:string," +
+      "item2:array<int>>>", ""));
+    schema.add(new FeatureGroupFeatureDTO("feature6", "array<struct<test:string,val:int>>", ""));
+    String result = avroSchemaConstructorController.constructSchema("fg", "fs", schema);
+    Assert.assertEquals("{\n" +
+        "  \"type\" : \"record\",\n" +
+        "  \"name\" : \"fg\",\n" +
+        "  \"namespace\" : \"fs\",\n" +
+        "  \"fields\" : [ {\n" +
+        "    \"name\" : \"feature3\",\n" +
+        "    \"type\" : [ \"null\", {\n" +
+        "      \"type\" : \"record\",\n" +
+        "      \"name\" : \"r221276846\",\n" +
+        "      \"namespace\" : \"feature3\",\n" +
+        "      \"fields\" : [ {\n" +
+        "        \"name\" : \"label1\",\n" +
+        "        \"type\" : [ \"null\", \"string\" ]\n" +
+        "      }, {\n" +
+        "        \"name\" : \"value\",\n" +
+        "        \"type\" : [ \"null\", {\n" +
+        "          \"type\" : \"record\",\n" +
+        "          \"name\" : \"r773256226\",\n" +
+        "          \"namespace\" : \"feature3.r221276846\",\n" +
+        "          \"fields\" : [ {\n" +
+        "            \"name\" : \"label2\",\n" +
+        "            \"type\" : [ \"null\", \"string\" ]\n" +
+        "          }, {\n" +
+        "            \"name\" : \"value2\",\n" +
+        "            \"type\" : [ \"null\", \"int\" ]\n" +
+        "          } ]\n" +
+        "        } ]\n" +
+        "      } ]\n" +
+        "    } ]\n" +
+        "  }, {\n" +
+        "    \"name\" : \"feature4\",\n" +
+        "    \"type\" : [ \"null\", {\n" +
+        "      \"type\" : \"record\",\n" +
+        "      \"name\" : \"r1179734341\",\n" +
+        "      \"namespace\" : \"feature4\",\n" +
+        "      \"fields\" : [ {\n" +
+        "        \"name\" : \"label3\",\n" +
+        "        \"type\" : [ \"null\", \"string\" ]\n" +
+        "      }, {\n" +
+        "        \"name\" : \"value3\",\n" +
+        "        \"type\" : [ \"null\", {\n" +
+        "          \"type\" : \"array\",\n" +
+        "          \"items\" : [ \"null\", \"string\" ]\n" +
+        "        } ]\n" +
+        "      } ]\n" +
+        "    } ]\n" +
+        "  }, {\n" +
+        "    \"name\" : \"feature5\",\n" +
+        "    \"type\" : [ \"null\", {\n" +
+        "      \"type\" : \"record\",\n" +
+        "      \"name\" : \"r37053473\",\n" +
+        "      \"namespace\" : \"feature5\",\n" +
+        "      \"fields\" : [ {\n" +
+        "        \"name\" : \"key\",\n" +
+        "        \"type\" : [ \"null\", \"string\" ]\n" +
+        "      }, {\n" +
+        "        \"name\" : \"item1\",\n" +
+        "        \"type\" : [ \"null\", {\n" +
+        "          \"type\" : \"record\",\n" +
+        "          \"name\" : \"r866074742\",\n" +
+        "          \"namespace\" : \"feature5.r37053473\",\n" +
+        "          \"fields\" : [ {\n" +
+        "            \"name\" : \"subkey\",\n" +
+        "            \"type\" : [ \"null\", \"string\" ]\n" +
+        "          }, {\n" +
+        "            \"name\" : \"item2\",\n" +
+        "            \"type\" : [ \"null\", {\n" +
+        "              \"type\" : \"array\",\n" +
+        "              \"items\" : [ \"null\", \"int\" ]\n" +
+        "            } ]\n" +
+        "          } ]\n" +
+        "        } ]\n" +
+        "      } ]\n" +
+        "    } ]\n" +
+        "  }, {\n" +
+        "    \"name\" : \"feature6\",\n" +
+        "    \"type\" : [ \"null\", {\n" +
+        "      \"type\" : \"array\",\n" +
+        "      \"items\" : [ \"null\", {\n" +
+        "        \"type\" : \"record\",\n" +
+        "        \"name\" : \"r983056190\",\n" +
+        "        \"namespace\" : \"feature6\",\n" +
+        "        \"fields\" : [ {\n" +
+        "          \"name\" : \"test\",\n" +
+        "          \"type\" : [ \"null\", \"string\" ]\n" +
+        "        }, {\n" +
+        "          \"name\" : \"val\",\n" +
+        "          \"type\" : [ \"null\", \"int\" ]\n" +
+        "        } ]\n" +
+        "      } ]\n" +
+        "    } ]\n" +
+        "  } ]\n" +
+        "}",
+      result);
   }
 }
