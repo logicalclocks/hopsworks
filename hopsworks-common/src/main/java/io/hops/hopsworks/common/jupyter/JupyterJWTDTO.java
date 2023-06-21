@@ -16,8 +16,6 @@
 package io.hops.hopsworks.common.jupyter;
 
 import io.hops.hopsworks.common.util.DateUtils;
-import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.user.Users;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -25,36 +23,36 @@ import java.util.Objects;
 
 public class JupyterJWTDTO implements Serializable {
   private static final long serialVersionUID = -5687462769985361531L;
-  private Project project;
-  private Users user;
+  private Integer projectId;
+  private Integer userId;
   private LocalDateTime expiration;
   private String token;
   private String tokenFile;
   private final CidAndPort pidAndPort;
   
   public JupyterJWTDTO(JupyterJWT jupyterJWT) {
-    this.project = jupyterJWT.project;
-    this.user = jupyterJWT.user;
+    this.projectId = jupyterJWT.project.getId();
+    this.userId = jupyterJWT.user.getUid();
     this.expiration = jupyterJWT.expiration;
     this.token = jupyterJWT.token;
     this.tokenFile = jupyterJWT.tokenFile.toString();
     this.pidAndPort = jupyterJWT.pidAndPort;
   }
   
-  public Project getProject() {
-    return project;
+  public Integer getProjectId() {
+    return projectId;
   }
   
-  public void setProject(Project project) {
-    this.project = project;
+  public void setProjectId(Integer projectId) {
+    this.projectId = projectId;
   }
   
-  public Users getUser() {
-    return user;
+  public Integer getUserId() {
+    return userId;
   }
   
-  public void setUser(Users user) {
-    this.user = user;
+  public void setUserId(Integer userId) {
+    this.userId = userId;
   }
   
   public LocalDateTime getExpiration() {
@@ -103,11 +101,11 @@ public class JupyterJWTDTO implements Serializable {
       return false;
     }
     JupyterJWTDTO that = (JupyterJWTDTO) o;
-    return Objects.equals(project.getId(), that.project.getId()) && Objects.equals(user.getUid(), that.user.getUid());
+    return Objects.equals(projectId, that.projectId) && Objects.equals(userId, that.userId);
   }
   
   @Override
   public int hashCode() {
-    return Objects.hash(project.getId(), user.getUid());
+    return Objects.hash(projectId, userId);
   }
 }

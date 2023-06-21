@@ -310,8 +310,9 @@ public class JupyterJWTManager {
           try {
             newToken = jwtController.renewToken(element.getToken(), DateUtils.localDateTime2Date(newExpirationDate),
                 DateUtils.localDateTime2Date(now), true, new HashMap<>(3));
-            JupyterJWT renewedJWT = new JupyterJWT(element.getProject(), element.getUser(), newExpirationDate,
-              element.getPidAndPort());
+            Project project = projectFacade.find(element.getProjectId());
+            Users user = userFacade.find(element.getUserId());
+            JupyterJWT renewedJWT = new JupyterJWT(project, user, newExpirationDate, element.getPidAndPort());
             renewedJWT.tokenFile = Paths.get(element.getTokenFile());
             renewedJWT.token = newToken;
             jwtTokenWriter.writeToken(settings, renewedJWT);
