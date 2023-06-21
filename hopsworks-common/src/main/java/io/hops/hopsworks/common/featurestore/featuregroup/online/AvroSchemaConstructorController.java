@@ -101,19 +101,19 @@ public class AvroSchemaConstructorController {
   
   public Schema toAvro(String hiveType, boolean nullable, String nameSpace) throws FeaturestoreException {
     SchemaBuilder.TypeBuilder<Schema> avroSchema = SchemaBuilder.builder();
-    String sanetizedHiveType = hiveType.toUpperCase().replaceAll("\\s+", "");
+    String sanetizedHiveType = hiveType.replaceAll("\\s+", "");
     Schema result;
     
-    if (sanetizedHiveType.startsWith(Type.ARRAY_TYPE.getName())) {
+    if (sanetizedHiveType.startsWith(Type.ARRAY_TYPE.getName().toLowerCase())) {
       result = avroSchema.array().items(toAvro(getInnerType(sanetizedHiveType, 5), nullable, nameSpace));
-    } else if (sanetizedHiveType.startsWith(Type.MAP_TYPE.getName())) {
+    } else if (sanetizedHiveType.startsWith(Type.MAP_TYPE.getName().toLowerCase())) {
       String[] mapTypes = getMapTypes(getInnerType(sanetizedHiveType, 3));
-      if (!mapTypes[0].equals(Type.STRING_TYPE.getName())) {
+      if (!mapTypes[0].equals(Type.STRING_TYPE.getName().toLowerCase())) {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.AVRO_MAP_STRING_KEY, Level.FINE, "The type of" +
           " Map keys has to be STRING, but found: " + mapTypes[0]);
       }
       result = avroSchema.map().values(toAvro(mapTypes[1], nullable, nameSpace));
-    } else if (sanetizedHiveType.startsWith(Type.STRUCT_TYPE.getName())) {
+    } else if (sanetizedHiveType.startsWith(Type.STRUCT_TYPE.getName().toLowerCase())) {
       // use random name, as user has no possibility to provide it and it doesn't matter for de-/serialization
       String recordName = "r" + Math.abs(sanetizedHiveType.hashCode());
       String childNameSpace = !Strings.isNullOrEmpty(nameSpace) ? nameSpace + "." + recordName : recordName;
@@ -191,6 +191,7 @@ public class AvroSchemaConstructorController {
   
   public String[] getStructField(String structField) {
     // struct field is defined by a key and a value-type: "key:TYPE"
-    return structField.split(":");
+    // limit needs to be set to 2 as type can itself be a struct
+    return structField.split(":", 2);
   }
 }
