@@ -7,6 +7,7 @@ import io.hops.hopsworks.remote.user.api.AuthResource;
 import io.hops.hopsworks.remote.user.api.exception.mapper.RESTApiThrowableMapper;
 import io.hops.hopsworks.remote.user.api.krb.KrbConfigResource;
 import io.hops.hopsworks.remote.user.api.ldap.LdapConfigResource;
+import io.hops.hopsworks.remote.user.api.mapping.GroupToProjectMappingResource;
 import io.hops.hopsworks.remote.user.api.oauth2.OAuthClientResource;
 import io.hops.hopsworks.remote.user.jwt.AuthFilter;
 import io.hops.hopsworks.remote.user.jwt.JWTAutoRenewFilter;
@@ -25,6 +26,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(OAuthClientResource.class);
     register(LdapConfigResource.class);
     register(KrbConfigResource.class);
+    register(GroupToProjectMappingResource.class);
     register(RESTApiThrowableMapper.class);
     register(AuthFilter.class);
     register(JWTAutoRenewFilter.class);

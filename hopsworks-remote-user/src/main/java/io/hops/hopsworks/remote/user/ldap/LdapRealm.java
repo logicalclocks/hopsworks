@@ -46,7 +46,7 @@ public class LdapRealm {
   private static final String[] DN_ONLY = {"dn"};
   private static final String SUBST_SUBJECT_NAME = "%s";
   private static final String SUBST_SUBJECT_DN = "%d";
-  private static final String SUBST_SUBJECT_CN = "%c";
+  public static final String SUBST_SUBJECT_CN = "%c";
   private static final String JNDICF_DEFAULT = "com.sun.jndi.ldap.LdapCtxFactory";
   private static final String BASEDN_PROPERTY_NAME = "hopsworks.ldap.basedn";
   private static final String OBJECTGUID = "objectGUID";
@@ -487,11 +487,11 @@ public class LdapRealm {
     SearchControls ctls = new SearchControls();
     ctls.setReturningAttributes(targets);
     ctls.setSearchScope(SearchControls.SUBTREE_SCOPE);
-    NamingEnumeration e = null;
+    NamingEnumeration<SearchResult> e = null;
     try {
       e = doSearch(dn, searchFilter, ctls);
       while (e.hasMoreElements()) {
-        SearchResult result = (SearchResult) e.next();
+        SearchResult result = e.next();
         Attribute grpAttr = result.getAttributes().get(target);
         for (int i = 0; i < grpAttr.size(); i++) {
           resultList.add((String) grpAttr.get(i));
@@ -501,11 +501,40 @@ public class LdapRealm {
       if (e != null) {
         try {
           e.close();
-        } catch (Exception ex) {
+        } catch (Exception ignored) {
         }
       }
     }
     return resultList;
+  }
+  
+  private String getGroupDNByCN(String groupName, String target, String dn) throws NamingException {
+    String groupDN = "";
+    String groupCN = settings.getLdapGroupsSearchFilter().replace(SUBST_SUBJECT_CN, groupName);
+    String[] targets = new String[]{target};
+    SearchControls ctls = new SearchControls();
+    ctls.setReturningAttributes(targets);
+    ctls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+    NamingEnumeration<SearchResult> e = null;
+    try {
+      e = doSearch(dn, groupCN, ctls);
+      if (e.hasMoreElements()) {
+        SearchResult result = e.next();
+        groupDN = result.getNameInNamespace();
+      }
+    } finally {
+      if (e != null) {
+        try {
+          e.close();
+        } catch (Exception ignored) {
+        }
+      }
+    }
+    return groupDN;
+  }
+  
+  public String getGroupDN(String groupName) throws NamingException {
+    return getGroupDNByCN(groupName, settings.getLdapGroupsTarget(), groupDN);
   }
   
   public RemoteUsersDTO getAllMembers(List<String> groups) throws NamingException {
@@ -518,21 +547,19 @@ public class LdapRealm {
   
   public RemoteUsersDTO getAllMembers(String groupName) throws NamingException {
     RemoteUsersDTO remoteUsersDTO = new RemoteUsersDTO();
-    String groupSearch = settings.getLdapGroupsSearchFilter().replace(SUBST_SUBJECT_CN, groupName);
-    List<String> resultList = ldapSearch(groupSearch, settings.getLdapGroupsTarget(), groupDN);
-    if (resultList == null || resultList.isEmpty()) {
+    String dn = getGroupDN(groupName);
+    if (Strings.isNullOrEmpty(dn)) {
       return remoteUsersDTO;
     }
-    String dn = resultList.get(0);
     String memberOfQuery = settings.getLdapGroupMembersFilter().replace(SUBST_SUBJECT_DN, dn);
     SearchControls ctls = new SearchControls();
     ctls.setSearchScope(SearchControls.SUBTREE_SCOPE);
     ctls.setReturningAttributes(returningAttrs);
-    NamingEnumeration e = null;
+    NamingEnumeration<SearchResult> e = null;
     try {
       e = doSearch(groupDN, memberOfQuery, ctls);
       while (e.hasMoreElements()) {
-        SearchResult result = (SearchResult) e.next();
+        SearchResult result = e.next();
         Attributes attrs = result.getAttributes();
         remoteUsersDTO.add(new RemoteUserDTO(getUUIDAttribute(attrs, entryUUIDField), getAttribute(attrs,
           usernameField), getAttribute(attrs, givenNameField), getAttribute(attrs, surnameField), getAttrList(attrs,
@@ -542,7 +569,7 @@ public class LdapRealm {
       if (e != null) {
         try {
           e.close();
-        } catch (Exception ex) {
+        } catch (Exception ignored) {
         }
       }
     }

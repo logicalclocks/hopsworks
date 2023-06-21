@@ -52,6 +52,20 @@ public class RemoteGroupMapping {
     }
     groupMappingProcessor.syncMapping(ldapRealm, remoteUserGroupMapper, remoteUserFacade);
   }
+  
+  @Asynchronous
+  public void syncMappingAsync() {
+    if (!settings.isLdapGroupMappingSyncEnabled()) {
+      return;
+    }
+    List<RemoteUser> remoteUsers = remoteUserFacade.findAll();
+    for (RemoteUser remoteUser : remoteUsers) {
+      try {
+        syncMapping(remoteUser, null);
+      } catch (UserException ignored) {
+      }
+    }
+  }
 
   @Asynchronous
   public void syncUserMappingAsync(RemoteUser user, List<String> groups) {

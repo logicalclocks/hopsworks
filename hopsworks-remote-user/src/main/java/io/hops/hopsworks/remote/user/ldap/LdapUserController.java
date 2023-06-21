@@ -144,4 +144,8 @@ public class LdapUserController {
         e.getMessage());
     }
   }
+  
+  public String getGroupDN(String groupName) throws NamingException {
+    return ldapRealm.getGroupDN(groupName);
+  }
 }
