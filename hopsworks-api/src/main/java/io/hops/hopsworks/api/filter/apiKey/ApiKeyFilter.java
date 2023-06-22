@@ -18,10 +18,12 @@ package io.hops.hopsworks.api.filter.apiKey;
 import io.hops.hopsworks.api.filter.util.HopsworksSecurityContext;
 import io.hops.hopsworks.api.filter.util.Subject;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
+import io.hops.hopsworks.common.user.UserStatusValidator;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.user.security.apiKey.ApiKeyController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ApiKeyException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiKey;
@@ -65,6 +67,8 @@ public class ApiKeyFilter implements ContainerRequestFilter {
   @EJB
   private UsersController usersController;
   @EJB
+  private UserStatusValidator userStatusValidator;
+  @EJB
   private Settings settings;
   
   @Context
@@ -105,6 +109,7 @@ public class ApiKeyFilter implements ContainerRequestFilter {
     try {
       ApiKey apiKey = apiKeyController.getApiKey(key);
       Users user = apiKey.getUser();
+      userStatusValidator.checkStatus(user.getStatus());
       List<String> roles = usersController.getUserRoles(user);
       Set<ApiScope> scopes = apiKeyController.getScopes(apiKey);
       checkRole(roles);
@@ -112,7 +117,7 @@ public class ApiKeyFilter implements ContainerRequestFilter {
       Subject subject = new Subject(user.getUsername(), roles);
       String scheme = requestContext.getUriInfo().getRequestUri().getScheme();
       requestContext.setSecurityContext(new HopsworksSecurityContext(subject, scheme));
-    } catch (ApiKeyException e) {
+    } catch (ApiKeyException | UserException e) {
       LOGGER.log(Level.FINEST, "Api key Verification Exception: {0}", e.getMessage());
       e.buildJsonResponse(jsonResponse, settings.getHopsworksRESTLogLevel());
       requestContext.abortWith(Response.status(e.getErrorCode().getRespStatus().getStatusCode())
