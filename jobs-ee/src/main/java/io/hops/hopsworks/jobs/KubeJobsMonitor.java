@@ -120,8 +120,7 @@ public class KubeJobsMonitor implements JobsMonitor {
                   String message = containerStateTerminated.getMessage();
                   Integer exitCode = containerStateTerminated.getExitCode();
                   JobState jobState = KubeJobType.getAsJobState(reason);
-                  execution.setState(jobState);
-                  execution.setFinalStatus(KubeJobType.getAsJobFinalStatus(jobState));
+                  execution = updateState(jobState, execution);
                   cleanUpExecution(execution, pod);
                   // Exitcode 0 is successful execution and logs comes from the container
                   // Exitcode 1 is application failure and logs comes from container
@@ -159,8 +158,7 @@ public class KubeJobsMonitor implements JobsMonitor {
                     execution.getExecutionDuration() > Settings.PYTHON_JOB_KUBE_WAITING_TIMEOUT_MS) {
                     LOGGER.log(Level.FINEST, "reason: " + containerState + ", pod: " + pod);
                     JobState jobState = KubeJobType.getAsJobState(reason);
-                    execution.setState(jobState);
-                    execution.setFinalStatus(KubeJobType.getAsJobFinalStatus(jobState));
+                    execution = updateState(jobState, execution);
                     cleanUpExecution(execution, pod);
                     // Write log in Logs dataset
                     DistributedFileSystemOps udfso = null;
@@ -194,8 +192,8 @@ public class KubeJobsMonitor implements JobsMonitor {
           if (execution.getExecutionDuration() > 20000) {
             updateState(JobState.FAILED, execution);
             updateFinalStatus(JobFinalStatus.FAILED, execution);
-            execution.setExecutionStop(System.currentTimeMillis());
-            execution.setProgress(1);
+            updateExecutionStop(System.currentTimeMillis(), execution);
+            updateProgress(1, execution);
           }
         }
       }
@@ -205,10 +203,11 @@ public class KubeJobsMonitor implements JobsMonitor {
   }
   
   private void cleanUpExecution(Execution execution, Pod pod) {
+
     LOGGER.log(Level.FINEST, "Execution: " + execution + ", with state:" + execution.getState() + ", pod: " + pod);
     if (execution.getExecutionStop() < 1) {
-      execution.setExecutionStop(System.currentTimeMillis());
-      execution.setProgress(1);
+      execution = updateExecutionStop(System.currentTimeMillis(), execution);
+      execution = updateProgress(1, execution);
       execution = executionUpdateController.
         updateFinalStatusAndSendAlert(KubeJobType.getAsJobFinalStatus(execution.getState()), execution);
     }
@@ -225,6 +224,10 @@ public class KubeJobsMonitor implements JobsMonitor {
   @Override
   public Execution updateState(JobState newState, Execution execution) {
     return executionUpdateController.updateState(newState, execution);
+  }
+
+  public Execution updateExecutionStop(Long executionStop, Execution execution) {
+    return executionUpdateController.updateExecutionStop(executionStop, execution);
   }
 
   private Execution updateFinalStatus(JobFinalStatus finalStatus, Execution execution) {
