@@ -40,6 +40,10 @@ public class ExecutionUpdateController {
   public Execution updateProgress(float progress, Execution execution) {
     return executionFacade.updateProgress(execution, progress);
   }
+  
+  public Execution updateExecutionStop(long executionStop, Execution execution) {
+    return executionFacade.updateExecutionStop(execution, executionStop);
+  }
 
   public Execution updateState(JobState newState, Execution execution) {
     return executionFacade.updateState(execution, newState);
