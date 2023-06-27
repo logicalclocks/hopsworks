@@ -2055,11 +2055,11 @@ public class ProjectController {
     }
     for (DatasetSharedWith ds : dsSharedWithProject) {
       if(ds.getDataset().getDsType().equals(DatasetType.DATASET)) {
-        Inode sharedProjectInode = inodeController.getProjectRoot(ds.getProject().getName());
+        Inode sharedDsParentProjectInode = inodeController.getProjectRoot(ds.getDataset().getProject().getName());
         Path datasetPath = Utils.getDatasetPath(ds.getDataset(), settings);
-        Inode dsInode = inodeController.getProjectDatasetInode(sharedProjectInode, datasetPath.toString(),
+        Inode dsInode = inodeController.getProjectDatasetInode(sharedDsParentProjectInode, datasetPath.toString(),
           ds.getDataset());
-        kids.add(new InodeView(sharedProjectInode, dsInode, ds, datasetPath.toString()));
+        kids.add(new InodeView(sharedDsParentProjectInode, dsInode, ds, datasetPath.toString()));
       } else {
         Path datasetPath = Utils.getDatasetPath(ds.getDataset(), settings);
         Inode dsInode = inodeController.getInodeAtPath(datasetPath.toString());
