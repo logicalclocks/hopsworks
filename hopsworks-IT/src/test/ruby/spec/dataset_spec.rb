@@ -453,6 +453,17 @@ describe "On #{ENV['OS']}" do
           expect_status_details(403)
         end
 
+        it "should access project after sharing [HWORKS-614]" do
+          project = create_project
+          dsname = "dataset_#{short_random_id}"
+          ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
+          share_dataset(@project, dsname, project[:projectname], permission: "READ_ONLY")
+          # Accept dataset
+          accept_dataset(project, "#{@project[:projectname]}::#{dsname}", datasetType: "&type=DATASET")
+          get "#{ENV['HOPSWORKS_API']}/project/getProjectInfo/#{project[:projectname]}"
+          expect_status_details(200)
+        end
+
         it "should show the user that accepted the dataset" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
