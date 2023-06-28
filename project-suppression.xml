@@ -218,5 +218,6 @@
   <suppress>
     <notes><![CDATA[file name: payara-embedded-web-5.2022.5.jar]]></notes>
     <cve>CVE-2023-28462</cve>
+    <cve>CVE-2016-4055</cve>
   </suppress>
 </suppressions>

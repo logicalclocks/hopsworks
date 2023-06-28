@@ -19,7 +19,6 @@ package io.hops.hopsworks.persistence.entity.featurestore.statistics;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -62,16 +61,9 @@ public class FeaturestoreStatistic implements Serializable {
   @Basic(optional = false)
   @Column(name = "commit_time")
   private Date commitTime;
-
-  @JoinColumns({
-      @JoinColumn(name = "inode_pid",
-          referencedColumnName = "parent_id"),
-      @JoinColumn(name = "inode_name",
-          referencedColumnName = "name"),
-      @JoinColumn(name = "partition_id",
-          referencedColumnName = "partition_id")})
-  @ManyToOne(optional = false)
-  private Inode inode;
+  
+  @Column(name = "file_path", nullable = false, length = 1000)
+  private String filePath;
 
   @JoinColumn(name = "feature_group_id", referencedColumnName = "id")
   private Featuregroup featureGroup;
@@ -94,22 +86,22 @@ public class FeaturestoreStatistic implements Serializable {
   public FeaturestoreStatistic() {
   }
 
-  public FeaturestoreStatistic(Date commitTime, Inode inode, TrainingDataset trainingDataset) {
+  public FeaturestoreStatistic(Date commitTime, String filePath, TrainingDataset trainingDataset) {
     this.commitTime = commitTime;
-    this.inode = inode;
+    this.filePath = filePath;
     this.trainingDataset = trainingDataset;
   }
   
-  public FeaturestoreStatistic(Date commitTime, Inode inode, Featuregroup featureGroup) {
+  public FeaturestoreStatistic(Date commitTime, String filePath, Featuregroup featureGroup) {
     this.commitTime = commitTime;
-    this.inode = inode;
+    this.filePath = filePath;
     this.featureGroup = featureGroup;
   }
 
-  public FeaturestoreStatistic(Date commitTime, Inode inode, Featuregroup featureGroup,
+  public FeaturestoreStatistic(Date commitTime, String filePath, Featuregroup featureGroup,
                                FeatureGroupCommit featureGroupCommit) {
     this.commitTime = commitTime;
-    this.inode = inode;
+    this.filePath = filePath;
     this.featureGroup = featureGroup;
     this.featureGroupCommit = featureGroupCommit;
   }
@@ -134,12 +126,12 @@ public class FeaturestoreStatistic implements Serializable {
     this.commitTime = commitTime;
   }
 
-  public Inode getInode() {
-    return inode;
+  public String getFilePath() {
+    return filePath;
   }
 
-  public void setInode(Inode inode) {
-    this.inode = inode;
+  public void setFilePath(String filePath) {
+    this.filePath = filePath;
   }
 
   public Featuregroup getFeatureGroup() {
@@ -191,7 +183,7 @@ public class FeaturestoreStatistic implements Serializable {
     if (!commitTime.equals(that.commitTime)) {
       return false;
     }
-    if (!inode.equals(that.inode)) {
+    if (!filePath.equals(that.filePath)) {
       return false;
     }
     if (featureGroup != null ? !featureGroup.equals(that.featureGroup) : that.featureGroup != null) {
@@ -208,7 +200,7 @@ public class FeaturestoreStatistic implements Serializable {
   public int hashCode() {
     int result = id.hashCode();
     result = 31 * result + commitTime.hashCode();
-    result = 31 * result + inode.hashCode();
+    result = 31 * result + filePath.hashCode();
     result = 31 * result + (featureGroup != null ? featureGroup.hashCode() : 0);
     result = 31 * result + (featureGroupCommit != null ? featureGroupCommit.hashCode() : 0);
     result = 31 * result + (trainingDataset != null ? trainingDataset.hashCode() : 0);

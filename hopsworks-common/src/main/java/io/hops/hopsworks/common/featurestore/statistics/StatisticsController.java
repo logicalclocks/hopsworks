@@ -23,7 +23,6 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
@@ -37,7 +36,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Fea
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -49,6 +47,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Date;
@@ -56,13 +55,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class StatisticsController {
-
-  @EJB
-  private InodeController inodeController;
+  
+  private static final Logger logger = Logger.getLogger(StatisticsController.class.getName());
+  
   @EJB
   private DistributedFsService dfs;
   @EJB
@@ -78,18 +78,16 @@ public class StatisticsController {
   @EJB
   private Settings settings;
 
-  public String readStatisticsContent(Project project, Users user, FeaturestoreStatistic statistic)
+  public String readOrDeleteStatistics(Project project, Users user, FeaturestoreStatistic statistic)
       throws FeaturestoreException {
-    String path = inodeController.getPath(statistic.getInode());
-    return readContent(project, user, path);
+    return readOrDeleteStatisticsFile(project, user, statistic, statistic.getFilePath());
   }
 
-  public String readStatisticsContent(Project project, Users user, FeaturestoreStatistic statistic, String splitName)
-          throws FeaturestoreException {
-
-    String statisticsPath = inodeController.getPath(statistic.getInode());
-    String path = statisticsPath + "/" + splitStatisticsFileName(splitName, statistic.getCommitTime().getTime());
-    return readContent(project, user, path);
+  public String readOrDeleteStatistics(Project project, Users user, FeaturestoreStatistic statistic,
+      String splitName) throws FeaturestoreException {
+    String fileName = splitStatisticsFileName(splitName, statistic.getCommitTime().getTime());
+    String path = statistic.getFilePath() + "/" + fileName;
+    return readOrDeleteStatisticsFile(project, user, statistic, path);
   }
 
   public FeaturestoreStatistic registerStatistics(Project project, Users user, Long statisticsCommitTimeStamp,
@@ -117,21 +115,21 @@ public class StatisticsController {
       }
     }
 
-    Inode statisticsInode = registerStatistics(project, user, statisticsCommitTimeStamp, statisticsJson.toString(),
+    String statisticsFilePath = registerStatistics(project, user, statisticsCommitTimeStamp, statisticsJson.toString(),
         featuregroup.getName(), "FeatureGroups", featuregroup.getVersion(), null, false);
     Timestamp commitTime = new Timestamp(statisticsCommitTimeStamp);
 
-    FeaturestoreStatistic featurestoreStatistic = new FeaturestoreStatistic(commitTime, statisticsInode, featuregroup);
+    FeaturestoreStatistic statistic = new FeaturestoreStatistic(commitTime, statisticsFilePath, featuregroup);
     if (featureGroupCommit.isPresent()) {
-      featurestoreStatistic.setFeatureGroupCommit(featureGroupCommit.get());
+      statistic.setFeatureGroupCommit(featureGroupCommit.get());
     }
-
-    featurestoreStatistic = featurestoreStatisticFacade.update(featurestoreStatistic);
+    
+    statistic = featurestoreStatisticFacade.update(statistic);
 
     // Log statistics activity
-    fsActivityFacade.logStatisticsActivity(user, featuregroup, new Date(commitTime.getTime()), featurestoreStatistic);
+    fsActivityFacade.logStatisticsActivity(user, featuregroup, new Date(commitTime.getTime()), statistic);
 
-    return featurestoreStatistic;
+    return statistic;
   }
 
   public FeaturestoreStatistic registerStatistics(Project project, Users user, Long commitTimeStamp, String content,
@@ -153,12 +151,12 @@ public class StatisticsController {
       }
     }
 
-    Inode statisticsInode = registerStatistics(project, user, commitTimeStamp, statContent,
+    String statisticsFilePath = registerStatistics(project, user, commitTimeStamp, statContent,
         trainingDataset.getName(), "TrainingDatasets", trainingDataset.getVersion(), splitStatJson,
         forTransformation);
     Timestamp commitTime = new Timestamp(commitTimeStamp);
     FeaturestoreStatistic featurestoreStatistic =
-        new FeaturestoreStatistic(commitTime, statisticsInode, trainingDataset);
+        new FeaturestoreStatistic(commitTime, statisticsFilePath, trainingDataset);
     featurestoreStatistic.setForTransformation(forTransformation);
     featurestoreStatistic = featurestoreStatisticFacade.update(featurestoreStatistic);
 
@@ -171,7 +169,7 @@ public class StatisticsController {
     return featurestoreStatistic;
   }
 
-  private Inode registerStatistics(Project project, Users user, Long commitTime, String content, String entityName,
+  private String registerStatistics(Project project, Users user, Long commitTime, String content, String entityName,
                                    String entitySubDir, Integer version, Map<String, JSONObject> splitStatistics,
                                    boolean forTransformation)
       throws DatasetException, HopsSecurityException, IOException {
@@ -193,13 +191,13 @@ public class StatisticsController {
         udfso.mkdir(dirPath.toString());
       }
 
-      Inode inode;
+      String path;
       if (splitStatistics != null && !splitStatistics.isEmpty()){
         for (Map.Entry<String, JSONObject> entry: splitStatistics.entrySet()){
           Path filePath = new Path(dirPath,  splitStatisticsFileName(entry.getKey(), commitTime));
           udfso.create(filePath, entry.getValue().toString());
         }
-        inode = inodeController.getInodeAtPath(dirPath.toString());
+        path = dirPath.toString();
       } else {
         Path filePath;
         if (forTransformation) {
@@ -208,26 +206,28 @@ public class StatisticsController {
           filePath = new Path(dirPath, commitTime + ".json");
         }
         udfso.create(filePath, content);
-        inode = inodeController.getInodeAtPath(filePath.toString());
+        path = filePath.toString();
       }
-      return inode;
+      return path;
     } finally {
       dfs.closeDfsClient(udfso);
     }
   }
-
+  
   public void deleteStatistics(Project project, Users user, Featuregroup featuregroup)
       throws FeaturestoreException {
-    deleteStatistics(project, user, featuregroup.getName(), "FeatureGroups", featuregroup.getVersion());
+    deleteStatisticsDir(project, user, featuregroup.getName(), "FeatureGroups", featuregroup.getVersion());
+    featurestoreStatisticFacade.deleteByFeatureGroup(featuregroup);
   }
 
   public void deleteStatistics(Project project, Users user, TrainingDataset trainingDataset)
       throws FeaturestoreException {
-    deleteStatistics(project, user, trainingDataset.getName(), "TrainingDatasets", trainingDataset.getVersion());
+    deleteStatisticsDir(project, user, trainingDataset.getName(), "TrainingDatasets", trainingDataset.getVersion());
+    featurestoreStatisticFacade.deleteByTrainingDataset(trainingDataset);
   }
-
-  private void deleteStatistics(Project project, Users user, String entityName, String entitySubDir, Integer version)
-      throws FeaturestoreException {
+  
+  private void deleteStatisticsDir(Project project, Users user, String entityName, String entitySubDir,
+    Integer version) throws FeaturestoreException {
     DistributedFileSystemOps udfso = null;
     try {
       udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
@@ -248,7 +248,7 @@ public class StatisticsController {
       dfs.closeDfsClient(udfso);
     }
   }
-
+  
   private Dataset getOrCreateStatisticsDataset(Project project, Users user)
       throws DatasetException, HopsSecurityException {
     Optional<Dataset> statsDataset = project.getDatasetCollection().stream()
@@ -297,15 +297,29 @@ public class StatisticsController {
   private String transformationFnStatisticsFileName(Long commitTime) {
     return "transformation_fn" + "_" +  commitTime + ".json";
   }
-
-  private String readContent(Project project, Users user, String path) throws FeaturestoreException {
+  
+  private String readOrDeleteStatisticsFile(Project project, Users user, FeaturestoreStatistic statistic,
+      String filePath) throws FeaturestoreException {
+    try {
+      return readFile(project, user, filePath);
+    } catch (FeaturestoreException e) {
+      if (e.getCause() instanceof FileNotFoundException) {
+        // if statistics file doesn't exist, remove statistics instance in the DB
+        logger.info("Deleting statistics due to missing statistics file with path: " + filePath);
+        featurestoreStatisticFacade.delete(statistic);
+      }
+      throw e;
+    }
+  }
+  
+  private String readFile(Project project, Users user, String path) throws FeaturestoreException {
     DistributedFileSystemOps udfso = null;
     try {
       udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
       return udfso.cat(path);
     } catch (IOException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.STATISTICS_READ_ERROR,
-          Level.WARNING, e.getMessage(), e.getMessage(), e);
+          Level.WARNING, "Statistics file not found", e.getMessage(), e);
     } finally {
       dfs.closeDfsClient(udfso);
     }

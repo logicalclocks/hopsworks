@@ -129,10 +129,9 @@ public class StatisticsBuilder {
             featurestoreStatistic.getFeatureGroupCommit().getFeatureGroupCommitPK().getCommitId());
       }
       if (resourceRequest.getField() != null && resourceRequest.getField().contains("content")) {
-        dto.setContent(statisticsController.readStatisticsContent(project, user, featurestoreStatistic));
+        dto.setContent(statisticsController.readOrDeleteStatistics(project, user, featurestoreStatistic));
       }
     }
-
     return dto;
   }
 
@@ -151,12 +150,12 @@ public class StatisticsBuilder {
             !featurestoreStatistic.getForTransformation()) {
           for (TrainingDatasetSplit trainingDatasetSplit : trainingDataset.getSplits()) {
             splitStatistics.add(new SplitStatisticsDTO(trainingDatasetSplit.getName(),
-              statisticsController.readStatisticsContent(project, user, featurestoreStatistic,
+              statisticsController.readOrDeleteStatistics(project, user, featurestoreStatistic,
                 trainingDatasetSplit.getName())));
           }
           dto.setSplitStatistics(splitStatistics);
         } else {
-          dto.setContent(statisticsController.readStatisticsContent(project, user, featurestoreStatistic));
+          dto.setContent(statisticsController.readOrDeleteStatistics(project, user, featurestoreStatistic));
         }
       }
     }
@@ -174,7 +173,7 @@ public class StatisticsBuilder {
     if (dto.isExpand()) {
       dto.setCommitTime(featurestoreStatistic.getCommitTime().getTime());
       if (resourceRequest.getField() != null && resourceRequest.getField().contains("content")) {
-        dto.setContent(statisticsController.readStatisticsContent(project, user, featurestoreStatistic));
+        dto.setContent(statisticsController.readOrDeleteStatistics(project, user, featurestoreStatistic));
       }
     }
 
@@ -194,7 +193,7 @@ public class StatisticsBuilder {
           resourceRequest.getFilter(),
           featuregroup);
       dto.setCount(collectionInfo.getCount());
-
+      
       for (Object s : collectionInfo.getItems()) {
         dto.addItem(build(uriInfo, resourceRequest, project, user, featuregroup, (FeaturestoreStatistic) s));
       }
@@ -217,7 +216,7 @@ public class StatisticsBuilder {
           trainingDataset,
           forTransformation);
       dto.setCount(collectionInfo.getCount());
-
+      
       for (Object s : collectionInfo.getItems()) {
         dto.addItem(build(uriInfo, resourceRequest, project, user, trainingDataset, (FeaturestoreStatistic) s));
       }

@@ -40,6 +40,10 @@ module FeatureStoreStatisticsHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/#{entity_type}/#{entity_id}/statistics?filter_by=commit_time_eq:#{commit_time}&fields=content&for_transformation=#{for_transformation}"
   end
 
+  def get_statistics_commits(project_id, featurestore_id, entity_type, entity_id, for_transformation: false)
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/#{entity_type}/#{entity_id}/statistics?sort_by=commit_time:desc&fields=content&for_transformation=#{for_transformation}"
+  end
+
   def get_last_statistics_commit(project_id, featurestore_id, entity_type, entity_id, for_transformation: false)
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/#{entity_type}/#{entity_id}/statistics?sort_by=commit_time:desc&offset=0&limit=1&fields=content&for_transformation=#{for_transformation}"
   end

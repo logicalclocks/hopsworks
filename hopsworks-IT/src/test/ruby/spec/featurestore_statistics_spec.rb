@@ -248,30 +248,157 @@ describe "On #{ENV['OS']}" do
           expect(test_dir(path)).to be false
         end
 
+        it "deleting a feature group statistics file should delete the associated statistics commit" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
+          expect_status_details(201)
+          fg_parsed_json = JSON.parse(json_result)
+          create_statistics_commit(project.id, featurestore_id, "featuregroups", fg_parsed_json["id"])
+          expect_status_details(200)
+          create_statistics_commit(project.id, featurestore_id, "featuregroups", fg_parsed_json["id"], commit_time: 1597990088000)
+          expect_status_details(200)
+          
+          # before deleting the statistics file
+          json_result = get_last_statistics_commit(project.id, featurestore_id, "featuregroups", fg_parsed_json["id"])
+          expect_status_details(200)
+          parsed_json = JSON.parse(json_result)
+          expect(parsed_json.key?("items")).to be true
+          expect(parsed_json.key?("count")).to be true
+          expect(parsed_json["count"]).to eql(2)
+
+          # remove hdfs statistics file of 1597990088000 
+          path = "/Projects/#{project[:projectname]}//Statistics/FeatureGroups/#{featuregroup_name}_1/1597990088000.json"
+          rm(path)
+
+          # after deleting the statistics file:
+          # first request throws an exception. The missing statistics metadata is removed from the db
+          json_result = get_last_statistics_commit(project.id, featurestore_id, "featuregroups", fg_parsed_json["id"])
+          expect_status_details(500, error_code: 270107)
+          # second request returns successfully
+          json_result = get_last_statistics_commit(project.id, featurestore_id, "featuregroups", fg_parsed_json["id"])
+          expect_status_details(200)
+          parsed_json = JSON.parse(json_result)
+          expect(parsed_json.key?("items")).to be true
+          expect(parsed_json.key?("count")).to be true
+          expect(parsed_json["count"]).to eql(1)
+        end
+
+        it "deleting a training dataset statistics file should delete the associated statistics metadata" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
+          td_parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          create_statistics_commit(project.id, featurestore_id, "trainingdatasets", td_parsed_json["id"])
+          expect_status_details(200)
+          create_statistics_commit(project.id, featurestore_id, "trainingdatasets", td_parsed_json["id"], commit_time: 1597990088000)
+          expect_status_details(200)
+
+          # before deleting the statistics file
+          json_result = get_last_statistics_commit(project.id, featurestore_id, "trainingdatasets", td_parsed_json["id"])
+          expect_status_details(200)
+          parsed_json = JSON.parse(json_result)
+          expect(parsed_json.key?("items")).to be true
+          expect(parsed_json.key?("count")).to be true
+          expect(parsed_json["count"]).to eql(2)
+
+          # remove hdfs statistics file of 1597990088000 
+          path = "/Projects/#{project[:projectname]}//Statistics/TrainingDatasets/#{training_dataset_name}_1/1597990088000.json"
+          rm(path)
+
+          # after deleting the statistics file:
+          # first request throws an exception. The missing statistics metadata is removed from the db
+          json_result = get_last_statistics_commit(project.id, featurestore_id, "trainingdatasets", td_parsed_json["id"])
+          expect_status_details(500, error_code: 270107)
+          # second request returns successfully
+          json_result = get_last_statistics_commit(project.id, featurestore_id, "trainingdatasets", td_parsed_json["id"])
+          expect_status_details(200)
+          parsed_json = JSON.parse(json_result)
+          expect(parsed_json.key?("items")).to be true
+          expect(parsed_json.key?("count")).to be true
+          expect(parsed_json["count"]).to eql(1)
+        end
+
+        it "deleting a training dataset split statistics file should delete the associated statistics metadata" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+          splits = [
+              {
+                  name: "train",
+                  percentage: 0.8
+              },
+              {
+                  name: "test",
+                  percentage: 0.2
+              }
+          ]
+          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector,
+           splits: splits, train_split: "train")
+          td_parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          expect(td_parsed_json.key?("splits")).to be true
+          expect(td_parsed_json["splits"].length).to be 2
+
+          splitStatistics = [
+            {"name": "train", "content": '{"columns": ["a", "b", "c"]}'},
+            {"name": "test", "content": '{"columns": ["a", "b", "c"]}'}
+          ]
+
+          create_statistics_commit(project.id, featurestore_id, "trainingdatasets", td_parsed_json["id"], split_statistics: splitStatistics)
+          expect_status_details(200)
+
+          # before deleting the statistics file
+          json_result = get_statistics_commit(project.id, featurestore_id, "trainingdatasets", td_parsed_json["id"])
+          expect_status_details(200)
+          parsed_json = JSON.parse(json_result)
+          expect(parsed_json["items"][0].key?("splitStatistics")).to be true
+          expect(parsed_json["items"][0]["splitStatistics"].length).to be 2
+          expect(parsed_json["items"][0]["splitStatistics"][0].key?("content")).to be true
+          expect(JSON.parse(parsed_json["items"][0]["splitStatistics"][0]["content"])).to eql({"columns" => ["a", "b", "c"]})
+          expect(JSON.parse(parsed_json["items"][0]["splitStatistics"][1]["content"])).to eql({"columns" => ["a", "b", "c"]})
+          expect(parsed_json["items"][0]["commitTime"]).to eql(1597903688000)
+
+          # remove hdfs statistics file for the train split
+          path = "/Projects/#{project[:projectname]}//Statistics/TrainingDatasets/#{training_dataset_name}_1/train_1597903688000.json"
+          rm(path)
+          # after deleting the statistics file:
+          # first request throws an exception. The missing statistics metadata is removed from the db
+          json_result = get_statistics_commit(project.id, featurestore_id, "trainingdatasets", td_parsed_json["id"])
+          expect_status_details(500, error_code: 270107)
+          # second request returns successfully
+          json_result = get_statistics_commit(project.id, featurestore_id, "trainingdatasets", td_parsed_json["id"])
+          expect_status_details(200)
+          parsed_json = JSON.parse(json_result)
+          expect(parsed_json["count"]).to eql(0)
+        end
+
         it "should be able to create a training dataset split statistics and retrieve content back" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
           splits = [
               {
-                  name: "train_split",
+                  name: "train",
                   percentage: 0.8
               },
               {
-                  name: "test_split",
+                  name: "test",
                   percentage: 0.2
               }
           ]
           json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector,
-           splits: splits, train_split: "train_split")
+           splits: splits, train_split: "train")
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
           expect(parsed_json.key?("splits")).to be true
           expect(parsed_json["splits"].length).to be 2
 
           splitStatistics = [
-            {"name": "train_split", "content": '{"columns": ["a", "b", "c"]}'},
-            {"name": "test_split", "content": '{"columns": ["a", "b", "c"]}'}
+            {"name": "train", "content": '{"columns": ["a", "b", "c"]}'},
+            {"name": "test", "content": '{"columns": ["a", "b", "c"]}'}
           ]
 
           create_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"], split_statistics: splitStatistics)
@@ -329,16 +456,16 @@ describe "On #{ENV['OS']}" do
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
           splits = [
               {
-                  name: "train_split",
+                  name: "train",
                   percentage: 0.8
               },
               {
-                  name: "test_split",
+                  name: "test",
                   percentage: 0.2
               }
           ]
           json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector,
-           splits: splits, train_split: "train_split")
+           splits: splits, train_split: "train")
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
           expect(parsed_json.key?("splits")).to be true
@@ -346,8 +473,8 @@ describe "On #{ENV['OS']}" do
 
           # create general feature statistics content
           splitStatistics = [
-            {"name": "train_split", "content": '{"columns": ["a", "b", "c"]}'},
-            {"name": "test_split", "content": '{"columns": ["a", "b", "c"]}'}
+            {"name": "train", "content": '{"columns": ["a", "b", "c"]}'},
+            {"name": "test", "content": '{"columns": ["a", "b", "c"]}'}
           ]
           create_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"], split_statistics: splitStatistics, forTransformation: false)
 

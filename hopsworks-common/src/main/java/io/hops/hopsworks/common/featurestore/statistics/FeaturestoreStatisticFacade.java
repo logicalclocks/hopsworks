@@ -111,7 +111,30 @@ public class FeaturestoreStatisticFacade extends AbstractFacade<FeaturestoreStat
     setOffsetAndLim(offset, limit, query);
     return new CollectionInfo((Long) queryCount.getSingleResult(), query.getResultList());
   }
-
+  
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public void delete(FeaturestoreStatistic statistic) {
+    if (statistic != null) {
+      em.remove(em.merge(statistic));
+    }
+  }
+  
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public void deleteByFeatureGroup(Featuregroup featuregroup) {
+    Query qDeleteVisitors = em.createQuery(
+      "DELETE FROM FeaturestoreStatistic fss WHERE fss.featureGroup = :featureGroup");
+    qDeleteVisitors.setParameter("featureGroup", featuregroup);
+    qDeleteVisitors.executeUpdate();
+  }
+  
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public void deleteByTrainingDataset(TrainingDataset trainingDataset) {
+    Query qDeleteVisitors = em.createQuery(
+      "DELETE FROM FeaturestoreStatistic fss WHERE fss.trainingDataset = :trainingDataset");
+    qDeleteVisitors.setParameter("trainingDataset", trainingDataset);
+    qDeleteVisitors.executeUpdate();
+  }
+  
   private void setFilter(Set<? extends AbstractFacade.FilterBy> filter, Query q) {
     if (filter == null || filter.isEmpty()) {
       return;
