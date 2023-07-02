@@ -48,7 +48,6 @@
     <class>io.hops.hopsworks.persistence.entity.dataset.Dataset</class>
     <class>io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith</class>
     <class>io.hops.hopsworks.persistence.entity.dataset.DatasetRequest</class>
-    <class>io.hops.hopsworks.persistence.entity.dela.certs.ClusterCertificate</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.Featurestore</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivity</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.tag.TagSchemas</class>
@@ -71,8 +70,6 @@
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeatureExtraConstraints</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeature</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.stream.StreamFeatureGroup</class>
-    <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset</class>
-    <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFeature</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetJoin</class>
@@ -115,8 +112,6 @@
     <class>io.hops.hopsworks.persistence.entity.kafka.schemas.Subjects</class>
     <class>io.hops.hopsworks.persistence.entity.kafka.schemas.SubjectsCompatibility</class>
     <class>io.hops.hopsworks.persistence.entity.kafka.schemas.Schemas</class>
-    <class>io.hops.hopsworks.persistence.entity.kafka.SharedTopics</class>
-    <class>io.hops.hopsworks.persistence.entity.kafka.TopicAcls</class>
     <class>io.hops.hopsworks.persistence.entity.kagent.HostServices</class>
     <class>io.hops.hopsworks.persistence.entity.log.operation.OperationsLog</class>
     <class>io.hops.hopsworks.persistence.entity.maggy.MaggyDriver</class>

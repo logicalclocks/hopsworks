@@ -20,8 +20,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivity;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig;
-import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset;
-import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.TrainingDatasetSplit;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
@@ -146,12 +145,6 @@ public class TrainingDataset implements Serializable {
   @Enumerated(EnumType.ORDINAL)
   @Column(name = "training_dataset_type")
   private TrainingDatasetType trainingDatasetType = TrainingDatasetType.HOPSFS_TRAINING_DATASET;
-  @JoinColumn(name = "hopsfs_training_dataset_id", referencedColumnName = "id")
-  @OneToOne
-  private HopsfsTrainingDataset hopsfsTrainingDataset;
-  @JoinColumn(name = "external_training_dataset_id", referencedColumnName = "id")
-  @OneToOne
-  private ExternalTrainingDataset externalTrainingDataset;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
   private Collection<TrainingDatasetSplit> splits;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
@@ -165,6 +158,16 @@ public class TrainingDataset implements Serializable {
   @Basic
   @Column(name = "sample_ratio")
   private Double sampleRatio;
+  @Basic
+  @Column(name = "connector_path")
+  private String connectorPath;
+  @Basic
+  @Column(name = "tag_path")
+  private String tagPath;
+  @JoinColumn(name = "connector_id", referencedColumnName = "id")
+  @ManyToOne(optional = false)
+  private FeaturestoreConnector featurestoreConnector;
+
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -241,25 +244,7 @@ public class TrainingDataset implements Serializable {
   public void setFeatures(Collection<TrainingDatasetFeature> features) {
     this.features = features;
   }
-  
-  public HopsfsTrainingDataset getHopsfsTrainingDataset() {
-    return hopsfsTrainingDataset;
-  }
-  
-  public void setHopsfsTrainingDataset(
-    HopsfsTrainingDataset hopsfsTrainingDataset) {
-    this.hopsfsTrainingDataset = hopsfsTrainingDataset;
-  }
-  
-  public ExternalTrainingDataset getExternalTrainingDataset() {
-    return externalTrainingDataset;
-  }
-  
-  public void setExternalTrainingDataset(
-    ExternalTrainingDataset externalTrainingDataset) {
-    this.externalTrainingDataset = externalTrainingDataset;
-  }
-  
+
   public TrainingDatasetType getTrainingDatasetType() {
     return trainingDatasetType;
   }
@@ -375,6 +360,30 @@ public class TrainingDataset implements Serializable {
     this.sampleRatio = sampleRatio;
   }
 
+  public String getConnectorPath() {
+    return connectorPath;
+  }
+
+  public void setConnectorPath(String connectorPath) {
+    this.connectorPath = connectorPath;
+  }
+
+  public String getTagPath() {
+    return tagPath;
+  }
+
+  public void setTagPath(String tagPath) {
+    this.tagPath = tagPath;
+  }
+
+  public FeaturestoreConnector getFeaturestoreConnector() {
+    return featurestoreConnector;
+  }
+
+  public void setFeaturestoreConnector(FeaturestoreConnector featurestoreConnector) {
+    this.featurestoreConnector = featurestoreConnector;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -396,13 +405,14 @@ public class TrainingDataset implements Serializable {
     if (!Objects.equals(joins, that.joins)) return false;
     if (!Objects.equals(filters, that.filters)) return false;
     if (trainingDatasetType != that.trainingDatasetType) return false;
-    if (!Objects.equals(hopsfsTrainingDataset, that.hopsfsTrainingDataset)) return false;
-    if (!Objects.equals(externalTrainingDataset, that.externalTrainingDataset)) return false;
     if (!Objects.equals(trainSplit, that.trainSplit)) return false;
     if (!Objects.equals(featureView, that.featureView)) return false;
     if (!Objects.equals(startTime, that.startTime)) return false;
     if (!Objects.equals(endTime, that.endTime)) return false;
     if (!Objects.equals(sampleRatio, that.sampleRatio)) return false;
+    if (!Objects.equals(connectorPath, that.connectorPath)) return false;
+    if (!Objects.equals(tagPath, that.tagPath)) return false;
+    if (!Objects.equals(featurestoreConnector, that.featurestoreConnector)) return false;
     return Objects.equals(splits, that.splits);
   }
 
@@ -422,14 +432,15 @@ public class TrainingDataset implements Serializable {
     result = 31 * result + (joins != null ? joins.hashCode() : 0);
     result = 31 * result + (filters != null ? filters.hashCode() : 0);
     result = 31 * result + (trainingDatasetType != null ? trainingDatasetType.hashCode() : 0);
-    result = 31 * result + (hopsfsTrainingDataset != null ? hopsfsTrainingDataset.hashCode() : 0);
-    result = 31 * result + (externalTrainingDataset != null ? externalTrainingDataset.hashCode() : 0);
     result = 31 * result + (splits != null ? splits.hashCode() : 0);
     result = 31 * result + (trainSplit != null ? trainSplit.hashCode() : 0);
     result = 31 * result + (featureView != null ? featureView.hashCode() : 0);
     result = 31 * result + (startTime != null ? startTime.hashCode() : 0);
     result = 31 * result + (endTime != null ? endTime.hashCode() : 0);
     result = 31 * result + (sampleRatio != null ? sampleRatio.hashCode() : 0);
+    result = 31 * result + (connectorPath != null ? connectorPath.hashCode() : 0);
+    result = 31 * result + (tagPath != null ? tagPath.hashCode() : 0);
+    result = 31 * result + (featurestoreConnector != null ? featurestoreConnector.hashCode() : 0);
     return result;
   }
 }

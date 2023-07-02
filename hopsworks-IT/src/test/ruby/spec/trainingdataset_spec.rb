@@ -46,7 +46,6 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("dataFormat")).to be true
           expect(parsed_json.key?("trainingDatasetType")).to be true
           expect(parsed_json.key?("location")).to be true
-          expect(parsed_json.key?("inodeId")).to be true
           expect(parsed_json.key?("features")).to be true
           expect(parsed_json.key?("seed")).to be true
           expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
@@ -336,7 +335,6 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json2.key?("version")).to be true
           expect(parsed_json2.key?("dataFormat")).to be true
           expect(parsed_json2.key?("trainingDatasetType")).to be true
-          expect(parsed_json2.key?("inodeId")).to be true
 
           # make sure the dataformat didn't change
           expect(parsed_json2["dataFormat"] == "tfrecords").to be true
@@ -772,7 +770,7 @@ describe "On #{ENV['OS']}" do
                                         "FROM `#{featurestore_name}`.`#{fg_name}_1` `fg0`\n" +
                                         "INNER JOIN `fg1` ON `fg0`.`testfeature` = `fg1`.`testfeature`")
           expect(query.key?('onDemandFeatureGroups')).to be true
-          expect(query.key?("queryOnline")).to be false
+          expect(query.key?("queryOnline")).to be true
         end
 
         it "should succeed to replay the query from a query based training dataset with and without label" do

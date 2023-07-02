@@ -21,7 +21,6 @@ import io.hops.hopsworks.common.dao.user.security.secrets.SecretsFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.storageconnectors.StorageConnectorUtil;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
@@ -54,8 +53,6 @@ public class FeaturestoreS3ConnectorController {
 
   private static final Logger LOGGER = Logger.getLogger(FeaturestoreS3ConnectorController.class.getName());
 
-  @EJB
-  private Settings settings;
   @EJB
   private SecretsController secretsController;
   @EJB
