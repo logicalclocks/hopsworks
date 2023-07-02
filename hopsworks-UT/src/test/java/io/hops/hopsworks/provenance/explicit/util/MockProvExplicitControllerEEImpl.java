@@ -204,7 +204,6 @@ public class MockProvExplicitControllerEEImpl {
     Mockito.when(setup.datasetHelper.getDatasetPath(Mockito.any(), Mockito.any(), Mockito.any()))
       .thenReturn(new DatasetPath((Path)null, (Path)null, (Path)null));
     Mockito.when(setup.featureViewCtrl.getLocation(Mockito.any())).thenReturn(null);
-    Mockito.when(setup.trainingDatasetCtrl.getTrainingDatasetInodePath(Mockito.any())).thenReturn(null);
 
     Mockito.when(setup.settings.getProvenanceGraphMaxSize()).thenReturn(10000);
     return new ProvExplicitControllerEEImpl(setup.settings, setup.fgLinkFacade, setup.fvLinkFacade, setup.tdFacade,

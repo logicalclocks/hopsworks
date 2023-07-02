@@ -168,7 +168,6 @@ public class TestProvExplicitDeleteScenario {
     Mockito.when(datasetHelper.getDatasetPath(Mockito.any(), Mockito.any(), Mockito.any()))
       .thenReturn(new DatasetPath((Path)null, (Path)null, (Path)null));
     Mockito.when(featureViewCtrl.getLocation(Mockito.any())).thenReturn(null);
-    Mockito.when(trainingDatasetCtrl.getTrainingDatasetInodePath(Mockito.any())).thenReturn(null);
     //
     provExplicitCtrl = new ProvExplicitControllerEEImpl(settings, fgLinkFacade, fvLinkFacade, tdFacade,
       featureStoreCtrl, featureViewCtrl, trainingDatasetCtrl, datasetHelper, accessCtrl);

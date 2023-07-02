@@ -45,14 +45,12 @@ import io.hops.hopsworks.common.featurestore.statistics.columns.StatisticColumnC
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.external.ExternalTrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs.HopsfsTrainingDatasetController;
-import io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs.HopsfsTrainingDatasetFacade;
 import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionFacade;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.security.QuotasEnforcement;
 import io.hops.hopsworks.common.security.QuotaEnforcementException;
@@ -80,11 +78,8 @@ import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.Trainin
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetJoin;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetJoinCondition;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
-import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset;
-import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.TrainingDatasetSplit;
 import io.hops.hopsworks.persistence.entity.featurestore.transformationFunction.TransformationFunction;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
@@ -128,13 +123,9 @@ public class TrainingDatasetController {
   @EJB
   private HopsfsTrainingDatasetController hopsfsTrainingDatasetController;
   @EJB
-  private HopsfsTrainingDatasetFacade hopsfsTrainingDatasetFacade;
-  @EJB
   private ExternalTrainingDatasetController externalTrainingDatasetController;
   @EJB
   private TrainingDatasetInputValidation trainingDatasetInputValidation;
-  @EJB
-  private InodeController inodeController;
   @EJB
   private HopsFSProvenanceController fsProvenanceController;
   @EJB
@@ -336,7 +327,6 @@ public class TrainingDatasetController {
     // Verify input
     inputValidation.validate(trainingDatasetDTO, query);
 
-    Inode inode = null;
     FeaturestoreConnector featurestoreConnector;
     TrainingDatasetDTO completeTrainingDatasetDTO;
     if (trainingDatasetDTO.getTrainingDatasetType() == HOPSFS_TRAINING_DATASET) {
@@ -377,7 +367,7 @@ public class TrainingDatasetController {
     // TODO(Fabio) account for path
     // we allow specifying the path in the training dataset dir, but it is not really used, this option will be
     // deprecated for hopsfs training datasets.
-    String trainingDatasetPath = getTrainingDatasetPath(
+    String tagPath = getTrainingDatasetPath(
         Utils.getDatasetPath(trainingDatasetsFolder, settings).toString(),
         trainingDatasetDTO.getName(), trainingDatasetDTO.getVersion());
 
@@ -385,13 +375,12 @@ public class TrainingDatasetController {
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     try {
       udfso = dfs.getDfsOps(username);
-      udfso.mkdir(trainingDatasetPath);
+      udfso.mkdir(tagPath);
 
-      inode = inodeController.getInodeAtPath(trainingDatasetPath);
       completeTrainingDatasetDTO = createTrainingDatasetMetadata(user, project,
-          featurestore, featureView, trainingDatasetDTO, query, featurestoreConnector, inode, skipFeature);
+          featurestore, featureView, trainingDatasetDTO, query, featurestoreConnector, tagPath, skipFeature);
       if (featureView == null) {
-        fsProvenanceController.trainingDatasetAttachXAttr(trainingDatasetPath, completeTrainingDatasetDTO, udfso);
+        fsProvenanceController.trainingDatasetAttachXAttr(tagPath, completeTrainingDatasetDTO, udfso);
       }
       activityFacade.persistActivity(ActivityFacade.CREATED_TRAINING_DATASET +
           completeTrainingDatasetDTO.getName(), project, user, ActivityFlag.SERVICE);
@@ -408,7 +397,7 @@ public class TrainingDatasetController {
     switch (trainingDataset.getTrainingDatasetType()) {
       case HOPSFS_TRAINING_DATASET:
       case IN_MEMORY_TRAINING_DATASET:
-        featurestoreConnector = trainingDataset.getHopsfsTrainingDataset().getFeaturestoreConnector();
+        featurestoreConnector = trainingDataset.getFeaturestoreConnector();
         break;
       case EXTERNAL_TRAINING_DATASET:
         featurestoreConnector = getDefaultHopsFSTrainingDatasetConnector(trainingDataset.getFeaturestore());
@@ -465,29 +454,11 @@ public class TrainingDatasetController {
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
   private TrainingDatasetDTO createTrainingDatasetMetadata(Users user, Project project, Featurestore featurestore,
-      FeatureView featureView, TrainingDatasetDTO trainingDatasetDTO, Query query,
-      FeaturestoreConnector featurestoreConnector, Inode inode, Boolean skipFeature)
+                                                           FeatureView featureView,
+                                                           TrainingDatasetDTO trainingDatasetDTO, Query query,
+                                                           FeaturestoreConnector featurestoreConnector,
+                                                           String tagPath, Boolean skipFeature)
       throws FeaturestoreException, ServiceException, CloudException {
-    //Create specific dataset type
-    HopsfsTrainingDataset hopsfsTrainingDataset = null;
-    ExternalTrainingDataset externalTrainingDataset = null;
-    switch (trainingDatasetDTO.getTrainingDatasetType()) {
-      case HOPSFS_TRAINING_DATASET:
-      case IN_MEMORY_TRAINING_DATASET:
-        // inode is required for keyword and tag for even for in-memory training dataset
-        hopsfsTrainingDataset =
-            hopsfsTrainingDatasetFacade.createHopsfsTrainingDataset(featurestoreConnector, inode);
-        break;
-      case EXTERNAL_TRAINING_DATASET:
-        externalTrainingDataset = externalTrainingDatasetController.create(featurestoreConnector,
-          trainingDatasetDTO.getLocation(), inode);
-        break;
-      default:
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TYPE, Level.FINE,
-          ", Recognized training dataset types are: " + HOPSFS_TRAINING_DATASET + ", and: " +
-          TrainingDatasetType.EXTERNAL_TRAINING_DATASET + ". The provided training dataset type was not recognized: "
-          + trainingDatasetDTO.getTrainingDatasetType());
-    }
 
     //Store trainingDataset metadata in Hopsworks
     TrainingDataset trainingDataset = new TrainingDataset();
@@ -500,8 +471,6 @@ public class TrainingDatasetController {
     }
     trainingDataset.setSampleRatio(trainingDatasetDTO.getSampleRatio());
     trainingDataset.setName(trainingDatasetDTO.getName());
-    trainingDataset.setHopsfsTrainingDataset(hopsfsTrainingDataset);
-    trainingDataset.setExternalTrainingDataset(externalTrainingDataset);
     trainingDataset.setDataFormat(trainingDatasetDTO.getDataFormat());
     trainingDataset.setDescription(trainingDatasetDTO.getDescription());
     trainingDataset.setFeaturestore(featurestore);
@@ -520,6 +489,9 @@ public class TrainingDatasetController {
         })
         .collect(Collectors.toList()));
     trainingDataset.setCoalesce(trainingDatasetDTO.getCoalesce() != null ? trainingDatasetDTO.getCoalesce() : false);
+    trainingDataset.setFeaturestoreConnector(featurestoreConnector);
+    trainingDataset.setConnectorPath(trainingDatasetDTO.getLocation());
+    trainingDataset.setTagPath(tagPath);
 
     StatisticsConfig statisticsConfig = new StatisticsConfig(trainingDatasetDTO.getStatisticsConfig().getEnabled(),
       trainingDatasetDTO.getStatisticsConfig().getCorrelations(),
@@ -852,7 +824,7 @@ public class TrainingDatasetController {
 
     statisticsController.deleteStatistics(project, user, trainingDataset);
 
-    trainingDatasetFacade.removeTrainingDataset(trainingDataset);
+    trainingDatasetFacade.remove(trainingDataset);
     deleteHopsfsTrainingData(user, project, trainingDataset, false);
     //Delete associated jobs
     fsJobManagerController.deleteJobs(project, user, trainingDataset);
@@ -860,7 +832,7 @@ public class TrainingDatasetController {
   }
 
   public void deleteDataOnly(Users user, Project project, Featurestore featurestore, FeatureView featureView,
-      Integer trainingDatasetVersion) throws FeaturestoreException {
+                             Integer trainingDatasetVersion) throws FeaturestoreException {
     TrainingDataset trainingDataset = getTrainingDatasetByFeatureViewAndVersion(featureView, trainingDatasetVersion);
     featurestoreUtils.verifyTrainingDatasetDataOwnerOrSelf(user, project, trainingDataset,
         FeaturestoreUtils.ActionMessage.DELETE_TRAINING_DATASET_DATA_ONLY);
@@ -920,7 +892,6 @@ public class TrainingDatasetController {
 
   public void deleteHopsfsTrainingData(Users user, Project project, TrainingDataset trainingDataset,
                                        Boolean keepMetadata) {
-    String dsPath = getTrainingDatasetInodePath(trainingDataset);
     String username = hdfsUsersBean.getHdfsUserName(project, user);
 
     DistributedFileSystemOps udfso = dfs.getDfsOps(username);
@@ -928,26 +899,18 @@ public class TrainingDatasetController {
       // TODO(Fabio): if Data owner *In project* do operation as superuser
       if (keepMetadata) {
         // Since keywords and tags are stored as attribute of the folder, delete contents in the folder only.
-        FileStatus[] fileStatuses = udfso.listStatus(new Path(dsPath));
+        FileStatus[] fileStatuses = udfso.listStatus(new Path(trainingDataset.getTagPath()));
         for (FileStatus fileStatus : fileStatuses) {
           udfso.rm(fileStatus.getPath(), true);
         }
       } else {
-        udfso.rm(dsPath, true);
+        udfso.rm(trainingDataset.getTagPath(), true);
       }
     } catch (IOException e) {
     } finally {
       if (udfso != null) {
         dfs.closeDfsClient(udfso);
       }
-    }
-  }
-
-  public String getTrainingDatasetInodePath(TrainingDataset trainingDataset) {
-    if (trainingDataset.getTrainingDatasetType() == TrainingDatasetType.EXTERNAL_TRAINING_DATASET) {
-      return inodeController.getPath(trainingDataset.getExternalTrainingDataset().getInode());
-    } else {
-      return inodeController.getPath(trainingDataset.getHopsfsTrainingDataset().getInode());
     }
   }
 

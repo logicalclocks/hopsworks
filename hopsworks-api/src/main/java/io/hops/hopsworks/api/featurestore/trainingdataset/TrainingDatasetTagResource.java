@@ -21,7 +21,6 @@ import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
-import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
@@ -36,8 +35,6 @@ import javax.enterprise.context.RequestScoped;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class TrainingDatasetTagResource extends FeatureStoreTagResource {
   
-  @EJB
-  private TrainingDatasetController trainingDatasetController;
   @EJB
   private DatasetHelper datasetHelper;
   
@@ -55,8 +52,7 @@ public class TrainingDatasetTagResource extends FeatureStoreTagResource {
   
   @Override
   protected DatasetPath getDatasetPath() throws DatasetException {
-    return datasetHelper.getDatasetPath(project, trainingDatasetController.getTrainingDatasetInodePath(trainingDataset),
-      DatasetType.DATASET);
+    return datasetHelper.getDatasetPath(project, trainingDataset.getTagPath(), DatasetType.DATASET);
   }
   
   @Override

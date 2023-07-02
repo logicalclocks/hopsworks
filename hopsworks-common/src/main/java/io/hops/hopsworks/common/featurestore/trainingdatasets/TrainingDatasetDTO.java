@@ -59,10 +59,6 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO<TrainingDatasetDTO
 
   private FeaturestoreStorageConnectorDTO storageConnector;
 
-  // This is here for the frontend. The frontend uses a rest call to get the total size of
-  // a subdirectory - the rest call requires the inode id.
-  private Long inodeId;
-
   private QueryDTO queryDTO;
 
   private Boolean fromQuery;
@@ -133,14 +129,6 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO<TrainingDatasetDTO
     this.storageConnector = storageConnector;
   }
 
-  public Long getInodeId() {
-    return inodeId;
-  }
-
-  public void setInodeId(Long inodeId) {
-    this.inodeId = inodeId;
-  }
-  
   public TrainingDatasetType getTrainingDatasetType() {
     return trainingDatasetType;
   }
@@ -263,7 +251,6 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO<TrainingDatasetDTO
       ", splits=" + splits +
       ", seed=" + seed +
       ", trainSplit=" + trainSplit +
-      ", inodeId=" + inodeId +
       '}';
   }
 }

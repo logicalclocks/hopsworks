@@ -84,8 +84,7 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
         Level.FINE, "Tags are only supported for " + TrainingDatasetType.HOPSFS_TRAINING_DATASET);
     }
   
-    String path = inodeController.getPath(trainingDataset.getHopsfsTrainingDataset().getInode());
-    return tagsController.getAll(accessProject, user, path);
+    return tagsController.getAll(accessProject, user, trainingDataset.getTagPath());
   }
 
   /**
@@ -150,8 +149,7 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
         Level.FINE, "Tags are only supported for " + TrainingDatasetType.HOPSFS_TRAINING_DATASET);
     }
   
-    String path = inodeController.getPath(trainingDataset.getHopsfsTrainingDataset().getInode());
-    return tagsController.get(accessProject, user, path, name);
+    return tagsController.get(accessProject, user, trainingDataset.getTagPath(), name);
   }
 
   /**
@@ -216,8 +214,7 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
         Level.FINE, "Tags are only supported for " + TrainingDatasetType.HOPSFS_TRAINING_DATASET);
     }
   
-    String path = inodeController.getPath(trainingDataset.getHopsfsTrainingDataset().getInode());
-    return tagsController.upsert(project, user, path, name, value);
+    return tagsController.upsert(project, user, trainingDataset.getTagPath(), name, value);
   }
 
   /**
@@ -281,8 +278,7 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
         Level.FINE, "Tags are only supported for " + TrainingDatasetType.HOPSFS_TRAINING_DATASET);
     }
   
-    String path = inodeController.getPath(trainingDataset.getHopsfsTrainingDataset().getInode());
-    return tagsController.upsert(project, user, path, newTags);
+    return tagsController.upsert(project, user, trainingDataset.getTagPath(), newTags);
   }
 
   /**
@@ -340,8 +336,7 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
         Level.FINE, "Tags are only supported for " + TrainingDatasetType.HOPSFS_TRAINING_DATASET);
     }
   
-    String path = inodeController.getPath(trainingDataset.getHopsfsTrainingDataset().getInode());
-    tagsController.deleteAll(accessProject, user, path);
+    tagsController.deleteAll(accessProject, user, trainingDataset.getTagPath());
   }
 
   /**
@@ -401,8 +396,7 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
         Level.FINE, "Tags are only supported for " + TrainingDatasetType.HOPSFS_TRAINING_DATASET);
     }
   
-    String path = inodeController.getPath(trainingDataset.getHopsfsTrainingDataset().getInode());
-    tagsController.delete(accessProject, user, path, name);
+    tagsController.delete(accessProject, user, trainingDataset.getTagPath(), name);
   }
 
   /**

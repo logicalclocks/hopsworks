@@ -149,7 +149,7 @@ public class KeywordController implements KeywordControllerIface {
     if (featureGroup != null) {
       path = featuregroupController.getFeatureGroupLocation(featureGroup);
     } else if (trainingDataset != null) {
-      path = trainingDatasetController.getTrainingDatasetInodePath(trainingDataset);
+      path = trainingDataset.getTagPath();
     } else if (featureView != null) {
       path =  featureViewController.getLocation(featureView);
     } else {

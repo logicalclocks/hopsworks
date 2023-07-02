@@ -18,8 +18,6 @@ package io.hops.hopsworks.common.featurestore.trainingdatasets;
 
 import com.google.common.collect.Lists;
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.featurestore.trainingdatasets.external.ExternalTrainingDatasetFacade;
-import io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs.HopsfsTrainingDatasetFacade;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
@@ -52,10 +50,6 @@ public class TrainingDatasetFacade extends AbstractFacade<TrainingDataset> {
   
   @EJB
   private Settings settings;
-  @EJB
-  private HopsfsTrainingDatasetFacade hopsfsTrainingDatasetFacade;
-  @EJB
-  private ExternalTrainingDatasetFacade externalTrainingDatasetFacade;
 
   public TrainingDatasetFacade() {
     super(TrainingDataset.class);
@@ -275,18 +269,5 @@ public class TrainingDatasetFacade extends AbstractFacade<TrainingDataset> {
   @Override
   protected EntityManager getEntityManager() {
     return em;
-  }
-
-  public void removeTrainingDataset(TrainingDataset trainingDataset) {
-    switch (trainingDataset.getTrainingDatasetType()) {
-      case HOPSFS_TRAINING_DATASET:
-        hopsfsTrainingDatasetFacade.remove(trainingDataset.getHopsfsTrainingDataset());
-        break;
-      case EXTERNAL_TRAINING_DATASET:
-        externalTrainingDatasetFacade.remove(trainingDataset.getExternalTrainingDataset());
-        break;
-    }
-
-    remove(trainingDataset);
   }
 }

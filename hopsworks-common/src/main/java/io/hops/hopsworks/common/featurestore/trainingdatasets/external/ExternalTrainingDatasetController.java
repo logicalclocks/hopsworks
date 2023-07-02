@@ -24,11 +24,8 @@ import io.hops.hopsworks.common.cloud.TemporaryCredentialsHelper;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.exceptions.CloudException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
-import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.adls.FeaturestoreADLSConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
-import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -50,8 +47,6 @@ public class ExternalTrainingDatasetController {
   @EJB
   private FeaturestoreStorageConnectorController storageConnectorController;
   @EJB
-  private ExternalTrainingDatasetFacade externalTrainingDatasetFacade;
-  @EJB
   private TemporaryCredentialsHelper temporaryCredentialsHelper;
 
   private static final String ABFSS_SCHEME = "abfss://";
@@ -59,22 +54,13 @@ public class ExternalTrainingDatasetController {
 
   private static final String ADL_SCHEME = "adl://";
   private static final String ADL_URI_SUFFIX = ".azuredatalakestore.net";
-  
-  public ExternalTrainingDataset create(FeaturestoreConnector connector, String path, Inode inode) {
-    ExternalTrainingDataset externalTrainingDataset = new ExternalTrainingDataset();
-    externalTrainingDataset.setFeaturestoreConnector(connector);
-    externalTrainingDataset.setPath(path);
-    externalTrainingDataset.setInode(inode);
-    return externalTrainingDatasetFacade.createExternalTrainingDataset(externalTrainingDataset);
-  }
 
   public TrainingDatasetDTO convertExternalTrainingDatasetToDTO(Users user, Project project,
                                                                 TrainingDatasetDTO trainingDatasetDTO,
                                                                 TrainingDataset trainingDataset)
       throws FeaturestoreException, CloudException {
-    ExternalTrainingDataset externalTrainingDataset = trainingDataset.getExternalTrainingDataset();
     FeaturestoreStorageConnectorDTO storageConnectorDTO = storageConnectorController
-      .convertToConnectorDTO(user, project, externalTrainingDataset.getFeaturestoreConnector());
+      .convertToConnectorDTO(user, project, trainingDataset.getFeaturestoreConnector());
     temporaryCredentialsHelper.setTemporaryCredentials(true, user, project, -1, storageConnectorDTO);
     trainingDatasetDTO.setStorageConnector(storageConnectorDTO);
     trainingDatasetDTO.setLocation(buildDatasetPath(trainingDataset));
@@ -88,7 +74,7 @@ public class ExternalTrainingDatasetController {
    * @return
    */
   private String buildDatasetPath(TrainingDataset trainingDataset) throws FeaturestoreException {
-    switch (trainingDataset.getExternalTrainingDataset().getFeaturestoreConnector().getConnectorType()) {
+    switch (trainingDataset.getFeaturestoreConnector().getConnectorType()) {
       case S3:
         return buildDatasetPathS3(trainingDataset);
       case ADLS:
@@ -104,20 +90,18 @@ public class ExternalTrainingDatasetController {
 
   private String buildDatasetPathS3(TrainingDataset trainingDataset) {
     String bucketFolder = FeaturestoreConstants.S3_BUCKET_TRAINING_DATASETS_FOLDER;
-    if (!Strings.isNullOrEmpty(trainingDataset.getExternalTrainingDataset().getPath())) {
-      bucketFolder = trainingDataset.getExternalTrainingDataset().getPath();
+    if (!Strings.isNullOrEmpty(trainingDataset.getConnectorPath())) {
+      bucketFolder = trainingDataset.getConnectorPath();
     }
 
-    return "s3://" + Paths.get(trainingDataset.getExternalTrainingDataset()
-            .getFeaturestoreConnector().getS3Connector().getBucket(), bucketFolder,
-        trainingDataset.getName() + "_" + trainingDataset.getVersion()).toString();
+    return "s3://" + Paths.get(trainingDataset.getFeaturestoreConnector().getS3Connector().getBucket(),
+        bucketFolder, trainingDataset.getName() + "_" + trainingDataset.getVersion());
   }
 
   private String buildDatasetPathADL(TrainingDataset trainingDataset) {
-    FeaturestoreADLSConnector adlsConnector = trainingDataset.getExternalTrainingDataset()
-        .getFeaturestoreConnector().getAdlsConnector();
-    String directory = Strings.isNullOrEmpty(trainingDataset.getExternalTrainingDataset().getPath()) ? "/" :
-        trainingDataset.getExternalTrainingDataset().getPath();
+    FeaturestoreADLSConnector adlsConnector = trainingDataset.getFeaturestoreConnector().getAdlsConnector();
+    String directory = Strings.isNullOrEmpty(trainingDataset.getConnectorPath()) ? "/" :
+        trainingDataset.getConnectorPath();
     String scheme = adlsConnector.getGeneration() == 1 ? ADL_SCHEME : ABFSS_SCHEME;
     String hostname = adlsConnector.getGeneration() == 1 ?
         adlsConnector.getAccountName() + ADL_URI_SUFFIX :
@@ -128,12 +112,11 @@ public class ExternalTrainingDatasetController {
   
   private String buildDatasetPathGCS(TrainingDataset trainingDataset) {
     String bucketFolder = FeaturestoreConstants.TRAINING_DATASETS_FOLDER;
-    if (!Strings.isNullOrEmpty(trainingDataset.getExternalTrainingDataset().getPath())) {
-      bucketFolder = trainingDataset.getExternalTrainingDataset().getPath();
+    if (!Strings.isNullOrEmpty(trainingDataset.getConnectorPath())) {
+      bucketFolder = trainingDataset.getConnectorPath();
     }
     
-    return "gs://" + Paths.get(trainingDataset.getExternalTrainingDataset()
-        .getFeaturestoreConnector().getGcsConnector().getBucket(), bucketFolder,
-      trainingDataset.getName() + "_" + trainingDataset.getVersion()).toString();
+    return "gs://" + Paths.get(trainingDataset.getFeaturestoreConnector().getGcsConnector().getBucket(),
+        bucketFolder, trainingDataset.getName() + "_" + trainingDataset.getVersion());
   }
 }

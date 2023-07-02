@@ -85,7 +85,6 @@ public class TrainingDatasetProvenanceResource extends ProvenanceResource<Traini
   protected DatasetPath getArtifactDatasetPath() throws FeaturestoreException, DatasetException {
     TrainingDataset trainingDataset
       = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(featureView, trainingDatasetVersion);
-    return datasetHelper.getDatasetPath(project, trainingDatasetController.getTrainingDatasetInodePath(trainingDataset),
-      DatasetType.DATASET);
+    return datasetHelper.getDatasetPath(project, trainingDataset.getTagPath(), DatasetType.DATASET);
   }
 }

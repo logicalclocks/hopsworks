@@ -98,8 +98,7 @@ public class TrainingDatasetDTOBuilder {
       }
       if (resourceRequest.contains(ResourceRequest.Name.TAGS)) {
         // Tag expansion
-        DatasetPath path = datasetHelper.getDatasetPath(
-            project, trainingDatasetController.getTrainingDatasetInodePath(trainingDataset), DatasetType.DATASET);
+        DatasetPath path = datasetHelper.getDatasetPath(project, trainingDataset.getTagPath(), DatasetType.DATASET);
         FeatureStoreTagUri tagUri = new FeatureStoreTagUri(uriInfo, trainingDataset.getFeaturestore().getId(),
             ResourceRequest.Name.FEATUREVIEW, trainingDataset.getId());
         trainingDatasetDTO.setTags(tagsBuilder.build(tagUri, resourceRequest, user, path));

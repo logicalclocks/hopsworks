@@ -195,7 +195,6 @@ public class TestProvExplicitSharedScenario {
         FeatureView d = invocation.getArgument(0);
         return String.valueOf(d.getFeaturestore().getProject().getId());
       });
-    Mockito.when(trainingDatasetCtrl.getTrainingDatasetInodePath(Mockito.any())).thenReturn(null);
     //
     provExplicitCtrl = new ProvExplicitControllerEEImpl(settings, fgLinkFacade, fvLinkFacade, tdFacade,
       featureStoreCtrl, featureViewCtrl, trainingDatasetCtrl, datasetHelper, accessCtrl);

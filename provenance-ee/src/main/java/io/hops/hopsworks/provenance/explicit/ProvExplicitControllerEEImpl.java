@@ -549,7 +549,7 @@ public class ProvExplicitControllerEEImpl implements ProvExplicitControllerIface
         ProvExplicitLink<FeatureView> node = collector.nodes.get(String.valueOf(td.getFeatureView().getId()));
   
         Dataset datasetLocation = datasetHelper.getDatasetPath(td.getFeaturestore().getProject(),
-          trainingDatasetCtrl.getTrainingDatasetInodePath(td), DatasetType.DATASET).getDataset();
+            td.getTagPath(), DatasetType.DATASET).getDataset();
         boolean shared = !accessProject.getId().equals(td.getFeaturestore().getProject().getId());
         if (accessCtrl.hasAccess(accessProject, datasetLocation)) {
           ProvExplicitLink<TrainingDataset> downstreamNode = buildTDLink(
