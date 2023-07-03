@@ -324,7 +324,14 @@ module SessionHelper
     user.save
     user
   end
-  
+
+  def block_user(user)
+    user = User.find_by(email: user[:email])
+    user.status = 4
+    user.save
+    user
+  end
+
   def create_blocked_user(params={})
     params[:email] = "#{random_id}@email.com" unless params[:email]
     create_validated_user(params)

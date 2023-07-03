@@ -246,6 +246,18 @@ describe "On #{ENV['OS']}" do
       expect_status_details(200)
       reset_session
     end
+    it "should block api key if user is blocked" do
+      with_valid_session
+      @key = create_api_key('firstKey8')
+      set_api_key_to_header(@key)
+      get "#{ENV['HOPSWORKS_API']}/project"
+      expect_status_details(200)
+
+      block_user(@user)
+      get "#{ENV['HOPSWORKS_API']}/project"
+      expect_status_details(401)
+      reset_session
+    end
     context "as admin user" do
       before :all do
         with_admin_session
