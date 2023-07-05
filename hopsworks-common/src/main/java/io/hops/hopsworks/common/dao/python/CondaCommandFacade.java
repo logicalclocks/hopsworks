@@ -45,6 +45,10 @@ public class CondaCommandFacade extends AbstractFacade<CondaCommands> {
     return em;
   }
 
+  public void flushEm() {
+    em.flush();
+  }
+
   public CondaCommandFacade() {
     super(CondaCommands.class);
   }
