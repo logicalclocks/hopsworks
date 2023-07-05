@@ -171,15 +171,19 @@ public class LibraryInstaller {
         // and the docker image stay in sync during all the backup time
         // Group new commands by project and run in parallel
         Map<Project, List<CondaCommands>> allCondaCommandsNewByProject =
-          getCondaCommandsByProject(condaCommandFacade.findByStatus(CondaStatus.NEW));
+          getCondaLibraryCommandsByProject(condaCommandFacade.findByStatus(CondaStatus.NEW));
         Map<Project, List<CondaCommands>> allCondaCommandsOngoingByProject =
-          getCondaCommandsByProject(condaCommandFacade.findByStatus(CondaStatus.ONGOING));
+          getCondaLibraryCommandsByProject(condaCommandFacade.findByStatus(CondaStatus.ONGOING));
         
         LOG.log(Level.FINE, "allCondaCommandsOngoingByProject:" + allCondaCommandsOngoingByProject);
         for (Project project : allCondaCommandsNewByProject.keySet()) {
           if (!allCondaCommandsOngoingByProject.containsKey(project)) {
             try {
-              executorService.submit(() -> condaCommandHandler(allCondaCommandsNewByProject.get(project)));
+              allCondaCommandsNewByProject.get(project).sort(ASC_COMPARATOR);
+              CondaCommands commandToExecute = allCondaCommandsNewByProject.get(project).get(0);
+              commandsController.updateCondaCommandStatus(
+                commandToExecute.getId(), CondaStatus.ONGOING, commandToExecute.getArg(), commandToExecute.getOp());
+              executorService.submit(() -> condaCommandHandler(commandToExecute));
             } catch (Exception ex) {
               LOG.log(Level.WARNING, "Could not run conda commands for project: " + project, ex);
             }
@@ -194,46 +198,41 @@ public class LibraryInstaller {
     }
   }
 
-  private void condaCommandHandler(List<CondaCommands> projectCondaCommands) {
-    projectCondaCommands.sort(ASC_COMPARATOR);
-    for (final CondaCommands cc : projectCondaCommands) {
-      // Remove operations are handled differently, as we it needs to take an exclusive lock on all operations
-      if (cc.getOp() != CondaOp.REMOVE) {
+  private void condaCommandHandler(CondaCommands commandToExecute) {
+    // Remove operations are handled differently, as we it needs to take an exclusive lock on all operations
+    if (commandToExecute.getOp() != CondaOp.REMOVE) {
+      try {
         try {
-          try {
-            commandsController.updateCondaCommandStatus(
-                cc.getId(), CondaStatus.ONGOING, cc.getArg(), cc.getOp());
-            switch (cc.getOp()) {
-              case CREATE:
-              case IMPORT:
-                createNewImage(cc);
-                break;
-              case INSTALL:
-                installLibrary(cc);
-                break;
-              case UNINSTALL:
-                uninstallLibrary(cc);
-                break;
-              case EXPORT:
-                exportEnvironment(cc);
-                break;
-              case SYNC_BASE_ENV:
-                syncBaseLibraries(cc);
-                break;
-              default:
-                throw new UnsupportedOperationException("conda command unknown: " + cc.getOp());
-            }
-          } catch (Throwable ex) {
-            LOG.log(Level.WARNING, "Could not execute command with ID: " + cc.getId(), ex);
-            commandsController.updateCondaCommandStatus(
-                cc.getId(), CondaStatus.FAILED, cc.getArg(), cc.getOp(), errorMsg(ex));
-            continue;
+          switch (commandToExecute.getOp()) {
+            case CREATE:
+            case IMPORT:
+              createNewImage(commandToExecute);
+              break;
+            case INSTALL:
+              installLibrary(commandToExecute);
+              break;
+            case UNINSTALL:
+              uninstallLibrary(commandToExecute);
+              break;
+            case EXPORT:
+              exportEnvironment(commandToExecute);
+              break;
+            case SYNC_BASE_ENV:
+              syncBaseLibraries(commandToExecute);
+              break;
+            default:
+              throw new UnsupportedOperationException("conda command unknown: " + commandToExecute.getOp());
           }
-          commandsController.updateCondaCommandStatus(
-              cc.getId(), CondaStatus.SUCCESS, cc.getArg(), cc.getOp());
-        } catch (ProjectException ex) {
-          LOG.log(Level.WARNING, "Could not update command with ID: " + cc.getId(), ex);
+        } catch (Throwable ex) {
+          LOG.log(Level.WARNING, "Could not execute command with ID: " + commandToExecute.getId(), ex);
+          commandsController.updateCondaCommandStatus(commandToExecute.getId(), CondaStatus.FAILED,
+            commandToExecute.getArg(), commandToExecute.getOp(), errorMsg(ex));
+          return;
         }
+        commandsController.updateCondaCommandStatus(
+          commandToExecute.getId(), CondaStatus.SUCCESS, commandToExecute.getArg(), commandToExecute.getOp());
+      } catch (ProjectException ex) {
+        LOG.log(Level.WARNING, "Could not update command with ID: " + commandToExecute.getId(), ex);
       }
     }
   }
@@ -455,7 +454,7 @@ public class LibraryInstaller {
     return dockerImage.substring(0, indexOfLastDigit) + "." + nextVersion;
   }
   
-  private Map<Project, List<CondaCommands>> getCondaCommandsByProject(List<CondaCommands> condaCommands) {
+  private Map<Project, List<CondaCommands>> getCondaLibraryCommandsByProject(List<CondaCommands> condaCommands) {
     Map<Project, List<CondaCommands>> condaCommandsByProject = new HashMap<>();
     for (CondaCommands condacommand : condaCommands) {
       // If it is a command of a project that has been deleted, delete the command (do not delete an environment
@@ -464,7 +463,7 @@ public class LibraryInstaller {
         (condacommand.getProjectId() == null || condacommand.getProjectId().getPythonEnvironment() == null)) {
         LOG.log(Level.FINEST, "Removing condacommand: " + condacommand);
         condaCommandFacade.remove(condacommand);
-      } else {
+      } else if (condacommand.getOp() != CondaOp.REMOVE) {
         Project project = condacommand.getProjectId();
         if (!condaCommandsByProject.containsKey(project)) {
           condaCommandsByProject.put(project, new ArrayList<>());

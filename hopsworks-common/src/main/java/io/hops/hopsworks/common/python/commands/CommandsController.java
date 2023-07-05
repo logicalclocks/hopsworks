@@ -194,9 +194,11 @@ public class CommandsController {
         cc.setArg(arg);
         cc.setErrorMsg(errorMessage);
         condaCommandFacade.update(cc);
+        condaCommandFacade.flushEm();
       } else if (condaStatus == CondaStatus.ONGOING) {
         cc.setStatus(condaStatus);
         condaCommandFacade.update(cc);
+        condaCommandFacade.flushEm();
       }
     } else {
       LOGGER.log(Level.FINE, "Could not remove CondaCommand with id: {0}", commandId);
