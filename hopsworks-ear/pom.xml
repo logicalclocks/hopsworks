@@ -44,13 +44,13 @@
   <parent>
     <groupId>io.hops</groupId>
     <artifactId>hopsworks</artifactId>
-    <version>3.3.0-SNAPSHOT</version>
+    <version>3.4.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-ear</artifactId>
-  <version>3.3.0-SNAPSHOT</version>
+  <version>3.4.0-SNAPSHOT</version>
   <packaging>ear</packaging>
 
   <name>hopsworks-ear:${project.version}</name>
