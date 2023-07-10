@@ -69,7 +69,7 @@ public class TestProjectController {
             new ProjectException(
                 RESTCodes.ProjectErrorCode.PROJECT_EXISTS, Level.FINE, exceptionUsrMsg, exceptionUsrMsg))
         .when(projectController).createProjectInternal(Mockito.any(), Mockito.any());
-    AlertManager alertManager = Mockito.mock(AlertManager.class);
+    AMClient alertManager = Mockito.mock(AMClient.class);
     Mockito.doNothing().when(alertManager).asyncPostAlerts(Mockito.any());
 
     projectController.setAlertManager(alertManager);
@@ -103,7 +103,7 @@ public class TestProjectController {
             new ProjectException(
                 RESTCodes.ProjectErrorCode.PROJECT_EXISTS, Level.SEVERE, exceptionUsrMsg, exceptionDevMsg))
         .when(projectController).createProjectInternal(Mockito.any(), Mockito.any());
-    AlertManager alertManager = Mockito.mock(AlertManager.class);
+    AMClient alertManager = Mockito.mock(AMClient.class);
     Mockito.doNothing().when(alertManager).asyncPostAlerts(Mockito.any());
 
     projectController.setAlertManager(alertManager);
