@@ -51,8 +51,79 @@ public class TestProjectController {
       // Exception is expected here;
     }
 
+    String message =
+        RESTCodes.ProjectErrorCode.PROJECT_FOLDER_NOT_CREATED.getMessage() + " ErrorCode: " + RESTCodes.ProjectErrorCode.PROJECT_FOLDER_NOT_CREATED.getCode()
+        + " User msg: " + exceptionUsrMsg + " Dev msg: " + exceptionDevMsg;
     Mockito.verify(projectController, Mockito.times(1)).sendProjectCreationFailAlert(
-        owner, "test", exceptionDevMsg
+        owner, "test", message
+    );
+  }
+
+  @Test
+  public void testSkipAlertIfProjectExists() throws Exception {
+    String exceptionUsrMsg = "This is the RESTException user error message";
+    String exceptionDevMsg = "This is the RESTException dev error message";
+
+    ProjectController projectController = Mockito.spy(new ProjectController());
+    Mockito.doThrow(
+            new ProjectException(
+                RESTCodes.ProjectErrorCode.PROJECT_EXISTS, Level.FINE, exceptionUsrMsg, exceptionUsrMsg))
+        .when(projectController).createProjectInternal(Mockito.any(), Mockito.any());
+    AMClient alertManager = Mockito.mock(AMClient.class);
+    Mockito.doNothing().when(alertManager).asyncPostAlerts(Mockito.any());
+
+    projectController.setAlertManager(alertManager);
+
+    Users owner = new Users(1);
+    ProjectDTO projectDTO = new ProjectDTO();
+    projectDTO.setProjectName("test");
+
+    try {
+      projectController.createProject(projectDTO, owner);
+    } catch (ProjectException e) {
+      // Exception is expected here;
+    }
+
+    String message =
+        RESTCodes.ProjectErrorCode.PROJECT_EXISTS.getMessage() + " ErrorCode: " + RESTCodes.ProjectErrorCode.PROJECT_EXISTS.getCode()
+            + " User msg: " + exceptionUsrMsg + " Dev msg: " + exceptionDevMsg;
+
+    Mockito.verify(projectController, Mockito.never()).sendProjectCreationFailAlert(
+        owner, "test", message
+    );
+  }
+
+  @Test
+  public void testSendAlertIfProjectExistsAndLevelNotFine() throws Exception {
+    String exceptionUsrMsg = "This is the RESTException user error message project exists";
+    String exceptionDevMsg = "This is the RESTException dev error message project exists";
+
+    ProjectController projectController = Mockito.spy(new ProjectController());
+    Mockito.doThrow(
+            new ProjectException(
+                RESTCodes.ProjectErrorCode.PROJECT_EXISTS, Level.SEVERE, exceptionUsrMsg, exceptionDevMsg))
+        .when(projectController).createProjectInternal(Mockito.any(), Mockito.any());
+    AMClient alertManager = Mockito.mock(AMClient.class);
+    Mockito.doNothing().when(alertManager).asyncPostAlerts(Mockito.any());
+
+    projectController.setAlertManager(alertManager);
+
+    Users owner = new Users(1);
+    ProjectDTO projectDTO = new ProjectDTO();
+    projectDTO.setProjectName("test");
+
+    try {
+      projectController.createProject(projectDTO, owner);
+    } catch (ProjectException e) {
+      // Exception is expected here;
+    }
+
+    String message =
+        RESTCodes.ProjectErrorCode.PROJECT_EXISTS.getMessage() + " ErrorCode: " + RESTCodes.ProjectErrorCode.PROJECT_EXISTS.getCode()
+            + " User msg: " + exceptionUsrMsg + " Dev msg: " + exceptionDevMsg;
+
+    Mockito.verify(projectController, Mockito.times(1)).sendProjectCreationFailAlert(
+        owner, "test", message
     );
   }
 }

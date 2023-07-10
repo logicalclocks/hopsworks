@@ -314,7 +314,13 @@ public class ProjectController {
     try {
       return createProjectInternal(projectDTO, owner);
     } catch (RESTException e) {
-      sendProjectCreationFailAlert(owner, projectDTO.getProjectName(), e.getDevMsg());
+      if(!(e.getErrorCode() == RESTCodes.ProjectErrorCode.PROJECT_EXISTS && e.getLevel() == Level.FINE)){
+        String message = e.getErrorCode().getMessage() + " ErrorCode: " + e.getErrorCode().getCode()
+            + " User msg: " + e.getUsrMsg() + " Dev msg: " + e.getDevMsg();
+        LOGGER.log(Level.INFO, "project creation failed for project {0}. send an alert with message: {1}",
+            new Object[]{projectDTO.getProjectName(), message});
+        sendProjectCreationFailAlert(owner, projectDTO.getProjectName(), message);
+      }
       throw e;
     }
   }
