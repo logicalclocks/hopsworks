@@ -43,6 +43,7 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.hops.common.Pair;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.kube.serving.utils.KubeServingUtils;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.DockerResourcesConfiguration;
@@ -197,8 +198,10 @@ public class KubeClientService {
       cmData = data;
     }
     cm.setData(cmData);
-    LOGGER.log(INFO, "Patching config map of project " + kubeProjectNS + " with members: " + String.join(", ",
-      cmData.keySet()));
+    if (!KubeServingUtils.HOPS_SYSTEM_NAMESPACE.equals(kubeProjectNS)) {
+      LOGGER.log(INFO, "Patching config map of project " + kubeProjectNS + " with members: " + String.join(", ",
+          cmData.keySet()));
+    }
     handleClientOp((client) -> client.configMaps().inNamespace(kubeProjectNS).withName(kubeProjectConfigMap).patch(cm));
   }
   

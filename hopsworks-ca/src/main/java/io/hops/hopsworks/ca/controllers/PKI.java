@@ -1075,6 +1075,9 @@ public class PKI {
       CertificationRequestValidationException {
     LOGGER.log(Level.FINE, "Signing CSR for type " + certificateType);
     PKCS10CertificationRequest csr = parseCertificateRequest(csrStr);
+    if (!certificateType.equals(CertificateType.APP)) {
+      LOGGER.log(Level.INFO, "Signing certificate with Subject " + csr.getSubject().toString());
+    }
     validateCertificateSigningRequest(csr, caType);
     KeyPair signerKeyPair = getCAKeyPair(caType);
     X509Certificate signerCertificate = getCACertificate(certificateType);
@@ -1219,7 +1222,9 @@ public class PKI {
       LOGGER.log(Level.SEVERE, "Failed to initialize CA", ex);
       throw new CAInitializationException(ex);
     }
-    LOGGER.log(Level.FINE, "Revoking certificate with Subject " + certificateName);
+    if (!certificateType.equals(CertificateType.APP)) {
+      LOGGER.log(Level.INFO, "Revoking certificate with Subject " + certificateName);
+    }
     Optional<PKICertificate> maybeCert = pkiCertificateFacade.findById(
         new PKICertificateId(PKICertificate.Status.VALID, certificateName.toString()));
 

@@ -21,6 +21,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -33,6 +35,7 @@ public class KubeProjectConfigMaps {
   private final String HADOOP_CONF_SUFFIX = SEPARATOR + HADOOP_CONF;
   private final String SPARK_SUFFIX = SEPARATOR + SPARK;
   private final String PROJECT_TEAMS_SUFFIX = SEPARATOR + PROJECT_TEAMS;
+  private static final Logger LOGGER = Logger.getLogger(KubeProjectConfigMaps.class.getName());
   
   @EJB
   private KubeClientService kubeClientService;
@@ -75,12 +78,15 @@ public class KubeProjectConfigMaps {
   private void createServiceConfigMaps(Project project) throws IOException {
     // create config maps that are reloaded periodically
     createHadoopConfigMap(project);
+    LOGGER.log(Level.INFO, "Created Hops configmap for project " + project.getName());
     createSparkConfigMap(project);
+    LOGGER.log(Level.INFO, "Created Spark configmap for project " + project.getName());
   }
   
   private void createProjectConfigMaps(Project project) throws IOException {
     // create config maps that are only removed when the project is deleted
     createProjectTeamsConfigMap(project);
+    LOGGER.log(Level.INFO, "Created teams configmap for project " + project.getName());
   }
   
   private void createHadoopConfigMap(Project project) throws IOException {

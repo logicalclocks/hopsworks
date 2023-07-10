@@ -274,11 +274,14 @@ public class CertificatesController {
   private Pair<KeyStore, KeyStore> generateStores(String CN, String userKeyPwd, Endpoint endpoint)
       throws HopsSecurityException, GenericException {
     try {
+      LOGGER.log(Level.INFO, "Generating keypair for " + CN);
       // Generate keypair
       KeyPair keyPair = keyPairGenerator.generateKeyPair();
 
       CSR csr = generateCSR(CN, keyPair);
+      LOGGER.log(Level.INFO, "Sending Certificate Signing Request for " + CN);
       CSR signedCsr = signCSR(csr, endpoint);
+      LOGGER.log(Level.INFO, "Gotten signed certificate for " + CN);
       return buildStores(CN, userKeyPwd, keyPair.getPrivate(), signedCsr);
 
     } catch (OperatorCreationException | IOException e) {
