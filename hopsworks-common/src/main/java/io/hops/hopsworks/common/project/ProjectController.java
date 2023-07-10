@@ -325,6 +325,10 @@ public class ProjectController {
     }
   }
 
+  private String projectCreationLog(ProjectDTO project, String stage) {
+    return String.format("Project creation <%s> - %s", project.getProjectName(), stage);
+  }
+
   /**
    * Creates a new project(project), the related DIR, the different services in
    * the project, and the master of the
@@ -343,6 +347,7 @@ public class ProjectController {
     GenericException, KafkaException, ProjectException, UserException, HopsSecurityException, ServiceException,
     FeaturestoreException, OpenSearchException, SchemaException, IOException {
 
+    LOGGER.log(Level.INFO, projectCreationLog(projectDTO, "Creating project"));
     Long startTime = System.currentTimeMillis();
 
     //check that the project name is ok
@@ -372,6 +377,7 @@ public class ProjectController {
        */
       try {
         project = createProjectDbMetadata(projectName, owner, projectDTO.getDescription());
+        LOGGER.log(Level.INFO, projectCreationLog(projectDTO, "Created DB metadata"));
       } catch (EJBException ex) {
         LOGGER.log(Level.WARNING, null, ex);
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_EXISTS, Level.SEVERE, "project: " + projectName,
@@ -380,11 +386,13 @@ public class ProjectController {
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 2 (hdfs): {0}", System.currentTimeMillis() - startTime);
 
       verifyProject(project, dfso);
+      LOGGER.log(Level.INFO, projectCreationLog(projectDTO, "Verified project"));
 
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 3 (verify): {0}", System.currentTimeMillis() - startTime);
 
       try {
         ProjectHandler.runProjectPreCreateHandlers(projectHandlers, project);
+        LOGGER.log(Level.INFO, projectCreationLog(projectDTO, "Ran project pre-create handlers"));
       } catch (ProjectException ex) {
         cleanup(project, null, true, owner);
         throw ex;
@@ -400,6 +408,7 @@ public class ProjectController {
       try {
         certsResultFuture = certificatesController.generateCertificates(project, owner);
         projectCreationFutures.add(certsResultFuture);
+        LOGGER.log(Level.INFO, projectCreationLog(projectDTO, "Started certificates creation"));
       } catch (Exception ex) {
         cleanup(project, projectCreationFutures, true, owner);
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_CREATION_ERROR, Level.SEVERE,
@@ -415,6 +424,7 @@ public class ProjectController {
       try {
         mkProjectDIR(projectName, dfso);
         fsProvController.updateProjectProvType(project, provType, dfso);
+        LOGGER.log(Level.INFO, projectCreationLog(projectDTO, "Created project directory in HopsFS"));
       } catch (IOException | EJBException | ProvenanceException ex) {
         cleanup(project, projectCreationFutures, true, owner);
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_FOLDER_NOT_CREATED, Level.SEVERE,
@@ -425,6 +435,7 @@ public class ProjectController {
       //set payment and quotas
       try {
         setProjectOwnerAndQuotas(project, dfso, owner);
+        LOGGER.log(Level.INFO, projectCreationLog(projectDTO, "Set project owner and quotas"));
       } catch (IOException | EJBException ex) {
         cleanup(project, projectCreationFutures, true, owner);
         throw new ProjectException(RESTCodes.ProjectErrorCode.QUOTA_ERROR, Level.SEVERE, "project: " + project.getName()
@@ -435,6 +446,7 @@ public class ProjectController {
       try {
         hdfsUsersController.addProjectFolderOwner(project, dfso);
         createProjectLogResources(owner, project, dfso);
+        LOGGER.log(Level.INFO, projectCreationLog(projectDTO, "Created project log resources"));
       } catch (IOException | EJBException ex) {
         cleanup(project, projectCreationFutures);
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_SET_PERMISSIONS_ERROR, Level.SEVERE,
@@ -449,6 +461,7 @@ public class ProjectController {
         openSearchController.deleteProjectSavedObjects(projectName);
         LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 8 (opensearch cleanup): {0}",
             System.currentTimeMillis() - startTime);
+        LOGGER.log(Level.INFO, projectCreationLog(projectDTO, "Deleted old OpenSearch indices"));
       } catch (OpenSearchException ex){
         LOGGER.log(Level.FINE, "Error while cleaning old project indices", ex);
       }
@@ -459,6 +472,7 @@ public class ProjectController {
       try {
         if (certsResultFuture != null) {
           certsResultFuture.get();
+          LOGGER.log(Level.INFO, projectCreationLog(projectDTO, "Created project certificates"));
         }
       } catch (InterruptedException | ExecutionException ex) {
         LOGGER.log(Level.SEVERE, "Error while waiting for the certificate generation thread to finish. Will try to " +
@@ -470,6 +484,7 @@ public class ProjectController {
       // enable services
       for (ProjectServiceEnum service : projectServices) {
         try {
+          LOGGER.log(Level.INFO, projectCreationLog(projectDTO, "Adding service " + service));
           projectCreationFutures.addAll(addService(project, service, owner, dfso, provType));
         } catch (RESTException | IOException ex) {
           LOGGER.log(Level.SEVERE, "Error enabling service {0}: {1}. Will try to cleanup...", new Object[]{service,
@@ -485,6 +500,7 @@ public class ProjectController {
             f.get();
           }
         }
+        LOGGER.log(Level.INFO, projectCreationLog(projectDTO, "Finished with all async project creation tasks"));
       } catch (InterruptedException | ExecutionException ex) {
         LOGGER.log(Level.SEVERE, "Error while waiting for project creation future thread to finish. Will try to " +
           "cleanup...", ex);
@@ -496,6 +512,7 @@ public class ProjectController {
       // Run the handlers.
       try {
         ProjectHandler.runProjectPostCreateHandlers(projectHandlers, project);
+        LOGGER.log(Level.INFO, projectCreationLog(projectDTO, "Ran post-create handlers"));
       } catch (ProjectException ex) {
         LOGGER.log(Level.SEVERE, "Error running Project Post Create Handlers {0}. Will try to cleanup...",
           ex.getMessage());
@@ -505,6 +522,7 @@ public class ProjectController {
 
       try {
         project = environmentController.createEnv(project, owner);
+        LOGGER.log(Level.INFO, projectCreationLog(projectDTO, "Created Python environment"));
       } catch (PythonException | EJBException ex) {
         LOGGER.log(Level.SEVERE, "Error creating environment {0}. Will try to cleanup...", ex.getMessage());
         cleanup(project, projectCreationFutures);
@@ -517,6 +535,7 @@ public class ProjectController {
       projectFacade.update(project);
       
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 10 (env): {0}", System.currentTimeMillis() - startTime);
+      LOGGER.log(Level.INFO, projectCreationLog(projectDTO, "Finished with project creation"));
 
       return project;
 
