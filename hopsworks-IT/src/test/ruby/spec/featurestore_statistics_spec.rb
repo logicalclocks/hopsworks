@@ -38,7 +38,7 @@ describe "On #{ENV['OS']}" do
         it "should be able to add statistics as a commit to a stream feature group" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result, _ = create_stream_featuregroup(project.id, featurestore_id, backfill_offline: true)
+          json_result, _ = create_stream_featuregroup(project.id, featurestore_id, materialize_offline: true)
           expect_status_details(200)
           parsed_json = JSON.parse(json_result)
           create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
@@ -79,7 +79,7 @@ describe "On #{ENV['OS']}" do
         it "should be able to get a specific statistics commit with content field of a stream feature group" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result, _ = create_stream_featuregroup(project.id, featurestore_id, backfill_offline: true,
+          json_result, _ = create_stream_featuregroup(project.id, featurestore_id, materialize_offline: true,
                                                       commit_time: 1597903688000)
           expect_status_details(200)
           parsed_json = JSON.parse(json_result)
@@ -145,7 +145,7 @@ describe "On #{ENV['OS']}" do
         it "should be able to get the latest statistics commit for a stream feature group" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result, _ = create_stream_featuregroup(project.id, featurestore_id, backfill_offline: true,
+          json_result, _ = create_stream_featuregroup(project.id, featurestore_id, materialize_offline: true,
                                                       commit_time: 1597990088000)
           parsed_json = JSON.parse(json_result)
           featuregroup_id = parsed_json["id"]
@@ -155,7 +155,7 @@ describe "On #{ENV['OS']}" do
                                                       commit_time: 1597990088000)
           expect_status_details(200)
 
-          backfill_stream_featuregroup(featurestore_id, featuregroup_id, 1598990088000)
+          materialize_stream_featuregroup(featurestore_id, featuregroup_id, 1598990088000)
           expect_status_details(200)
           create_statistics_commit(project.id, featurestore_id, "featuregroups", featuregroup_id, commit_time: 1598990088000)
           expect_status_details(200)
@@ -217,7 +217,7 @@ describe "On #{ENV['OS']}" do
         it "deleting a stream feature group should delete all associated statistics commit files from hopsfs" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result, featuregroup_name = create_stream_featuregroup(project.id, featurestore_id, backfill_offline: true,
+          json_result, featuregroup_name = create_stream_featuregroup(project.id, featurestore_id, materialize_offline: true,
                                                 commit_time: 1597990088000)
           expect_status_details(200)
           parsed_json = JSON.parse(json_result)
