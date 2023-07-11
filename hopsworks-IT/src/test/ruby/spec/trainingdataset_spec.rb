@@ -1959,7 +1959,7 @@ describe "On #{ENV['OS']}" do
               {type: "INT", name: "a_testfeature", primary: true},
               {type: "INT", name: "a_testfeature1"},
           ]
-          json_result, fg_name = create_stream_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_a_#{short_random_id}", backfill_offline: true)
+          json_result, fg_name = create_stream_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_a_#{short_random_id}", materialize_offline: true)
           parsed_json = JSON.parse(json_result)
           fg_id = parsed_json["id"]
           fg_type = parsed_json["type"]
@@ -1968,7 +1968,7 @@ describe "On #{ENV['OS']}" do
               {type: "INT", name: "a_testfeature", primary: true},
               {type: "INT", name: "b_testfeature1"},
           ]
-          json_result_b, fg_name_b = create_stream_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_b_#{short_random_id}", backfill_offline: true)
+          json_result_b, fg_name_b = create_stream_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_b_#{short_random_id}", materialize_offline: true)
           parsed_json_b = JSON.parse(json_result_b)
           fg_id_b = parsed_json_b["id"]
           fg_b_type = parsed_json_b["type"]
@@ -2016,7 +2016,7 @@ describe "On #{ENV['OS']}" do
           ]
           json_result, fg_name = create_stream_featuregroup(@project.id, featurestore_id, features: features,
                                                             featuregroup_name: "test_fg_a_#{short_random_id}",
-                                                            backfill_offline: true, online_enabled: false)
+                                                            materialize_offline: true, online_enabled: false)
           parsed_json = JSON.parse(json_result)
           fg_id = parsed_json["id"]
           fg_type = parsed_json["type"]
@@ -2025,7 +2025,7 @@ describe "On #{ENV['OS']}" do
             {type: "INT", name: "a_testfeature", primary: true},
             {type: "INT", name: "b_testfeature1"},
           ]
-          json_result_b, fg_name_b = create_stream_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_b_#{short_random_id}", backfill_offline: true)
+          json_result_b, fg_name_b = create_stream_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_b_#{short_random_id}", materialize_offline: true)
           parsed_json_b = JSON.parse(json_result_b)
           fg_id_b = parsed_json_b["id"]
           fg_b_type = parsed_json_b["type"]
@@ -2065,7 +2065,7 @@ describe "On #{ENV['OS']}" do
               {type: "INT", name: "a_testfeature", primary: true},
               {type: "INT", name: "a_testfeature1"},
           ]
-          json_result, fg_name = create_stream_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_a_#{short_random_id}", backfill_offline: true)
+          json_result, fg_name = create_stream_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_a_#{short_random_id}", materialize_offline: true)
           parsed_json = JSON.parse(json_result)
           fg_id = parsed_json["id"]
           fg_type = parsed_json["type"]
@@ -2074,7 +2074,7 @@ describe "On #{ENV['OS']}" do
               {type: "INT", name: "a_testfeature", primary: true},
               {type: "INT", name: "b_testfeature1"},
           ]
-          json_result_b, fg_name_b = create_stream_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_b_#{short_random_id}", backfill_offline: true)
+          json_result_b, fg_name_b = create_stream_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_b_#{short_random_id}", materialize_offline: true)
           parsed_json_b = JSON.parse(json_result_b)
           fg_id_b = parsed_json_b["id"]
           fg_b_type = parsed_json_b["type"]
@@ -2083,7 +2083,7 @@ describe "On #{ENV['OS']}" do
               {type: "INT", name: "a_testfeature", primary: true},
               {type: "INT", name: "c_testfeature1"},
           ]
-          json_result_c, fg_name_c = create_stream_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_c_#{short_random_id}", backfill_offline: true)
+          json_result_c, fg_name_c = create_stream_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_c_#{short_random_id}", materialize_offline: true)
           parsed_json_c = JSON.parse(json_result_c)
           fg_id_c = parsed_json_c["id"]
           fg_c_type = parsed_json_c["type"]

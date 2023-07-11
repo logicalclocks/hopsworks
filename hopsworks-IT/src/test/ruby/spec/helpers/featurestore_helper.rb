@@ -127,7 +127,7 @@ module FeaturestoreHelper
 
   def create_stream_featuregroup(project_id, featurestore_id, features: nil, featuregroup_name: nil,
                                  version: 1, featuregroup_description: nil, statistics_config: nil,
-                                 event_time: nil, deltaStreamerJobConf: nil, backfill_offline: false,
+                                 event_time: nil, deltaStreamerJobConf: nil, materialize_offline: false,
                                  commit_time: nil, online_enabled: true)
     type = "streamFeatureGroupDTO"
     featuregroupType = "STREAM_FEATURE_GROUP"
@@ -173,18 +173,18 @@ module FeaturestoreHelper
     create_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups"
     json_result = post create_featuregroup_endpoint, json_data
 
-    if backfill_offline
+    if materialize_offline
       # commit to offline fg
       parsed_json = JSON.parse(json_result)
       featuregroup_id = parsed_json["id"]
       featuregroup_version = parsed_json["version"]
-      backfill_stream_featuregroup(featurestore_id, featuregroup_id, commit_time)
+      materialize_stream_featuregroup(featurestore_id, featuregroup_id, commit_time)
     end
 
     return json_result, featuregroup_name
   end
 
-  def backfill_stream_featuregroup(featurestore_id, featuregroup_id, commit_time)
+  def materialize_stream_featuregroup(featurestore_id, featuregroup_id, commit_time)
       if commit_time.nil?
         time = Time.now
         commit_time = time.to_i * 1000

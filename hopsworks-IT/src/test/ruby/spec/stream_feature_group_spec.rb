@@ -38,7 +38,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["onlineTopicName"]).to eql(project.id.to_s + "_" + parsed_json["id"].to_s + "_" +
                                                         featuregroup_name + "_" + parsed_json["version"].to_s + "_onlinefs")
 
-        job_name =  featuregroup_name + "_" + parsed_json["version"].to_s + "_" + "offline_fg_backfill"
+        job_name =  featuregroup_name + "_" + parsed_json["version"].to_s + "_" + "offline_fg_materialization"
         job_json_result = get_job(project.id, job_name, expected_status: 200)
         job_parsed_json = JSON.parse(job_json_result)
         expect(job_parsed_json["name"]).to eql(job_name)
@@ -69,7 +69,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["onlineTopicName"]).to eql(project.id.to_s + "_" + parsed_json["id"].to_s + "_" +
                                                         featuregroup_name + "_" + parsed_json["version"].to_s)
 
-        job_name =  featuregroup_name + "_" + parsed_json["version"].to_s + "_" + "offline_fg_backfill"
+        job_name =  featuregroup_name + "_" + parsed_json["version"].to_s + "_" + "offline_fg_materialization"
         job_json_result = get_job(project.id, job_name, expected_status: 200)
         job_parsed_json = JSON.parse(job_json_result)
         expect(job_parsed_json["name"]).to eql(job_name)
@@ -93,7 +93,7 @@ describe "On #{ENV['OS']}" do
         featuregroup_id = parsed_json["id"]
 
         # Check if job and job config exists
-        job_name =  featuregroup_name + "_" + parsed_json["version"].to_s + "_" + "offline_fg_backfill"
+        job_name =  featuregroup_name + "_" + parsed_json["version"].to_s + "_" + "offline_fg_materialization"
         expect(job_exists(project.id, job_name)).to be true
         expect(job_config_exists(project[:projectname], job_name)).to be true
 
@@ -115,7 +115,7 @@ describe "On #{ENV['OS']}" do
         featuregroup_id = parsed_json["id"]
 
         # Check if job and job config exists
-        job_name =  featuregroup_name + "_" + parsed_json["version"].to_s + "_" + "offline_fg_backfill"
+        job_name =  featuregroup_name + "_" + parsed_json["version"].to_s + "_" + "offline_fg_materialization"
         expect(job_exists(project.id, job_name)).to be true
         expect(job_config_exists(project[:projectname], job_name)).to be true
 
@@ -504,7 +504,7 @@ describe "On #{ENV['OS']}" do
           {type: "INT", name: "a_testfeature1"},
         ]
         fg_a_name = "test_fg_#{short_random_id}"
-        json_result, featuregroup_name = create_stream_featuregroup(@project.id, featurestore_id, featuregroup_name: fg_a_name, features: features, backfill_offline: true)
+        json_result, featuregroup_name = create_stream_featuregroup(@project.id, featurestore_id, featuregroup_name: fg_a_name, features: features, materialize_offline: true)
         parsed_json = JSON.parse(json_result)
         fg_id = parsed_json["id"]
         fg_type = parsed_json["type"]
@@ -515,7 +515,7 @@ describe "On #{ENV['OS']}" do
           {type: "INT", name: "b_testfeature2"}
         ]
         fg_b_name = "test_fg_#{short_random_id}"
-        json_result, featuregroup_name = create_stream_featuregroup(@project.id, featurestore_id, featuregroup_name: fg_b_name, features: features, backfill_offline: true)
+        json_result, featuregroup_name = create_stream_featuregroup(@project.id, featurestore_id, featuregroup_name: fg_b_name, features: features, materialize_offline: true)
         parsed_json = JSON.parse(json_result)
         fg_id_b = parsed_json["id"]
         fg_b_type = parsed_json["type"]
@@ -584,7 +584,7 @@ describe "On #{ENV['OS']}" do
           {type: "TIMESTAMP", name: "event_time"}
         ]
         fg_a_name = "test_fg_#{short_random_id}"
-        json_result, featuregroup_name = create_stream_featuregroup(@project.id, featurestore_id, featuregroup_name: fg_a_name, features: features, event_time: "event_time", backfill_offline: true)
+        json_result, featuregroup_name = create_stream_featuregroup(@project.id, featurestore_id, featuregroup_name: fg_a_name, features: features, event_time: "event_time", materialize_offline: true)
         parsed_json = JSON.parse(json_result)
         fg_id = parsed_json["id"]
         fg_type = parsed_json["type"]
@@ -596,7 +596,7 @@ describe "On #{ENV['OS']}" do
           {type: "TIMESTAMP", name: "event_time"}
         ]
         fg_b_name = "test_fg_#{short_random_id}"
-        json_result, featuregroup_name = create_stream_featuregroup(@project.id, featurestore_id, featuregroup_name: fg_b_name, features: features, event_time: "event_time", backfill_offline: true)
+        json_result, featuregroup_name = create_stream_featuregroup(@project.id, featurestore_id, featuregroup_name: fg_b_name, features: features, event_time: "event_time", materialize_offline: true)
         parsed_json = JSON.parse(json_result)
         fg_id_b = parsed_json["id"]
         fg_b_type = parsed_json["type"]
@@ -675,7 +675,7 @@ describe "On #{ENV['OS']}" do
           {type: "INT", name: "ft_e"},
           {type: "INT", name: "ft_f"},
         ]
-        json_result, fg_name = create_stream_featuregroup(@project.id, featurestore_id, features: features, backfill_offline: true)
+        json_result, fg_name = create_stream_featuregroup(@project.id, featurestore_id, features: features, materialize_offline: true)
         expect_status_details(200)
 
         # Get the first version

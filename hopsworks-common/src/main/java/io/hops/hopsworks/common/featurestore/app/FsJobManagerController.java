@@ -115,7 +115,7 @@ public class FsJobManagerController {
   // fg
   private final static String INSERT_FG_OP = "insert_fg";
   private final static String COMPUTE_STATS_OP = "compute_stats";
-  private final static String DELTA_STREAMER_OP = "offline_fg_backfill";
+  private final static String DELTA_STREAMER_OP = "offline_fg_materialization";
   private final static String GE_VALIDATE_OP = "ge_validate";
   private final static String IMPORT_FEATUREGROUP_OP = "import_fg";
   // td
