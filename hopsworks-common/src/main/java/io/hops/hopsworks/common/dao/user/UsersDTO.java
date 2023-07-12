@@ -58,7 +58,6 @@ public class UsersDTO {
   private boolean twoFactor;
   private int toursState;
   private int maxNumProjects;
-  private int numCreatedProjects;
   private boolean testUser;
   private String userAccountType;
   private int numActiveProjects;
@@ -73,12 +72,11 @@ public class UsersDTO {
     this.firstName = user.getFname();
     this.lastName = user.getLname();
     this.maxNumProjects = user.getMaxNumProjects();
-    this.numCreatedProjects = user.getNumCreatedProjects();
     this.twoFactor = user.getTwoFactor();
     this.toursState = user.getToursState();
     this.userAccountType = user.getMode().toString();
     this.numActiveProjects = user.getNumActiveProjects();
-    numRemainingProjects = maxNumProjects-numCreatedProjects;
+    numRemainingProjects = maxNumProjects-numActiveProjects;
   }
 
   public String getUsername() { return username; }
@@ -171,16 +169,7 @@ public class UsersDTO {
 
   public void setMaxNumProjects(int maxNumProjects) {
     this.maxNumProjects = maxNumProjects;
-    numRemainingProjects = maxNumProjects-numCreatedProjects;
-  }
-
-  public int getNumCreatedProjects() {
-    return numCreatedProjects;
-  }
-
-  public void setNumCreatedProjects(int numCreatedProjects) {
-    this.numCreatedProjects = numCreatedProjects;
-    numRemainingProjects = maxNumProjects-numCreatedProjects;
+    numRemainingProjects = maxNumProjects-numActiveProjects;
   }
 
   public int getNumRemainingProjects(){
@@ -197,6 +186,7 @@ public class UsersDTO {
 
   public void setNumActiveProjects(int numActiveProjects) {
     this.numActiveProjects = numActiveProjects;
+    numRemainingProjects = maxNumProjects-numActiveProjects;
   }
 
   public boolean isTestUser() {
@@ -227,7 +217,6 @@ public class UsersDTO {
       ", twoFactor=" + twoFactor +
       ", toursState=" + toursState +
       ", maxNumProjects=" + maxNumProjects +
-      ", numCreatedProjects=" + numCreatedProjects +
       ", testUser=" + testUser +
       ", userAccountType='" + userAccountType + '\'' +
       ", numActiveProjects=" + numActiveProjects +

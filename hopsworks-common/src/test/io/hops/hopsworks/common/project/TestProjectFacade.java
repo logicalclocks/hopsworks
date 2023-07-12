@@ -23,22 +23,47 @@ import org.junit.Test;
 public class TestProjectFacade {
 
   @Test
-  public void testNumberOfProjectLimitIsReached() {
+  public void testNumberOfProjectLimitReached() {
+    // Arrange
     ProjectFacade pf = new ProjectFacade();
     Users user = new Users();
-    user.setNumCreatedProjects(2);
+    user.setNumActiveProjects(3);
     user.setMaxNumProjects(3);
 
-    Assert.assertFalse(pf.numProjectsLimitReached(user));
-    user.setNumCreatedProjects(3);
-    Assert.assertTrue(pf.numProjectsLimitReached(user));
+    // Act
+    boolean result = pf.numProjectsLimitReached(user);
 
-    user.setNumCreatedProjects(0);
-    user.setMaxNumProjects(0);
-    Assert.assertTrue(pf.numProjectsLimitReached(user));
+    // Assert
+    Assert.assertTrue(result);
+  }
 
+  @Test
+  public void testNumberOfProjectLimitNotReached() {
+    // Arrange
+    ProjectFacade pf = new ProjectFacade();
+    Users user = new Users();
+    user.setNumActiveProjects(2);
+    user.setMaxNumProjects(3);
+
+    // Act
+    boolean result = pf.numProjectsLimitReached(user);
+
+    // Assert
+    Assert.assertFalse(result);
+  }
+
+  @Test
+  public void testNumberOfProjectLimitUnlimited() {
+    // Arrange
+    ProjectFacade pf = new ProjectFacade();
+    Users user = new Users();
     user.setNumActiveProjects(10);
     user.setMaxNumProjects(-1);
-    Assert.assertFalse(pf.numProjectsLimitReached(user));
+
+    // Act
+    boolean result = pf.numProjectsLimitReached(user);
+
+    // Assert
+    Assert.assertFalse(result);
   }
 }

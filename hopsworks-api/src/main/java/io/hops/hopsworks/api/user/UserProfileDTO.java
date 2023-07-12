@@ -59,7 +59,6 @@ public class UserProfileDTO extends RestDTO<UserProfileDTO> {
   private Integer toursState;
   private Integer status;
   private Integer maxNumProjects;
-  private Integer numCreatedProjects;
   private Integer numActiveProjects;
   private Date activated;
   private Collection<BbcGroup> role;
@@ -78,7 +77,6 @@ public class UserProfileDTO extends RestDTO<UserProfileDTO> {
     this.toursState = user.getToursState();
     this.status = user.getStatus().getValue();
     this.maxNumProjects = user.getMaxNumProjects();
-    this.numCreatedProjects = user.getNumCreatedProjects();
     this.numActiveProjects = user.getNumActiveProjects();
     this.activated = user.getActivated();
     this.role = user.getBbcGroupCollection();
@@ -156,14 +154,6 @@ public class UserProfileDTO extends RestDTO<UserProfileDTO> {
     this.maxNumProjects = maxNumProjects;
   }
 
-  public Integer getNumCreatedProjects() {
-    return numCreatedProjects;
-  }
-
-  public void setNumCreatedProjects(Integer numCreatedProjects) {
-    this.numCreatedProjects = numCreatedProjects;
-  }
-
   public Integer getNumActiveProjects() {
     return numActiveProjects;
   }
@@ -209,7 +199,6 @@ public class UserProfileDTO extends RestDTO<UserProfileDTO> {
       ", toursState=" + toursState +
       ", status=" + status +
       ", maxNumProjects=" + maxNumProjects +
-      ", numCreatedProjects=" + numCreatedProjects +
       ", numActiveProjects=" + numActiveProjects +
       ", activated=" + activated +
       ", role=" + role +
