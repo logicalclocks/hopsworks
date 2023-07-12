@@ -590,7 +590,7 @@ public class ProjectService {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     StringBuilder message = new StringBuilder();
     message.append(ResponseMessages.PROJECT_CREATED);
-    message.append("<br>You have ").append(user.getMaxNumProjects() - user.getNumCreatedProjects()).
+    message.append("<br>You have ").append(user.getMaxNumProjects() - user.getNumActiveProjects()).
         append(" project(s) left that you can create");
     json.setSuccessMessage(message.toString());
 

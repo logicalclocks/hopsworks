@@ -406,7 +406,7 @@ public class ProjectController {
         UserAccountHandler.runUserAccountUpdateHandlers(userAccountHandlers, owner);
         LOGGER.log(Level.INFO, projectCreationLog(projectDTO, "Ran user account update handlers"));
       } catch (UserException ex) {
-        cleanup(project, null, true, owner);
+        cleanup(project, null, owner);
         throw ex;
       }
       
@@ -415,7 +415,7 @@ public class ProjectController {
         ProjectHandler.runProjectPreCreateHandlers(projectHandlers, project);
         LOGGER.log(Level.INFO, projectCreationLog(projectDTO, "Ran project pre-create handlers"));
       } catch (ProjectException ex) {
-        cleanup(project, null, true, owner);
+        cleanup(project, null, owner);
         throw ex;
       }
 
@@ -431,7 +431,7 @@ public class ProjectController {
         projectCreationFutures.add(certsResultFuture);
         LOGGER.log(Level.INFO, projectCreationLog(projectDTO, "Started certificates creation"));
       } catch (Exception ex) {
-        cleanup(project, projectCreationFutures, true, owner);
+        cleanup(project, projectCreationFutures, owner);
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_CREATION_ERROR, Level.SEVERE,
           "project: " + project.getName() +
             "owner: " + owner.getUsername(), ex.getMessage(), ex);
@@ -447,7 +447,7 @@ public class ProjectController {
         fsProvController.updateProjectProvType(project, provType, dfso);
         LOGGER.log(Level.INFO, projectCreationLog(projectDTO, "Created project directory in HopsFS"));
       } catch (IOException | EJBException | ProvenanceException ex) {
-        cleanup(project, projectCreationFutures, true, owner);
+        cleanup(project, projectCreationFutures, owner);
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_FOLDER_NOT_CREATED, Level.SEVERE,
           "project: " + projectName, ex.getMessage(), ex);
       }
@@ -458,7 +458,7 @@ public class ProjectController {
         setProjectOwnerAndQuotas(project, dfso, owner);
         LOGGER.log(Level.INFO, projectCreationLog(projectDTO, "Set project owner and quotas"));
       } catch (IOException | EJBException ex) {
-        cleanup(project, projectCreationFutures, true, owner);
+        cleanup(project, projectCreationFutures, owner);
         throw new ProjectException(RESTCodes.ProjectErrorCode.QUOTA_ERROR, Level.SEVERE, "project: " + project.getName()
           , ex.getMessage(), ex);
       }
@@ -589,16 +589,16 @@ public class ProjectController {
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_GROUP_EXISTS, Level.INFO, severity,
           project.getName());
       } else if (!verifyQuota(project.getName())) {
-        cleanup(project, true);
+        cleanup(project);
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_EXISTS, Level.INFO, project.getName());
       } else if (!verifyLogs(dfso, project.getName())) {
-        cleanup(project, true);
+        cleanup(project);
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_LOGS_EXIST, Level.INFO, severity,
           project.getName());
       }
     } catch (IOException | EJBException ex) {
       LOGGER.log(Level.SEVERE, RESTCodes.ProjectErrorCode.PROJECT_VERIFICATIONS_FAILED.toString(), ex);
-      cleanup(project, true);
+      cleanup(project);
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_VERIFICATIONS_FAILED, Level.SEVERE);
     }
   }
@@ -611,7 +611,7 @@ public class ProjectController {
     }
     if (projectFacade.numProjectsLimitReached(user)) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.NUM_PROJECTS_LIMIT_REACHED,
-        Level.FINE, "projects already created: " + user.getNumCreatedProjects() + ", out of a maximum: " +
+        Level.FINE, "projects already active: " + user.getNumActiveProjects() + ", out of a maximum: " +
           user.getMaxNumProjects());
     } else if (projectFacade.projectExists(projectName)) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_EXISTS, Level.FINE, "project: " + projectName);
@@ -626,8 +626,7 @@ public class ProjectController {
     //Persist project object
     this.projectFacade.persistProject(project);
     this.projectFacade.flushEm();
-    usersController.increaseNumCreatedProjects(user.getUid());
-    usersController.updateNumActiveProjects(project.getOwner().getUid());
+    usersController.updateNumActiveProjects(project.getOwner());
     return project;
   }
 
@@ -1369,7 +1368,7 @@ public class ProjectController {
           cleanupLogger.logError(e.getMessage());
         }
 
-        usersController.updateNumActiveProjects(project.getOwner().getUid());
+        usersController.updateNumActiveProjects(project.getOwner());
       } else {
         cleanupLogger.logSuccess("Project is *NOT* in the database, going to remove as much as possible");
         Date now = DateUtils.localDateTime2Date(DateUtils.getNow());
@@ -1589,24 +1588,14 @@ public class ProjectController {
   }
 
   public void cleanup(Project project) throws GenericException {
-    cleanup(project,true);
-  }
-
-  public void cleanup(Project project, boolean decreaseCreatedProj) throws GenericException {
-    cleanup(project, null, decreaseCreatedProj);
-  }
-
-  public void cleanup(Project project, List<Future<?>> projectCreationFutures) throws GenericException {
-    cleanup(project, projectCreationFutures, true);
+    cleanup(project, null);
   }
   
-  public void cleanup(Project project, List<Future<?>> projectCreationFutures,
-                      boolean decreaseCreatedProj) throws GenericException {
-    cleanup(project, projectCreationFutures, decreaseCreatedProj, null);
+  public void cleanup(Project project, List<Future<?>> projectCreationFutures) throws GenericException {
+    cleanup(project, projectCreationFutures, null);
   }
 
-  public void cleanup(Project project, List<Future<?>> projectCreationFutures,
-                      boolean decreaseCreatedProj, Users owner) throws GenericException {
+  public void cleanup(Project project, List<Future<?>> projectCreationFutures, Users owner) throws GenericException {
 
     if (project == null) {
       return;
@@ -1650,7 +1639,7 @@ public class ProjectController {
 
         List<HdfsUsers> usersToClean = getUsersToClean(project);
         List<HdfsGroups> groupsToClean = getGroupsToClean(project);
-        removeProjectInt(project, usersToClean, groupsToClean, projectCreationFutures, decreaseCreatedProj, owner);
+        removeProjectInt(project, usersToClean, groupsToClean, projectCreationFutures, owner);
         removeCertificatesFromMaterializer(project);
         //Delete online featurestore database
         onlineFeaturestoreController.removeOnlineFeatureStore(project);
@@ -1674,8 +1663,7 @@ public class ProjectController {
   }
 
   private void removeProjectInt(Project project, List<HdfsUsers> usersToClean,
-                                List<HdfsGroups> groupsToClean, List<Future<?>> projectCreationFutures,
-                                boolean decreaseCreatedProj, Users owner)
+                                List<HdfsGroups> groupsToClean, List<Future<?>> projectCreationFutures, Users owner)
       throws IOException, InterruptedException, HopsSecurityException, ServiceException, ProjectException,
       GenericException, TensorBoardException, KafkaException, FeaturestoreException {
     DistributedFileSystemOps dfso = null;
@@ -1768,11 +1756,7 @@ public class ProjectController {
       //remove folder and from the database
       removeProject(project.getName(), dfso);
 
-      if (decreaseCreatedProj) {
-        usersController.decrementNumProjectsCreated(project.getOwner().getUid());
-      }
-      
-      usersController.updateNumActiveProjects(project.getOwner().getUid());
+      usersController.updateNumActiveProjects(project.getOwner());
 
       // Run custom handlers for project deletion
       ProjectHandler.runProjectPostDeleteHandlers(projectHandlers, project);

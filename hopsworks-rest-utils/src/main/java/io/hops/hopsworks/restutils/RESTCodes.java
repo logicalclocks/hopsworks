@@ -64,7 +64,8 @@ public class RESTCodes {
     //project error response
     PROJECT_EXISTS(1, "Project with the same name already exists.", Response.Status.CONFLICT),
     NUM_PROJECTS_LIMIT_REACHED(2, "You have reached the maximum number of projects you could create."
-        + " Contact an administrator to increase your limit.", Response.Status.BAD_REQUEST),
+        + " Contact an administrator to increase your limit or delete some of the existing projects.",
+            Response.Status.BAD_REQUEST),
     INVALID_PROJECT_NAME(3, "Invalid project name, valid characters: [a-zA-Z0-9]((?!__)[_a-zA-Z0-9]){0,62}",
         Response.Status.BAD_REQUEST),
     PROJECT_NOT_FOUND(4, "Project wasn't found.", Response.Status.BAD_REQUEST),
