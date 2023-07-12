@@ -23,6 +23,8 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 
 public class TestProjectController {
@@ -60,15 +62,20 @@ public class TestProjectController {
   }
 
   @Test
-  public void testSkipAlertIfProjectExists() throws Exception {
+  public void testSkipAlertIfProjectExistsOrNameVerificationFailed() throws Exception {
     String exceptionUsrMsg = "This is the RESTException user error message";
     String exceptionDevMsg = "This is the RESTException dev error message";
 
     ProjectController projectController = Mockito.spy(new ProjectController());
-    Mockito.doThrow(
-            new ProjectException(
-                RESTCodes.ProjectErrorCode.PROJECT_EXISTS, Level.FINE, exceptionUsrMsg, exceptionUsrMsg))
-        .when(projectController).createProjectInternal(Mockito.any(), Mockito.any());
+    List<RESTCodes.ProjectErrorCode> ignoredErrorCodes = Arrays.asList(RESTCodes.ProjectErrorCode.PROJECT_EXISTS,
+        RESTCodes.ProjectErrorCode.PROJECT_NAME_TOO_LONG, RESTCodes.ProjectErrorCode.RESERVED_PROJECT_NAME,
+        RESTCodes.ProjectErrorCode.INVALID_PROJECT_NAME);
+    for(RESTCodes.ProjectErrorCode errorCode : ignoredErrorCodes){
+      Mockito.doThrow(
+              new ProjectException(
+                  errorCode, Level.FINE, exceptionUsrMsg, exceptionUsrMsg))
+          .when(projectController).createProjectInternal(Mockito.any(), Mockito.any());
+    }
     AMClient alertManager = Mockito.mock(AMClient.class);
     Mockito.doNothing().when(alertManager).asyncPostAlerts(Mockito.any());
 
@@ -84,13 +91,12 @@ public class TestProjectController {
       // Exception is expected here;
     }
 
-    String message =
-        RESTCodes.ProjectErrorCode.PROJECT_EXISTS.getMessage() + " ErrorCode: " + RESTCodes.ProjectErrorCode.PROJECT_EXISTS.getCode()
-            + " User msg: " + exceptionUsrMsg + " Dev msg: " + exceptionDevMsg;
-
-    Mockito.verify(projectController, Mockito.never()).sendProjectCreationFailAlert(
-        owner, "test", message
-    );
+    for(RESTCodes.ProjectErrorCode errorCode : ignoredErrorCodes){
+      String message = errorCode.getMessage() + " ErrorCode: " + errorCode.getCode()
+          + " User msg: " + exceptionUsrMsg + " Dev msg: " + exceptionDevMsg;
+      Mockito.verify(projectController, Mockito.never()).sendProjectCreationFailAlert(
+          owner, "test", message);
+    }
   }
 
   @Test
