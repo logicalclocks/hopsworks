@@ -318,7 +318,12 @@ public class ProjectController {
     try {
       return createProjectInternal(projectDTO, owner);
     } catch (RESTException e) {
-      if(!(e.getErrorCode() == RESTCodes.ProjectErrorCode.PROJECT_EXISTS && e.getLevel() == Level.FINE)){
+      boolean ignoreErrorCode =
+          e.getErrorCode() == RESTCodes.ProjectErrorCode.PROJECT_NAME_TOO_LONG ||
+              e.getErrorCode() == RESTCodes.ProjectErrorCode.RESERVED_PROJECT_NAME ||
+              e.getErrorCode() == RESTCodes.ProjectErrorCode.INVALID_PROJECT_NAME ||
+              e.getErrorCode() == RESTCodes.ProjectErrorCode.PROJECT_EXISTS;
+      if (!(ignoreErrorCode && e.getLevel() == Level.FINE)) {
         String message = e.getErrorCode().getMessage() + " ErrorCode: " + e.getErrorCode().getCode()
             + " User msg: " + e.getUsrMsg() + " Dev msg: " + e.getDevMsg();
         LOGGER.log(Level.INFO, "project creation failed for project {0}. send an alert with message: {1}",
