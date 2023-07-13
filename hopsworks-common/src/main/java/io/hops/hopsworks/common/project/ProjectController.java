@@ -395,17 +395,6 @@ public class ProjectController {
 
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 3 (verify): {0}", System.currentTimeMillis() - startTime);
 
-      // Run the user account update handlers
-      // For users created during Hopsworks installation (e.g., meb10000), the user account might have not been
-      // propagated completely in the system (e.g., hops-system--users config map)
-      try {
-        UserAccountHandler.runUserAccountUpdateHandlers(userAccountHandlers, owner);
-        LOGGER.log(Level.INFO, projectCreationLog(projectDTO, "Ran user account update handlers"));
-      } catch (UserException ex) {
-        cleanup(project, null, owner);
-        throw ex;
-      }
-      
       // Run the project precreate handlers.
       try {
         ProjectHandler.runProjectPreCreateHandlers(projectHandlers, project);
