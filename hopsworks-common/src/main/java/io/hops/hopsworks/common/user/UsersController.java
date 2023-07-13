@@ -585,27 +585,11 @@ public class UsersController {
     user.setSecret(sec);
     userFacade.update(user);
   }
-
-  public void increaseNumCreatedProjects(int id) {
-    Users u = userFacade.find(id);
-    u.setNumCreatedProjects(u.getNumCreatedProjects() + 1);
-    userFacade.update(u);
-  }
-
-  public void decrementNumProjectsCreated(int id) {
-    Users u = userFacade.find(id);
-    int n = u.getNumCreatedProjects();
-    if (n > 0) {
-      u.setNumCreatedProjects(n - 1);
-      userFacade.update(u);
-    }
-  }
-
-  public void updateNumActiveProjects(Integer id) {
-    Users u = userFacade.find(id);
-    List<Project> projects = projectFacade.findByUser(u);
-    u.setNumActiveProjects(projects != null ? projects.size() : 0);
-    userFacade.update(u);
+  
+  public void updateNumActiveProjects(Users users) {
+    List<Project> projects = projectFacade.findByUser(users);
+    users.setNumActiveProjects(projects != null ? projects.size() : 0);
+    userFacade.update(users);
   }
 
   public boolean isUserInRole(Users user, String groupName) {

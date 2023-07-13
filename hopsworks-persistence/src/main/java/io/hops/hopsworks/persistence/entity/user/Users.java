@@ -224,10 +224,6 @@ public class Users implements Serializable {
   @Column(name = "max_num_projects")
   private Integer maxNumProjects;
   @Basic(optional = false)
-  @Column(name = "num_created_projects")
-  @NotNull
-  private Integer numCreatedProjects = 0;
-  @Basic(optional = false)
   @Column(name = "num_active_projects")
   @NotNull
   private Integer numActiveProjects = 0;
@@ -273,8 +269,7 @@ public class Users implements Serializable {
   }
 
   public Users(Integer uid, String username, String password, Date activated,
-      int falseLogin, UserAccountStatus status, int isonline, int maxNumProjects, int numCreatedProjects,
-      int numActiveProjects) {
+      int falseLogin, UserAccountStatus status, int isonline, int maxNumProjects, int numActiveProjects) {
     this.uid = uid;
     this.username = username;
     this.password = password;
@@ -283,7 +278,6 @@ public class Users implements Serializable {
     this.isonline = isonline;
     this.status = status;
     this.maxNumProjects = maxNumProjects;
-    this.numCreatedProjects = numCreatedProjects;
     this.numActiveProjects  = numActiveProjects;
   }
 
@@ -304,7 +298,6 @@ public class Users implements Serializable {
     this.passwordChanged = passwordChanged;
     this.status = status;
     this.maxNumProjects = maxNumProjects;
-    this.numCreatedProjects = 0;
     this.numActiveProjects = 0;
   }
 
@@ -330,7 +323,6 @@ public class Users implements Serializable {
     this.twoFactor = twoFactor;
     this.salt = salt;
     this.toursState = toursState;
-    this.numCreatedProjects = 0;
     this.numActiveProjects = 0;
   }
   
@@ -349,7 +341,6 @@ public class Users implements Serializable {
     this.passwordChanged = passwordChanged;
     this.maxNumProjects = maxNumProjects;
     this.salt = salt;
-    this.numCreatedProjects = 0;
     this.numActiveProjects = 0;
   }
 
@@ -538,14 +529,6 @@ public class Users implements Serializable {
     return maxNumProjects;
   }
 
-  public Integer getNumCreatedProjects() {
-    return numCreatedProjects;
-  }
-
-  public void setNumCreatedProjects(Integer numCreatedProjects) {
-    this.numCreatedProjects = numCreatedProjects;
-  }
-
   public Integer getNumActiveProjects() {
     return numActiveProjects;
   }
@@ -630,7 +613,7 @@ public class Users implements Serializable {
 
   public Users asUser() {
     return new Users(uid, username, password, activated, falseLogin, status,
-        isonline, maxNumProjects, numCreatedProjects, numActiveProjects);
+        isonline, maxNumProjects, numActiveProjects);
   }
   
   @Override
