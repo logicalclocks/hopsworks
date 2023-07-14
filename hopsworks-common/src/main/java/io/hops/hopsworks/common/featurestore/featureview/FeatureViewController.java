@@ -16,10 +16,14 @@
 
 package io.hops.hopsworks.common.featurestore.featureview;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import io.hops.hopsworks.common.dao.QueryParam;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
+import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetFacade;
@@ -36,9 +40,13 @@ import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivityMeta;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.ServingKey;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFeature;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetJoin;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetJoinCondition;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
@@ -54,6 +62,9 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -88,6 +99,8 @@ public class FeatureViewController {
   private FsJobManagerController fsJobManagerController;
   @EJB
   private FeatureViewLinkController featureViewLinkController;
+  @EJB
+  private FeaturegroupController featuregroupController;
 
   public FeatureView createFeatureView(Project project, Users user, FeatureView featureView, Featurestore featurestore)
       throws FeaturestoreException, ProvenanceException, IOException {
@@ -150,17 +163,17 @@ public class FeatureViewController {
   public String getLocation(FeatureView featureView) throws FeaturestoreException {
     Featurestore featurestore = featureView.getFeaturestore();
     String connectorName =
-            featurestore.getProject().getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName();
+        featurestore.getProject().getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName();
 
     Dataset datasetsFolder =
-            featurestoreConnectorFacade.findByFeaturestoreName(featurestore, connectorName)
-                    .orElseThrow(() ->
-                            new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND,
-                            Level.FINE, "HOPSFS Connector: " + connectorName))
-                    .getHopsfsConnector().getHopsfsDataset();
+        featurestoreConnectorFacade.findByFeaturestoreName(featurestore, connectorName)
+            .orElseThrow(() ->
+                new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND,
+                    Level.FINE, "HOPSFS Connector: " + connectorName))
+            .getHopsfsConnector().getHopsfsDataset();
 
     return String.format(PATH_TO_FEATURE_VIEW, Utils.getDatasetPath(datasetsFolder, settings),
-                    featureView.getName(), featureView.getVersion());
+        featureView.getName(), featureView.getVersion());
   }
 
   public List<FeatureView> getAll() {
@@ -173,7 +186,7 @@ public class FeatureViewController {
 
   public List<FeatureView> getByNameAndFeatureStore(String name, Featurestore featurestore, QueryParam queryParam)
       throws FeaturestoreException {
-    List<FeatureView> featureViews =  featureViewFacade.findByNameAndFeaturestore(
+    List<FeatureView> featureViews = featureViewFacade.findByNameAndFeaturestore(
         name, featurestore, queryParam);
     if (featureViews.isEmpty()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_VIEW_NOT_FOUND,
@@ -210,11 +223,11 @@ public class FeatureViewController {
       throw new FeaturestoreException(FEATURE_VIEW_NOT_FOUND, Level.FINE, "Provided feature view name or version " +
           "does not exist.");
     }
-    for (FeatureView fv: featureViews) {
+    for (FeatureView fv : featureViews) {
       featurestoreUtils.verifyFeatureViewDataOwnerOrSelf(user, project, fv,
           FeaturestoreUtils.ActionMessage.DELETE_FEATURE_VIEW);
     }
-    for (FeatureView fv: featureViews) {
+    for (FeatureView fv : featureViews) {
       trainingDatasetController.delete(user, project, featurestore, fv);
       featureViewFacade.remove(fv);
       removeFeatureViewDir(project, user, fv);
@@ -240,7 +253,7 @@ public class FeatureViewController {
   }
 
   public FeatureView update(Users user, Project project, Featurestore featurestore, String name, Integer version,
-                            String description)
+      String description)
       throws FeaturestoreException {
     FeatureView featureView = getByNameVersionAndFeatureStore(name, version, featurestore);
 
@@ -269,5 +282,104 @@ public class FeatureViewController {
           }
         })
         .collect(Collectors.toList());
+  }
+
+  public List<ServingKey> getServingKeys(Project project, Users user, FeatureView featureView)
+      throws FeaturestoreException {
+    List<ServingKey> servingKeys = Lists.newArrayList();
+    Set<String> prefixFeatureNames = Sets.newHashSet();
+    Set<Integer> featureGroupIdAdded = Sets.newHashSet();
+    Optional<TrainingDatasetJoin> leftJoin =
+        featureView.getJoins().stream().filter(join -> join.getIndex().equals(0)).findFirst();
+    Set<String> leftPrimaryKeys = featuregroupController
+        .getFeatures(leftJoin.get().getFeatureGroup(), project, user)
+        .stream()
+        .filter(FeatureGroupFeatureDTO::getPrimary)
+        .map(FeatureGroupFeatureDTO::getName)
+        .collect(Collectors.toSet());
+    for (TrainingDatasetJoin join : featureView.getJoins()) {
+      // This contains join key and pk of feature group
+      Set<String> tempPrefixFeatureNames = Sets.newHashSet();
+
+      List<FeatureGroupFeatureDTO> primaryKeys = featuregroupController
+          .getFeatures(join.getFeatureGroup(), project, user)
+          .stream()
+          .filter(FeatureGroupFeatureDTO::getPrimary)
+          .collect(Collectors.toList());
+      Set<String> primaryKeyNames =
+          primaryKeys.stream().map(FeatureGroupFeatureDTO::getName).collect(Collectors.toSet());
+      Collection<TrainingDatasetJoinCondition> joinConditions = join.getConditions() == null ?
+          Lists.newArrayList() : join.getConditions();
+      for (TrainingDatasetJoinCondition condition : joinConditions) {
+        ServingKey servingKey = new ServingKey();
+        String featureName = condition.getRightFeature();
+        // Join on column, so ignore
+        if (!primaryKeyNames.contains(featureName)) {
+          continue;
+        }
+        servingKey.setFeatureName(featureName);
+        String joinOn = condition.getLeftFeature();
+        servingKey.setJoinOn(joinOn);
+        // if join on is not a primary key, set required to true
+        servingKey.setRequired(!leftPrimaryKeys.contains(joinOn));
+        servingKey.setPrefix(join.getPrefix());
+        servingKey.setFeatureGroup(join.getFeatureGroup());
+        servingKey.setFeatureView(featureView);
+        servingKey.setJoinIndex(join.getIndex());
+        servingKeys.add(servingKey);
+        tempPrefixFeatureNames.add(servingKey.getPrefix() + servingKey.getFeatureName());
+      }
+
+      for (FeatureGroupFeatureDTO pk : primaryKeys) {
+        String prefixFeatureName = join.getPrefix() + pk.getName();
+        if (!tempPrefixFeatureNames.contains(prefixFeatureName)) {
+          ServingKey servingKey = new ServingKey();
+          servingKey.setFeatureName(pk.getName());
+          if (prefixFeatureNames.contains(prefixFeatureName)) {
+            // conflict with pk of other feature group, set new prefix
+            String defaultPrefix;
+            int i = 0;
+            do {
+              defaultPrefix = String.format("%d_%s", i, join.getPrefix());
+              i++;
+            } while (prefixFeatureNames.contains(defaultPrefix + pk.getName()));
+            servingKey.setPrefix(defaultPrefix);
+          } else {
+            servingKey.setPrefix(join.getPrefix());
+          }
+          servingKey.setRequired(true);
+          servingKey.setFeatureGroup(join.getFeatureGroup());
+          servingKey.setJoinIndex(join.getIndex());
+          servingKey.setFeatureView(featureView);
+          servingKeys.add(servingKey);
+          tempPrefixFeatureNames.add(servingKey.getPrefix() + servingKey.getFeatureName());
+        }
+      }
+      prefixFeatureNames.addAll(tempPrefixFeatureNames);
+      featureGroupIdAdded.add(join.getFeatureGroup().getId());
+    }
+    // pk from label only fg and not left most fg is not mandatory
+    Set<Featuregroup> labelOnlyFgs = featureView.getFeatures().stream()
+        .collect(Collectors.groupingBy(TrainingDatasetFeature::getFeatureGroup))
+        .entrySet()
+        .stream()
+        .filter(entry -> entry.getValue().stream().allMatch(TrainingDatasetFeature::isLabel))
+        .map(Map.Entry::getKey)
+        .collect(Collectors.toSet());
+    for (ServingKey servingKey : servingKeys) {
+      if (labelOnlyFgs.contains(servingKey.getFeatureGroup())) {
+        if (servingKeys.stream()
+            .noneMatch(key -> key.getJoinOn().equals(servingKey.getPrefix() + servingKey.getFeatureName()))) {
+          servingKey.setRequired(false);
+        }
+      }
+    }
+    return servingKeys;
+  }
+
+  // For testing
+  public void setFeaturegroupController(
+      FeaturegroupController featuregroupController) {
+    this.featuregroupController = featuregroupController;
   }
 }

@@ -100,6 +100,8 @@ public class FeatureView implements Serializable {
   private Collection<FeaturestoreActivity> activities;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "featureView")
   private Collection<TrainingDataset> trainingDatasets;
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "featureView")
+  private Collection<ServingKey> servingKeys;
 
   public FeatureView() {
   }
@@ -203,6 +205,15 @@ public class FeatureView implements Serializable {
   public void setTrainingDatasets(
       Collection<TrainingDataset> trainingDatasets) {
     this.trainingDatasets = trainingDatasets;
+  }
+
+  public Collection<ServingKey> getServingKeys() {
+    return servingKeys;
+  }
+
+  public void setServingKeys(
+      Collection<ServingKey> servingKeys) {
+    this.servingKeys = servingKeys;
   }
 
   @Override

@@ -29,6 +29,7 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewDTO;
+import io.hops.hopsworks.common.featurestore.featureview.ServingKeyDTO;
 import io.hops.hopsworks.common.featurestore.keyword.KeywordControllerIface;
 import io.hops.hopsworks.common.featurestore.keyword.KeywordDTO;
 import io.hops.hopsworks.common.featurestore.query.Query;
@@ -94,38 +95,39 @@ public class FeatureViewBuilder {
 
   public FeatureViewBuilder() {
   }
-  
+
   public FeatureView convertFromDTO(Project project, Featurestore featurestore, Users user,
-                                    FeatureViewDTO featureViewDTO) throws FeaturestoreException {
+      FeatureViewDTO featureViewDTO) throws FeaturestoreException {
     featureViewInputValidator.validate(featureViewDTO, project, user);
     FeatureView featureView = new FeatureView();
     featureView.setName(featureViewDTO.getName());
     featureView.setFeaturestore(featurestore);
-    featureView.setCreated(featureViewDTO.getCreated() == null ? new Date(): featureViewDTO.getCreated());
+    featureView.setCreated(featureViewDTO.getCreated() == null ? new Date() : featureViewDTO.getCreated());
     featureView.setCreator(user);
     featureView.setVersion(featureViewDTO.getVersion());
     featureView.setDescription(featureViewDTO.getDescription());
     setQuery(project, user, featureViewDTO.getQuery(), featureView, featureViewDTO.getFeatures());
+    featureView.setServingKeys(featureViewController.getServingKeys(project, user, featureView));
     return featureView;
   }
-  
+
   private void setQuery(Project project, Users user, QueryDTO queryDTO, FeatureView featureView,
-                        List<TrainingDatasetFeatureDTO> featureDTOs)
-    throws FeaturestoreException {
+      List<TrainingDatasetFeatureDTO> featureDTOs)
+      throws FeaturestoreException {
     if (queryDTO != null) {
       Query query = queryController.convertQueryDTO(project, user, queryDTO,
-        pitJoinController.isPitEnabled(queryDTO));
+          pitJoinController.isPitEnabled(queryDTO));
       List<TrainingDatasetJoin> tdJoins = trainingDatasetController.collectJoins(query, null, featureView);
       featureView.setJoins(tdJoins);
       List<TrainingDatasetFeature> features = trainingDatasetController.collectFeatures(query, featureDTOs,
-        null, featureView, 0, tdJoins, 0);
+          null, featureView, 0, tdJoins, 0);
       featureView.setFeatures(features);
       List<TrainingDatasetFilter> filters = trainingDatasetController.convertToFilterEntities(query.getFilter(),
-        featureView, "L");
+          featureView, "L");
       featureView.setFilters(filters);
     }
   }
-  
+
   public FeatureViewDTO build(List<FeatureView> featureViews, ResourceRequest resourceRequest, Project project,
       Users user, UriInfo uriInfo)
       throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException {
@@ -148,7 +150,7 @@ public class FeatureViewBuilder {
 
   public FeatureViewDTO build(FeatureView featureView, ResourceRequest resourceRequest, Project project,
       Users user, UriInfo uriInfo)
-        throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException {
+      throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException {
     FeatureViewDTO base = convertToDTO(featureView);
     if (resourceRequest != null) {
       if (resourceRequest.contains(ResourceRequest.Name.QUERY_STRING)) {
@@ -167,18 +169,18 @@ public class FeatureViewBuilder {
 
         ResourceRequest keywordResourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
         KeywordDTO dto = featurestoreKeywordBuilder.build(uriInfo, keywordResourceRequest, project,
-          featureView, keywords);
+            featureView, keywords);
         base.setKeywords(dto);
       }
       DatasetPath path = datasetHelper.getDatasetPath(project, featureViewController.getLocation(featureView),
           DatasetType.DATASET);
       FeatureStoreTagUri tagUri = new FeatureStoreTagUri(uriInfo, featureView.getFeaturestore().getId(),
-        ResourceRequest.Name.FEATUREVIEW, featureView.getId());
+          ResourceRequest.Name.FEATUREVIEW, featureView.getId());
       base.setTags(tagsBuilder.build(tagUri, resourceRequest, user, path));
     }
     return base;
   }
-  
+
   public FeatureViewDTO convertToDTO(FeatureView featureView) {
     FeatureViewDTO featureViewDTO = new FeatureViewDTO();
     featureViewDTO.setId(featureView.getId());
@@ -190,6 +192,8 @@ public class FeatureViewBuilder {
     featureViewDTO.setVersion(featureView.getVersion());
     featureViewDTO.setName(featureView.getName());
     featureViewDTO.setId(featureView.getId());
+    featureViewDTO.setServingKeys(
+        featureView.getServingKeys().stream().map(ServingKeyDTO::new).collect(Collectors.toList()));
     return featureViewDTO;
   }
 
