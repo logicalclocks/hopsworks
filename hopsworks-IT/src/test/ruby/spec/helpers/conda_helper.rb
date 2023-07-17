@@ -214,4 +214,11 @@ module CondaHelper
     result
   end
 
+  def install_with_custom_commands(project_id, version, commands_file, artifacts="")
+    data = {
+      "commandsFile": commands_file,
+      "artifacts": artifacts
+    }
+    post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/python/environments/#{version}/commands/custom", data
+  end
 end

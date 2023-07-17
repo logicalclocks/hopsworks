@@ -255,7 +255,7 @@ describe "On #{ENV['OS']}" do
           install_library(@project[:id], ENV['PYTHON_VERSION'], 'hops', 'PIP', conda_channel, lib_version: '2.1.0')
 
           wait_for_running_command(@project[:id])
-        end
+          end
         end
       end
     end
@@ -589,6 +589,66 @@ describe "On #{ENV['OS']}" do
 
             get_env_conflicts(@project[:id], ENV['PYTHON_VERSION'], "?filter_by=service:JUPYTER")
             expect(json_body[:count]).to be > 0
+          end
+        end
+        context 'custom_commands' do
+          it 'should fail to run with custom commands if commands file is not provided' do
+            install_with_custom_commands(@project[:id], ENV['PYTHON_VERSION'], "")
+            expect_status_details(400, error_code: 100061)
+            expect_json(usrMsg: "Please provide the file path that contains the commands you would like to execute")
+          end
+          it 'should fail to run with custom commands if commands file is not valid' do
+            uploadFile(@project, "Resources", "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/docker/docker_commands_empty.sh")
+            install_with_custom_commands(@project[:id], ENV['PYTHON_VERSION'], "/Projects/#{@project[:projectname]}/Resources/docker_commands_empty.sh")
+            expect_status_details(400, error_code: 100061)
+            expect_json(usrMsg: "The commands file provided is empty")
+
+            uploadFile(@project, "Resources", "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/docker/docker_commands.txt")
+            install_with_custom_commands(@project[:id], ENV['PYTHON_VERSION'], "/Projects/#{@project[:projectname]}/Resources/docker_commands.txt")
+            expect_status_details(400, error_code: 100061)
+            expect_json(usrMsg: "The commands file should have .sh extension")
+
+            uploadFile(@project, "Resources", "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/docker/docker_commands_invalid.sh")
+            install_with_custom_commands(@project[:id], ENV['PYTHON_VERSION'], "/Projects/#{@project[:projectname]}/Resources/docker_commands_invalid.sh")
+            expect_status_details(400, error_code: 100061)
+            expect_json(usrMsg: "The commands file provided is not a valid bash script: the first line in the script should be #!/bin/bash")
+          end
+          it 'should build with custom commands' do
+            uploadFile(@project, "Resources", "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/docker/docker_commands.sh")
+            install_with_custom_commands(@project[:id], ENV['PYTHON_VERSION'], "/Projects/#{@project[:projectname]}/Resources/docker_commands.sh")
+            expect_status_details(200)
+            wait_for_running_command(@project[:id])
+          end
+          it 'should install a library from custom commands' do
+            uploadFile(@project, "Resources", "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/docker/docker_commands_install_library.sh")
+            install_with_custom_commands(@project[:id], ENV['PYTHON_VERSION'], "/Projects/#{@project[:projectname]}/Resources/docker_commands_install_library.sh")
+            expect_status_details(200)
+            wait_for_running_command(@project[:id])
+            list_libraries(@project[:id], ENV['PYTHON_VERSION'])
+
+            spotify_library = json_body[:items].detect { |library| library[:library] == "spotify" }
+            expect(spotify_library[:version]).to eq ("0.10.2")
+          end
+          it 'should build with artifacts' do
+            uploadFile(@project, "Resources", "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
+            uploadFile(@project, "Resources", "#{ENV['PROJECT_DIR']}/tools/upload_example/sampleStore.jks")
+            commandsFile = "/Projects/#{@project[:projectname]}/Resources/docker_commands_install_library.sh"
+            artifact1 = "/Projects/#{@project[:projectname]}/Resources/Sample.json"
+            artifact2 = "/Projects/#{@project[:projectname]}/Resources/sampleStore.jks"
+            artifacts = artifact1 + "," + artifact2
+            install_with_custom_commands(@project[:id], ENV['PYTHON_VERSION'], commandsFile, artifacts = artifacts)
+            expect_status_details(200)
+            wait_for_running_command(@project[:id])
+          end
+          it 'should version the commands file' do
+            uploadFile(@project, "Resources", "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/docker/docker_commands.sh")
+            install_with_custom_commands(@project[:id], ENV['PYTHON_VERSION'], "/Projects/#{@project[:projectname]}/Resources/docker_commands.sh")
+            expect_status_details(200)
+            conda_command_id = json_body[:id]
+            # even if the command fails it should version the bash script
+            sleep(180)
+            get_dataset_stat(@project, "Logs/Docker/#{conda_command_id}_conda_build/docker_commands.sh", datasetType: "&type=DATASET")
+            expect_status_details(200)
           end
         end
       end

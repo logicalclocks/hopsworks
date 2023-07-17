@@ -95,6 +95,13 @@ public class DockerImageController {
         "Could not initiate docker operation", "Error executing OSProcessExecutor-dockerImage.sh", e);
     }
   }
+
+  public void buildImage(String dockerImageName,
+                         String dockerFilePath,
+                         File cwd,
+                         ArrayList<String> dockerBuildOpts) throws ServiceException, ServiceDiscoveryException {
+    buildImage(dockerImageName, dockerFilePath, cwd, dockerBuildOpts, null, null);
+  }
   
   public void buildImage(String dockerImageName,
                          String dockerFilePath,

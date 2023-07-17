@@ -630,7 +630,10 @@ public class RESTCodes {
         Response.Status.INTERNAL_SERVER_ERROR),
     GRAFANA_PROXY_ERROR(58, "Unauthorized access to dashboard", Response.Status.INTERNAL_SERVER_ERROR),
     DOCKER_ERROR(59, "Failed to run docker command", Response.Status.INTERNAL_SERVER_ERROR),
-    LOCAL_FILESYSTEM_ERROR(60, "Failed to write to local filesystem", Response.Status.INTERNAL_SERVER_ERROR);
+    LOCAL_FILESYSTEM_ERROR(60, "Failed to write to local filesystem", Response.Status.INTERNAL_SERVER_ERROR),
+    INVALID_DOCKER_COMMAND_FILE(61, "Invalid commands file provided", Response.Status.BAD_REQUEST),
+    INVALID_ARTIFACT_FOR_DOCKER_COMMANDS(62, "Invalid artifact provided for docker commands",
+        Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;
