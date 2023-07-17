@@ -175,7 +175,7 @@ public class ProjectUtils {
       return project.getDockerImage();
     }
   }
-  
+
   public String getFullDockerImageName(String imageName) throws ServiceDiscoveryException {
     return getRegistryURL(settings, serviceDiscoveryController) + "/" + imageName;
   }

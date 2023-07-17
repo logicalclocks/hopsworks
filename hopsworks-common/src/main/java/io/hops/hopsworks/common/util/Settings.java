@@ -1857,6 +1857,11 @@ public class Settings implements Serializable {
     return ANACONDA_DIR;
   }
 
+  public static final String DOCKER_CUSTOM_COMMANDS_POST_BUILD_ARTIFACT_DIR_SUFFIX = "_conda_build";
+  public static final String DOCKER_CUSTOM_COMMANDS_TEMPLATE_NAME = "custom_docker_commands_template";
+  public static final String DOCKER_CUSTOM_COMMANDS_GENERATED_FILE_NAME = "docker_commands_generated";
+
+
   private String condaEnvName = "theenv";
   /**
    * Constructs the path to the project environment in Anaconda

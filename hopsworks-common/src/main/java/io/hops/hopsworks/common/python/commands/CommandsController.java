@@ -78,7 +78,11 @@ public class CommandsController {
   public void deleteCommands(Project project) {
     condaCommandFacade.deleteCommandsForEnvironment(project);
   }
-  
+
+  public void create(CondaCommands command) {
+    condaCommandFacade.save(command);
+  }
+
   public void retryFailedCondaEnvOps(Project project) {
     List<CondaCommands> commands = condaCommandFacade.getFailedEnvCommandsForProject(project);
     for (CondaCommands cc : commands) {

@@ -21,6 +21,7 @@ import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.python.command.CommandBeanParam;
 import io.hops.hopsworks.api.python.command.CommandBuilder;
 import io.hops.hopsworks.api.python.command.CommandDTO;
+import io.hops.hopsworks.api.python.environment.command.custom.EnvironmentCustomCommandsResource;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
@@ -38,6 +39,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
@@ -64,6 +66,8 @@ public class EnvironmentCommandsResource {
   private CommandBuilder commandBuilder;
   @EJB
   private EnvironmentController environmentController;
+  @Inject
+  private EnvironmentCustomCommandsResource environmentCustomCommandsResource;
   
   private Project project;
   private String pythonVersion;
@@ -139,5 +143,13 @@ public class EnvironmentCommandsResource {
     environmentController.checkCondaEnabled(project, pythonVersion, false);
     commandsController.retryFailedCondaEnvOps(project);
     return Response.noContent().build();
+  }
+
+  @Logged(logLevel = LogLevel.OFF)
+  @ApiOperation(value = "Custom commands sub-resource", tags = {"EnvironmentCustomCommandsResource"})
+  @Path("custom")
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  public EnvironmentCustomCommandsResource commands() {
+    return this.environmentCustomCommandsResource.setProject(project, pythonVersion);
   }
 }

@@ -374,7 +374,8 @@ public class LibraryController {
   public Collection<PythonDep> addOngoingOperations(Collection<CondaCommands> projectCondaCommands,
                                                     Collection<PythonDep> projectDeps) {
     for(CondaCommands condaCommand: projectCondaCommands) {
-      if(condaCommand.getInstallType().equals(CondaInstallType.ENVIRONMENT))
+      if(condaCommand.getInstallType().equals(CondaInstallType.ENVIRONMENT)
+          || condaCommand.getInstallType().equals(CondaInstallType.CUSTOM_COMMANDS))
           continue;
 
       PythonDep pythonDep = getOrCreateDep(condaCommand.getChannelUrl(),

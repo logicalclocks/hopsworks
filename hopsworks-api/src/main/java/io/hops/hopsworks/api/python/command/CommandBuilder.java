@@ -110,10 +110,7 @@ public class CommandBuilder {
     uri(dto, uriInfo);
     expand(dto, resourceRequest);
     if (dto.isExpand()) {
-      dto.setStatus(command.getStatus().name());
-      dto.setOp(command.getOp().name());
-      dto.setInstallType(command.getInstallType().name());
-      dto.setErrorMessage(command.getErrorMsg());
+      expand(dto, command);
     }
     return dto;
   }
@@ -124,10 +121,7 @@ public class CommandBuilder {
     uriItems(dto, uriInfo, command, project);
     expand(dto, resourceRequest);
     if (dto.isExpand()) {
-      dto.setStatus(command.getStatus().name());
-      dto.setOp(command.getOp().name());
-      dto.setInstallType(command.getInstallType().name());
-      dto.setErrorMessage(command.getErrorMsg());
+      expand(dto, command);
     }
     return dto;
   }
@@ -138,10 +132,7 @@ public class CommandBuilder {
     uriItems(dto, uriInfo, project, libName, command);
     expand(dto, resourceRequest);
     if (dto.isExpand()) {
-      dto.setStatus(command.getStatus().name());
-      dto.setOp(command.getOp().name());
-      dto.setInstallType(command.getInstallType().name());
-      dto.setErrorMessage(command.getErrorMsg());
+      expand(dto, command);
     }
     return dto;
   }
@@ -237,5 +228,14 @@ public class CommandBuilder {
     }
     return dto;
   }
-  
+
+  private void expand(CommandDTO dto, CondaCommands command) {
+    dto.setId(command.getId());
+    dto.setStatus(command.getStatus().name());
+    dto.setOp(command.getOp().name());
+    dto.setInstallType(command.getInstallType().name());
+    dto.setErrorMessage(command.getErrorMsg());
+    dto.setArgs(command.getArg());
+    dto.setCustomCommandsFile(command.getCustomCommandsFile());
+  }
 }
