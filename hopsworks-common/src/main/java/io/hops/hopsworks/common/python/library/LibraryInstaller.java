@@ -19,6 +19,8 @@ import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.python.commands.CommandsController;
 import io.hops.hopsworks.common.python.environment.DockerFileController;
@@ -42,6 +44,7 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.hadoop.fs.Path;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -112,7 +115,10 @@ public class LibraryInstaller {
   @EJB
   private DockerFileController dockerFileController;
   @EJB
+  private DistributedFsService dfs;
+  @EJB
   private PayaraClusterManager payaraClusterManager;
+
   
   private Timer timer;
 
@@ -215,6 +221,9 @@ public class LibraryInstaller {
             case SYNC_BASE_ENV:
               syncBaseLibraries(commandToExecute);
               break;
+            case CUSTOM_COMMANDS:
+              buildWithCustomCommands(commandToExecute);
+              break;
             default:
               throw new UnsupportedOperationException("conda command unknown: " + commandToExecute.getOp());
           }
@@ -231,6 +240,7 @@ public class LibraryInstaller {
       }
     }
   }
+
   
   private String errorMsg(Throwable ex) {
     return errorMsg(ex, "");
@@ -313,6 +323,42 @@ public class LibraryInstaller {
     projectFacade.update(project);
     projectFacade.flushEm();
     return project;
+  }
+
+  private void buildWithCustomCommands(CondaCommands cc) throws ProjectException, ServiceDiscoveryException,
+      ServiceException, UserException, PythonException {
+    Project project = getProject(cc);
+    File cwd = dockerFileController.createTmpDir(cc.getProjectId());
+    try{
+      String baseImage = projectUtils.getFullDockerImageName(project, false);
+      String dockerFileName = "dockerFile_" + cc.getProjectId().getName();
+      DockerFileController.BuildImageDetails customCommandsDockerFile
+          = dockerFileController.installLibrary(cwd, dockerFileName, baseImage, cc);
+      String nextDockerImageName = getNextDockerImageName(project);
+      dockerImageController.buildImage(nextDockerImageName,
+          customCommandsDockerFile.dockerFile.getAbsolutePath(),
+          cwd,
+          customCommandsDockerFile.dockerBuildOpts);
+      updateProjectDockerImage(cc, nextDockerImageName);
+    } finally {
+      try {
+        DistributedFileSystemOps dfso = dfs.getDfsOps();
+        try {
+          Path artifactPath = new Path(Utils.getProjectPath(project.getName()) + "Logs/Docker",
+              cc.getId() + Settings.DOCKER_CUSTOM_COMMANDS_POST_BUILD_ARTIFACT_DIR_SUFFIX);
+          dfso.mkdirs(artifactPath, dfso.getParentPermission(artifactPath));
+          File commandsFile = new File(cc.getCustomCommandsFile());
+          dfso.copyFromLocal(false, new Path(cwd.toString(), commandsFile.getName()), artifactPath);
+        } catch (Exception e){
+          LOG.log(Level.WARNING, "Failed copy commands file for conda build: " + cc.getId(), e.getMessage());
+        } finally {
+          dfs.closeDfsClient(dfso);
+        }
+        FileUtils.deleteDirectory(cwd);
+      } catch (IOException e) {
+        LOG.log(Level.WARNING, "Failed removing docker file - " + cc.getId(), e.getMessage());
+      }
+    }
   }
 
   private void installLibrary(CondaCommands cc)

@@ -136,7 +136,7 @@ public class CondaCommands implements Serializable {
   @Size(max = 255)
   @Column(name = "channel_url")
   private String channelUrl;
-  @Size(max = 255)
+  @Size(max = 11000)
   @Column(name = "arg")
   private String arg="";
   @Size(max = 255)
@@ -192,7 +192,11 @@ public class CondaCommands implements Serializable {
   @Size(max = 10000)
   @Column(name = "error_message")
   private String errorMsg="";
-  
+
+  @Size(max = 255)
+  @Column(name = "custom_commands_file")
+  private String customCommandsFile;
+
   public CondaCommands() {
   }
 
@@ -330,7 +334,11 @@ public class CondaCommands implements Serializable {
   public void setErrorMsg(String errorMsg) {
     this.errorMsg = errorMsg.substring(Math.max(0, errorMsg.length() - 10000), errorMsg.length());
   }
-  
+
+  public String getCustomCommandsFile() { return customCommandsFile; }
+
+  public void setCustomCommandsFile(String customCommandsFile) { this.customCommandsFile = customCommandsFile; }
+
   @Override
   public int hashCode() {
     int hash = 0;

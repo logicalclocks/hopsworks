@@ -151,13 +151,15 @@ public class CondaCommandFacade extends AbstractFacade<CondaCommands> {
   public CollectionInfo findAllEnvCmdByProject(Integer offset, Integer limit,
       Set<? extends AbstractFacade.FilterBy> filter, Set<? extends AbstractFacade.SortBy> sort, Project project) {
     String queryStr = buildQuery("SELECT c FROM CondaCommands c ", filter, sort,
-        "c.installType = :installType AND c.projectId = :project ");
+        "(c.installType = :environment OR c.installType = :customCommands) AND c.projectId = :project ");
     String queryCountStr = buildQuery("SELECT COUNT(c.id) FROM CondaCommands c ", filter, sort,
-        "c.installType = :installType AND c.projectId = :project ");
+        "(c.installType = :environment OR c.installType = :customCommands) AND c.projectId = :project ");
     Query query = em.createQuery(queryStr, CondaCommands.class)
-        .setParameter("installType", CondaInstallType.ENVIRONMENT).setParameter("project", project);
+        .setParameter("environment", CondaInstallType.ENVIRONMENT).setParameter("project", project)
+        .setParameter("customCommands", CondaInstallType.CUSTOM_COMMANDS);
     Query queryCount = em.createQuery(queryCountStr, CondaCommands.class)
-        .setParameter("installType", CondaInstallType.ENVIRONMENT).setParameter("project", project);
+        .setParameter("environment", CondaInstallType.ENVIRONMENT).setParameter("project", project)
+        .setParameter("customCommands", CondaInstallType.CUSTOM_COMMANDS);;
     return findAll(offset, limit, filter, query, queryCount);
   }
 

@@ -16,10 +16,14 @@
 package io.hops.hopsworks.common.python.environment;
 
 import com.google.common.base.Strings;
+import freemarker.template.TemplateException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.common.util.TemplateEngine;
+import io.hops.hopsworks.common.util.templates.python.DockerCustomCommandsTemplate;
+import io.hops.hopsworks.common.util.templates.python.DockerCustomCommandsTemplateBuilder;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.jupyter.config.GitBackend;
@@ -33,12 +37,20 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 
 @Stateless
@@ -53,6 +65,8 @@ public class DockerFileController {
   private DistributedFsService dfs;
   @EJB
   private SecretsController secretsController;
+  @EJB
+  private TemplateEngine templateEngine;
 
   public File createTmpDir(Project project) {
     File tmpDir = new File("/tmp/docker/" + project.getName());
@@ -222,6 +236,10 @@ public class DockerFileController {
             }
             dockerBuildOpts.add(DOCKER_NO_CACHE_OPT);
             break;
+          case CUSTOM_COMMANDS:
+            copyCustomCommandsArtifactsToLocal(baseDir.getPath(), cc);
+            customCommandsDockerfile(writer, cc, baseDir);
+            break;
           case ENVIRONMENT:
           default:
             throw new UnsupportedOperationException("install type unknown: " + cc.getInstallType());
@@ -281,6 +299,54 @@ public class DockerFileController {
       dfso.copyToLocal(source, destPath);
     }
     finally {
+      if (dfso != null) {
+        dfso.close();
+      }
+    }
+  }
+
+  public void customCommandsDockerfile(BufferedWriter writer, CondaCommands cc, File baseDir) throws IOException {
+    // 1. Configure the Docker commands from the template
+    File bashScript = new File(cc.getCustomCommandsFile());
+    DockerCustomCommandsTemplate template = DockerCustomCommandsTemplateBuilder.newBuilder()
+        .setCommandScript(bashScript.getName())
+        .build();
+    File dockerCommandsFile = new File(baseDir, Settings.DOCKER_CUSTOM_COMMANDS_GENERATED_FILE_NAME);
+    if (!dockerCommandsFile.exists()) {
+      try (Writer out = new FileWriter(dockerCommandsFile, false)) {
+        Map<String, Object> dataModel = new HashMap<>(1);
+        dataModel.put("args", template);
+        try {
+          templateEngine.template(Settings.DOCKER_CUSTOM_COMMANDS_TEMPLATE_NAME, dataModel, out);
+        } catch (TemplateException ex) {
+          throw new IOException(ex);
+        }
+      }
+    }
+    String dockerCommands = new String(Files.readAllBytes(Paths.get(dockerCommandsFile.toString())));
+    writer.write("\n\n" + dockerCommands + "\n\n");
+    // dummy command so we concatenate with other conda commands we run at the end
+    writer.write("RUN echo '' ");
+    try {
+      Files.delete(Paths.get(dockerCommandsFile.toString()));
+    } catch (IOException e) {
+      // we can fail silently
+    }
+  }
+
+  private void copyCustomCommandsArtifactsToLocal(String destPath, CondaCommands cc) throws IOException {
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfs.getDfsOps();
+      ArrayList<String> artifacts = new ArrayList<>();
+      artifacts.add(cc.getCustomCommandsFile());
+      if (!Strings.isNullOrEmpty(cc.getArg())) {
+        artifacts.addAll(Arrays.asList(cc.getArg().split(",")));
+      }
+      for (String artifact: artifacts) {
+        dfso.copyToLocal(artifact, destPath);
+      }
+    } finally {
       if (dfso != null) {
         dfso.close();
       }

@@ -22,14 +22,16 @@ public enum CondaOp {
   UNINSTALL,
   EXPORT,
   IMPORT,
-  SYNC_BASE_ENV;
+  SYNC_BASE_ENV,
+  CUSTOM_COMMANDS;
 
   public static boolean isEnvOp(CondaOp op) {
     return op.compareTo(CondaOp.CREATE) == 0 ||
            op.compareTo(CondaOp.REMOVE) == 0 ||
            op.compareTo(CondaOp.EXPORT) == 0 ||
            op.compareTo(CondaOp.IMPORT) == 0 ||
-           op.compareTo(CondaOp.SYNC_BASE_ENV) == 0;
+           op.compareTo(CondaOp.SYNC_BASE_ENV) == 0 ||
+           op.compareTo(CondaOp.CUSTOM_COMMANDS) == 0;
   }
 
   public static boolean isLibraryOp(CondaOp op) {

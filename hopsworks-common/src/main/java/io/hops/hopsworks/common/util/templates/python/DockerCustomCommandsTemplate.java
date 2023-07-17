@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2020, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2023, Hopsworks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -13,16 +13,16 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.persistence.entity.python;
+package io.hops.hopsworks.common.util.templates.python;
 
-public enum CondaInstallType {
-  ENVIRONMENT,
-  CONDA,
-  PIP,
-  EGG,
-  WHEEL,
-  GIT,
-  REQUIREMENTS_TXT,
-  ENVIRONMENT_YAML,
-  CUSTOM_COMMANDS
+public class DockerCustomCommandsTemplate {
+  private String commandScript;
+
+  private DockerCustomCommandsTemplate(){}
+
+  public DockerCustomCommandsTemplate(DockerCustomCommandsTemplateBuilder builder) {
+    this.commandScript = builder.getCommandScript();
+  }
+
+  public String getCommandScript() { return commandScript; }
 }

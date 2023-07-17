@@ -22,10 +22,17 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class CommandDTO extends RestDTO<CommandDTO> {
 
+  private Integer id;
   private String op;
   private String installType;
   private String status;
   private String errorMessage;
+  private String customCommandsFile;
+  private String args;
+
+  public Integer getId() { return id; }
+
+  public void setId(Integer id) { this.id = id; }
 
   public String getOp() {
     return op;
@@ -58,4 +65,13 @@ public class CommandDTO extends RestDTO<CommandDTO> {
   public void setInstallType(String installType) {
     this.installType = installType;
   }
+
+
+  public String getCustomCommandsFile() { return customCommandsFile; }
+
+  public void setCustomCommandsFile(String customCommandsFile) { this.customCommandsFile = customCommandsFile; }
+
+  public String getArgs() { return args; }
+
+  public void setArgs(String args) { this.args = args; }
 }
