@@ -101,8 +101,8 @@
     <payara.extras.version>5.2022.5</payara.extras.version>
     <ehcache.version>3.7.0</ehcache.version>
     <opensearch-rest-high-level-client.version>1.3.3</opensearch-rest-high-level-client.version>
-    <flink-clients_2.11.version>1.14.3</flink-clients_2.11.version>
-    <flink-yarn_2.11.version>1.14.3.1</flink-yarn_2.11.version>
+    <flink-clients.version>1.17.1</flink-clients.version>
+    <flink-yarn.version>1.17.1.0</flink-yarn.version>
     <freemarker.version>2.3.29</freemarker.version>
     <google-gson.version>2.2</google-gson.version>
     <google-guava.version>27.0-jre</google-guava.version>
@@ -382,8 +382,8 @@
       </dependency>
       <dependency>
         <groupId>io.hops.flink</groupId>
-        <artifactId>flink-yarn_2.11</artifactId>
-        <version>${flink-yarn_2.11.version}</version>
+        <artifactId>flink-yarn</artifactId>
+        <version>${flink-yarn.version}</version>
         <exclusions>
           <exclusion>
             <groupId>org.apache.hadoop</groupId>
@@ -671,14 +671,8 @@
       </dependency>
       <dependency>
         <groupId>org.apache.flink</groupId>
-        <artifactId>flink-clients_2.11</artifactId>
-        <version>${flink-clients_2.11.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-hadoop-fs</artifactId>
-          </exclusion>
-        </exclusions>
+        <artifactId>flink-clients</artifactId>
+        <version>${flink-clients.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.htrace</groupId>
