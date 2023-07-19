@@ -145,7 +145,7 @@
     <spnego.version>7.0</spnego.version>
     <swagger-annotations.version>1.6.2</swagger-annotations.version>
     <swagger.jersey2.jaxrs.version>1.6.2</swagger.jersey2.jaxrs.version>
-    <zookeeper.version>3.7.1</zookeeper.version>
+    <zookeeper.version>3.8.2</zookeeper.version>
   </properties>
 
   <dependencyManagement>
