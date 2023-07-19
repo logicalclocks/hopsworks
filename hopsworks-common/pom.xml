@@ -124,11 +124,11 @@
     </dependency>
     <dependency>
       <groupId>org.apache.flink</groupId>
-      <artifactId>flink-clients_2.11</artifactId>
+      <artifactId>flink-clients</artifactId>
     </dependency>
     <dependency>
       <groupId>io.hops.flink</groupId>
-      <artifactId>flink-yarn_2.11</artifactId>
+      <artifactId>flink-yarn</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
