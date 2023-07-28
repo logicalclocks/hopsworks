@@ -197,8 +197,17 @@ public class FsJobManagerController {
   }
   
   private Jobs setupAndStartJob(Project project, Users user, Featurestore featurestore, String entityName,
-      Integer entityVersion, JobEntityType type, String op, String configPrefix, boolean nameIncludeTimestamp)
-      throws FeaturestoreException, JobException, GenericException, ProjectException, ServiceException {
+    Integer entityVersion, JobEntityType type, String op, String configPrefix,
+    boolean nameIncludeTimestamp)
+    throws FeaturestoreException, JobException, GenericException, ProjectException, ServiceException {
+    return setupAndStartJob(project, user, featurestore, entityName, entityVersion, null, type, op, configPrefix,
+      nameIncludeTimestamp);
+  }
+  
+  private Jobs setupAndStartJob(Project project, Users user, Featurestore featurestore, String entityName,
+    Integer entityVersion, Integer tdVersion, JobEntityType type, String op, String configPrefix,
+    boolean nameIncludeTimestamp)
+    throws FeaturestoreException, JobException, GenericException, ProjectException, ServiceException {
     DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
     Map<String, String> jobConfiguration = new HashMap<>();
 
@@ -213,7 +222,10 @@ public class FsJobManagerController {
       jobConfiguration.put("type", type.toString());
       jobConfiguration.put("name", entityName);
       jobConfiguration.put("version", String.valueOf(entityVersion));
-
+      if (tdVersion != null) {
+        jobConfiguration.put("td_version", String.valueOf(tdVersion));
+      }
+      
       String jobConfigurationStr = objectMapper.writeValueAsString(jobConfiguration);
       writeToHDFS(jobConfigurationPath, jobConfigurationStr, udfso);
 
@@ -285,6 +297,7 @@ public class FsJobManagerController {
       throws FeaturestoreException, JobException, GenericException, ProjectException, ServiceException {
     String entityName;
     Integer entityVersion;
+    Integer tdVersion = null;
     JobEntityType type;
 
     if (featureGroup != null) {
@@ -298,11 +311,12 @@ public class FsJobManagerController {
       entityVersion = featureGroup.getVersion();
     } else {
       entityName = trainingDataset.getName();
-      entityVersion = trainingDataset.getVersion();
+      entityVersion = trainingDataset.getFeatureView().getVersion();
+      tdVersion = trainingDataset.getVersion();
       type = JobEntityType.TD;
     }
 
-    return setupAndStartJob(project, user, featurestore, entityName, entityVersion, type, COMPUTE_STATS_OP,
+    return setupAndStartJob(project, user, featurestore, entityName, entityVersion, tdVersion, type, COMPUTE_STATS_OP,
       "statistics", true);
   }
 
