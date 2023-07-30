@@ -23,9 +23,6 @@
 angular.module('hopsWorksApp')
         .factory('AirflowService', ['$http', function ($http) {
             return {
-              getSecretPath: function (projectId) {
-                return $http.get('/api/project/' + projectId + '/airflow/secretDir');
-              },
               storeAirflowJWT: function (projectId) {
                 return $http.post('/api/project/' + projectId + "/airflow/jwt")
               },
