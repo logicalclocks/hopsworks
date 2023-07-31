@@ -43,6 +43,9 @@ import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
@@ -71,6 +74,7 @@ import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.yarn.YarnClientYarnClusterInformationRetriever;
 import org.apache.flink.yarn.YarnClusterDescriptor;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.client.api.YarnClient;
@@ -114,6 +118,10 @@ public class FlinkController {
   @EJB
   private InodeController inodeController;
   @EJB
+  private DatasetController datasetController;
+  @EJB
+  private DistributedFsService dfs;
+  @EJB
   private KafkaBrokers kafkaBrokers;
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
@@ -122,7 +130,7 @@ public class FlinkController {
 
   
   public Execution startJob(final Jobs job, final Users user)
-      throws GenericException, JobException, ServiceException {
+    throws GenericException, JobException, ServiceException {
     //First: some parameter checking.
     if (job == null) {
       throw new NullPointerException("Cannot run a null job.");
@@ -132,7 +140,7 @@ public class FlinkController {
       throw new IllegalArgumentException(
         "Job configuration is not a Flink job configuration.");
     }
-
+    
     // Set Hopsworks consul service domain, don't use the address, use the name
     String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
     FlinkJob flinkjob = null;
@@ -156,7 +164,11 @@ public class FlinkController {
       throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_NOT_FOUND, Level.SEVERE,
           "job: " + job.getId() + ", user:" + user.getUsername(), ex.getMessage(), ex);
     }
-
+  
+    // for backwards compatibility
+    createSubResourceDirs(job.getProject(), user, ".flinkStaging");
+    createSubResourceDirs(job.getProject(), user, ".flinkCheckpoints");
+  
     if (flinkjob == null) {
       throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.WARNING,
         "Could not instantiate job with name: " + job.getName() + " and id: " + job.getId(),
@@ -245,6 +257,7 @@ public class FlinkController {
     if (Strings.isNullOrEmpty(archivePath)) {
       throw new IllegalArgumentException("Flink historyserver.archive.fs.dir property was not provided");
     }
+
     //Read all completed jobs from "historyserver.archive.fs.dir"
     //Flink history server caches old jobs locally. Server is setup to restart once a day, but until it does we might
     // can jobs that don't exist
@@ -256,5 +269,34 @@ public class FlinkController {
       }
     }
     throw new UserNotFoundException("Flink job belongs to a deleted project or a removed project member.");
+  }
+  
+  /**
+   * Create Flink's staging and checkpoint directories if it doesn't exist. This function is used for backwards
+   * compatibility.
+   *
+   * @param project
+   * @param user
+   * @param subDir
+   */
+  private void createSubResourceDirs(Project project, Users user, String subDir) {
+  
+    Path dsPath = new Path(File.separator + "Projects" + File.separator + project.getName() + File.separator
+      + Settings.PROJECT_STAGING_DIR);
+    Path subDirPath = new Path(dsPath, subDir);
+    
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfs.getDfsOps(project, user);
+      if (!dfso.exists(subDirPath)) {
+        dfso.mkdir(subDirPath);
+      }
+    } catch (IOException e) {
+      LOGGER.log(Level.SEVERE, "Could not create Flink sub resource directory", e);
+    } finally {
+      if (dfso != null) {
+        dfso.close();
+      }
+    }
   }
 }
