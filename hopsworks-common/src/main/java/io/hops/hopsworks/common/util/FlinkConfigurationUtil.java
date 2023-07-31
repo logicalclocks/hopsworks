@@ -46,7 +46,8 @@ public class FlinkConfigurationUtil extends ConfigurationUtil {
       new ConfigProperty(
         Settings.FLINK_STATE_CHECKPOINTS_DIR,
         HopsUtils.OVERWRITE,
-        "hdfs://" + Utils.getProjectPath(project.getName()) + Settings.PROJECT_STAGING_DIR + "/flink"));
+        "hdfs://" + Utils.getProjectPath(project.getName()) + Settings.PROJECT_STAGING_DIR +
+         "/.flinkCheckpoints"));
     
     if (extraJavaOptions == null) {
       extraJavaOptions = new HashMap<>();

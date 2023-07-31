@@ -2157,7 +2157,7 @@ public class Settings implements Serializable {
   }
 
   public static final String JUPYTER_PIDS = "/tmp/jupyterNotebookServer.pids";
-  private String RESOURCE_DIRS = ".sparkStaging;spark-warehouse";
+  private String RESOURCE_DIRS = ".sparkStaging;spark-warehouse;.flinkStaging;.flinkCheckpoints";
 
   public synchronized String getResourceDirs() {
     checkCache();
