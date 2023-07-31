@@ -187,7 +187,18 @@ public class DistributedFileSystemOps {
   public void copyToLocal(String src, String dest) throws IOException {
     dfs.copyToLocalFile(new Path(src), new Path(dest));
   }
-
+  
+  /**
+   * Create a new folder on the given path only if the parent folders exist
+   * <p/>
+   * @param path
+   * @return True if successful.
+   * @throws java.io.IOException
+   */
+  public boolean mkdir(Path path) throws IOException {
+    return dfs.mkdir(path, FsPermission.getDefault());
+  }
+  
   /**
    * Create a new folder on the given path only if the parent folders exist
    * <p/>
@@ -212,8 +223,7 @@ public class DistributedFileSystemOps {
     Path location = new Path(path);
     return dfs.mkdir(location, FsPermission.getDefault());
   }
-
-
+  
   /**
    * Create a new directory and its parent directory on the given path.
    * <p/>

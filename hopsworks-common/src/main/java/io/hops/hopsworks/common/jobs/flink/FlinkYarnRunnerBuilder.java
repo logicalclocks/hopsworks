@@ -115,7 +115,7 @@ public class FlinkYarnRunnerBuilder {
       throws IOException, ServiceDiscoveryException {
   
     String stagingPath = File.separator + "Projects" + File.separator + project.getName() + File.separator
-      + Settings.PROJECT_STAGING_DIR;
+      + Settings.PROJECT_STAGING_DIR +  "/.flinkStaging/" +  hopsworksUser.getUsername();
   
     Configuration conf = services.getSettings().getConfiguration();
     //Create the YarnRunner builder for Flink, proceed with setting values
