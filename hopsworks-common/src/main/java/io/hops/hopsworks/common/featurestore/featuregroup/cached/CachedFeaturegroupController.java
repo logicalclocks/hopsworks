@@ -303,24 +303,15 @@ public class CachedFeaturegroupController {
    * @return the converted DTO representation
    */
   public CachedFeaturegroupDTO convertCachedFeaturegroupToDTO(Featuregroup featuregroup, Project project, Users user)
-      throws FeaturestoreException, ServiceException {
-    if (featuregroup.getExpectationSuite() != null) {
-      featuregroup.setExpectationSuite(
-        expectationSuiteController.addAllExpectationIdToMetaField(featuregroup.getExpectationSuite()));
-    }
+      throws ServiceException {
     CachedFeaturegroupDTO cachedFeaturegroupDTO = new CachedFeaturegroupDTO(featuregroup);
-    List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS = getFeaturesDTO(featuregroup.getCachedFeaturegroup(),
-      featuregroup.getId(), featuregroup.getFeaturestore(), project, user);
 
     if (settings.isOnlineFeaturestore() && featuregroup.isOnlineEnabled()) {
       cachedFeaturegroupDTO.setOnlineEnabled(true);
       cachedFeaturegroupDTO.setOnlineTopicName(onlineFeaturegroupController
               .onlineFeatureGroupTopicName(project.getId(), featuregroup.getId(),
                 Utils.getFeaturegroupName(featuregroup)));
-      featureGroupFeatureDTOS = onlineFeaturegroupController.getFeaturegroupFeatures(featuregroup,
-        featureGroupFeatureDTOS);
     }
-    cachedFeaturegroupDTO.setFeatures(featureGroupFeatureDTOS);
     cachedFeaturegroupDTO.setName(featuregroup.getName());
     cachedFeaturegroupDTO.setTimeTravelFormat(featuregroup.getCachedFeaturegroup().getTimeTravelFormat());
     cachedFeaturegroupDTO.setDescription(
@@ -336,22 +327,6 @@ public class CachedFeaturegroupController {
     return cachedFeaturegroupDTO;
   }
   
-  public List<FeatureGroupFeatureDTO> getFeaturesDTO(StreamFeatureGroup streamFeatureGroup,
-    Integer featureGroupId, Featurestore featurestore,
-    Project project, Users user) throws FeaturestoreException {
-    Collection<CachedFeatureExtraConstraints> featureExtraConstraints =
-      streamFeatureGroup.getFeaturesExtraConstraints();
-
-    HiveTbls hiveTable = streamFeatureGroup.getHiveTbls();
-  
-    List<SQLDefaultConstraint> defaultConstraints =
-      offlineFeatureGroupController.getDefaultConstraints(featurestore, hiveTable.getTblName(), project, user);
-    Collection<CachedFeature> cachedFeatures = streamFeatureGroup.getCachedFeatures();
-  
-    return getFeatureGroupFeatureDTOS(featureExtraConstraints, defaultConstraints, hiveTable, cachedFeatures,
-      featureGroupId, true);
-  }
-  
   public List<FeatureGroupFeatureDTO> getFeaturesDTO(CachedFeaturegroup cachedFeaturegroup, Integer featureGroupId,
     Featurestore featurestore, Project project, Users user) throws FeaturestoreException {
     Collection<CachedFeatureExtraConstraints> featureExtraConstraints =
@@ -362,11 +337,23 @@ public class CachedFeaturegroupController {
       offlineFeatureGroupController.getDefaultConstraints(featurestore, hiveTable.getTblName(), project, user);
     
     Collection<CachedFeature> cachedFeatures = cachedFeaturegroup.getCachedFeatures();
-  
+
     return getFeatureGroupFeatureDTOS(featureExtraConstraints, defaultConstraints, hiveTable, cachedFeatures,
       featureGroupId, cachedFeaturegroup.getTimeTravelFormat() == TimeTravelFormat.HUDI);
   }
-  
+
+  public List<FeatureGroupFeatureDTO> getFeaturesDTOOnlineChecked(Featuregroup featuregroup,
+      CachedFeaturegroup cachedFeaturegroup, Integer featureGroupId,
+      Featurestore featurestore, Project project, Users user) throws FeaturestoreException {
+    List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS =
+        getFeaturesDTO(cachedFeaturegroup, featureGroupId, featurestore, project, user);
+    if (settings.isOnlineFeaturestore() && featuregroup.isOnlineEnabled()) {
+      featureGroupFeatureDTOS = onlineFeaturegroupController.getFeaturegroupFeatures(featuregroup,
+          featureGroupFeatureDTOS);
+    }
+    return featureGroupFeatureDTOS;
+  }
+
   public List<FeatureGroupFeatureDTO> getFeatureGroupFeatureDTOS(
     Collection<CachedFeatureExtraConstraints> featureExtraConstraints, List<SQLDefaultConstraint> defaultConstraints,
     HiveTbls hiveTable, Collection<CachedFeature> cachedFeatures, Integer featureGroupId, boolean hudiFormat) {
@@ -411,7 +398,7 @@ public class CachedFeaturegroupController {
     if (hudiFormat){
       featureGroupFeatureDTOS = dropHudiSpecFeatureGroupFeature(featureGroupFeatureDTOS);
     }
-  
+
     return featureGroupFeatureDTOS;
   }
   
