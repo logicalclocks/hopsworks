@@ -26,15 +26,14 @@ import io.hops.hopsworks.api.featurestore.datavalidationv2.reports.ValidationRep
 import io.hops.hopsworks.api.featurestore.datavalidationv2.results.ValidationResultResource;
 import io.hops.hopsworks.api.featurestore.datavalidationv2.suites.ExpectationSuiteResource;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
-import io.hops.hopsworks.api.jobs.JobDTO;
-import io.hops.hopsworks.api.jobs.JobsBuilder;
-import io.hops.hopsworks.api.provenance.FeatureGroupProvenanceResource;
-import io.hops.hopsworks.common.featurestore.featuregroup.stream.DeltaStreamerJobConf;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.api.jobs.JobDTO;
+import io.hops.hopsworks.api.jobs.JobsBuilder;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.provenance.FeatureGroupProvenanceResource;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
@@ -42,10 +41,11 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
-import io.hops.hopsworks.common.featurestore.featuregroup.ImportFgJobConf;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.ImportFgJobConf;
 import io.hops.hopsworks.common.featurestore.featuregroup.IngestionJob;
+import io.hops.hopsworks.common.featurestore.featuregroup.stream.DeltaStreamerJobConf;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
@@ -152,6 +152,8 @@ public class FeaturegroupService {
   private FeatureGroupTagResource tagResource;
   @Inject
   private FeatureGroupProvenanceResource provenanceResource;
+  @EJB
+  private FeaturegroupBuilder featuregroupBuilder;
 
   private Project project;
   private Featurestore featurestore;
@@ -212,20 +214,28 @@ public class FeaturegroupService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
-    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiOperation(value = "Get the list of feature groups for a featurestore",
       response = FeaturegroupDTO.class,
       responseContainer = "List")
   public Response getFeaturegroupsForFeaturestore(
-          @BeanParam FeatureGroupBeanParam featureGroupBeanParam,
-          @Context HttpServletRequest req,
-          @Context SecurityContext sc)
+      @BeanParam
+          FeatureGroupBeanParam featureGroupBeanParam,
+      @Context
+          HttpServletRequest req,
+      @Context
+          SecurityContext sc,
+      @BeanParam
+          FeaturegroupExpansionBeanParam expansion)
       throws FeaturestoreException, ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    List<FeaturegroupDTO> featuregroups = featuregroupController
-      .getFeaturegroupsForFeaturestore(featurestore, project, user);
+    List<Featuregroup> featuregroups = featuregroupController
+        .getFeaturegroupsForFeaturestore(featurestore, project, user);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.FEATUREGROUPS);
+    resourceRequest.setExpansions(expansion.getResources());
     GenericEntity<List<FeaturegroupDTO>> featuregroupsGeneric =
-        new GenericEntity<List<FeaturegroupDTO>>(featuregroups) {};
+        new GenericEntity<List<FeaturegroupDTO>>(
+            featuregroupBuilder.build(featuregroups, project, user, resourceRequest)) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupsGeneric).build();
   }
 

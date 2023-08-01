@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade
 import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.ValidationReportController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteController;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteDTO;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
@@ -48,9 +49,9 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
-import io.hops.hopsworks.common.security.QuotasEnforcement;
-import io.hops.hopsworks.common.security.QuotaEnforcementException;
 import io.hops.hopsworks.common.provenance.explicit.FeatureGroupLinkController;
+import io.hops.hopsworks.common.security.QuotaEnforcementException;
+import io.hops.hopsworks.common.security.QuotasEnforcement;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
@@ -153,18 +154,13 @@ public class FeaturegroupController {
 
   /**
    * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
-   *
    * @param featurestore featurestore to query featuregroups for
-   * @return list of XML/JSON DTOs of the featuregroups
+   * @param project
+   * @param user
+   * @return list of feature groups
    */
-  public List<FeaturegroupDTO> getFeaturegroupsForFeaturestore(Featurestore featurestore, Project project, Users user)
-          throws FeaturestoreException, ServiceException {
-    List<Featuregroup> featuregroups = featuregroupFacade.findByFeaturestore(featurestore);
-    List<FeaturegroupDTO> featuregroupDTOS = new ArrayList<>();
-    for (Featuregroup featuregroup : featuregroups) {
-      featuregroupDTOS.add(convertFeaturegrouptoDTO(featuregroup, project, user));
-    }
-    return featuregroupDTOS;
+  public List<Featuregroup> getFeaturegroupsForFeaturestore(Featurestore featurestore, Project project, Users user) {
+    return featuregroupFacade.findByFeaturestore(featurestore);
   }
 
   /**
@@ -324,6 +320,18 @@ public class FeaturegroupController {
    * @return a DTO representation of the entity
    */
   public FeaturegroupDTO convertFeaturegrouptoDTO(Featuregroup featuregroup, Project project, Users user)
+      throws FeaturestoreException, ServiceException {
+    return convertFeaturegrouptoDTO(featuregroup, project, user, true, true);
+  }
+
+  /**
+   * Convert a featuregroup entity to a DTO representation
+   *
+   * @param featuregroup the entity to convert
+   * @return a DTO representation of the entity
+   */
+  public FeaturegroupDTO convertFeaturegrouptoDTO(Featuregroup featuregroup, Project project, Users user,
+      Boolean includeFeatures, Boolean includeExpectationSuite)
           throws FeaturestoreException, ServiceException {
     String featurestoreName = featurestoreFacade.getHiveDbName(featuregroup.getFeaturestore().getHiveDbId());
     switch (featuregroup.getFeaturegroupType()) {
@@ -331,11 +339,29 @@ public class FeaturegroupController {
         CachedFeaturegroupDTO cachedFeaturegroupDTO =
           cachedFeaturegroupController.convertCachedFeaturegroupToDTO(featuregroup, project, user);
         cachedFeaturegroupDTO.setFeaturestoreName(featurestoreName);
+        if (includeFeatures) {
+          cachedFeaturegroupDTO.setFeatures(
+              cachedFeaturegroupController.getFeaturesDTOOnlineChecked(featuregroup,
+                  featuregroup.getCachedFeaturegroup(),
+                  featuregroup.getId(), featuregroup.getFeaturestore(), project, user));
+        }
+        if (includeExpectationSuite && featuregroup.getExpectationSuite() != null) {
+          cachedFeaturegroupDTO.setExpectationSuite(new ExpectationSuiteDTO(featuregroup.getExpectationSuite()));
+        }
         return cachedFeaturegroupDTO;
       case STREAM_FEATURE_GROUP:
         StreamFeatureGroupDTO streamFeatureGroupDTO =
           streamFeatureGroupController.convertStreamFeatureGroupToDTO(featuregroup, project, user);
         streamFeatureGroupDTO.setFeaturestoreName(featurestoreName);
+        if (includeFeatures) {
+          streamFeatureGroupDTO.setFeatures(
+              streamFeatureGroupController.getFeaturesDTOOnlineChecked(featuregroup,
+                  featuregroup.getStreamFeatureGroup(),
+                  featuregroup.getId(), featuregroup.getFeaturestore(), project, user));
+        }
+        if (includeExpectationSuite && featuregroup.getExpectationSuite() != null) {
+          streamFeatureGroupDTO.setExpectationSuite(new ExpectationSuiteDTO(featuregroup.getExpectationSuite()));
+        }
         return streamFeatureGroupDTO;
       case ON_DEMAND_FEATURE_GROUP:
         FeaturestoreStorageConnectorDTO storageConnectorDTO = null;
@@ -348,7 +374,10 @@ public class FeaturegroupController {
         OnDemandFeaturegroupDTO onDemandFeaturegroupDTO =
           onDemandFeaturegroupController.convertOnDemandFeatureGroupToDTO(featurestoreName, featuregroup,
             storageConnectorDTO);
-
+        if (includeFeatures) {
+          onDemandFeaturegroupDTO.setFeatures(
+              onDemandFeaturegroupController.getFeaturesDTO(featuregroup));
+        }
         try {
           String path = getFeatureGroupLocation(featuregroup);
           String location = featurestoreUtils.prependNameNode(path);
@@ -818,7 +847,7 @@ public class FeaturegroupController {
         return cachedFeaturegroupController.getFeaturesDTO(featuregroup.getCachedFeaturegroup(), featuregroup.getId(),
           featuregroup.getFeaturestore(), project, user);
       case STREAM_FEATURE_GROUP:
-        return cachedFeaturegroupController.getFeaturesDTO(featuregroup.getStreamFeatureGroup(), featuregroup.getId(),
+        return streamFeatureGroupController.getFeaturesDTO(featuregroup.getStreamFeatureGroup(), featuregroup.getId(),
           featuregroup.getFeaturestore(), project, user);
       case ON_DEMAND_FEATURE_GROUP:
         return featuregroup.getOnDemandFeaturegroup().getFeatures().stream()

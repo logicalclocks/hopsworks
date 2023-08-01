@@ -71,9 +71,6 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO<FeaturegroupDTO> {
         featuregroup.getCreator(), featuregroup.getVersion(),
         featuregroup.getId(), new StatisticsConfigDTO(featuregroup.getStatisticsConfig()));
     this.eventTime = featuregroup.getEventTime();
-    if (featuregroup.getExpectationSuite() != null) {
-      this.expectationSuite = new ExpectationSuiteDTO(featuregroup.getExpectationSuite());
-    }
   }
 
   public FeaturegroupDTO(Integer featurestoreId, String featurestoreName, Integer id, String name, Integer version,
