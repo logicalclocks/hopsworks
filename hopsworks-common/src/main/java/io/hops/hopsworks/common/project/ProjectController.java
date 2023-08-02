@@ -479,7 +479,7 @@ public class ProjectController {
       // inconsistencies
       try {
         openSearchController.deleteProjectIndices(project);
-        openSearchController.deleteProjectSavedObjects(projectName);
+        openSearchController.deleteProjectSavedObjects(project);
         LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 8 (opensearch cleanup): {0}",
             System.currentTimeMillis() - startTime);
         LOGGER.log(Level.INFO, projectCreationLog(projectDTO, "Deleted old OpenSearch indices"));
@@ -820,6 +820,7 @@ public class ProjectController {
         addServiceDataset(project, user, Settings.ServiceDataset.STATISTICS, dfso, udfso, Provenance.Type.DISABLED.dto);
         // add onlinefs service user to project
         futureList.add(addOnlineFsUser(project));
+        createProjectOnlineFSIndex(project, user);
         //Enable Jobs service at the same time as featurestore
         if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JOBS)) {
           if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JUPYTER)) {
@@ -1008,6 +1009,10 @@ public class ProjectController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATURESTORE, Level.SEVERE,
         "project: " + project.getName(), ex.getMessage(), ex);
     }
+  }
+
+  private void createProjectOnlineFSIndex(Project project, Users user) throws OpenSearchException, ProjectException {
+    openSearchController.createIndexPattern(project, user, "onlinefs_" + project.getId() + "-*");
   }
 
 
@@ -2384,7 +2389,7 @@ public class ProjectController {
       || projectServices.contains(ProjectServiceEnum.SERVING)) {
       openSearchController.deleteProjectIndices(project);
       LOGGER.log(Level.FINE, "removeOpenSearch-1:{0}", projectName);
-      openSearchController.deleteProjectSavedObjects(projectName);
+      openSearchController.deleteProjectSavedObjects(project);
     }
   }
 

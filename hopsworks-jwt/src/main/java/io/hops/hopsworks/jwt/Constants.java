@@ -36,6 +36,8 @@ public class Constants {
   public final static String ELK_SIGNING_KEY_NAME = "elk_jwt_signing_key";
   public final static String ELK_VALID_PROJECT_NAME = "pn";
   public final static String ELK_PROJECT_INODE_ID = "piid";
+  public final static String ELK_PROJECT_ID = "projid";
+
 
   public final static String GIT_SIGNING_KEY_NAME = "git_jwt_signing_key";
   

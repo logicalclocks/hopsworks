@@ -36,6 +36,10 @@ public class OpenSearchUtils {
   public static String getAllKibanaTenantIndex(String project){
     return getKibanaTenantIndex(project) + "*";
   }
+
+  public static String getAllKibanaTenantIndex(Integer projectId) {
+    return "onlinefs_" + projectId + "-*";
+  }
   
   public static String getProjectNameWithNoSpecialCharacters(String project){
     return project.toLowerCase().replaceAll("[^a-z0-9]+", "");
