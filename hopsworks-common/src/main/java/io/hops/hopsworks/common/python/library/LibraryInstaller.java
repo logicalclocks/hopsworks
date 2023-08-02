@@ -27,6 +27,7 @@ import io.hops.hopsworks.common.python.environment.DockerFileController;
 import io.hops.hopsworks.common.python.environment.DockerImageController;
 import io.hops.hopsworks.common.python.environment.DockerRegistryMngr;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
+import io.hops.hopsworks.common.python.environment.EnvironmentHistoryController;
 import io.hops.hopsworks.common.util.PayaraClusterManager;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
@@ -119,8 +120,9 @@ public class LibraryInstaller {
   private DistributedFsService dfs;
   @EJB
   private PayaraClusterManager payaraClusterManager;
+  @EJB
+  private EnvironmentHistoryController environmentHistoryController;
 
-  
   private Timer timer;
 
   @PostConstruct
@@ -303,8 +305,7 @@ public class LibraryInstaller {
     project = projectFacade.update(project);
     projectFacade.flushEm();
     updateInstalledDependencies(project);
-    exportEnvironment(project, cc.getUserId(), Utils.getProjectPath(project.getName()) +
-      Settings.PROJECT_PYTHON_ENVIRONMENT_FILE);
+    exportEnvironment(project, cc.getUserId());
   }
   
   private Project updateInstalledDependencies(Project project) throws ServiceException, PythonException {
@@ -417,11 +418,12 @@ public class LibraryInstaller {
       RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
   }
 
-  private String exportEnvironment(Project project, Users user, String exportPath)
+  private String exportEnvironment(Project project, Users user)
     throws ServiceException, ServiceDiscoveryException {
     String dockerImage = projectUtils.getFullDockerImageName(project, false);
     String env = dockerImageController.exportImage(dockerImage);
-    environmentController.uploadYmlInProject(project, user, env, exportPath);
+    environmentController.uploadYmlInProject(project, user, env);
+    environmentHistoryController.computeDelta(project, user);
     return env;
   }
 
@@ -429,7 +431,7 @@ public class LibraryInstaller {
     throws ServiceException, ServiceDiscoveryException, ProjectException {
 
     Project project = getProject(cc);
-    exportEnvironment(project, cc.getUserId(), cc.getArg());
+    exportEnvironment(project, cc.getUserId());
   }
 
   private void syncBaseLibraries(CondaCommands cc)
@@ -456,12 +458,12 @@ public class LibraryInstaller {
 
 
     String baseImageEnvYaml = getBaseImageEnvYaml();
-    String exportPath = Utils.getProjectPath(project.getName()) + Settings.PROJECT_PYTHON_ENVIRONMENT_FILE;
     if (baseImageEnvYaml == null) {
-      baseImageEnvYaml = exportEnvironment(project, cc.getUserId(), exportPath);
+      baseImageEnvYaml = exportEnvironment(project, cc.getUserId());
       setBaseImageEnvYaml(baseImageEnvYaml);
     } else {
-      environmentController.uploadYmlInProject(project, cc.getUserId(), baseImageEnvYaml, exportPath);
+      environmentController.uploadYmlInProject(project, cc.getUserId(), baseImageEnvYaml);
+      environmentHistoryController.computeDelta(project, cc.getUserId());
     }
   }
   

@@ -80,6 +80,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(AdminSilenceResource.class);
     register(io.hops.hopsworks.api.python.environment.command.EnvironmentCommandsResource.class);
     register(io.hops.hopsworks.api.python.environment.EnvironmentResource.class);
+    register(io.hops.hopsworks.api.python.environment.history.EnvironmentHistoryResource.class);
     register(io.hops.hopsworks.api.python.library.command.LibraryCommandsResource.class);
     register(io.hops.hopsworks.api.python.library.LibraryResource.class);
     register(io.hops.hopsworks.api.python.PythonResource.class);
