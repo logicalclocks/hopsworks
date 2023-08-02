@@ -112,13 +112,15 @@ public class OpenSearchClientController {
       }
     }
   }
-  public String[] mngIndicesGetByRegex(String regex) throws OpenSearchException {
+  public String[] mngIndicesGetByRegex(String[] regexes) throws OpenSearchException {
     GetIndexResponse response = mngIndexGet(new GetIndexRequest("*"));
     ArrayList<String> result = new ArrayList<>();
-    Pattern pattern = Pattern.compile(regex);
     for(String index : response.getIndices()) {
-      if (pattern.matcher(index).matches()) {
-        result.add(index);
+      for (String regex: regexes) {
+        Pattern pattern = Pattern.compile(regex);
+        if (pattern.matcher(index).matches()) {
+          result.add(index);
+        }
       }
     }
     return result.toArray(new String[0]);

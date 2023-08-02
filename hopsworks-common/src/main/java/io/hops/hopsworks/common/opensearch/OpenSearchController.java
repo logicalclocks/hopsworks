@@ -372,8 +372,8 @@ public class OpenSearchController {
   
   public void deleteProjectIndices(Project project) throws OpenSearchException {
     //Get all project indices
-    String[] indices = elasticClientCtrl.mngIndicesGetByRegex(project.getName() +
-      "_(((logs|serving)-\\d{4}.\\d{2}.\\d{2}))");
+    String[] indices = elasticClientCtrl.mngIndicesGetByRegex(new String[]{project.getName() +
+        "_(((logs|serving)-\\d{4}.\\d{2}.\\d{2}))", "(((onlinefs)_" + project.getId() + "-\\d{4}.\\d{2}.\\d{2}))"});
     for (String index : indices) {
       try {
         elasticClientCtrl.mngIndexDelete(index);
@@ -388,14 +388,15 @@ public class OpenSearchController {
    *
    * @param project
    */
-  public void deleteProjectSavedObjects(String project)
+  public void deleteProjectSavedObjects(Project project)
       throws OpenSearchException {
     if(!settings.isKibanaMultiTenancyEnabled()){
       throw new UnsupportedOperationException("Only multitenant kibana setup " +
           "supported.");
     }
     
-    elasticClientCtrl.mngIndexDelete(OpenSearchUtils.getAllKibanaTenantIndex(project.toLowerCase()));
+    elasticClientCtrl.mngIndexDelete(OpenSearchUtils.getAllKibanaTenantIndex(project.getName().toLowerCase()));
+    elasticClientCtrl.mngIndexDelete(OpenSearchUtils.getAllKibanaTenantIndex(project.getId()));
   }
   
   private SearchHit[] projectSearchInSharedDatasets(Integer projectId, String searchTerm,

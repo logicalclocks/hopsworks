@@ -76,9 +76,9 @@ public class OpenSearchJWTController {
     return createTokenForELK(project,
         ProjectRoleTypes.DATA_OWNER.getRole());
   }
-  
+
   public String createTokenForELKAsAdmin() throws OpenSearchException {
-    return createTokenForELK(settings.getOpenSearchAdminUser(), Optional.empty(),
+    return createTokenForELK(settings.getOpenSearchAdminUser(), null, Optional.empty(),
       OpenSearchSettings.OPENSEARCH_ADMIN_ROLE);
   }
 
@@ -91,17 +91,18 @@ public class OpenSearchJWTController {
    */
   public String createTokenForELKServices() throws OpenSearchException {
     return createTokenForELK(
-        settings.getOpenSearchServiceLogUser(), Optional.empty(), OpenSearchSettings.OPENSEARCH_SERVICE_LOG_ROLE);
+        settings.getOpenSearchServiceLogUser(), null, Optional.empty(),
+        OpenSearchSettings.OPENSEARCH_SERVICE_LOG_ROLE);
   }
   
   private String createTokenForELK(Project project, String role)
       throws OpenSearchException {
     Inode projectInode = inodeController.getProjectRoot(project.getName());
     String userRole = OpenSearchUtils.getValidRole(role);
-    return createTokenForELK(project.getName(), Optional.of(projectInode.getId()), userRole);
+    return createTokenForELK(project.getName(), project.getId(), Optional.of(projectInode.getId()), userRole);
   }
   
-  private String createTokenForELK(String project, Optional<Long> projectInodeId, String userRole)
+  private String createTokenForELK(String project, Integer projectId ,Optional<Long> projectInodeId, String userRole)
       throws OpenSearchException {
     SignatureAlgorithm alg = SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg());
     Date expiresAt =
@@ -113,6 +114,9 @@ public class OpenSearchJWTController {
           OpenSearchUtils.getProjectNameWithNoSpecialCharacters(project));
       if(projectInodeId.isPresent()) {
         claims.put(Constants.ELK_PROJECT_INODE_ID, projectInodeId.get());
+      }
+      if (projectId != null) {
+        claims.put(Constants.ELK_PROJECT_ID, projectId.toString());
       }
       return jwtController.createTokenForELK(project, settings.getJWTIssuer()
           , claims, expiresAt, alg);
