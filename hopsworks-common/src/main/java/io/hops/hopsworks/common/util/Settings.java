@@ -197,9 +197,6 @@ public class Settings implements Serializable {
 
   private static final String VARIABLE_DOWNLOAD_ALLOWED = "download_allowed";
 
-  private static final String VARIABLE_KAGENT_USER = "kagent_user";
-  private static final String VARIABLE_KAGENT_LIVENESS_MONITOR_ENABLED = "kagent_liveness_monitor_enabled";
-  private static final String VARIABLE_KAGENT_LIVENESS_THRESHOLD = "kagent_liveness_threshold";
   private static final String VARIABLE_RESOURCE_DIRS = "resources";
   private static final String VARIABLE_CERTS_DIRS = "certs_dir";
   private static final String VARIABLE_MAX_STATUS_POLL_RETRY = "max_status_poll_retry";
@@ -709,10 +706,6 @@ public class Settings implements Serializable {
       ANACONDA_DEFAULT_REPO = setStrVar(VARIABLE_ANACONDA_DEFAULT_REPO, ANACONDA_DEFAULT_REPO);
       ANACONDA_ENABLED = Boolean.parseBoolean(setStrVar(
           VARIABLE_ANACONDA_ENABLED, ANACONDA_ENABLED.toString()));
-      KAGENT_USER = setStrVar(VARIABLE_KAGENT_USER, KAGENT_USER);
-      KAGENT_LIVENESS_MONITOR_ENABLED = setBoolVar(VARIABLE_KAGENT_LIVENESS_MONITOR_ENABLED,
-          KAGENT_LIVENESS_MONITOR_ENABLED);
-      KAGENT_LIVENESS_THRESHOLD = setStrVar(VARIABLE_KAGENT_LIVENESS_THRESHOLD, KAGENT_LIVENESS_THRESHOLD);
       DOWNLOAD_ALLOWED = Boolean.parseBoolean(setStrVar(VARIABLE_DOWNLOAD_ALLOWED, DOWNLOAD_ALLOWED.toString()));
       RESOURCE_DIRS = setStrVar(VARIABLE_RESOURCE_DIRS, RESOURCE_DIRS);
       MAX_STATUS_POLL_RETRY = setIntVar(VARIABLE_MAX_STATUS_POLL_RETRY, MAX_STATUS_POLL_RETRY);
@@ -1885,26 +1878,6 @@ public class Settings implements Serializable {
     return DOWNLOAD_ALLOWED;
   }
 
-  /**
-   * kagent liveness monitor settings
-   */
-  private String KAGENT_USER = "kagent";
-  public synchronized String getKagentUser() {
-    checkCache();
-    return KAGENT_USER;
-  }
-
-  private boolean KAGENT_LIVENESS_MONITOR_ENABLED = false;
-  public synchronized boolean isKagentLivenessMonitorEnabled() {
-    checkCache();
-    return KAGENT_LIVENESS_MONITOR_ENABLED;
-  }
-
-  private String KAGENT_LIVENESS_THRESHOLD = "10s";
-  public synchronized String getKagentLivenessThreshold() {
-    checkCache();
-    return KAGENT_LIVENESS_THRESHOLD;
-  }
 
   private RESTLogLevel HOPSWORKS_REST_LOG_LEVEL = RESTLogLevel.PROD;
 

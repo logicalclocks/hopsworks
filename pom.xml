@@ -122,7 +122,6 @@
     <jersey.client.version>2.26</jersey.client.version>
     <jersey.media.multipart.version>2.26</jersey.media.multipart.version>
     <jersey.server.version>2.26</jersey.server.version>
-    <jsch.version>0.1.54</jsch.version>
     <json-schema.version>1.12.1</json-schema.version>
     <jsoup.version>1.15.3</jsoup.version>
     <junit.version>4.13.2</junit.version>
@@ -235,11 +234,6 @@
         <groupId>com.googlecode.json-simple</groupId>
         <artifactId>json-simple</artifactId>
         <version>${googlecode-json-simple.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.jcraft</groupId>
-        <artifactId>jsch</artifactId>
-        <version>${jsch.version}</version>
       </dependency>
       <dependency>
         <groupId>com.lambdista</groupId>
