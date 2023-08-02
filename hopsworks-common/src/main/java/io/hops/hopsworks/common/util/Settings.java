@@ -1980,7 +1980,8 @@ public class Settings implements Serializable {
 
   public static final String PROJECT_PYTHON_DIR = PROJECT_STAGING_DIR + "/.python";
   public static final String ENVIRONMENT_FILE = "environment.yml";
-  public static final String PROJECT_PYTHON_ENVIRONMENT_FILE = PROJECT_PYTHON_DIR + "/" + ENVIRONMENT_FILE;
+  public static final String PROJECT_PYTHON_ENVIRONMENT_FILE_DIR = PROJECT_PYTHON_DIR + "/";
+  public static final String ENVIRONMENT_FILE_DELIMETER = "-";
 
   // when user is loged in 1 otherwise 0
   public static final int IS_ONLINE = 1;

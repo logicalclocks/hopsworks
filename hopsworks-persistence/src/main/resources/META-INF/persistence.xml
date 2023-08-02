@@ -126,6 +126,8 @@
     <class>io.hops.hopsworks.persistence.entity.python.PythonEnvironment</class>
     <class>io.hops.hopsworks.persistence.entity.python.PythonDep</class>
     <class>io.hops.hopsworks.persistence.entity.python.CondaCommands</class>
+    <class>io.hops.hopsworks.persistence.entity.python.history.EnvironmentDelta</class>
+    <class>io.hops.hopsworks.persistence.entity.python.history.JSONArrayStringConverter</class>
     <class>io.hops.hopsworks.persistence.entity.remote.user.RemoteUser</class>
     <class>io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient</class>
     <class>io.hops.hopsworks.persistence.entity.remote.oauth.OauthLoginState</class>
