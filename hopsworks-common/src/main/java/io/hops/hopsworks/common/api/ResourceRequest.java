@@ -241,7 +241,9 @@ public class ResourceRequest {
     EXTRAFILTER,
     PROVENANCE,
     LINKS,
-    PROVENANCE_ARTIFACTS;
+    PROVENANCE_ARTIFACTS,
+    PROJECT_LDAP_GROUP_MAPPING,
+    ENVIRONMENT_HISTORY;
 
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());

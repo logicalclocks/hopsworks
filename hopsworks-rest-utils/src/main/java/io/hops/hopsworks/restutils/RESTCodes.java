@@ -633,7 +633,12 @@ public class RESTCodes {
     LOCAL_FILESYSTEM_ERROR(60, "Failed to write to local filesystem", Response.Status.INTERNAL_SERVER_ERROR),
     INVALID_DOCKER_COMMAND_FILE(61, "Invalid commands file provided", Response.Status.BAD_REQUEST),
     INVALID_ARTIFACT_FOR_DOCKER_COMMANDS(62, "Invalid artifact provided for docker commands",
-        Response.Status.BAD_REQUEST);
+        Response.Status.BAD_REQUEST),
+    ENVIRONMENT_YAML_READ_ERROR(63, "Failed to read yaml file", Response.Status.INTERNAL_SERVER_ERROR),
+    ENVIRONMENT_BUILD_NOT_FOUND(64, "Build not found in environment history",
+        Response.Status.NOT_FOUND),
+    ENVIRONMENT_HISTORY_READ_ERROR(65, "Failed to read environment history record from database",
+        Response.Status.INTERNAL_SERVER_ERROR);
 
     private Integer code;
     private String message;

@@ -16,8 +16,10 @@
 package io.hops.hopsworks.common.python.environment;
 
 import com.google.common.base.Strings;
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
+import io.hops.hopsworks.common.dao.python.EnvironmentHistoryFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -35,6 +37,7 @@ import io.hops.hopsworks.persistence.entity.python.CondaStatus;
 import io.hops.hopsworks.persistence.entity.python.PythonEnvironment;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
@@ -74,6 +77,9 @@ public class EnvironmentController {
   private DistributedFsService dfs;
   @EJB
   private DockerImageController dockerImageController;
+  @EJB
+  private EnvironmentHistoryFacade environmentHistoryFacade;
+
 
   private static final Logger LOGGER = Logger.getLogger(EnvironmentController.class.getName());
 
@@ -205,16 +211,25 @@ public class EnvironmentController {
     DistributedFileSystemOps udfso = null;
     try {
       udfso = dfs.getDfsOps();
-      udfso.rm(Utils.getProjectPath(project.getName()) + new Path(Settings.PROJECT_PYTHON_ENVIRONMENT_FILE), false);
+      Path pythonPath = new Path(Utils.getProjectPath(project.getName()) +
+          Settings.PROJECT_PYTHON_ENVIRONMENT_FILE_DIR);
+      if (udfso.exists(pythonPath)) {
+        FileStatus[] environmentYamls = udfso.listStatus(pythonPath);
+        for (FileStatus file: environmentYamls) {
+          udfso.rm(file.getPath(), false);
+        }
+      }
     } catch (IOException ex) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_REMOVAL_FAILED, Level.SEVERE,
           "Failed to clean up environment yaml file on path: " +
-              Settings.PROJECT_PYTHON_ENVIRONMENT_FILE, ex.getMessage(), ex);
+              Settings.PROJECT_PYTHON_ENVIRONMENT_FILE_DIR, ex.getMessage(), ex);
     } finally {
       if (udfso != null) {
         dfs.closeDfsClient(udfso);
       }
     }
+
+    environmentHistoryFacade.deleteAll(project);
 
     // Do not remove conda env if project is using the base
     if (Strings.isNullOrEmpty(project.getDockerImage()) ||
@@ -316,13 +331,15 @@ public class EnvironmentController {
     }
   }
 
-  public void uploadYmlInProject(Project project, Users user, String environmentYml, String exportPath)
-      throws ServiceException {
+  public void uploadYmlInProject(Project project, Users user, String environmentYml)
+      throws ServiceException, ServiceDiscoveryException {
     DistributedFileSystemOps udfso = null;
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
+    String exportPath = getDockerImageEnvironmentFile(project);
     try {
       udfso = dfs.getDfsOps(hdfsUser);
-      Path projectYmlPath = new Path(exportPath);
+      Path projectYmlPath =
+          new Path(getDockerImageEnvironmentFile(project));
       udfso.create(projectYmlPath, environmentYml);
     } catch (IOException ex) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_EXPORT_ERROR,
@@ -332,5 +349,16 @@ public class EnvironmentController {
         dfs.closeDfsClient(udfso);
       }
     }
+  }
+
+  public String getDockerImageEnvironmentFile(Project project) throws ServiceDiscoveryException {
+    String dockerImage = projectUtils.getFullDockerImageName(project, false);
+    String tag = dockerImage.substring(dockerImage.lastIndexOf(":") + 1);
+    return getDockerImageEnvironmentFile(project, tag);
+  }
+
+  public String getDockerImageEnvironmentFile(Project project, String dockerImageTag) {
+    return Utils.getProjectPath(project.getName()) + Settings.PROJECT_PYTHON_ENVIRONMENT_FILE_DIR + dockerImageTag
+        + Settings.ENVIRONMENT_FILE_DELIMETER + Settings.ENVIRONMENT_FILE;
   }
 }

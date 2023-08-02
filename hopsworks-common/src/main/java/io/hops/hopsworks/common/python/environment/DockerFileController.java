@@ -246,8 +246,8 @@ public class DockerFileController {
         }
         //Installing faulty libraries like broken .egg files can cause the list operation to fail
         //As we find library names and versions using that command we need to make sure it does not break
-        writer.write(" && " + getCleanupCommand(anaconda_dir) + " && " + anaconda_dir + "/bin/conda list -n "
-          + settings.getCurrentCondaEnvironment());
+        writer.write(" && " + " change_library_ownership.sh && " + getCleanupCommand(anaconda_dir)
+            + " && " + anaconda_dir + "/bin/conda list -n " + settings.getCurrentCondaEnvironment());
       }
       return new BuildImageDetails(dockerFile, dockerBuildOpts, cc.getGitApiKeyName(), apiToken);
     } catch(IOException e) {

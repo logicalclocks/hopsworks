@@ -25,12 +25,11 @@ import io.hops.hopsworks.api.project.util.DsPath;
 import io.hops.hopsworks.api.project.util.PathValidator;
 import io.hops.hopsworks.api.python.conflicts.EnvironmentConflictsResource;
 import io.hops.hopsworks.api.python.environment.command.EnvironmentCommandsResource;
+import io.hops.hopsworks.api.python.environment.history.EnvironmentHistoryResource;
 import io.hops.hopsworks.api.python.library.LibraryResource;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.PythonException;
@@ -85,6 +84,8 @@ public class EnvironmentResource {
   private EnvironmentCommandsResource environmentCommandsResource;
   @Inject
   private EnvironmentConflictsResource environmentConflictsResource;
+  @Inject
+  private EnvironmentHistoryResource environmentHistoryResource;
   @EJB
   private EnvironmentBuilder environmentBuilder;
   
@@ -163,8 +164,7 @@ public class EnvironmentResource {
     Users user = jWTHelper.getUserPrincipal(sc);
     switch ((action != null) ? action : EnvironmentDTO.Operation.CREATE) {
       case EXPORT:
-        environmentController.exportEnv(project, user, Utils.getProjectPath(project.getName()) +
-                Settings.PROJECT_PYTHON_ENVIRONMENT_FILE);
+        environmentController.exportEnv(project, user, environmentController.getDockerImageEnvironmentFile(project));
         dto = buildEnvDTO(uriInfo, null, version);
         return Response.ok().entity(dto).build();
       case CREATE:
@@ -239,5 +239,12 @@ public class EnvironmentResource {
   public EnvironmentConflictsResource conflicts(@PathParam("version") String version) {
     return this.environmentConflictsResource.setProject(project, version);
   }
-  
+
+  @Logged(logLevel = LogLevel.OFF)
+  @ApiOperation(value = "Environment history subresource", tags = {"EnvironmentHistoryResource"})
+  @Path("{version}/history")
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  public EnvironmentHistoryResource environmentHistory(@PathParam("version") String version) {
+    return this.environmentHistoryResource.init(project, version);
+  }
 }

@@ -214,6 +214,35 @@ module CondaHelper
     result
   end
 
+  def get_environment_history(projectId, version, query="?sort_by=id:desc")
+    get "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/history" + query
+    expect_status_details(200)
+  end
+
+  def upgrade_or_downgrade_library(projectId, project_name, library, version)
+    list_libraries(@project[:id], ENV['PYTHON_VERSION'])
+    this_library = json_body[:items].detect { |lib| lib[:library] == library }
+    expect(this_library).not_to be_nil
+    script = "#!/bin/bash\n\n/srv/hops/anaconda/envs/theenv/bin/pip install " + library + "==" + version
+    file = StringIO.new(script)
+    file_size = file.size
+    file_name = "conda_#{short_random_id}.sh"
+    params = {file: script,
+              flowChunkNumber: 1, flowChunkSize: 1048576,
+              flowCurrentChunkSize: file_size, flowTotalSize: file_size,
+              flowIdentifier: "#{file_size}-#{file_name}", flowFilename: "#{file_name}",
+              flowRelativePath: "#{file_name}", flowTotalChunks: 1}
+    multipart = RestClient::Payload::Multipart.new(params)
+    post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/dataset/upload/Resources", multipart.read, multipart.headers
+    install_with_custom_commands(projectId, ENV['PYTHON_VERSION'], "/Projects/#{project_name}/Resources/" + file_name)
+    expect_status_details(200)
+    wait_for_running_command(projectId)
+    list_libraries(projectId, ENV['PYTHON_VERSION'])
+    updated_lib = json_body[:items].detect { |lib| lib[:library] == library }
+    expect(updated_lib).not_to be_nil
+    expect(updated_lib[:version]).to eq (version)
+  end
+
   def install_with_custom_commands(project_id, version, commands_file, artifacts="")
     data = {
       "commandsFile": commands_file,
