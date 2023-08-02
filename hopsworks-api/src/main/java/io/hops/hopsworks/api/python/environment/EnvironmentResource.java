@@ -239,8 +239,7 @@ public class EnvironmentResource {
   public EnvironmentConflictsResource conflicts(@PathParam("version") String version) {
     return this.environmentConflictsResource.setProject(project, version);
   }
-
-  @Logged(logLevel = LogLevel.OFF)
+  
   @ApiOperation(value = "Environment history subresource", tags = {"EnvironmentHistoryResource"})
   @Path("{version}/history")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})

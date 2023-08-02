@@ -20,8 +20,6 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
-import io.hops.hopsworks.audit.logger.LogLevel;
-import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -46,7 +44,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
-@Logged
 @Api(value = "Python Environments History Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -60,14 +57,12 @@ public class EnvironmentHistoryResource {
   private Project project;
   private String version;
 
-  @Logged(logLevel = LogLevel.OFF)
   public EnvironmentHistoryResource init(Project project, String version) {
     this.project = project;
     this.version = version;
     return this;
   }
 
-  @Logged(logLevel = LogLevel.OFF)
   public Project getProject() {
     return project;
   }
