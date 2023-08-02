@@ -20,9 +20,6 @@ module AgentHelper
 
     @@SYSTEMCTL_IS_ACTIVE = "systemctl show unit.service -p ActiveState"
 
-    @@KAGENT_START = "sudo systemctl start kagent"
-    @@KAGENT_STOP = "sudo systemctl stop kagent"
-
     @@SPARKHISTORYSERVER_START = "systemctl start sparkhistoryserver"
     @@SPARKHISTORYSERVER_STOP = "systemctl stop sparkhistoryserver"
 
@@ -72,14 +69,6 @@ module AgentHelper
         filebeat-tf-serving
         filebeat-sklearn-serving
     ]
-
-    def kagent_start(hostname)
-        execute_remotely hostname, @@KAGENT_START
-    end
-
-    def kagent_stop(hostname)
-        execute_remotely hostname, @@KAGENT_STOP
-    end
 
     def sparkhistoryserver_start(hostname)
         execute_remotely hostname, @@SPARKHISTORYSERVER_START

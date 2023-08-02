@@ -50,8 +50,6 @@ public class AgentController {
   @EJB
   private SystemCommandFacade systemCommandFacade;
   @EJB
-  private AgentLivenessMonitor agentLivenessMonitor;
-  @EJB
   private HostsController hostsController;
   @EJB
   private HostServicesController hostServicesController;
@@ -73,7 +71,6 @@ public class AgentController {
           "hostId: " + heartbeat.hostId);
     }
 
-    agentLivenessMonitor.alive(host);
     updateHostMetrics(host, heartbeat);
     updateServices(heartbeat);
     processSystemCommands(heartbeat);

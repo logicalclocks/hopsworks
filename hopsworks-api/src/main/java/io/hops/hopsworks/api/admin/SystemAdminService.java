@@ -39,7 +39,6 @@
 
 package io.hops.hopsworks.api.admin;
 
-import com.google.common.base.Strings;
 import io.hops.hopsworks.api.admin.dto.VariablesRequest;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
@@ -48,22 +47,17 @@ import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.audit.logger.annotation.Secret;
-import io.hops.hopsworks.common.agent.AgentLivenessMonitor;
 import io.hops.hopsworks.common.dao.kafka.TopicDefaultValueDTO;
-import io.hops.hopsworks.common.hosts.HostsController;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.security.ServiceJWTKeepAlive;
-import io.hops.hopsworks.common.util.RemoteCommandResult;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.KafkaException;
-import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.jwt.exception.JWTException;
-import io.hops.hopsworks.persistence.entity.host.Hosts;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.util.Variables;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -76,7 +70,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -112,11 +105,7 @@ public class SystemAdminService {
   @EJB
   private Settings settings;
   @EJB
-  private HostsController hostsController;
-  @EJB
   private JWTHelper jWTHelper;
-  @EJB
-  private AgentLivenessMonitor agentLivenessMonitor;
   @EJB
   private ServiceJWTKeepAlive serviceJWTKeepAlive;
   @EJB
@@ -217,65 +206,7 @@ public class SystemAdminService {
         "issued");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NO_CONTENT).entity(response).build();
   }
-  
-  @POST
-  @Path("/kagent/{hostname}")
-  public Response startAgent(@PathParam("hostname") String hostname,
-                             @Context HttpServletRequest req,
-                             @Context SecurityContext sc)
-    throws ServiceException {
-    if (Strings.isNullOrEmpty(hostname)) {
-      throw new IllegalArgumentException("Hostname should not be null or empty");
-    }
-    Hosts host = hostsController.findByHostname(hostname);
-    RemoteCommandResult result = agentLivenessMonitor.start(host);
-    
-    if (result.getExitCode() == 0) {
-      return Response.ok().build();
-    }
-    
-    String responseMessage = "Exit code: " + result.getExitCode() + " Reason: " + result.getStdout();
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NO_CONTENT).entity(responseMessage).build();
-  }
-  
-  @DELETE
-  @Path("/kagent/{hostname}")
-  public Response stopAgent(@PathParam("hostname") String hostname,
-                            @Context HttpServletRequest req,
-                            @Context SecurityContext sc)
-    throws ServiceException {
-    if (Strings.isNullOrEmpty(hostname)) {
-      throw new IllegalArgumentException("Hostname should not be null or empty");
-    }
-    Hosts host = hostsController.findByHostname(hostname);
-    RemoteCommandResult result = agentLivenessMonitor.stop(host);
-    
-    if (result.getExitCode() == 0) {
-      return Response.ok().build();
-    }
-  
-    String responseMessage = "Exit code: " + result.getExitCode() + " Reason: " + result.getStdout();
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NO_CONTENT).entity(responseMessage).build();
-  }
-  
-  @PUT
-  @Path("/kagent/{hostname}")
-  public Response restartAgent(@PathParam("hostname") String hostname,
-                               @Context HttpServletRequest req,
-                               @Context SecurityContext sc)
-    throws ServiceException {
-    if (Strings.isNullOrEmpty(hostname)) {
-      throw new IllegalArgumentException("Hostname should not be null or empty");
-    }
-    Hosts host = hostsController.findByHostname(hostname);
-    RemoteCommandResult result = agentLivenessMonitor.restart(host);
-    if (result.getExitCode() == 0) {
-      return Response.ok().build();
-    }
-    String responseMessage = "Exit code: " + result.getExitCode() + " Reason: " + result.getStdout();
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NO_CONTENT).entity(responseMessage).build();
-  }
-  
+
   @PUT
   @Path("/servicetoken")
   public Response renewServiceJWT(@Context SecurityContext sc, @Context HttpServletRequest req)
