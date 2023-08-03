@@ -162,15 +162,14 @@ public class OnDemandFeaturegroupController {
   }
 
   public OnDemandFeaturegroupDTO convertOnDemandFeatureGroupToDTO(String featureStoreName, Featuregroup featureGroup,
-    FeaturestoreStorageConnectorDTO storageConnectorDTO) throws FeaturestoreException {
-    List<FeatureGroupFeatureDTO> features = getFeaturesDTO(featureGroup);
+    FeaturestoreStorageConnectorDTO storageConnectorDTO) {
     String onlineTopicName = onlineFeatureGroupController.onlineFeatureGroupTopicName(
       featureGroup.getFeaturestore().getProject().getId(),
       featureGroup.getId(), Utils.getFeaturegroupName(featureGroup));
-    return new OnDemandFeaturegroupDTO(featureStoreName, featureGroup, storageConnectorDTO, features, onlineTopicName);
+    return new OnDemandFeaturegroupDTO(featureStoreName, featureGroup, storageConnectorDTO, null, onlineTopicName);
   }
 
-  private List<FeatureGroupFeatureDTO> getFeaturesDTO(Featuregroup featureGroup)
+  public List<FeatureGroupFeatureDTO> getFeaturesDTO(Featuregroup featureGroup)
     throws FeaturestoreException {
     List<FeatureGroupFeatureDTO> features = featureGroup.getOnDemandFeaturegroup().getFeatures().stream()
       .sorted(Comparator.comparing(OnDemandFeature::getIdx))

@@ -149,6 +149,8 @@ public class FeaturegroupService {
   private FeatureGroupTagResource tagResource;
   @Inject
   private FeatureGroupProvenanceResource provenanceResource;
+  @EJB
+  private FeaturegroupBuilder featuregroupBuilder;
 
   private Project project;
   private Featurestore featurestore;
@@ -207,19 +209,28 @@ public class FeaturegroupService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
-    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiOperation(value = "Get the list of feature groups for a featurestore",
       response = FeaturegroupDTO.class,
       responseContainer = "List")
   public Response getFeaturegroupsForFeaturestore(
-          @BeanParam FeatureGroupBeanParam featureGroupBeanParam,
-          @Context SecurityContext sc)
+      @BeanParam
+          FeatureGroupBeanParam featureGroupBeanParam,
+      @Context
+          HttpServletRequest req,
+      @Context
+          SecurityContext sc,
+      @BeanParam
+          FeaturegroupExpansionBeanParam expansion)
       throws FeaturestoreException, ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    List<FeaturegroupDTO> featuregroups = featuregroupController
-      .getFeaturegroupsForFeaturestore(featurestore, project, user);
+    List<Featuregroup> featuregroups = featuregroupController
+        .getFeaturegroupsForFeaturestore(featurestore, project, user);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.FEATUREGROUPS);
+    resourceRequest.setExpansions(expansion.getResources());
     GenericEntity<List<FeaturegroupDTO>> featuregroupsGeneric =
-        new GenericEntity<List<FeaturegroupDTO>>(featuregroups) {};
+        new GenericEntity<List<FeaturegroupDTO>>(
+            featuregroupBuilder.build(featuregroups, project, user, resourceRequest)) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupsGeneric).build();
   }
 
