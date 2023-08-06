@@ -16,34 +16,27 @@
  */
 package io.hops.hopsworks.api.airflow;
 
-import freemarker.template.TemplateException;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
-import io.hops.hopsworks.common.airflow.AirflowManager;
+import io.hops.hopsworks.common.airflow.AirflowController;
+import io.hops.hopsworks.common.airflow.AirflowDagDTO;
+import io.hops.hopsworks.common.airflow.AirflowJWTManager;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.util.TemplateEngine;
-import io.hops.hopsworks.common.util.templates.airflow.AirflowDAG;
-import io.hops.hopsworks.common.util.templates.airflow.AirflowJobLaunchOperator;
-import io.hops.hopsworks.common.util.templates.airflow.AirflowJobSuccessSensor;
 import io.hops.hopsworks.exceptions.AirflowException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.apache.commons.codec.digest.DigestUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -51,56 +44,24 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.attribute.PosixFilePermission;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Airflow related endpoints")
 public class AirflowService {
-
-  private final static Logger LOGGER = Logger.getLogger(AirflowService.class.getName());
-
   @EJB
   private ProjectFacade projectFacade;
   @EJB
-  private NoCacheResponse noCacheResponse;
-  @EJB
   private JWTHelper jwtHelper;
   @EJB
-  private AirflowManager airflowJWTManager;
+  private AirflowJWTManager airflowJWTManager;
   @EJB
-  private TemplateEngine templateEngine;
-
+  private AirflowController airflowController;
   private Integer projectId;
   // No @EJB annotation for Project, it's injected explicitly in ProjectService.
   private Project project;
 
-  private static final Set<PosixFilePermission> DAGS_PERM = new HashSet<>(8);
-
-  static {
-    //add owners permission
-    DAGS_PERM.add(PosixFilePermission.OWNER_READ);
-    DAGS_PERM.add(PosixFilePermission.OWNER_WRITE);
-    DAGS_PERM.add(PosixFilePermission.OWNER_EXECUTE);
-    //add group permissions
-    DAGS_PERM.add(PosixFilePermission.GROUP_READ);
-    DAGS_PERM.add(PosixFilePermission.GROUP_WRITE);
-    DAGS_PERM.add(PosixFilePermission.GROUP_EXECUTE);
-    //add others permissions
-    DAGS_PERM.add(PosixFilePermission.OTHERS_READ);
-    DAGS_PERM.add(PosixFilePermission.OTHERS_EXECUTE);
-  }
 
   // Audience for Airflow JWTs
   private static final String[] JWT_AUDIENCE = new String[]{Audience.API};
@@ -132,29 +93,6 @@ public class AirflowService {
     return Response.noContent().build();
   }
 
-  @GET
-  @Path("secretDir")
-  @Produces(MediaType.TEXT_PLAIN)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Create project secret directory in Airflow home")
-  public Response secretDir(@Context HttpServletRequest req,
-                            @Context SecurityContext sc) throws AirflowException {
-    String secret = DigestUtils.sha256Hex(Integer.toString(this.projectId));
-
-    java.nio.file.Path dagsDir = airflowJWTManager.getProjectDagDirectory(project.getId());
-
-    try {
-      // Instead of checking and setting the permissions, just set them as it is an idempotent operation
-      dagsDir.toFile().mkdirs();
-      Files.setPosixFilePermissions(dagsDir, DAGS_PERM);
-    } catch (IOException ex) {
-      throw new AirflowException(RESTCodes.AirflowErrorCode.AIRFLOW_DIRS_NOT_CREATED, Level.SEVERE,
-          "Could not create Airlflow directories", ex.getMessage(), ex);
-    }
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(secret).build();
-  }
 
   @POST
   @Path("/dag")
@@ -166,21 +104,7 @@ public class AirflowService {
                              @Context HttpServletRequest req,
                              @Context SecurityContext sc) throws AirflowException {
     Users user = jwtHelper.getUserPrincipal(sc);
-    AirflowDAG dag = AirflowDagDTO.toAirflowDagTemplate(dagDefinition, user, project);
-
-    Map<String, Object> dataModel = new HashMap<>(4);
-    dataModel.put(AirflowJobLaunchOperator.class.getSimpleName(), AirflowJobLaunchOperator.class);
-    dataModel.put(AirflowJobSuccessSensor.class.getSimpleName(), AirflowJobSuccessSensor.class);
-    dataModel.put("dag", dag);
-    java.nio.file.Path outputFile = Paths.get(airflowJWTManager.getProjectDagDirectory(project.getId()).toString(),
-        dagDefinition.getName() + ".py");
-    try (FileWriter out = new FileWriter(outputFile.toFile(), false)) {
-      templateEngine.template(AirflowDAG.TEMPLATE_NAME, dataModel, out);
-    } catch (IOException | TemplateException ex) {
-      throw new AirflowException(RESTCodes.AirflowErrorCode.DAG_NOT_TEMPLATED, Level.SEVERE,
-          "Could not template DAG file for Project " + project.getName(),
-          ex.getMessage(), ex);
-    }
+    airflowController.composeDAG(project, user, dagDefinition);
     return Response.ok().build();
   }
 }

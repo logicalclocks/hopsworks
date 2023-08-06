@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.api.airflow;
+package io.hops.hopsworks.common.airflow;
 
 import io.hops.hopsworks.common.util.templates.airflow.AirflowDAG;
 import io.hops.hopsworks.common.util.templates.airflow.AirflowJobLaunchOperator;

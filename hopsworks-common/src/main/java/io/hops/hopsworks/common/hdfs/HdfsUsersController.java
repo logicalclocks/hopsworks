@@ -144,7 +144,7 @@ public class HdfsUsersController {
         dataset.getPermission());
   }
   
-  private List<AclEntry> getDatasetAcl(String aclGroup) {
+  public List<AclEntry> getDatasetAcl(String aclGroup) {
     List<AclEntry> aclEntries = new ArrayList<>();
     AclEntry aclEntryUser = new AclEntry.Builder()
       .setType(AclEntryType.USER)

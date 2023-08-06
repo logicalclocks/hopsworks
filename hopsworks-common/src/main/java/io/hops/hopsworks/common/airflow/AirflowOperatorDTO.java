@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.api.airflow;
+package io.hops.hopsworks.common.airflow;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
@@ -26,7 +26,6 @@ public class AirflowOperatorDTO {
   private String jobName;
   private boolean wait;
   private List<String> dependsOn;
-  private String featureGroupName;
   private String jobArgs;
   
   public AirflowOperatorDTO() {}
@@ -70,15 +69,7 @@ public class AirflowOperatorDTO {
   public void setDependsOn(List<String> dependsOn) {
     this.dependsOn = dependsOn;
   }
-  
-  public String getFeatureGroupName() {
-    return featureGroupName;
-  }
-  
-  public void setFeatureGroupName(String featureGroupName) {
-    this.featureGroupName = featureGroupName;
-  }
-  
+
   public String getJobArgs() { return jobArgs; }
   
   public void setJobArgs(String jobArgs) { this.jobArgs = jobArgs; }
