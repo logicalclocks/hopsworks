@@ -32,6 +32,7 @@ import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -76,6 +77,19 @@ public class TemplateEngine {
     dataModel.putIfAbsent("instanceOf", new InstanceOf());
     Template template = configuration.getTemplate(templateName);
     template.process(dataModel, out);
+  }
+
+  @Lock(LockType.READ)
+  public String template(Map<String, Object> dataModel, StringWriter stringWriter, String templateName)
+      throws IOException, TemplateException {
+    isInitialized();
+    if (dataModel == null) {
+      throw new IOException("Data model is null");
+    }
+    dataModel.putIfAbsent("instanceOf", new InstanceOf());
+    Template template = configuration.getTemplate(templateName);
+    template.process(dataModel, stringWriter);
+    return stringWriter.toString();
   }
   
   private void isInitialized() throws IOException {

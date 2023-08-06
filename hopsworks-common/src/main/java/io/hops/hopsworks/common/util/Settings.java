@@ -149,6 +149,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_STAGING_DIR = "staging_dir";
   private static final String VARIABLE_UPLOAD_STAGING_DIR = "upload_staging_dir";
   private static final String VARIABLE_AIRFLOW_DIR = "airflow_dir";
+  private static final String VARIABLE_AIRFLOW_USER = "airflow_user";
   private static final String VARIABLE_JUPYTER_DIR = "jupyter_dir";
   private static final String VARIABLE_JUPYTER_WS_PING_INTERVAL = "jupyter_ws_ping_interval";
   private static final String VARIABLE_SPARK_DIR = "spark_dir";
@@ -658,6 +659,7 @@ public class Settings implements Serializable {
       SUDOERS_DIR = setDirVar(VARIABLE_SUDOERS_DIR, SUDOERS_DIR);
       SERVICE_DISCOVERY_DOMAIN = setStrVar(VARIABLE_SERVICE_DISCOVERY_DOMAIN, SERVICE_DISCOVERY_DOMAIN);
       AIRFLOW_DIR = setDirVar(VARIABLE_AIRFLOW_DIR, AIRFLOW_DIR);
+      AIRFLOW_USER = setStrVar(VARIABLE_AIRFLOW_USER, AIRFLOW_USER);
       String openSearchIps = setStrVar(VARIABLE_OPENSEARCH_IP,
           OpenSearchSettings.OPENSEARCH_IP_DEFAULT);
       int openSearchPort = setIntVar(VARIABLE_OPENSEARCH_PORT, OpenSearchSettings.OPENSEARCH_PORT_DEFAULT);
@@ -1210,6 +1212,12 @@ public class Settings implements Serializable {
   public synchronized String getAirflowDir() {
     checkCache();
     return AIRFLOW_DIR;
+  }
+
+  private String AIRFLOW_USER = "airflow";
+  public synchronized String getAirflowUser() {
+    checkCache();
+    return AIRFLOW_USER;
   }
 
   private String HADOOP_DIR = "/srv/hops/hadoop";
@@ -2114,7 +2122,8 @@ public class Settings implements Serializable {
     TRAININGDATASETS("Training_Datasets", "Contains curated training datasets created from the feature store"),
     STATISTICS("Statistics", "Contains the statistics for feature groups and training datasets"),
     DATAVALIDATION("DataValidation", "Contains rules and results for Features validation"),
-    INGESTION("Ingestion", "Temporary dataset to store feature data ready for ingestion");
+    INGESTION("Ingestion", "Temporary dataset to store feature data ready for ingestion"),
+    AIRFLOW("Airflow", "Contains airflow dags");
 
     private final String name;
     private final String description;

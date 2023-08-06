@@ -90,8 +90,8 @@ import java.util.logging.Logger;
 @Startup
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @DependsOn("Settings")
-public class AirflowManager {
-  private final static Logger LOG = Logger.getLogger(AirflowManager.class.getName());
+public class AirflowJWTManager {
+  private final static Logger LOG = Logger.getLogger(AirflowJWTManager.class.getName());
   
   private final static String TOKEN_FILE_SUFFIX = ".jwt";
   private final static Set<PosixFilePermission> TOKEN_FILE_PERMISSIONS = new HashSet<>(5);
@@ -152,7 +152,7 @@ public class AirflowManager {
       timerService.createIntervalTimer(10L, interval, new TimerConfig("Airflow init/JWT renewal timer", false));
     }
   }
-  
+
   private void initAirflow() {
     Path airflowPath = Paths.get(settings.getAirflowDir());
     try {
@@ -305,17 +305,7 @@ public class AirflowManager {
           "AirflowManager failed to initialize or Airflow is not deployed");
     }
   }
-  
-  @Lock(LockType.WRITE)
-  @AccessTimeout(value = 5, unit = TimeUnit.SECONDS)
-  public void onProjectRemoval(Project project) throws IOException {
-    if (initialized) {
-      FileUtils.deleteDirectory(getProjectDagDirectory(project.getId()).toFile());
-      // Airflow material will be deleted from the database by the foreign key constraint
-      // Monitor will reap all material that do not exist in the database
-    }
-  }
-  
+
   @Lock(LockType.READ)
   @AccessTimeout(value = 1, unit = TimeUnit.SECONDS)
   public void prepareSecurityMaterial(Users user, Project project, String[] audience) throws AirflowException {
@@ -436,18 +426,10 @@ public class AirflowManager {
     }
   }
   
-  public Path getProjectDagDirectory(Integer projectID) {
-    return Paths.get(settings.getAirflowDir(), "dags", generateProjectSecret(projectID));
-  }
-  
   private Path getProjectSecretsDirectory(String username) {
     return Paths.get(settings.getAirflowDir(), "secrets", generateOwnerSecret(username));
   }
-  
-  private String generateProjectSecret(Integer projectID) {
-    return DigestUtils.sha256Hex(Integer.toString(projectID));
-  }
-  
+
   private String generateOwnerSecret(String username) {
     return DigestUtils.sha256Hex(username);
   }

@@ -481,6 +481,10 @@ public class DistributedFileSystemOps {
     dfs.setAcl(path, aclEntries);
   }
 
+  public void updateAcls(Path path, final List<AclEntry> aclEntries) throws IOException {
+    dfs.modifyAclEntries(path, aclEntries);
+  }
+
   /**
    * Set permission for paths.
    * <p>

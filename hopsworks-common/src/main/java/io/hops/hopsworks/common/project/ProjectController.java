@@ -49,7 +49,7 @@ import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigCtrlCreateExcepti
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigReadException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigUpdateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerResponseException;
-import io.hops.hopsworks.common.airflow.AirflowManager;
+import io.hops.hopsworks.common.airflow.AirflowController;
 import io.hops.hopsworks.common.alert.AlertController;
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
@@ -287,8 +287,6 @@ public class ProjectController {
   @EJB
   private JupyterFacade jupyterFacade;
   @EJB
-  private AirflowManager airflowManager;
-  @EJB
   private ProjectServiceFacade projectServiceFacade;
   @EJB
   private ProjectQuotasController projectQuotasController;
@@ -300,6 +298,8 @@ public class ProjectController {
   private SubjectsController subjectsController;
   @EJB
   private HopsFSProvenanceController fsProvController;
+  @EJB
+  private AirflowController airflowController;
   @EJB
   private AlertController alertController;
   @EJB
@@ -830,6 +830,11 @@ public class ProjectController {
           addServiceKafka(project);
         }
         break;
+      case AIRFLOW:
+        addServiceDataset(project, user, Settings.ServiceDataset.AIRFLOW, dfso, udfso,
+            Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET));
+        airflowController.grantAirflowPermissions(project, udfso);
+        break;
     }
 
     // Persist enabled service in the database
@@ -1304,15 +1309,6 @@ public class ProjectController {
           cleanupLogger.logError(ex.getMessage());
         }
 
-        // Remove project DAGs, JWT monitors and free X.509 certificates
-        try {
-          airflowManager.onProjectRemoval(project);
-          cleanupLogger.logSuccess("Removed Airflow DAGs and security references");
-        } catch (Exception ex) {
-          cleanupLogger.logError("Error while cleaning Airflow DAGs and security references");
-          cleanupLogger.logError(ex.getMessage());
-        }
-
         try {
           removeCertificatesFromMaterializer(project);
           cleanupLogger.logSuccess("Removed all X.509 certificates related to the Project from " +
@@ -1437,14 +1433,6 @@ public class ProjectController {
           // NOOP
         }
         toDeleteProject.setProjectTeamCollection(reconstructedProjectTeam);
-
-        try {
-          airflowManager.onProjectRemoval(toDeleteProject);
-          cleanupLogger.logSuccess("Removed Airflow DAGs and security references");
-        } catch (Exception ex) {
-          cleanupLogger.logError("Failed to remove Airflow DAGs and security references");
-          cleanupLogger.logError(ex.getMessage());
-        }
 
         try {
           removeCertificatesFromMaterializer(toDeleteProject);
@@ -1737,10 +1725,6 @@ public class ProjectController {
       } catch (ServingException e) {
         throw new IOException(e);
       }
-
-      // Remove Airflow DAGs from local filesystem,
-      // JWT renewal monitors and materialized X.509
-      airflowManager.onProjectRemoval(project);
 
       //remove folder and from the database
       removeProject(project.getName(), dfso);
