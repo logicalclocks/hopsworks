@@ -561,7 +561,7 @@ public class DatasetController {
     Dataset dataset = datasetFacade.findByProjectAndName(project, inode.getInodePK().getName());
     if (dataset != null && !dataset.getProject().equals(project)) { //not owned by project check shared
       DatasetSharedWith datasetSharedWith = datasetSharedWithFacade.findByProjectAndDataset(project, dataset);
-      if (datasetSharedWith == null) {
+      if (datasetSharedWith == null || !datasetSharedWith.getAccepted()) {
         dataset = null;
       }
     }

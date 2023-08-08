@@ -1919,7 +1919,7 @@ public class ProjectController {
 
         // give access to the shared online feature stores
         for (DatasetSharedWith sharedDs : project.getDatasetSharedWithCollection()) {
-          if (sharedDs.getDataset().getDsType() == DatasetType.FEATURESTORE) {
+          if (sharedDs.getAccepted() && sharedDs.getDataset().getDsType() == DatasetType.FEATURESTORE) {
             onlineFeaturestoreController
                 .shareOnlineFeatureStore(project, newMember, projectTeam.getTeamRole(),
                     sharedDs.getDataset().getFeatureStore(), sharedDs.getPermission());
