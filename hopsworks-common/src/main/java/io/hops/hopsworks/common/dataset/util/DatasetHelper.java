@@ -97,8 +97,11 @@ public class DatasetHelper {
   public DatasetPath getDatasetPath(Project project, String path, DatasetType datasetType) throws DatasetException {
     DatasetPath datasetPath = getNewDatasetPath(project, path, datasetType);
     Dataset dataset = datasetController.getByProjectAndFullPath(project, datasetPath.getDatasetFullPath().toString());
+    if (dataset == null) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE, "path: " + path);
+    }
     datasetPath.setDataset(dataset);
-    if (dataset != null && dataset.isShared(project)) {
+    if (dataset.isShared(project)) {
       DatasetSharedWith datasetSharedWith = datasetSharedWithFacade.findByProjectAndDataset(project, dataset);
       datasetPath.setDatasetSharedWith(datasetSharedWith);
     }

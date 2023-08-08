@@ -24,7 +24,6 @@ import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import org.apache.hadoop.fs.Path;
 
-import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
@@ -37,6 +36,8 @@ public class DatasetPath {
   private DatasetSharedWith datasetSharedWith;
   private Inode inode;
   
+  private static final String FILE_SEPARATOR = "/";
+
   public DatasetPath(Path fullPath, Path datasetFullPath, Path relativePath) {
     this.fullPath = fullPath;
     this.datasetFullPath = datasetFullPath;
@@ -51,25 +52,25 @@ public class DatasetPath {
     isShared = pathStr.contains(Settings.SHARED_FILE_SEPARATOR);
     String dataset = getDatasetFromPath(pathStr, pathRoot, project.getName(), isProject);
     String datasetName =
-      !dataset.isEmpty() && dataset.contains(File.separator) ? dataset.split(File.separator)[0] : dataset;
-    String projectName = isProject ? File.separator + project.getName() + File.separator : File.separator;
-    if (pathStr.startsWith(pathRoot + File.separator) && !datasetName.contains(Settings.SHARED_FILE_SEPARATOR)) {
+      !dataset.isEmpty() && dataset.contains(FILE_SEPARATOR) ? dataset.split(FILE_SEPARATOR)[0] : dataset;
+    String projectName = isProject ? FILE_SEPARATOR + project.getName() + FILE_SEPARATOR : FILE_SEPARATOR;
+    if (pathStr.startsWith(pathRoot + FILE_SEPARATOR) && !datasetName.contains(Settings.SHARED_FILE_SEPARATOR)) {
       // fullpath
-      fullPath = new Path(File.separator + pathStr);
+      fullPath = new Path(FILE_SEPARATOR + pathStr);
     } else if (!datasetName.contains(Settings.SHARED_FILE_SEPARATOR)) {
       // relative
-      fullPath = new Path(File.separator + pathRoot + projectName + pathStr);
+      fullPath = new Path(FILE_SEPARATOR + pathRoot + projectName + pathStr);
     } else {
       // shared
       String[] datasetNameParts = datasetName.split(Settings.SHARED_FILE_SEPARATOR);
-      projectName = isProject ? File.separator + datasetNameParts[0] + File.separator : File.separator;
-      if (projectName.replaceAll(File.separator, "").equals(project.getName())) {
+      projectName = isProject ? FILE_SEPARATOR + datasetNameParts[0] + FILE_SEPARATOR : FILE_SEPARATOR;
+      if (projectName.replaceAll(FILE_SEPARATOR, "").equals(project.getName())) {
         isShared = false; // if contains :: but the project name in path is the same as project remove ::
         dataset = dataset.replace(datasetName, datasetNameParts[1]);
       }
-      fullPath = new Path(File.separator + pathRoot + projectName + dataset.replace(datasetName, datasetNameParts[1]));
+      fullPath = new Path(FILE_SEPARATOR + pathRoot + projectName + dataset.replace(datasetName, datasetNameParts[1]));
     }
-    relativePath = new Path(File.separator + dataset);
+    relativePath = new Path(FILE_SEPARATOR + dataset);
     datasetFullPath = getDatasetPath(fullPath.toString(), new Path(pathRoot + projectName));
   }
   
@@ -129,23 +130,23 @@ public class DatasetPath {
   private String getDatasetFromPath(String path, String root, String projectName, boolean isProject) {
     String dataset = path;
     if (path.startsWith(root)) {
-      dataset = path.replace(root + File.separator, "");
+      dataset = path.replace(root + FILE_SEPARATOR, "");
       if (isProject && dataset.startsWith(projectName)) {
-        dataset = dataset.replace(projectName + File.separator, "");
+        dataset = dataset.replace(projectName + FILE_SEPARATOR, "");
       } else if (isProject) {
-        dataset = dataset.substring(dataset.indexOf(File.separator) + 1);
+        dataset = dataset.substring(dataset.indexOf(FILE_SEPARATOR) + 1);
       }
     }
     return dataset;
   }
   
   private Path getDatasetPath(String fullPath, Path root) {
-    if (fullPath.startsWith(File.separator)) {
+    if (fullPath.startsWith(FILE_SEPARATOR)) {
       fullPath = fullPath.substring(1);
     }
-    String[] parts = fullPath.split(File.separator);
-    String dsPath = String.join(File.separator, Arrays.copyOfRange(parts, 0, root.depth() + 1));
-    return new Path(File.separator + dsPath);
+    String[] parts = fullPath.split(FILE_SEPARATOR);
+    String dsPath = String.join(FILE_SEPARATOR, Arrays.copyOfRange(parts, 0, root.depth() + 1));
+    return new Path(FILE_SEPARATOR + dsPath);
   }
   
   public Project getAccessProject() {
