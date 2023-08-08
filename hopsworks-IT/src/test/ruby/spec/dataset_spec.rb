@@ -695,6 +695,24 @@ describe "On #{ENV['OS']}" do
           get_dataset_stat(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
           expect_status_details(400)
         end
+        it "should not add new members to a shared dataset that is not accepted" do
+          project = get_project
+          # Create a second project and a dataset in it
+          second_project = create_project
+          dsname = "dataset_#{short_random_id}"
+          create_dataset_by_name_checked(second_project, dsname, permission: "READ_ONLY")
+          # Share the dataset with the first project
+          share_dataset(second_project, dsname, project[:projectname], permission: "EDITABLE",
+                        datasetType: "&type=DATASET")
+          # Create a new user and add it only to the first project
+          member = create_user
+          add_member_to_project(project, member[:email], "Data scientist")
+          create_session(member[:email], "Pass123")
+
+          # The new member should not be able to fetch the readme in the shared dataset
+          get_dataset_blob(project, "Projects/#{second_project[:projectname]}/#{dsname}/README.md", datasetType: "&type=DATASET")
+          expect_status_details(500)
+        end
       end
       context 'delete' do
         before :each do

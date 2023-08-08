@@ -484,7 +484,9 @@ public class HdfsUsersController {
       addNewMember(ds, ds.getPermission(), teamMember, dfso);
     }
     for (DatasetSharedWith datasetSharedWith : teamMember.getProject().getDatasetSharedWithCollection()) {
-      addNewMember(datasetSharedWith.getDataset(), datasetSharedWith.getPermission(), teamMember, dfso);
+      if (datasetSharedWith.getAccepted()) {
+        addNewMember(datasetSharedWith.getDataset(), datasetSharedWith.getPermission(), teamMember, dfso);
+      }
     }
   }
 
@@ -558,7 +560,9 @@ public class HdfsUsersController {
       removeMember(ds, ds.getPermission(), teamMember, dfso);
     }
     for (DatasetSharedWith datasetSharedWith : teamMember.getProject().getDatasetSharedWithCollection()) {
-      removeMember(datasetSharedWith.getDataset(), datasetSharedWith.getPermission(), teamMember, dfso);
+      if (datasetSharedWith.getAccepted()) {
+        removeMember(datasetSharedWith.getDataset(), datasetSharedWith.getPermission(), teamMember, dfso);
+      }
     }
   }
 
@@ -615,7 +619,9 @@ public class HdfsUsersController {
       changeMemberRole(ds, ds.getPermission(), teamMember, dfso);
     }
     for (DatasetSharedWith datasetSharedWith : teamMember.getProject().getDatasetSharedWithCollection()) {
-      changeMemberRole(datasetSharedWith.getDataset(), datasetSharedWith.getPermission(), teamMember, dfso);
+      if (datasetSharedWith.getAccepted()) {
+        changeMemberRole(datasetSharedWith.getDataset(), datasetSharedWith.getPermission(), teamMember, dfso);
+      }
     }
   }
 
