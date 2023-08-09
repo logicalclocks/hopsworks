@@ -157,6 +157,21 @@ describe "On #{ENV['OS']}" do
           expect(json_body[:count]).to be > 5
           expect_status_details(200)
         end
+        it "should return dataset list with correct paths" do
+          json_body = get_all_datasets(@project)
+          expect_status_details(200)
+          expect(json_body[:count]).to be > 0
+          json_body[:items].each do |item|
+            case item[:datasetType]
+            when "DATASET"
+              expect(item[:attributes][:path]).to eql("/Projects/#{@project[:projectname]}/#{item[:attributes][:name]}")
+            when "FEATURESTORE", "HIVEDB"
+              expect(item[:attributes][:path]).to eql("/apps/hive/warehouse/#{item[:attributes][:name]}")
+            else
+              expect(item[:attributes][:path]).not_to include "//"
+            end
+          end
+        end
         it "should fail to return dataset list from Projects if path contains ../" do
           get_datasets_in_path(@project, 'Logs/../../../Projects', query: "&type=DATASET")
           expect_status_details(400)
@@ -387,6 +402,28 @@ describe "On #{ENV['OS']}" do
           create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
           share_dataset(@project, dsname, project[:projectname], permission: "EDITABLE", datasetType: "&type=DATASET")
           expect_status_details(204)
+        end
+		
+        it "should share dataset and return datasets with correct paths" do
+          project = create_project
+          dsname = "dataset_#{short_random_id}"
+          create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
+          share_dataset(@project, dsname, project[:projectname], permission: "EDITABLE", datasetType: "&type=DATASET")
+          expect_status_details(204)
+          
+          json_body = get_all_datasets(project)
+          expect_status_details(200)
+          expect(json_body[:count]).to be > 0
+          json_body[:items].each do |item|
+            case item[:datasetType]
+            when "DATASET"
+              expect(item[:attributes][:path]).to eql("/Projects/#{item[:shared] == true ? @project[:projectname] : project[:projectname]}/#{item[:attributes][:name]}")
+            when "FEATURESTORE", "HIVEDB"
+              expect(item[:attributes][:path]).to eql("/apps/hive/warehouse/#{item[:attributes][:name]}")
+            else
+              expect(item[:attributes][:path]).not_to include "//"
+            end
+          end
         end
 
         it "should show the user that shared the dataset" do

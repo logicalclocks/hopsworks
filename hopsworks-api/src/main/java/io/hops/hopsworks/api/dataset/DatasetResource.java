@@ -223,7 +223,7 @@ public class DatasetResource {
           ResourceRequest datasetResourceRequest = new ResourceRequest(ResourceRequest.Name.DATASET);
           datasetResourceRequest.setExpansions(datasetExpansionBeanParam.getResources());
           DatasetDTO datasetDTO = datasetBuilder.build(uriInfo, datasetResourceRequest, user, datasetPath,
-              null, null, true);
+              null, true);
           return Response.ok().entity(datasetDTO).build();
         } else {
           dto = inodeBuilder.buildStat(uriInfo, resourceRequest, user, datasetPath);
@@ -287,7 +287,7 @@ public class DatasetResource {
           datasetHelper.updateDataset(project, datasetPath, ds);
           Inode inode = inodeController.getInodeAtPath(datasetPath.getFullPath().toString());
           datasetPath.setInode(inode);
-          DatasetDTO dto = datasetBuilder.build(uriInfo, resourceRequest, user, datasetPath, null, null, false);
+          DatasetDTO dto = datasetBuilder.build(uriInfo, resourceRequest, user, datasetPath, null, false);
           return Response.created(dto.getHref()).entity(dto).build();
         } else {
           datasetHelper.checkIfDatasetExists(project, datasetPath);
@@ -432,7 +432,7 @@ public class DatasetResource {
       case PERMISSION:
         checkIfDataOwner(project, user);
         datasetController.updatePermission(datasetPath.getDataset(), datasetPermissions, project, project, user);
-        dto = datasetBuilder.build(uriInfo, resourceRequest, user, datasetPath, null, null, false);
+        dto = datasetBuilder.build(uriInfo, resourceRequest, user, datasetPath, null, false);
         break;
       case SHARE_PERMISSION:
         checkIfDataOwner(project, user);
@@ -443,11 +443,11 @@ public class DatasetResource {
         }
         datasetController.updateSharePermission(datasetPath.getDataset(), datasetPermissions, project, targetProjectName
             , user);
-        dto = datasetBuilder.build(uriInfo, resourceRequest, user, datasetPath, null, null, false);
+        dto = datasetBuilder.build(uriInfo, resourceRequest, user, datasetPath, null, false);
         break;
       case DESCRIPTION:
         datasetController.updateDescription(project, user, datasetPath.getDataset(), description);
-        dto = datasetBuilder.build(uriInfo, resourceRequest, user, datasetPath, null, null, false);
+        dto = datasetBuilder.build(uriInfo, resourceRequest, user, datasetPath, null, false);
         break;
       default:
         throw new WebApplicationException("Action not valid.", Response.Status.NOT_FOUND);
