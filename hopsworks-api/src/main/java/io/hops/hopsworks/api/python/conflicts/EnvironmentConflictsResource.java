@@ -69,10 +69,13 @@ public class EnvironmentConflictsResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON_LIBRARIES}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON_LIBRARIES},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response get(@BeanParam ConflictBeanParam environmentConflictBeanParam,
-    @Context UriInfo uriInfo, @Context SecurityContext sc)
+                      @Context UriInfo uriInfo,
+                      @Context SecurityContext sc)
       throws IOException, ServiceDiscoveryException, PythonException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.CONFLICTS);
     resourceRequest.setFilter(environmentConflictBeanParam.getFilter());
