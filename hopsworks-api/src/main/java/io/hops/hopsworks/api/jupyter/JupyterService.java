@@ -245,7 +245,7 @@ public class JupyterService {
   @Path("/settings")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response settings(@Context SecurityContext sc,
                            @Context HttpServletRequest req) {
 
@@ -271,7 +271,7 @@ public class JupyterService {
   @Path("/running")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response isRunning(@Context HttpServletRequest req, @Context SecurityContext sc) throws ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
     JupyterProject jp = jupyterFacade.findByProjectUser(project, user)
