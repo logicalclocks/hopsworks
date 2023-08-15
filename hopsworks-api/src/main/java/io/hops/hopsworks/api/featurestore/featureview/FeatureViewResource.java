@@ -27,6 +27,7 @@ import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.QueryParam;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewDTO;
+import io.hops.hopsworks.common.featurestore.featureview.ServingKeyDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.JobException;
@@ -37,6 +38,7 @@ import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.ServingKey;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
@@ -67,6 +69,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Logged
 @RequestScoped
@@ -217,6 +220,40 @@ public class FeatureViewResource {
 
     return Response.ok()
         .entity(featureViewBuilder.build(featureView, resourceRequest, project, user, uriInfo))
+        .build();
+  }
+
+  @GET
+  @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/servingKeys")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiOperation(value = "Get Feature View metadata by name and version.", response = FeatureViewDTO.class)
+  public Response getServingKeys(
+      @Context
+          SecurityContext sc,
+      @Context
+          HttpServletRequest req,
+      @Context
+          UriInfo uriInfo,
+      @BeanParam
+          FeatureViewBeanParam param,
+      @ApiParam(value = "Name of the feature view", required = true)
+      @PathParam("name")
+          String name,
+      @ApiParam(value = "Version of the feature view", required = true)
+      @PathParam("version")
+          Integer version
+  ) throws FeaturestoreException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    FeatureView featureView = featureViewController.getByNameVersionAndFeatureStore(name, version, featurestore);
+    List<ServingKey> servingKeys = featureViewController.getServingKeys(project, user, featureView);
+
+    return Response.ok()
+        .entity(servingKeys.stream().map(ServingKeyDTO::new).collect(Collectors.toList()))
         .build();
   }
 

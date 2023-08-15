@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.featureview;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import io.hops.hopsworks.common.dao.QueryParam;
@@ -61,6 +62,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -291,13 +293,20 @@ public class FeatureViewController {
     Set<Integer> featureGroupIdAdded = Sets.newHashSet();
     Optional<TrainingDatasetJoin> leftJoin =
         featureView.getJoins().stream().filter(join -> join.getIndex().equals(0)).findFirst();
+    // If a feature group is deleted, the corresponding join will be deleted by cascade.
+    if (!leftJoin.isPresent()) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND,
+          Level.SEVERE, "Cannot construct serving because some feature groups which are used in the query are removed");
+    }
     Set<String> leftPrimaryKeys = featuregroupController
         .getFeatures(leftJoin.get().getFeatureGroup(), project, user)
         .stream()
         .filter(FeatureGroupFeatureDTO::getPrimary)
         .map(FeatureGroupFeatureDTO::getName)
         .collect(Collectors.toSet());
-    for (TrainingDatasetJoin join : featureView.getJoins()) {
+    for (TrainingDatasetJoin join :
+        featureView.getJoins().stream().sorted(Comparator.comparingInt(TrainingDatasetJoin::getIndex)).collect(
+            Collectors.toList())) {
       // This contains join key and pk of feature group
       Set<String> tempPrefixFeatureNames = Sets.newHashSet();
 
@@ -320,39 +329,38 @@ public class FeatureViewController {
         servingKey.setFeatureName(featureName);
         String joinOn = condition.getLeftFeature();
         servingKey.setJoinOn(joinOn);
-        // if join on is not a primary key, set required to true
+        // if join on (column of left fg) is not a primary key, set required to true
         servingKey.setRequired(!leftPrimaryKeys.contains(joinOn));
-        servingKey.setPrefix(join.getPrefix());
         servingKey.setFeatureGroup(join.getFeatureGroup());
         servingKey.setFeatureView(featureView);
         servingKey.setJoinIndex(join.getIndex());
+        // Set new prefix only if the key is required
+        if (servingKey.getRequired()) {
+          servingKey.setPrefix(
+              getPrefixCheckCollision(prefixFeatureNames, servingKey.getFeatureName(), join.getPrefix()));
+        } else {
+          servingKey.setPrefix(join.getPrefix());
+        }
+        tempPrefixFeatureNames.add((join.getPrefix() == null ? "" : join.getPrefix()) + servingKey.getFeatureName());
         servingKeys.add(servingKey);
-        tempPrefixFeatureNames.add(servingKey.getPrefix() + servingKey.getFeatureName());
       }
 
       for (FeatureGroupFeatureDTO pk : primaryKeys) {
-        String prefixFeatureName = join.getPrefix() + pk.getName();
+        String prefixFeatureName = pk.getName();
+        if (!Strings.isNullOrEmpty(join.getPrefix())) {
+          prefixFeatureName = join.getPrefix() + pk.getName();
+        }
         if (!tempPrefixFeatureNames.contains(prefixFeatureName)) {
           ServingKey servingKey = new ServingKey();
           servingKey.setFeatureName(pk.getName());
-          if (prefixFeatureNames.contains(prefixFeatureName)) {
-            // conflict with pk of other feature group, set new prefix
-            String defaultPrefix;
-            int i = 0;
-            do {
-              defaultPrefix = String.format("%d_%s", i, join.getPrefix());
-              i++;
-            } while (prefixFeatureNames.contains(defaultPrefix + pk.getName()));
-            servingKey.setPrefix(defaultPrefix);
-          } else {
-            servingKey.setPrefix(join.getPrefix());
-          }
+          servingKey.setPrefix(getPrefixCheckCollision(prefixFeatureNames, pk.getName(), join.getPrefix()));
           servingKey.setRequired(true);
           servingKey.setFeatureGroup(join.getFeatureGroup());
           servingKey.setJoinIndex(join.getIndex());
           servingKey.setFeatureView(featureView);
           servingKeys.add(servingKey);
-          tempPrefixFeatureNames.add(servingKey.getPrefix() + servingKey.getFeatureName());
+          tempPrefixFeatureNames.add(
+              (join.getPrefix() == null ? "" : join.getPrefix()) + servingKey.getFeatureName());
         }
       }
       prefixFeatureNames.addAll(tempPrefixFeatureNames);
@@ -368,13 +376,37 @@ public class FeatureViewController {
         .collect(Collectors.toSet());
     for (ServingKey servingKey : servingKeys) {
       if (labelOnlyFgs.contains(servingKey.getFeatureGroup())) {
+        // Check if the serving key belongs to a left most fg by checking if the key was required by other fg.
         if (servingKeys.stream()
-            .noneMatch(key -> key.getJoinOn().equals(servingKey.getPrefix() + servingKey.getFeatureName()))) {
+            .noneMatch(key -> (servingKey.getPrefix() + servingKey.getFeatureName()).equals(key.getJoinOn()))) {
           servingKey.setRequired(false);
         }
       }
     }
     return servingKeys;
+  }
+
+  private String getPrefixCheckCollision(Set<String> prefixFeatureNames, String featureName, String prefix) {
+    String prefixFeatureName = featureName;
+    if (!Strings.isNullOrEmpty(prefix)) {
+      prefixFeatureName = prefix + featureName;
+    }
+    if (prefixFeatureNames.contains(prefixFeatureName)) {
+      // conflict with pk of other feature group, set new prefix
+      String defaultPrefix;
+      int i = 0;
+      do {
+        if (Strings.isNullOrEmpty(prefix)) {
+          defaultPrefix = String.format("%d_", i);
+        } else {
+          defaultPrefix = String.format("%d_%s", i, prefix);
+        }
+        i++;
+      } while (prefixFeatureNames.contains(defaultPrefix + featureName));
+      return defaultPrefix;
+    } else {
+      return prefix;
+    }
   }
 
   // For testing
