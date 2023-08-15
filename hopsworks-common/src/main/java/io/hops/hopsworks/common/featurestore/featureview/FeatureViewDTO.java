@@ -38,6 +38,7 @@ public class FeatureViewDTO extends FeaturestoreEntityDTO<FeatureViewDTO> {
   private KeywordDTO keywords;
   private TagsDTO tags;
   private FsQueryDTO queryString;
+  private List<ServingKeyDTO> servingKeys;
 
   public FeatureViewDTO() {
   }
@@ -82,4 +83,11 @@ public class FeatureViewDTO extends FeaturestoreEntityDTO<FeatureViewDTO> {
     this.tags = tags;
   }
 
+  public List<ServingKeyDTO> getServingKeys() {
+    return servingKeys;
+  }
+
+  public void setServingKeys(List<ServingKeyDTO> servingKeys) {
+    this.servingKeys = servingKeys;
+  }
 }
