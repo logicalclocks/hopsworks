@@ -519,13 +519,13 @@ public class FeatureViewControllerTest {
     fv.setFeatures(tdfs);
     // set join
     join1.setConditions(Lists.newArrayList());
-    join1.setPrefix("");
+    join1.setPrefix(null);
     join1.setIdx(0);
     TrainingDatasetJoinCondition condition = new TrainingDatasetJoinCondition();
     condition.setLeftFeature("feature1");
     condition.setRightFeature("pk1");
     join2.setConditions(Lists.newArrayList(condition));
-    join2.setPrefix("");
+    join2.setPrefix(null);
     join2.setIdx(1);
     fv.setJoins(Lists.newArrayList(join1, join2));
 
@@ -533,8 +533,39 @@ public class FeatureViewControllerTest {
 
     // validate
     Assert.assertEquals(2, actual.size());
-    validate(actual.get(0), true, "pk1", fgOneKey1, "", null);
-    validate(actual.get(1), true, "pk1", fgOneKey2, "", "feature1");
+    validate(actual.get(0), true, "pk1", fgOneKey1, null, null);
+    validate(actual.get(1), true, "pk1", fgOneKey2, "0_", "feature1");
+  }
+
+  @Test
+  public void getServingKeys_joinColOnCol() throws Exception {
+    doReturn(getFgFeature(fgOneKey1)).when(featuregroupController).getFeatures(eq(fgOneKey1), any(), any());
+    doReturn(getFgFeature(fgOneKey2)).when(featuregroupController).getFeatures(eq(fgOneKey2), any(), any());
+
+    FeatureView fv = new FeatureView();
+    // set tdf
+    List<TrainingDatasetFeature> tdfs = Lists.newArrayList();
+    tdfs.addAll(tdf1);
+    tdfs.addAll(tdf2);
+    fv.setFeatures(tdfs);
+    // set join
+    join1.setConditions(Lists.newArrayList());
+    join1.setPrefix(null);
+    join1.setIdx(0);
+    TrainingDatasetJoinCondition condition = new TrainingDatasetJoinCondition();
+    condition.setLeftFeature("feature1");
+    condition.setRightFeature("feature1");
+    join2.setConditions(Lists.newArrayList(condition));
+    join2.setPrefix(null);
+    join2.setIdx(1);
+    fv.setJoins(Lists.newArrayList(join1, join2));
+
+    List<ServingKey> actual = target.getServingKeys(null, null, fv);
+
+    // validate
+    Assert.assertEquals(2, actual.size());
+    validate(actual.get(0), true, "pk1", fgOneKey1, null, null);
+    validate(actual.get(1), true, "pk1", fgOneKey2, "0_", null);
   }
 
   @Test
