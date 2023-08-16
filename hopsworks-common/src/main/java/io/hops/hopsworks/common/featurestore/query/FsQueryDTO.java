@@ -26,6 +26,7 @@ public class FsQueryDTO extends RestDTO<FsQueryDTO> {
   private String query;
   private String queryOnline;
   private String pitQuery;
+  private String pitQueryAsof;
 
   private List<HudiFeatureGroupAliasDTO> hudiCachedFeatureGroups;
   private List<OnDemandFeatureGroupAliasDTO> onDemandFeatureGroups;
@@ -52,6 +53,14 @@ public class FsQueryDTO extends RestDTO<FsQueryDTO> {
   
   public void setPitQuery(String pitQuery) {
     this.pitQuery = pitQuery;
+  }
+
+  public String getPitQueryAsof() {
+    return pitQueryAsof;
+  }
+
+  public void setPitQueryAsof(String pitQueryAsof) {
+    this.pitQueryAsof = pitQueryAsof;
   }
 
   public List<HudiFeatureGroupAliasDTO> getHudiCachedFeatureGroups() {
