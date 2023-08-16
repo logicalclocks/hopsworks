@@ -29,9 +29,8 @@ import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.TreeSet;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -85,38 +84,20 @@ public class JobsJWTManager {
     labels.put("type", "jwt");
     labels.put("deployment", "execution");
     try {
-      TreeSet<ExecutionJWT> jwts = new TreeSet<>((t0, t1) -> {
-        if (t0.equals(t1)) {
-          return 0;
-        } else {
-          if (t0.expiration.isBefore(t1.expiration)) {
-            return -1;
-          } else if (t0.expiration.isAfter(t1.expiration)) {
-            return 1;
-          }
-          return 0;
-        }
-      });
-      jwts.addAll(jwtTokenWriter.getJWTs(labels));
+      Set<ExecutionJWT> jwts = jwtTokenWriter.getJWTs(labels);
       LOG.log(Level.FINEST, "jwts:" + jwts);
-      Iterator<ExecutionJWT> iter = jwts.iterator();
       LocalDateTime now = DateUtils.getNow();
-      while (iter.hasNext()) {
-        ExecutionJWT element = iter.next();
-        // Elements are sorted by their expiration date.
-        // If element N does not need to be renewed neither does N+1
+      for (ExecutionJWT element : jwts) {
         if (element.maybeRenew(now)) {
           LOG.log(Level.FINE, "renew:" + element);
           LocalDateTime newExpirationDate = now.plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
           String newToken = jwtController.renewToken(element.token, DateUtils.localDateTime2Date(newExpirationDate),
-            DateUtils.localDateTime2Date(now), true, new HashMap<>(3));
-          
-          ExecutionJWT renewedJWT = new ExecutionJWT(element.project, element.user, element.execution,
-            newExpirationDate);
+                  DateUtils.localDateTime2Date(now), false, new HashMap<>(3));
+
+          ExecutionJWT renewedJWT =
+                  new ExecutionJWT(element.project, element.user, element.execution, newExpirationDate);
           renewedJWT.token = newToken;
           jwtTokenWriter.writeToken(renewedJWT);
-        } else {
-          break;
         }
       }
     } catch (Exception ex) {
