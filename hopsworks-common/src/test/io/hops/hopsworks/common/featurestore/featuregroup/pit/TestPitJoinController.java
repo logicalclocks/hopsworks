@@ -64,6 +64,7 @@ public class TestPitJoinController {
   
   @Before
   public void setup() {
+    System.setProperty("line.separator", "\n");
     fs = new Featurestore();
     fs.setHiveDbId(1l);
     fs.setProject(new Project("test_proj"));
@@ -169,29 +170,6 @@ public class TestPitJoinController {
     leftQuery.setJoins(joins);
   
     Assert.assertEquals(false, pitJoinController.isPitEnabled(leftQuery));
-  }
-  
-  @Test
-  public void testAddEventTimeOn() {
-    Featuregroup fg1 = new Featuregroup(1);
-    fg1.setEventTime("ts");
-    List<Feature> oldOn = Collections.singletonList(new Feature("ft1"));
-    List<Feature> newOn = pitJoinController.addEventTimeOn(oldOn, fg1, "fg0");
-    
-    Assert.assertEquals(2, newOn.size());
-    // should respect order
-    Assert.assertEquals("ts", newOn.get(1).getName());
-  }
-  
-  @Test
-  public void testAddEventTimeCondition() {
-    List<SqlCondition> oldCondition = Collections.singletonList(SqlCondition.EQUALS);
-    List<SqlCondition> newCondition = pitJoinController.addEventTimeCondition(
-      oldCondition, SqlCondition.GREATER_THAN_OR_EQUAL);
-  
-    Assert.assertEquals(2, newCondition.size());
-    // should respect order
-    Assert.assertEquals(SqlCondition.GREATER_THAN_OR_EQUAL, newCondition.get(1));
   }
   
   @Test

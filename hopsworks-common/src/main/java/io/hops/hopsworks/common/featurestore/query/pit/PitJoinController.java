@@ -26,7 +26,6 @@ import io.hops.hopsworks.common.featurestore.query.filter.Filter;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterController;
 import io.hops.hopsworks.common.featurestore.query.join.Join;
 import io.hops.hopsworks.common.featurestore.query.join.JoinController;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlCall;
@@ -125,11 +124,12 @@ public class PitJoinController {
     // group
     for (Join join : query.getJoins()) {
       // add event time inequality join condition
-      List<Feature> newLeftOn = addEventTimeOn(join.getLeftOn(), baseQuery.getFeaturegroup(), baseQuery.getAs());
-      List<Feature> newRightOn = addEventTimeOn(join.getRightOn(), join.getRightQuery().getFeaturegroup(),
-        join.getRightQuery().getAs());
+      List<Feature> newLeftOn = constructorController.addEventTimeOn(join.getLeftOn(),
+              baseQuery.getFeaturegroup(), baseQuery.getAs());
+      List<Feature> newRightOn = constructorController.addEventTimeOn(join.getRightOn(),
+              join.getRightQuery().getFeaturegroup(), join.getRightQuery().getAs());
       List<SqlCondition> newJoinOperator =
-        addEventTimeCondition(join.getJoinOperator(), SqlCondition.GREATER_THAN_OR_EQUAL);
+              constructorController.addEventTimeCondition(join.getJoinOperator(), SqlCondition.GREATER_THAN_OR_EQUAL);
 
       // single right feature group
       List<Join> newJoins = Collections.singletonList(
@@ -247,11 +247,13 @@ public class PitJoinController {
       // add event time inequality join condition
       List<Feature> primaryKey =
         baseQuery.getAvailableFeatures().stream().filter(Feature::isPrimary).collect(Collectors.toList());
-      List<Feature> newLeftOn = addEventTimeOn(primaryKey, baseQuery.getFeaturegroup(), baseQuery.getAs());
+      List<Feature> newLeftOn = constructorController.addEventTimeOn(primaryKey,
+              baseQuery.getFeaturegroup(), baseQuery.getAs());
       renameJoinFeatures(newLeftOn);
       
       // equivalent copy, but needed to be able to set different alias
-      List<Feature> newRightOn = addEventTimeOn(primaryKey, baseQuery.getFeaturegroup(), baseQuery.getAs());
+      List<Feature> newRightOn = constructorController.addEventTimeOn(primaryKey,
+              baseQuery.getFeaturegroup(), baseQuery.getAs());
       renameJoinFeatures(newRightOn);
       
       List<SqlCondition> newJoinOperator = newLeftOn.stream().map(f -> SqlCondition.EQUALS)
@@ -298,20 +300,6 @@ public class PitJoinController {
       String prefixName = f.isPrimary() ? PK_JOIN_PREFIX + f.getName(): EVT_JOIN_PREFIX + f.getName();
       f.setName(prefixName);
     });
-  }
-  
-  public List<Feature> addEventTimeOn(List<Feature> on, Featuregroup featureGroup, String fgAlias) {
-    // make copy of features since otherwise it leads to problems when setting aliases later on
-    List<Feature> newOn = on.stream().map(f -> new Feature(f.getName(), f.getFgAlias(), f.isPrimary()))
-      .collect(Collectors.toList());
-    newOn.add(new Feature(featureGroup.getEventTime(), fgAlias));
-    return newOn;
-  }
-  
-  public List<SqlCondition> addEventTimeCondition(List<SqlCondition> joinCondition, SqlCondition operator) {
-    List<SqlCondition> newJoinCondition = new ArrayList<>(joinCondition);
-    newJoinCondition.add(operator);
-    return newJoinCondition;
   }
   
   public List<Feature> dropIrrelevantSubqueryFeatures(Query query, Query rightQuery) {

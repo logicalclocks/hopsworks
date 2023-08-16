@@ -35,6 +35,7 @@ import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlCondition;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -44,6 +45,7 @@ import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.dialect.HiveSqlDialect;
 import org.apache.calcite.sql.dialect.SparkSqlDialect;
 import org.apache.calcite.sql.fun.SqlCase;
@@ -56,8 +58,10 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -118,6 +122,7 @@ public class ConstructorController {
 
     if (pitEnabled) {
       fsQueryDTO.setPitQuery(makePitQuery(query, isTrainingDataset));
+      fsQueryDTO.setPitQueryAsof(makePitQueryAsof(query, isTrainingDataset));
     }
 
     return fsQueryDTO;
@@ -134,6 +139,12 @@ public class ConstructorController {
     return query.getHiveEngine() ? pitQuery.toSqlString(new HiveSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql() :
         pitQuery.toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
   }
+  
+  public String makePitQueryAsof(Query query, boolean isTrainingDataset) {
+    SqlDialect offlineSqlDialect = query.getHiveEngine() ? new HiveSqlDialect(SqlDialect.EMPTY_CONTEXT) :
+            new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT);
+    return generateSQL(query, false, true, isTrainingDataset).toSqlString(offlineSqlDialect).getSql();
+  }
 
   /**
    * Generate the SQL string. The backend will return a string to the client which is the SQL query to execute.
@@ -142,9 +153,27 @@ public class ConstructorController {
    * @return
    */
   public SqlSelect generateSQL(Query query, boolean online) {
+    return this.generateSQL(query, online, false, false);
+  }
+
+    /**
+     * Generate the SQL string. The backend will return a string to the client which is the SQL query to execute.
+     *
+     * @param query
+     * @return
+     */
+  public SqlSelect generateSQL(Query query, boolean online, boolean pitQuery, boolean isTrainingDataset) {
+
+    List<Feature> finalSelectList = collectFeatures(query);
+    // sort features in last select
+    if (isTrainingDataset) {
+      finalSelectList = finalSelectList.stream()
+              .sorted(Comparator.comparing(Feature::getIdx))
+              .collect(Collectors.toList());
+    }
 
     SqlNodeList selectList = new SqlNodeList(SqlParserPos.ZERO);
-    for (Feature f : collectFeatures(query)) {
+    for (Feature f : finalSelectList) {
       // Build the select part. List of features selected by the user. Each feature will be fg_alias.fg_name
       // we should use the ` to avoid syntax errors on reserved keywords used as feature names (e.g. date)
       if (f.getDefaultValue() == null) {
@@ -152,6 +181,40 @@ public class ConstructorController {
       } else {
         selectList.add(selectWithDefaultAs(f, true));
       }
+    }
+
+
+
+    if (pitQuery) {
+      List<Join> newJoins = new ArrayList<>();
+      for (Join join : query.getJoins()) {
+        JoinType joinType = join.getJoinType();
+        if (joinType == JoinType.INNER) {
+          joinType = JoinType.INNER_ASOF;
+        } else if (joinType == JoinType.LEFT) {
+          joinType = JoinType.LEFT_ASOF;
+        } else if (joinType == JoinType.RIGHT) {
+          joinType = JoinType.RIGHT_ASOF;
+        } else if (joinType == JoinType.FULL) {
+          joinType = JoinType.FULL_ASOF;
+        }
+        // add event time inequality join condition
+        List<Feature> newLeftOn = this.addEventTimeOn(join.getLeftOn(), query.getFeaturegroup(), query.getAs());
+        List<Feature> newRightOn = this.addEventTimeOn(join.getRightOn(), join.getRightQuery().getFeaturegroup(),
+                join.getRightQuery().getAs());
+        List<SqlCondition> newJoinOperator =
+                this.addEventTimeCondition(join.getJoinOperator(), SqlCondition.GREATER_THAN_OR_EQUAL);
+
+        // single right feature group
+        newJoins.add(new Join(query, join.getRightQuery(), newLeftOn, newRightOn, joinType, join.getPrefix(),
+                        newJoinOperator));
+
+      }
+      // make a copy of original query to replace joins
+      query = new Query(query.getFeatureStore(), query.getProject(), query.getFeaturegroup(), query.getAs(),
+              new ArrayList<>(query.getFeatures()), query.getAvailableFeatures(), query.getHiveEngine(),
+              query.getFilter());
+      query.setJoins(newJoins);
     }
 
     SqlNode joinNode = null;
@@ -191,6 +254,20 @@ public class ConstructorController {
     // Assemble the query
     return new SqlSelect(SqlParserPos.ZERO, null, selectList, joinNode,
         filterNode, null, null, null, orderByList, null, null, null);
+  }
+
+  public List<Feature> addEventTimeOn(List<Feature> on, Featuregroup featureGroup, String fgAlias) {
+    // make copy of features since otherwise it leads to problems when setting aliases later on
+    List<Feature> newOn = on.stream().map(f -> new Feature(f.getName(), f.getFgAlias(), f.isPrimary()))
+            .collect(Collectors.toList());
+    newOn.add(new Feature(featureGroup.getEventTime(), fgAlias));
+    return newOn;
+  }
+
+  public List<SqlCondition> addEventTimeCondition(List<SqlCondition> joinCondition, SqlCondition operator) {
+    List<SqlCondition> newJoinCondition = new ArrayList<>(joinCondition);
+    newJoinCondition.add(operator);
+    return newJoinCondition;
   }
 
   public SqlNode caseWhenDefault(Feature feature) {

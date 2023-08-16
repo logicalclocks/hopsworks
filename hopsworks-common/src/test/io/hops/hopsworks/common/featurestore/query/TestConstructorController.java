@@ -107,6 +107,7 @@ public class TestConstructorController {
 
   @Before
   public void setup() {
+    System.setProperty("line.separator", "\n");
     fs = new Featurestore();
     fs.setHiveDbId(1l);
     fs.setProject(new Project("test_proj"));
@@ -1226,4 +1227,27 @@ public class TestConstructorController {
 
     Assert.assertEquals(startRequest, query.getLeftFeatureGroupStartTimestamp());
   }
+  @Test
+  public void testAddEventTimeOn() {
+    Featuregroup fg1 = new Featuregroup(1);
+    fg1.setEventTime("ts");
+    List<Feature> oldOn = Collections.singletonList(new Feature("ft1"));
+    List<Feature> newOn = target.addEventTimeOn(oldOn, fg1, "fg0");
+
+    Assert.assertEquals(2, newOn.size());
+    // should respect order
+    Assert.assertEquals("ts", newOn.get(1).getName());
+  }
+
+  @Test
+  public void testAddEventTimeCondition() {
+    List<SqlCondition> oldCondition = Collections.singletonList(SqlCondition.EQUALS);
+    List<SqlCondition> newCondition = target.addEventTimeCondition(
+            oldCondition, SqlCondition.GREATER_THAN_OR_EQUAL);
+
+    Assert.assertEquals(2, newCondition.size());
+    // should respect order
+    Assert.assertEquals(SqlCondition.GREATER_THAN_OR_EQUAL, newCondition.get(1));
+  }
+
 }
