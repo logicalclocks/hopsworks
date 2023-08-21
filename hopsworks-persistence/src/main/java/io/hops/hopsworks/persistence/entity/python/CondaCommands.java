@@ -44,6 +44,7 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -332,9 +333,14 @@ public class CondaCommands implements Serializable {
   }
 
   public void setErrorMsg(String errorMsg) {
-    this.errorMsg = errorMsg.substring(Math.max(0, errorMsg.length() - 10000), errorMsg.length());
+    this.errorMsg = convertToLatin1(errorMsg.substring(Math.max(0, errorMsg.length() - 10000)));
   }
-
+  
+  public String convertToLatin1(String s) {
+    byte[] bytes = s.getBytes(StandardCharsets.ISO_8859_1);
+    return new String(bytes, StandardCharsets.ISO_8859_1);
+  }
+  
   public String getCustomCommandsFile() { return customCommandsFile; }
 
   public void setCustomCommandsFile(String customCommandsFile) { this.customCommandsFile = customCommandsFile; }
