@@ -261,13 +261,14 @@ public class LibraryInstaller {
     if(errorMsg == null) {
       errorMsg = ExceptionUtils.getStackTrace(ex);
     }
-    if(errorMsg == null) {
+    if(Strings.isNullOrEmpty(errorMsg)) {
       errorMsg = "Command failed due to exception:" + ex.getClass().getSimpleName();
     }
     errorMsg = prefix + errorMsg;
     if(errorMsg.length() > 10000) {
       errorMsg = errorMsg.substring(0, 10000);
     }
+
     return errorMsg;
   }
   
