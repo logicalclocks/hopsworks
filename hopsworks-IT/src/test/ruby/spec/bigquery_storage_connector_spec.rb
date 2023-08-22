@@ -43,7 +43,17 @@ describe "On #{ENV['OS']}" do
     create_data = {
       keyPath: key_path,
       parentProject: parent_project,
-      materializationDataset: material_dataset
+      materializationDataset: material_dataset,
+      arguments: [
+        {
+          "name": "key1",
+          "value": "option1"
+        },
+        {
+          "name": "key2",
+          "value": "option2"
+        }
+      ]
     }
     json_result, connector_name = create_bigquery_connector(project.id,  get_featurestore_id(project.id), create_data)
     return [JSON.parse(json_result),connector_name]
@@ -60,16 +70,6 @@ describe "On #{ENV['OS']}" do
       queryProject: 'feature-store-testing',
       dataset: 'temp',
       queryTable: 'shakespeare',
-      arguments: [
-        {
-          "name": "key1",
-          "value": "option1"
-        },
-        {
-          "name": "key2",
-          "value": "option2"
-        }
-      ]
     }
     json_result, connector_name = create_bigquery_connector(project.id, featurestore_id, json_data)
     parsed_json = JSON.parse(json_result)
@@ -82,10 +82,6 @@ describe "On #{ENV['OS']}" do
     expect(parsed_json['queryProject']).to eql('feature-store-testing')
     expect(parsed_json['dataset']).to eql('temp')
     expect(parsed_json['queryTable']).to eql('shakespeare')
-    expect(parsed_json['arguments'][0]['name']).to eql('key1')
-    expect(parsed_json['arguments'][0]['value']).to eql('option1')
-    expect(parsed_json['arguments'][1]['name']).to eql('key2')
-    expect(parsed_json['arguments'][1]['value']).to eql('option2')
   end
 
   it 'should create a bigquery connector with materializationDataset' do
@@ -101,6 +97,10 @@ describe "On #{ENV['OS']}" do
     expect(parsed_json['keyPath']).to eql(key_path)
     expect(parsed_json['parentProject']).to eql(parent_project)
     expect(parsed_json['materializationDataset']).to eql(material_dataset)
+    expect(parsed_json['arguments'][0]['name']).to eql('key1')
+    expect(parsed_json['arguments'][0]['value']).to eql('option1')
+    expect(parsed_json['arguments'][1]['name']).to eql('key2')
+    expect(parsed_json['arguments'][1]['value']).to eql('option2')
   end
 
   it 'should update bigquery connector with same name' do
@@ -124,7 +124,8 @@ describe "On #{ENV['OS']}" do
       parentProject: parent_project,
       queryProject: query_project,
       dataset: dataset,
-      queryTable: table
+      queryTable: table,
+      arguments: nil,
     }
     project = get_project
     update_result=update_connector_json(project.id, get_featurestore_id(project.id), connector_name, update_data )
@@ -139,6 +140,8 @@ describe "On #{ENV['OS']}" do
     expect(parsed_result_update['queryProject']).to eql(query_project)
     expect(parsed_result_update['dataset']).to eql(dataset)
     expect(parsed_result_update['queryTable']).to eql(table)
+    expect(parsed_result_update['queryTable']).to eql(table)
+    expect(parsed_result_update['arguments']).to eql(nil)
   end
 
   it 'should fail to update non existing connector' do
