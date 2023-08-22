@@ -22,6 +22,7 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jobs.alert.JobAlertsResource;
 import io.hops.hopsworks.api.jobs.executions.ExecutionsResource;
+import io.hops.hopsworks.api.jobs.scheduler.JobScheduleV2Resource;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.audit.logger.LogLevel;
@@ -101,7 +102,8 @@ public class JobsResource {
   private JobsBuilder jobsBuilder;
   @Inject
   private JobAlertsResource jobAlertsResource;
-
+  @Inject
+  private JobScheduleV2Resource scheduleResourceV2;
   private Project project;
 
   @Logged(logLevel = LogLevel.OFF)
@@ -210,9 +212,6 @@ public class JobsResource {
     Users user = jWTHelper.getUserPrincipal(sc);
     Jobs job = jobController.getJob(project, name);
 
-    if (job.getJobConfig().getSchedule() != null) {
-      jobController.unscheduleJob(job);
-    }
     switch (job.getJobType()) {
       case SPARK:
       case PYSPARK:
@@ -279,6 +278,16 @@ public class JobsResource {
     }
     jobController.unscheduleJob(job);
     return Response.noContent().build();
+  }
+
+  @Path("{name}/schedule/v2")
+  @Logged(logLevel = LogLevel.OFF)
+  public JobScheduleV2Resource scheduleV2(@PathParam("name") String name) throws JobException {
+    Jobs job = jobFacade.findByProjectAndName(project, name);
+    if (job == null) {
+      throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINEST, "Job name: " + name);
+    }
+    return this.scheduleResourceV2.setJob(job);
   }
 
   @ApiOperation(value = "Inspect user program and return a JobConfiguration",

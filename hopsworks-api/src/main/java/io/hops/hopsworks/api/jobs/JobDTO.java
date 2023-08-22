@@ -18,6 +18,7 @@ package io.hops.hopsworks.api.jobs;
 import io.hops.hopsworks.api.jobs.executions.ExecutionDTO;
 import io.hops.hopsworks.api.user.UserDTO;
 import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.common.jobs.scheduler.JobScheduleV2DTO;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 
@@ -34,6 +35,7 @@ public class JobDTO extends RestDTO<JobDTO> {
   private JobType jobType;
   private UserDTO creator;
   private ExecutionDTO executions;
+  private JobScheduleV2DTO jobSchedule;
   
   public Integer getId() {
     return id;
@@ -90,5 +92,8 @@ public class JobDTO extends RestDTO<JobDTO> {
   public void setExecutions(ExecutionDTO executions) {
     this.executions = executions;
   }
-
+  
+  public JobScheduleV2DTO getJobSchedule() { return jobSchedule; }
+  
+  public void setJobSchedule(JobScheduleV2DTO jobSchedule) { this.jobSchedule = jobSchedule; }
 }

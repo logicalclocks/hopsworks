@@ -126,3 +126,4 @@ Backend Dependencies
 * com.lambdista:try:jar:0.3.1 [ApacheV2] (https://github.com/lambdista/try)
 * software.amazon.awssdk [ApacheV2] (https://github.com/aws/aws-sdk-java-v2)
 * org.everit.json:schema:jar:1.12.1 [ApacheV2] (https://github.com/everit-org/json-schema)
+* com.cron-utils:cron-utils:jar:9.2.1 [ApacheV2] (https://github.com/jmrozanec/cron-utils)

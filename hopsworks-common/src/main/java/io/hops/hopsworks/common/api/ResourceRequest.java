@@ -243,6 +243,7 @@ public class ResourceRequest {
     LINKS,
     PROVENANCE_ARTIFACTS,
     PROJECT_LDAP_GROUP_MAPPING,
+    SCHEDULE,
     ENVIRONMENT_HISTORY;
 
     public static Name fromString(String name) {

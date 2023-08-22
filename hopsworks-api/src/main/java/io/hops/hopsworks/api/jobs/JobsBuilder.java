@@ -16,6 +16,7 @@
 package io.hops.hopsworks.api.jobs;
 
 import io.hops.hopsworks.api.jobs.executions.ExecutionsBuilder;
+import io.hops.hopsworks.api.jobs.scheduler.JobScheduleV2Builder;
 import io.hops.hopsworks.api.user.UsersBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
@@ -44,6 +45,8 @@ public class JobsBuilder {
   private UsersBuilder usersBuilder;
   @EJB
   private ExecutionsBuilder executionsBuilder;
+  @EJB
+  private JobScheduleV2Builder jobScheduleBuilder;
   
   
   public JobDTO uri(JobDTO dto, UriInfo uriInfo, Project project) {
@@ -82,6 +85,7 @@ public class JobsBuilder {
       dto.setJobType(job.getJobType());
       dto.setCreator(usersBuilder.build(uriInfo, resourceRequest.get(ResourceRequest.Name.CREATOR), job.getCreator()));
       dto.setExecutions(executionsBuilder.build(uriInfo, resourceRequest.get(ResourceRequest.Name.EXECUTIONS), job));
+      dto.setJobSchedule(jobScheduleBuilder.build(uriInfo, job.getJobSchedule()));
     }
     return dto;
   }
@@ -99,6 +103,7 @@ public class JobsBuilder {
       dto.setCreator(usersBuilder.build(uriInfo, resourceRequest.get(ResourceRequest.Name.CREATOR), job.getCreator()));
       dto.setExecutions(
           executionsBuilder.build(uriInfo, resourceRequest.get(ResourceRequest.Name.EXECUTIONS), execution));
+      dto.setJobSchedule(jobScheduleBuilder.build(uriInfo, job.getJobSchedule()));
     }
     return dto;
   }

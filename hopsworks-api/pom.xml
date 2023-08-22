@@ -177,10 +177,6 @@
       <artifactId>commons-httpclient</artifactId>
     </dependency>
     <dependency>
-      <groupId>commons-fileupload</groupId>
-      <artifactId>commons-fileupload</artifactId>
-    </dependency>
-    <dependency>
       <groupId>io.hops</groupId>
       <artifactId>hadoop-client-api</artifactId>
       <!-- this dependency is already in the classpath, we don't need it here as well. -->

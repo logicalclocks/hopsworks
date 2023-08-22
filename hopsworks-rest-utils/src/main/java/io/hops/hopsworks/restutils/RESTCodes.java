@@ -455,8 +455,8 @@ public class RESTCodes {
     FAILED_TO_DELETE_ROUTE(39, "Failed to delete route.", Response.Status.BAD_REQUEST),
     EXECUTIONS_LIMIT_REACHED(40, "Job reached the maximum number of executions.",
             Response.Status.BAD_REQUEST),
-    JOB_ALREADY_EXISTS(41, "Job with this name already exists.", Response.Status.BAD_REQUEST);
-
+    JOB_ALREADY_EXISTS(41, "Job with this name already exists.", Response.Status.BAD_REQUEST),
+    JOB_SCHEDULE_NOT_FOUND(42, "Cannot find the job schedule.", Response.Status.NOT_FOUND);
 
     private Integer code;
     private String message;
