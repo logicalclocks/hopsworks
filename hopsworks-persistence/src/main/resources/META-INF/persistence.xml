@@ -105,6 +105,7 @@
     <class>io.hops.hopsworks.persistence.entity.jobs.quota.YarnProjectsDailyCost</class>
     <class>io.hops.hopsworks.persistence.entity.jobs.quota.YarnProjectsQuota</class>
     <class>io.hops.hopsworks.persistence.entity.jobs.description.Jobs</class>
+    <class>io.hops.hopsworks.persistence.entity.jobs.scheduler.JobScheduleV2</class>
     <class>io.hops.hopsworks.persistence.entity.jupyter.JupyterProject</class>
     <class>io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings</class>
     <class>io.hops.hopsworks.persistence.entity.jwt.InvalidJwt</class>
