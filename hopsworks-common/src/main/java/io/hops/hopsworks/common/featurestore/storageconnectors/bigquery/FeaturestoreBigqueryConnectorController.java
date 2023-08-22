@@ -111,24 +111,17 @@ public class FeaturestoreBigqueryConnectorController {
 
     featureStoreBigqueryConnector.setKeyPath(featurestoreBigqueryConnectorDTO.getKeyPath());
     featureStoreBigqueryConnector.setParentProject(featurestoreBigqueryConnectorDTO.getParentProject());
-    if (featurestoreBigqueryConnectorDTO.getQueryProject() != null) {
-      featureStoreBigqueryConnector.setDataset(featurestoreBigqueryConnectorDTO.getDataset());
-      featureStoreBigqueryConnector.setQueryTable(featurestoreBigqueryConnectorDTO.getQueryTable());
-      featureStoreBigqueryConnector.setQueryProject(featurestoreBigqueryConnectorDTO.getQueryProject());
-    }
-    
-    if (featurestoreBigqueryConnectorDTO.getMaterializationDataset() != null) {
-      featureStoreBigqueryConnector.setMaterializationDataset(
-        featurestoreBigqueryConnectorDTO.getMaterializationDataset()
-      );
-    }
-  
-    if (featurestoreBigqueryConnectorDTO.getArguments() != null) {
-      featureStoreBigqueryConnector.setArguments(
-        storageConnectorUtil.fromOptions(featurestoreBigqueryConnectorDTO.getArguments())
-      );
-      
-    }
+    featureStoreBigqueryConnector.setDataset(featurestoreBigqueryConnectorDTO.getDataset());
+    featureStoreBigqueryConnector.setQueryTable(featurestoreBigqueryConnectorDTO.getQueryTable());
+    featureStoreBigqueryConnector.setQueryProject(featurestoreBigqueryConnectorDTO.getQueryProject());
+
+    featureStoreBigqueryConnector.setMaterializationDataset(
+      featurestoreBigqueryConnectorDTO.getMaterializationDataset()
+    );
+
+    featureStoreBigqueryConnector.setArguments(
+      storageConnectorUtil.fromOptions(featurestoreBigqueryConnectorDTO.getArguments())
+    );
     
     return featureStoreBigqueryConnector;
   }
