@@ -45,6 +45,7 @@ public class OAuthClientDTO extends RestDTO<OAuthClientDTO> {
   private String callbackURI;
   private Boolean rejectRemoteNoGroup;
   private String managedCloudRedirectUri;
+  private String managedCloudLogoutRedirectUri;
   
   public OAuthClientDTO() {
   }
@@ -265,6 +266,14 @@ public class OAuthClientDTO extends RestDTO<OAuthClientDTO> {
     this.managedCloudRedirectUri = managedCloudRedirectUri;
   }
   
+  public String getManagedCloudLogoutRedirectUri() {
+    return managedCloudLogoutRedirectUri;
+  }
+  
+  public void setManagedCloudLogoutRedirectUri(String managedCloudLogoutRedirectUri) {
+    this.managedCloudLogoutRedirectUri = managedCloudLogoutRedirectUri;
+  }
+  
   public void validate() throws RemoteAuthException {
     if (Strings.isNullOrEmpty(this.getClientId())) {
       throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Client id not set.");
@@ -356,6 +365,7 @@ public class OAuthClientDTO extends RestDTO<OAuthClientDTO> {
       ", callbackURI='" + callbackURI + '\'' +
       ", rejectRemoteNoGroup=" + rejectRemoteNoGroup +
       ", managedCloudRedirectUri='" + managedCloudRedirectUri + '\'' +
+      ", managedCloudLogoutRedirectUri='" + managedCloudLogoutRedirectUri + '\'' +
       '}';
   }
 }

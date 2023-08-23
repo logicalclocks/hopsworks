@@ -13,8 +13,13 @@ import io.hops.hadoop.shaded.javax.ws.rs.core.UriBuilder;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static io.hops.hopsworks.common.remote.oauth.OpenIdConstant.CLIENT_ID;
 
 public class LogoutReq {
+  private final static Logger LOGGER = Logger.getLogger(LogoutReq.class.getName());
   private final URI uri;
   private final ClientID clientID;
   private JWT idTokenHint;
@@ -78,12 +83,13 @@ public class LogoutReq {
     LogoutRequest logoutRequest = new LogoutRequest(this.uri, this.idTokenHint,
       Strings.isNullOrEmpty(this.postLogoutRedirectParam)? this.postLogoutRedirectURI : null, this.state);
     UriBuilder logoutURIWithParams = UriBuilder.fromUri(logoutRequest.toURI())
-      .queryParam("client_id", this.clientID.getValue());
+      .queryParam(CLIENT_ID, this.clientID.getValue());
     if (!Strings.isNullOrEmpty(this.postLogoutRedirectParam)) {
       try {
         logoutURIWithParams.queryParam(this.postLogoutRedirectParam,
           URLEncoder.encode(this.postLogoutRedirectURI.toString(), "utf-8"));
       } catch (UnsupportedEncodingException e) {
+        LOGGER.log(Level.WARNING, "Failed to encode post logout redirect URI {0}", e.getMessage());
       }
     }
     return logoutURIWithParams.build();
