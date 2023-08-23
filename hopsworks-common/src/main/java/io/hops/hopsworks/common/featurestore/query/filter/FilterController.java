@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.query.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
@@ -211,41 +212,47 @@ public class FilterController {
   }
   
   public SqlNode generateFilterLogicNode(FilterLogic filterLogic, boolean online) {
-    return generateFilterLogicNode(filterLogic, online, true);
+    return generateFilterLogicNode(filterLogic, online, true, false);
   }
   
-  public SqlNode generateFilterLogicNode(FilterLogic filterLogic, boolean online, boolean checkForInNull) {
+  public SqlNode generateFilterLogicNode(FilterLogic filterLogic, boolean online, boolean checkForInNull,
+                                         boolean usePitAlias) {
     if (filterLogic.getType() == SqlFilterLogic.SINGLE) {
       if (filterLogic.getLeftFilter().getFeatures().size() > 1) {
         // NOTE: this is currently only the case when the Filter is coming from the PreparedStatementBuilder
         // if we want to support user defined filters over multiple features in the future, this needs to be changed,
         // as the ? placeholder is hard coded in `generateFilterNodeList`
-        return generateFilterNodeList(filterLogic.getLeftFilter(), online);
+        return generateFilterNodeList(filterLogic.getLeftFilter(), online, usePitAlias);
       } else {
-        return generateFilterNode(filterLogic.getLeftFilter(), online, checkForInNull);
+        return generateFilterNode(filterLogic.getLeftFilter(), online, checkForInNull, usePitAlias);
       }
     } else {
       SqlNode leftNode = filterLogic.getLeftFilter() != null ?
-        generateFilterNode(filterLogic.getLeftFilter(), online, checkForInNull) :
-          generateFilterLogicNode(filterLogic.getLeftLogic(), online);
+        generateFilterNode(filterLogic.getLeftFilter(), online, checkForInNull, usePitAlias) :
+          generateFilterLogicNode(filterLogic.getLeftLogic(), online, checkForInNull, usePitAlias);
       SqlNode rightNode = filterLogic.getRightFilter() != null ?
-          generateFilterNode(filterLogic.getRightFilter(), online, checkForInNull) :
-          generateFilterLogicNode(filterLogic.getRightLogic(), online);
+          generateFilterNode(filterLogic.getRightFilter(), online, checkForInNull, usePitAlias) :
+          generateFilterLogicNode(filterLogic.getRightLogic(), online, checkForInNull, usePitAlias);
       return filterLogic.getType().operator.createCall(SqlParserPos.ZERO, leftNode, rightNode);
     }
   }
   
   public SqlNode generateFilterNode(Filter filter, boolean online) {
-    return generateFilterNode(filter, online, true);
+    return generateFilterNode(filter, online, true, false);
   }
 
-  public SqlNode generateFilterNode(Filter filter, boolean online, boolean checkForInNull) {
+  public SqlNode generateFilterNode(Filter filter, boolean online, boolean checkForInNull, boolean usePitAlias) {
     SqlNode sqlNode;
     Feature feature = filter.getFeatures().get(0);
     if (feature.getDefaultValue() == null) {
-      if (feature.getFgAlias(false) != null) {
-        sqlNode = new SqlIdentifier(Arrays.asList("`" + feature.getFgAlias(false) + "`",
-            "`" + feature.getName() + "`"), SqlParserPos.ZERO);
+      if (feature.getFgAlias(usePitAlias) != null) {
+        String featurePrefixed = feature.getName();
+        if (usePitAlias &&!Strings.isNullOrEmpty(feature.getPrefix())) {
+          featurePrefixed = feature.getPrefix() + feature.getName();
+        }
+
+        sqlNode = new SqlIdentifier(Arrays.asList("`" + feature.getFgAlias(usePitAlias) + "`",
+            "`" + featurePrefixed + "`"), SqlParserPos.ZERO);
       } else {
         sqlNode = new SqlIdentifier("`" + feature.getName() + "`", SqlParserPos.ZERO);
       }
@@ -267,7 +274,7 @@ public class FilterController {
         if (item == null && checkForInNull) {
           FilterLogic wrappedIn = new FilterLogic(SqlFilterLogic.OR, filter, new Filter(filter.getFeatures(),
             SqlCondition.IS, (String) null));
-          return generateFilterLogicNode(wrappedIn, online, false);
+          return generateFilterLogicNode(wrappedIn, online, false, usePitAlias);
         }
         // Item would not be json of FeatureDTO object, so it is ok to create FilterValue from string value of item
         // skip null values since they are handled by adding the OR construct
@@ -312,29 +319,34 @@ public class FilterController {
   }
 
   public SqlNode buildFilterNode(Query baseQuery, Query query, int i, boolean online) {
+    return this.buildFilterNode(baseQuery, query, i, online, false);
+  }
+
+  public SqlNode buildFilterNode(Query baseQuery, Query query, int i, boolean online, boolean usePitAlias) {
     if (i < 0 && query.getFilter() != null) {
       // No more joins to read build the node for the query itself.
-      return generateFilterLogicNode(query.getFilter(), online);
+      return generateFilterLogicNode(query.getFilter(), online, true, usePitAlias);
     } else if (i >= 0) {
-      SqlNode filter = buildFilterNode(baseQuery, baseQuery.getJoins().get(i).getRightQuery(), i - 1, online);
+      SqlNode filter = buildFilterNode(baseQuery, baseQuery.getJoins().get(i).getRightQuery(), i - 1, online,
+              usePitAlias);
       if (filter != null && query.getFilter() != null) {
         return SqlStdOperatorTable.AND.createCall(SqlParserPos.ZERO, generateFilterLogicNode(query.getFilter(), online),
             filter);
       } else if (filter != null) {
         return filter;
       } else if (query.getFilter() != null) {
-        return generateFilterLogicNode(query.getFilter(), online);
+        return generateFilterLogicNode(query.getFilter(), online, true, usePitAlias);
       }
     }
     return null;
   }
 
-  public SqlNode generateFilterNodeList(Filter filter, boolean online) {
+  public SqlNode generateFilterNodeList(Filter filter, boolean online, boolean usePitAlias) {
     SqlNodeList operandList = new SqlNodeList(SqlParserPos.ZERO);
     for (Feature feature : filter.getFeatures()) {
       if (feature.getDefaultValue() == null) {
-        if (feature.getFgAlias(false) != null) {
-          operandList.add(new SqlIdentifier(Arrays.asList("`" + feature.getFgAlias(false) + "`",
+        if (feature.getFgAlias(usePitAlias) != null) {
+          operandList.add(new SqlIdentifier(Arrays.asList("`" + feature.getFgAlias(usePitAlias) + "`",
               "`" + feature.getName() + "`"), SqlParserPos.ZERO));
         } else {
           operandList.add(new SqlIdentifier("`" + feature.getName() + "`", SqlParserPos.ZERO));

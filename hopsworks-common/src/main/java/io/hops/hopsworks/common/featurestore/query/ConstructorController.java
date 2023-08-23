@@ -24,6 +24,7 @@ import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegr
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupDTO;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterController;
+import io.hops.hopsworks.common.featurestore.query.filter.FilterLogic;
 import io.hops.hopsworks.common.featurestore.query.join.Join;
 import io.hops.hopsworks.common.featurestore.query.join.JoinController;
 import io.hops.hopsworks.common.featurestore.query.pit.PitJoinController;
@@ -326,6 +327,29 @@ public class ConstructorController {
       (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
         query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI)) {
       features = cachedFeaturegroupController.dropHudiSpecFeatures(features);
+    }
+    return features;
+  }
+
+  public List<Feature> collectFeaturesFromFilter(FilterLogic filter) {
+    return this.collectFeaturesFromFilter(filter, null);
+  }
+
+  public List<Feature> collectFeaturesFromFilter(FilterLogic filter, Query query) {
+    List<Feature> features = new ArrayList<>();
+    if (filter.getLeftFilter() != null) {
+      features.addAll(filter.getLeftFilter().getFeatures().stream().filter(f ->
+              (query == null || f.getFeatureGroup().equals( query.getFeaturegroup()))).collect(Collectors.toList()));
+    }
+    if (filter.getRightFilter() != null) {
+      features.addAll(filter.getRightFilter().getFeatures().stream().filter(f ->
+              (query == null || f.getFeatureGroup().equals( query.getFeaturegroup()))).collect(Collectors.toList()));
+    }
+    if (filter.getLeftLogic() != null) {
+      features.addAll(this.collectFeaturesFromFilter(filter.getLeftLogic(), query));
+    }
+    if (filter.getRightLogic() != null) {
+      features.addAll(this.collectFeaturesFromFilter(filter.getRightLogic(), query));
     }
     return features;
   }

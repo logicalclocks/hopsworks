@@ -48,7 +48,7 @@ import java.util.List;
 import java.util.Map;
 
 public class TestFilterController {
-  
+
   private ConstructorController constructorController;
   private FilterController filterController;
   private ObjectMapper objectMapper = new ObjectMapper();
@@ -74,6 +74,7 @@ public class TestFilterController {
   
   @Before
   public void setup() {
+
     constructorController = new ConstructorController();
     filterController = new FilterController(constructorController);
   
@@ -395,7 +396,6 @@ public class TestFilterController {
     FilterLogic filter = new FilterLogic(new Filter(fg2Features, SqlCondition.IN, "?"));
     String result = filterController.generateFilterLogicNode(filter, true).toSqlString(new SparkSqlDialect(SqlDialect
       .EMPTY_CONTEXT)).getSql();
-    System.out.println(result);
     String expected = "(`fg2`.`fg2_pk`, CASE WHEN `fg2`.`fg2_ft` IS NULL THEN 10.0 ELSE `fg2`.`fg2_ft` END) IN ?";
     Assert.assertEquals(expected, result);
   }
