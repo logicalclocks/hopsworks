@@ -1907,7 +1907,9 @@ public class RESTCodes {
     KEY_HANDLER_CREATE_ERROR(10, "Error occurred during apikey create handler.",
       Response.Status.INTERNAL_SERVER_ERROR),
     KEY_HANDLER_DELETE_ERROR(11, "Error occurred during apikey delete handler.",
-      Response.Status.INTERNAL_SERVER_ERROR);
+      Response.Status.INTERNAL_SERVER_ERROR),
+    KEY_INVALID(12, "Invalid or incorrect API key.", Response.Status.UNAUTHORIZED),
+    KEY_NOT_FOUND_IN_DATABASE(13, "API key not found in the database", Response.Status.UNAUTHORIZED);
 
     private Integer code;
     private String message;
