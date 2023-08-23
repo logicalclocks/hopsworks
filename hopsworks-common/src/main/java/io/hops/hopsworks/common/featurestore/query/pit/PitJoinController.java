@@ -131,6 +131,23 @@ public class PitJoinController {
       List<SqlCondition> newJoinOperator =
               constructorController.addEventTimeCondition(join.getJoinOperator(), SqlCondition.GREATER_THAN_OR_EQUAL);
 
+      // Add filters if needed
+      List<Feature> originalFeatures = new ArrayList<>(join.getRightQuery().getFeatures());
+      if (query.getFilter() != null) {
+        // if all filters are on left-sided features, add them to the base/inner query
+        if (baseQuery.getFilter() == null && !constructorController.collectFeaturesFromFilter(query.getFilter()
+                ).stream().anyMatch(f -> !query.getFeatures().contains(f))) {
+          baseQuery.setFilter(query.getFilter());
+        }
+        // else, filters will be added to the outer query and relevant features need to be selected in the subquery
+        else {
+          List<Feature> filterFeatures = constructorController.collectFeaturesFromFilter(query.getFilter(),
+                          join.getRightQuery()).stream().filter(f -> !join.getRightQuery().getFeatures().contains(f))
+                  .collect(Collectors.toList());
+          join.getRightQuery().getFeatures().addAll(filterFeatures);
+        }
+      }
+
       // single right feature group
       List<Join> newJoins = Collections.singletonList(
         new Join(baseQuery, join.getRightQuery(), newLeftOn, newRightOn, join.getJoinType(), join.getPrefix(),
@@ -147,6 +164,9 @@ public class PitJoinController {
 
       // first generate subquery and subsequently add rank over window
       SqlSelect subQuery = constructorController.generateSQL(baseQuery, false);
+
+      // reset the feature list
+      join.getRightQuery().setFeatures(originalFeatures);
 
       // now add rank over window
       subQuery.getSelectList().add(rankOverAs(newLeftOn,
@@ -206,7 +226,7 @@ public class PitJoinController {
   public SqlNode generateSQL(Query query, boolean isTrainingDataset) {
     // make a copy of base query to replace joins
     Query baseQuery = new Query(query.getFeatureStore(), query.getProject(), query.getFeaturegroup(), query.getAs(),
-      new ArrayList<>(query.getFeatures()), query.getAvailableFeatures(), query.getHiveEngine(), query.getFilter());
+      new ArrayList<>(query.getFeatures()), query.getAvailableFeatures(), query.getHiveEngine(), null);
 
     // collect left outer most features
     List<Feature> finalSelectList = constructorController.collectFeatures(baseQuery);
@@ -242,6 +262,15 @@ public class PitJoinController {
         List<Feature> features = constructorController.collectFeatures(query.getJoins().get(i).getRightQuery());
         features.forEach(f -> f.setPitFgAlias(pitAlias));
         finalSelectList.addAll(features);
+        if (query.getFilter() != null) {
+          Query rightQuery = query.getJoins().get(i).getRightQuery();
+          List<Feature> filterFeatures = constructorController.collectFeaturesFromFilter(
+                          query.getFilter(),
+                          rightQuery).stream().filter(f -> f.getFeatureGroup() == rightQuery.getFeaturegroup())
+                  .collect(Collectors.toList());
+          filterFeatures.forEach(f -> f.setPitFgAlias(pitAlias));
+        }
+
       }
 
       // add event time inequality join condition
@@ -285,8 +314,15 @@ public class PitJoinController {
             Arrays.asList("`" + f.getFgAlias(true) + "`", "`" + featurePrefixed + "`"), SqlParserPos.ZERO),
           new SqlIdentifier("`" + featurePrefixed + "`", SqlParserPos.ZERO)));
     }
+
+    // if the base query does not have filters, but there are filters on the final query, add them to the body
+    SqlNode filterNode = null;
+    if (baseQuery.getFilter() == null && query.getFilter() != null) {
+      filterNode = filterController.generateFilterLogicNode(query.getFilter(), false, true, true);
+    }
+
     SqlSelect body = new SqlSelect(SqlParserPos.ZERO, null, selectList,
-            buildWithJoin(newJoins, newJoins.size()-1), null, null, null, null, null, null, null, null);
+            buildWithJoin(newJoins, newJoins.size()-1), filterNode, null, null, null, null, null, null, null);
     
     return new SqlWith(SqlParserPos.ZERO, selectAsses, body);
   }
