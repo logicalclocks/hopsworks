@@ -699,7 +699,6 @@ public class Settings implements Serializable {
       YARN_DEFAULT_QUOTA = setIntVar(VARIABLE_YARN_DEFAULT_QUOTA, YARN_DEFAULT_QUOTA);
       DEFAULT_PAYMENT_TYPE = setPaymentType(VARIABLE_PROJECT_PAYMENT_TYPE, DEFAULT_PAYMENT_TYPE);
       HDFS_DEFAULT_QUOTA_MBs = setLongVar(VARIABLE_HDFS_DEFAULT_QUOTA, HDFS_DEFAULT_QUOTA_MBs);
-      HDFS_BASE_STORAGE_POLICY = setHdfsStoragePolicy(VARIABLE_HDFS_BASE_STORAGE_POLICY, HDFS_BASE_STORAGE_POLICY);
       HDFS_LOG_STORAGE_POLICY = setHdfsStoragePolicy(VARIABLE_HDFS_LOG_STORAGE_POLICY, HDFS_LOG_STORAGE_POLICY);
       MAX_NUM_PROJ_PER_USER = setIntVar(VARIABLE_MAX_NUM_PROJ_PER_USER, MAX_NUM_PROJ_PER_USER);
       FILE_PREVIEW_IMAGE_SIZE = setIntVar(VARIABLE_FILE_PREVIEW_IMAGE_SIZE, 10000000);
@@ -1343,9 +1342,6 @@ public class Settings implements Serializable {
     return HDFS_DEFAULT_QUOTA_MBs;
   }
 
-  // Set the DIR_ROOT (/Projects) to have DB storage policy, i.e. - small files stored on db
-  private DistributedFileSystemOps.StoragePolicy HDFS_BASE_STORAGE_POLICY
-    = DistributedFileSystemOps.StoragePolicy.SMALL_FILES;
   // To not fill the SSDs with Logs files that nobody access frequently
   // We set the StoragePolicy for the LOGS dir to be DEFAULT
   private DistributedFileSystemOps.StoragePolicy HDFS_LOG_STORAGE_POLICY
@@ -1370,11 +1366,6 @@ public class Settings implements Serializable {
     } else {
       return defaultPolicy;
     }
-  }
-
-  public synchronized DistributedFileSystemOps.StoragePolicy getHdfsBaseStoragePolicy() {
-    checkCache();
-    return HDFS_BASE_STORAGE_POLICY;
   }
 
   public synchronized DistributedFileSystemOps.StoragePolicy getHdfsLogStoragePolicy() {

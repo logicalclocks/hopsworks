@@ -77,7 +77,6 @@ import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController
 import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.hdfs.FsPermissions;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
@@ -155,7 +154,6 @@ import org.apache.commons.lang.WordUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
@@ -1042,41 +1040,10 @@ public class ProjectController {
   }
 
   //create project in HDFS
-  private String mkProjectDIR(String projectName, DistributedFileSystemOps dfso)
-    throws IOException {
-
-    String rootDir = Settings.DIR_ROOT;
-
-    boolean rootDirCreated;
-    boolean projectDirCreated;
-
-    if (!dfso.isDir(File.separator + rootDir)) {
-      /*
-       * if the base path does not exist in the file system, create it first
-       * and set it metaEnabled so that other folders down the dir tree
-       * are getting registered in hdfs_metadata_log table
-       */
-      Path location = new Path(File.separator + rootDir);
-      rootDirCreated = dfso.mkdir(location, FsPermission.getDirDefault());
-      dfso.setPermission(location, FsPermissions.rwxrwxr_x);
-      dfso.setStoragePolicy(location, settings.getHdfsBaseStoragePolicy());
-    } else {
-      rootDirCreated = true;
-    }
-
-    /*
-     * Marking a project path as meta enabled means that all child folders/files
-     * that'll be created down this directory tree will have as a parent this
-     * inode.
-     */
+  private void mkProjectDIR(String projectName, DistributedFileSystemOps dfso) throws IOException {
     String projectPath = Utils.getProjectPath(projectName);
     //Create first the projectPath
-    projectDirCreated = dfso.mkdir(projectPath);
-
-    if (rootDirCreated && projectDirCreated) {
-      return projectPath;
-    }
-    return null;
+    dfso.mkdir(projectPath);
   }
 
   @VisibleForTesting
