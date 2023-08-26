@@ -125,6 +125,8 @@ public class Featuregroup implements Serializable {
   private String eventTime;
   @Column(name = "online_enabled")
   private boolean onlineEnabled;
+  @Column(name = "deprecated")
+  private boolean deprecated;
   @NotNull
   @Enumerated(EnumType.ORDINAL)
   @Column(name = "feature_group_type")
@@ -296,6 +298,14 @@ public class Featuregroup implements Serializable {
   public void setOnlineEnabled(boolean onlineEnabled) {
     this.onlineEnabled = onlineEnabled;
   }
+
+  public boolean isDeprecated() {
+    return deprecated;
+  }
+
+  public void setDeprecated(boolean deprecated) {
+    this.deprecated = deprecated;
+  }
   
   @Override
   public boolean equals(Object o) {
@@ -316,6 +326,7 @@ public class Featuregroup implements Serializable {
     if (!Objects.equals(streamFeatureGroup, that.streamFeatureGroup)) return false;
     if (!Objects.equals(eventTime, that.eventTime)) return false;
     if (!Objects.equals(onlineEnabled, that.onlineEnabled)) return false;
+    if (!Objects.equals(deprecated, that.deprecated)) return false;
     if (!Objects.equals(expectationSuite, that.expectationSuite)) return false;
     return Objects.equals(statisticsConfig, that.statisticsConfig);
   }
@@ -335,6 +346,7 @@ public class Featuregroup implements Serializable {
     result = 31 * result + (statisticsConfig != null ? statisticsConfig.hashCode() : 0);
     result = 31 * result + (eventTime != null ? eventTime.hashCode() : 0);
     result = 31 * result + (onlineEnabled ? 1: 0);
+    result = 31 * result + (deprecated ? 1: 0);
     result = 31 * result + (expectationSuite != null ? expectationSuite.hashCode(): 0);
     return result;
   }

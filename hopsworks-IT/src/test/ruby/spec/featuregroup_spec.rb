@@ -444,7 +444,56 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["features"].select{ |f| f["name"] == "testfeature"}.first["defaultValue"]).to be nil
         expect(parsed_json["features"].select{ |f| f["name"] == "testfeature2"}.first["defaultValue"]).to eql("10")
       end
+      
+      it "should be able to deprecated a cached featuregroup in the featurestore" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(201)
+        featuregroup_id = parsed_json["id"]
+        expect(parsed_json["deprecated"]).to be false
 
+        # updated metadata
+        json_result = deprecate_featuregroup(project.id, featurestore_id, featuregroup_id, parsed_json, true)
+        expect_status_details(200)
+
+        # get feature group and verify that its deprecated
+        parsed_json = get_featuregroup_checked(project.id, featuregroup_name, version: parsed_json["version"])
+        expect(parsed_json.length).to be 1
+        parsed_json = parsed_json[0]
+        expect(parsed_json["deprecated"]).to be true
+      end
+      
+      it "should be able to reanable a deprecated cached featuregroup in the featurestore" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(201)
+        featuregroup_id = parsed_json["id"]
+        expect(parsed_json["deprecated"]).to be false
+
+        # updated metadata
+        json_result = deprecate_featuregroup(project.id, featurestore_id, featuregroup_id, parsed_json, true)
+        expect_status_details(200)
+
+        # get feature group and verify that its deprecated
+        parsed_json = get_featuregroup_checked(project.id, featuregroup_name, version: parsed_json["version"])
+        expect(parsed_json.length).to be 1
+        parsed_json = parsed_json[0]
+        expect(parsed_json["deprecated"]).to be true
+        
+        # updated metadata
+        json_result = deprecate_featuregroup(project.id, featurestore_id, featuregroup_id, parsed_json, false)
+        expect_status_details(200)
+
+        # get feature group and verify that its not deprecated
+        parsed_json = get_featuregroup_checked(project.id, featuregroup_name, version: parsed_json["version"])
+        expect(parsed_json.length).to be 1
+        parsed_json = parsed_json[0]
+        expect(parsed_json["deprecated"]).to be false
+      end
 
       it "should be able to update the metadata of an offline featuregroup from the featurestore" do
         project = get_project

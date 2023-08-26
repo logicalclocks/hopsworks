@@ -56,6 +56,8 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO<FeaturegroupDTO> {
   private String eventTime = null;
   @JsonSetter(nulls = Nulls.SKIP)
   private Boolean onlineEnabled = false;
+  @JsonSetter(nulls = Nulls.SKIP)
+  private Boolean deprecated = false;
   
   public FeaturegroupDTO() {
   }
@@ -129,6 +131,14 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO<FeaturegroupDTO> {
 
   public void setOnlineEnabled(Boolean onlineEnabled) {
     this.onlineEnabled = onlineEnabled;
+  }
+
+  public Boolean getDeprecated() {
+    return deprecated;
+  }
+
+  public void setDeprecated(Boolean deprecated) {
+    this.deprecated = deprecated;
   }
   
   @Override
