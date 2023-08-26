@@ -113,6 +113,7 @@ public class StreamFeatureGroupController {
         .orElse("")
     );
     streamFeatureGroupDTO.setOnlineEnabled(featuregroup.isOnlineEnabled());
+    streamFeatureGroupDTO.setDeprecated(featuregroup.isDeprecated());
 
     streamFeatureGroupDTO.setLocation(featurestoreUtils.resolveLocationURI(
       featuregroup.getStreamFeatureGroup().getHiveTbls().getSdId().getLocation()));

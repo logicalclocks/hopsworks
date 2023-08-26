@@ -459,20 +459,28 @@ public class FeaturegroupService {
       @QueryParam("disableOnline") @DefaultValue("false") Boolean disableOnline,
       @ApiParam(value = "updateStatsConfig", example = "true")
       @QueryParam("updateStatsConfig") @DefaultValue("false") Boolean updateStatsConfig,
+      @ApiParam(value = "deprecate", example = "true")
+      @QueryParam("deprecate") Boolean deprecate,
       FeaturegroupDTO featuregroupDTO)
       throws FeaturestoreException, SQLException, ProvenanceException, ServiceException, SchemaException,
       KafkaException, ProjectException, UserException, IOException, HopsSecurityException {
-    if(featuregroupDTO == null) {
-      throw new IllegalArgumentException("Input JSON for updating Feature Group cannot be null");
+    if (updateMetadata || updateStatsConfig) {
+      if (featuregroupDTO == null) {
+        throw new IllegalArgumentException("Input JSON for updating Feature Group cannot be null");
+      }
+      featuregroupDTO.setId(featuregroupId);
     }
     verifyIdProvided(featuregroupId);
-    featuregroupDTO.setId(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
     Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
     FeaturegroupDTO updatedFeaturegroupDTO = null;
     if(updateMetadata) {
       updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupMetadata(project, user, featurestore,
         featuregroup, featuregroupDTO);
+    }
+    if(updateStatsConfig) {
+      updatedFeaturegroupDTO = featuregroupController.updateFeatureGroupStatsConfig(
+          featurestore, featuregroupDTO, project, user);
     }
     if(enableOnline && !featuregroup.isOnlineEnabled() &&
         (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP ||
@@ -495,9 +503,8 @@ public class FeaturegroupService {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.STREAM_FEATURE_GROUP_ONLINE_DISABLE_ENABLE,
         Level.FINE, "Please create a new version of the feature group to disable online storage.");
     }
-    if(updateStatsConfig) {
-      updatedFeaturegroupDTO = featuregroupController.updateFeatureGroupStatsConfig(
-        featurestore, featuregroupDTO, project, user);
+    if(deprecate != null) {
+      updatedFeaturegroupDTO = featuregroupController.deprecateFeatureGroup(project, user, featuregroup, deprecate);
     }
     if(updatedFeaturegroupDTO != null) {
       GenericEntity<FeaturegroupDTO> featuregroupGeneric =

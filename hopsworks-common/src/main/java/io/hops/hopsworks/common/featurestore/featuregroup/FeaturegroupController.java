@@ -601,6 +601,14 @@ public class FeaturegroupController {
     return convertFeaturegrouptoDTO(featuregroup, project, user);
   }
 
+  public FeaturegroupDTO deprecateFeatureGroup(Project project, Users user, Featuregroup featuregroup,
+                                               Boolean deprecate)
+      throws FeaturestoreException, ServiceException {
+    featuregroup.setDeprecated(deprecate);
+    featuregroupFacade.updateFeaturegroupMetadata(featuregroup);
+    return convertFeaturegrouptoDTO(featuregroup, project, user);
+  }
+
   /**
    * Check if the feature group described by the DTO exists
    *

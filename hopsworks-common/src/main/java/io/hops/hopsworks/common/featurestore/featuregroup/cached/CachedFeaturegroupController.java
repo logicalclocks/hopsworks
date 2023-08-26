@@ -312,6 +312,7 @@ public class CachedFeaturegroupController {
               .onlineFeatureGroupTopicName(project.getId(), featuregroup.getId(),
                 Utils.getFeaturegroupName(featuregroup)));
     }
+    cachedFeaturegroupDTO.setDeprecated(featuregroup.isDeprecated());
     cachedFeaturegroupDTO.setName(featuregroup.getName());
     cachedFeaturegroupDTO.setTimeTravelFormat(featuregroup.getCachedFeaturegroup().getTimeTravelFormat());
     cachedFeaturegroupDTO.setDescription(

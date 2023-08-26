@@ -402,6 +402,11 @@ module FeaturestoreHelper
     json_result = put disable_featuregroup_online_endpoint, json_data
     return json_result
   end
+  
+  def deprecate_featuregroup(project_id, featurestore_id, featuregroup_id, json_data, deprecate)
+    deprecate_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}?deprecate=#{deprecate}"
+    return put deprecate_featuregroup_endpoint, json_data
+  end
 
   def update_hopsfs_training_dataset_metadata(project_id, featurestore_id, training_dataset_id, dataFormat,
                                               hopsfs_connector, jobs: nil)
