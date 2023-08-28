@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.featurestore.storageconnectors;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.adls.FeaturestoreADLSConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.adls.FeaturestoreADLSConnectorDTO;
@@ -39,12 +40,14 @@ import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3
 import io.hops.hopsworks.common.featurestore.storageconnectors.snowflake.FeaturestoreSnowflakeConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.snowflake.FeaturestoreSnowflakeConnectorDTO;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
+import io.hops.hopsworks.common.kafka.KafkaBrokers;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.kafka.SecurityProtocol;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
@@ -95,6 +98,12 @@ public class FeaturestoreStorageConnectorController {
   private FeaturestoreUtils featurestoreUtils;
   @EJB
   private StorageConnectorUtil storageConnectorUtil;
+  @EJB
+  private KafkaBrokers kafkaBrokers;
+  @EJB
+  private FeaturestoreController featurestoreController;
+
+  private static final String KAFKA_STORAGE_CONNECTOR_NAME = "kafka_connector";
 
   /**
    * Returns a list with DTOs of all storage connectors for a featurestore
@@ -141,6 +150,46 @@ public class FeaturestoreStorageConnectorController {
     }
 
     return featurestoreStorageConnectorDTOS;
+  }
+
+  public FeatureStoreKafkaConnectorDTO getKafkaConnector(Project project)
+      throws FeaturestoreException {
+    Featurestore featureStore = featurestoreController.getProjectFeaturestore(project);
+    return getKafkaConnector(featureStore, KafkaBrokers.BrokerProtocol.INTERNAL);
+  }
+
+  public FeatureStoreKafkaConnectorDTO getKafkaConnector(Featurestore featureStore,
+                                                         KafkaBrokers.BrokerProtocol brokerProtocol)
+      throws FeaturestoreException {
+    Optional<FeaturestoreConnector> featurestoreConnector =
+            featurestoreConnectorFacade.findByFeaturestoreName(featureStore, KAFKA_STORAGE_CONNECTOR_NAME);
+
+    FeatureStoreKafkaConnectorDTO kafkaConnectorDTO;
+    if (featurestoreConnector.isPresent()) {
+      // connector found
+      FeaturestoreConnector connector = featurestoreConnector.get();
+      if (!connector.getConnectorType().equals(FeaturestoreConnectorType.KAFKA)) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_TYPE, Level.FINE,
+            "Storage connector type should be KAFKA");
+      }
+      kafkaConnectorDTO = (FeatureStoreKafkaConnectorDTO)
+          convertToConnectorDTO(null, featureStore.getProject(), connector);
+      kafkaConnectorDTO.setExternalKafka(Boolean.TRUE);
+    } else {
+      // create new connector with default values
+      kafkaConnectorDTO = new FeatureStoreKafkaConnectorDTO();
+      kafkaConnectorDTO.setId(-1); // negative id used to identify storage connector not existing
+      kafkaConnectorDTO.setName(KAFKA_STORAGE_CONNECTOR_NAME);
+      kafkaConnectorDTO.setDescription("Connector used for exchanging information within hopsworks");
+      kafkaConnectorDTO.setFeaturestoreId(featureStore.getId());
+      kafkaConnectorDTO.setStorageConnectorType(FeaturestoreConnectorType.KAFKA);
+      kafkaConnectorDTO.setBootstrapServers(kafkaBrokers.getBrokerEndpointsString(brokerProtocol));
+      kafkaConnectorDTO.setSecurityProtocol(SecurityProtocol.SSL);
+      kafkaConnectorDTO.setSslEndpointIdentificationAlgorithm("");
+      kafkaConnectorDTO.setExternalKafka(Boolean.FALSE);
+    }
+
+    return kafkaConnectorDTO;
   }
 
   public FeaturestoreStorageConnectorDTO convertToConnectorDTO(Users user, Project project,
@@ -195,6 +244,12 @@ public class FeaturestoreStorageConnectorController {
         .isPresent()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME, Level.FINE,
           "Storage connector with the same name already exists. Name=" + featurestoreStorageConnectorDTO.getName());
+    }
+
+    if (KAFKA_STORAGE_CONNECTOR_NAME.equals(featurestoreStorageConnectorDTO.getName())
+        && !featurestoreStorageConnectorDTO.getStorageConnectorType().equals(FeaturestoreConnectorType.KAFKA)) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME, Level.FINE,
+          "The provided storage connector name is reserved exclusively for KAFKA connector.");
     }
 
     FeaturestoreConnector featurestoreConnector = new FeaturestoreConnector();

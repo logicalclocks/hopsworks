@@ -65,7 +65,7 @@ public class HdfsCommandExecutionController {
   
   public HdfsCommandExecution setupAndStartJob(Users user, Project project, Command command, Path src, Path dest,
                                                ArchiveFormat format, boolean overwrite)
-         throws JobException, ProjectException, ServiceException, GenericException {
+      throws JobException, ProjectException, ServiceException, GenericException {
     Optional<HdfsCommandExecution> hdfsCommandExecutionOptional =
       hdfsCommandExecutionFacade.findBySrcPath(src.toString());
     if (hdfsCommandExecutionOptional.isPresent() &&

@@ -29,10 +29,8 @@ import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.KafkaException;
-import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.SchemaException;
 import io.hops.hopsworks.exceptions.ServiceException;
-import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivityMeta;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
@@ -280,15 +278,16 @@ public class StreamFeatureGroupController {
       project.getId(), featureGroup.getId(), Utils.getFeaturegroupName(featureGroup));
     onlineFeaturegroupController.alterFeatureGroupSchema(featureGroup, fullNewSchema, topicName, project);
   }
-
+  
   public void setupOfflineStreamFeatureGroup(Project project, Featuregroup featureGroup,
                                              List<FeatureGroupFeatureDTO> features)
-      throws ProjectException, SchemaException, KafkaException, UserException, FeaturestoreException {
+      throws SchemaException, KafkaException, FeaturestoreException {
     String featureGroupEntityName = Utils.getFeaturegroupName(featureGroup);
     String topicName = offlineStreamFeatureGroupTopicName(
       project.getId(), featureGroup.getId(), featureGroupEntityName);
-
-    onlineFeaturegroupController.createFeatureGroupKafkaTopic(project, featureGroupEntityName, topicName, features);
+    
+    onlineFeaturegroupController.createFeatureGroupKafkaTopic(project, featureGroupEntityName, topicName,
+            features);
   }
 
   public String offlineStreamFeatureGroupTopicName(Integer projectId, Integer featureGroupId,

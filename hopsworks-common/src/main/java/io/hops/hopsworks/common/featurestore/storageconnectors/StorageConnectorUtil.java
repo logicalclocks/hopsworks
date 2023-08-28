@@ -45,6 +45,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -154,7 +155,7 @@ public class StorageConnectorUtil {
   
   public List<OptionDTO> toOptions(String arguments) throws FeaturestoreException {
     if (Strings.isNullOrEmpty(arguments)) {
-      return null;
+      return new ArrayList<>();
     }
 
     try {

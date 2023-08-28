@@ -735,7 +735,7 @@ public class RESTCodes {
             "that can be created for this project.", Response.Status.PRECONDITION_FAILED),
     TOPIC_REPLICATION_ERROR(5, "Maximum topic replication factor exceeded", Response.Status.BAD_REQUEST),
     SCHEMA_NOT_FOUND(6, "Topic has no schema attached to it.", Response.Status.NOT_FOUND),
-    KAFKA_GENERIC_ERROR(7, "An error occurred while retrieving information from Kafka service",
+    KAFKA_GENERIC_ERROR(7, "An error occurred while retrieving information about Kafka",
         Response.Status.INTERNAL_SERVER_ERROR),
     DESTINATION_PROJECT_IS_TOPIC_OWNER(8, "Destination projet is topic owner",
         Response.Status.BAD_REQUEST),

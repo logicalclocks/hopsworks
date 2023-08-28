@@ -16,8 +16,7 @@
 
 package io.hops.hopsworks.common.serving.inference.logger;
 
-import io.hops.hopsworks.common.dao.kafka.KafkaConst;
-import io.hops.hopsworks.common.kafka.KafkaBrokers;
+import io.hops.hopsworks.common.dao.kafka.HopsKafkaAdminClient;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
@@ -30,7 +29,6 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
-import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -38,7 +36,6 @@ import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 
-import javax.annotation.PostConstruct;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -59,23 +56,9 @@ public class KafkaInferenceLogger implements InferenceLogger {
   @EJB
   private CertificateMaterializer certificateMaterializer;
   @EJB
-  private KafkaBrokers kafkaBrokers;
+  private HopsKafkaAdminClient hopsKafkaAdminClient;
 
   public static final String SERVING_MANAGER_USERNAME = "srvmanager";
-  private Properties props;
-
-  @PostConstruct
-  public void init() {
-    // Setup default properties
-    props = new Properties();
-    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBrokers.getKafkaBrokersString());
-    props.put(ProducerConfig.CLIENT_ID_CONFIG, "KafkaServing");
-    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-        StringSerializer.class.getName());
-    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-        ByteArraySerializer.class.getName());
-
-  }
 
   @Override
   @Asynchronous
@@ -171,14 +154,21 @@ public class KafkaInferenceLogger implements InferenceLogger {
 
   private KafkaProducer<String, byte[]> setupProducer(Project project) throws IOException,
     CryptoPasswordNotFoundException {
-    certificateMaterializer.materializeCertificatesLocal(SERVING_MANAGER_USERNAME, project.getName());
-    CertificateMaterializer.CryptoMaterial cryptoMaterial =
-        certificateMaterializer.getUserMaterial(SERVING_MANAGER_USERNAME, project.getName());
+    // Get default properties
+    Properties props = hopsKafkaAdminClient.getHopsworksKafkaProperties();
+
+    // Setup producer properties
+    props.put(ProducerConfig.CLIENT_ID_CONFIG, "KafkaServing");
+    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+            StringSerializer.class.getName());
+    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+            ByteArraySerializer.class.getName());
 
     // Configure TLS for this producer
-    props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, KafkaConst.KAFKA_SECURITY_PROTOCOL);
-    props.setProperty(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG,
-      KafkaConst.KAFKA_ENDPOINT_IDENTIFICATION_ALGORITHM);
+    certificateMaterializer.materializeCertificatesLocal(SERVING_MANAGER_USERNAME, project.getName());
+    CertificateMaterializer.CryptoMaterial cryptoMaterial =
+            certificateMaterializer.getUserMaterial(SERVING_MANAGER_USERNAME, project.getName());
+
     props.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG,
         settings.getHopsworksTmpCertDir() + File.separator + HopsUtils.getProjectTruststoreName(project.getName(),
             SERVING_MANAGER_USERNAME));

@@ -43,7 +43,6 @@ import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -118,8 +117,6 @@ public class FlinkController {
   @EJB
   private InodeController inodeController;
   @EJB
-  private DatasetController datasetController;
-  @EJB
   private DistributedFsService dfs;
   @EJB
   private KafkaBrokers kafkaBrokers;
@@ -130,7 +127,7 @@ public class FlinkController {
 
   
   public Execution startJob(final Jobs job, final Users user)
-    throws GenericException, JobException, ServiceException {
+      throws GenericException, JobException, ServiceException {
     //First: some parameter checking.
     if (job == null) {
       throw new NullPointerException("Cannot run a null job.");
@@ -150,10 +147,12 @@ public class FlinkController {
 
       UserGroupInformation proxyUser = UserGroupInformation.createProxyUser(username,
         UserGroupInformation.getLoginUser());
+
       try {
         flinkjob = proxyUser.doAs((PrivilegedExceptionAction<FlinkJob>) () -> new FlinkJob(job, submitter, user,
             hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()), settings,
-            kafkaBrokers.getKafkaBrokersString(), hopsworksRestEndpoint, servingConfig, serviceDiscoveryController));
+            kafkaBrokers.getBrokerEndpointsString(KafkaBrokers.BrokerProtocol.INTERNAL), hopsworksRestEndpoint,
+            servingConfig, serviceDiscoveryController));
       } catch (InterruptedException ex) {
         LOGGER.log(Level.SEVERE, null, ex);
       }

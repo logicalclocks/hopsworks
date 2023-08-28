@@ -18,6 +18,7 @@ package io.hops.hopsworks.api.kafka.topics;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.kafka.common.KafkaFuture;
 import org.junit.Assert;
 import org.junit.Before;
@@ -29,7 +30,8 @@ import javax.ws.rs.core.UriInfo;
 import java.util.concurrent.TimeUnit;
 
 public class TestTopicsBuilder {
-  
+
+  private Users mockUser;
   private UriInfo mockUriInfo;
   private TopicsBuilder topicsBuilder;
   private KafkaController mockKafkaController;
@@ -37,7 +39,6 @@ public class TestTopicsBuilder {
   
   @Before
   public void setup() {
-    
     mockUriInfo = Mockito.mock(UriInfo.class);
     UriBuilder mockUriBuilder = Mockito.mock(UriBuilder.class);
     Mockito.when(mockUriBuilder.path(Mockito.anyString()))
@@ -57,10 +58,7 @@ public class TestTopicsBuilder {
     String topicName = "119_20_ge_transactions_fg_1";
     String topicNameOnline = "119_22_transactions_4h_aggs_1_onlinefs";
   
-    KafkaFuture mockKafkaFuture = Mockito.mock(KafkaFuture.class);
-  
-    Mockito.when(mockKafkaController.getTopicDetails(Mockito.any(), Mockito.any())).thenReturn(mockKafkaFuture);
-    Mockito.when(mockKafkaFuture.get(3000, TimeUnit.MILLISECONDS)).thenThrow(new InterruptedException());
+    Mockito.when(mockKafkaController.getTopicDetails(Mockito.any(), Mockito.any())).thenThrow(new InterruptedException());
   
     KafkaException e = Assert.assertThrows(
       KafkaException.class, () -> topicsBuilder.buildTopicDetails(mockUriInfo, project, topicName));

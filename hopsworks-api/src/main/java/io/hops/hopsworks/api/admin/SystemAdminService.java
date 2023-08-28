@@ -203,7 +203,7 @@ public class SystemAdminService {
     serviceJWTKeepAlive.forceRenewServiceToken();
     return Response.noContent().build();
   }
-  
+
   @ApiOperation(value = "Get kafka system settings")
   @GET
   @Path("/kafka/settings")
@@ -211,10 +211,10 @@ public class SystemAdminService {
   @Produces(MediaType.APPLICATION_JSON)
   public Response getKafkaSettings(@Context SecurityContext sc) throws KafkaException {
     TopicDefaultValueDTO values = kafkaController.topicDefaultValues();
-    
+
     return Response.ok().entity(values).build();
   }
-  
+
   @GET
   @Path("/elastic/admintoken")
   public Response getElasticAdminToken(@Context SecurityContext sc) throws OpenSearchException {

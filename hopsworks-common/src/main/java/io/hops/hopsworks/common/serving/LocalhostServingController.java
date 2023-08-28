@@ -297,8 +297,8 @@ public class LocalhostServingController implements ServingController {
   @Override
   public void put(Project project, Users user, ServingWrapper servingWrapper)
       throws ProjectException, ServingException, KafkaException, UserException,
-    InterruptedException, ExecutionException {
-    
+      InterruptedException, ExecutionException {
+
     Serving serving = servingWrapper.getServing();
     
     if (serving.getId() == null) {

@@ -122,7 +122,7 @@ public class SparkController {
    * Spark job.
    */
   public Execution startJob(final Jobs job, String args, final Users user)
-    throws ServiceException, GenericException, JobException, ProjectException {
+      throws ServiceException, GenericException, JobException, ProjectException {
     //First: some parameter checking.
     sanityCheck(job, user);
     String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
@@ -268,7 +268,7 @@ public class SparkController {
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private SparkJob createSparkJob(String username, Jobs job, Users user) throws JobException, GenericException,
-          ServiceException {
+      ServiceException {
     SparkJob sparkjob = null;
     try {
       // Set Hopsworks consul service domain, don't use the address, use the name
@@ -278,12 +278,13 @@ public class SparkController {
 
       UserGroupInformation proxyUser = UserGroupInformation.createProxyUser(username,
         UserGroupInformation.getLoginUser());
+
       try {
         sparkjob = proxyUser.doAs((PrivilegedExceptionAction<SparkJob>) () ->
                 new SparkJob(job, submitter, user, settings.getHadoopSymbolicLinkDir(),
                         hdfsUsersBean.getHdfsUserName(job.getProject(), user),
-                        settings, kafkaBrokers.getKafkaBrokersString(), hopsworksRestEndpoint, servingConfig,
-                        serviceDiscoveryController));
+                        settings, kafkaBrokers.getBrokerEndpointsString(KafkaBrokers.BrokerProtocol.INTERNAL),
+                        hopsworksRestEndpoint, servingConfig, serviceDiscoveryController));
       } catch (InterruptedException ex) {
         LOGGER.log(Level.SEVERE, null, ex);
       }

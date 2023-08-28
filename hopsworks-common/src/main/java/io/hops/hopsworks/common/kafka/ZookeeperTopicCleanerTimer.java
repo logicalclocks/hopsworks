@@ -72,9 +72,9 @@ import java.util.stream.Collectors;
 public class ZookeeperTopicCleanerTimer {
 
   private final static Logger LOGGER = Logger.getLogger(ZookeeperTopicCleanerTimer.class.getName());
-  
+
   private final static String offsetTopic = "__consumer_offsets";
-  
+
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
@@ -102,7 +102,7 @@ public class ZookeeperTopicCleanerTimer {
     }
   }
 
-  // Run once per hour 
+  // Run once per hour
   @Timeout
   public void execute(Timer timer) {
     if (!payaraClusterManager.amIThePrimary()) {
@@ -113,10 +113,10 @@ public class ZookeeperTopicCleanerTimer {
     try {
       Set<String> zkTopics = hopsKafkaAdminClient.listTopics().names().get();
       Set<String> dbTopics = em.createNamedQuery("ProjectTopics.findAll", ProjectTopics.class)
-          .getResultList()
-          .stream()
-          .map(ProjectTopics::getTopicName)
-          .collect(Collectors.toSet());
+              .getResultList()
+              .stream()
+              .map(ProjectTopics::getTopicName)
+              .collect(Collectors.toSet());
 
       /*
        * To remove topics from zookeeper which do not exist in database. This
@@ -156,12 +156,11 @@ public class ZookeeperTopicCleanerTimer {
   @Schedule(persistent = false,
       minute = "*/1",
       hour = "*")
-  public void getBrokers() {
+  public void setBrokers() {
     // TODO: This should be removed by HOPSWORKS-2798 and usages of this method should simply call
     //  kafkaBrokers.getBrokerEndpoints() directly
     try {
-      kafkaBrokers.setInternalKafkaBrokers(
-        kafkaBrokers.getBrokerEndpoints(KafkaBrokers.KAFKA_BROKER_PROTOCOL_INTERNAL));
+      kafkaBrokers.setBrokerEndpoints();
     } catch (Exception ex) {
       LOGGER.log(Level.SEVERE, null, ex);
     }

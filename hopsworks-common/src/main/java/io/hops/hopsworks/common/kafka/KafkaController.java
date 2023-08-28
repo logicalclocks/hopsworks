@@ -47,10 +47,10 @@ import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.kafka.TopicDefaultValueDTO;
 import io.hops.hopsworks.common.dao.kafka.schemas.SubjectDTO;
 import io.hops.hopsworks.common.dao.kafka.schemas.SubjectsFacade;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.project.ProjectController;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
+import io.hops.hopsworks.common.featurestore.storageconnectors.kafka.FeatureStoreKafkaConnectorDTO;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.SchemaException;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
@@ -63,19 +63,16 @@ import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartitionInfo;
-import org.apache.zookeeper.KeeperException;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -92,24 +89,23 @@ public class KafkaController {
   @EJB
   private Settings settings;
   @EJB
-  private ProjectFacade projectFacade;
+  protected ProjectTopicsFacade projectTopicsFacade;
   @EJB
-  private UserFacade userFacade;
-  @EJB
-  private ProjectTopicsFacade projectTopicsFacade;
-  @EJB
-  private HopsKafkaAdminClient hopsKafkaAdminClient;
+  protected HopsKafkaAdminClient hopsKafkaAdminClient;
   @EJB
   private SubjectsFacade subjectsFacade;
   @EJB
-  private ProjectController projectController;
-  @EJB
-  private KafkaBrokers kafkaBrokers;
+  protected KafkaBrokers kafkaBrokers;
   @EJB
   private DatasetSharedWithFacade datasetSharedWithFacade;
+  @EJB
+  protected FeaturestoreStorageConnectorController storageConnectorController;
 
   
-  public void createTopic(Project project, TopicDTO topicDto) throws KafkaException {
+  public ProjectTopics createTopic(Project project, TopicDTO topicDto) throws KafkaException {
+    if (externalKafka(project)) {
+      return null;
+    }
     
     if (topicDto == null) {
       throw new IllegalArgumentException("topicDto was not provided.");
@@ -125,31 +121,50 @@ public class KafkaController {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_LIMIT_REACHED, Level.FINE,
         "topic name: " + topicName + ", project: " + project.getName());
     }
-    
-    //check if the replication factor is not greater than the
-    //number of running brokers
-    try {
-      Set<String> brokerEndpoints = kafkaBrokers.getBrokerEndpoints(KafkaBrokers.KAFKA_BROKER_PROTOCOL_INTERNAL);
-      if (brokerEndpoints.size() < topicDto.getNumOfReplicas()) {
-        throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_REPLICATION_ERROR, Level.FINE,
-          "maximum: " + brokerEndpoints.size());
-      }
-    } catch (InterruptedException | IOException | KeeperException ex) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.KAFKA_GENERIC_ERROR, Level.SEVERE,
-        "project: " + project.getName(), ex.getMessage(), ex);
-    }
-    
-    createTopicInProject(project, topicDto);
+
+    checkReplication(topicDto);
+
+    return createTopicInProject(project, topicDto);
   }
-  
+
+  protected void checkReplication(TopicDTO topicDto) throws KafkaException {
+    List<String> brokerEndpoints = kafkaBrokers.getBrokerEndpoints(KafkaBrokers.BrokerProtocol.INTERNAL);
+    if (brokerEndpoints.size() < topicDto.getNumOfReplicas()) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_REPLICATION_ERROR, Level.FINE,
+          "maximum: " + brokerEndpoints.size());
+    }
+  }
+
   public void removeTopicFromProject(Project project, String topicName) throws KafkaException {
-    
+    if (externalKafka(project)) {
+      return;
+    }
+
     ProjectTopics pt = projectTopicsFacade.findTopicByNameAndProject(project, topicName)
       .orElseThrow(() ->
         new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "topic: " + topicName));
     
     //remove from database
     projectTopicsFacade.remove(pt);
+
+    deleteTopic(Collections.singletonList(pt));
+  }
+
+  public void removeKafkaTopics(Project project) {
+    if (externalKafka(project)) {
+      return;
+    }
+
+    List<ProjectTopics> topics = projectTopicsFacade.findTopicsByProject(project);
+
+    deleteTopic(topics);
+  }
+
+  private void deleteTopic(List<ProjectTopics> topics) {
+    List<String> topicNameList = topics.stream()
+        .map(ProjectTopics::getTopicName)
+        .collect(Collectors.toList());
+
     /*
      * What is the possibility of the program failing below? The topic is
      * removed from
@@ -161,7 +176,7 @@ public class KafkaController {
      * topic (with the same name) create operation fails.
      */
     //remove from zookeeper
-    hopsKafkaAdminClient.deleteTopics(Collections.singleton(pt.getTopicName()));
+    hopsKafkaAdminClient.deleteTopics(topicNameList);
   }
   
   public boolean projectTopicExists(Project project, String topicName) {
@@ -192,7 +207,7 @@ public class KafkaController {
     return findTopicsByProject(project);
   }
   
-  public ProjectTopics createTopicInProject(Project project, TopicDTO topicDto) throws KafkaException {
+  private ProjectTopics createTopicInProject(Project project, TopicDTO topicDto) throws KafkaException {
     
     Subjects schema =
       subjectsFacade.findSubjectByNameAndVersion(project, topicDto.getSchemaName(), topicDto.getSchemaVersion())
@@ -201,10 +216,7 @@ public class KafkaController {
     
     // create the topic in kafka
     try {
-      if (createTopicInKafka(topicDto).get(6000, TimeUnit.MILLISECONDS) == null) {
-        throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS_IN_ZOOKEEPER, Level.INFO,
-          "topic name: " + topicDto.getName());
-      }
+      createTopicInKafka(topicDto);
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new KafkaException(
         RESTCodes.KafkaErrorCode.TOPIC_CREATION_FAILED, Level.WARNING, "Topic name: " + topicDto.getName(),
@@ -232,9 +244,10 @@ public class KafkaController {
     
     return pt;
   }
-  
-  private KafkaFuture<CreateTopicsResult> createTopicInKafka(TopicDTO topicDTO) throws KafkaException {
-    return hopsKafkaAdminClient.listTopics().names().thenApply(
+
+  private void createTopicInKafka(TopicDTO topicDTO)
+      throws ExecutionException, InterruptedException, TimeoutException, KafkaException {
+    KafkaFuture<CreateTopicsResult> result = hopsKafkaAdminClient.listTopics().names().thenApply(
       set -> {
         if (set.contains(topicDTO.getName())) {
           return null;
@@ -249,72 +262,69 @@ public class KafkaController {
           }
         }
       });
-  }
-  
-  private KafkaFuture<List<PartitionDetailsDTO>> getTopicDetailsFromKafkaCluster(String topicName)
-      throws KafkaException{
-    return hopsKafkaAdminClient.describeTopics(Collections.singleton(topicName))
-      .all()
-      .thenApply((map) -> map.getOrDefault(topicName, null))
-      .thenApply((td) -> {
-        if (td != null) {
-          List<PartitionDetailsDTO> partitionDetails = new ArrayList<>();
-          List<TopicPartitionInfo> partitions = td.partitions();
-          for (TopicPartitionInfo partition : partitions) {
-            int id = partition.partition();
-            List<String> replicas = partition.replicas()
-              .stream()
-              .map(Node::host)
-              .collect(Collectors.toList());
-            List<String> inSyncReplicas = partition.isr()
-              .stream()
-              .map(Node::host)
-              .collect(Collectors.toList());
-            partitionDetails.add(new PartitionDetailsDTO(id, partition.leader().host(), replicas, inSyncReplicas));
-          }
-          partitionDetails.sort(Comparator.comparing(PartitionDetailsDTO::getId));
-          return partitionDetails;
-        } else {
-          return Collections.emptyList();
-        }
-      });
-  }
-  
-  public KafkaFuture<List<PartitionDetailsDTO>> getTopicDetails(Project project, String topicName)
-      throws KafkaException {
-    projectTopicsFacade.findTopicByNameAndProject(project, topicName).orElseThrow(() ->
-      new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "topic: " + topicName)
-    );
-  
-    return getTopicDetailsFromKafkaCluster(topicName);
-  }
-  
-  public TopicDefaultValueDTO topicDefaultValues() throws KafkaException {
-    try {
-      Set<String> brokers = kafkaBrokers.getBrokerEndpoints(KafkaBrokers.KAFKA_BROKER_PROTOCOL_INTERNAL);
-      return new TopicDefaultValueDTO(
-        settings.getKafkaDefaultNumReplicas(),
-        settings.getKafkaDefaultNumPartitions(),
-        brokers.size());
-    } catch (InterruptedException | IOException | KeeperException ex) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.KAFKA_GENERIC_ERROR, Level.SEVERE,
-        "", ex.getMessage(), ex);
+
+    if (result.get(6000, TimeUnit.MILLISECONDS) == null) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS_IN_ZOOKEEPER, Level.INFO,
+          "topic name: " + topicDTO.getName());
     }
   }
 
+  public List<PartitionDetailsDTO> getTopicDetails(Project project, String topicName)
+      throws ExecutionException, InterruptedException, TimeoutException, FeaturestoreException {
+    FeatureStoreKafkaConnectorDTO connector = storageConnectorController.getKafkaConnector(project);
+
+    KafkaFuture<List<PartitionDetailsDTO>> result = hopsKafkaAdminClient
+        .describeTopics(connector, Collections.singleton(topicName))
+        .all()
+        .thenApply((map) -> map.getOrDefault(topicName, null))
+        .thenApply((td) -> {
+          if (td != null) {
+            List<PartitionDetailsDTO> partitionDetails = new ArrayList<>();
+            List<TopicPartitionInfo> partitions = td.partitions();
+            for (TopicPartitionInfo partition : partitions) {
+              int id = partition.partition();
+              List<String> replicas = partition.replicas()
+                  .stream()
+                  .map(Node::host)
+                  .collect(Collectors.toList());
+              List<String> inSyncReplicas = partition.isr()
+                  .stream()
+                  .map(Node::host)
+                  .collect(Collectors.toList());
+              partitionDetails.add(new PartitionDetailsDTO(id, partition.leader().host(), replicas, inSyncReplicas));
+            }
+            partitionDetails.sort(Comparator.comparing(PartitionDetailsDTO::getId));
+            return partitionDetails;
+          } else {
+            return Collections.emptyList();
+          }
+        });
+
+    return result.get(3000, TimeUnit.MILLISECONDS);
+  }
+
+  public TopicDefaultValueDTO topicDefaultValues() {
+    List<String> brokers = kafkaBrokers.getBrokerEndpoints(KafkaBrokers.BrokerProtocol.INTERNAL);
+    return new TopicDefaultValueDTO(
+        settings.getKafkaDefaultNumReplicas(),
+        settings.getKafkaDefaultNumPartitions(),
+        brokers.size());
+  }
+
   public void updateTopicSchemaVersion(Project project, String topicName, Integer schemaVersion) throws KafkaException {
-    ProjectTopics pt = projectTopicsFacade.findTopicByNameAndProject(project, topicName)
-      .orElseThrow(() ->
-        new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE,  "topic: " + topicName));
-    
-    String schemaName = pt.getSubjects().getSubject();
-  
-    Subjects st = subjectsFacade.findSubjectByNameAndVersion(project, schemaName, schemaVersion)
-      .orElseThrow(() ->
-        new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_VERSION_NOT_FOUND, Level.FINE,
-        "schema: " + schemaName + ", version: " + schemaVersion));
-    
-    projectTopicsFacade.updateTopicSchemaVersion(pt, st);
+    Optional<ProjectTopics> optionalPt = projectTopicsFacade.findTopicByNameAndProject(project, topicName);
+
+    if (optionalPt.isPresent()) {
+      ProjectTopics pt = optionalPt.get();
+      String schemaName = pt.getSubjects().getSubject();
+
+      Subjects st = subjectsFacade.findSubjectByNameAndVersion(project, schemaName, schemaVersion)
+          .orElseThrow(() ->
+              new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_VERSION_NOT_FOUND, Level.FINE,
+                  "schema: " + schemaName + ", version: " + schemaVersion));
+
+      projectTopicsFacade.updateTopicSchemaVersion(pt, st);
+    }
   }
   
   public SubjectDTO getSubjectForTopic(Project project, String topic) throws KafkaException {
@@ -348,6 +358,16 @@ public class KafkaController {
           "schema: " + topicSubject + ", version: " + version));
   
     projectTopicsFacade.updateTopicSchemaVersion(pt, st);
+  }
+
+  protected boolean externalKafka(Project project) {
+    FeatureStoreKafkaConnectorDTO connector;
+    try {
+      connector = storageConnectorController.getKafkaConnector(project);
+    } catch (FeaturestoreException e) {
+      throw new RuntimeException(e);
+    }
+    return connector.isExternalKafka();
   }
 }
 

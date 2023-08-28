@@ -55,19 +55,19 @@ import io.hops.hopsworks.common.dao.kafka.schemas.CompatibilityLevel;
 import io.hops.hopsworks.common.dao.kafka.schemas.SchemaRegistryError;
 import io.hops.hopsworks.common.dao.kafka.schemas.SubjectDTO;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.kafka.KafkaBrokers;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
+import io.hops.hopsworks.common.featurestore.storageconnectors.kafka.FeatureStoreKafkaConnectorDTO;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.kafka.SchemasController;
 import io.hops.hopsworks.common.kafka.SubjectsCompatibilityController;
 import io.hops.hopsworks.common.kafka.SubjectsController;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.SchemaException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import org.apache.zookeeper.KeeperException;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -77,26 +77,21 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
-import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Logger;
 
 @RequestScoped
@@ -118,7 +113,7 @@ public class KafkaResource {
   @EJB
   private SchemasController schemasController;
   @EJB
-  private KafkaBrokers kafkaBrokers;
+  private FeaturestoreStorageConnectorController storageConnectorController;
   @EJB
   private KafkaClusterInfoBuilder kafkaClusterInfoBuilder;
 
@@ -144,19 +139,10 @@ public class KafkaResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getBrokers(@Context UriInfo uriInfo,
                              @Context HttpServletRequest req,
-                             @Context SecurityContext sc,
-                             @ApiParam(value = "external", example = "false")
-                             @QueryParam("external") @DefaultValue("false") Boolean externalListeners)
-      throws InterruptedException, IOException, KeeperException {
-    Set<String> brokerEndpoints;
-    if (externalListeners) {
-      brokerEndpoints = kafkaBrokers.getBrokerEndpoints(KafkaBrokers.KAFKA_BROKER_PROTOCOL_EXTERNAL);
-    } else {
-      brokerEndpoints = kafkaBrokers.getBrokerEndpoints(KafkaBrokers.KAFKA_BROKER_PROTOCOL_INTERNAL);
-    }
-    KafkaClusterInfoDTO dto = kafkaClusterInfoBuilder.build(
-        uriInfo, project,
-        new ArrayList<>(brokerEndpoints));
+                             @Context SecurityContext sc) throws FeaturestoreException {
+    FeatureStoreKafkaConnectorDTO connectorDTO = storageConnectorController.getKafkaConnector(project);
+    KafkaClusterInfoDTO dto = kafkaClusterInfoBuilder.build(uriInfo, project,
+        Arrays.asList(connectorDTO.getBootstrapServers().split(",")));
     return Response.ok().entity(dto).build();
   }
 

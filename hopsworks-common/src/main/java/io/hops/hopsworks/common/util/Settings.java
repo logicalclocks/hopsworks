@@ -3376,7 +3376,7 @@ public class Settings implements Serializable {
     return ENABLE_SNOWFLAKE_STORAGE_CONNECTORS;
   }
 
-  private boolean ENABLE_KAFKA_STORAGE_CONNECTORS = false;
+  private boolean ENABLE_KAFKA_STORAGE_CONNECTORS = true;
   public synchronized boolean isKafkaStorageConnectorsEnabled() {
     checkCache();
     return ENABLE_KAFKA_STORAGE_CONNECTORS;

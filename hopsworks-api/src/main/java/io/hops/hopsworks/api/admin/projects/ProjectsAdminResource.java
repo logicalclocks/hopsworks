@@ -163,7 +163,7 @@ public class ProjectsAdminResource {
     if (force) {
       Project project = projectFacade.find(id);
       if (project != null) {
-        projectController.forceCleanup(project.getName(), user.getEmail());
+        projectController.forceCleanup(project.getName(), user);
       }
     } else {
       projectController.removeProject(user.getEmail(), id);

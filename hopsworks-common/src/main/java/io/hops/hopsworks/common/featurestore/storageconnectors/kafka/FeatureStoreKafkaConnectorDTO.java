@@ -44,6 +44,7 @@ public class FeatureStoreKafkaConnectorDTO extends FeaturestoreStorageConnectorD
   private String sslKeyPassword;
   private String sslEndpointIdentificationAlgorithm;
   private List<OptionDTO> options = new ArrayList<>();
+  private Boolean externalKafka;
   
   public FeatureStoreKafkaConnectorDTO() {
   }
@@ -128,5 +129,13 @@ public class FeatureStoreKafkaConnectorDTO extends FeaturestoreStorageConnectorD
   
   public void setOptions(List<OptionDTO> options) {
     this.options = options;
+  }
+
+  public Boolean isExternalKafka() {
+    return externalKafka;
+  }
+
+  public void setExternalKafka(Boolean externalKafka) {
+    this.externalKafka = externalKafka;
   }
 }
