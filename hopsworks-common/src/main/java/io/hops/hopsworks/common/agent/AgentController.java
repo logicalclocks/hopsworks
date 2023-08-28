@@ -54,13 +54,13 @@ public class AgentController {
   @EJB
   private HostServicesController hostServicesController;
 
-  public void register(String hostId, String password) throws ServiceException {
-    Hosts host = hostsController.findByHostname(hostId);
+  public void register(String hostname, String hostIp, String password) throws ServiceException {
+    Hosts host = hostsFacade.findByHostname(hostname)
+                    .orElseGet(Hosts::new);
     host.setAgentPassword(password);
     host.setRegistered(true);
-    host.setHostname(hostId);
-    // Jim: We set the hostname as hopsworks::default pre-populates with the hostname,
-    // but it's not the correct hostname for GCE.
+    host.setHostname(hostname);
+    host.setHostIp(hostIp);
     hostsFacade.update(host);
   }
 
