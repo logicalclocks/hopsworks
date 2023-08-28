@@ -174,6 +174,6 @@ public class AgentResource {
       throw new IllegalArgumentException("Invalid registration request");
     }
     
-    agentController.register(request.getHostId(), request.getPassword());
+    agentController.register(request.getHostId(), request.getPrivateIp(), request.getPassword());
   }
 }
