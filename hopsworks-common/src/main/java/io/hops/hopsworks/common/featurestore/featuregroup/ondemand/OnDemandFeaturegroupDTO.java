@@ -70,7 +70,6 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
     setDescription(featuregroup.getOnDemandFeaturegroup().getDescription());
     setFeatures(features);
     setOnlineEnabled(featuregroup.isOnlineEnabled());
-    setDeprecated(featuregroup.isDeprecated());
     setOnlineTopicName(onlineTopicName);
   }
 
