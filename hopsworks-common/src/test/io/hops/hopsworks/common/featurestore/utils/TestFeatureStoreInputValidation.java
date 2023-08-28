@@ -38,7 +38,7 @@ public class TestFeatureStoreInputValidation {
   
   @Test
   public void testVerifyUserInputFeatureGroup() throws Exception {
-    FeaturegroupDTO featuregroupDTO = new FeaturegroupDTO(1, "featurestore", 1, "1wrong_name", 1, "online_topic_name");
+    FeaturegroupDTO featuregroupDTO = new FeaturegroupDTO(1, "featurestore", 1, "1wrong_name", 1, "online_topic_name", false);
     // upper case
     featuregroupDTO.setName("UPPER_CASE");
     thrown.expect(FeaturestoreException.class);
@@ -62,7 +62,7 @@ public class TestFeatureStoreInputValidation {
   
   @Test
   public void testVerifyDescription() throws Exception {
-    FeaturegroupDTO featuregroupDTO = new FeaturegroupDTO(1, "featurestore", 1, "wrong_name", 1, "online_topic_name");
+    FeaturegroupDTO featuregroupDTO = new FeaturegroupDTO(1, "featurestore", 1, "wrong_name", 1, "online_topic_name", false);
     
     // description is null
     featuregroupDTO.setDescription(null);

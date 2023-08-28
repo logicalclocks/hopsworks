@@ -63,9 +63,10 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO<FeaturegroupDTO> {
   }
 
   public FeaturegroupDTO(Integer featurestoreId, String featurestoreName, Integer id, String name, Integer version,
-    String onlineTopicName) {
+    String onlineTopicName, Boolean deprecated) {
     super(featurestoreId, featurestoreName, id, name, version);
     this.onlineTopicName = onlineTopicName;
+    this.deprecated = deprecated;
   }
 
   public FeaturegroupDTO(Featuregroup featuregroup) {
@@ -73,19 +74,7 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO<FeaturegroupDTO> {
         featuregroup.getCreator(), featuregroup.getVersion(),
         featuregroup.getId(), new StatisticsConfigDTO(featuregroup.getStatisticsConfig()));
     this.eventTime = featuregroup.getEventTime();
-  }
-
-  public FeaturegroupDTO(Integer featurestoreId, String featurestoreName, Integer id, String name, Integer version,
-    String onlineTopicName, ExpectationSuiteDTO expectationSuite) {
-    super(featurestoreId, featurestoreName, id, name, version);
-    this.onlineTopicName = onlineTopicName;
-    this.expectationSuite = expectationSuite;
-  }
-
-  public FeaturegroupDTO(Integer featurestoreId, String featurestoreName, Integer id, String name, Integer version,
-    ExpectationSuiteDTO expectationSuite) {
-    super(featurestoreId, featurestoreName, id, name, version);
-    this.expectationSuite = expectationSuite;
+    this.deprecated = featuregroup.isDeprecated();
   }
   
   // for testing

@@ -209,7 +209,8 @@ public class FeatureViewBuilder {
                     f.getFeatureGroup().getId(), f.getFeatureGroup().getName(),
                     f.getFeatureGroup().getVersion(),
                     onlineFeaturegroupController.onlineFeatureGroupTopicName(project.getId(),
-                        f.getFeatureGroup().getId(), Utils.getFeaturegroupName(f.getFeatureGroup())))
+                        f.getFeatureGroup().getId(), Utils.getFeaturegroupName(f.getFeatureGroup())),
+                    f.getFeatureGroup().isDeprecated())
                 : null,
             f.getIndex(), f.isLabel()))
         .collect(Collectors.toList());
