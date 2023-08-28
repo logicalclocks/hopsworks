@@ -33,6 +33,7 @@ import io.hops.hopsworks.common.featurestore.storageconnectors.connectionChecker
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.StorageConnectorUtil;
+import io.hops.hopsworks.common.kafka.KafkaBrokers;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.CloudException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -325,6 +326,39 @@ public class FeaturestoreStorageConnectorService {
             storageConnectorController.getOnlineFeaturestoreConnector(user, project, featurestore);
     GenericEntity<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOGenericEntity =
             new GenericEntity<FeaturestoreStorageConnectorDTO>(featurestoreJdbcConnectorDTO) {};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
+            .entity(featurestoreStorageConnectorDTOGenericEntity).build();
+  }
+
+  /**
+   * This method returns the kafka connector for the featurestore.
+   *
+   * @param sc
+   * @return
+   * @throws FeaturestoreException
+   */
+  @GET
+  @Path("/kafka_connector")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+          allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
+          allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiOperation(value = "Get kafka storage connector for this feature store",
+          response = FeaturestoreStorageConnectorDTO.class)
+  public Response getFeatureStoreKafkaConnector(@Context SecurityContext sc,
+                                                @Context HttpServletRequest req,
+                                                @QueryParam("external") @DefaultValue("false")
+                                                Boolean externalListeners)
+      throws FeaturestoreException {
+    KafkaBrokers.BrokerProtocol brokerProtocol = Boolean.TRUE.equals(externalListeners)
+        ? KafkaBrokers.BrokerProtocol.EXTERNAL: KafkaBrokers.BrokerProtocol.INTERNAL;
+    FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO =
+            storageConnectorController.getKafkaConnector(featurestore, brokerProtocol);
+
+    GenericEntity<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOGenericEntity =
+            new GenericEntity<FeaturestoreStorageConnectorDTO>(featurestoreStorageConnectorDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
             .entity(featurestoreStorageConnectorDTOGenericEntity).build();
   }

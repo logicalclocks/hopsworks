@@ -198,7 +198,7 @@ public class OnlineFeaturegroupController {
   }
   
   public void deleteFeatureGroupKafkaTopic(Project project, String topicName)
-    throws KafkaException, SchemaException {
+      throws KafkaException, SchemaException {
     // user might have deleted topic manually
     if (kafkaController.projectTopicExists(project, topicName)) {
       kafkaController.removeTopicFromProject(project, topicName);

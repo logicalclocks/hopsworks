@@ -612,8 +612,9 @@ public class KubeExecutionController extends AbstractExecutionController impleme
         environment.add(new EnvVarBuilder().withName("HOPSWORKS_LOGS_DATASET")
           .withValue(Settings.BaseDataset.LOGS.getName()).build());
 
-        if (!Strings.isNullOrEmpty(kafkaBrokers.getKafkaBrokersString())) {
-          environment.add(new EnvVarBuilder().withName("KAFKA_BROKERS").withValue(kafkaBrokers.getKafkaBrokersString())
+        String brokers = kafkaBrokers.getBrokerEndpointsString(KafkaBrokers.BrokerProtocol.INTERNAL);
+        if (!Strings.isNullOrEmpty(brokers)) {
+          environment.add(new EnvVarBuilder().withName("KAFKA_BROKERS").withValue(brokers)
             .build());
         }
         Service hopsworks =

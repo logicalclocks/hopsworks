@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -48,56 +49,58 @@ import java.util.stream.Collectors;
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class KafkaBrokers {
   private final static Logger LOGGER = Logger.getLogger(KafkaBrokers.class.getName());
-  
-  public static final String KAFKA_BROKER_PROTOCOL_INTERNAL = "INTERNAL";
-  public static final String KAFKA_BROKER_PROTOCOL_EXTERNAL = "EXTERNAL";
-  
+
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
-  
-  private final Set<String> internalKafkaBrokers;
-  
-  public KafkaBrokers() {
-    this.internalKafkaBrokers = new HashSet<>();
+
+  public enum BrokerProtocol {
+    INTERNAL,
+    EXTERNAL
   }
-  
+
+  private final Set<String> kafkaBrokers = new HashSet<>();
+
   @PostConstruct
-  private void init() {
+  @Lock(LockType.WRITE)
+  public void setBrokerEndpoints() {
     try {
-      setInternalKafkaBrokers(getBrokerEndpoints(KAFKA_BROKER_PROTOCOL_INTERNAL));
-    } catch (Exception ex) {
+      this.kafkaBrokers.clear();
+      this.kafkaBrokers.addAll(getBrokerEndpoints());
+    } catch (IOException | KeeperException | InterruptedException ex) {
       LOGGER.log(Level.SEVERE, null, ex);
     }
   }
-  
-  public void setInternalKafkaBrokers(Set<String> internalKafkaBrokers) {
-    this.internalKafkaBrokers.clear();
-    this.internalKafkaBrokers.addAll(internalKafkaBrokers);
+
+  @Lock(LockType.READ)
+  public List<String> getBrokerEndpoints(BrokerProtocol protocol) {
+    return kafkaBrokers.stream()
+        .filter(bi -> bi.startsWith(protocol.toString()))
+        .map(bi -> bi.replaceAll(protocol + "://", ""))
+        .collect(Collectors.toList());
   }
 
   @Lock(LockType.READ)
-  public String getKafkaBrokersString() {
-    if (!internalKafkaBrokers.isEmpty()) {
-      return StringUtils.join(internalKafkaBrokers, ",");
+  public String getBrokerEndpointsString(BrokerProtocol protocol) {
+    List<String> kafkaProtocolBrokers = getBrokerEndpoints(protocol);
+    if (!kafkaProtocolBrokers.isEmpty()) {
+      return StringUtils.join(kafkaProtocolBrokers, ",");
     }
     return null;
   }
 
-  @Lock(LockType.READ)
-  public Set<String> getBrokerEndpoints(String protocol) throws IOException, KeeperException, InterruptedException {
+  private Set<String> getBrokerEndpoints()
+      throws IOException, KeeperException, InterruptedException {
     try {
       String zkConnectionString = getZookeeperConnectionString();
-      final ZooKeeper zk = new ZooKeeper(zkConnectionString, Settings.ZOOKEEPER_SESSION_TIMEOUT_MS, watchedEvent -> {});
-      try {
+      try (ZooKeeper zk = new ZooKeeper(zkConnectionString, Settings.ZOOKEEPER_SESSION_TIMEOUT_MS, watchedEvent -> {
+      })) {
         return zk.getChildren("/brokers/ids", false).stream()
             .map(bi -> getBrokerInfo(zk, bi))
             .filter(StringUtils::isNoneEmpty)
             .map(bi -> bi.split(KafkaConst.DLIMITER))
             .flatMap(Arrays::stream)
-            .filter(bi -> isValidBrokerInfo(bi, protocol))
+            .filter(this::isValidBrokerInfo)
             .collect(Collectors.toSet());
-      } finally {
-        zk.close();
       }
     } catch (ServiceDiscoveryException ex) {
       throw new IOException(ex);
@@ -111,17 +114,17 @@ public class KafkaBrokers {
       throw ex;
     }
   }
-  
-  public String getZookeeperConnectionString() throws ServiceDiscoveryException {
+
+  private String getZookeeperConnectionString() throws ServiceDiscoveryException {
     return serviceDiscoveryController.getService(
-      Type.DNS, ServiceQuery.of(
-        serviceDiscoveryController.constructServiceFQDN(
-            HopsworksService.ZOOKEEPER.getNameWithTag(ZooKeeperTags.client)),
-        Collections.emptySet()))
-      .map(zkServer -> zkServer.getAddress() + ":" + zkServer.getPort())
-      .collect(Collectors.joining(","));
+            Type.DNS, ServiceQuery.of(
+                serviceDiscoveryController.constructServiceFQDN(
+                    HopsworksService.ZOOKEEPER.getNameWithTag(ZooKeeperTags.client)),
+                Collections.emptySet()))
+        .map(zkServer -> zkServer.getAddress() + ":" + zkServer.getPort())
+        .collect(Collectors.joining(","));
   }
-  
+
   private String getBrokerInfo(ZooKeeper zk, String brokerId) {
     try {
       return new String(zk.getData("/brokers/ids/" + brokerId, false, null));
@@ -130,8 +133,13 @@ public class KafkaBrokers {
       throw new RuntimeException(ex);
     }
   }
-  
-  private boolean isValidBrokerInfo(String brokerInfo, String protocol) {
-    return brokerInfo.startsWith(protocol) && brokerInfo.contains(KafkaConst.SLASH_SEPARATOR);
+
+  private boolean isValidBrokerInfo(String brokerInfo) {
+    String[] brokerProtocolNames = Arrays
+        .stream(BrokerProtocol.values())
+        .map(Enum::name)
+        .toArray(String[]::new);
+    return StringUtils.startsWithAny(brokerInfo, brokerProtocolNames)
+        && brokerInfo.contains(KafkaConst.SLASH_SEPARATOR);
   }
 }

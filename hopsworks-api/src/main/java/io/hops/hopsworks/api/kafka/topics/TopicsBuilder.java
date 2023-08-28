@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.kafka.KafkaController;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -39,7 +40,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -127,12 +127,11 @@ public class TopicsBuilder extends CollectionsBuilder<TopicDTO> {
     PartitionDetailsDTO dto = new PartitionDetailsDTO();
     dto.setHref(topicUri(uriInfo, project, topicName).build());
     try {
-      List<PartitionDetailsDTO> list =
-        kafkaController.getTopicDetails(project, topicName).get(3000, TimeUnit.MILLISECONDS);
+      List<PartitionDetailsDTO> list = kafkaController.getTopicDetails(project, topicName);
       dto.setCount(Integer.toUnsignedLong(list.size()));
       list.forEach(dto::addItem);
       return dto;
-    } catch (InterruptedException | ExecutionException | TimeoutException e){
+    } catch (InterruptedException | ExecutionException | TimeoutException | FeaturestoreException e){
       String usrMsg;
       if (FeaturestoreConstants.FEATURE_GROUP_KAFKA_TOPIC_REGEX.matcher(topicName).matches()
           || FeaturestoreConstants.ONLINE_FEATURE_GROUP_KAFKA_TOPIC_REGEX.matcher(topicName).matches()) {

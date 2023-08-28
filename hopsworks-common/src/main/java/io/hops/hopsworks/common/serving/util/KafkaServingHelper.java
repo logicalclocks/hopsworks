@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.common.serving.util;
 
-import io.hops.hopsworks.common.kafka.KafkaBrokers;
 import io.hops.hopsworks.persistence.entity.kafka.ProjectTopics;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
@@ -33,13 +32,11 @@ import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.serving.ServingTool;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.zookeeper.KeeperException;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.io.IOException;
 import java.util.logging.Level;
 
 @Stateless
@@ -52,8 +49,6 @@ public class KafkaServingHelper {
   private KafkaController kafkaController;
   @EJB
   private ProjectTopicsFacade projectTopicsFacade;
-  @EJB
-  private KafkaBrokers kafkaBrokers;
 
   
   /**
@@ -128,23 +123,11 @@ public class KafkaServingHelper {
       topic.getSubjects().getSchema().getSchema());
   }
 
-  private ProjectTopics setupKafkaTopic(Project project, ServingWrapper servingWrapper) throws KafkaException {
-    try {
-      // Check that the user is not trying to create a topic with  more replicas than brokers.
-      if (servingWrapper.getKafkaTopicDTO().getNumOfReplicas() != null &&
-          (servingWrapper.getKafkaTopicDTO().getNumOfReplicas() <= 0 ||
-              servingWrapper.getKafkaTopicDTO().getNumOfReplicas() >
-                kafkaBrokers.getBrokerEndpoints(KafkaBrokers.KAFKA_BROKER_PROTOCOL_INTERNAL).size())) {
-        throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_REPLICATION_ERROR, Level.FINE);
-
-      } else if (servingWrapper.getKafkaTopicDTO().getNumOfReplicas() == null) {
-        // set default value
-        servingWrapper.getKafkaTopicDTO().setNumOfReplicas(settings.getKafkaDefaultNumReplicas());
-      }
-
-    } catch (IOException | KeeperException | InterruptedException e) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.BROKER_METADATA_ERROR, Level.SEVERE,
-          "", e.getMessage(), e);
+  private ProjectTopics setupKafkaTopic(Project project, ServingWrapper servingWrapper)
+      throws KafkaException {
+    if (servingWrapper.getKafkaTopicDTO().getNumOfReplicas() == null) {
+      // set default value
+      servingWrapper.getKafkaTopicDTO().setNumOfReplicas(settings.getKafkaDefaultNumReplicas());
     }
 
     // Check that the user is not trying to create a topic with negative partitions
@@ -170,7 +153,7 @@ public class KafkaServingHelper {
     TopicDTO topicDTO = new TopicDTO(servingTopicName, servingWrapper.getKafkaTopicDTO().getNumOfReplicas(),
         servingWrapper.getKafkaTopicDTO().getNumOfPartitions(), Settings.INFERENCE_SCHEMANAME, schemaVersion);
 
-    return kafkaController.createTopicInProject(project, topicDTO);
+    return kafkaController.createTopic(project, topicDTO);
   }
 
   private ProjectTopics checkSchemaRequirements(Project project, ServingWrapper servingWrapper)

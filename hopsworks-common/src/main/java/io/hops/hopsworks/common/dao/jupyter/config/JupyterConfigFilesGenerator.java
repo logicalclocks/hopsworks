@@ -149,7 +149,7 @@ public class JupyterConfigFilesGenerator {
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_ADD_FAILURE, Level.SEVERE, null,
         e.getMessage(), e);
     }
-    
+
     return jp;
   }
   
@@ -226,7 +226,7 @@ public class JupyterConfigFilesGenerator {
   
   public void createJupyterNotebookConfig(Writer out, Project project, String hdfsUser, int port, JupyterSettings js,
                                           String certsDir, String allowOrigin)
-        throws IOException, ServiceDiscoveryException {
+      throws IOException, ServiceDiscoveryException {
     Service namenode = serviceDiscoveryController
         .getAnyAddressOfServiceWithDNS(HopsworksService.NAMENODE.getNameWithTag(NamenodeTags.rpc));
     String hopsworksRestEndpoint = "https://" + serviceDiscoveryController
@@ -253,7 +253,7 @@ public class JupyterConfigFilesGenerator {
         .setRequestsVerify(settings.getRequestsVerify())
         .setDomainCATruststore(Paths.get(certsDir, hdfsUser + Settings.TRUSTSTORE_SUFFIX).toString())
         .setServiceDiscoveryDomain(settings.getServiceDiscoveryDomain())
-        .setKafkaBrokers(kafkaBrokers.getKafkaBrokersString())
+        .setKafkaBrokers(kafkaBrokers.getBrokerEndpointsString(KafkaBrokers.BrokerProtocol.INTERNAL))
         .setHopsworksPublicHost(settings.getHopsworksPublicHost())
         .setAllocatedNotebookMBs(dockerJobConfiguration.getResourceConfig().getMemory())
         .setAllocatedNotebookCores(dockerJobConfiguration.getResourceConfig().getCores());
@@ -310,8 +310,8 @@ public class JupyterConfigFilesGenerator {
 
     finalSparkConfiguration.putAll(
         sparkConfigurationUtil.setFrameworkProperties(project, sparkJobConfiguration, settings, hdfsUser, user,
-            extraJavaOptions, kafkaBrokers.getKafkaBrokersString(), hopsworksRestEndpoint, servingConfig,
-            serviceDiscoveryController));
+            extraJavaOptions, kafkaBrokers.getBrokerEndpointsString(KafkaBrokers.BrokerProtocol.INTERNAL),
+            hopsworksRestEndpoint, servingConfig, serviceDiscoveryController));
     
     StringBuilder sparkConfBuilder = new StringBuilder();
     ArrayList<String> keys = new ArrayList<>(finalSparkConfiguration.keySet());

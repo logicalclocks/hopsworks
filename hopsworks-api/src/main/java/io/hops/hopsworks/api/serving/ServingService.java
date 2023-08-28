@@ -231,8 +231,8 @@ public class ServingService {
     @Context SecurityContext sc,
     @Context UriInfo uriInfo,
     @ApiParam(value = "serving specification", required = true) ServingView serving)
-    throws ServingException, ServiceException, KafkaException, ProjectException, UserException,
-           InterruptedException, ExecutionException, UnsupportedEncodingException {
+      throws ServingException, ServiceException, KafkaException, ProjectException, UserException,
+      InterruptedException, ExecutionException, UnsupportedEncodingException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
     if (serving == null) {

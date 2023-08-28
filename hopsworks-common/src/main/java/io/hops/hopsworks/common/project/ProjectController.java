@@ -58,7 +58,6 @@ import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
-import io.hops.hopsworks.common.dao.kafka.HopsKafkaAdminClient;
 import io.hops.hopsworks.common.dao.kafka.KafkaConst;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
 import io.hops.hopsworks.common.dao.log.operation.OperationsLogFacade;
@@ -70,6 +69,7 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FolderNameValidator;
+import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.opensearch.OpenSearchController;
 import io.hops.hopsworks.common.experiments.tensorboard.TensorBoardController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
@@ -135,7 +135,6 @@ import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.jobs.quota.YarnPriceMultiplicator;
 import io.hops.hopsworks.persistence.entity.jobs.quota.YarnProjectsQuota;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
-import io.hops.hopsworks.persistence.entity.kafka.ProjectTopics;
 import io.hops.hopsworks.persistence.entity.kafka.schemas.SchemaCompatibility;
 import io.hops.hopsworks.persistence.entity.log.operation.OperationType;
 import io.hops.hopsworks.persistence.entity.log.operation.OperationsLog;
@@ -290,7 +289,7 @@ public class ProjectController {
   @EJB
   private ProjectQuotasController projectQuotasController;
   @EJB
-  private HopsKafkaAdminClient hopsKafkaAdminClient;
+  private KafkaController kafkaController;
   @EJB
   private ProjectTopicsFacade projectTopicsFacade;
   @EJB
@@ -1095,7 +1094,7 @@ public class ProjectController {
     cleanup(project);
   }
 
-  public String[] forceCleanup(String projectName, String userEmail) {
+  public String[] forceCleanup(String projectName, Users user) {
     CleanupLogger cleanupLogger = new CleanupLogger(projectName);
     DistributedFileSystemOps dfso = null;
     YarnClientWrapper yarnClientWrapper = null;
@@ -1189,7 +1188,7 @@ public class ProjectController {
 
         // Remove Kafka
         try {
-          removeKafkaTopics(project);
+          kafkaController.removeKafkaTopics(project);
           cleanupLogger.logSuccess("Removed Kafka topics");
         } catch (Exception ex) {
           cleanupLogger.logError("Error when removing kafka topics during project cleanup");
@@ -1340,7 +1339,6 @@ public class ProjectController {
       } else {
         cleanupLogger.logSuccess("Project is *NOT* in the database, going to remove as much as possible");
         Date now = DateUtils.localDateTime2Date(DateUtils.getNow());
-        Users user = userFacade.findByEmail(userEmail);
         Project toDeleteProject = new Project(projectName, user, now, settings.getDefaultPaymentType());
         toDeleteProject.setKafkaMaxNumTopics(settings.getKafkaMaxNumTopics());
         toDeleteProject.setCreationStatus(CreationStatus.ONGOING);
@@ -1451,7 +1449,7 @@ public class ProjectController {
         LOGGER.log(Level.SEVERE, errorLog);
       }
       sendInbox(cleanupLogger.getSuccessLog().append("\n")
-        .append(cleanupLogger.getErrorLog()).append("\n").toString(), userEmail);
+        .append(cleanupLogger.getErrorLog()).append("\n").toString(), user.getEmail());
     }
     String[] logs = new String[2];
     logs[0] = cleanupLogger.getSuccessLog().toString();
@@ -1625,7 +1623,7 @@ public class ProjectController {
   private void removeProjectInt(Project project, List<HdfsUsers> usersToClean,
                                 List<HdfsGroups> groupsToClean, List<Future<?>> projectCreationFutures, Users owner)
       throws IOException, InterruptedException, HopsSecurityException, ServiceException, ProjectException,
-      GenericException, TensorBoardException, KafkaException, FeaturestoreException {
+      GenericException, TensorBoardException, FeaturestoreException {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
@@ -1640,7 +1638,7 @@ public class ProjectController {
       changeOwnershipToSuperuser(location, dfso);
 
       //remove kafka topics
-      removeKafkaTopics(project);
+      kafkaController.removeKafkaTopics(project);
 
       // remove user certificate from local node
       // (they will be removed from db when the project folder is deleted)
@@ -1750,17 +1748,6 @@ public class ProjectController {
 
     return hdfsUsersController.getAllProjectHdfsGroups(project.getName());
 
-  }
-
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private void removeKafkaTopics(Project project) throws KafkaException {
-    List<ProjectTopics> topics = projectTopicsFacade.findTopicsByProject(project);
-  
-    List<String> topicNameList = topics.stream()
-      .map(ProjectTopics::getTopicName)
-      .collect(Collectors.toList());
-  
-    hopsKafkaAdminClient.deleteTopics(topicNameList);
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)

@@ -46,6 +46,10 @@ module StorageConnectorHelper
   def get_storage_connector(project_id, featurestore_id, name)
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/#{name}"
   end
+  
+  def get_online_kafka_storage_connector(project_id, featurestore_id)
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/kafka_connector"
+  end
 
   def create_hopsfs_connector(project_id, featurestore_id, datasetName: "Resources")
     type = "featurestoreHopsfsConnectorDTO"
@@ -171,11 +175,10 @@ module StorageConnectorHelper
     [json_result, connector_name]
   end
 
-  def create_kafka_connector(project_id, featurestore_id, additional_data)
+  def create_kafka_connector(project_id, featurestore_id, additional_data, kafka_connector_name)
     type = "featureStoreKafkaConnectorDTO"
     storageConnectorType = "KAFKA"
     create_kafka_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors"
-    kafka_connector_name = "kafka_connector_#{random_id}"
     json_data = {
       name: kafka_connector_name,
       description: "test KafkaConnector description",
@@ -184,8 +187,7 @@ module StorageConnectorHelper
     }
     json_data = json_data.merge(additional_data)
 
-    json_result = post create_kafka_connector_endpoint, json_data.to_json
-    [json_result, kafka_connector_name]
+    post create_kafka_connector_endpoint, json_data.to_json
   end
 
   def update_kafka_connector(project_id, featurestore_id, connector_name, additional_data)

@@ -17,7 +17,7 @@ describe "On #{ENV['OS']}" do
   after(:all) {clean_all_test_projects(spec: "storage_connector") if defined?(@cleanup) && @cleanup}
 
   describe "Create, delete and update operations on storage connectors in a specific featurestore" do
-    
+
     describe 'with valid project, featurestore service enabled' do
 
       context "with storage connector flags enabled" do
@@ -473,7 +473,7 @@ describe "On #{ENV['OS']}" do
 
           expect(jdbc_connector_db[:connection_string]).to start_with("jdbc:mysql://onlinefs.mysql.service.consul")
         end
-        
+
         it "online storage connector should contain the driver class and isolationLevel" do
           connector_name = "#{@project['projectname']}_#{@user['username']}_onlinefeaturestore"
           featurestore_id = get_featurestore_id(@project['id'])
@@ -517,7 +517,8 @@ describe "On #{ENV['OS']}" do
               {name: "kafka.sasl.mechanism", value: "SCRAM-SHA-256"}
             ]
           }
-          json_result, _ = create_kafka_connector(project.id, featurestore_id, additional_data)
+          connector_name = "kafka_connector_#{random_id}"
+          json_result = create_kafka_connector(project.id, featurestore_id, additional_data, connector_name)
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
 
@@ -528,7 +529,7 @@ describe "On #{ENV['OS']}" do
 
           create_session(@project[:username], "Pass123")
         end
-  
+
         after :all do
           # enable kafka storage connectors temporarily
           @enable_kafka_storage_connectors = getVar('enable_kafka_storage_connectors')
@@ -562,7 +563,8 @@ describe "On #{ENV['OS']}" do
               {name: "kafka.sasl.mechanism", value: "SCRAM-SHA-256"}
             ]
           }
-          json_result, _ = create_kafka_connector(project.id, featurestore_id, additional_data)
+          connector_name = "kafka_connector_#{random_id}"
+          create_kafka_connector(project.id, featurestore_id, additional_data, connector_name)
           expect_status_details(400, error_code: 270214)
         end
 
@@ -641,7 +643,8 @@ describe "On #{ENV['OS']}" do
           options: [{name: "option1", value: "value1"}]
         }
 
-        json_result, connector_name = create_kafka_connector(project.id, featurestore_id, additional_data)
+        connector_name = "kafka_connector_#{random_id}"
+        json_result = create_kafka_connector(project.id, featurestore_id, additional_data, connector_name)
 
         parsed_json = JSON.parse(json_result)
         expect_status_details(201)
@@ -678,7 +681,8 @@ describe "On #{ENV['OS']}" do
           ]
         }
 
-        json_result, connector_name = create_kafka_connector(project.id, featurestore_id, additional_data)
+        connector_name = "kafka_connector_#{random_id}"
+        json_result = create_kafka_connector(project.id, featurestore_id, additional_data, connector_name)
 
         parsed_json = JSON.parse(json_result)
         expect_status_details(201)
@@ -714,7 +718,8 @@ describe "On #{ENV['OS']}" do
           options: [{name: "option1", value: "value1"}]
         }
 
-        _, connector_name = create_kafka_connector(project.id, featurestore_id, additional_data)
+        connector_name = "kafka_connector_#{random_id}"
+        create_kafka_connector(project.id, featurestore_id, additional_data, connector_name)
         expect_status_details(201)
 
         updated_data = {
@@ -767,7 +772,8 @@ describe "On #{ENV['OS']}" do
           options: [{name: "option1", value: "value1"}]
         }
 
-        _, connector_name = create_kafka_connector(project.id, featurestore_id, additional_data)
+        connector_name = "kafka_connector_#{random_id}"
+        create_kafka_connector(project.id, featurestore_id, additional_data, connector_name)
         expect_status_details(201)
 
         json_result = get_storage_connector(project.id, featurestore_id, connector_name)
@@ -806,7 +812,8 @@ describe "On #{ENV['OS']}" do
           options: [{name: "option1", value: "value1"}]
         }
 
-        _, connector_name = create_kafka_connector(project.id, featurestore_id, additional_data)
+        connector_name = "kafka_connector_#{random_id}"
+        create_kafka_connector(project.id, featurestore_id, additional_data, connector_name)
         expect_status_details(201)
 
         member = create_user
@@ -839,7 +846,8 @@ describe "On #{ENV['OS']}" do
           options: [{name: "option1", value: "value1"}]
         }
 
-        _, connector_name = create_kafka_connector(project.id, featurestore_id, additional_data)
+        connector_name = "kafka_connector_#{random_id}"
+        create_kafka_connector(project.id, featurestore_id, additional_data, connector_name)
         expect_status_details(201)
         reset_session
 
@@ -882,13 +890,89 @@ describe "On #{ENV['OS']}" do
           options: [{name: "option1", value: "value1"}]
         }
 
-        json_result, connector_name = create_kafka_connector(project.id, featurestore_id, additional_data)
+        connector_name = "kafka_connector_#{random_id}"
+        json_result = create_kafka_connector(project.id, featurestore_id, additional_data, connector_name)
         parsed_json = JSON.parse(json_result)
         expect_status_details(201)
         delete_connector(project.id,featurestore_id,connector_name)
         expect_status_details(200)
         expect(test_file(parsed_json["sslTruststoreLocation"])).to be false
         expect(test_file(parsed_json["sslKeystoreLocation"])).to be false
+      end
+    end
+  end
+
+  describe "Operations for online kafka connector" do
+    context 'with valid project, featurestore service enabled' do
+      before :all do
+        @online_kafka_storage_connector_name = getVar('online_kafka_storage_connector_name')
+        @enable_kafka_storage_connectors = getVar('enable_kafka_storage_connectors')
+        setVar('enable_kafka_storage_connectors', "true")
+
+        @cleanup = true
+        @debugOpt = false
+        with_valid_project
+      end
+
+      after :all do
+        setVar('online_kafka_storage_connector_name', @online_kafka_storage_connector_name[:value])
+        setVar('enable_kafka_storage_connectors', @enable_kafka_storage_connectors[:value])
+      end
+
+      it "should get a online kafka storage connector with default values if it didn't exist" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        connector_name = "kafka_connector"
+
+        create_session(project[:username], "Pass123")
+        json_result = get_online_kafka_storage_connector(project.id, featurestore_id)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(200)
+        expect(parsed_json.key?("id")).to be true
+        expect(parsed_json["featurestoreId"]).to eql(featurestore_id)
+        expect(parsed_json["name"]).to eql(connector_name)
+        expect(parsed_json["storageConnectorType"]).to eql("KAFKA")
+        expect(parsed_json["bootstrapServers"]).to eql("10.0.2.15:9091")
+        expect(parsed_json["securityProtocol"]).to eql("SSL")
+        expect(parsed_json.key?("sslTruststoreLocation")).to be false
+        expect(parsed_json.key?("sslTruststorePassword")).to be false
+        expect(parsed_json.key?("sslKeystoreLocation")).to be false
+        expect(parsed_json.key?("sslKeystorePassword")).to be false
+        expect(parsed_json.key?("sslKeyPassword")).to be false
+        expect(parsed_json["sslEndpointIdentificationAlgorithm"]).to eql("")
+        expect(parsed_json["externalKafka"]).to be false
+      end
+
+      it "should get already created online kafka storage connector" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        connector_name = "kafka_connector"
+
+        additional_data = {
+          bootstrapServers: "localhost:9091",
+          securityProtocol: "SASL_SSL",
+          sslEndpointIdentificationAlgorithm: "",
+          options: [{name: "option1", value: "value1"}]
+        }
+
+        create_kafka_connector(project.id, featurestore_id, additional_data, connector_name)
+        expect_status_details(201)
+
+        create_session(project[:username], "Pass123")
+        json_result = get_online_kafka_storage_connector(project.id, featurestore_id)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(200)
+        expect(parsed_json.key?("id")).to be true
+        expect(parsed_json["featurestoreId"]).to eql(featurestore_id)
+        expect(parsed_json["name"]).to eql(connector_name)
+        expect(parsed_json["storageConnectorType"]).to eql("KAFKA")
+        expect(parsed_json["bootstrapServers"]).to eql("localhost:9091")
+        expect(parsed_json["securityProtocol"]).to eql("SASL_SSL")
+        expect(parsed_json["sslEndpointIdentificationAlgorithm"]).to eql("")
+        expect(parsed_json["options"].length).to eql(1)
+        expect(parsed_json["options"][0]["name"]).to eql("option1")
+        expect(parsed_json["options"][0]["value"]).to eql("value1")
+        expect(parsed_json["externalKafka"]).to be true
       end
     end
   end
