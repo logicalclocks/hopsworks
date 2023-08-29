@@ -17,6 +17,8 @@ package io.hops.hopsworks.common.tags;
 
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.integrations.CommunityStereotype;
+import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.Stateless;
@@ -35,6 +37,12 @@ public class TagController implements TagControllerIface {
   
   @Override
   public Map<String, String> getAll(Users user, DatasetPath path) {
+    throw new IllegalArgumentException("API not supported in the community edition");
+  }
+  
+  @Override
+  public Map<String, String> getAllAsSuperUser(DatasetPath path)
+    throws DatasetException, MetadataException {
     throw new IllegalArgumentException("API not supported in the community edition");
   }
   

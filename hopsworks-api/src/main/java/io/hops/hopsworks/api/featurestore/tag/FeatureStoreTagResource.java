@@ -23,6 +23,7 @@ import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.tags.TagBuilder;
 import io.hops.hopsworks.api.tags.TagsExpansionBeanParam;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.commands.featurestore.search.SearchFSCommandLogger;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.tags.AttachTagResult;
 import io.hops.hopsworks.common.tags.TagControllerIface;
@@ -72,6 +73,8 @@ public abstract class FeatureStoreTagResource {
   private TagBuilder tagBuilder;
   @EJB
   private JWTHelper jwtHelper;
+  @EJB
+  protected SearchFSCommandLogger searchCommandLogger;
   
   protected Project project;
   protected Featurestore featureStore;
@@ -95,6 +98,7 @@ public abstract class FeatureStoreTagResource {
   }
   
   protected abstract DatasetPath getDatasetPath() throws DatasetException, FeaturestoreException;
+  protected abstract void logTagsUpdateForSearch() throws FeaturestoreException;
   protected abstract Integer getItemId();
   protected abstract ResourceRequest.Name getItemType();
   
@@ -116,6 +120,7 @@ public abstract class FeatureStoreTagResource {
           throws MetadataException, SchematizedTagException, DatasetException, FeaturestoreException {
     Users user = jwtHelper.getUserPrincipal(sc);
     AttachTagResult result = tagController.upsert(user, getDatasetPath(), name, value);
+    logTagsUpdateForSearch();
     FeatureStoreTagUri tagUri = new FeatureStoreTagUri(uriInfo, featureStore.getId(), getItemType(), getItemId());
     TagsDTO dto = tagBuilder.build(tagUri, getDatasetPath(), result.getItems());
     
@@ -144,11 +149,12 @@ public abstract class FeatureStoreTagResource {
     Users user = jwtHelper.getUserPrincipal(sc);
     AttachTagResult result;
     
-    if(tags.getItems().size() == 0) {
+    if(tags.getItems() == null || tags.getItems().isEmpty()) {
       result = tagController.upsert(user, getDatasetPath(), tags.getName(), tags.getValue());
     } else {
       result = tagController.upsertAll(user, getDatasetPath(), tagsToMap(tags));
     }
+    logTagsUpdateForSearch();
     FeatureStoreTagUri tagUri = new FeatureStoreTagUri(uriInfo, featureStore.getId(), getItemType(), getItemId());
     TagsDTO dto = tagBuilder.build(tagUri, getDatasetPath(), result.getItems());
     
@@ -222,6 +228,7 @@ public abstract class FeatureStoreTagResource {
     
     Users user = jwtHelper.getUserPrincipal(sc);
     tagController.deleteAll(user, getDatasetPath());
+    logTagsUpdateForSearch();
     return Response.noContent().build();
   }
   
@@ -241,6 +248,7 @@ public abstract class FeatureStoreTagResource {
     
     Users user = jwtHelper.getUserPrincipal(sc);
     tagController.delete(user, getDatasetPath(), name);
+    logTagsUpdateForSearch();
     return Response.noContent().build();
   }
 }

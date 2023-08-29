@@ -211,6 +211,7 @@ module ProjectHelper
   def clean_test_project(project, response, headers)
     request = raw_delete_project(project, response, headers)
     on_complete(request, project)
+    pp "check elastic index: #{opensearch_check_project_deleted(project)}"
     request
   end
 
@@ -248,9 +249,6 @@ module ProjectHelper
     hydra.run
     ending = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     elapsed = ending - starting
-
-    epipe_wait_on_mutations
-    epipe_wait_on_provenance
     pp "Finished cleanup - time elapsed " + elapsed.to_s + "s"
   end
 
@@ -258,7 +256,8 @@ module ProjectHelper
     projects_root_inode = INode.where(parent_id:1, name: "Projects")
     expect(projects_root_inode.length).to eq(1), "inode not found for project: #{project[:projectname]}"
     project_inode = INode.where(parent_id:projects_root_inode.first[:id], name: project[:projectname])
-    project_inode.first
+    @first = project_inode.first
+    @first
   end
 
   def create_member_in_table(project, user, role)

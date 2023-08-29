@@ -47,8 +47,8 @@ import java.util.logging.Level;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class XAttrsController {
 
-  private final static String XATTR_USER_NAMESPACE = "user.";
-  private final static String XATTR_PROV_NAMESPACE = "provenance.";
+  public final static String XATTR_USER_NAMESPACE = "user.";
+  public final static String XATTR_PROV_NAMESPACE = "provenance.";
 
   @EJB
   private InodeController inodeController;
@@ -173,6 +173,19 @@ public class XAttrsController {
     } finally {
       if (udfso != null) {
         dfs.closeDfsClient(udfso);
+      }
+    }
+  }
+  
+  public String getXAttrAsSuperUser(String inodePath, String namespace, String name)
+    throws MetadataException, DatasetException {
+    String path = validatePath(inodePath);
+    DistributedFileSystemOps dfso = dfs.getDfsOps();
+    try {
+      return getXAttr(path, namespace, name, dfso);
+    } finally {
+      if (dfso != null) {
+        dfs.closeDfsClient(dfso);
       }
     }
   }

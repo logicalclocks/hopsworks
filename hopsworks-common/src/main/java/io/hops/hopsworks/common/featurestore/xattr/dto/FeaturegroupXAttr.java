@@ -15,8 +15,9 @@
  */
 package io.hops.hopsworks.common.featurestore.xattr.dto;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -25,20 +26,21 @@ public class FeaturegroupXAttr {
   /**
    * common fields
    */
-  public static abstract class Base {
-    @XmlElement(nillable = false, name = FeaturestoreXAttrsConstants.FEATURESTORE_ID)
+  public abstract static class Base {
+    @JsonProperty(FeaturestoreXAttrsConstants.FEATURESTORE_ID)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Integer featurestoreId;
   
-    public Base() {}
+    protected Base() {}
   
-    public Base(Integer featurestoreId) {
+    protected Base(Integer featurestoreId) {
       this.featurestoreId = featurestoreId;
     }
   
     public Integer getFeaturestoreId() {
       return featurestoreId;
     }
-  
+    
     public void setFeaturestoreId(Integer featurestoreId) {
       this.featurestoreId = featurestoreId;
     }
@@ -50,21 +52,25 @@ public class FeaturegroupXAttr {
         '}';
     }
   }
-
+  
   /**
    * document attached as an xattr to a featuregroup directory
    */
-  @XmlRootElement
-  public static class FullDTO extends Base {
-    @XmlElement(nillable = true, name = FeaturestoreXAttrsConstants.DESCRIPTION)
+  public static class FullDTO extends Base implements FeatureStoreItem {
+    @JsonProperty(FeaturestoreXAttrsConstants.DESCRIPTION)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String description;
-    @XmlElement(nillable = true, name = FeaturestoreXAttrsConstants.CREATE_DATE)
+    @JsonProperty(FeaturestoreXAttrsConstants.CREATE_DATE)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Long createDate;
-    @XmlElement(nillable = true, name = FeaturestoreXAttrsConstants.CREATOR)
+    @JsonProperty(FeaturestoreXAttrsConstants.CREATOR)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String creator;
-    @XmlElement(nillable = true, name = FeaturestoreXAttrsConstants.FG_TYPE)
+    @JsonProperty(FeaturestoreXAttrsConstants.FG_TYPE)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private FGType fgType;
-    @XmlElement(nillable = false, name = FeaturestoreXAttrsConstants.FG_FEATURES)
+    @JsonProperty(FeaturestoreXAttrsConstants.FG_FEATURES)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<SimpleFeatureDTO> features = new LinkedList<>();
   
     public FullDTO() {
@@ -84,6 +90,7 @@ public class FeaturegroupXAttr {
       this.creator = creator;
     }
   
+    @Override
     public String getDescription() {
       return description;
     }
@@ -92,6 +99,7 @@ public class FeaturegroupXAttr {
       this.description = description;
     }
   
+    @Override
     public Long getCreateDate() {
       return createDate;
     }
@@ -100,6 +108,7 @@ public class FeaturegroupXAttr {
       this.createDate = createDate;
     }
   
+    @Override
     public String getCreator() {
       return creator;
     }
@@ -148,13 +157,15 @@ public class FeaturegroupXAttr {
    * simplified version of FullDTO that is part of the
    * @link io.hops.hopsworks.common.featurestore.xattr.dto.TrainingDatasetXAttrDTO
    */
-  @XmlRootElement
   public static class SimplifiedDTO extends Base {
-    @XmlElement(nillable = false, name = FeaturestoreXAttrsConstants.NAME)
+    @JsonProperty(FeaturestoreXAttrsConstants.NAME)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String name;
-    @XmlElement(nillable = false, name = FeaturestoreXAttrsConstants.VERSION)
+    @JsonProperty(FeaturestoreXAttrsConstants.VERSION)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Integer version;
-    @XmlElement(nillable = false, name = FeaturestoreXAttrsConstants.FG_FEATURES)
+    @JsonProperty(FeaturestoreXAttrsConstants.FG_FEATURES)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<String> features = new LinkedList<>();
   
     public SimplifiedDTO() {
@@ -199,9 +210,12 @@ public class FeaturegroupXAttr {
     }
   }
 
-  @XmlRootElement
   public static class SimpleFeatureDTO {
+    @JsonProperty(FeaturestoreXAttrsConstants.NAME)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String name;
+    @JsonProperty(FeaturestoreXAttrsConstants.DESCRIPTION)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String description;
     
     public SimpleFeatureDTO() {}

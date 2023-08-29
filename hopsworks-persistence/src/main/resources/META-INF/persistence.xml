@@ -174,6 +174,8 @@
     <class>io.hops.hopsworks.persistence.entity.pki.PKIKey</class>
     <class>io.hops.hopsworks.persistence.entity.pki.PKICertificate</class>
     <class>io.hops.hopsworks.persistence.entity.pki.PKICrl</class>
+    <class>io.hops.hopsworks.persistence.entity.commands.search.SearchFSCommand</class>
+    <class>io.hops.hopsworks.persistence.entity.commands.search.SearchFSCommandHistory</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

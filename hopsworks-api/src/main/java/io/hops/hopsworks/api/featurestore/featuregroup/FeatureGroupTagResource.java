@@ -57,6 +57,11 @@ public class FeatureGroupTagResource extends FeatureStoreTagResource {
   }
   
   @Override
+  protected void logTagsUpdateForSearch() throws FeaturestoreException {
+    searchCommandLogger.updateTags(featureGroup);
+  }
+  
+  @Override
   protected Integer getItemId() {
     return featureGroup.getId();
   }
