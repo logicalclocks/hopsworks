@@ -6,13 +6,15 @@ describe "On #{ENV['OS']}" do
   before(:all) do
     @debugOpt = false
     @cleanUp = true
-    epipe_wait_on_provenance(repeat: 2)
-    epipe_wait_on_mutations(repeat: 2)
+    wait_on_command_search(repeat: 30)
+    epipe_wait_on_mutations(repeat: 30)
+    epipe_wait_on_provenance(repeat: 30)
   end
   after(:all) do
     clean_all_test_projects(spec: "ee_search") if defined?(@cleanUp) && @cleanUp
-    epipe_wait_on_provenance(repeat: 2)
-    epipe_wait_on_mutations(repeat: 2)
+    wait_on_command_search(repeat: 10)
+    epipe_wait_on_mutations(repeat: 10)
+    epipe_wait_on_provenance(repeat: 10)
   end
 
   context "featurestore" do
@@ -153,7 +155,7 @@ describe "On #{ENV['OS']}" do
 
     context "same project" do
       before :all do
-        wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
+        wait_result = wait_on_command_search
         expect(wait_result["success"]).to be(true), wait_result["msg"]
 
         with_valid_session
@@ -171,7 +173,7 @@ describe "On #{ENV['OS']}" do
           @fvs = feature_view_setup(@project, @fv_fg)
           @tds = trainingdataset_setup(@project)
           #search
-          wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           expected_hits1 = [{:name => @fgs[1][:name], :highlight => "tags", :parentProjectName => @project[:projectname]},
@@ -202,7 +204,7 @@ describe "On #{ENV['OS']}" do
           #add tag
           add_featuregroup_tag_checked(@project[:id], @featuregroup_id, @tags[0], "cat")
           #search
-          wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           expected_hits1 = [{:name => fg_name, :highlight => "tags", :parentProjectName => @project[:projectname]}]
@@ -210,7 +212,7 @@ describe "On #{ENV['OS']}" do
           #remove tag
           delete_featuregroup_tag_checked(@project[:id], @featuregroup_id, @tags[0])
           #search
-          wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           expect(local_featurestore_search(@project, "FEATUREGROUP", "dog")["featuregroups"].length).to eq(0)
@@ -220,7 +222,7 @@ describe "On #{ENV['OS']}" do
           #update tag - with value - value is search hit
           update_featuregroup_tag_checked(@project[:id], @featuregroup_id, @tags[1], "dog")
           #search
-          wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           expected_hits2 = [{:name => fg_name, :highlight => "tags", :parentProjectName => @project[:projectname]}]
@@ -228,7 +230,7 @@ describe "On #{ENV['OS']}" do
           #update tag - with value - value is no search hit
           update_featuregroup_tag_checked(@project[:id], @featuregroup_id, @tags[1], "val")
           #search
-          wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           expect(local_featurestore_search(@project, "FEATUREGROUP", "dog")["featuregroups"].length).to eq(0)
@@ -244,7 +246,7 @@ describe "On #{ENV['OS']}" do
             add_featuregroup_tag_checked(@project[:id], @featuregroup_id, @large_tags[i+1], tag_val)
           end
 
-          wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
           #first part
           expected_hits = [{:name => fg_name, :highlight => "tags", :parentProjectName => @project[:projectname]}]
@@ -256,7 +258,7 @@ describe "On #{ENV['OS']}" do
           #remove tag from second part
           delete_featuregroup_tag_checked(@project[:id], @featuregroup_id, @large_tags[13])
           #search
-          wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
           expected_hits = [{:name => fg_name, :highlight => "tags", :parentProjectName => @project[:projectname]}]
           project_search_test(@project, "book", "featuregroup", expected_hits)
@@ -264,7 +266,7 @@ describe "On #{ENV['OS']}" do
           #delete last tag "book"
           delete_featuregroup_tag_checked(@project[:id], @featuregroup_id, @large_tags[14])
           #search
-          wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
           project_search_test(@project, "book", "featuregroup", [])
         end
@@ -272,8 +274,8 @@ describe "On #{ENV['OS']}" do
     end
     context "same 2 projects" do
       before :all do
-        #make sure epipe is free of work
-        wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
+        #make sure there are no pending commands for search
+        wait_result = wait_on_command_search
         expect(wait_result["success"]).to be(true), wait_result["msg"]
 
         with_valid_session
@@ -305,7 +307,7 @@ describe "On #{ENV['OS']}" do
       context "project search with shared fs" do
         it "featuregroup, feature views, training datasets with tags" do
           #search
-          wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           expected_hits1 = [{:name => @fgs1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
@@ -348,7 +350,7 @@ describe "On #{ENV['OS']}" do
       end
       context "global search" do
         it "featuregroup, feature views, training datasets with tags" do
-          wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           expected_hits1 = [{:name => @fgs1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
@@ -424,9 +426,12 @@ describe "On #{ENV['OS']}" do
         #delete projects that might contain these tags
         create_session(@user1_params[:email], @user1_params[:password])
         delete_project(@project1)
+        pp "check elastic index: #{opensearch_check_project_deleted(@project1)}"
         delete_project(@project3)
+        pp "check elastic index: #{opensearch_check_project_deleted(@project3)}"
         create_session(@user2_params[:email], @user2_params[:password])
         delete_project(@project2)
+        pp "check elastic index: #{opensearch_check_project_deleted(@project2)}"
 
         with_admin_session
         delete_tag_checked(@search_tags[0])
@@ -482,8 +487,8 @@ describe "On #{ENV['OS']}" do
           fgs
         end
         before :all do
-          #make sure epipe is free of work
-          wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+          #make sure there are no pending commands for search
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           create_session(@user1_params[:email], @user1_params[:password])
@@ -494,7 +499,7 @@ describe "On #{ENV['OS']}" do
           create_session(@user2_params[:email], @user2_params[:password])
           @fgs2 = tag_featuregroups_setup(@project2)
 
-          wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
         end
 
@@ -534,8 +539,8 @@ describe "On #{ENV['OS']}" do
           tds
         end
         before :all do
-          #make sure epipe is free of work
-          wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+          #make sure there are no pending commands for search
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           create_session(@user1_params[:email], @user1_params[:password])
@@ -545,12 +550,12 @@ describe "On #{ENV['OS']}" do
           create_session(@user2_params[:email], @user2_params[:password])
           @tds2 = tag_trainingdataset_setup(@project2)
 
-          #make sure epipe is free of work
-          wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+          #make sure there are no pending commands for search
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
         end
         it 'project local search' do
-          wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           create_session(@user1_params[:email], @user1_params[:password])
@@ -585,8 +590,8 @@ describe "On #{ENV['OS']}" do
           fvs
         end
         before :all do
-          #make sure epipe is free of work
-          wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+          #make sure there are no pending commands for search
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           create_session(@user1_params[:email], @user1_params[:password])
@@ -600,12 +605,12 @@ describe "On #{ENV['OS']}" do
           @fv_fg2 = create_cached_featuregroup_checked2(@project2.id, name: "fg")
           @fvs2 = tag_featureview_setup(@project2, @fv_fg2)
 
-          #make sure epipe is free of work
-          wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+          #make sure there are no pending commands for search
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
         end
         it 'project local search' do
-          wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           create_session(@user1_params[:email], @user1_params[:password])

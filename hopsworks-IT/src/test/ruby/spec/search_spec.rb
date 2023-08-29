@@ -17,9 +17,15 @@ describe "On #{ENV['OS']}" do
   before(:all) do
     @debugOpt = false
     @cleanup = true
+    wait_on_command_search(repeat: 30)
+    epipe_wait_on_mutations(repeat: 30)
+    epipe_wait_on_provenance(repeat: 30)
   end
   after(:all) do
     clean_all_test_projects(spec: "search") if @cleanup
+    wait_on_command_search(repeat: 10)
+    epipe_wait_on_mutations(repeat: 10)
+    epipe_wait_on_provenance(repeat: 10)
   end
 
   context "featurestore" do
@@ -124,8 +130,8 @@ describe "On #{ENV['OS']}" do
 
     context "one project basic ops" do
       before :all do
-        #make sure epipe is free of work
-        wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+        #make sure there are no pending commands for search
+        wait_result = wait_on_command_search
         expect(wait_result["success"]).to be(true), wait_result["msg"]
 
         with_valid_session
@@ -185,23 +191,6 @@ describe "On #{ENV['OS']}" do
         return td_features
       end
 
-      def xattr_num_parts(inode_name)
-        result = INode.where(name: inode_name)
-        result1 = XAttr.where(inode_id: result[0][:id])
-        pp "#{result[0][:id]} : #{result1[0][:num_parts]}"
-      end
-
-      def fg_featurstore_xattr_size(fg_size)
-        epipe_stop_restart do
-          fg_features = get_fg_features(fg_size, f_prefix1: @feature_keyword1, f_prefix2: @feature_keyword2)
-          td_features = get_td_features(@fg_name, fg_features)
-          create_cached_featuregroup_checked(@project[:id], @featurestore_id, @fg_name, features: fg_features, featuregroup_description: @description)
-          create_hopsfs_training_dataset_checked(@project[:id], @featurestore_id, @connector, name: @td_name, features: td_features, description: @description)
-          xattr_num_parts("#{@fg_name}_1")
-          xattr_num_parts("#{@td_name}_1")
-        end
-      end
-
       def cleanup_fg(project, fg_id)
         featurestore_id = get_featurestore_id(project[:id])
         delete_featuregroup_checked(project[:id], featurestore_id, fg_id) if defined?(fg_id) && !fg_id.nil?
@@ -231,7 +220,7 @@ describe "On #{ENV['OS']}" do
         def featurestore_search_test(size)
           featurestore_id = get_featurestore_id(@project[:id])
 
-          wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           #setup
@@ -240,7 +229,7 @@ describe "On #{ENV['OS']}" do
           td_features = get_td_features(@fg_name, fg_features)
           td_json, _ = create_hopsfs_training_dataset_checked(@project[:id], featurestore_id, @connector, name: @td_name, features: td_features, description: @description)
           @td_id = td_json[:id]
-          wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
           #search
           expected_hits1 = [{:name => @fg_name, :highlight => "name", :parentProjectName => @project[:projectname]}]
@@ -313,8 +302,8 @@ describe "On #{ENV['OS']}" do
 
       context 'fgs - search by name, desc, features' do
         before :all do
-          #make sure epipe is free of work
-          wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+          #make sure there are no pending commands for search
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           create_session(@user1_params[:email], @user1_params[:password])
@@ -323,7 +312,7 @@ describe "On #{ENV['OS']}" do
           create_session(@user2_params[:email], @user2_params[:password])
           @fgs2 = featuregroups_setup(@project2)
 
-          wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
         end
 
@@ -391,8 +380,8 @@ describe "On #{ENV['OS']}" do
       end
       context 'tds - search by name, desc, features' do
         before :all do
-          #make sure epipe is free of work
-          wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+          #make sure there are no pending commands for search
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           create_session(@user1_params[:email], @user1_params[:password])
@@ -400,12 +389,12 @@ describe "On #{ENV['OS']}" do
           create_session(@user2_params[:email], @user2_params[:password])
           @tds2 = trainingdataset_setup(@project2)
 
-          #make sure epipe is free of work
-          wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+          #make sure there are no pending commands for search
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
         end
         it 'project local search' do
-          wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+          wait_result = wait_on_command_search
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           create_session(@user1_params[:email], @user1_params[:password])
@@ -442,8 +431,8 @@ describe "On #{ENV['OS']}" do
         end
       end
       it 'should get correct accessor projects' do
-        #make sure epipe is free of work
-        wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+        #make sure there are no pending commands for search
+        wait_result = wait_on_command_search
         expect(wait_result["success"]).to be(true), wait_result["msg"]
 
         create_session(@user1_params[:email], @user1_params[:password])
@@ -455,7 +444,7 @@ describe "On #{ENV['OS']}" do
         fg2_name = "fg_john"
         create_cached_featuregroup_checked(@project3[:id], featurestore3_id, fg2_name)
 
-        wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+        wait_result = wait_on_command_search
         expect(wait_result["success"]).to be(true), wait_result["msg"]
 
         create_session(@user1_params[:email], @user1_params[:password])
@@ -494,8 +483,8 @@ describe "On #{ENV['OS']}" do
         @fgs = Array.new
         @tds = Array.new
 
-        #make sure epipe is free of work
-        wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+        #make sure there are no pending commands for search
+        wait_result = wait_on_command_search
         expect(wait_result["success"]).to be(true), wait_result["msg"]
 
         #create 15 featuregroups
@@ -516,7 +505,7 @@ describe "On #{ENV['OS']}" do
           @tds[i][:id] = td_json[:id]
         end
 
-        wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+        wait_result = wait_on_command_search
         expect(wait_result["success"]).to be(true), wait_result["msg"]
 
         #local search

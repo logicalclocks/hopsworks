@@ -27,6 +27,9 @@ describe "On #{ENV['OS']}" do
     6.times do |i|
       @tags[i] = "tags_#{i}"
     end
+    wait_on_command_search(repeat: 20)
+    epipe_wait_on_mutations(repeat: 20)
+    epipe_wait_on_provenance(repeat: 20)
   end
 
   def schema()
@@ -221,6 +224,9 @@ describe "On #{ENV['OS']}" do
 
     def fs_cleanup
       clean_all_test_projects(spec: "ee_tags")
+      wait_on_command_search(repeat: 10)
+      epipe_wait_on_mutations(repeat: 10)
+      epipe_wait_on_provenance(repeat: 10)
 
       with_admin_session
       @pre_tags.each do |tag|
@@ -882,6 +888,9 @@ describe "On #{ENV['OS']}" do
 
     after :all do
       clean_all_test_projects(spec: "ee_tags")
+      wait_on_command_search(repeat: 10)
+      epipe_wait_on_mutations(repeat: 10)
+      epipe_wait_on_provenance(repeat: 10)
 
       with_admin_session
       @pre_tags.each do |tag|
@@ -1040,6 +1049,9 @@ describe "On #{ENV['OS']}" do
     def clean_projects()
       #delete projects that might contain these tags
       clean_all_test_projects(spec: "ee_tags")
+      wait_on_command_search(repeat: 10)
+      epipe_wait_on_mutations(repeat: 10)
+      epipe_wait_on_provenance(repeat: 10)
 
       with_admin_session
       @pre_tags.each do |tag|

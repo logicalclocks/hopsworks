@@ -51,6 +51,7 @@ import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigUpdateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerResponseException;
 import io.hops.hopsworks.common.airflow.AirflowController;
 import io.hops.hopsworks.common.alert.AlertController;
+import io.hops.hopsworks.common.commands.featurestore.search.SearchFSCommandLogger;
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetSharedWithFacade;
@@ -308,6 +309,8 @@ public class ProjectController {
   @Inject
   @Any
   private Instance<UserAccountHandler> userAccountHandlers;
+  @EJB
+  private SearchFSCommandLogger searchFSCommandLogger;
 
   public Project createProject(ProjectDTO projectDTO, Users owner) throws DatasetException,
       GenericException, KafkaException, ProjectException, UserException, HopsSecurityException, ServiceException,
@@ -1104,6 +1107,7 @@ public class ProjectController {
       Project project = projectFacade.findByName(projectName);
       if (project != null) {
         cleanupLogger.logSuccess("Project found in the database");
+        searchFSCommandLogger.delete(project);
 
         // Run custom handlers for project deletion
         try {
@@ -1558,6 +1562,7 @@ public class ProjectController {
     if (project == null) {
       return;
     }
+    searchFSCommandLogger.delete(project);
     int nbTry = 0;
     while (nbTry < 2) {
       YarnClientWrapper yarnClientWrapper = ycs.getYarnClientSuper(settings

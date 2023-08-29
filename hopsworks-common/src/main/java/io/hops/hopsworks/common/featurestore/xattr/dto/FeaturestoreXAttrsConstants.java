@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.featurestore.xattr.dto;
 import io.hops.hopsworks.common.provenance.core.ProvXAttrs;
 
 public class FeaturestoreXAttrsConstants {
+  public static final String DOC_TYPE = "doc_type";
   public static final String OPENSEARCH_XATTR = "xattr";
   public static final String PROJECT_ID = "project_id";
   public static final String PROJECT_NAME = "project_name";
@@ -58,5 +59,9 @@ public class FeaturestoreXAttrsConstants {
   
   public static String getTagsOpenSearchValue() {
     return OPENSEARCH_XATTR + "." + TAGS + ".value";
+  }
+  
+  private FeaturestoreXAttrsConstants() {
+    throw new IllegalStateException("Utility class");
   }
 }

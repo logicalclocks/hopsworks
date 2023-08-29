@@ -63,6 +63,14 @@ public class TagEEController implements TagControllerIface {
   }
   
   @Override
+  public Map<String, String> getAllAsSuperUser(DatasetPath path)
+    throws DatasetException, MetadataException {
+    String xAttrStr =  xAttrsController.getXAttrAsSuperUser(path.getFullPath().toString(),
+      XAttrsController.XATTR_USER_NAMESPACE, FeaturestoreXAttrsConstants.TAGS);
+    return FeatureStoreTagsHelper.convertToExternalTags(xAttrStr);
+  }
+  
+  @Override
   public AttachTagResult upsert(Users user, DatasetPath path, String name, String value)
     throws MetadataException, SchematizedTagException {
     String hdfsUserName = hdfsUsersController.getHdfsUserName(path.getAccessProject(), user);

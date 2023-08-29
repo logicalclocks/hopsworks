@@ -33,8 +33,11 @@ module EpipeHelper
   #epipe_active expects epipe to be active and will fail if epipe is down
   def epipe_restart_checked(msg: "epipe is down")
     epipe_restart
-    sleep(1)
-    epipe_active(msg: msg)
+    sleep(2)
+    if is_epipe_active == false
+      sleep(5)
+      epipe_active(msg: msg)
+    end
   end
 
   def epipe_restart
@@ -42,13 +45,13 @@ module EpipeHelper
   end
 
   def epipe_active(msg: "epipe is down")
-    output = execute_remotely ENV['EPIPE_HOST'], "systemctl is-active epipe"
-    expect(output.strip).to eq("active"), msg
+    active = is_epipe_active
+    expect(active).to be true, msg
   end
 
   def is_epipe_active
     output = execute_remotely ENV['EPIPE_HOST'], "systemctl is-active epipe"
-    output.strip.eql? "active"
+    output.match(/\bactive\b/i)
   end
 
   #search especially relies on the logs to be consumed.
@@ -57,32 +60,39 @@ module EpipeHelper
   #if epipe is up and consumed all the logs, this method should not sleep at all and exit on first check
   def epipe_wait_on(wait_time: 10, repeat: 1, &log_size)
     result = (0..repeat).to_a.each_with_object([]) do | _, output |
+      epipe_restart_checked unless is_epipe_active
       #wait returns on success or after timeout
-      result = wait_for_me_time(wait_time) do
+      initial = -1
+      last_pending = -1
+      idx = 0
+      result = wait_for_me_time(repeat*wait_time, wait_time) do
+        idx = idx + 1
         pending = log_size.call
+        if initial == -1
+          initial = pending
+        end
+        if (last_pending > 0 && pending == last_pending)
+          epipe_restart
+        end
+        last_pending = pending
         if pending == 0
           { "success" => true, "pending" => 0 }
         else
-          { "msg" => "logs are not being consumed by epipe - pending:#{pending}", "success" => false, "pending" => pending }
+          msg = "command logs are not being consumed by executor -"
+          msg = msg + "initial:#{initial} after:#{idx} x #{wait_time}s"
+          msg = msg + "at pending:#{pending} and previous:#{last_pending}"
+          { "msg" => msg, "success" => false, "pending" => pending }
         end
       end
-      pp "WARNING - #{result["msg"]}" if (result["pending"] > 0)
-      if result["success"] == false
-        pending = log_size.call
-        if (result["pending"] - pending) < 10
-          pp "WARNING - no progress - restarting epipe"
-          epipe_restart
-        end
-      end
+      pp "WARNING - #{result["msg"]}" if (result["success"] == false)
       output[0] = result
     end
     #short wait for epipe-opensearch propagation
-    sleep(3)
-    epipe_active(msg: "epipe is dead")
+    sleep(1)
     result[0]
   end
 
-  def epipe_wait_on_mutations(wait_time: 10, repeat: 1)
+  def epipe_wait_on_mutations(wait_time: 10, repeat: 6)
     result = epipe_wait_on(wait_time: wait_time, repeat: repeat) do
       count = HDFSMetadataLog.count
       count
@@ -90,7 +100,7 @@ module EpipeHelper
     result
   end
 
-  def epipe_wait_on_provenance(wait_time:10, repeat: 1, with_restart: true)
+  def epipe_wait_on_provenance(wait_time:10, repeat: 6)
     result = epipe_wait_on(wait_time: wait_time, repeat: repeat) do
       count = FileProv.count
       count

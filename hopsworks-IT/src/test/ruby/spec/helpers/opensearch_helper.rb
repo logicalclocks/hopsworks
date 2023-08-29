@@ -133,4 +133,15 @@ module OpensearchHelper
     pp query if defined?(@debugOpt) && @debugOpt
     opensearch_get(path, body: query)
   end
+
+  def opensearch_check_project_deleted(project, timeout: 30)
+    opensearch_rest do
+      wait_for_me_time(timeout) do
+        response = opensearch_post("featurestore/_search",
+                                   "{\"query\":{\"bool\":{\"must\":[{\"terms\":{\"project_name\":[\"#{project[:projectname]}\"]}}]}}}")
+        index = response.body
+        { 'success' => JSON.parse(index)['hits']['total']['value'] == 0 }
+      end
+    end
+  end
 end

@@ -253,6 +253,10 @@
           <file>target/classes/META-INF/beans.xml</file>
           <replacements>
             <replacement>
+              <token>io.hops.hopsworks.common.integrations.CommunityStereotype</token>
+              <value>io.hops.hopsworks.common.integrations.EnterpriseStereotype</value>
+            </replacement>
+            <replacement>
               <token>io.hops.hopsworks.common.integrations.LocalhostStereotype</token>
               <value>${kube.stereotype}</value>
             </replacement>

@@ -49,7 +49,7 @@ import java.util.logging.Level;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class HopsworksJAXBContext {
-  private static JAXBContext context;
+  private JAXBContext context;
   
   @PostConstruct
   public void init() {
@@ -89,7 +89,8 @@ public class HopsworksJAXBContext {
       StreamSource ss = new StreamSource(new StringReader(json));
       return unmarshaller.unmarshal(ss, type).getValue();
     } catch(JAXBException e) {
-      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_STATE, Level.INFO, "jaxb unmarshall exception");
+      String errMsg = "jaxb unmarshall exception";
+      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_STATE, Level.INFO, errMsg, errMsg, e);
     }
   }
 

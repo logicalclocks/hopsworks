@@ -22,6 +22,7 @@ import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 
@@ -53,6 +54,11 @@ public class TrainingDatasetTagResource extends FeatureStoreTagResource {
   @Override
   protected DatasetPath getDatasetPath() throws DatasetException {
     return datasetHelper.getDatasetPath(project, trainingDataset.getTagPath(), DatasetType.DATASET);
+  }
+  
+  @Override
+  protected void logTagsUpdateForSearch() throws FeaturestoreException {
+    searchCommandLogger.updateTags(trainingDataset);
   }
   
   @Override

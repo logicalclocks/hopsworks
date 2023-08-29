@@ -15,7 +15,9 @@
 require 'json'
 
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects(spec: "featureviewkeywords")}
+  after :all do
+    clean_all_test_projects(spec: "featureviewkeywords")
+  end
 
   describe "feature view keywords" do
     describe "internal" do

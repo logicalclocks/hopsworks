@@ -61,6 +61,11 @@ public class FeatureViewTagResource extends FeatureStoreTagResource {
   }
   
   @Override
+  protected void logTagsUpdateForSearch() throws FeaturestoreException {
+    searchCommandLogger.updateTags(featureView);
+  }
+  
+  @Override
   protected Integer getItemId() {
     return featureView.getId();
   }

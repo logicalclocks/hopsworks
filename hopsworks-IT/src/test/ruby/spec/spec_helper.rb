@@ -118,6 +118,7 @@ RSpec.configure do |config|
   config.include DatasetTagHelper
   config.include GitHelper
   config.include ProxyAuthHelper
+  config.include CommandHelper
   config.example_status_persistence_file_path = "#{ENV['PROJECT_DIR']}#{ENV['RSPEC_TEST_STATUS']}"
   # uncomment next line if you need to clean hdfs and hopsworks db before test.
   # config.before(:suite) { clean_test_data }

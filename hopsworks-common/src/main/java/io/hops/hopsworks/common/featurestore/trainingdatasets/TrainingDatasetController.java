@@ -20,6 +20,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.logicalclocks.shaded.com.google.common.collect.Streams;
+import io.hops.hopsworks.common.commands.featurestore.search.SearchFSCommandLogger;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
@@ -87,6 +88,7 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.calcite.sql.JoinType;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
+import org.javatuples.Pair;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -166,6 +168,8 @@ public class TrainingDatasetController {
   private Settings settings;
   @Inject
   private FeaturestoreController featurestoreController;
+  @EJB
+  private SearchFSCommandLogger searchCommandLogger;
 
   /**
    * Gets all trainingDatasets for a particular featurestore and project
@@ -378,10 +382,13 @@ public class TrainingDatasetController {
       udfso = dfs.getDfsOps(username);
       udfso.mkdir(tagPath);
 
-      completeTrainingDatasetDTO = createTrainingDatasetMetadata(user, project,
+      Pair<TrainingDatasetDTO, TrainingDataset> aux = createTrainingDatasetMetadata(user, project,
           featurestore, featureView, trainingDatasetDTO, query, featurestoreConnector, tagPath, skipFeature);
+      completeTrainingDatasetDTO = aux.getValue0();
+      searchCommandLogger.create(aux.getValue1());
       if (featureView == null) {
         fsProvenanceController.trainingDatasetAttachXAttr(tagPath, completeTrainingDatasetDTO, udfso);
+        searchCommandLogger.updateFeaturestore(aux.getValue1());
       }
       activityFacade.persistActivity(ActivityFacade.CREATED_TRAINING_DATASET +
           completeTrainingDatasetDTO.getName(), project, user, ActivityFlag.SERVICE);
@@ -454,8 +461,8 @@ public class TrainingDatasetController {
    * Creates the metadata structure in DB for the training dataset
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
-  private TrainingDatasetDTO createTrainingDatasetMetadata(Users user, Project project, Featurestore featurestore,
-                                                           FeatureView featureView,
+  private Pair<TrainingDatasetDTO, TrainingDataset> createTrainingDatasetMetadata(Users user, Project project,
+                                                           Featurestore featurestore, FeatureView featureView,
                                                            TrainingDatasetDTO trainingDatasetDTO, Query query,
                                                            FeaturestoreConnector featurestoreConnector,
                                                            String tagPath, Boolean skipFeature)
@@ -530,7 +537,7 @@ public class TrainingDatasetController {
     fsActivityFacade.logMetadataActivity(user, dbTrainingDataset, featureView, FeaturestoreActivityMeta.TD_CREATED);
 
     //Get final entity from the database
-    return convertTrainingDatasetToDTO(user, project, dbTrainingDataset, skipFeature);
+    return Pair.with(convertTrainingDatasetToDTO(user, project, dbTrainingDataset, skipFeature), dbTrainingDataset);
   }
 
 
@@ -803,7 +810,7 @@ public class TrainingDatasetController {
   }
 
   public void delete(Users user, Project project, Featurestore featurestore, FeatureView featureView)
-      throws FeaturestoreException, JobException {
+    throws FeaturestoreException, JobException {
     List<TrainingDataset> trainingDatasets = getTrainingDatasetByFeatureView(featureView);
 
     // Delete all only if user has the right to delete all versions of training dataset.
@@ -824,7 +831,8 @@ public class TrainingDatasetController {
         FeaturestoreUtils.ActionMessage.DELETE_TRAINING_DATASET);
 
     statisticsController.deleteStatistics(project, user, trainingDataset);
-
+  
+    searchCommandLogger.delete(trainingDataset);
     trainingDatasetFacade.remove(trainingDataset);
     deleteHopsfsTrainingData(user, project, trainingDataset, false);
     //Delete associated jobs

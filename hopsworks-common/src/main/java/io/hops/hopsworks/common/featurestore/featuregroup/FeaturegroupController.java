@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.featurestore.featuregroup;
 
 import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.hops.hopsworks.common.commands.featurestore.search.SearchFSCommandLogger;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
@@ -142,6 +143,8 @@ public class FeaturegroupController {
   private FeatureGroupLinkController featureGroupLinkController;
   @EJB
   private FeatureGroupCommitController featureGroupCommitController;
+  @EJB
+  private SearchFSCommandLogger searchCommandLogger;
 
   /**
    * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
@@ -289,6 +292,7 @@ public class FeaturegroupController {
       String fgPath = Utils.getFeaturestorePath(featurestore.getProject(), settings)
           + "/" + Utils.getFeaturegroupName(featuregroup);
       fsController.featuregroupAttachXAttrs(fgPath, completeFeaturegroupDTO, udfso);
+      searchCommandLogger.updateFeaturestore(featuregroup);
     } finally {
       dfs.closeDfsClient(udfso);
     }
@@ -440,7 +444,7 @@ public class FeaturegroupController {
                                                     Featuregroup featuregroup,
                                                     FeaturegroupDTO featuregroupDTO)
       throws FeaturestoreException, SQLException, ProvenanceException, ServiceException, SchemaException,
-      KafkaException {
+        KafkaException {
     featurestoreUtils.verifyUserProjectEqualsFsProjectAndDataOwner(user, project, featuregroup.getFeaturestore(),
         FeaturestoreUtils.ActionMessage.UPDATE_FEATURE_GROUP_METADATA);
 
@@ -486,6 +490,7 @@ public class FeaturegroupController {
       String fgPath = Utils.getFeaturestorePath(featurestore.getProject(), settings)
           + "/" + Utils.getFeaturegroupName(featuregroup);
       fsController.featuregroupAttachXAttrs(fgPath, featuregroupDTO, udfso);
+      searchCommandLogger.updateFeaturestore(featuregroup);
     } finally {
       dfs.closeDfsClient(udfso);
     }
@@ -636,6 +641,7 @@ public class FeaturegroupController {
     JobException {
     featurestoreUtils.verifyUserProjectEqualsFsProjectAndDataOwner(user, project, featuregroup.getFeaturestore(),
         FeaturestoreUtils.ActionMessage.DELETE_FEATURE_GROUP);
+    searchCommandLogger.delete(featuregroup);
     // In some cases, fg metadata was not deleted. https://hopsworks.atlassian.net/browse/FSTORE-377
     // This enables users to delete a corrupted fg using the hsfs client.
     if (featuregroup.getOnDemandFeaturegroup() == null
@@ -695,7 +701,7 @@ public class FeaturegroupController {
     deleteFeatureGroupMeta(featuregroup);
   }
 
-  private void deleteFeatureGroupMeta(Featuregroup featuregroup) {
+  private void deleteFeatureGroupMeta(Featuregroup featuregroup) throws FeaturestoreException {
     if (featuregroupFacade.findByIdAndFeaturestore(featuregroup.getId(),
         featuregroup.getFeaturestore()).isPresent()) {
       featuregroupFacade.remove(featuregroup);
@@ -807,6 +813,7 @@ public class FeaturegroupController {
     }
     
     featuregroupFacade.persist(featuregroup);
+    searchCommandLogger.create(featuregroup);
     if(cachedFeaturegroup != null) {
       featureGroupLinkController.createParentLinks(featurestore, (CachedFeaturegroupDTO)featuregroupDTO, featuregroup);
     } else if(streamFeatureGroup != null) {

@@ -12,10 +12,15 @@ describe "On #{ENV['OS']}" do
     $stdout.sync = true
     @debugOpt = false
     @cleanup = true
+    wait_on_command_search(repeat: 30)
+    epipe_wait_on_mutations(repeat: 30)
+    epipe_wait_on_provenance(repeat: 30)
   end
   after :all do
     clean_all_test_projects(spec: "prov_ops") if defined?(@cleanup) && @cleanup
-    epipe_wait_on_provenance
+    wait_on_command_search(repeat: 10)
+    epipe_wait_on_mutations(repeat: 10)
+    epipe_wait_on_provenance(repeat: 10)
     restore_cluster_prov(@new_provenance_type, @new_provenance_archive_size, @old_provenance_type, @old_provenance_archive_size)
   end
 

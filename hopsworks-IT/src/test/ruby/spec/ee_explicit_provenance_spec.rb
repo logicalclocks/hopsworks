@@ -8,11 +8,9 @@ describe "On #{ENV['OS']}" do
     $stdout.sync = true
     @debugOpt = false
     @cleanUp = true
-    epipe_wait_on_provenance(repeat: 2)
   end
   after :all do
     clean_all_test_projects(spec: "ee_explicit_provenance") if @cleanUp
-    epipe_wait_on_provenance(repeat: 2)
     restore_cluster_prov(@new_provenance_type, @new_provenance_archive_size, @old_provenance_type, @old_provenance_archive_size)
   end
 
@@ -27,7 +25,6 @@ describe "On #{ENV['OS']}" do
       cached_fg1 = create_cached_featuregroup_checked2(@project.id, name: @cached_fg1_name)
       derived_fg1 = create_cached_featuregroup_checked2(@project.id, name: @derived_fg1_name, parents: [cached_fg1])
       feature_view1 = create_feature_view_checked(@project.id, fg: derived_fg1, name: @feature_view1_name)
-      pp feature_view1
       training_dataset1 = create_featureview_training_dataset_checked(@project, feature_view1)
     end
 

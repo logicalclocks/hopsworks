@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.tag;
 
+import io.hops.hopsworks.common.commands.CommandException;
 import io.hops.hopsworks.common.tags.AttachTagResult;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -52,43 +53,43 @@ public interface FeatureStoreTagControllerIface {
   
   AttachTagResult upsert(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup,
                          String name, String value)
-          throws MetadataException, SchematizedTagException, FeaturestoreException;
+          throws MetadataException, SchematizedTagException, FeaturestoreException, CommandException;
   
   AttachTagResult upsert(Project project, Users user, Featurestore featureStore, TrainingDataset trainingDataset,
                          String name, String value)
-    throws MetadataException, SchematizedTagException;
+    throws MetadataException, SchematizedTagException, CommandException, FeaturestoreException;
 
   AttachTagResult upsert(Project project, Users user, Featurestore featureStore, FeatureView featureView,
                          String name, String value)
-      throws MetadataException, SchematizedTagException, FeaturestoreException;
+      throws MetadataException, SchematizedTagException, FeaturestoreException, CommandException;
   
   AttachTagResult upsert(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup,
                          Map<String, String> tags)
-          throws MetadataException, SchematizedTagException, FeaturestoreException;
+          throws MetadataException, SchematizedTagException, FeaturestoreException, CommandException;
   
   AttachTagResult upsert(Project project, Users user, Featurestore featureStore, TrainingDataset trainingDataset,
                          Map<String, String> tags)
-    throws MetadataException, SchematizedTagException;
+    throws MetadataException, SchematizedTagException, CommandException, FeaturestoreException;
 
   AttachTagResult upsert(Project project, Users user, Featurestore featureStore, FeatureView featureView,
-                         Map<String, String> tags)
-      throws MetadataException, SchematizedTagException, FeaturestoreException;
+                         Map<String, String> tags) throws FeaturestoreException, MetadataException,
+                                                          SchematizedTagException;
   
   void deleteAll(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup)
-          throws DatasetException, MetadataException, FeaturestoreException;
+          throws DatasetException, MetadataException, FeaturestoreException, CommandException;
   
   void deleteAll(Project project, Users user, Featurestore featureStore, TrainingDataset trainingDataset)
-    throws DatasetException, MetadataException, SchematizedTagException;
+    throws DatasetException, MetadataException, SchematizedTagException, CommandException, FeaturestoreException;
 
   void deleteAll(Project project, Users user, Featurestore featureStore, FeatureView featureView)
-      throws DatasetException, MetadataException, SchematizedTagException, FeaturestoreException;
+      throws DatasetException, MetadataException, SchematizedTagException, FeaturestoreException, CommandException;
   
   void delete(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup, String name)
-          throws DatasetException, MetadataException, FeaturestoreException;
+          throws DatasetException, MetadataException, FeaturestoreException, CommandException;
   
   void delete(Project project, Users user, Featurestore featureStore, TrainingDataset trainingDataset, String name)
-    throws DatasetException, MetadataException, SchematizedTagException;
+    throws DatasetException, MetadataException, SchematizedTagException, CommandException, FeaturestoreException;
 
   void delete(Project project, Users user, Featurestore featureStore, FeatureView featureView, String name)
-      throws DatasetException, MetadataException, SchematizedTagException, FeaturestoreException;
+      throws DatasetException, MetadataException, SchematizedTagException, FeaturestoreException, CommandException;
 }

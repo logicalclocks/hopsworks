@@ -15,8 +15,9 @@
  */
 package io.hops.hopsworks.common.featurestore.xattr.dto;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,17 +25,21 @@ import java.util.List;
 /**
  * document attached as an xattr to a featuregroup directory
  */
-@XmlRootElement
-public class TrainingDatasetXAttrDTO {
-  @XmlElement(nillable = false, name = FeaturestoreXAttrsConstants.FEATURESTORE_ID)
+public class TrainingDatasetXAttrDTO implements FeatureStoreItem {
+  @JsonProperty(FeaturestoreXAttrsConstants.FEATURESTORE_ID)
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   private Integer featurestoreId;
-  @XmlElement(nillable = true, name = FeaturestoreXAttrsConstants.DESCRIPTION)
+  @JsonProperty(FeaturestoreXAttrsConstants.DESCRIPTION)
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   private String description;
-  @XmlElement(nillable = true, name = FeaturestoreXAttrsConstants.CREATE_DATE)
+  @JsonProperty(FeaturestoreXAttrsConstants.CREATE_DATE)
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   private Long createDate;
-  @XmlElement(nillable = true, name = FeaturestoreXAttrsConstants.CREATOR)
+  @JsonProperty(FeaturestoreXAttrsConstants.CREATOR)
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   private String creator;
-  @XmlElement(nillable = false, name = FeaturestoreXAttrsConstants.TD_FEATURES)
+  @JsonProperty(FeaturestoreXAttrsConstants.TD_FEATURES)
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   private List<FeaturegroupXAttr.SimplifiedDTO> features = new LinkedList<>();
   
   public TrainingDatasetXAttrDTO() {

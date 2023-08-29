@@ -21,7 +21,6 @@ import io.hops.hopsworks.restutils.RESTException;
 import java.util.logging.Level;
 
 public class SchematizedTagException extends RESTException {
-  
   public SchematizedTagException(RESTCodes.SchematizedTagErrorCode errorCode, Level level) {
     super(errorCode, level);
   }
@@ -38,5 +37,10 @@ public class SchematizedTagException extends RESTException {
   public SchematizedTagException(RESTCodes.SchematizedTagErrorCode errorCode, Level level, String usrMsg,
                                  String devMsg, Throwable throwable) {
     super(errorCode, level, usrMsg, devMsg, throwable);
+  }
+  
+  public static SchematizedTagException tagsNotSupported(String type) {
+    return new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.TAG_NOT_ALLOWED,
+      Level.FINE, "Tags are only supported for " + type);
   }
 }

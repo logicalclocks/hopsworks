@@ -3,9 +3,16 @@
 =end
 require 'pp'
 describe "On #{ENV['OS']}" do
+  before :all do
+    wait_on_command_search(repeat: 30)
+    epipe_wait_on_mutations(repeat: 30)
+    epipe_wait_on_provenance(repeat: 30)
+  end
   after :all do
-    epipe_restart_checked unless is_epipe_active
     clean_all_test_projects(spec: "epipe")
+    wait_on_command_search(repeat: 10)
+    epipe_wait_on_mutations(repeat: 10)
+    epipe_wait_on_provenance(repeat: 10)
   end
 
   describe 'epipe tests - ok in shared project' do

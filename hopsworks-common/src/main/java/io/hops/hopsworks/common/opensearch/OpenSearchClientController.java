@@ -31,6 +31,8 @@ import org.opensearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.opensearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.opensearch.action.bulk.BulkRequest;
 import org.opensearch.action.bulk.BulkResponse;
+import org.opensearch.action.delete.DeleteRequest;
+import org.opensearch.action.delete.DeleteResponse;
 import org.opensearch.action.index.IndexRequest;
 import org.opensearch.action.index.IndexResponse;
 import org.opensearch.action.search.ClearScrollRequest;
@@ -57,6 +59,8 @@ import org.opensearch.cluster.metadata.MappingMetadata;
 import org.opensearch.common.settings.Settings;
 import org.opensearch.common.unit.TimeValue;
 import org.opensearch.index.IndexNotFoundException;
+import org.opensearch.index.reindex.BulkByScrollResponse;
+import org.opensearch.index.reindex.DeleteByQueryRequest;
 import org.opensearch.rest.RestStatus;
 import org.javatuples.Pair;
 
@@ -220,7 +224,7 @@ public class OpenSearchClientController {
     FailableSupplier<IndexResponse> query =
       () -> client.getClient().index(request, RequestOptions.DEFAULT);
     IndexResponse response = executeOpenSearchQuery(query, "opensearch index doc", request.toString());
-    if (response.status().getStatus() != 201) {
+    if (response.status().getStatus() != 201 && response.status().getStatus() != 200) {
       String msg = "doc index - bad status response:" + response.status().getStatus();
       throw new OpenSearchException(RESTCodes.OpenSearchErrorCode.OPENSEARCH_QUERY_ERROR, Level.INFO, msg);
     }
@@ -234,6 +238,33 @@ public class OpenSearchClientController {
       String msg = "doc update - bad status response:" + response.status().getStatus();
       throw new OpenSearchException(RESTCodes.OpenSearchErrorCode.OPENSEARCH_QUERY_ERROR, Level.INFO, msg);
     }
+  }
+  
+  public boolean deleteDoc(DeleteRequest request) throws OpenSearchException {
+    FailableSupplier<DeleteResponse> query =
+      () -> client.getClient().delete(request, RequestOptions.DEFAULT);
+    DeleteResponse response = executeOpenSearchQuery(query, "opensearch delete doc", request.toString());
+    if(response.status().getStatus() == 404) {
+      LOG.log(Level.INFO, "document:{0} does not exist", new Object[]{request.id()});
+      return false;
+    }
+    if (response.status().getStatus() != 200) {
+      String msg = "doc delete - bad status response:" + response.status().getStatus();
+      throw new OpenSearchException(RESTCodes.OpenSearchErrorCode.OPENSEARCH_QUERY_ERROR, Level.INFO, msg);
+    }
+    return true;
+  }
+  
+  public long deleteByQuery(DeleteByQueryRequest request) throws OpenSearchException {
+    FailableSupplier<BulkByScrollResponse> query =
+      () -> client.getClient().deleteByQuery(request, RequestOptions.DEFAULT);
+    BulkByScrollResponse response = executeOpenSearchQuery(query, "opensearch delete by query", request.toString());
+    if(!response.getBulkFailures().isEmpty() || !response.getSearchFailures().isEmpty()) {
+      String msg = "delete by query had " + response.getSearchFailures().size() + " search failures";
+      msg += " and " + response.getBulkFailures().size() + " bulk failures";
+      throw new OpenSearchException(RESTCodes.OpenSearchErrorCode.OPENSEARCH_QUERY_ERROR, Level.INFO, msg);
+    }
+    return response.getDeleted();
   }
   
   public MultiSearchResponse multiSearch(MultiSearchRequest request) throws OpenSearchException {
@@ -495,8 +526,8 @@ public class OpenSearchClientController {
     return executeOpenSearchQuery(query, "opensearch get template", request.toString());
   }
   
-  private <O> O executeOpenSearchQuery(FailableSupplier<O> query, String usrMsg, String devMsg) throws
-    OpenSearchException {
+  private <O> O executeOpenSearchQuery(FailableSupplier<O> query, String usrMsg, String devMsg)
+    throws OpenSearchException {
     try {
       try {
         LOG.log(Level.FINE, "{0}:{1}", new Object[]{usrMsg, devMsg});

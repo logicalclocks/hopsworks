@@ -5,6 +5,8 @@ experiment_spec.rb
 execution_spec.rb
 execution_kube_spec.rb
 ee_epipe_spec.rb
+ee_search_spec.rb
+ee_tags_spec.rb
 epipe_spec.rb
 projects_spec.rb
 prov_ops_spec.rb
