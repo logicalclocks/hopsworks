@@ -40,7 +40,6 @@ import io.hops.hopsworks.servicediscovery.tags.NamenodeTags;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ws.rs.core.UriBuilder;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -51,7 +50,7 @@ public class FeaturestoreUtils {
   @EJB
   private ProjectTeamFacade projectTeamFacade;
   @EJB
-  private ServiceDiscoveryController serviceDiscoveryController;
+  protected ServiceDiscoveryController serviceDiscoveryController;
 
   public enum ActionMessage {
     // Feature Group
@@ -212,7 +211,7 @@ public class FeaturestoreUtils {
     try {
       String namenodeAddress = serviceDiscoveryController
               .constructServiceAddressWithPort(HopsworksService.NAMENODE.getNameWithTag(NamenodeTags.rpc));
-      return Paths.get(DistributedFsService.HOPSFS_SCHEME + namenodeAddress, location).toString();
+      return DistributedFsService.HOPSFS_SCHEME + namenodeAddress + location;
     } catch (ServiceDiscoveryException ex) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_NOT_FOUND, Level.SEVERE,
               ex.getMessage(), ex.getMessage(), ex);

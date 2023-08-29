@@ -37,6 +37,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
         expect(parsed_json["name"] == featuregroup_name).to be true
         expect(parsed_json["type"] == "cachedFeaturegroupDTO").to be true
+        expect(parsed_json["location"]).to start_with("hopsfs://")
       end
 
       it "should fail when creating the same feature group and version twice" do
@@ -66,6 +67,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
         expect(parsed_json["name"] == featuregroup_name).to be true
         expect(parsed_json["type"] == "cachedFeaturegroupDTO").to be true
+        expect(parsed_json["location"]).to start_with("hopsfs://")
       end
 
       it "should set the feature group permissions to be the same as for the feature store db" do
@@ -713,6 +715,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["statisticsConfig"]["correlations"]).to be false
         expect(parsed_json["statisticsConfig"]["histograms"]).to be false
         expect(parsed_json["statisticsConfig"]["exactUniqueness"]).to be false
+        expect(parsed_json["location"]).to start_with("hopsfs://")
       end
 
       it "should not be able to add a cached feature group with non-existing statistic column to the feature store" do
@@ -782,6 +785,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["name"] == featuregroup_name).to be true
         expect(parsed_json["type"] == "cachedFeaturegroupDTO").to be true
         expect(parsed_json["timeTravelFormat"] == "HUDI").to be true
+        expect(parsed_json["location"]).to start_with("hopsfs://")
 
         # The location should contain the IP not the consul domain name of the namenode
         uri = URI(parsed_json["location"])
@@ -1716,11 +1720,12 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json.key?("features")).to be true
         expect(parsed_json.key?("featurestoreName")).to be true
         expect(parsed_json.key?("name")).to be true
-		expect(parsed_json.key?("location")).to be true
+        expect(parsed_json.key?("location")).to be true
         expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
         expect(parsed_json["name"] == featuregroup_name).to be true
         expect(parsed_json["type"] == "onDemandFeaturegroupDTO").to be true
         expect(parsed_json["storageConnector"]["id"] == connector_id).to be true
+        expect(parsed_json["location"]).to start_with("hopsfs://")
 
         path = "/apps/hive/warehouse/#{project['projectname'].downcase}_featurestore.db/#{featuregroup_name}_1"
         expect(test_file(path)).to be true
@@ -1741,11 +1746,12 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json.key?("features")).to be true
         expect(parsed_json.key?("featurestoreName")).to be true
         expect(parsed_json.key?("name")).to be true
-		expect(parsed_json.key?("location")).to be true
+        expect(parsed_json.key?("location")).to be true
         expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
         expect(parsed_json["name"] == featuregroup_name).to be true
         expect(parsed_json["type"] == "onDemandFeaturegroupDTO").to be true
         expect(parsed_json["storageConnector"]["id"]).to eq connector_id
+        expect(parsed_json["location"]).to start_with("hopsfs://")
 
         path = "/apps/hive/warehouse/#{project['projectname'].downcase}_featurestore.db/#{featuregroup_name}_1"
         expect(test_file(path)).to be true
@@ -1765,11 +1771,12 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json.key?("features")).to be true
         expect(parsed_json.key?("featurestoreName")).to be true
         expect(parsed_json.key?("name")).to be true
-		expect(parsed_json.key?("location")).to be true
+        expect(parsed_json.key?("location")).to be true
         expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
         expect(parsed_json["name"] == featuregroup_name).to be true
         expect(parsed_json["type"] == "onDemandFeaturegroupDTO").to be true
         expect(parsed_json["storageConnector"]["id"]).to eq connector_id
+        expect(parsed_json["location"]).to start_with("hopsfs://")
 
         path = "/apps/hive/warehouse/#{project['projectname'].downcase}_featurestore.db/#{featuregroup_name}_1"
         expect(test_file(path)).to be true
@@ -2480,6 +2487,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["name"] == featuregroup_name).to be true
         expect(parsed_json["type"] == "onDemandFeaturegroupDTO").to be true
         expect(parsed_json["storageConnector"]["id"]).to eq connector_id
+        expect(parsed_json["location"]).to start_with("hopsfs://")
 
         path = "/apps/hive/warehouse/#{project['projectname'].downcase}_featurestore.db/#{featuregroup_name}_1"
         expect(test_file(path)).to be true
@@ -2511,6 +2519,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["name"] == featuregroup_name).to be true
         expect(parsed_json["type"] == "onDemandFeaturegroupDTO").to be true
         expect(parsed_json["storageConnector"]["id"]).to eq connector_id
+        expect(parsed_json["location"]).to start_with("hopsfs://")
 
         path = "/apps/hive/warehouse/#{project['projectname'].downcase}_featurestore.db/#{featuregroup_name}_1"
         expect(test_file(path)).to be true
@@ -2558,6 +2567,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["type"] == "cachedFeaturegroupDTO").to be true
         expect(parsed_json["onlineTopicName"]).to eql(project.id.to_s + "_" + parsed_json["id"].to_s + "_" +
             featuregroup_name + "_" + parsed_json["version"].to_s + "_onlinefs")
+        expect(parsed_json["location"]).to start_with("hopsfs://")
       end
 
       it "should create the kafka topic and avro schema for an online enabled feature group" do
@@ -3030,6 +3040,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["connectionString"]).to include("jdbc:mysql:")
         expect(parsed_json["arguments"].find{ |item| item['name'] == 'password' }.key?('value')).to be true
         expect(parsed_json["arguments"].find{ |item| item['name'] == 'user' }.key?('value')).to be true
+        expect(parsed_json["location"]).to start_with("hopsfs://")
         expect_status_details(200)
       end
     end
@@ -3082,6 +3093,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
         expect(parsed_json["name"] == featuregroup_name).to be true
         expect(parsed_json["id"] == featuregroup_id).to be true
+        expect(parsed_json["location"]).to start_with("hopsfs://")
       end
     end
   end
