@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.featurestore.featureview;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import io.hops.hopsworks.common.commands.featurestore.search.SearchFSCommandLogger;
 import io.hops.hopsworks.common.dao.QueryParam;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
@@ -103,9 +104,11 @@ public class FeatureViewController {
   private FeatureViewLinkController featureViewLinkController;
   @EJB
   private FeaturegroupController featuregroupController;
+  @EJB
+  private SearchFSCommandLogger searchCommandLogger;
 
   public FeatureView createFeatureView(Project project, Users user, FeatureView featureView, Featurestore featurestore)
-      throws FeaturestoreException, ProvenanceException, IOException {
+    throws FeaturestoreException, ProvenanceException, IOException {
     featurestoreUtils.verifyUserProjectEqualsFsProject(user, project, featurestore,
         FeaturestoreUtils.ActionMessage.CREATE_FEATURE_VIEW);
 
@@ -145,6 +148,7 @@ public class FeatureViewController {
       udfso.mkdirs(path, FsPermission.getDefault());
 
       featureView = featureViewFacade.update(featureView);
+      searchCommandLogger.create(featureView);
 
       // Log the metadata operation
       fsActivityFacade.logMetadataActivity(user, featureView, FeaturestoreActivityMeta.FV_CREATED);
@@ -154,6 +158,7 @@ public class FeatureViewController {
 
       fsProvenanceController.featureViewAttachXAttr(path.toString(), featureView, udfso);
       featureViewLinkController.createParentLinks(featureView);
+      searchCommandLogger.updateFeaturestore(featureView);
       return featureView;
     } finally {
       if (udfso != null) {
@@ -231,6 +236,7 @@ public class FeatureViewController {
     }
     for (FeatureView fv : featureViews) {
       trainingDatasetController.delete(user, project, featurestore, fv);
+      searchCommandLogger.delete(fv);
       featureViewFacade.remove(fv);
       removeFeatureViewDir(project, user, fv);
       //Delete associated jobs

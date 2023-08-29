@@ -55,7 +55,7 @@ public abstract class AbstractFacade<T> {
 
   public static Integer BATCH_SIZE = 100;
 
-  private final Class<T> entityClass;
+  protected final Class<T> entityClass;
 
   public AbstractFacade(Class<T> entityClass) {
     this.entityClass = entityClass;

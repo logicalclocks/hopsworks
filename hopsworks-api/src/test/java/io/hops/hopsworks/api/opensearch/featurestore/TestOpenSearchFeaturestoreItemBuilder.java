@@ -19,7 +19,6 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturestoreXAttrsConstants;
 import io.hops.hopsworks.common.opensearch.FeaturestoreDocType;
 import io.hops.hopsworks.common.opensearch.OpenSearchFeaturestoreHit;
-import io.hops.hopsworks.common.util.HopsworksJAXBContext;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import org.junit.Assert;
@@ -34,7 +33,6 @@ import java.util.Map;
 public class TestOpenSearchFeaturestoreItemBuilder {
   OpenSearchFeaturestoreItemBuilder itemBuilder;
   UserFacade userFacade;
-  HopsworksJAXBContext converter;
   Users user;
   
   @Before
@@ -45,9 +43,7 @@ public class TestOpenSearchFeaturestoreItemBuilder {
     user.setEmail("doe@hopsworks.ai");
     user.setUsername("johndoe000");
     userFacade = Mockito.mock(UserFacade.class);
-    converter = new HopsworksJAXBContext();
-    converter.init();
-    itemBuilder = new OpenSearchFeaturestoreItemBuilder(userFacade, converter);
+    itemBuilder = new OpenSearchFeaturestoreItemBuilder(userFacade);
   
     Mockito.when(userFacade.findByEmail(Mockito.anyString()))
       .thenReturn(user);

@@ -61,12 +61,16 @@ describe "On #{ENV['OS']}" do
     @xattrV6 = "notJava"
     @xattrV7 = "not Json"
     @xattrV8 = JSON['{"name": "fashion mnist gridsearch"}']
+    wait_on_command_search(repeat: 30)
+    epipe_wait_on_mutations(repeat: 30)
+    epipe_wait_on_provenance(repeat: 30)
   end
 
   after :all do
     clean_all_test_projects(spec: "prov_state")
-    wait_result = epipe_wait_on_provenance(repeat: 5)
-    expect(wait_result["success"]).to be(true), wait_result["msg"]
+    wait_on_command_search(repeat: 10)
+    epipe_wait_on_mutations(repeat: 10)
+    epipe_wait_on_provenance(repeat: 10)
 
     project_index_cleanup(@email)
     restore_cluster_prov("MIN", "0", @old_provenance_type, @old_provenance_archive_size)

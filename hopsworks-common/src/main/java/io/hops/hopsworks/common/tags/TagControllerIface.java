@@ -30,6 +30,12 @@ public interface TagControllerIface {
   Map<String, String> getAll(Users user, DatasetPath path)
     throws DatasetException, MetadataException;
   
+  /**
+   * Whenever possible use getAll by user
+   */
+  Map<String, String> getAllAsSuperUser(DatasetPath path)
+    throws DatasetException, MetadataException;
+  
   AttachTagResult upsert(Users user, DatasetPath path, String name, String value)
     throws MetadataException, SchematizedTagException;
   

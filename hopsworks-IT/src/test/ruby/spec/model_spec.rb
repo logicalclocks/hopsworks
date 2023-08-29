@@ -22,11 +22,17 @@ describe "On #{ENV['OS']}" do
     # ensure data science profile is enabled
     @enable_data_science_profile = getVar('enable_data_science_profile')
     setVar('enable_data_science_profile', "true")
+    wait_on_command_search(repeat: 30)
+    epipe_wait_on_mutations(repeat: 30)
+    epipe_wait_on_provenance(repeat: 30)
   end
 
   after :all do
     clean_all_test_projects(spec: "model") if @cleanup
     setVar('enable_data_science_profile', @enable_data_science_profile[:value])
+    wait_on_command_search(repeat: 10)
+    epipe_wait_on_mutations(repeat: 10)
+    epipe_wait_on_provenance(repeat: 10)
   end
 
   experiment_1 = "experiment_1"

@@ -3775,4 +3775,39 @@ public class Settings implements Serializable {
     return MAX_LONG_RUNNING_HTTP_REQUESTS;
   }
   
+  /**
+   * Search commands
+   */
+  private final Integer MAX_ONGOING_OPENSEARCH_DOC_WRITE = 100;
+  public synchronized int getMaxOngoingOpensearchDocIndexOps() {
+    checkCache();
+    return MAX_ONGOING_OPENSEARCH_DOC_WRITE;
+  }
+  
+  //1s
+  private Long COMMAND_PROCESS_TIMER_PERIOD = 1000l;
+  public Long commandProcessTimerPeriod() {
+    checkCache();
+    return COMMAND_PROCESS_TIMER_PERIOD;
+  }
+  
+  //1h
+  private Long COMMAND_HISTORY_CLEAN_TIMER_PERIOD = 1000l*60*60;
+  public Long commandHistoryCleanTimerPeriod() {
+    checkCache();
+    return COMMAND_HISTORY_CLEAN_TIMER_PERIOD;
+  }
+  
+  //1h
+  private Long COMMAND_HISTORY_PERIOD = 1000l*60*60;
+  public Long commandHistoryPeriod() {
+    checkCache();
+    return COMMAND_HISTORY_PERIOD;
+  }
+  
+  private int COMMAND_RETRY_PER_CLEAN_INTERVAL = 5;
+  public Integer commandRetryPerCleanInterval() {
+    checkCache();
+    return COMMAND_RETRY_PER_CLEAN_INTERVAL;
+  }
 }

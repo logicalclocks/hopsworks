@@ -2277,6 +2277,90 @@ public class RESTCodes {
       return range;
     }
   }
+  
+  public enum RemoteAuthErrorCode implements RESTErrorCode {
+    NOT_FOUND(0, "Not found.", Response.Status.NOT_FOUND),
+    DUPLICATE_ENTRY(1, "Duplicate entry.", Response.Status.BAD_REQUEST),
+    ILLEGAL_ARGUMENT(2, "Illegal argument.", Response.Status.BAD_REQUEST),
+    WRONG_CONFIG(3, "Wrong configuration.", Response.Status.PRECONDITION_FAILED),
+    TOKEN_PARSE_EXCEPTION(4, "Token ParseException.", Response.Status.EXPECTATION_FAILED),
+    NOT_ALLOWED(5, "Operation not allowed.", Response.Status.BAD_REQUEST);
+    
+    private int code;
+    private String message;
+    private Response.Status respStatus;
+    public final int range = 400000;
+  
+    RemoteAuthErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+    
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+  
+  public enum CommandErrorCode implements RESTErrorCode {
+    INTERNAL_SERVER_ERROR(0, "Something went wrong executing command",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    INVALID_SQL_QUERY(1, "Invalid sql query for command", Response.Status.BAD_REQUEST),
+    ILLEGAL_ARGUMENT(2, "Illegal argument in command", Response.Status.BAD_REQUEST),
+    FILESYSTEM_ACCESS_ERROR(3, "Error accessing files system for components",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    FEATURESTORE_ACCESS_ERROR(4, "Error accessing the featurestore",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    OPENSEARCH_ACCESS_ERROR(5, "Error acccessing OpenSearch", Response.Status.INTERNAL_SERVER_ERROR),
+    SERIALIZATION_ERROR(6, "Error serializing content", Response.Status.INTERNAL_SERVER_ERROR),
+    NOT_IMPLEMENTED(7, "Internal error dealing with new artifact type",
+      Response.Status.NOT_IMPLEMENTED);
+    
+    private final int code;
+    private final String message;
+    private final Response.Status respStatus;
+    public final int range = 410000;
+  
+    CommandErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+    
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
 
   public enum GitOpErrorCode implements RESTErrorCode {
     SIGNING_KEY_ERROR(0, "Couldn't get or create the GIT signing key.",

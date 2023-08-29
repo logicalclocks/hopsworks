@@ -30,6 +30,7 @@ import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jobs.JobDTO;
 import io.hops.hopsworks.api.jobs.JobsBuilder;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.common.commands.CommandException;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
 import io.hops.hopsworks.common.featurestore.query.FsQueryDTO;
@@ -195,7 +196,7 @@ public class TrainingDatasetService {
   public Response create(@Context SecurityContext sc,
                          @Context HttpServletRequest req,
                          TrainingDatasetDTO trainingDatasetDTO)
-      throws FeaturestoreException, ProvenanceException, IOException, ServiceException {
+      throws FeaturestoreException, IOException, ServiceException, CommandException, ProvenanceException {
     if(trainingDatasetDTO == null){
       throw new IllegalArgumentException("Input JSON for creating a new Training Dataset cannot be null");
     }

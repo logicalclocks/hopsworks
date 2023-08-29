@@ -121,4 +121,26 @@ module OpensearchHelper
       JSON.parse(response.body)["nodes"][node_id]
     end
   end
+
+  def opensearch_basic_search(index, terms, size: 10)
+    path = "#{index}/_search"
+    terms_query = []
+    terms.each do |key,value|
+      terms_query.append({"term"=>{key=>{"value"=>value}}})
+    end
+    query = {"size"=>size,"query"=>{"bool"=>{"must"=>terms_query}}}.to_json
+    pp query if defined?(@debugOpt) && @debugOpt
+    opensearch_get(path, body: query)
+  end
+
+  def opensearch_check_project_deleted(project, timeout: 30)
+    opensearch_rest do
+      wait_for_me_time(timeout) do
+        response = opensearch_post("featurestore/_search",
+                                   "{\"query\":{\"bool\":{\"must\":[{\"terms\":{\"project_name\":[\"#{project[:projectname]}\"]}}]}}}")
+        index = response.body
+        { 'success' => JSON.parse(index)['hits']['total']['value'] == 0 }
+      end
+    end
+  end
 end
