@@ -180,7 +180,6 @@ public class ResourceRequest {
     FEATURESTORES,
     FEATUREGROUPS,
     PREVIEW,
-    PARTITIONS,
     EXPERIMENTS,
     TENSORBOARD,
     RESULTS,

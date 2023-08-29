@@ -16,8 +16,6 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached;
 
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HiveTbls;
-
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -27,7 +25,6 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
@@ -36,6 +33,7 @@ import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * Entity class representing the cached_feature_group table in Hopsworks database.
@@ -58,8 +56,6 @@ public class CachedFeaturegroup implements Serializable {
   @Basic(optional = false)
   @Column(name = "id")
   private Integer id;
-  @JoinColumn(name = "offline_feature_group", referencedColumnName = "TBL_ID")
-  private HiveTbls hiveTbls;
   @Basic(optional = false)
   @NotNull
   @Enumerated(EnumType.ORDINAL)
@@ -71,14 +67,6 @@ public class CachedFeaturegroup implements Serializable {
   private Collection<CachedFeature> cachedFeatures;
   
   public CachedFeaturegroup() {}
-
-  public HiveTbls getHiveTbls() {
-    return hiveTbls;
-  }
-
-  public void setHiveTbls(HiveTbls hiveTbls) {
-    this.hiveTbls = hiveTbls;
-  }
 
   public Integer getId() {
     return id;
@@ -119,7 +107,7 @@ public class CachedFeaturegroup implements Serializable {
 
     CachedFeaturegroup that = (CachedFeaturegroup) o;
 
-    return id != null ? id.equals(that.id) : that.id == null;
+    return Objects.equals(id, that.id);
   }
 
   @Override

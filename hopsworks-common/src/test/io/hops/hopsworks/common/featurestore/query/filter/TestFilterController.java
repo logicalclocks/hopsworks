@@ -79,7 +79,6 @@ public class TestFilterController {
     filterController = new FilterController(constructorController);
   
     Featurestore fs = new Featurestore();
-    fs.setHiveDbId(1l);
     fs.setProject(new Project("test_proj"));
     CachedFeaturegroup cachedFeaturegroup = new CachedFeaturegroup();
     cachedFeaturegroup.setTimeTravelFormat(TimeTravelFormat.NONE);

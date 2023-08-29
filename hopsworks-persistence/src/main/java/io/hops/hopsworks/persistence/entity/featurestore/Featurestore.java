@@ -31,10 +31,10 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * Entity class representing the feature_store table in Hopsworks database.
@@ -68,10 +68,6 @@ public class Featurestore implements Serializable {
   @Column(name = "created")
   @Temporal(TemporalType.TIMESTAMP)
   private Date created;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "hive_db_id")
-  private Long hiveDbId;
 
   public Featurestore() {
   }
@@ -112,35 +108,19 @@ public class Featurestore implements Serializable {
     this.created = created;
   }
 
-  public Long getHiveDbId() {
-    return hiveDbId;
-  }
-
-  public void setHiveDbId(Long hiveDbId) {
-    this.hiveDbId = hiveDbId;
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof Featurestore)) return false;
-
+    if (o == null || getClass() != o.getClass()) return false;
     Featurestore that = (Featurestore) o;
-    
-    if (id != null  && !id.equals(that.id)) return false;
-    if (name != null && !name.equals(that.name)) return false;
-    if (!project.equals(that.project)) return false;
-    if (created != null && that.created != null && !created.equals(that.created)) return false;
-    return hiveDbId.equals(that.hiveDbId);
+    return Objects.equals(id, that.id)
+       && Objects.equals(name, that.name)
+       && Objects.equals(project, that.project)
+       && Objects.equals(created, that.created);
   }
 
   @Override
   public int hashCode() {
-    int result = id != null ? id.hashCode() : 0;
-    result = 31 * result + project.hashCode();
-    result = 31 * result + (name != null ? name.hashCode() : 0);
-    result = 31 * result + (created != null ? created.hashCode() : 0);
-    result = 31 * result + hiveDbId.hashCode();
-    return result;
+    return Objects.hash(id, name, project, created);
   }
 }

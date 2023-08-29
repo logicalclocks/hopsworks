@@ -18,7 +18,7 @@ package io.hops.hopsworks.common.featurestore.query;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
@@ -78,7 +78,7 @@ public class QueryController {
   @EJB
   private FilterController filterController;
   @EJB
-  private FeaturestoreFacade featurestoreFacade;
+  private FeaturestoreController featurestoreController;
   @EJB
   private OnlineFeaturestoreController onlineFeaturestoreController;
   @EJB
@@ -89,13 +89,13 @@ public class QueryController {
   }
 
   public QueryController(FeaturegroupController featuregroupController, FeaturegroupFacade featuregroupFacade,
-                         FilterController filterController, FeaturestoreFacade featurestoreFacade,
+                         FilterController filterController, FeaturestoreController featurestoreController,
                          OnlineFeaturestoreController onlineFeaturestoreController,
                          FeatureGroupCommitController featureGroupCommitController) {
     this.featuregroupController = featuregroupController;
     this.featuregroupFacade = featuregroupFacade;
     this.filterController = filterController;
-    this.featurestoreFacade = featurestoreFacade;
+    this.featurestoreController = featurestoreController;
     this.onlineFeaturestoreController = onlineFeaturestoreController;
     this.featureGroupCommitController = featureGroupCommitController;
   }
@@ -136,7 +136,7 @@ public class QueryController {
     Integer fgId = queryDTO.getLeftFeatureGroup().getId();
     Featuregroup fg = fgLookup.get(fgId);
 
-    String featureStore = featurestoreFacade.getHiveDbName(fg.getFeaturestore().getHiveDbId());
+    String featureStore = featurestoreController.getOfflineFeaturestoreDbName(fg.getFeaturestore());
     // used to build the online query - needs to respect the online db format name
     String projectName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(fg.getFeaturestore().getProject());
 

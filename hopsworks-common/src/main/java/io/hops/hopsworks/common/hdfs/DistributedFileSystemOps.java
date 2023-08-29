@@ -256,6 +256,16 @@ public class DistributedFileSystemOps {
    * @param location The path to the new folder, its name included.
    * @throws java.io.IOException
    */
+  public void touchz(String location) throws IOException {
+    touchz(new Path(location));
+  }
+
+  /**
+   * Create a new directory and its parent directory on the given path.
+   * <p/>
+   * @param location The path to the new folder, its name included.
+   * @throws java.io.IOException
+   */
   public void touchz(Path location) throws IOException {
     dfs.create(location).close();
   }

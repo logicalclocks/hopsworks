@@ -17,10 +17,10 @@
 package io.hops.hopsworks.common.featurestore.featuregroup.ondemand;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeatureGroupInputValidation;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
@@ -46,15 +46,12 @@ import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.Featur
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.ArrayList;
@@ -71,11 +68,11 @@ import java.util.stream.Collectors;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class OnDemandFeaturegroupController {
   @EJB
+  private FeaturegroupController featuregroupController;
+  @EJB
   private OnDemandFeaturegroupFacade onDemandFeaturegroupFacade;
   @EJB
   private FeaturestoreConnectorFacade featurestoreConnectorFacade;
-  @EJB
-  private FeaturestoreFacade featurestoreFacade;
   @EJB
   private DistributedFsService distributedFsService;
   @EJB
@@ -129,7 +126,6 @@ public class OnDemandFeaturegroupController {
 
     //Persist on-demand featuregroup
     OnDemandFeaturegroup onDemandFeaturegroup = new OnDemandFeaturegroup();
-    onDemandFeaturegroup.setDescription(onDemandFeaturegroupDTO.getDescription());
     onDemandFeaturegroup.setFeaturestoreConnector(connector);
     onDemandFeaturegroup.setQuery(onDemandFeaturegroupDTO.getQuery());
     onDemandFeaturegroup.setFeatures(convertOnDemandFeatures(onDemandFeaturegroupDTO, onDemandFeaturegroup));
@@ -153,7 +149,6 @@ public class OnDemandFeaturegroupController {
     createFile(project, user, featurestore, onDemandFeaturegroupDTO);
 
     OnDemandFeaturegroup onDemandFeaturegroup = new OnDemandFeaturegroup();
-    onDemandFeaturegroup.setDescription(onDemandFeaturegroupDTO.getDescription());
     onDemandFeaturegroup.setFeatures(convertOnDemandFeatures(onDemandFeaturegroupDTO, onDemandFeaturegroup));
     onDemandFeaturegroup.setSpine(onDemandFeaturegroupDTO.getSpine());
 
@@ -196,12 +191,7 @@ public class OnDemandFeaturegroupController {
     
     List<FeatureGroupFeatureDTO> newFeatures = featureGroupInputValidation.verifyAndGetNewFeatures(previousSchema,
       onDemandFeaturegroupDTO.getFeatures());
-  
-    // Update metadata in entity
-    if (onDemandFeaturegroupDTO.getDescription() != null) {
-      onDemandFeaturegroup.setDescription(onDemandFeaturegroupDTO.getDescription());
-    }
-    
+
     // append new features and update existing ones
     updateOnDemandFeatures(onDemandFeaturegroup, onDemandFeaturegroupDTO.getFeatures());
   
@@ -267,15 +257,15 @@ public class OnDemandFeaturegroupController {
    * Removes a on demand feature group
    * @return the deleted entity
    */
-  public void removeOnDemandFeaturegroup(Featurestore featurestore, Featuregroup featuregroup,
-                                         Project project, Users user) throws FeaturestoreException {
+  public void removeOnDemandFeaturegroup(Featuregroup featuregroup, Project project, Users user)
+          throws FeaturestoreException {
     onDemandFeaturegroupFacade.remove(featuregroup.getOnDemandFeaturegroup());
 
     DistributedFileSystemOps udfso = null;
     try {
       udfso = distributedFsService.getDfsOps(project, user);
-      udfso.rm(getFilePath(featurestore, featuregroup.getName(), featuregroup.getVersion()), false);
-    } catch (IOException | URISyntaxException e) {
+      udfso.rm(featuregroupController.getFeatureGroupLocation(featuregroup), false);
+    } catch (IOException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_ON_DEMAND_FEATUREGROUP,
           Level.SEVERE, "Error removing the placeholder file", e.getMessage(), e);
     } finally {
@@ -301,31 +291,17 @@ public class OnDemandFeaturegroupController {
                            OnDemandFeaturegroupDTO onDemandFeaturegroupDTO) throws FeaturestoreException {
     DistributedFileSystemOps udfso = null;
     try {
-      Path path = getFilePath(featurestore, onDemandFeaturegroupDTO.getName(), onDemandFeaturegroupDTO.getVersion());
+      String path = featuregroupController.getFeatureGroupLocation(
+              featurestore, onDemandFeaturegroupDTO.getName(), onDemandFeaturegroupDTO.getVersion());
 
       udfso = distributedFsService.getDfsOps(project, user);
       udfso.touchz(path);
-    } catch (IOException | URISyntaxException e) {
+    } catch (IOException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_ON_DEMAND_FEATUREGROUP,
           Level.SEVERE, "Error creating the placeholder file", e.getMessage(), e);
     } finally {
       distributedFsService.closeDfsClient(udfso);
     }
-  }
-
-  public String getFeatureGroupLocation(Featuregroup featuregroup) throws FeaturestoreException {
-    try {
-      return getFilePath(featuregroup.getFeaturestore(), featuregroup.getName(), featuregroup.getVersion()).toString();
-    } catch (URISyntaxException e) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_GET_FEATURE_GROUP_METADATA,
-              Level.SEVERE, "", e.getMessage(), e);
-    }
-  }
-
-  private Path getFilePath(Featurestore featurestore, String name, Integer version) throws URISyntaxException {
-    // for compatibility reason here we need to remove the authority
-    return new Path (new URI(featurestoreFacade.getHiveDbHdfsPath(featurestore.getHiveDbId())).getPath(),
-        name + "_" + version);
   }
 
   private FeaturestoreConnector getStorageConnector(Integer connectorId) throws FeaturestoreException {

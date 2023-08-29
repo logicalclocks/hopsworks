@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 
-import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
@@ -66,8 +65,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -134,18 +135,12 @@ public class OfflineFeatureGroupController {
     }
   }
 
-  public void createHiveTable(Featurestore featurestore, String tableName, String tableDesc,
+  public void createHiveTable(Featurestore featurestore, String tableName,
                               List<FeatureGroupFeatureDTO> featureGroupFeatureDTOList, Project project,
                               Users user, Formats format)
       throws FeaturestoreException {
     String dbName = featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject());
     Table table = getEmptyTable(dbName, tableName, hdfsUsersController.getHdfsUserName(project, user), format);
-    ThriftHiveMetastore.Client client = getMetaStoreClient(project, user);
-
-    // add table description, skip if null
-    if (!Strings.isNullOrEmpty(tableDesc)) {
-      table.getParameters().put(COMMENT, tableDesc);
-    }
 
     // Create Schema
     List<SQLDefaultConstraint> defaultConstraints = new ArrayList<>();
@@ -167,18 +162,12 @@ public class OfflineFeatureGroupController {
       }
     }
 
-    createTable(client, table, defaultConstraints, project, user);
-    finalizeMetastoreOperation(project, user, client);
-  }
-  
-  public void alterHiveTableDescription(Featurestore featurestore, String tableName, String description,
-    Project project, Users user) throws FeaturestoreException {
-    String dbName = featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject());
     ThriftHiveMetastore.Client client = getMetaStoreClient(project, user);
-    Table table = getTable(client, dbName, tableName, project, user);
-    table.getParameters().put(COMMENT, description);
-    alterTable(client, table, project, user);
-    finalizeMetastoreOperation(project, user, client);
+    try {
+      createTable(client, table, defaultConstraints);
+    } finally {
+      finalizeMetastoreOperation(project, user, client);
+    }
   }
 
   public void alterHiveTableFeatures(Featurestore featurestore, String tableName,
@@ -186,101 +175,125 @@ public class OfflineFeatureGroupController {
     String dbName = featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject());
 
     ThriftHiveMetastore.Client client = getMetaStoreClient(project, user);
-    Table table = getTable(client, dbName, tableName, project, user);
- 
-    // modify columns here
-    List<SQLDefaultConstraint> defaultConstraints = getDefaultConstraints(client, featurestore, tableName, project,
-      user);
-    for (FeatureGroupFeatureDTO featureDTO : featureDTOs) {
-      table.getSd().addToCols(
-        new FieldSchema(featureDTO.getName(), featureDTO.getType().toLowerCase(), null));
-      if (featureDTO.getDefaultValue() != null) {
-        defaultConstraints.add(new SQLDefaultConstraint(table.getCatName(), table.getDbName(),
-          table.getTableName(), featureDTO.getName(), featureDTO.getDefaultValue(),
-          dbName + "_" + tableName + "_" + featureDTO.getName() + "_dc", true, false,
-          false));
+    try {
+      Table table = getTable(client, dbName, tableName);
+
+      // modify columns here
+      List<SQLDefaultConstraint> defaultConstraints = getDefaultConstraints(client, "hive", dbName, tableName);
+      for (FeatureGroupFeatureDTO featureDTO : featureDTOs) {
+        table.getSd().addToCols(
+            new FieldSchema(featureDTO.getName(), featureDTO.getType().toLowerCase(), null));
+        if (featureDTO.getDefaultValue() != null) {
+          defaultConstraints.add(new SQLDefaultConstraint(table.getCatName(), table.getDbName(),
+              table.getTableName(), featureDTO.getName(), featureDTO.getDefaultValue(),
+              dbName + "_" + tableName + "_" + featureDTO.getName() + "_dc", true, false,
+              false));
+        }
       }
+      alterTable(client, table);
+      addDefaultConstraints(client, defaultConstraints);
+    } finally {
+      finalizeMetastoreOperation(project, user, client);
     }
-    alterTable(client, table, project, user);
-    addDefaultConstraints(client, defaultConstraints, project, user);
-    finalizeMetastoreOperation(project, user, client);
+  }
+
+  public List<FeatureGroupFeatureDTO> getSchema(Featurestore featurestore, String tableName,
+                                                Project project, Users user) throws FeaturestoreException {
+    String dbName = featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject());
+    ThriftHiveMetastore.Client client = getMetaStoreClient(project, user);
+    Table table;
+    List<FieldSchema> schema;
+    List<SQLDefaultConstraint> defaultConstraints;
+    try {
+      table = getTable(client, dbName, tableName);
+      schema = getFields(client, dbName, tableName);
+      defaultConstraints = getDefaultConstraints(client, "hive", dbName, tableName);
+    } finally {
+      finalizeMetastoreOperation(project, user, client);
+    }
+
+    // Setup a map of constraint values for easy access
+    Map<String, String> defaultConstraintsMap = defaultConstraints.stream()
+        .collect(Collectors.toMap(SQLDefaultConstraint::getColumn_name, SQLDefaultConstraint::getDefault_value));
+    List<FeatureGroupFeatureDTO> featureSchema = new ArrayList<>();
+
+    // Partitions are listed first
+    for (FieldSchema fieldSchema : table.getPartitionKeys()) {
+      featureSchema.add(new FeatureGroupFeatureDTO(fieldSchema.getName(), fieldSchema.getType(), true,
+          defaultConstraintsMap.get(fieldSchema.getName())));
+    }
+
+    // take care of the remaining of the schema
+    for (FieldSchema fieldSchema : schema) {
+      featureSchema.add(new FeatureGroupFeatureDTO(fieldSchema.getName(), fieldSchema.getType(), false,
+          defaultConstraintsMap.get(fieldSchema.getName())));
+    }
+
+    return featureSchema;
   }
 
   private void createTable(ThriftHiveMetastore.Client client, Table table,
-                           List<SQLDefaultConstraint> defaultConstraints, Project project, Users user)
-      throws FeaturestoreException {
+                           List<SQLDefaultConstraint> defaultConstraints) throws FeaturestoreException {
     try {
       client.create_table_with_constraints(table, null, null, null, null, defaultConstraints, null);
     } catch (TException e) {
-      finalizeMetastoreOperation(project, user, client);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP, Level.SEVERE,
           "Error creating feature group table in the Hive Metastore: " + e.getMessage(), e.getMessage(), e);
     }
   }
   
-  public List<SQLDefaultConstraint> getDefaultConstraints(Featurestore featurestore, String tableName, Project project,
-                                                           Users user) throws FeaturestoreException {
-    ThriftHiveMetastore.Client client = getMetaStoreClient(project, user);
-    List<SQLDefaultConstraint> constraints = getDefaultConstraints(client, featurestore, tableName, project, user);
-    finalizeMetastoreOperation(project, user, client);
-    return constraints;
-  }
-  
-  private List<SQLDefaultConstraint> getDefaultConstraints(ThriftHiveMetastore.Client client, Featurestore featurestore,
-                                                          String tableName, Project project, Users user)
-      throws FeaturestoreException {
-    String dbName = featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject());
-    return getDefaultConstraints(client, project, user, "hive", dbName, tableName);
-  }
-  
-  private List<SQLDefaultConstraint> getDefaultConstraints(ThriftHiveMetastore.Client client, Project project,
-                                                           Users user, String catName, String dbName,
-                                                           String tableName)
+  private List<SQLDefaultConstraint> getDefaultConstraints(ThriftHiveMetastore.Client client,
+                                                           String catName, String dbName, String tableName)
       throws FeaturestoreException {
     try {
       DefaultConstraintsRequest constraintRequest = new DefaultConstraintsRequest(catName, dbName, tableName);
       return client.get_default_constraints(constraintRequest).getDefaultConstraints();
     } catch (TException e) {
-      finalizeMetastoreOperation(project, user, client);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_GET_FEATURE_GROUP_METADATA,
         Level.SEVERE, "Error getting feature group default constraints from the Hive Metastore: " + e.getMessage(),
         e.getMessage(), e);
     }
   }
 
-  private void alterTable(ThriftHiveMetastore.Client client, Table table, Project project, Users user)
-    throws FeaturestoreException {
+  private void alterTable(ThriftHiveMetastore.Client client, Table table) throws FeaturestoreException {
     try {
       client.alter_table_with_cascade(table.getDbName(), table.getTableName(), table, true);
     } catch (TException e) {
-      finalizeMetastoreOperation(project, user, client);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_ALTER_FEAUTURE_GROUP_METADATA,
         Level.SEVERE, "Error altering feature group table in the Hive Metastore: " + e.getMessage(), e.getMessage(), e);
     }
   }
 
-  private void addDefaultConstraints(ThriftHiveMetastore.Client client, List<SQLDefaultConstraint> defaultConstraints,
-                                     Project project, Users user) throws FeaturestoreException {
+  private void addDefaultConstraints(ThriftHiveMetastore.Client client, List<SQLDefaultConstraint> defaultConstraints)
+      throws FeaturestoreException {
     try {
       AddDefaultConstraintRequest constraintRequest = new AddDefaultConstraintRequest();
       constraintRequest.setDefaultConstraintCols(defaultConstraints);
       client.add_default_constraint(constraintRequest);
     } catch (TException e) {
-      finalizeMetastoreOperation(project, user, client);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_ALTER_FEAUTURE_GROUP_METADATA,
         Level.SEVERE, "Error adding default constraints to feature group in the Hive Metastore: " + e.getMessage(),
         e.getMessage(), e);
     }
   }
 
-  private Table getTable(ThriftHiveMetastore.Client client, String dbName, String tableName,  Project project,
-                         Users user) throws FeaturestoreException {
+  private Table getTable(ThriftHiveMetastore.Client client, String dbName, String tableName)
+      throws FeaturestoreException {
     try {
       return client.get_table(dbName, tableName);
     } catch (TException e) {
-      finalizeMetastoreOperation(project, user, client);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_GET_FEATURE_GROUP_METADATA,
         Level.SEVERE, "Error getting feature group table from Hive Metastore: " + e.getMessage(), e.getMessage(), e);
+    }
+  }
+
+  private List<FieldSchema> getFields(ThriftHiveMetastore.Client client, String dbName, String tableName)
+      throws FeaturestoreException {
+    try {
+      return client.get_fields(dbName, tableName);
+    } catch (TException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_GET_FEATURE_GROUP_METADATA,
+          Level.SEVERE, "Error getting feature group table from Hive Metastore: " + e.getMessage(), e.getMessage(), e);
     }
   }
   

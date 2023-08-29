@@ -21,7 +21,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.logicalclocks.shaded.com.google.common.collect.Streams;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
 import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
@@ -118,8 +118,6 @@ public class TrainingDatasetController {
   @EJB
   private TrainingDatasetFacade trainingDatasetFacade;
   @EJB
-  private FeaturestoreFacade featurestoreFacade;
-  @EJB
   private HopsfsTrainingDatasetController hopsfsTrainingDatasetController;
   @EJB
   private ExternalTrainingDatasetController externalTrainingDatasetController;
@@ -165,6 +163,8 @@ public class TrainingDatasetController {
   private FsJobManagerController fsJobManagerController;
   @Inject
   private Settings settings;
+  @Inject
+  private FeaturestoreController featurestoreController;
 
   /**
    * Gets all trainingDatasets for a particular featurestore and project
@@ -214,8 +214,8 @@ public class TrainingDatasetController {
       throws ServiceException, FeaturestoreException {
     TrainingDatasetDTO trainingDatasetDTO = new TrainingDatasetDTO(trainingDataset);
 
-    String featurestoreName = featurestoreFacade.getHiveDbName(trainingDataset.getFeaturestore().getHiveDbId());
-    trainingDatasetDTO.setFeaturestoreName(featurestoreName);
+    trainingDatasetDTO.setFeaturestoreName(
+            featurestoreController.getOfflineFeaturestoreDbName(trainingDataset.getFeaturestore()));
 
     if (!skipFeature) {
       // Set features
@@ -1216,7 +1216,7 @@ public class TrainingDatasetController {
     for (TrainingDatasetJoin join : tdJoins) {
       if (!fsLookup.containsKey(join.getFeatureGroup().getFeaturestore().getId())) {
         fsLookup.put(join.getFeatureGroup().getFeaturestore().getId(),
-            featurestoreFacade.getHiveDbName(join.getFeatureGroup().getFeaturestore().getHiveDbId()));
+            featurestoreController.getOfflineFeaturestoreDbName(join.getFeatureGroup().getFeaturestore()));
       }
     }
 
@@ -1229,7 +1229,8 @@ public class TrainingDatasetController {
       if (tdFeature.getFeatureGroup() != null &&
           !fsLookup.containsKey(tdFeature.getFeatureGroup().getFeaturestore().getId())) {
         fsLookup.put(tdFeature.getFeatureGroup().getFeaturestore().getId(),
-            featurestoreFacade.getHiveDbName(tdFeature.getFeatureGroup().getFeaturestore().getHiveDbId()));
+                featurestoreController.getOfflineFeaturestoreDbName(
+                        tdFeature.getFeatureGroup().getFeaturestore()));
       }
     }
 

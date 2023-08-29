@@ -16,8 +16,8 @@
 
 package io.hops.hopsworks.common.featurestore.featuregroup.stream;
 
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
-import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteController;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeatureGroupInputValidation;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
@@ -37,24 +37,21 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregro
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeature;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeatureExtraConstraints;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HiveTableParams;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HiveTbls;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.stream.StreamFeatureGroup;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.restutils.RESTCodes;
-import org.apache.hadoop.hive.metastore.api.SQLDefaultConstraint;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.logging.Level;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -79,9 +76,9 @@ public class StreamFeatureGroupController {
   @EJB
   private FeaturestoreActivityFacade fsActivityFacade;
   @EJB
-  private ExpectationSuiteController expectationSuiteController;
-  @EJB
   private FeatureGroupInputValidation featureGroupInputValidation;
+  @EJB
+  private FeaturestoreController featurestoreController;
 
   /**
    * Converts a StreamFeatureGroup entity into a DTO representation
@@ -90,7 +87,7 @@ public class StreamFeatureGroupController {
    * @return the converted DTO representation
    */
   public StreamFeatureGroupDTO convertStreamFeatureGroupToDTO(Featuregroup featuregroup, Project project, Users user)
-    throws FeaturestoreException, ServiceException {
+          throws FeaturestoreException, ServiceException {
     StreamFeatureGroupDTO streamFeatureGroupDTO = new StreamFeatureGroupDTO(featuregroup);
 
     if (featuregroup.isOnlineEnabled()) {
@@ -103,42 +100,50 @@ public class StreamFeatureGroupController {
     }
 
     streamFeatureGroupDTO.setName(featuregroup.getName());
-    streamFeatureGroupDTO.setDescription(
-      featuregroup.getStreamFeatureGroup().getHiveTbls().getHiveTableParamsCollection().stream()
-        .filter(p -> p.getHiveTableParamsPK().getParamKey().equalsIgnoreCase("COMMENT"))
-        .map(HiveTableParams::getParamValue)
-        .findFirst()
-        .orElse("")
-    );
+    streamFeatureGroupDTO.setDescription(featuregroup.getDescription());
     streamFeatureGroupDTO.setOnlineEnabled(featuregroup.isOnlineEnabled());
 
-    streamFeatureGroupDTO.setLocation(featurestoreUtils.resolveLocationURI(
-      featuregroup.getStreamFeatureGroup().getHiveTbls().getSdId().getLocation()));
+    streamFeatureGroupDTO.setLocation(
+            featurestoreUtils.resolveLocation(featuregroupController.getFeatureGroupLocation(featuregroup)));
     return streamFeatureGroupDTO;
   }
 
-  public List<FeatureGroupFeatureDTO> getFeaturesDTO(StreamFeatureGroup streamFeatureGroup,
-      Integer featureGroupId, Featurestore featurestore,
-      Project project, Users user) throws FeaturestoreException {
-    Collection<CachedFeatureExtraConstraints> featureExtraConstraints =
-        streamFeatureGroup.getFeaturesExtraConstraints();
+  public List<FeatureGroupFeatureDTO> getFeaturesDTO(Featuregroup featuregroup,
+                                                     Project project, Users user) throws FeaturestoreException {
+    Set<String> primaryKeys = featuregroup.getStreamFeatureGroup().getFeaturesExtraConstraints().stream()
+        .filter(CachedFeatureExtraConstraints::getPrimary)
+        .map(CachedFeatureExtraConstraints::getName)
+        .collect(Collectors.toSet());
 
-    HiveTbls hiveTable = streamFeatureGroup.getHiveTbls();
+    Set<String> precombineKeys = featuregroup.getStreamFeatureGroup().getFeaturesExtraConstraints().stream()
+        .filter(CachedFeatureExtraConstraints::getHudiPrecombineKey)
+        .map(CachedFeatureExtraConstraints::getName)
+        .collect(Collectors.toSet());
 
-    List<SQLDefaultConstraint> defaultConstraints =
-        offlineFeatureGroupController.getDefaultConstraints(featurestore, hiveTable.getTblName(), project, user);
-    Collection<CachedFeature> cachedFeatures = streamFeatureGroup.getCachedFeatures();
+    Map<String, String> featureDescription = featuregroup.getStreamFeatureGroup().getCachedFeatures().stream()
+        .collect(Collectors.toMap(CachedFeature::getName, CachedFeature::getDescription));
 
-    return cachedFeaturegroupController.getFeatureGroupFeatureDTOS(featureExtraConstraints, defaultConstraints,
-        hiveTable, cachedFeatures,
-        featureGroupId, true);
+    List<FeatureGroupFeatureDTO> featureGroupFeatures = offlineFeatureGroupController.getSchema(
+        featuregroup.getFeaturestore(),
+        featuregroupController.getTblName(featuregroup),
+        project, user);
+
+    for (FeatureGroupFeatureDTO feature : featureGroupFeatures) {
+      feature.setPrimary(primaryKeys.contains(feature.getName()));
+      feature.setHudiPrecombineKey(precombineKeys.contains(feature.getName()));
+      feature.setDescription(featureDescription.get(feature.getName()));
+      feature.setFeatureGroupId(featuregroup.getId());
+    }
+
+    featureGroupFeatures = cachedFeaturegroupController.dropHudiSpecFeatureGroupFeature(featureGroupFeatures);
+
+    return featureGroupFeatures;
   }
 
   public List<FeatureGroupFeatureDTO> getFeaturesDTOOnlineChecked(Featuregroup featuregroup,
-      StreamFeatureGroup streamFeatureGroup, Integer featureGroupId,
-      Featurestore featurestore, Project project, Users user) throws FeaturestoreException {
-    List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS =
-        getFeaturesDTO(streamFeatureGroup, featureGroupId, featurestore, project, user);
+                                                                  Project project, Users user)
+      throws FeaturestoreException {
+    List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS = getFeaturesDTO(featuregroup, project, user);
     if (featuregroup.isOnlineEnabled()) {
       featureGroupFeatureDTOS = onlineFeaturegroupController.getFeaturegroupFeatures(featuregroup,
           featureGroupFeatureDTOS);
@@ -147,17 +152,33 @@ public class StreamFeatureGroupController {
   }
 
   /**
+   * Drop a feature group
+   * @param featuregroup
+   * @param project
+   * @param user
+   * @throws FeaturestoreException
+   * @throws IOException
+   * @throws ServiceException
+   */
+  public void deleteFeatureGroup(Featuregroup featuregroup, Project project, Users user)
+      throws FeaturestoreException, IOException, ServiceException {
+    // Drop the table from Hive
+    String db = featurestoreController.getOfflineFeaturestoreDbName(featuregroup.getFeaturestore().getProject());
+    String tableName = featuregroupController.getTblName(featuregroup.getName(), featuregroup.getVersion());
+    offlineFeatureGroupController.dropFeatureGroup(db, tableName, project, user);
+
+    // remove the metadata from the Hopswroks schema
+    streamFeatureGroupFacade.remove(featuregroup.getStreamFeatureGroup());
+  }
+
+  /**
    * Persists metadata of a new stream feature group in the stream_feature_group table
    *
-   * @param hiveTable the id of the Hive table in the Hive metastore
    * @param featureGroupFeatureDTOS the list of the feature group feature DTOs
-   * @param onlineEnabled
    * @return Entity of the created cached feature group
    */
-  private StreamFeatureGroup persistStreamFeatureGroupMetadata(HiveTbls hiveTable,
-    List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS, Boolean onlineEnabled) {
+  private StreamFeatureGroup persistStreamFeatureGroupMetadata(List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS) {
     StreamFeatureGroup streamFeatureGroup = new StreamFeatureGroup();
-    streamFeatureGroup.setHiveTbls(hiveTable);
     streamFeatureGroup.setCachedFeatures(featureGroupFeatureDTOS.stream()
       // right now we are filtering and saving only features with description separately, if we add more
       // information to the cached_feature table in the future, we might want to change this and persist a row for
@@ -188,28 +209,19 @@ public class StreamFeatureGroupController {
     //Prepare DDL statement
     String tableName = featuregroupController.getTblName(streamFeatureGroupDTO.getName(),
       streamFeatureGroupDTO.getVersion());
-    offlineFeatureGroupController.createHiveTable(featurestore, tableName, streamFeatureGroupDTO.getDescription(),
-      cachedFeaturegroupController.addHudiSpecFeatures(streamFeatureGroupDTO.getFeatures()),
-      project, user, OfflineFeatureGroupController.Formats.HUDI);
-
-    //Get HiveTblId of the newly created table from the metastore
-    HiveTbls hiveTbls = streamFeatureGroupFacade.getHiveTableByNameAndDB(tableName, featurestore.getHiveDbId())
-      .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP,
-        Level.WARNING, "Table created correctly but not in the metastore"));
+    offlineFeatureGroupController.createHiveTable(featurestore, tableName,
+        cachedFeaturegroupController.addHudiSpecFeatures(streamFeatureGroupDTO.getFeatures()),
+        project, user, OfflineFeatureGroupController.Formats.HUDI);
 
     //Persist stream feature group
-    return persistStreamFeatureGroupMetadata(
-      hiveTbls, streamFeatureGroupDTO.getFeatures(), streamFeatureGroupDTO.getOnlineEnabled());
+    return persistStreamFeatureGroupMetadata(streamFeatureGroupDTO.getFeatures());
   }
 
   public void updateMetadata(Project project, Users user, Featuregroup featuregroup,
     FeaturegroupDTO featuregroupDTO)
     throws FeaturestoreException, SQLException, SchemaException, KafkaException {
 
-    List<FeatureGroupFeatureDTO> previousSchema =
-      getFeaturesDTO(featuregroup.getStreamFeatureGroup(),
-      featuregroup.getId(), featuregroup.getFeaturestore(), project,
-      user);
+    List<FeatureGroupFeatureDTO> previousSchema = getFeaturesDTO(featuregroup, project, user);
 
     String tableName = featuregroupController.getTblName(featuregroup.getName(), featuregroup.getVersion());
 
@@ -218,12 +230,6 @@ public class StreamFeatureGroupController {
     if (featuregroupDTO.getFeatures() != null) {
       cachedFeaturegroupController.verifyPreviousSchemaUnchanged(previousSchema, featuregroupDTO.getFeatures());
       newFeatures = featureGroupInputValidation.verifyAndGetNewFeatures(previousSchema, featuregroupDTO.getFeatures());
-    }
-
-    // change table description
-    if (featuregroupDTO.getDescription() != null) {
-      offlineFeatureGroupController.alterHiveTableDescription(
-        featuregroup.getFeaturestore(), tableName, featuregroupDTO.getDescription(), project, user);
     }
 
     // change feature descriptions

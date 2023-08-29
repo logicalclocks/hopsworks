@@ -17,7 +17,7 @@
 package io.hops.hopsworks.common.featurestore.query;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
-import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
@@ -84,7 +84,7 @@ public class ConstructorController {
   @EJB
   private PitJoinController pitJoinController;
   @EJB
-  private FeaturestoreFacade featurestoreFacade;
+  private FeaturestoreController featurestoreController;
 
   public ConstructorController() {
   }
@@ -408,19 +408,21 @@ public class ConstructorController {
     if (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
             isHudiTimeTravelFeatureGroup(query)) {
       CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO(featuregroup);
-      String featurestoreName = featurestoreFacade.getHiveDbName(featuregroup.getFeaturestore().getHiveDbId());
+      String featurestoreName =
+              featurestoreController.getOfflineFeaturestoreDbName(featuregroup.getFeaturestore());
       featuregroupDTO.setFeaturestoreName(featurestoreName);
-      featuregroupDTO.setLocation(featurestoreUtils.resolveLocationURI(
-          featuregroup.getCachedFeaturegroup().getHiveTbls().getSdId().getLocation()));
+      featuregroupDTO.setLocation(featurestoreUtils.resolveLocation(
+              featuregroupController.getFeatureGroupLocation(featuregroup)));
       aliases.add(new HudiFeatureGroupAliasDTO(query.getAs(), featuregroupDTO,
           query.getLeftFeatureGroupStartTimestamp(), query.getLeftFeatureGroupEndTimestamp()));
     } else if (featuregroup.getFeaturegroupType() == FeaturegroupType.STREAM_FEATURE_GROUP &&
             isHudiTimeTravelFeatureGroup(query)) {
       StreamFeatureGroupDTO featuregroupDTO = new StreamFeatureGroupDTO(featuregroup);
-      String featurestoreName = featurestoreFacade.getHiveDbName(featuregroup.getFeaturestore().getHiveDbId());
+      String featurestoreName =
+              featurestoreController.getOfflineFeaturestoreDbName(featuregroup.getFeaturestore());
       featuregroupDTO.setFeaturestoreName(featurestoreName);
-      featuregroupDTO.setLocation(featurestoreUtils.resolveLocationURI(
-        featuregroup.getStreamFeatureGroup().getHiveTbls().getSdId().getLocation()));
+      featuregroupDTO.setLocation(featurestoreUtils.resolveLocation(
+              featuregroupController.getFeatureGroupLocation(featuregroup)));
       aliases.add(new HudiFeatureGroupAliasDTO(query.getAs(), featuregroupDTO,
           query.getLeftFeatureGroupStartTimestamp(), query.getLeftFeatureGroupEndTimestamp()));
     }

@@ -17,7 +17,7 @@ package io.hops.hopsworks.api.featurestore.datavalidation.alert;
 
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.datavalidation.FeatureGroupAlertFacade;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
@@ -44,7 +44,7 @@ public class FeatureGroupAlertBuilder {
   @EJB
   private FeatureGroupAlertFacade featureGroupAlertFacade;
   @EJB
-  private FeaturestoreFacade featurestoreFacade;
+  private FeaturestoreController featurestoreController;
 
   public FeatureGroupAlertDTO uri(FeatureGroupAlertDTO dto, UriInfo uriInfo) {
     dto.setHref(uriInfo.getAbsolutePathBuilder()
@@ -91,8 +91,8 @@ public class FeatureGroupAlertBuilder {
       dto.setStatus(featureGroupAlert.getStatus());
       dto.setSeverity(featureGroupAlert.getSeverity());
       dto.setCreated(featureGroupAlert.getCreated());
-      String name =
-          featurestoreFacade.getHiveDbName(featureGroupAlert.getFeatureGroup().getFeaturestore().getHiveDbId());
+      String name = featurestoreController.getOfflineFeaturestoreDbName(
+              featureGroupAlert.getFeatureGroup().getFeaturestore());
       dto.setFeatureStoreName(name);
       dto.setFeatureGroupName(featureGroupAlert.getFeatureGroup().getName());
       dto.setFeatureGroupId(featureGroupAlert.getFeatureGroup().getId());

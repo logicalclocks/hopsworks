@@ -55,7 +55,6 @@ public class TestConstructorControllerPit {
     System.setProperty("line.separator", "\n");
 
     fs = new Featurestore();
-    fs.setHiveDbId(1l);
     fs.setProject(new Project("test_proj"));
     cachedFeaturegroup = new CachedFeaturegroup();
     cachedFeaturegroup.setTimeTravelFormat(TimeTravelFormat.NONE);

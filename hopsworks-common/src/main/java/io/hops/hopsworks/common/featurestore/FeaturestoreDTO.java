@@ -32,11 +32,8 @@ public class FeaturestoreDTO {
   private Integer featurestoreId;
   private String featurestoreName;
   private Date created;
-  private String hdfsStorePath;
   private String projectName;
   private Integer projectId;
-  private String featurestoreDescription;
-  private Long inodeId;
   private String onlineFeaturestoreName;
   private Double onlineFeaturestoreSize;
   private String offlineFeaturestoreName;
@@ -56,10 +53,7 @@ public class FeaturestoreDTO {
     this.created = featurestore.getCreated();
     this.projectName = featurestore.getProject().getName();
     this.projectId = featurestore.getProject().getId();
-    this.hdfsStorePath = null;
-    this.featurestoreDescription = null;
     this.featurestoreName = null;
-    this.inodeId = null;
     this.onlineFeaturestoreName = null;
     this.offlineFeaturestoreName = null;
     this.hiveEndpoint = null;
@@ -67,16 +61,7 @@ public class FeaturestoreDTO {
     this.onlineFeaturestoreSize = 0.0;
     this.onlineEnabled = false;
   }
-  
-  @XmlElement
-  public String getHdfsStorePath() {
-    return hdfsStorePath;
-  }
-  
-  public void setHdfsStorePath(String hdfsStorePath) {
-    this.hdfsStorePath = hdfsStorePath;
-  }
-  
+
   @XmlElement
   public String getFeaturestoreName() {
     return featurestoreName;
@@ -105,25 +90,7 @@ public class FeaturestoreDTO {
   public Integer getProjectId() {
     return projectId;
   }
-  
-  @XmlElement(nillable = true)
-  public String getFeaturestoreDescription() {
-    return featurestoreDescription;
-  }
-  
-  public void setFeaturestoreDescription(String featurestoreDescription) {
-    this.featurestoreDescription = featurestoreDescription;
-  }
-  
-  @XmlElement
-  public Long getInodeId() {
-    return inodeId;
-  }
-  
-  public void setInodeId(Long inodeId) {
-    this.inodeId = inodeId;
-  }
-  
+
   @XmlElement
   public String getOnlineFeaturestoreName() {
     return onlineFeaturestoreName;
@@ -216,11 +183,8 @@ public class FeaturestoreDTO {
         "featurestoreId=" + featurestoreId +
         ", featurestoreName='" + featurestoreName + '\'' +
         ", created=" + created +
-        ", hdfsStorePath='" + hdfsStorePath + '\'' +
         ", projectName='" + projectName + '\'' +
         ", projectId=" + projectId +
-        ", featurestoreDescription='" + featurestoreDescription + '\'' +
-        ", inodeId=" + inodeId +
         ", onlineFeaturestoreName='" + onlineFeaturestoreName + '\'' +
         ", onlineFeaturestoreSize=" + onlineFeaturestoreSize +
         ", offlineFeaturestoreName='" + offlineFeaturestoreName + '\'' +

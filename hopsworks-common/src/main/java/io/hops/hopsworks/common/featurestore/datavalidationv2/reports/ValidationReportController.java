@@ -22,16 +22,14 @@ import io.hops.hopsworks.common.dao.AbstractFacade.CollectionInfo;
 import io.hops.hopsworks.common.dao.AbstractFacade.FilterBy;
 import io.hops.hopsworks.common.dao.AbstractFacade.SortBy;
 import io.hops.hopsworks.common.dataset.DatasetController;
-import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
-import io.hops.hopsworks.common.featurestore.datavalidationv2.expectations.ExpectationFacade;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.results.ValidationResultController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.results.ValidationResultDTO;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
@@ -85,10 +83,6 @@ public class ValidationReportController {
   @EJB
   private ValidationReportFacade validationReportFacade;
   @EJB
-  private ExpectationFacade expectationFacade;
-  @EJB
-  private InodeController inodeController;
-  @EJB
   private DistributedFsService dfs;
   @EJB
   private DatasetController datasetController;
@@ -97,7 +91,7 @@ public class ValidationReportController {
   @EJB
   private AlertController alertController;
   @EJB
-  private FeaturestoreFacade featurestoreFacade;
+  private FeaturestoreController featurestoreController;
   @EJB
   private FeaturestoreActivityFacade fsActivityFacade;
   @EJB
@@ -150,7 +144,7 @@ public class ValidationReportController {
   private List<PostableAlert> getPostableAlerts(Featuregroup featureGroup, ValidationReport validationReport) {
     List<PostableAlert> postableAlerts = new ArrayList<>();
     if (featureGroup.getFeatureGroupAlerts() != null && !featureGroup.getFeatureGroupAlerts().isEmpty()) {
-      String name = featurestoreFacade.getHiveDbName(featureGroup.getFeaturestore().getHiveDbId());
+      String name = featurestoreController.getOfflineFeaturestoreDbName(featureGroup.getFeaturestore());
       for (FeatureGroupAlert alert : featureGroup.getFeatureGroupAlerts()) {
         if (alert.getStatus() == ValidationRuleAlertStatus.FAILURE
             && validationReport.getIngestionResult() == IngestionResult.REJECTED) {
@@ -163,7 +157,7 @@ public class ValidationReportController {
     }
     if (featureGroup.getFeaturestore().getProject().getProjectServiceAlerts() != null &&
       !featureGroup.getFeaturestore().getProject().getProjectServiceAlerts().isEmpty()) {
-      String name = featurestoreFacade.getHiveDbName(featureGroup.getFeaturestore().getHiveDbId());
+      String name = featurestoreController.getOfflineFeaturestoreDbName(featureGroup.getFeaturestore());
       for (ProjectServiceAlert alert : featureGroup.getFeaturestore().getProject().getProjectServiceAlerts()) {
         if (ProjectServiceEnum.FEATURESTORE.equals(alert.getService())
             && alert.getStatus() == ProjectServiceAlertStatus.VALIDATION_FAILURE

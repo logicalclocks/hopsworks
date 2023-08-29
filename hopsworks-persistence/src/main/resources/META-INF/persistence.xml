@@ -155,15 +155,6 @@
     <class>io.hops.hopsworks.persistence.entity.jobs.description.JobAlert</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.FeatureGroupAlert</class>
     <class>io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlert</class>
-    <!-- Metastore -->
-    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HiveTbls</class>
-    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HiveSds</class>
-    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HiveColumns</class>
-    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HiveCds</class>
-    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HiveKeyConstraints</class>
-    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HiveTableParams</class>
-    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HivePartitionKeys</class>
-    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HivePartitions</class>
     <!-- Git -->
     <class>io.hops.hopsworks.persistence.entity.git.GitOpExecution</class>
     <class>io.hops.hopsworks.persistence.entity.git.GitRepository</class>

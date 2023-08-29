@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.query;
 
-import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
@@ -88,7 +88,7 @@ public class TestConstructorController {
   private List<SqlCondition> singleEqualsJoinOperator;
 
   private FeaturegroupController featuregroupController;
-  private FeaturestoreFacade featurestoreFacade;
+  private FeaturestoreController featurestoreController;
   private FeaturegroupFacade featuregroupFacade;
   private OnlineFeaturestoreController onlineFeaturestoreController;
   private CachedFeaturegroupController cachedFeaturegroupController;
@@ -110,7 +110,6 @@ public class TestConstructorController {
     System.setProperty("line.separator", "\n");
 
     fs = new Featurestore();
-    fs.setHiveDbId(1l);
     fs.setProject(new Project("test_proj"));
     cachedFeaturegroup = new CachedFeaturegroup();
     cachedFeaturegroup.setTimeTravelFormat(TimeTravelFormat.NONE);
@@ -180,7 +179,7 @@ public class TestConstructorController {
 
     featuregroupController = Mockito.mock(FeaturegroupController.class);
     featuregroupFacade = Mockito.mock(FeaturegroupFacade.class);
-    featurestoreFacade = Mockito.mock(FeaturestoreFacade.class);
+    featurestoreController = Mockito.mock(FeaturestoreController.class);
     onlineFeaturestoreController = Mockito.mock(OnlineFeaturestoreController.class);
     cachedFeaturegroupController = Mockito.mock(CachedFeaturegroupController.class);
     featureGroupCommitController = Mockito.mock(FeatureGroupCommitController.class);
@@ -194,7 +193,7 @@ public class TestConstructorController {
     new JoinController(new ConstructorController());
 
     queryController = new QueryController(featuregroupController, featuregroupFacade, filterController,
-        featurestoreFacade, onlineFeaturestoreController, featureGroupCommitController);
+        featurestoreController, onlineFeaturestoreController, featureGroupCommitController);
   }
 
 
@@ -203,7 +202,6 @@ public class TestConstructorController {
     Mockito.when(featuregroupController.getFeatures(Mockito.any(), Mockito.any(), Mockito.any()))
         .thenReturn(fg1FeaturesDTO, fg2FeaturesDTO);
     Mockito.when(featuregroupFacade.findById(Mockito.any())).thenReturn(Optional.of(fg1), Optional.of(fg2));
-    Mockito.when(featurestoreFacade.getHiveDbName(Mockito.any())).thenReturn("fg1", "fg2");
 
     FeaturegroupDTO fg1 = new FeaturegroupDTO();
     fg1.setId(1);
@@ -246,7 +244,6 @@ public class TestConstructorController {
     Mockito.when(featuregroupController.getFeatures(Mockito.any(), Mockito.any(), Mockito.any()))
         .thenReturn(fg1FeaturesDTO, fg2FeaturesDTO);
     Mockito.when(featuregroupFacade.findById(Mockito.any())).thenReturn(Optional.of(fg1), Optional.of(fg2));
-    Mockito.when(featurestoreFacade.getHiveDbName(Mockito.any())).thenReturn("fg1", "fg2");
 
     FeaturegroupDTO fg1 = new FeaturegroupDTO();
     fg1.setId(1);
@@ -1083,7 +1080,6 @@ public class TestConstructorController {
     Mockito.when(featuregroupController.getFeatures(Mockito.any(), Mockito.any(), Mockito.any()))
         .thenReturn(fg1FeaturesDTO);
     Mockito.when(featuregroupFacade.findById(Mockito.any())).thenReturn(Optional.of(fgHudi));
-    Mockito.when(featurestoreFacade.getHiveDbName(Mockito.any())).thenReturn("fgHudi");
 
     FeaturegroupDTO fgHudi = new FeaturegroupDTO();
     fgHudi.setId(5);
@@ -1119,7 +1115,6 @@ public class TestConstructorController {
     Mockito.when(featuregroupController.getFeatures(Mockito.any(), Mockito.any(), Mockito.any()))
         .thenReturn(fg1FeaturesDTO);
     Mockito.when(featuregroupFacade.findById(Mockito.any())).thenReturn(Optional.of(fgHudi));
-    Mockito.when(featurestoreFacade.getHiveDbName(Mockito.any())).thenReturn("fgHudi");
     Mockito.when(featureGroupCommitController.findCommitByDate(Mockito.any(), Mockito.eq(commitRequest)))
         .thenReturn(Optional.of(commit));
 
@@ -1153,7 +1148,6 @@ public class TestConstructorController {
     Mockito.when(featuregroupController.getFeatures(Mockito.any(), Mockito.any(), Mockito.any()))
         .thenReturn(fg1FeaturesDTO);
     Mockito.when(featuregroupFacade.findById(Mockito.any())).thenReturn(Optional.of(fgHudi));
-    Mockito.when(featurestoreFacade.getHiveDbName(Mockito.any())).thenReturn("fgHudi");
     Mockito.when(featureGroupCommitController.findCommitByDate(Mockito.any(), Mockito.eq(commitRequest)))
         .thenReturn(Optional.empty());
 
@@ -1197,7 +1191,6 @@ public class TestConstructorController {
     Mockito.when(featuregroupController.getFeatures(Mockito.any(), Mockito.any(), Mockito.any()))
         .thenReturn(fg1FeaturesDTO);
     Mockito.when(featuregroupFacade.findById(Mockito.any())).thenReturn(Optional.of(fgHudi));
-    Mockito.when(featurestoreFacade.getHiveDbName(Mockito.any())).thenReturn("fgHudi");
     Mockito.when(featureGroupCommitController.findCommitByDate(Mockito.any(), Mockito.eq(startRequest)))
         .thenReturn(Optional.of(firstCommit));
     Mockito.when(featureGroupCommitController.findCommitByDate(Mockito.any(), Mockito.eq(endRequest)))
