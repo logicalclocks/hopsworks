@@ -28,6 +28,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Entity class representing the cached_feature table in Hopsworks database.
@@ -111,32 +112,31 @@ public class CachedFeature implements Serializable {
   public void setDescription(String description) {
     this.description = description;
   }
-  
+
+
   @Override
   public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
     CachedFeature that = (CachedFeature) o;
-    
-    if (!id.equals(that.id)) return false;
-    if (!cachedFeaturegroup.equals(that.cachedFeaturegroup)) return false;
-    if (!streamFeatureGroup.equals(that.streamFeatureGroup)) return false;
-    if (!name.equals(that.name)) return false;
-    return description.equals(that.description);
+
+    if (!Objects.equals(id, that.id)) return false;
+    if (!Objects.equals(cachedFeaturegroup, that.cachedFeaturegroup))
+      return false;
+    if (!Objects.equals(streamFeatureGroup, that.streamFeatureGroup))
+      return false;
+    if (!Objects.equals(name, that.name)) return false;
+    return Objects.equals(description, that.description);
   }
-  
+
   @Override
   public int hashCode() {
-    int result = id.hashCode();
-    result = 31 * result + cachedFeaturegroup.hashCode();
-    result = 31 * result + streamFeatureGroup.hashCode();
-    result = 31 * result + name.hashCode();
-    result = 31 * result + description.hashCode();
+    int result = id != null ? id.hashCode() : 0;
+    result = 31 * result + (cachedFeaturegroup != null ? cachedFeaturegroup.hashCode() : 0);
+    result = 31 * result + (streamFeatureGroup != null ? streamFeatureGroup.hashCode() : 0);
+    result = 31 * result + (name != null ? name.hashCode() : 0);
+    result = 31 * result + (description != null ? description.hashCode() : 0);
     return result;
   }
 }

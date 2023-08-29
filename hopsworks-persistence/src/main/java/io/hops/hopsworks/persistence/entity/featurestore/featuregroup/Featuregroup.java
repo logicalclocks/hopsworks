@@ -107,6 +107,8 @@ public class Featuregroup implements Serializable {
   @NotNull
   @Column(name = "name")
   private String name;
+  @Column(name = "description")
+  private String description;
   @JoinColumn(name = "feature_store_id", referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Featurestore featurestore;
@@ -175,6 +177,14 @@ public class Featuregroup implements Serializable {
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  public String getDescription() {
+    return description;
+  }
+
+  public void setDescription(String description) {
+    this.description = description;
   }
 
   public Featurestore getFeaturestore() {
@@ -316,6 +326,7 @@ public class Featuregroup implements Serializable {
 
     if (!Objects.equals(id, that.id)) return false;
     if (!Objects.equals(name, that.name)) return false;
+    if (!Objects.equals(description, that.description)) return false;
     if (!Objects.equals(featurestore, that.featurestore)) return false;
     if (!Objects.equals(created, that.created)) return false;
     if (!Objects.equals(creator, that.creator)) return false;
@@ -335,6 +346,7 @@ public class Featuregroup implements Serializable {
   public int hashCode() {
     int result = id != null ? id.hashCode() : 0;
     result = 31 * result + (name != null ? name.hashCode() : 0);
+    result = 31 * result + (description != null ? description.hashCode() : 0);
     result = 31 * result + (featurestore != null ? featurestore.hashCode() : 0);
     result = 31 * result + (created != null ? created.hashCode() : 0);
     result = 31 * result + (creator != null ? creator.hashCode() : 0);

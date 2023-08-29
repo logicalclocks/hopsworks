@@ -123,8 +123,6 @@ public class FeaturegroupService {
   @Inject
   private FeatureGroupPreviewResource featureGroupPreviewResource;
   @Inject
-  private FeatureGroupPartitionResource featureGroupPartitionResource;
-  @Inject
   private StatisticsResource statisticsResource;
   @Inject
   private CodeResource codeResource;
@@ -566,17 +564,6 @@ public class FeaturegroupService {
     fgPreviewResource.setFeaturestore(featurestore);
     fgPreviewResource.setFeatureGroupId(featuregroupId);
     return fgPreviewResource;
-  }
-
-  @Path("/{featuregroupId}/partitions")
-  @Logged(logLevel = LogLevel.OFF)
-  public FeatureGroupPartitionResource getFeatureGroupPartitions(
-      @ApiParam(value = "Id of the featuregroup") @PathParam("featuregroupId") Integer featuregroupId)
-      throws FeaturestoreException {
-    FeatureGroupPartitionResource partitionResource = featureGroupPartitionResource.setProject(project);
-    partitionResource.setFeaturestore(featurestore);
-    partitionResource.setFeatureGroupId(featuregroupId);
-    return partitionResource;
   }
 
   @Path("/{featureGroupId}/statistics")

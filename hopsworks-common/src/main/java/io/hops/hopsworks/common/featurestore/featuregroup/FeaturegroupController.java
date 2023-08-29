@@ -18,7 +18,7 @@ package io.hops.hopsworks.common.featurestore.featuregroup;
 
 import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
-import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.ValidationReportController;
@@ -27,7 +27,6 @@ import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.Expectation
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
-import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeatureGroupCommitController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupController;
@@ -35,7 +34,6 @@ import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeatu
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupDTO;
-import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupFacade;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsController;
 import io.hops.hopsworks.common.featurestore.statistics.columns.StatisticColumnController;
@@ -47,7 +45,6 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.provenance.explicit.FeatureGroupLinkController;
 import io.hops.hopsworks.common.security.QuotaEnforcementException;
@@ -69,7 +66,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregro
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HivePartitions;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.stream.StreamFeatureGroup;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticColumn;
@@ -84,6 +80,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -106,15 +103,11 @@ public class FeaturegroupController {
   @EJB
   private OnDemandFeaturegroupController onDemandFeaturegroupController;
   @EJB
-  private FeaturestoreFacade featurestoreFacade;
+  private FeaturestoreController featurestoreController;
   @EJB
   private StatisticColumnController statisticColumnController;
   @EJB
   private FeaturestoreInputValidation featurestoreInputValidation;
-  @EJB
-  private CachedFeaturegroupFacade cachedFeaturegroupFacade;
-  @EJB
-  private StreamFeatureGroupFacade streamFeatureGroupFacade;
   @EJB
   private HopsFSProvenanceController fsController;
   @EJB
@@ -125,8 +118,6 @@ public class FeaturegroupController {
   private Settings settings;
   @EJB
   private HdfsUsersController hdfsUsersController;
-  @EJB
-  private InodeController inodeController;
   @EJB
   private OnlineFeaturestoreController onlineFeaturestoreController;
   @EJB
@@ -333,7 +324,8 @@ public class FeaturegroupController {
   public FeaturegroupDTO convertFeaturegrouptoDTO(Featuregroup featuregroup, Project project, Users user,
       Boolean includeFeatures, Boolean includeExpectationSuite)
           throws FeaturestoreException, ServiceException {
-    String featurestoreName = featurestoreFacade.getHiveDbName(featuregroup.getFeaturestore().getHiveDbId());
+    String featurestoreName =
+            featurestoreController.getOfflineFeaturestoreDbName(featuregroup.getFeaturestore());
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
         CachedFeaturegroupDTO cachedFeaturegroupDTO =
@@ -341,9 +333,7 @@ public class FeaturegroupController {
         cachedFeaturegroupDTO.setFeaturestoreName(featurestoreName);
         if (includeFeatures) {
           cachedFeaturegroupDTO.setFeatures(
-              cachedFeaturegroupController.getFeaturesDTOOnlineChecked(featuregroup,
-                  featuregroup.getCachedFeaturegroup(),
-                  featuregroup.getId(), featuregroup.getFeaturestore(), project, user));
+              cachedFeaturegroupController.getFeaturesDTOOnlineChecked(featuregroup, project, user));
         }
         if (includeExpectationSuite && featuregroup.getExpectationSuite() != null) {
           cachedFeaturegroupDTO.setExpectationSuite(new ExpectationSuiteDTO(featuregroup.getExpectationSuite()));
@@ -355,9 +345,7 @@ public class FeaturegroupController {
         streamFeatureGroupDTO.setFeaturestoreName(featurestoreName);
         if (includeFeatures) {
           streamFeatureGroupDTO.setFeatures(
-              streamFeatureGroupController.getFeaturesDTOOnlineChecked(featuregroup,
-                  featuregroup.getStreamFeatureGroup(),
-                  featuregroup.getId(), featuregroup.getFeaturestore(), project, user));
+              streamFeatureGroupController.getFeaturesDTOOnlineChecked(featuregroup, project, user));
         }
         if (includeExpectationSuite && featuregroup.getExpectationSuite() != null) {
           streamFeatureGroupDTO.setExpectationSuite(new ExpectationSuiteDTO(featuregroup.getExpectationSuite()));
@@ -482,6 +470,14 @@ public class FeaturegroupController {
 
     // get feature group object again after alter table
     featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
+
+    // update the description
+    if (featuregroupDTO.getDescription() != null) {
+      featuregroup.setDescription(featuregroupDTO.getDescription());
+    }
+
+    featuregroup = featuregroupFacade.updateFeaturegroupMetadata(featuregroup);
+
     featuregroupDTO = convertFeaturegrouptoDTO(featuregroup, project, user);
 
     String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
@@ -654,8 +650,7 @@ public class FeaturegroupController {
           // Delete existing commits if it's a hudi feature group
           featureGroupCommitController.deleteFeatureGroupCommits(featuregroup);
         }
-        // Delete hive_table will cascade to cached_featuregroup_table which will cascade to feature_group table
-        cachedFeaturegroupController.dropHiveFeaturegroup(featuregroup, project, user);
+        cachedFeaturegroupController.deleteFeatureGroup(featuregroup, project, user);
         // Delete mysql table and metadata
         if(settings.isOnlineFeaturestore() && featuregroup.isOnlineEnabled()) {
           onlineFeaturegroupController.disableOnlineFeatureGroup(featuregroup, project, user);
@@ -664,8 +659,7 @@ public class FeaturegroupController {
       case STREAM_FEATURE_GROUP:
         // Delete existing commits if it's a hudi feature group
         featureGroupCommitController.deleteFeatureGroupCommits(featuregroup);
-        // Delete hive_table will cascade to stream_featuregroup_table which will cascade to feature_group table
-        cachedFeaturegroupController.dropHiveFeaturegroup(featuregroup, project, user);
+        streamFeatureGroupController.deleteFeatureGroup(featuregroup, project, user);
         // Delete mysql table and metadata
         if (settings.isOnlineFeaturestore() && featuregroup.isOnlineEnabled()) {
           onlineFeaturegroupController.disableOnlineFeatureGroup(featuregroup, project, user);
@@ -676,8 +670,7 @@ public class FeaturegroupController {
         break;
       case ON_DEMAND_FEATURE_GROUP:
         // Delete on_demand_feature_group will cascade to feature_group table
-        onDemandFeaturegroupController
-            .removeOnDemandFeaturegroup(featuregroup.getFeaturestore(), featuregroup, project, user);
+        onDemandFeaturegroupController.removeOnDemandFeaturegroup(featuregroup, project, user);
         // Delete mysql table and metadata
         if (settings.isOnlineFeaturestore() && featuregroup.isOnlineEnabled()
             && !featuregroup.getOnDemandFeaturegroup().isSpine()) {
@@ -706,33 +699,6 @@ public class FeaturegroupController {
     if (featuregroupFacade.findByIdAndFeaturestore(featuregroup.getId(),
         featuregroup.getFeaturestore()).isPresent()) {
       featuregroupFacade.remove(featuregroup);
-    }
-  }
-
-  /**
-   * Get a list of partitions for offline feature groups
-   * @param featuregroup
-   * @return
-   * @throws FeaturestoreException in case the feature group is not offline
-   */
-  public List<HivePartitions> getPartitions(Featuregroup featuregroup, Integer offset, Integer limit)
-      throws FeaturestoreException {
-    switch (featuregroup.getFeaturegroupType()) {
-      case CACHED_FEATURE_GROUP:
-        return cachedFeaturegroupFacade.getHiveTablePartitions(
-            featuregroup.getCachedFeaturegroup().getHiveTbls(), offset, limit);
-      case STREAM_FEATURE_GROUP:
-        return streamFeatureGroupFacade.getHiveTablePartitions(
-          featuregroup.getStreamFeatureGroup().getHiveTbls(), offset, limit);
-      case ON_DEMAND_FEATURE_GROUP:
-        throw new FeaturestoreException(
-            RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_ONDEMAND_NO_PARTS, Level.FINE,
-            "featuregroupId: " + featuregroup.getId());
-      default:
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE, Level.FINE,
-            ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
-                FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
-                + featuregroup.getFeaturegroupType());
     }
   }
 
@@ -804,6 +770,7 @@ public class FeaturegroupController {
     featuregroup.setCreated(new Date());
     featuregroup.setCreator(user);
     featuregroup.setVersion(featuregroupDTO.getVersion());
+    featuregroup.setDescription(featuregroupDTO.getDescription());
     
     if (featuregroupDTO instanceof CachedFeaturegroupDTO) {
       featuregroup.setFeaturegroupType(FeaturegroupType.CACHED_FEATURE_GROUP);
@@ -852,11 +819,9 @@ public class FeaturegroupController {
     throws FeaturestoreException {
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
-        return cachedFeaturegroupController.getFeaturesDTO(featuregroup.getCachedFeaturegroup(), featuregroup.getId(),
-          featuregroup.getFeaturestore(), project, user);
+        return cachedFeaturegroupController.getFeaturesDTO(featuregroup, project, user);
       case STREAM_FEATURE_GROUP:
-        return streamFeatureGroupController.getFeaturesDTO(featuregroup.getStreamFeatureGroup(), featuregroup.getId(),
-          featuregroup.getFeaturestore(), project, user);
+        return streamFeatureGroupController.getFeaturesDTO(featuregroup, project, user);
       case ON_DEMAND_FEATURE_GROUP:
         return featuregroup.getOnDemandFeaturegroup().getFeatures().stream()
           .map(f -> new FeatureGroupFeatureDTO(
@@ -864,6 +829,10 @@ public class FeaturegroupController {
           .collect(Collectors.toList());
     }
     return new ArrayList<>();
+  }
+
+  public String getTblName(Featuregroup featuregroup) {
+    return featuregroup.getName() + "_" + featuregroup.getVersion().toString();
   }
 
   /**
@@ -883,18 +852,15 @@ public class FeaturegroupController {
       .map(FeatureGroupFeatureDTO::getName).collect(Collectors.toList());
   }
 
+  public String getFeatureGroupLocation(Featuregroup featuregroup) {
+    return getFeatureGroupLocation(featuregroup.getFeaturestore(), featuregroup.getName(), featuregroup.getVersion());
+  }
 
-  public String getFeatureGroupLocation(Featuregroup featureGroup) throws FeaturestoreException {
-    // Cached feature groups also have a `location` field.
-    // the issue is that the host is slightly different due to a configuration of Hive
-    // so here we resolve only the path based on the indoe
-    if (featureGroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP) {
-      return inodeController.getPath(featureGroup.getCachedFeaturegroup().getHiveTbls().getSdId().getInode());
-    } else if (featureGroup.getFeaturegroupType() == FeaturegroupType.STREAM_FEATURE_GROUP) {
-      return inodeController.getPath(featureGroup.getStreamFeatureGroup().getHiveTbls().getSdId().getInode());
-    } else {
-      return onDemandFeaturegroupController.getFeatureGroupLocation(featureGroup);
-    }
+  public String getFeatureGroupLocation(Featurestore featurestore, String name, Integer version) {
+    // for compatibility reason here we need to remove the authority
+    return Paths.get(settings.getHiveWarehouse(),
+            featurestoreController.getOfflineFeaturestoreDbName(featurestore) + ".db",
+            getTblName(name, version)).toString();
   }
 
   /**

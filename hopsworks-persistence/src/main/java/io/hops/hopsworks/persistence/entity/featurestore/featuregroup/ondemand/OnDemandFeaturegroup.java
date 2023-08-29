@@ -59,8 +59,6 @@ public class OnDemandFeaturegroup implements Serializable {
   @Basic(optional = false)
   @Column(name = "query")
   private String query;
-  @Column(name = "description")
-  private String description;
   @Column(name = "data_format")
   @Enumerated(EnumType.ORDINAL)
   private OnDemandDataFormat dataFormat;
@@ -88,14 +86,6 @@ public class OnDemandFeaturegroup implements Serializable {
     this.query = query;
   }
   
-  public String getDescription() {
-    return description;
-  }
-  
-  public void setDescription(String description) {
-    this.description = description;
-  }
-
   public FeaturestoreConnector getFeaturestoreConnector() {
     return featurestoreConnector;
   }

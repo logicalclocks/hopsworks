@@ -48,6 +48,13 @@ public class FeatureGroupFeatureDTO {
     this.type = type;
   }
 
+  public FeatureGroupFeatureDTO(String name, String type, boolean partition, String defaultValue) {
+    this.name = name;
+    this.type = type;
+    this.partition = partition;
+    this.defaultValue = defaultValue;
+  }
+
   public FeatureGroupFeatureDTO(String name, String type, String description, Boolean primary,
                                 Boolean partition, String onlineType, String defaultValue, Integer featureGroupId) {
     this.name = name;

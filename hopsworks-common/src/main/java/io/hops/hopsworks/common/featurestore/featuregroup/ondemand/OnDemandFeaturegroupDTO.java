@@ -67,7 +67,7 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
         .collect(Collectors.toList());
 
     setFeaturestoreName(featureStoreName);
-    setDescription(featuregroup.getOnDemandFeaturegroup().getDescription());
+    setDescription(featuregroup.getDescription());
     setFeatures(features);
     setOnlineEnabled(featuregroup.isOnlineEnabled());
     setOnlineTopicName(onlineTopicName);

@@ -154,7 +154,6 @@ public class TestQuotasEnforcement {
     Project project = new Project();
     project.setName("ProjectName");
     fs.setProject(project);
-    fs.setHiveDbId(1L);
 
     // Quotas disabled
     Mockito.when(settings.getQuotasOnlineEnabledFeaturegroups()).thenReturn(-1L);
@@ -208,7 +207,6 @@ public class TestQuotasEnforcement {
     project.setName("ProjectName");
     Featurestore fs = new Featurestore();
     fs.setProject(project);
-    fs.setHiveDbId(1L);
 
     // It should go through
     Mockito.when(settings.getQuotasTrainingDatasets()).thenReturn(-1L);

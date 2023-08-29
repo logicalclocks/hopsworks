@@ -251,13 +251,10 @@ public class FeaturestoreController {
   public Featurestore createProjectFeatureStore(Project project, Users user, String featurestoreName,
       Dataset trainingDatasetsFolder) throws FeaturestoreException, ProjectException, UserException {
 
-    //Get HiveDbId for the newly created Hive featurestore DB
-    Long hiveDbId = featurestoreFacade.getHiveDatabaseId(featurestoreName);
     //Store featurestore metadata in Hopsworks
     Featurestore featurestore = new Featurestore();
     featurestore.setProject(project);
     featurestore.setName(project.getName().toLowerCase());
-    featurestore.setHiveDbId(hiveDbId);
     featurestore.setCreated(new Date());
     featurestoreFacade.persist(featurestore);
     activityFacade.persistActivity(ActivityFacade.CREATED_FEATURESTORE + featurestoreName, project,
@@ -367,16 +364,11 @@ public class FeaturestoreController {
    * @return a DTO representation of the featurestore
    */
   private FeaturestoreDTO convertFeaturestoreToDTO(Featurestore featurestore) {
-    String hiveDbDescription = featurestoreFacade.getHiveDatabaseDescription(featurestore.getHiveDbId());
     FeaturestoreDTO featurestoreDTO = new FeaturestoreDTO(featurestore);
-
-    featurestoreDTO.setFeaturestoreDescription(hiveDbDescription);
-    String name = featurestoreFacade.getHiveDbName(featurestore.getHiveDbId());
+    String featureStoreName = getOfflineFeaturestoreDbName(featurestore);
     // TODO(Fabio): remove this when we switch to the new UI.
-    featurestoreDTO.setFeaturestoreName(name);
-    featurestoreDTO.setOfflineFeaturestoreName(name);
-    featurestoreDTO.setHdfsStorePath(featurestoreFacade.getHiveDbHdfsPath(featurestore.getHiveDbId()));
-    featurestoreDTO.setInodeId(featurestoreFacade.getFeaturestoreInodeId(featurestore.getHiveDbId()));
+    featurestoreDTO.setFeaturestoreName(featureStoreName);
+    featurestoreDTO.setOfflineFeaturestoreName(featureStoreName);
 
     try {
       featurestoreDTO.setHiveEndpoint(hiveController.getHiveServerInternalEndpoint());
@@ -408,6 +400,14 @@ public class FeaturestoreController {
    * @return the hive database name of the featurestore in the project
    */
   public String getOfflineFeaturestoreDbName(Project project) {
-    return project.getName().toLowerCase() + FeaturestoreConstants.FEATURESTORE_HIVE_DB_SUFFIX;
+    return getOfflineFeaturestoreDbName(project.getName().toLowerCase());
+  }
+
+  public String getOfflineFeaturestoreDbName(Featurestore featurestore) {
+    return getOfflineFeaturestoreDbName(featurestore.getName());
+  }
+
+  private String getOfflineFeaturestoreDbName(String name) {
+    return name + FeaturestoreConstants.FEATURESTORE_HIVE_DB_SUFFIX;
   }
 }

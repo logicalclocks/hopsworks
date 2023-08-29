@@ -101,24 +101,24 @@ public class AvroSchemaConstructorController {
   
   public Schema toAvro(String hiveType, boolean nullable, String nameSpace) throws FeaturestoreException {
     SchemaBuilder.TypeBuilder<Schema> avroSchema = SchemaBuilder.builder();
-    String sanetizedHiveType = hiveType.replaceAll("\\s+", "");
+    String sanitizedHiveType = hiveType.replaceAll("\\s+", "").toLowerCase();
     Schema result;
     
-    if (sanetizedHiveType.startsWith(Type.ARRAY_TYPE.getName().toLowerCase())) {
-      result = avroSchema.array().items(toAvro(getInnerType(sanetizedHiveType, 5), nullable, nameSpace));
-    } else if (sanetizedHiveType.startsWith(Type.MAP_TYPE.getName().toLowerCase())) {
-      String[] mapTypes = getMapTypes(getInnerType(sanetizedHiveType, 3));
+    if (sanitizedHiveType.startsWith(Type.ARRAY_TYPE.getName().toLowerCase())) {
+      result = avroSchema.array().items(toAvro(getInnerType(sanitizedHiveType, 5), nullable, nameSpace));
+    } else if (sanitizedHiveType.startsWith(Type.MAP_TYPE.getName().toLowerCase())) {
+      String[] mapTypes = getMapTypes(getInnerType(sanitizedHiveType, 3));
       if (!mapTypes[0].equals(Type.STRING_TYPE.getName().toLowerCase())) {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.AVRO_MAP_STRING_KEY, Level.FINE, "The type of" +
           " Map keys has to be STRING, but found: " + mapTypes[0]);
       }
       result = avroSchema.map().values(toAvro(mapTypes[1], nullable, nameSpace));
-    } else if (sanetizedHiveType.startsWith(Type.STRUCT_TYPE.getName().toLowerCase())) {
+    } else if (sanitizedHiveType.startsWith(Type.STRUCT_TYPE.getName().toLowerCase())) {
       // use random name, as user has no possibility to provide it and it doesn't matter for de-/serialization
-      String recordName = "r" + Math.abs(sanetizedHiveType.hashCode());
+      String recordName = "r" + Math.abs(sanitizedHiveType.hashCode());
       String childNameSpace = !Strings.isNullOrEmpty(nameSpace) ? nameSpace + "." + recordName : recordName;
       SchemaBuilder.FieldAssembler<Schema> record = avroSchema.record(recordName).namespace(nameSpace).fields();
-      for (String field : parseStructFields(getInnerType(sanetizedHiveType, 6))) {
+      for (String field : parseStructFields(getInnerType(sanitizedHiveType, 6))) {
         String[] structField = getStructField(field);
         if (structField.length != 2) {
           throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.AVRO_MALFORMED_SCHEMA, Level.FINE, "Failed " +
@@ -128,7 +128,7 @@ public class AvroSchemaConstructorController {
       }
       result = record.endRecord();
     } else {
-      result = toAvroPrimitiveType(sanetizedHiveType);
+      result = toAvroPrimitiveType(sanitizedHiveType);
     }
     if (nullable) {
       return Schema.createUnion(Schema.create(Schema.Type.NULL), result);

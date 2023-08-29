@@ -48,7 +48,6 @@ public class TestJoinController {
   @Before
   public void setup() {
     fs = new Featurestore();
-    fs.setHiveDbId(1l);
     fs.setProject(new Project("test_proj"));
     cachedFeaturegroup = new CachedFeaturegroup();
     cachedFeaturegroup.setTimeTravelFormat(TimeTravelFormat.NONE);

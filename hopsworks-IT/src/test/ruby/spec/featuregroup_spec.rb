@@ -168,7 +168,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         features = [
             {
-                type: "ARRAY <BOOLEAN>",
+                type: "ARRAY<BOOLEAN>",
                 name: "test",
                 description: "--",
                 primary: false
@@ -1422,7 +1422,6 @@ describe "On #{ENV['OS']}" do
       it "should be able to construct PIT join with event time enabled feature groups" do
         project_name = @project.projectname
         featurestore_id = get_featurestore_id(@project.id)
-        featurestore_name = get_featurestore_name(@project.id)
         features = [
           {type: "INT", name: "a_testfeature", primary: true},
           {type: "INT", name: "a_testfeature1"},
@@ -1504,8 +1503,9 @@ describe "On #{ENV['OS']}" do
                                            "(SELECT `fg1`.`a_testfeature` `a_testfeature`, `fg1`.`a_testfeature1` `a_testfeature1`, `fg1`.`a_testfeature` `join_pk_a_testfeature`, `fg1`.`event_time` `join_evt_event_time`, `fg0`.`b_testfeature1` `b_testfeature1`, RANK() OVER (PARTITION BY `fg0`.`a_testfeature`, `fg1`.`event_time` ORDER BY `fg0`.`event_time` DESC) pit_rank_hopsworks\n" +
                                            "FROM `#{project_name.downcase}_featurestore`.`#{fg_a_name}_1` `fg1`\n" +
                                            "INNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_b_name}_1` `fg0` ON `fg1`.`a_testfeature` = `fg0`.`a_testfeature` AND `fg1`.`event_time` >= `fg0`.`event_time`\n" +
-                                           "WHERE (`fg1`.`a_testfeature` = 10 OR `fg0`.`b_testfeature1` = 10) AND `fg0`.`b_testfeature2` = 10) NA\n" +
-                                           "WHERE `pit_rank_hopsworks` = 1) (SELECT `right_fg0`.`a_testfeature` `a_testfeature`, `right_fg0`.`a_testfeature1` `a_testfeature1`, `right_fg0`.`b_testfeature1` `b_testfeature1`\nFROM right_fg0)")
+                                           "WHERE `fg0`.`b_testfeature2` = 10) NA\n" +
+                                           "WHERE `pit_rank_hopsworks` = 1) (SELECT `right_fg0`.`a_testfeature` `a_testfeature`, `right_fg0`.`a_testfeature1` `a_testfeature1`, `right_fg0`.`b_testfeature1` `b_testfeature1`\nFROM right_fg0\n" +
+                                           "WHERE `right_fg0`.`a_testfeature` = 10 OR `right_fg0`.`b_testfeature1` = 10)")
       end
 
       it "should be able to create cached feature group with many features and get features in specific order on get" do
@@ -1851,7 +1851,7 @@ describe "On #{ENV['OS']}" do
                                                        options: options)
         parsed_json = JSON.parse(json_result)
         expect_status_details(201)
-		expect(parsed_json.key?("location")).to be true
+        expect(parsed_json.key?("location")).to be true
         expect(parsed_json["query"]).to eql("")
         expect(parsed_json["dataFormat"]).to eql("CSV")
         expect(parsed_json["options"][0]["name"]).to eql("header")
@@ -1887,13 +1887,11 @@ describe "On #{ENV['OS']}" do
                 type: "INT",
                 name: "testfeature",
                 description: "new description",
-                primary: true
             },
             {
                 type: "INT",
                 name: "new_feature",
                 description: "testfeaturedescription",
-                primary: true
             }
         ]
         json_result, _ = update_on_demand_featuregroup(project.id, featurestore_id,

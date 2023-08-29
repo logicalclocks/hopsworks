@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.query;
 
 import com.google.common.collect.Lists;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
@@ -73,7 +74,7 @@ public class TestQueryController {
   private List<SqlCondition> singleEqualsJoinOperator;
 
   private FeaturegroupController featuregroupController;
-  private FeaturestoreFacade featurestoreFacade;
+  private FeaturestoreController featurestoreController;
   private FeaturegroupFacade featuregroupFacade;
   private OnlineFeaturestoreController onlineFeaturestoreController;
 
@@ -89,7 +90,6 @@ public class TestQueryController {
   @Before
   public void setup() {
     fs = new Featurestore();
-    fs.setHiveDbId(1l);
     fs.setProject(new Project("test_proj"));
     cachedFeaturegroup = new CachedFeaturegroup();
     cachedFeaturegroup.setTimeTravelFormat(TimeTravelFormat.NONE);
@@ -155,13 +155,13 @@ public class TestQueryController {
 
     featuregroupController = Mockito.mock(FeaturegroupController.class);
     featuregroupFacade = Mockito.mock(FeaturegroupFacade.class);
-    featurestoreFacade = Mockito.mock(FeaturestoreFacade.class);
+    featurestoreController = Mockito.mock(FeaturestoreController.class);
     onlineFeaturestoreController = Mockito.mock(OnlineFeaturestoreController.class);
     project = Mockito.mock(Project.class);
     user = Mockito.mock(Users.class);
     filterController = new FilterController(new ConstructorController());
 
-    target = new QueryController(featuregroupController, featuregroupFacade, filterController, featurestoreFacade,
+    target = new QueryController(featuregroupController, featuregroupFacade, filterController, featurestoreController,
         onlineFeaturestoreController, null);
       new JoinController(new ConstructorController());
   }

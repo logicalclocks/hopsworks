@@ -18,23 +18,26 @@ package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.stream;
 
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeature;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeatureExtraConstraints;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HiveTbls;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * Entity class representing the stream_feature_group table in Hopsworks database.
@@ -56,22 +59,22 @@ public class StreamFeatureGroup  implements Serializable {
   @Basic(optional = false)
   @Column(name = "id")
   private Integer id;
-  @JoinColumn(name = "offline_feature_group", referencedColumnName = "TBL_ID")
-  private HiveTbls hiveTbls;
+  // This is an hack to have something to write in the table. Without this column, the insert will be
+  // empty and will fail. We don't need this table, but removing it requires re-wiring a several other
+  // tables.
+  // stream feature groups can't have a time travel format other than hudi, hence why we don't have a
+  // getter/setter for this field. This is here purely to not make JPA fail.
+  @Basic(optional = false)
+  @NotNull
+  @Enumerated(EnumType.ORDINAL)
+  @Column(name = "timetravel_format")
+  private TimeTravelFormat timeTravelFormat = TimeTravelFormat.HUDI;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "streamFeatureGroup")
   private Collection<CachedFeatureExtraConstraints> featuresExtraConstraints;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "streamFeatureGroup")
   private Collection<CachedFeature> cachedFeatures;
   
   public StreamFeatureGroup() {};
-
-  public HiveTbls getHiveTbls() {
-    return hiveTbls;
-  }
-
-  public void setHiveTbls(HiveTbls hiveTbls) {
-    this.hiveTbls = hiveTbls;
-  }
 
   public Integer getId() {
     return id;
@@ -104,7 +107,7 @@ public class StreamFeatureGroup  implements Serializable {
 
     StreamFeatureGroup that = (StreamFeatureGroup) o;
 
-    return id != null ? id.equals(that.id) : that.id == null;
+    return Objects.equals(id, that.id);
   }
 
   @Override

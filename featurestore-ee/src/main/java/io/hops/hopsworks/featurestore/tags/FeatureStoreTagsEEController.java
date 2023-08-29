@@ -7,7 +7,6 @@ package io.hops.hopsworks.featurestore.tags;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.common.featurestore.tag.FeatureStoreTagControllerIface;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.integrations.EnterpriseStereotype;
 import io.hops.hopsworks.common.tags.AttachTagResult;
 import io.hops.hopsworks.exceptions.DatasetException;
@@ -40,8 +39,6 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
   private FeaturegroupController featuregroupController;
   @EJB
   private FeatureViewController featureViewController;
-  @EJB
-  private InodeController inodeController;
   @EJB
   private TagsController tagsController;
 
@@ -311,7 +308,7 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
    */
   @Override
   public void deleteAll(Project accessProject, Users user, Featurestore featureStore, Featuregroup featureGroup)
-          throws MetadataException, DatasetException, FeaturestoreException {
+          throws MetadataException, DatasetException {
   
     String path = featuregroupController.getFeatureGroupLocation(featureGroup);
     tagsController.deleteAll(accessProject, user, path);
