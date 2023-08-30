@@ -258,45 +258,73 @@ describe "On #{ENV['OS']}" do
           end
         end
         context 'environment history' do
-          it 'should show installed library in the environment history' do
-            install_library(@project[:id], ENV['PYTHON_VERSION'], 'spotify', 'PIP', conda_channel, lib_version: '0.9.0')
-            wait_for_running_command(@project[:id])
-            get_environment_history(@project[:id], ENV['PYTHON_VERSION'], query="?sort_by=id:desc&offset=0&limit=1")
-            expect(json_body[:count]).to be > 0
-            installed = json_body[:items][0][:installed]
-            spotify = installed.detect { |library| library[:library] == "spotify" }
-            expect(spotify).not_to be_nil
+          describe "operations" do
+            it 'should show installed library in the environment history' do
+              install_library(@project[:id], ENV['PYTHON_VERSION'], 'spotify', 'PIP', conda_channel, lib_version: '0.9.0')
+              wait_for_running_command(@project[:id])
+              get_environment_history(@project[:id], ENV['PYTHON_VERSION'], query="?sort_by=id:desc&offset=0&limit=1")
+              expect(json_body[:count]).to be > 0
+              installed = json_body[:items][0][:installed]
+              spotify = installed.detect { |library| library[:library] == "spotify" }
+              expect(spotify).not_to be_nil
+            end
+            it 'should show uninstalled library in the environment history' do
+              uninstall_library(@project[:id], ENV['PYTHON_VERSION'], 'spotify')
+              wait_for_running_command(@project[:id])
+              get_environment_history(@project[:id], ENV['PYTHON_VERSION'], query="?sort_by=id:desc&offset=0&limit=1")
+              expect(json_body[:count]).to be > 0
+              uninstalled = json_body[:items][0][:uninstalled]
+              spotify = uninstalled.detect { |library| library[:library] == "spotify" }
+              expect(spotify).not_to be_nil
+            end
+            it 'should show upgraded library in the environment history' do
+              install_library(@project[:id], ENV['PYTHON_VERSION'], 'access-spotify', 'PIP', conda_channel, lib_version: '1.0')
+              wait_for_running_command(@project[:id])
+              upgrade_or_downgrade_library(@project[:id], @project[:projectname], 'access-spotify', '1.1')
+              get_environment_history(@project[:id], ENV['PYTHON_VERSION'], query="?sort_by=id:desc&offset=0&limit=1")
+              expect(json_body[:count]).to be > 0
+              upgraded = json_body[:items][0][:upgraded]
+              access_spotify = upgraded.detect { |library| library[:library] == "access-spotify" }
+              expect(access_spotify).not_to be_nil
+              expect(access_spotify[:currentVersion]).to eq ("1.1")
+            end
+            it 'should show downgraded library in the environment history' do
+              install_library(@project[:id], ENV['PYTHON_VERSION'], 'async-spotify', 'PIP', conda_channel, lib_version: '0.4.4')
+              wait_for_running_command(@project[:id])
+              upgrade_or_downgrade_library(@project[:id], @project[:projectname], 'async-spotify', '0.4.3')
+              get_environment_history(@project[:id], ENV['PYTHON_VERSION'], query="?sort_by=id:desc&offset=0&limit=1")
+              expect(json_body[:count]).to be > 0
+              downgraded = json_body[:items][0][:downgraded]
+              async_spotify = downgraded.detect { |library| library[:library] == "async-spotify" }
+              expect(async_spotify).not_to be_nil
+              expect(async_spotify[:currentVersion]).to eq ("0.4.3")
+            end
           end
-          it 'should show uninstalled library in the environment history' do
-            uninstall_library(@project[:id], ENV['PYTHON_VERSION'], 'spotify')
-            wait_for_running_command(@project[:id])
-            get_environment_history(@project[:id], ENV['PYTHON_VERSION'], query="?sort_by=id:desc&offset=0&limit=1")
-            expect(json_body[:count]).to be > 0
-            uninstalled = json_body[:items][0][:uninstalled]
-            spotify = uninstalled.detect { |library| library[:library] == "spotify" }
-            expect(spotify).not_to be_nil
-          end
-          it 'should show upgraded library in the environment history' do
-            install_library(@project[:id], ENV['PYTHON_VERSION'], 'access-spotify', 'PIP', conda_channel, lib_version: '1.0')
-            wait_for_running_command(@project[:id])
-            upgrade_or_downgrade_library(@project[:id], @project[:projectname], 'access-spotify', '1.1')
-            get_environment_history(@project[:id], ENV['PYTHON_VERSION'], query="?sort_by=id:desc&offset=0&limit=1")
-            expect(json_body[:count]).to be > 0
-            upgraded = json_body[:items][0][:upgraded]
-            access_spotify = upgraded.detect { |library| library[:library] == "access-spotify" }
-            expect(access_spotify).not_to be_nil
-            expect(access_spotify[:currentVersion]).to eq ("1.1")
-          end
-          it 'should show downgraded library in the environment history' do
-            install_library(@project[:id], ENV['PYTHON_VERSION'], 'async-spotify', 'PIP', conda_channel, lib_version: '0.4.4')
-            wait_for_running_command(@project[:id])
-            upgrade_or_downgrade_library(@project[:id], @project[:projectname], 'async-spotify', '0.4.3')
-            get_environment_history(@project[:id], ENV['PYTHON_VERSION'], query="?sort_by=id:desc&offset=0&limit=1")
-            expect(json_body[:count]).to be > 0
-            downgraded = json_body[:items][0][:downgraded]
-            async_spotify = downgraded.detect { |library| library[:library] == "async-spotify" }
-            expect(async_spotify).not_to be_nil
-            expect(async_spotify[:currentVersion]).to eq ("0.4.3")
+          describe "filtering" do
+            it 'should filter by library' do
+              install_library(@project[:id], ENV['PYTHON_VERSION'], 'black-body', 'PIP', conda_channel, lib_version: '0.0.1')
+              wait_for_running_command(@project[:id])
+              get_environment_history(@project[:id], ENV['PYTHON_VERSION'], query="?filter_by=library:black-body")
+              expect(json_body[:count]).to eq 1
+            end
+            it 'should filter by date_from' do
+              install_library(@project[:id], ENV['PYTHON_VERSION'], 'black-holes', 'PIP', conda_channel, lib_version: '0.0.3b0')
+              wait_for_running_command(@project[:id])
+              get_environment_history(@project[:id], ENV['PYTHON_VERSION'], query="?sort_by=id:desc&offset=0&limit=10")
+              expect(json_body[:count]).to be > 0
+              creation_date = json_body[:items][0][:dateCreated]
+              get_environment_history(@project[:id], ENV['PYTHON_VERSION'], query="?filter_by=date_from:#{creation_date}")
+              bad_entry = json_body[:items].detect { |env| env[:dateCreated] < creation_date }
+              expect(bad_entry).to eq nil
+            end
+            it 'should filter by date_to' do
+              get_environment_history(@project[:id], ENV['PYTHON_VERSION'], query="?sort_by=id:desc&offset=0&limit=10")
+              expect(json_body[:count]).to be > 0
+              creation_date = json_body[:items][0][:dateCreated]
+              get_environment_history(@project[:id], ENV['PYTHON_VERSION'], query="?filter_by=date_to:#{creation_date}")
+              bad_entry = json_body[:items].detect { |env| env[:dateCreated] > creation_date }
+              expect(bad_entry).to eq nil
+            end
           end
         end
       end

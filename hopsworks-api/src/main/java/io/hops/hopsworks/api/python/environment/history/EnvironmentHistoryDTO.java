@@ -20,6 +20,7 @@ import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.persistence.entity.python.history.LibrarySpec;
 import io.hops.hopsworks.persistence.entity.python.history.LibraryUpdate;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -34,6 +35,7 @@ public class EnvironmentHistoryDTO extends RestDTO<EnvironmentHistoryDTO> {
   private List<LibraryUpdate> downgraded;
   private Set<LibrarySpec> installedLibraries;
   private UserDTO user;
+  private Date dateCreated;
 
   public Integer getId() { return id; }
 
@@ -76,4 +78,8 @@ public class EnvironmentHistoryDTO extends RestDTO<EnvironmentHistoryDTO> {
   public void setInstalledLibraries(Set<LibrarySpec> installedLibraries) {
     this.installedLibraries = installedLibraries;
   }
+
+  public Date getDateCreated() { return dateCreated; }
+
+  public void setDateCreated(Date dateCreated) { this.dateCreated = dateCreated; }
 }

@@ -125,6 +125,7 @@ public class EnvironmentHistoryBuilder {
       dto.setId(environmentDelta.getId());
       dto.setEnvironmentName(environmentDelta.getDockerImage());
       dto.setPreviousEnvironment(environmentDelta.getPreviousDockerImage());
+      dto.setDateCreated(environmentDelta.getCreated());
       try {
         dto.setInstalled(objectMapper.readValue(environmentDelta.getInstalled().toString(), List.class));
         dto.setUninstalled(objectMapper.readValue(environmentDelta.getUninstalled().toString(), List.class));

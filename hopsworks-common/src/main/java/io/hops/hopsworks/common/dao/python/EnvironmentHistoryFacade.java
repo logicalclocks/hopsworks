@@ -24,6 +24,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.persistence.NoResultException;
+import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
 import javax.persistence.Query;
@@ -113,6 +114,11 @@ public class EnvironmentHistoryFacade extends AbstractFacade<EnvironmentHistoryF
       case LIBRARY:
         q.setParameter(filterBy.getField(), filterBy.getParam().toLowerCase());
         break;
+      case DATE_FROM:
+      case DATE_TO:
+        Date date = getDate(filterBy.getField(), filterBy.getParam());
+        q.setParameter(filterBy.getField(), date);
+        break;
       default:
         break;
     }
@@ -148,7 +154,9 @@ public class EnvironmentHistoryFacade extends AbstractFacade<EnvironmentHistoryF
     LIBRARY("LIBRARY", "(LOWER(e.installed) LIKE CONCAT('%', :library, '%') " +
         "OR LOWER(e.uninstalled) LIKE CONCAT('%', :library, '%') " +
         "OR LOWER(e.upgraded) LIKE CONCAT('%', :library, '%') " +
-        "OR LOWER(e.downgraded) LIKE CONCAT('%', :library, '%'))", "library", " ");
+        "OR LOWER(e.downgraded) LIKE CONCAT('%', :library, '%'))", "library", ""),
+    DATE_TO("DATE_TO", "e.created <= :dateTo ", "dateTo", " "),
+    DATE_FROM("DATE_FROM", "e.created >= :dateFrom ", "dateFrom", " ");
 
     private final String value;
     private final String sql;

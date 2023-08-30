@@ -29,15 +29,17 @@ public class EnvironmentHistoryBeanParam {
 
   private final Set<SortBy> sortBySet;
 
-  @QueryParam("filter")
-  @ApiParam(value = "ex. filter=library:myetl", allowableValues = "filter=library:myetl", allowMultiple = true)
+  @QueryParam("filter_by")
+  @ApiParam(value = "ex. filter_by=library:myetl",
+      allowableValues = "filter_by=library:myetl,date_from:2018-12-25T17:12:10.058,date_to:2018-12-25T17:12:10.058",
+      allowMultiple = true)
   private Set<FilterBy> filter;
 
   @BeanParam
   private EnvironmentHistoryExpansionsBeanParam expansions;
 
   public EnvironmentHistoryBeanParam( @QueryParam("sort_by") String sortBy,
-                              @QueryParam("filter") Set<FilterBy> filter) {
+                              @QueryParam("filter_by") Set<FilterBy> filter) {
     this.sortBy = sortBy;
     this.filter = filter;
     this.sortBySet = getSortBy(sortBy);
