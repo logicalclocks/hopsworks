@@ -92,7 +92,7 @@ public class SearchFSCommandExecutor {
   }
   
   private void schedule() {
-    timer = timerService.createSingleActionTimer(settings.commandProcessTimerPeriod(),
+    timer = timerService.createSingleActionTimer(settings.commandSearchFSProcessTimerPeriod(),
       new TimerConfig("feature store command executor", false));
   }
   
@@ -103,11 +103,11 @@ public class SearchFSCommandExecutor {
       List<SearchFSCommand> resetOngoingCommands = commandFacade.updateByQuery(queryByStatus(CommandStatus.ONGOING),
         c -> c.failWith("Could not run search command due to internal server error. Please try again.")
       );
-      resetOngoingCommands.forEach(c -> commandHistoryFacade.persistAndFlush(getHistoryStep(c)));
+      resetOngoingCommands.forEach(this::saveHistory);
       List<SearchFSCommand> resetCleanCommands = commandFacade.updateByQuery(queryByStatus(CommandStatus.CLEANING),
         c -> c.failWith("Could not clean search command due to internal server error. Please try again.")
       );
-      resetCleanCommands.forEach(c -> commandHistoryFacade.persistAndFlush(getHistoryStep(c)));
+      resetCleanCommands.forEach(this::saveHistory);
       return true;
     } catch(CommandException e) {
       LOGGER.log(Level.SEVERE, "Error resetting commands", e);
@@ -210,7 +210,7 @@ public class SearchFSCommandExecutor {
     Set<Long> processingDocs = processArtifacts(excludeProjects, excludeDocs, maxOngoing - active);
     excludeDocs.addAll(processingDocs);
     for(SearchFSCommand c : failedCommands) {
-      if(commandHistoryFacade.countRetries(c.getId()) < settings.commandRetryPerCleanInterval()) {
+      if(shouldRetry(c)) {
         //reset failed ops if retry allows
         updateCommand(c, CommandStatus.NEW);
       }
@@ -365,19 +365,33 @@ public class SearchFSCommandExecutor {
   private void updateCommand(SearchFSCommand command, CommandStatus status) {
     command.setStatus(status);
     commandFacade.update(command);
-    commandHistoryFacade.persistAndFlush(getHistoryStep(command));
+    saveHistory(command);
   }
   
   private void removeCommand(SearchFSCommand command, CommandStatus status) {
     commandFacade.removeById(command.getId());
     command.setStatus(status);
-    commandHistoryFacade.persistAndFlush(getHistoryStep(command));
+    saveHistory(command);
   }
   
   private void failCommand(SearchFSCommand command, String msg) {
     command.failWith(msg);
     commandFacade.update(command);
-    commandHistoryFacade.persistAndFlush(getHistoryStep(command));
+    saveHistory(command);
+  }
+  
+  private void saveHistory(SearchFSCommand command) {
+    if(settings.commandSearchFSHistoryEnabled()) {
+      commandHistoryFacade.persistAndFlush(getHistoryStep(command));
+    }
+  }
+  
+  private boolean shouldRetry(SearchFSCommand command) {
+    if(settings.commandSearchFSHistoryEnabled()) {
+      return commandHistoryFacade.countRetries(command.getId()) < settings.commandRetryPerCleanInterval();
+    } else {
+      return false;
+    }
   }
   
   private Long getDocId(SearchFSCommand command) {

@@ -956,6 +956,16 @@ public class Settings implements Serializable {
       MAX_LONG_RUNNING_HTTP_REQUESTS =
         setIntVar(VARIABLE_MAX_LONG_RUNNING_HTTP_REQUESTS, MAX_LONG_RUNNING_HTTP_REQUESTS);
 
+      COMMAND_SEARCH_FS_HISTORY_ENABLE = setBoolVar(VARIABLE_COMMAND_SEARCH_FS_HISTORY_ENABLE,
+        COMMAND_SEARCH_FS_HISTORY_ENABLE);
+      COMMAND_SEARCH_FS_PROCESS_TIMER_PERIOD = setLongVar(VARIABLE_COMMAND_SEARCH_FS_PROCESS_TIMER_PERIOD,
+        COMMAND_SEARCH_FS_PROCESS_TIMER_PERIOD);
+      COMMAND_SEARCH_FS_HISTORY_WINDOW = setLongVar(VARIABLE_COMMAND_SEARCH_FS_HISTORY_WINDOW,
+        COMMAND_SEARCH_FS_HISTORY_WINDOW);
+      COMMAND_SEARCH_FS_HISTORY_CLEAN_PERIOD = setLongVar(VARIABLE_COMMAND_SEARCH_FS_HISTORY_CLEAN_PERIOD,
+        COMMAND_SEARCH_FS_HISTORY_CLEAN_PERIOD);
+      COMMAND_SEARCH_FS_RETRY_PER_CLEAN_INTERVAL = setIntVar(VARIABLE_COMMAND_SEARCH_FS_RETRY_PER_CLEAN_INTERVAL,
+        COMMAND_SEARCH_FS_RETRY_PER_CLEAN_INTERVAL);
       cached = true;
     }
   }
@@ -3824,29 +3834,46 @@ public class Settings implements Serializable {
   }
   
   //1s
-  private Long COMMAND_PROCESS_TIMER_PERIOD = 1000l;
-  public Long commandProcessTimerPeriod() {
+  private Long COMMAND_SEARCH_FS_PROCESS_TIMER_PERIOD = 1000l;
+  private final static String VARIABLE_COMMAND_SEARCH_FS_PROCESS_TIMER_PERIOD =
+    "command_search_fs_process_timer_period_as_ms";
+  public Long commandSearchFSProcessTimerPeriod() {
     checkCache();
-    return COMMAND_PROCESS_TIMER_PERIOD;
+    return COMMAND_SEARCH_FS_PROCESS_TIMER_PERIOD;
   }
   
-  //1h
-  private Long COMMAND_HISTORY_CLEAN_TIMER_PERIOD = 1000l*60*60;
-  public Long commandHistoryCleanTimerPeriod() {
+  //enable command search fs history
+  private boolean COMMAND_SEARCH_FS_HISTORY_ENABLE = false;
+  private final static String VARIABLE_COMMAND_SEARCH_FS_HISTORY_ENABLE =
+    "command_search_fs_history_enable";
+  public boolean commandSearchFSHistoryEnabled() {
     checkCache();
-    return COMMAND_HISTORY_CLEAN_TIMER_PERIOD;
+    return COMMAND_SEARCH_FS_HISTORY_ENABLE;
   }
   
-  //1h
-  private Long COMMAND_HISTORY_PERIOD = 1000l*60*60;
-  public Long commandHistoryPeriod() {
+  //1h as ms
+  private final static String VARIABLE_COMMAND_SEARCH_FS_HISTORY_CLEAN_PERIOD =
+    "command_search_fs_history_clean_period_as_ms";
+  private Long COMMAND_SEARCH_FS_HISTORY_CLEAN_PERIOD = 1000l*60;
+  public Long commandSearchFSHistoryCleanPeriod() {
     checkCache();
-    return COMMAND_HISTORY_PERIOD;
+    return COMMAND_SEARCH_FS_HISTORY_CLEAN_PERIOD;
   }
   
-  private int COMMAND_RETRY_PER_CLEAN_INTERVAL = 5;
+  //1h as s
+  private final static String VARIABLE_COMMAND_SEARCH_FS_HISTORY_WINDOW
+    = "command_search_fs_history_window_as_s";
+  private Long COMMAND_SEARCH_FS_HISTORY_WINDOW = 60*60L;
+  public Long commandSearchFSHistoryWindow() {
+    checkCache();
+    return COMMAND_SEARCH_FS_HISTORY_WINDOW;
+  }
+  
+  private final static String VARIABLE_COMMAND_SEARCH_FS_RETRY_PER_CLEAN_INTERVAL =
+    "command_search_fs_retry_per_clean_interval";
+  private int COMMAND_SEARCH_FS_RETRY_PER_CLEAN_INTERVAL = 5;
   public Integer commandRetryPerCleanInterval() {
     checkCache();
-    return COMMAND_RETRY_PER_CLEAN_INTERVAL;
+    return COMMAND_SEARCH_FS_RETRY_PER_CLEAN_INTERVAL;
   }
 }

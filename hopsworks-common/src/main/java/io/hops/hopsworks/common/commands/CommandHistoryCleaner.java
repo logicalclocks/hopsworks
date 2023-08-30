@@ -56,7 +56,7 @@ public class CommandHistoryCleaner {
   
   private void schedule() {
     LOGGER.log(Level.INFO, "schedule");
-    timerService.createSingleActionTimer(settings.commandHistoryCleanTimerPeriod(),
+    timerService.createSingleActionTimer(settings.commandSearchFSHistoryCleanPeriod(),
       new TimerConfig("command history cleaner", false));
   }
   
@@ -71,11 +71,13 @@ public class CommandHistoryCleaner {
     schedule();
   }
   
-  private void cleanInt() {
+  private void cleanInt() throws CommandException {
     if (!payaraClusterManager.amIThePrimary()) {
       LOGGER.log(Level.INFO, "not primary");
       return;
     }
-    commandHistoryFacade.deleteOlderThan(settings.commandHistoryPeriod());
+    if(settings.commandSearchFSHistoryEnabled()) {
+      commandHistoryFacade.deleteOlderThan(settings.commandSearchFSHistoryWindow());
+    }
   }
 }
