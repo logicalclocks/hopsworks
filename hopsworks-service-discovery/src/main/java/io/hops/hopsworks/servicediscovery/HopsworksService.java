@@ -59,6 +59,7 @@ public class HopsworksService<T extends ServiceTags> {
       PrometheusTags.values());
   public static final HopsworksService<NoTags> NODE_EXPORTER = HopsworksService.of("node_exporter");
   public static final HopsworksService<NoTags> GRAFANA = HopsworksService.of("grafana");
+  public static final HopsworksService<NoTags> KIBANA = HopsworksService.of("kibana");
   public static final HopsworksService<AirflowTags> AIRFLOW = HopsworksService.of("airflow",
       AirflowTags.values());
   public static final HopsworksService<FlinkTags> FLINK = HopsworksService.of("flink", FlinkTags.values());
