@@ -20,6 +20,7 @@ import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordResource;
 import io.hops.hopsworks.api.featurestore.activities.ActivityResource;
 import io.hops.hopsworks.api.featurestore.preparestatement.PreparedStatementResource;
 import io.hops.hopsworks.api.featurestore.query.QueryResource;
+import io.hops.hopsworks.api.featurestore.tag.FeatureViewTagResource;
 import io.hops.hopsworks.api.featurestore.trainingdataset.TrainingDatasetResource;
 import io.hops.hopsworks.api.featurestore.transformation.TransformationResource;
 import io.hops.hopsworks.api.provenance.FeatureViewProvenanceResource;

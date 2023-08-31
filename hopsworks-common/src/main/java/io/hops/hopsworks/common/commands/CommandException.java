@@ -37,4 +37,9 @@ public class CommandException extends RESTException {
                              Throwable throwable) {
     super(code, level, usrMsg, devMsg, throwable);
   }
+  
+  public static CommandException unhandledArtifactType() {
+    return new CommandException(RESTCodes.CommandErrorCode.NOT_IMPLEMENTED, Level.WARNING,
+      "unhandled artifact type");
+  }
 }

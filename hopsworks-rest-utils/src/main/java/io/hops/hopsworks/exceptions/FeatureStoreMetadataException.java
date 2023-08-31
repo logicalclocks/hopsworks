@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2020, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2023, Hopsworks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -20,27 +20,27 @@ import io.hops.hopsworks.restutils.RESTException;
 
 import java.util.logging.Level;
 
-public class SchematizedTagException extends RESTException {
-  public SchematizedTagException(RESTCodes.SchematizedTagErrorCode errorCode, Level level) {
+public class FeatureStoreMetadataException extends RESTException {
+  public FeatureStoreMetadataException(RESTCodes.SchematizedTagErrorCode errorCode, Level level) {
     super(errorCode, level);
   }
   
-  public SchematizedTagException(RESTCodes.SchematizedTagErrorCode errorCode, Level level, String usrMsg) {
+  public FeatureStoreMetadataException(RESTCodes.SchematizedTagErrorCode errorCode, Level level, String usrMsg) {
     super(errorCode, level, usrMsg);
   }
   
-  public SchematizedTagException(RESTCodes.SchematizedTagErrorCode errorCode, Level level, String usrMsg,
-                                 String devMsg) {
+  public FeatureStoreMetadataException(RESTCodes.SchematizedTagErrorCode errorCode, Level level, String usrMsg,
+                                       String devMsg) {
     super(errorCode, level, usrMsg, devMsg);
   }
   
-  public SchematizedTagException(RESTCodes.SchematizedTagErrorCode errorCode, Level level, String usrMsg,
-                                 String devMsg, Throwable throwable) {
+  public FeatureStoreMetadataException(RESTCodes.SchematizedTagErrorCode errorCode, Level level, String usrMsg,
+                                       String devMsg, Throwable throwable) {
     super(errorCode, level, usrMsg, devMsg, throwable);
   }
   
-  public static SchematizedTagException tagsNotSupported(String type) {
-    return new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.TAG_NOT_ALLOWED,
-      Level.FINE, "Tags are only supported for " + type);
+  public static FeatureStoreMetadataException schemaNotDefined(String name, Level lvl) {
+    return new FeatureStoreMetadataException(RESTCodes.SchematizedTagErrorCode.TAG_SCHEMA_NOT_FOUND,
+      lvl, "schema: " + name + " is not defined");
   }
 }

@@ -1,10 +1,10 @@
 /*
  * Copyright (C) 2020, Logical Clocks AB. All rights reserved
  */
-package io.hops.hopsworks.common.dao.featurestore.tag;
+package io.hops.hopsworks.common.dao.featurestore.metadata;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.persistence.entity.featurestore.tag.TagSchemas;
+import io.hops.hopsworks.persistence.entity.featurestore.metadata.TagSchemas;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;

@@ -26,12 +26,12 @@ import io.hops.hopsworks.api.tags.TagBuilder;
 import io.hops.hopsworks.api.tags.TagsExpansionBeanParam;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
-import io.hops.hopsworks.common.tags.AttachTagResult;
+import io.hops.hopsworks.common.featurestore.metadata.AttachMetadataResult;
 import io.hops.hopsworks.common.tags.TagControllerIface;
 import io.hops.hopsworks.common.tags.TagsDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.MetadataException;
-import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -114,10 +114,10 @@ public abstract class ModelRegistryTagResource {
                          @Context UriInfo uriInfo,
                          @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name,
                          @ApiParam(value = "Value to set for the tag") String value)
-    throws MetadataException, SchematizedTagException, DatasetException {
+    throws MetadataException, FeatureStoreMetadataException, DatasetException {
     
     Users user = jwtHelper.getUserPrincipal(sc);
-    AttachTagResult result = tagController.upsert(user, getDatasetPath(), name, value);
+    AttachMetadataResult result = tagController.upsert(user, getDatasetPath(), name, value);
     ModelRegistryTagUri tagUri = new ModelRegistryTagUri(uriInfo, modelRegistry, getItemType(), getItemId());
     TagsDTO dto = tagBuilder.build(tagUri, getDatasetPath(), result.getItems());
     
@@ -142,10 +142,10 @@ public abstract class ModelRegistryTagResource {
   public Response bulkPutTags(@Context SecurityContext sc, @Context UriInfo uriInfo,
                               @Context HttpServletRequest req,
                               TagsDTO tags)
-    throws MetadataException, SchematizedTagException, DatasetException {
+    throws MetadataException, FeatureStoreMetadataException, DatasetException {
     
     Users user = jwtHelper.getUserPrincipal(sc);
-    AttachTagResult result;
+    AttachMetadataResult result;
     
     if(tags.getItems().size() == 0) {
       result = tagController.upsert(user, getDatasetPath(), tags.getName(), tags.getValue());
@@ -179,7 +179,7 @@ public abstract class ModelRegistryTagResource {
   public Response getTags(@Context SecurityContext sc, @Context UriInfo uriInfo,
                           @Context HttpServletRequest req,
                           @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
-    throws DatasetException, MetadataException, SchematizedTagException {
+    throws DatasetException, MetadataException, FeatureStoreMetadataException {
     
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
@@ -203,7 +203,7 @@ public abstract class ModelRegistryTagResource {
                          @Context HttpServletRequest req,
                          @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name,
                          @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
-    throws DatasetException, MetadataException, SchematizedTagException {
+    throws DatasetException, MetadataException, FeatureStoreMetadataException {
     
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);

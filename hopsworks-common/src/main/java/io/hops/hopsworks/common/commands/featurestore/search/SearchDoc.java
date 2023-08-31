@@ -107,6 +107,9 @@ public class SearchDoc {
     @JsonProperty("tags")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<Tag> tags;
+    @JsonProperty("keywords")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<String> keywords;
   
     public Object getFeaturestore() {
       return featurestore;
@@ -122,6 +125,14 @@ public class SearchDoc {
   
     public void setTags(List<Tag> tags) {
       this.tags = tags;
+    }
+  
+    public List<String> getKeywords() {
+      return keywords;
+    }
+  
+    public void setKeywords(List<String> keywords) {
+      this.keywords = keywords;
     }
   }
   

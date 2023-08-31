@@ -26,6 +26,7 @@ import io.hops.hopsworks.api.featurestore.datavalidationv2.reports.ValidationRep
 import io.hops.hopsworks.api.featurestore.datavalidationv2.results.ValidationResultResource;
 import io.hops.hopsworks.api.featurestore.datavalidationv2.suites.ExpectationSuiteResource;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
+import io.hops.hopsworks.api.featurestore.tag.FeatureGroupTagResource;
 import io.hops.hopsworks.api.jobs.JobDTO;
 import io.hops.hopsworks.api.jobs.JobsBuilder;
 import io.hops.hopsworks.api.provenance.FeatureGroupProvenanceResource;

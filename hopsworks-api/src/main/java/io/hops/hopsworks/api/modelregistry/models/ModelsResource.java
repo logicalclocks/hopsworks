@@ -37,7 +37,7 @@ import io.hops.hopsworks.exceptions.ModelRegistryException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.PythonException;
-import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -125,7 +125,7 @@ public class ModelsResource {
     @BeanParam ModelsBeanParam modelsBeanParam,
     @Context UriInfo uriInfo,
     @Context SecurityContext sc)
-          throws ModelRegistryException, GenericException, SchematizedTagException, MetadataException {
+          throws ModelRegistryException, GenericException, FeatureStoreMetadataException, MetadataException {
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELS);
     resourceRequest.setOffset(pagination.getOffset());
@@ -153,7 +153,7 @@ public class ModelsResource {
     @Context UriInfo uriInfo,
     @Context SecurityContext sc)
           throws ProvenanceException, ModelRegistryException, DatasetException, GenericException,
-          SchematizedTagException, MetadataException {
+                 FeatureStoreMetadataException, MetadataException {
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELS);
     resourceRequest.setExpansions(modelsBeanParam.getExpansions().getResources());

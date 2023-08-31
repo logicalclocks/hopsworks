@@ -18,7 +18,7 @@ package io.hops.hopsworks.common.tags;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hops.hopsworks.common.integrations.CommunityStereotype;
-import io.hops.hopsworks.persistence.entity.featurestore.tag.TagSchemas;
+import io.hops.hopsworks.persistence.entity.featurestore.metadata.TagSchemas;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
