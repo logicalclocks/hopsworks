@@ -20,11 +20,7 @@ import io.hops.hopsworks.common.dao.kafka.HopsKafkaAdminClient;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
-import io.hops.hopsworks.common.featurestore.storageconnectors.kafka.FeatureStoreKafkaConnectorDTO;
-import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.KafkaException;
-import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
-import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.kafka.SecurityProtocol;
 import io.hops.hopsworks.persistence.entity.kafka.ProjectTopics;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import org.junit.Before;
@@ -35,8 +31,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 public class TestKafkaController {
 
@@ -91,13 +85,13 @@ public class TestKafkaController {
     kafkaController.removeKafkaTopics(Mockito.mock(Project.class));
 
     // Assert
-    Mockito.verify(kafkaController.hopsKafkaAdminClient, Mockito.times(1)).deleteTopics(Mockito.any());
+    Mockito.verify(kafkaController.hopsKafkaAdminClient, Mockito.times(0)).deleteTopics(Mockito.any());
   }
 
   @Test
   public void testRemoveKafkaTopicsExternalKafka() {
     // Arrange
-    Mockito.doReturn(true).when(kafkaController).externalKafka(Mockito.any());
+    Mockito.doReturn(new ArrayList<>()).when(kafkaController.projectTopicsFacade).findTopicsByProject(Mockito.any());
 
     // Act
     kafkaController.removeKafkaTopics(Mockito.mock(Project.class));
@@ -120,10 +114,9 @@ public class TestKafkaController {
     Mockito.verify(kafkaController.hopsKafkaAdminClient, Mockito.times(1)).deleteTopics(Mockito.any());
   }
 
-  @Test(expected = KafkaException.class)
+  @Test
   public void testRemoveTopicFromProjectInternalKafkaNoTopic() throws KafkaException {
     // Arrange
-    Mockito.doReturn(false).when(kafkaController).externalKafka(Mockito.any());
     Mockito.doReturn(Optional.empty()).when(kafkaController.projectTopicsFacade)
         .findTopicByNameAndProject(Mockito.any(), Mockito.any());
 
@@ -131,7 +124,7 @@ public class TestKafkaController {
     kafkaController.removeTopicFromProject(Mockito.mock(Project.class), "");
 
     // Assert
-    Mockito.verify(kafkaController.hopsKafkaAdminClient, Mockito.times(1)).deleteTopics(Mockito.any());
+    Mockito.verify(kafkaController.hopsKafkaAdminClient, Mockito.times(0)).deleteTopics(Mockito.any());
   }
 
   @Test
@@ -156,6 +149,7 @@ public class TestKafkaController {
 
     // Assert
     Mockito.verify(kafkaController.hopsKafkaAdminClient, Mockito.times(1)).listTopics();
+    Mockito.verify(kafkaController.projectTopicsFacade, Mockito.times(1)).save(Mockito.any());
   }
 
   @Test
@@ -168,5 +162,6 @@ public class TestKafkaController {
 
     // Assert
     Mockito.verify(kafkaController.hopsKafkaAdminClient, Mockito.times(0)).listTopics();
+    Mockito.verify(kafkaController.projectTopicsFacade, Mockito.times(0)).save(Mockito.any());
   }
 }

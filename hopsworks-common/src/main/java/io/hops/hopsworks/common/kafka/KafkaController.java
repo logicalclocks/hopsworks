@@ -135,29 +135,34 @@ public class KafkaController {
     }
   }
 
-  public void removeTopicFromProject(Project project, String topicName) throws KafkaException {
-    if (externalKafka(project)) {
-      return;
+  public void removeTopicFromProject(Project project, String topicName) {
+    /**
+     * Here we don't check if we have an external kafka setup. Reason being that, if we had an external
+     * kafka setup, we would not have the topics in the database. If we have topics in the database
+     * then it means that we have an internal Kafka setup
+     */
+    Optional<ProjectTopics> optionalPt = projectTopicsFacade.findTopicByNameAndProject(project, topicName);
+
+    if (optionalPt.isPresent()) {
+      ProjectTopics pt = optionalPt.get();
+      //remove from database
+      projectTopicsFacade.remove(pt);
+
+      deleteTopic(Collections.singletonList(pt));
     }
-
-    ProjectTopics pt = projectTopicsFacade.findTopicByNameAndProject(project, topicName)
-      .orElseThrow(() ->
-        new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "topic: " + topicName));
-    
-    //remove from database
-    projectTopicsFacade.remove(pt);
-
-    deleteTopic(Collections.singletonList(pt));
   }
 
   public void removeKafkaTopics(Project project) {
-    if (externalKafka(project)) {
-      return;
-    }
-
+    /**
+     * Here we don't check if we have an external kafka setup. Reason being that, if we had an external
+     * kafka setup, we would not have the topics in the database. If we have topics in the database
+     * then it means that we have an internal Kafka setup
+     */
     List<ProjectTopics> topics = projectTopicsFacade.findTopicsByProject(project);
 
-    deleteTopic(topics);
+    if (!topics.isEmpty()) {
+      deleteTopic(topics);
+    }
   }
 
   private void deleteTopic(List<ProjectTopics> topics) {
