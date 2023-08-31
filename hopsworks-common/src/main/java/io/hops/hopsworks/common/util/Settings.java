@@ -134,7 +134,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_PYTHON_LIBRARY_UPDATES_MONITOR_INTERVAL =
     "python_library_updates_monitor_interval";
   private static final String VARIABLE_HADOOP_VERSION = "hadoop_version";
-  private static final String VARIABLE_KIBANA_IP = "kibana_ip";
   private static final String VARIABLE_LOCALHOST = "localhost";
   private static final String VARIABLE_REQUESTS_VERIFY = "requests_verify";
   private static final String VARIABLE_CLOUD= "cloud";
@@ -688,7 +687,6 @@ public class Settings implements Serializable {
           openSearchJWTUrlParameter, openSearchJWTEXPMS, openSearchServiceLogUser);
       OpenSearch_LOGS_INDEX_EXPIRATION = setLongVar(VARIABLE_OPENSEARCH_LOGS_INDEX_EXPIRATION,
         OpenSearch_LOGS_INDEX_EXPIRATION);
-      KIBANA_IP = setIpVar(VARIABLE_KIBANA_IP, KIBANA_IP);
       KAFKA_MAX_NUM_TOPICS = setIntVar(VARIABLE_KAFKA_MAX_NUM_TOPICS, KAFKA_MAX_NUM_TOPICS);
       HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD = setVar(VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD,
           HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD);
@@ -1663,16 +1661,7 @@ public class Settings implements Serializable {
 
   // Kibana
   public static final String KIBANA_INDEX_PREFIX = ".kibana";
-  
-  private String KIBANA_IP = "10.0.2.15";
-  private static final int KIBANA_PORT = 5601;
 
-  public synchronized String getKibanaUri() {
-    checkCache();
-    return (KIBANA_HTTPS_ENABELED ? "https" : "http") + "://" + KIBANA_IP +
-        ":" + KIBANA_PORT;
-  }
-  
   public String getKibanaAppUri() {
     return "/hopsworks-api/kibana/app/discover?";
   }

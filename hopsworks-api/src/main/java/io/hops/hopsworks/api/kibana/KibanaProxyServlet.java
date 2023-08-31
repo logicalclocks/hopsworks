@@ -39,8 +39,10 @@
 package io.hops.hopsworks.api.kibana;
 
 import io.hops.hopsworks.api.proxy.ProxyServlet;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.CircularRedirectException;
 import org.apache.http.client.ClientProtocolException;
@@ -74,20 +76,22 @@ public class KibanaProxyServlet extends ProxyServlet {
   @EJB
   private Settings settings;
   @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
+  @EJB
   private BaseHadoopClientsService clientsService;
   
   private static final Logger LOG = Logger.getLogger(KibanaProxyServlet.class.getName());
 
   @Override
   protected void initTarget() throws ServletException {
-    targetUri = settings.getKibanaUri();
-    
     //test it's valid
     try {
+      targetUri = (settings.isKibanaHTTPSEnabled() ? "https://" : "http://") +
+          serviceDiscoveryController.constructServiceFQDNWithPort(HopsworksService.KIBANA.getName());
+
       targetUriObj = new URI(targetUri);
     } catch (Exception e) {
-      throw new ServletException("Trying to process targetUri init parameter: "
-          + e, e);
+      throw new ServletException("Trying to process targetUri init parameter: " + e, e);
     }
     targetHost = URIUtils.extractHost(targetUriObj);
   }

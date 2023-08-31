@@ -15,6 +15,8 @@
  */
 package io.hops.hopsworks.common.opensearch;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import com.google.common.base.Strings;
@@ -25,6 +27,7 @@ import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
 import org.apache.hadoop.util.ExponentialBackOff;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.ClientProtocolException;
@@ -75,6 +78,8 @@ public class KibanaClient {
   private BaseHadoopClientsService clientsService;
   @EJB
   private OpenSearchJWTController openSearchJWTController;
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
   
   private PoolingHttpClientConnectionManager connectionManager;
   private CloseableHttpClient client;
@@ -227,8 +232,17 @@ public class KibanaClient {
   private JSONObject execute(HttpMethod method, KibanaType type, String id,
       String data, Users user, Project project,
       boolean overwrite, boolean runAsDataOwner) throws OpenSearchException {
-    
-    String url = settings.getKibanaUri() + "/api/saved_objects";
+
+    String url = null;
+    try {
+      url = (settings.isKibanaHTTPSEnabled() ? "https://" : "http://") +
+          serviceDiscoveryController.constructServiceFQDNWithPort(HopsworksService.KIBANA.getName()) +
+          "/api/saved_objects";
+    } catch (ServiceDiscoveryException e) {
+      throw new OpenSearchException(RESTCodes.OpenSearchErrorCode.KIBANA_REQ_ERROR,
+          Level.SEVERE, "Failed to execute a Kibana request. Reason: " + e.getMessage(), e.getMessage(), e);
+    }
+
     if (type != KibanaType.All) {
       url += "/" + type.toString();
     }
