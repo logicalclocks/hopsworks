@@ -28,7 +28,7 @@ import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
-import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -86,7 +86,7 @@ public class ProvArtifactResource {
                          @Context UriInfo uriInfo,
                          @Context HttpServletRequest req,
                          @Context SecurityContext sc)
-      throws ProvenanceException, GenericException, DatasetException, MetadataException, SchematizedTagException {
+      throws ProvenanceException, GenericException, DatasetException, MetadataException, FeatureStoreMetadataException {
     Users user = jWTHelper.getUserPrincipal(sc);
     ProvArtifactUsageParentDTO status = usageBuilder.buildAccessible(uriInfo, user, targetEndpoint, artifactId,
       params.getUsageType());

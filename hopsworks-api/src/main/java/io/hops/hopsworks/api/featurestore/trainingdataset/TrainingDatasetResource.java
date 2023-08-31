@@ -16,6 +16,7 @@
 package io.hops.hopsworks.api.featurestore.trainingdataset;
 
 import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordResource;
+import io.hops.hopsworks.api.featurestore.tag.TrainingDatasetTagResource;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
@@ -40,7 +41,7 @@ import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
-import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
@@ -152,8 +153,8 @@ public class TrainingDatasetResource {
           HttpServletRequest req,
       @BeanParam
           TrainingDatasetExpansionBeanParam param
-  ) throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException,
-      IOException, CloudException {
+  ) throws FeaturestoreException, ServiceException, MetadataException, DatasetException, FeatureStoreMetadataException,
+           IOException, CloudException {
     Users user = jWTHelper.getUserPrincipal(sc);
     List<TrainingDataset> trainingDatasets =
         trainingDatasetController.getTrainingDatasetByFeatureView(featureView);
@@ -184,8 +185,8 @@ public class TrainingDatasetResource {
       @ApiParam(value = "training dataset version")
       @PathParam("version")
           Integer version
-  ) throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException,
-      IOException, CloudException {
+  ) throws FeaturestoreException, ServiceException, MetadataException, DatasetException, FeatureStoreMetadataException,
+           IOException, CloudException {
     Users user = jWTHelper.getUserPrincipal(sc);
     TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(featureView,
         version);

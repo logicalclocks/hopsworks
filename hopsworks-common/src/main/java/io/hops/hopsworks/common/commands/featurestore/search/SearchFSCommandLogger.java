@@ -88,6 +88,21 @@ public class SearchFSCommandLogger {
     commandFacade.persistAndFlush(command);
   }
   
+  public void updateKeywords(Featuregroup featureGroup) throws FeaturestoreException {
+    SearchFSCommand command = getCommand(featureGroup, SearchFSCommandOp.UPDATE_KEYWORDS);
+    commandFacade.persistAndFlush(command);
+  }
+  
+  public void updateKeywords(FeatureView featureView) throws FeaturestoreException {
+    SearchFSCommand command = getCommand(featureView, SearchFSCommandOp.UPDATE_KEYWORDS);
+    commandFacade.persistAndFlush(command);
+  }
+  
+  public void updateKeywords(TrainingDataset trainingDataset) throws FeaturestoreException {
+    SearchFSCommand command = getCommand(trainingDataset, SearchFSCommandOp.UPDATE_KEYWORDS);
+    commandFacade.persistAndFlush(command);
+  }
+  
   public void updateTags(Featuregroup featureGroup) throws FeaturestoreException {
     SearchFSCommand command = getCommand(featureGroup, SearchFSCommandOp.UPDATE_TAGS);
     commandFacade.persistAndFlush(command);

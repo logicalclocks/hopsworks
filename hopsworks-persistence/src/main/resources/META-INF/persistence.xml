@@ -52,7 +52,7 @@
     <class>io.hops.hopsworks.persistence.entity.dataset.DatasetRequest</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.Featurestore</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivity</class>
-    <class>io.hops.hopsworks.persistence.entity.featurestore.tag.TagSchemas</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.metadata.TagSchemas</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeature</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandOption</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector</class>
@@ -183,6 +183,8 @@
     <class>io.hops.hopsworks.persistence.entity.pki.PKICrl</class>
     <class>io.hops.hopsworks.persistence.entity.commands.search.SearchFSCommand</class>
     <class>io.hops.hopsworks.persistence.entity.commands.search.SearchFSCommandHistory</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.metadata.FeatureStoreTag</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.metadata.FeatureStoreKeyword</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

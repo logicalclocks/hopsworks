@@ -443,6 +443,10 @@ public class SearchFSCommandExecutor {
             searchController.updateTags(c.getInodeId(), c);
             return Try.apply(() -> true);
           }
+          case UPDATE_KEYWORDS: {
+            searchController.updateKeywords(c.getInodeId(), c);
+            return Try.apply(() -> true);
+          }
           case UPDATE_FEATURESTORE: {
             searchController.setFeaturestore(c.getInodeId(), c);
             return Try.apply(() -> true);

@@ -16,7 +16,7 @@
 package io.hops.hopsworks.api.tags;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.featurestore.tag.TagSchemasFacade;
+import io.hops.hopsworks.common.dao.featurestore.metadata.TagSchemasFacade;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;

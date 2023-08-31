@@ -22,7 +22,7 @@ import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.tags.SchemaDTO;
 import io.hops.hopsworks.common.tags.TagSchemasControllerIface;
-import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
@@ -74,7 +74,7 @@ public class TagSchemasResource {
   public Response getAll(@Context SecurityContext sc, @Context UriInfo uriInfo,
                          @Context HttpServletRequest req,
                          @BeanParam Pagination pagination,
-                         @BeanParam TagsBeanParam tagsBeanParam) throws SchematizedTagException {
+                         @BeanParam TagsBeanParam tagsBeanParam) throws FeatureStoreMetadataException {
     
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAG_SCHEMAS);
     resourceRequest.setOffset(pagination.getOffset());
@@ -95,7 +95,7 @@ public class TagSchemasResource {
   public Response get(@Context SecurityContext sc, @Context UriInfo uriInfo,
                       @Context HttpServletRequest req,
                       @PathParam("name") String schemaName)
-    throws SchematizedTagException {
+    throws FeatureStoreMetadataException {
     
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAG_SCHEMAS);
     SchemaDTO dto = tagSchemasBuilder.build(uriInfo, resourceRequest, schemaName);
@@ -110,7 +110,7 @@ public class TagSchemasResource {
                        @Context HttpServletRequest req,
                        @QueryParam("name") String schemaName,
                        String schema)
-    throws SchematizedTagException {
+    throws FeatureStoreMetadataException {
     
     tagSchemasController.create(schemaName, schema);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAG_SCHEMAS);

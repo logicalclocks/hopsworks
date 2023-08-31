@@ -16,16 +16,17 @@
 package io.hops.hopsworks.common.tags;
 
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
+import io.hops.hopsworks.common.featurestore.metadata.AttachMetadataResult;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.MetadataException;
-import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import java.util.Map;
 
 public interface TagControllerIface {
   String get(Users user, DatasetPath path, String name)
-    throws DatasetException, MetadataException, SchematizedTagException;
+    throws DatasetException, MetadataException, FeatureStoreMetadataException;
   
   Map<String, String> getAll(Users user, DatasetPath path)
     throws DatasetException, MetadataException;
@@ -36,11 +37,11 @@ public interface TagControllerIface {
   Map<String, String> getAllAsSuperUser(DatasetPath path)
     throws DatasetException, MetadataException;
   
-  AttachTagResult upsert(Users user, DatasetPath path, String name, String value)
-    throws MetadataException, SchematizedTagException;
+  AttachMetadataResult<String> upsert(Users user, DatasetPath path, String name, String value)
+    throws MetadataException, FeatureStoreMetadataException;
   
-  AttachTagResult upsertAll(Users user, DatasetPath path, Map<String, String> newTags)
-    throws MetadataException, SchematizedTagException;
+  AttachMetadataResult<String> upsertAll(Users user, DatasetPath path, Map<String, String> newTags)
+    throws MetadataException, FeatureStoreMetadataException;
   
   void delete(Users user, DatasetPath path, String name)
     throws DatasetException, MetadataException;

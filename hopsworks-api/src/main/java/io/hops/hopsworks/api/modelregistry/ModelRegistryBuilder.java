@@ -22,7 +22,7 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ModelRegistryException;
-import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -69,7 +69,7 @@ public class ModelRegistryBuilder {
 
   //Build collection
   public ModelRegistryDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Users user, Project project)
-          throws GenericException, ModelRegistryException, SchematizedTagException, MetadataException {
+          throws GenericException, ModelRegistryException, FeatureStoreMetadataException, MetadataException {
     ModelRegistryDTO dto = new ModelRegistryDTO();
     uri(dto, uriInfo, project);
     expand(dto, resourceRequest);
@@ -98,7 +98,7 @@ public class ModelRegistryBuilder {
   //Build specific
   public ModelRegistryDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Users user, Project userProject,
                                 Project modelRegistryProject) throws GenericException, ModelRegistryException,
-          SchematizedTagException, MetadataException {
+                                                                     FeatureStoreMetadataException, MetadataException {
     ModelRegistryDTO dto = new ModelRegistryDTO();
     uri(dto, uriInfo, userProject, modelRegistryProject);
     expand(dto, resourceRequest);

@@ -25,9 +25,8 @@ import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
-import io.hops.hopsworks.common.featurestore.keyword.KeywordControllerIface;
 import io.hops.hopsworks.common.featurestore.keyword.KeywordDTO;
-import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
+import io.hops.hopsworks.common.featurestore.metadata.FeatureStoreKeywordControllerIface;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -59,7 +58,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -72,15 +71,13 @@ public class FeaturestoreKeywordResource {
   @EJB
   private FeaturegroupController featuregroupController;
   @EJB
-  private TrainingDatasetController trainingDatasetController;
-  @EJB
   private FeatureViewController featureViewController;
   @EJB
   private JWTHelper jwtHelper;
-  @Inject
-  private KeywordControllerIface keywordControllerIface;
   @EJB
   private FeaturestoreKeywordBuilder featurestoreKeywordBuilder;
+  @Inject
+  private FeatureStoreKeywordControllerIface keywordCtrl;
 
   private Project project;
   private Featurestore featurestore;
@@ -124,17 +121,18 @@ public class FeaturestoreKeywordResource {
   public Response getKeywords(@Context SecurityContext sc,
                               @Context HttpServletRequest req,
                               @Context UriInfo uriInfo)
-      throws FeaturestoreException, MetadataException {
-    Users user = jwtHelper.getUserPrincipal(sc);
+      throws FeaturestoreException {
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
-    List<String> keywords = keywordControllerIface.getAll(project, user, featuregroup, trainingDataset, featureView);
     KeywordDTO dto;
     if (featuregroup != null) {
+      List<String> keywords = keywordCtrl.getKeywords(featuregroup);
       dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project, featuregroup, keywords);
     } else if (trainingDataset != null) {
+      List<String> keywords = keywordCtrl.getKeywords(trainingDataset);
       dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project, trainingDataset, keywords);
     } else if (featureView != null) {
+      List<String> keywords = keywordCtrl.getKeywords(featureView);
       dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project, featureView, keywords);
     } else {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.KEYWORD_ERROR, Level.FINE,
@@ -155,18 +153,20 @@ public class FeaturestoreKeywordResource {
   public Response replaceKeywords(@Context SecurityContext sc,
                                   @Context HttpServletRequest req,
                                   @Context UriInfo uriInfo, KeywordDTO keywordDTO)
-      throws FeaturestoreException, MetadataException {
-    Users user = jwtHelper.getUserPrincipal(sc);
-
+      throws FeaturestoreException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
-    List<String> updatedKeywords = keywordControllerIface.replaceKeywords(project, user, featuregroup, trainingDataset,
-        featureView, keywordDTO.getKeywords());
     KeywordDTO dto;
     if (featuregroup != null) {
+      List<String> updatedKeywords = keywordCtrl.replaceKeywords(featuregroup,
+        new HashSet<>(keywordDTO.getKeywords()));
       dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project, featuregroup, updatedKeywords);
     } else if (trainingDataset != null) {
+      List<String> updatedKeywords = keywordCtrl.replaceKeywords(trainingDataset,
+        new HashSet<>(keywordDTO.getKeywords()));
       dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project, trainingDataset, updatedKeywords);
     } else if (featureView != null) {
+      List<String> updatedKeywords = keywordCtrl.replaceKeywords(featureView,
+        new HashSet<>(keywordDTO.getKeywords()));
       dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project, featureView, updatedKeywords);
     } else {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.KEYWORD_ERROR, Level.FINE,
@@ -190,14 +190,18 @@ public class FeaturestoreKeywordResource {
     Users user = jwtHelper.getUserPrincipal(sc);
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
-    List<String> updatedKeywords = keywordControllerIface.deleteKeywords(project, user, featuregroup, trainingDataset,
-        featureView, Arrays.asList(keyword));
     KeywordDTO dto;
     if (featuregroup != null) {
+      keywordCtrl.deleteKeyword(featuregroup, keyword);
+      List<String> updatedKeywords = keywordCtrl.getKeywords(featuregroup);
       dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project, featuregroup, updatedKeywords);
     } else if (trainingDataset != null) {
+      keywordCtrl.deleteKeyword(trainingDataset, keyword);
+      List<String> updatedKeywords = keywordCtrl.getKeywords(trainingDataset);
       dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project, trainingDataset, updatedKeywords);
     } else if (featureView != null) {
+      keywordCtrl.deleteKeyword(featureView, keyword);
+      List<String> updatedKeywords = keywordCtrl.getKeywords(featureView);
       dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project, featureView, updatedKeywords);
     } else {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.KEYWORD_ERROR, Level.FINE,
@@ -205,5 +209,4 @@ public class FeaturestoreKeywordResource {
     }
     return Response.ok().entity(dto).build();
   }
-
 }

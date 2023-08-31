@@ -18,12 +18,11 @@ package io.hops.hopsworks.api.featurestore.trainingdataset;
 
 import com.google.common.collect.Lists;
 import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordBuilder;
-import io.hops.hopsworks.api.tags.TagBuilder;
+import io.hops.hopsworks.api.featurestore.tag.FeatureStoreTagBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dataset.util.DatasetHelper;
-import io.hops.hopsworks.common.dataset.util.DatasetPath;
-import io.hops.hopsworks.common.featurestore.keyword.KeywordControllerIface;
 import io.hops.hopsworks.common.featurestore.keyword.KeywordDTO;
+import io.hops.hopsworks.common.featurestore.metadata.FeatureStoreKeywordControllerIface;
+import io.hops.hopsworks.common.featurestore.metadata.FeatureStoreTagControllerIface;
 import io.hops.hopsworks.common.featurestore.query.Query;
 import io.hops.hopsworks.common.featurestore.query.QueryBuilder;
 import io.hops.hopsworks.common.featurestore.query.QueryController;
@@ -33,14 +32,12 @@ import io.hops.hopsworks.exceptions.CloudException;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.MetadataException;
-import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.exceptions.ServiceException;
-import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.api.featurestore.tag.FeatureStoreTagUri;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -58,11 +55,11 @@ public class TrainingDatasetDTOBuilder {
   @EJB
   private TrainingDatasetController trainingDatasetController;
   @EJB
-  private DatasetHelper datasetHelper;
-  @EJB
-  private TagBuilder tagsBuilder;
+  private FeatureStoreTagBuilder tagsBuilder;
   @Inject
-  private KeywordControllerIface keywordControllerIface;
+  private FeatureStoreKeywordControllerIface keywordController;
+  @Inject
+  private FeatureStoreTagControllerIface tagController;
   @EJB
   private FeaturestoreKeywordBuilder featurestoreKeywordBuilder;
   @EJB
@@ -72,13 +69,13 @@ public class TrainingDatasetDTOBuilder {
 
   public TrainingDatasetDTO build(Users user, Project project, TrainingDataset trainingDataset,
       UriInfo uriInfo,ResourceRequest resourceRequest)
-      throws FeaturestoreException, ServiceException, SchematizedTagException, MetadataException, DatasetException,
-      IOException, CloudException {
+      throws FeaturestoreException, ServiceException, FeatureStoreMetadataException, MetadataException,
+             DatasetException, IOException, CloudException {
     TrainingDatasetDTO trainingDatasetDTO = trainingDatasetController.convertTrainingDatasetToDTO(user, project,
         trainingDataset, true);
     if (resourceRequest != null) {
       if (resourceRequest.contains(ResourceRequest.Name.KEYWORDS)) {
-        List<String> keywords = keywordControllerIface.getAll(project, user, null, trainingDataset, null);
+        List<String> keywords = keywordController.getKeywords(trainingDataset);
         ResourceRequest keywordResourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
         KeywordDTO dto = featurestoreKeywordBuilder.build(uriInfo, keywordResourceRequest, project,
             trainingDataset, keywords);
@@ -96,21 +93,17 @@ public class TrainingDatasetDTOBuilder {
             queryBuilder.build(query, trainingDataset.getFeaturestore(), project, user).getFilter()
         );
       }
-      if (resourceRequest.contains(ResourceRequest.Name.TAGS)) {
-        // Tag expansion
-        DatasetPath path = datasetHelper.getDatasetPath(project, trainingDataset.getTagPath(), DatasetType.DATASET);
-        FeatureStoreTagUri tagUri = new FeatureStoreTagUri(uriInfo, trainingDataset.getFeaturestore().getId(),
-            ResourceRequest.Name.FEATUREVIEW, trainingDataset.getId());
-        trainingDatasetDTO.setTags(tagsBuilder.build(tagUri, resourceRequest, user, path));
-      }
+      trainingDatasetDTO.setTags(tagsBuilder.build(uriInfo, resourceRequest, project.getId(),
+        trainingDataset.getFeaturestore().getId(), ResourceRequest.Name.TRAININGDATASETS, trainingDataset.getId(),
+        tagController.getTags(trainingDataset)));
     }
     return trainingDatasetDTO;
   }
 
   public TrainingDatasetDTO build(Users user, Project project, List<TrainingDataset> trainingDatasets,
       UriInfo uriInfo, ResourceRequest resourceRequest)
-      throws FeaturestoreException, ServiceException, SchematizedTagException, MetadataException, DatasetException,
-      IOException, CloudException {
+      throws FeaturestoreException, ServiceException, FeatureStoreMetadataException, MetadataException,
+             DatasetException, IOException, CloudException {
     TrainingDatasetDTO trainingDatasetDTO = new TrainingDatasetDTO();
     trainingDatasetDTO.setCount((long) trainingDatasets.size());
     trainingDatasetDTO.setHref(uriInfo.getRequestUri());

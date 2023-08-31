@@ -4,11 +4,11 @@
 package io.hops.hopsworks.tags;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.hops.hopsworks.common.dao.featurestore.tag.TagSchemasFacade;
+import io.hops.hopsworks.common.dao.featurestore.metadata.TagSchemasFacade;
 import io.hops.hopsworks.common.tags.TagSchemasControllerIface;
 import io.hops.hopsworks.common.integrations.EnterpriseStereotype;
-import io.hops.hopsworks.exceptions.SchematizedTagException;
-import io.hops.hopsworks.persistence.entity.featurestore.tag.TagSchemas;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
+import io.hops.hopsworks.persistence.entity.featurestore.metadata.TagSchemas;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
@@ -28,14 +28,14 @@ public class TagSchemasEEController implements TagSchemasControllerIface {
   private TagSchemasFacade tagSchemasFacade;
   
   @Override
-  public void create(String name, String schema) throws SchematizedTagException {
+  public void create(String name, String schema) throws FeatureStoreMetadataException {
     SchematizedTagHelper.validateSchemaName(name);
     TagSchemas tag = tagSchemasFacade.findByName(name);
     if (tag != null) {
-      throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.TAG_ALREADY_EXISTS, Level.FINE);
+      throw new FeatureStoreMetadataException(RESTCodes.SchematizedTagErrorCode.TAG_ALREADY_EXISTS, Level.FINE);
     }
     if(schema == null) {
-      throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.INVALID_TAG_SCHEMA, Level.FINE);
+      throw new FeatureStoreMetadataException(RESTCodes.SchematizedTagErrorCode.INVALID_TAG_SCHEMA, Level.FINE);
     }
     SchematizedTagHelper.validateSchema(schema);
     
@@ -66,13 +66,13 @@ public class TagSchemasEEController implements TagSchemasControllerIface {
   }
   
   @Override
-  public boolean schemaHasNestedTypes(String schema) throws SchematizedTagException {
+  public boolean schemaHasNestedTypes(String schema) throws FeatureStoreMetadataException {
     return SchematizedTagHelper.hasNestedTypes(schema);
   }
   
   @Override
   public boolean schemaHasAdditionalRules(String name, String schema, ObjectMapper objectMapper)
-    throws SchematizedTagException {
+    throws FeatureStoreMetadataException {
     return SchematizedTagHelper.hasAdditionalRules(name, schema, objectMapper);
   }
 }

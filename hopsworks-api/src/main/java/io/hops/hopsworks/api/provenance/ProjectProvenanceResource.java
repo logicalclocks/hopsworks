@@ -51,7 +51,7 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
-import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
@@ -229,7 +229,7 @@ public class ProjectProvenanceResource {
       @Context UriInfo uriInfo,
       @Context HttpServletRequest req,
       @Context SecurityContext sc)
-      throws ProvenanceException, GenericException, DatasetException, MetadataException, SchematizedTagException {
+      throws ProvenanceException, GenericException, DatasetException, MetadataException, FeatureStoreMetadataException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if (artifactId == null) {
       throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE,

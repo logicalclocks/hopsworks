@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.persistence.entity.featurestore.tag;
+package io.hops.hopsworks.persistence.entity.featurestore.metadata;
 
 import java.io.Serializable;
 import javax.persistence.Basic;

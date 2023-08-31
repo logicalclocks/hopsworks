@@ -54,7 +54,7 @@ import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ModelRegistryException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
-import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
@@ -162,7 +162,7 @@ public class ModelsBuilder {
                         Project userProject,
                         Project modelRegistryProject
   )
-          throws ModelRegistryException, GenericException, SchematizedTagException, MetadataException {
+          throws ModelRegistryException, GenericException, FeatureStoreMetadataException, MetadataException {
     ModelDTO dto = new ModelDTO();
     uri(dto, uriInfo, userProject, modelRegistryProject);
     expand(dto, resourceRequest);
@@ -219,8 +219,8 @@ public class ModelsBuilder {
                         Project modelRegistryProject,
                         ProvStateDTO fileProvenanceHit,
                         String modelsFolder)
-          throws ModelRegistryException, GenericException, ProvenanceException, SchematizedTagException,
-          MetadataException, DatasetException {
+          throws ModelRegistryException, GenericException, ProvenanceException, FeatureStoreMetadataException,
+                 MetadataException, DatasetException {
     
     ModelDTO modelDTO = new ModelDTO();
     uri(modelDTO, uriInfo, userProject, modelRegistryProject, fileProvenanceHit);

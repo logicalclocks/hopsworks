@@ -7,7 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
-import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.everit.json.schema.ArraySchema;
 import org.everit.json.schema.BooleanSchema;
@@ -30,19 +30,19 @@ import java.util.logging.Level;
 
 public class SchematizedTagHelper {
   
-  public static void validateSchemaName(String name) throws SchematizedTagException {
+  public static void validateSchemaName(String name) throws FeatureStoreMetadataException {
     if (!FeaturestoreConstants.KEYWORDS_REGEX.matcher(name).matches()) {
-      throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.INVALID_TAG_NAME, Level.FINE,
+      throw new FeatureStoreMetadataException(RESTCodes.SchematizedTagErrorCode.INVALID_TAG_NAME, Level.FINE,
         "Tag Schema Names can only contain characters, numbers and underscores and cannot be " +
           "longer than " + FeaturestoreConstants.FEATURESTORE_ENTITY_NAME_MAX_LENGTH + " characters or empty.");
     }
   }
   
-  public static Schema validateSchema(String schema) throws SchematizedTagException {
+  public static Schema validateSchema(String schema) throws FeatureStoreMetadataException {
     try {
       return rawValidateSchema(schema);
     } catch (SchemaException | JSONException e) {
-      throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.INVALID_TAG_SCHEMA, Level.FINE,
+      throw new FeatureStoreMetadataException(RESTCodes.SchematizedTagErrorCode.INVALID_TAG_SCHEMA, Level.FINE,
         "bad schema", "schema validation issue", e);
     }
   }
@@ -52,7 +52,7 @@ public class SchematizedTagHelper {
     return SchemaLoader.load(jsonSchema);
   }
   
-  public static void validateTag(String schemaS, String val) throws SchematizedTagException {
+  public static void validateTag(String schemaS, String val) throws FeatureStoreMetadataException {
     Schema schema = validateSchema(schemaS);
     try {
       if(schema instanceof ObjectSchema || schema instanceof CombinedSchema || schema instanceof EmptySchema) {
@@ -66,7 +66,7 @@ public class SchematizedTagHelper {
           try {
             v = Integer.parseInt(val);
           } catch (NumberFormatException e) {
-            throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.INVALID_TAG_VALUE, Level.FINE,
+            throw new FeatureStoreMetadataException(RESTCodes.SchematizedTagErrorCode.INVALID_TAG_VALUE, Level.FINE,
               "expected(schema) Integer val");
           }
           schema.validate(v);
@@ -75,7 +75,7 @@ public class SchematizedTagHelper {
           try {
             v = Float.parseFloat(val);
           } catch (NumberFormatException e) {
-            throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.INVALID_TAG_VALUE, Level.FINE,
+            throw new FeatureStoreMetadataException(RESTCodes.SchematizedTagErrorCode.INVALID_TAG_VALUE, Level.FINE,
               "expected(schema) Float val");
           }
           schema.validate(v);
@@ -85,23 +85,23 @@ public class SchematizedTagHelper {
         if("true".equalsIgnoreCase(val) || "false".equalsIgnoreCase(val)) {
           v = Boolean.parseBoolean(val);
         } else {
-          throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.INVALID_TAG_VALUE, Level.FINE,
+          throw new FeatureStoreMetadataException(RESTCodes.SchematizedTagErrorCode.INVALID_TAG_VALUE, Level.FINE,
             "expected(schema) Boolean val");
         }
         schema.validate(v);
       } else if(schema instanceof StringSchema) {
         schema.validate(val);
       } else {
-        throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.TAG_SCHEMA_NOT_FOUND, Level.FINE,
+        throw new FeatureStoreMetadataException(RESTCodes.SchematizedTagErrorCode.TAG_SCHEMA_NOT_FOUND, Level.FINE,
           "unhandled schema type internally");
       }
     } catch (ValidationException | JSONException e) {
-      throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.INVALID_TAG_VALUE, Level.FINE,
+      throw new FeatureStoreMetadataException(RESTCodes.SchematizedTagErrorCode.INVALID_TAG_VALUE, Level.FINE,
         "error processing tag value", "schema or json validation issue", e);
     }
   }
   
-  public static boolean hasNestedTypes(String value) throws SchematizedTagException {
+  public static boolean hasNestedTypes(String value) throws FeatureStoreMetadataException {
     Schema schema = validateSchema(value);
     if(schema instanceof ObjectSchema) {
       ObjectSchema oSchema = (ObjectSchema) schema;
@@ -129,7 +129,7 @@ public class SchematizedTagHelper {
     return node.size() > uiParsable;
   }
   public static boolean hasAdditionalRules(String name, String value, ObjectMapper objectMapper)
-    throws SchematizedTagException {
+    throws FeatureStoreMetadataException {
     Schema schema = validateSchema(value);
     if(schema instanceof ObjectSchema) {
       ObjectSchema oSchema = (ObjectSchema) schema;
@@ -144,8 +144,8 @@ public class SchematizedTagHelper {
           } catch (JsonProcessingException e) {
             String usrMsg = "exception processing tag:" + name;
             String devMsg = usrMsg + " property:" + childEntry.getKey();
-            throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.INTERNAL_PROCESSING_ERROR, Level.FINE,
-              usrMsg, devMsg, e);
+            throw new FeatureStoreMetadataException(RESTCodes.SchematizedTagErrorCode.INTERNAL_PROCESSING_ERROR,
+              Level.FINE, usrMsg, devMsg, e);
           }
         } else if(childSchema instanceof ArraySchema) {
           try {
@@ -159,8 +159,8 @@ public class SchematizedTagHelper {
           } catch (JsonProcessingException e) {
             String usrMsg = "exception processing tag:" + name;
             String devMsg = usrMsg + " property:" + childEntry.getKey();
-            throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.INTERNAL_PROCESSING_ERROR, Level.FINE,
-              usrMsg, devMsg, e);
+            throw new FeatureStoreMetadataException(RESTCodes.SchematizedTagErrorCode.INTERNAL_PROCESSING_ERROR,
+              Level.FINE, usrMsg, devMsg, e);
           }
         }
       }

@@ -16,6 +16,7 @@
 package io.hops.hopsworks.common.tags;
 
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
+import io.hops.hopsworks.common.featurestore.metadata.AttachMetadataResult;
 import io.hops.hopsworks.common.integrations.CommunityStereotype;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.MetadataException;
@@ -47,12 +48,12 @@ public class TagController implements TagControllerIface {
   }
   
   @Override
-  public AttachTagResult upsert(Users user, DatasetPath path, String name, String value) {
+  public AttachMetadataResult<String> upsert(Users user, DatasetPath path, String name, String value) {
     throw new IllegalArgumentException("API not supported in the community edition");
   }
   
   @Override
-  public AttachTagResult upsertAll(Users user, DatasetPath path, Map<String, String> newTags) {
+  public AttachMetadataResult<String> upsertAll(Users user, DatasetPath path, Map<String, String> newTags) {
     throw new IllegalArgumentException("API not supported in the community edition");
   }
   

@@ -28,9 +28,8 @@ import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
-import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.exceptions.ServiceException;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.provenance.ProvExplicitNode;
 import io.hops.hopsworks.provenance.explicit.ProvExplicitControllerEEImpl;
@@ -55,7 +54,7 @@ public class TestProvExplicitLinksBuilder {
   
   @Before
   public void setup()
-    throws FeaturestoreException, ServiceException, DatasetException, MetadataException, SchematizedTagException,
+    throws FeaturestoreException, ServiceException, DatasetException, MetadataException, FeatureStoreMetadataException,
            IOException, CloudException {
     scenario = MockProvExplicitControllerEEImpl.standardScenario();
     provExplicitCtrl = MockProvExplicitControllerEEImpl.baseSetup(scenario);
@@ -65,7 +64,7 @@ public class TestProvExplicitLinksBuilder {
   
   @Test
   public void test()
-    throws DatasetException, SchematizedTagException, MetadataException, ServiceException, CloudException,
+    throws DatasetException, FeatureStoreMetadataException, MetadataException, ServiceException, CloudException,
            GenericException, FeaturestoreException, IOException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.PROVENANCE);
     ResourceRequest artifactExpansion = new ResourceRequest(ResourceRequest.Name.PROVENANCE_ARTIFACTS);

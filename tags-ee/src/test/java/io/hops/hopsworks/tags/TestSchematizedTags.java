@@ -6,7 +6,7 @@ package io.hops.hopsworks.tags;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hops.hopsworks.exceptions.GenericException;
-import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import org.everit.json.schema.Schema;
 import org.everit.json.schema.SchemaException;
 import org.everit.json.schema.ValidationException;
@@ -51,7 +51,7 @@ public class TestSchematizedTags {
   }
   
   @Test
-  public void testMalformedJSONTag() throws SchematizedTagException {
+  public void testMalformedJSONTag() throws FeatureStoreMetadataException {
     String schemaS = "{";
     schemaS +=  "$schema : \"http://json-schema.org/draft-07/schema#\",";
     schemaS += "$id : \"http://example.com/product.schema.json\",";
@@ -72,7 +72,7 @@ public class TestSchematizedTags {
   }
   
   @Test
-  public void testMalformedTag() throws SchematizedTagException {
+  public void testMalformedTag() throws FeatureStoreMetadataException {
     Random rand = new Random(123);
     
     String schemaS = "{";
@@ -117,7 +117,7 @@ public class TestSchematizedTags {
   }
 
   @Test
-  public void testPropertyTypeStringArray() throws SchematizedTagException {
+  public void testPropertyTypeStringArray() throws FeatureStoreMetadataException {
     Random rand = new Random(123);
     String schemaS = arrayFieldSchema1("string");
     SchematizedTagHelper.validateSchema(schemaS);
@@ -128,7 +128,7 @@ public class TestSchematizedTags {
   }
   
   @Test
-  public void testPropertyTypeIntArray() throws SchematizedTagException {
+  public void testPropertyTypeIntArray() throws FeatureStoreMetadataException {
     Random rand = new Random(123);
     String schemaS = arrayFieldSchema1("integer");
     SchematizedTagHelper.validateSchema(schemaS);
@@ -139,7 +139,7 @@ public class TestSchematizedTags {
   }
   
   @Test
-  public void testPropertyTypeBadIntArray1() throws SchematizedTagException {
+  public void testPropertyTypeBadIntArray1() throws FeatureStoreMetadataException {
     Random rand = new Random(123);
     String schemaS = arrayFieldSchema1("integer");
     Schema schema = SchematizedTagHelper.validateSchema(schemaS);
@@ -152,7 +152,7 @@ public class TestSchematizedTags {
   }
   
   @Test
-  public void testPropertyTypeBadIntArray2() throws SchematizedTagException {
+  public void testPropertyTypeBadIntArray2() throws FeatureStoreMetadataException {
     Random rand = new Random(123);
     String schemaS = arrayFieldSchema1("integer");
     Schema schema = SchematizedTagHelper.validateSchema(schemaS);
@@ -165,7 +165,7 @@ public class TestSchematizedTags {
   }
   
   @Test
-  public void testPropertyTypeFloatArray() throws SchematizedTagException {
+  public void testPropertyTypeFloatArray() throws FeatureStoreMetadataException {
     Random rand = new Random(123);
     String schemaS = arrayFieldSchema1("number");
     SchematizedTagHelper.validateSchema(schemaS);
@@ -176,7 +176,7 @@ public class TestSchematizedTags {
   }
   
   @Test
-  public void testPropertyTypeBadFloatArray() throws SchematizedTagException {
+  public void testPropertyTypeBadFloatArray() throws FeatureStoreMetadataException {
     Random rand = new Random(123);
     String schemaS = arrayFieldSchema1("number");
     Schema schema = SchematizedTagHelper.validateSchema(schemaS);
@@ -189,7 +189,7 @@ public class TestSchematizedTags {
   }
   
   @Test
-  public void testPropertyTypeBoolArray() throws SchematizedTagException {
+  public void testPropertyTypeBoolArray() throws FeatureStoreMetadataException {
     String schemaS = arrayFieldSchema1("boolean");
     SchematizedTagHelper.validateSchema(schemaS);
     String val = "{";
@@ -199,7 +199,7 @@ public class TestSchematizedTags {
   }
   
   @Test
-  public void testSchemaTypePrimitiveString() throws SchematizedTagException {
+  public void testSchemaTypePrimitiveString() throws FeatureStoreMetadataException {
     String schemaS = "{";
     schemaS +=  "$schema : \"http://json-schema.org/draft-07/schema#\",";
     schemaS += "$id : \"http://example.com/product.schema.json\",";
@@ -212,7 +212,7 @@ public class TestSchematizedTags {
   }
   
   @Test
-  public void testSchemaTypePrimitiveInteger() throws SchematizedTagException {
+  public void testSchemaTypePrimitiveInteger() throws FeatureStoreMetadataException {
     String schemaS = "{";
     schemaS +=  "$schema : \"http://json-schema.org/draft-07/schema#\",";
     schemaS += "$id : \"http://example.com/product.schema.json\",";
@@ -224,7 +224,7 @@ public class TestSchematizedTags {
   }
   
   @Test
-  public void testSchemaTypePrimitiveIntegerBad() throws SchematizedTagException {
+  public void testSchemaTypePrimitiveIntegerBad() throws FeatureStoreMetadataException {
     String schemaS = "{";
     schemaS +=  "$schema : \"http://json-schema.org/draft-07/schema#\",";
     schemaS += "$id : \"http://example.com/product.schema.json\",";
@@ -240,7 +240,7 @@ public class TestSchematizedTags {
   }
   
   @Test
-  public void testSchemaTypePrimitiveFloat() throws SchematizedTagException {
+  public void testSchemaTypePrimitiveFloat() throws FeatureStoreMetadataException {
     String schemaS = "{";
     schemaS +=  "$schema : \"http://json-schema.org/draft-07/schema#\",";
     schemaS += "$id : \"http://example.com/product.schema.json\",";
@@ -252,7 +252,7 @@ public class TestSchematizedTags {
   }
   
   @Test
-  public void testSchemaTypePrimitiveBoolean() throws SchematizedTagException {
+  public void testSchemaTypePrimitiveBoolean() throws FeatureStoreMetadataException {
     String schemaS = "{";
     schemaS += "$schema : \"http://json-schema.org/draft-07/schema#\",";
     schemaS += "$id : \"http://example.com/product.schema.json\",";
@@ -264,7 +264,7 @@ public class TestSchematizedTags {
   }
   
   @Test
-  public void testSchemaTypePrimitiveStringArray() throws SchematizedTagException {
+  public void testSchemaTypePrimitiveStringArray() throws FeatureStoreMetadataException {
     String schemaS = "{";
     schemaS += "$schema : \"http://json-schema.org/draft-07/schema#\",";
     schemaS += "$id : \"http://example.com/product.schema.json\",";
@@ -280,7 +280,7 @@ public class TestSchematizedTags {
   }
   
   @Test
-  public void testComplexSuccess() throws SchematizedTagException {
+  public void testComplexSuccess() throws FeatureStoreMetadataException {
     String schemaS ="{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"$id\":\"http://heap.com/test.schema.json\",\"allOf\":[{\"$ref\":\"#/definitions/disease\"},{\"$ref\":\"#/definitions/cancer\"},{\"$ref\":\"#/definitions/other\"}],\"definitions\":{\"disease\":{\"properties\":{\"disease_type\":{\"type\":\"string\"}}},\"cancer\":{\"properties\":{\"cancer_type\":{\"type\":\"string\"}}},\"other\":{\"properties\":{\"other_field\":{\"type\":\"string\"}}}},\"required\":[\"disease\"],\"if\":{\"properties\":{\"disease\":{\"const\":\"Cancer\"}}},\"then\":{\"required\":[\"cancer_type\"]}}";
     SchematizedTagHelper.validateSchema(schemaS);
     String val = "{\"disease\":\"Diabetes\"}";
@@ -288,17 +288,17 @@ public class TestSchematizedTags {
   }
   
   @Test
-  public void testComplexFail1() throws SchematizedTagException {
+  public void testComplexFail1() throws FeatureStoreMetadataException {
     String schemaS ="{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"$id\":\"http://heap.com/test.schema.json\",\"allOf\":[{\"$ref\":\"#/definitions/disease\"},{\"$ref\":\"#/definitions/cancer\"},{\"$ref\":\"#/definitions/other\"}],\"definitions\":{\"disease\":{\"properties\":{\"disease_type\":{\"type\":\"string\"}}},\"cancer\":{\"properties\":{\"cancer_type\":{\"type\":\"string\"}}},\"other\":{\"properties\":{\"other_field\":{\"type\":\"string\"}}}},\"required\":[\"disease\"],\"if\":{\"properties\":{\"disease\":{\"const\":\"Cancer\"}}},\"then\":{\"required\":[\"cancer_type\"]}}";
     SchematizedTagHelper.validateSchema(schemaS);
     String val = "{\"disease\":\"Cancer\"}";
-    thrown.expect(SchematizedTagException.class);
+    thrown.expect(FeatureStoreMetadataException.class);
     thrown.expectMessage("#: #: only 2 subschema matches out of 3");
     SchematizedTagHelper.validateTag(schemaS, val);
   }
   
   @Test
-  public void testComplexSuccess2() throws SchematizedTagException {
+  public void testComplexSuccess2() throws FeatureStoreMetadataException {
     String schemaS ="{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"$id\":\"http://heap.com/test.schema.json\",\"allOf\":[{\"$ref\":\"#/definitions/disease\"},{\"$ref\":\"#/definitions/cancer\"},{\"$ref\":\"#/definitions/other\"}],\"definitions\":{\"disease\":{\"properties\":{\"disease_type\":{\"type\":\"string\"}}},\"cancer\":{\"properties\":{\"cancer_type\":{\"type\":\"string\"}}},\"other\":{\"properties\":{\"other_field\":{\"type\":\"string\"}}}},\"required\":[\"disease\"],\"if\":{\"properties\":{\"disease\":{\"const\":\"Cancer\"}}},\"then\":{\"required\":[\"cancer_type\"]}}";
     SchematizedTagHelper.validateSchema(schemaS);
     String val = "{\"disease\":\"Cancer\", \"cancer_type\":\"Malinoma\"}";
@@ -306,37 +306,37 @@ public class TestSchematizedTags {
   }
   
   @Test
-  public void testC() throws SchematizedTagException {
+  public void testC() throws FeatureStoreMetadataException {
     String schemaS = "{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"$id\":\"http://heap.com/test.schema" +
       ".json\",\"allOf\":[{\"$ref\":\"#/definitions/hpv_sampling\"},{\"$ref\":\"#/definitions/cancer_properties\"}],\"definitions\":{\"hpv_sampling\":{\"properties\":{\"label_id\":{\"type\":\"string\"},\"gender\":{\"type\":\"string\",\"enum\":[\"Female\",\"Male\",\"Other\"]},\"Disease\":{\"type\":\"string\"},\"ICD_10\":{\"type\":\"string\"},\"HPVDIAG\":{\"type\":\"string\",\"enum\":[\"NEG\",\"POZ\"]},\"sample_taken\":{\"properties\":{\"date\":{\"type\":\"string\",\"format\":\"date\"},\"age\":{\"type\":\"integer\",\"minimum\":20,\"maximum\":100}},\"required\":[\"age\"]}}},\"cancer_properties\":{\"properties\":{\"Cancer type\":{\"type\":\"string\"},\"Cancer status\":{\"type\":\"string\",\"enum\":[\"Control\",\"Case\"]}}}},\"if\":{\"properties\":{\"Disease\":{\"const\":\"Cancer\"}}},\"then\":{\"required\":[\"Cancer type\",\"Cancer status\"]},\"required\":[\"label_id\",\"Disease\",\"sample_taken\"]}";
     SchematizedTagHelper.validateSchema(schemaS);
   }
   
   @Test
-  public void testNestedFieldsFlagEmptySchema() throws SchematizedTagException {
+  public void testNestedFieldsFlagEmptySchema() throws FeatureStoreMetadataException {
     String schemaS = "{\"type\":\"object\",\"properties\":{\"address\":{\"street\":{\"type\":\"string\"},\"city\":{\"type\":\"string\"}}},\"required\":[],\"additionalProperties\":false}";
     Assert.assertTrue(SchematizedTagHelper.hasNestedTypes(schemaS));
   }
   @Test
-  public void testNestedFieldsFlagObjectSchema() throws SchematizedTagException {
+  public void testNestedFieldsFlagObjectSchema() throws FeatureStoreMetadataException {
     String schemaS = "{\"type\":\"object\",\"properties\":{\"address\":{\"properties\": {\"street\":{\"type\":\"string\"},\"city\":{\"type\":\"string\"}}}},\"required\":[],\"additionalProperties\":false}";
     Assert.assertTrue(SchematizedTagHelper.hasNestedTypes(schemaS));
   }
   
   @Test
-  public void testAdditionalRulesStringPattern() throws SchematizedTagException, GenericException {
+  public void testAdditionalRulesStringPattern() throws FeatureStoreMetadataException, GenericException {
     String schemaS = "{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"string\",\"pattern\":\"^[A-Z]{2}[0-9]{4}$\"}},\"required\":[],\"additionalProperties\":false}";
     Assert.assertTrue(SchematizedTagHelper.hasAdditionalRules("testTag", schemaS, new ObjectMapper()));
   }
   
   @Test
-  public void testAdditionalRulesNumberMinMax() throws SchematizedTagException, GenericException {
+  public void testAdditionalRulesNumberMinMax() throws FeatureStoreMetadataException, GenericException {
     String schemaS = "{\"type\":\"object\",\"properties\":{\"age\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":150}},\"required\":[],\"additionalProperties\":false}";
     Assert.assertTrue(SchematizedTagHelper.hasAdditionalRules("testTag", schemaS, new ObjectMapper()));
   }
   
   @Test
-  public void testAdditionalRulesFales() throws SchematizedTagException, GenericException {
+  public void testAdditionalRulesFales() throws FeatureStoreMetadataException, GenericException {
     String schemaS = "{\"name\":\"test\",\"description\":\"lala\",\"properties\":{\"field\":{\"type\":\"string\",\"description\":\"dsds\"}},\"required\":[\"field\"]}";
     Assert.assertFalse(SchematizedTagHelper.hasAdditionalRules("testTag", schemaS, new ObjectMapper()));
   }

@@ -48,7 +48,7 @@ import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
-import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
@@ -162,7 +162,7 @@ public class DatasetResource {
                       @BeanParam DatasetBeanParam datasetBeanParam,
                       @Context HttpServletRequest req,
                       @Context UriInfo uriInfo, @Context SecurityContext sc)
-      throws ProjectException, DatasetException, MetadataException, SchematizedTagException {
+      throws ProjectException, DatasetException, MetadataException, FeatureStoreMetadataException {
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.DATASET);
     resourceRequest.setOffset(pagination.getOffset());
@@ -200,7 +200,7 @@ public class DatasetResource {
                             @Context UriInfo uriInfo,
                             @Context HttpServletRequest req,
                             @Context SecurityContext sc)
-      throws DatasetException, ProjectException, MetadataException, SchematizedTagException {
+      throws DatasetException, ProjectException, MetadataException, FeatureStoreMetadataException {
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.INODES);
     resourceRequest.setExpansions(datasetExpansionBeanParam.getResources());
@@ -257,7 +257,7 @@ public class DatasetResource {
                              @QueryParam("destination_type") DatasetType destDatasetType,
                              @DefaultValue("READ_ONLY") @QueryParam("permission") DatasetAccessPermission permission)
       throws DatasetException, ProjectException, HopsSecurityException, ProvenanceException, MetadataException,
-      SchematizedTagException, FeaturestoreException {
+             FeatureStoreMetadataException, FeaturestoreException {
     Users user = jwtHelper.getUserPrincipal(sc);
     DatasetPath datasetPath;
     DatasetPath distDatasetPath;
@@ -422,7 +422,8 @@ public class DatasetResource {
                   @Context UriInfo uriInfo,
                   @Context HttpServletRequest req,
                   @Context SecurityContext sc)
-      throws DatasetException, ProjectException, MetadataException, SchematizedTagException, FeaturestoreException {
+      throws DatasetException, ProjectException, MetadataException, FeatureStoreMetadataException,
+             FeaturestoreException {
     Project project = this.getProject();
     DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, datasetType);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.DATASET);

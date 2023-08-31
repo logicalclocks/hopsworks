@@ -22,6 +22,7 @@ import io.hops.hopsworks.api.featurestore.FsQueryBuilder;
 import io.hops.hopsworks.api.featurestore.activities.ActivityResource;
 import io.hops.hopsworks.api.featurestore.code.CodeResource;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
+import io.hops.hopsworks.api.featurestore.tag.TrainingDatasetTagResource;
 import io.hops.hopsworks.api.featurestore.transformationFunction.TransformationFunctionBuilder;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;

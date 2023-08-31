@@ -33,8 +33,8 @@ import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
-import io.hops.hopsworks.common.featurestore.keyword.KeywordControllerIface;
 import io.hops.hopsworks.common.featurestore.keyword.KeywordDTO;
+import io.hops.hopsworks.common.featurestore.metadata.FeatureStoreKeywordControllerIface;
 import io.hops.hopsworks.common.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -93,7 +93,7 @@ public class FeaturestoreService {
   @Inject
   private FsQueryConstructorResource fsQueryConstructorResource;
   @Inject
-  private KeywordControllerIface keywordControllerIface;
+  private FeatureStoreKeywordControllerIface keywordCtrl;
   @EJB
   private FeaturestoreKeywordBuilder featurestoreKeywordBuilder;
   @Inject
@@ -307,8 +307,8 @@ public class FeaturestoreService {
   @ApiOperation(value = "Get available keywords for the featurestore", response = KeywordDTO.class)
   public Response getUsedKeywords(@Context SecurityContext sc,
                                   @Context HttpServletRequest req,
-                                  @Context UriInfo uriInfo) throws FeaturestoreException {
-    List<String> keywords = keywordControllerIface.getUsedKeywords();
+                                  @Context UriInfo uriInfo) {
+    List<String> keywords = keywordCtrl.getAllKeywords();
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
     KeywordDTO dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project, keywords);
     return Response.ok().entity(dto).build();

@@ -26,14 +26,16 @@ import io.hops.hopsworks.api.featurestore.datavalidationv2.reports.ValidationRep
 import io.hops.hopsworks.api.featurestore.datavalidationv2.results.ValidationResultResource;
 import io.hops.hopsworks.api.featurestore.datavalidationv2.suites.ExpectationSuiteResource;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
+import io.hops.hopsworks.api.featurestore.tag.FeatureGroupTagResource;
+import io.hops.hopsworks.api.jobs.JobDTO;
+import io.hops.hopsworks.api.jobs.JobsBuilder;
+import io.hops.hopsworks.api.provenance.FeatureGroupProvenanceResource;
+import io.hops.hopsworks.common.featurestore.featuregroup.stream.DeltaStreamerJobConf;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
-import io.hops.hopsworks.api.jobs.JobDTO;
-import io.hops.hopsworks.api.jobs.JobsBuilder;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.api.provenance.FeatureGroupProvenanceResource;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
@@ -45,7 +47,6 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.ImportFgJobConf;
 import io.hops.hopsworks.common.featurestore.featuregroup.IngestionJob;
-import io.hops.hopsworks.common.featurestore.featuregroup.stream.DeltaStreamerJobConf;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;

@@ -4,7 +4,7 @@
 
 package io.hops.hopsworks.tags;
 
-import io.hops.hopsworks.common.dao.featurestore.tag.TagSchemasFacade;
+import io.hops.hopsworks.common.dao.featurestore.metadata.TagSchemasFacade;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturestoreXAttrsConstants;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -12,12 +12,12 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.common.integrations.EnterpriseStereotype;
-import io.hops.hopsworks.common.tags.AttachTagResult;
+import io.hops.hopsworks.common.featurestore.metadata.AttachMetadataResult;
 import io.hops.hopsworks.common.tags.TagControllerIface;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.MetadataException;
-import io.hops.hopsworks.exceptions.SchematizedTagException;
-import io.hops.hopsworks.persistence.entity.featurestore.tag.TagSchemas;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
+import io.hops.hopsworks.persistence.entity.featurestore.metadata.TagSchemas;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.json.JSONArray;
@@ -44,14 +44,14 @@ public class TagEEController implements TagControllerIface {
   
   @Override
   public String get(Users user, DatasetPath path, String name)
-    throws DatasetException, MetadataException, SchematizedTagException {
+    throws DatasetException, MetadataException, FeatureStoreMetadataException {
     String xAttrStr = xAttrsController.getXAttr(user, path, FeaturestoreXAttrsConstants.TAGS);
     Map<String, String> tags = FeatureStoreTagsHelper.convertToExternalTags(xAttrStr);
     
     if (tags.containsKey(name)) {
       return tags.get(name);
     } else {
-      throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.TAG_NOT_FOUND, Level.FINE);
+      throw new FeatureStoreMetadataException(RESTCodes.SchematizedTagErrorCode.TAG_NOT_FOUND, Level.FINE);
     }
   }
   
@@ -71,8 +71,8 @@ public class TagEEController implements TagControllerIface {
   }
   
   @Override
-  public AttachTagResult upsert(Users user, DatasetPath path, String name, String value)
-    throws MetadataException, SchematizedTagException {
+  public AttachMetadataResult<String> upsert(Users user, DatasetPath path, String name, String value)
+    throws MetadataException, FeatureStoreMetadataException {
     String hdfsUserName = hdfsUsersController.getHdfsUserName(path.getAccessProject(), user);
     DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUserName);
     try {
@@ -84,7 +84,7 @@ public class TagEEController implements TagControllerIface {
       JSONArray jsonTagsArr = FeatureStoreTagsHelper.convertToInternalTags(tags);
       xAttrsController.addStrXAttr(path.getFullPath().toString(), FeaturestoreXAttrsConstants.TAGS,
         jsonTagsArr.toString(), udfso);
-      return new AttachTagResult(tags, created);
+      return new AttachMetadataResult<>(tags, created);
     } finally {
       if (udfso != null) {
         dfs.closeDfsClient(udfso);
@@ -93,8 +93,8 @@ public class TagEEController implements TagControllerIface {
   }
   
   @Override
-  public AttachTagResult upsertAll(Users user, DatasetPath path, Map<String, String> newTags)
-    throws MetadataException, SchematizedTagException {
+  public AttachMetadataResult<String> upsertAll(Users user, DatasetPath path, Map<String, String> newTags)
+    throws MetadataException, FeatureStoreMetadataException {
     String hdfsUserName = hdfsUsersController.getHdfsUserName(path.getAccessProject(), user);
     DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUserName);
     try {
@@ -111,7 +111,7 @@ public class TagEEController implements TagControllerIface {
       JSONArray jsonTagsArr = FeatureStoreTagsHelper.convertToInternalTags(tags);
       xAttrsController.addStrXAttr(path.getFullPath().toString(), FeaturestoreXAttrsConstants.TAGS,
         jsonTagsArr.toString(), udfso);
-      return new AttachTagResult(tags, created);
+      return new AttachMetadataResult<>(tags, created);
     } finally {
       if (udfso != null) {
         dfs.closeDfsClient(udfso);
@@ -120,11 +120,11 @@ public class TagEEController implements TagControllerIface {
   }
   
   private void validateTag(String name, String value)
-    throws SchematizedTagException {
+    throws FeatureStoreMetadataException {
     
     TagSchemas tagSchema = tagSchemasFacade.findByName(name);
     if (tagSchema == null) {
-      throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.TAG_SCHEMA_NOT_FOUND,
+      throw new FeatureStoreMetadataException(RESTCodes.SchematizedTagErrorCode.TAG_SCHEMA_NOT_FOUND,
         Level.FINE, name + " schema is not defined.");
     }
     SchematizedTagHelper.validateTag(tagSchema.getSchema(), value);
