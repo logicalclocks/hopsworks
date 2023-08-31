@@ -2330,7 +2330,9 @@ public class RESTCodes {
     SERIALIZATION_ERROR(6, "Error serializing content", Response.Status.INTERNAL_SERVER_ERROR),
     NOT_IMPLEMENTED(7, "Internal error dealing with new artifact type",
       Response.Status.NOT_IMPLEMENTED),
-    DB_QUERY_ERROR(8, "DB error on query", Response.Status.INTERNAL_SERVER_ERROR);
+    DB_QUERY_ERROR(8, "DB error on query", Response.Status.INTERNAL_SERVER_ERROR),
+    ARTIFACT_DELETED(9, "Artifact was deleted before command could be executed",
+      Response.Status.INTERNAL_SERVER_ERROR);
     
     private final int code;
     private final String message;

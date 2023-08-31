@@ -18,6 +18,7 @@ package io.hops.hopsworks.persistence.entity.commands.search;
 public enum SearchFSCommandOp {
   CREATE,
   UPDATE_TAGS,
+  UPDATE_KEYWORDS,
   UPDATE_FEATURESTORE,
   DELETE_ARTIFACT,
   DELETE_PROJECT

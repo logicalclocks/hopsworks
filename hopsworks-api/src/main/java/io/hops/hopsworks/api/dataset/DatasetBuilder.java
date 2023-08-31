@@ -32,7 +32,7 @@ import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.MetadataException;
-import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
@@ -115,7 +115,7 @@ public class DatasetBuilder {
 
   private DatasetDTO build(DatasetDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
                            Users user, DatasetPath datasetPath, Users dirOwner)
-    throws DatasetException, MetadataException, SchematizedTagException {
+    throws DatasetException, MetadataException, FeatureStoreMetadataException {
     expand(dto, resourceRequest);
     if (dto.isExpand()) {
       Dataset dataset = datasetPath.getDataset();
@@ -163,13 +163,13 @@ public class DatasetBuilder {
   }
 
   public DatasetDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Users user, DatasetPath datasetPath)
-    throws DatasetException, MetadataException, SchematizedTagException {
+    throws DatasetException, MetadataException, FeatureStoreMetadataException {
     return build(uriInfo, resourceRequest, user, datasetPath, null, false);
   }
 
   public DatasetDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Users user, DatasetPath datasetPath,
                           Users dirOwner, boolean expandSharedWith)
-    throws DatasetException, MetadataException, SchematizedTagException {
+    throws DatasetException, MetadataException, FeatureStoreMetadataException {
     DatasetDTO dto = new DatasetDTO();
     uri(dto, uriInfo);
     build(dto, uriInfo, resourceRequest, user, datasetPath, dirOwner);
@@ -186,7 +186,7 @@ public class DatasetBuilder {
 
   public DatasetDTO buildItems(UriInfo uriInfo, ResourceRequest resourceRequest, Users user, DatasetPath datasetPath,
                                Users dirOwner)
-    throws DatasetException, MetadataException, SchematizedTagException {
+    throws DatasetException, MetadataException, FeatureStoreMetadataException {
     DatasetDTO dto = new DatasetDTO();
     uriItems(dto, uriInfo, datasetPath);
     return build(dto, uriInfo, resourceRequest, user, datasetPath, dirOwner);
@@ -202,7 +202,7 @@ public class DatasetBuilder {
    */
   public DatasetDTO buildItems(UriInfo uriInfo, ResourceRequest resourceRequest,
     ResourceRequest sharedDatasetResourceRequest, Project project, Users user)
-    throws DatasetException, MetadataException, SchematizedTagException {
+    throws DatasetException, MetadataException, FeatureStoreMetadataException {
     Inode projectInode = inodeController.getProjectRoot(project.getName());
     datasetHelper.checkResourceRequestLimit(resourceRequest, projectInode.getChildrenNum());
     Users dirOwner = userFacade.findByUsername(projectInode.getHdfsUser().getUsername());
@@ -213,7 +213,7 @@ public class DatasetBuilder {
   private DatasetDTO items(DatasetDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
                            ResourceRequest sharedDatasetResourceRequest, Project accessProject, Users user,
                            Users dirOwner)
-    throws DatasetException, MetadataException, SchematizedTagException {
+    throws DatasetException, MetadataException, FeatureStoreMetadataException {
     uri(dto, uriInfo);
     expand(dto, resourceRequest);
     if (dto.isExpand()) {
@@ -229,7 +229,7 @@ public class DatasetBuilder {
   // datasets in the project
   private DatasetDTO ownItems(DatasetDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
                               Project accessProject, Users user, Users dirOwner)
-    throws DatasetException, MetadataException, SchematizedTagException {
+    throws DatasetException, MetadataException, FeatureStoreMetadataException {
     AbstractFacade.CollectionInfo collectionInfo = datasetFacade.findAllDatasetByProject(null, null,
       resourceRequest.getFilter(), resourceRequest.getSort(), accessProject);
     dto.setCount(collectionInfo.getCount());
@@ -239,7 +239,7 @@ public class DatasetBuilder {
   // shared datasets
   private DatasetDTO sharedItems(DatasetDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
                                  Project accessProject, Users user, Users dirOwner)
-    throws DatasetException, MetadataException, SchematizedTagException {
+    throws DatasetException, MetadataException, FeatureStoreMetadataException {
     AbstractFacade.CollectionInfo collectionInfo = datasetSharedWithFacade.findAllDatasetByProject(null, null,
       resourceRequest.getFilter(), resourceRequest.getSort(), accessProject);
     dto.setCount(collectionInfo.getCount());
@@ -250,7 +250,7 @@ public class DatasetBuilder {
   // create dto from a list of dataset
   private DatasetDTO datasetItems(DatasetDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
     List<Dataset> datasets, Project accessProject, Users user, Users dirOwner)
-    throws DatasetException, MetadataException, SchematizedTagException {
+    throws DatasetException, MetadataException, FeatureStoreMetadataException {
     if (datasets != null && !datasets.isEmpty()) {
       Inode projectInode = inodeController.getProjectRoot(accessProject.getName());
       for(Dataset dataset : datasets) {
@@ -267,7 +267,7 @@ public class DatasetBuilder {
   private DatasetDTO datasetSharedWithItems(DatasetDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
                                             Project accessProject, Users user,
                                             List<DatasetSharedWith> datasetSharedWithList, Users dirOwner)
-    throws DatasetException, MetadataException, SchematizedTagException {
+    throws DatasetException, MetadataException, FeatureStoreMetadataException {
     if (datasetSharedWithList != null && !datasetSharedWithList.isEmpty()) {
       for(DatasetSharedWith datasetSharedWith : datasetSharedWithList) {
         Path dsPath = Utils.getDatasetPath(datasetSharedWith.getDataset(), settings);

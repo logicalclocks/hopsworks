@@ -17,10 +17,10 @@ package io.hops.hopsworks.common.commands.featurestore.search;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hops.hopsworks.common.commands.CommandException;
-import io.hops.hopsworks.common.dataset.util.DatasetHelper;
-import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
+import io.hops.hopsworks.common.featurestore.metadata.FeatureStoreKeywordControllerIface;
+import io.hops.hopsworks.common.featurestore.metadata.FeatureStoreTagControllerIface;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeatureViewXAttrDTO;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturegroupXAttr;
@@ -30,7 +30,6 @@ import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.common.opensearch.OpenSearchClientController;
-import io.hops.hopsworks.common.tags.TagControllerIface;
 import io.hops.hopsworks.common.util.HopsworksJAXBContext;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
@@ -39,7 +38,7 @@ import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.persistence.entity.commands.search.SearchFSCommand;
-import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
+import io.hops.hopsworks.persistence.entity.featurestore.metadata.FeatureStoreTag;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -70,7 +69,9 @@ public class SearchFSOpenSearchController {
   @EJB
   private OpenSearchClientController opensearchClient;
   @Inject
-  private TagControllerIface tagCtrl;
+  private FeatureStoreKeywordControllerIface keywordCtrl;
+  @Inject
+  private FeatureStoreTagControllerIface tagCtrl;
   @EJB
   private FeaturegroupController featureGroupCtrl;
   @EJB
@@ -80,8 +81,6 @@ public class SearchFSOpenSearchController {
   @EJB
   private XAttrsController xattrCtrl;
   
-  @EJB
-  private DatasetHelper datasetHelper;
   @EJB
   private HopsworksJAXBContext converter;
   @EJB
@@ -108,6 +107,13 @@ public class SearchFSOpenSearchController {
   public void updateTags(Long docId, SearchFSCommand c) throws CommandException, OpenSearchException {
     UpdateRequest request = new UpdateRequest().index(Settings.FEATURESTORE_INDEX).id(String.valueOf(docId));
     request.doc(docBuilder(updateTags(c)));
+    opensearchClient.updateDoc(request);
+  }
+  
+  public void updateKeywords(Long docId, SearchFSCommand c) throws CommandException, OpenSearchException {
+    UpdateRequest request = new UpdateRequest().index(Settings.FEATURESTORE_INDEX)
+      .id(String.valueOf(docId));
+    request.doc(docBuilder(updateKeywords(c)));
     opensearchClient.updateDoc(request);
   }
   
@@ -142,21 +148,42 @@ public class SearchFSOpenSearchController {
   
   private SearchDoc updateTags(SearchFSCommand c) throws CommandException {
     SearchDoc doc =  new SearchDoc();
-    Map<String, String> tags;
-    try {
-      tags = tagCtrl.getAllAsSuperUser(getArtifactPath(c));
-    } catch (DatasetException | MetadataException e) {
-      String errMsg = "command failed due to xattr access";
-      throw new CommandException(RESTCodes.CommandErrorCode.FILESYSTEM_ACCESS_ERROR, Level.WARNING,
-        errMsg, errMsg, e);
+    Map<String, FeatureStoreTag> tags;
+    if(c.getFeatureGroup() != null) {
+      tags = tagCtrl.getTags(c.getFeatureGroup());
+    } else if(c.getFeatureView() != null) {
+      tags = tagCtrl.getTags(c.getFeatureView());
+    } else if(c.getTrainingDataset() != null) {
+      tags = tagCtrl.getTags(c.getTrainingDataset());
+    } else {
+      throw new CommandException(RESTCodes.CommandErrorCode.ARTIFACT_DELETED, Level.WARNING,
+        "artifact targeted by command was deleted");
     }
     SearchDoc.XAttr xattr = new SearchDoc.XAttr();
     doc.setXattr(xattr);
     List<SearchDoc.Tag> docTags = new ArrayList<>();
-    for(Map.Entry<String, String> e : tags.entrySet()) {
-      docTags.add(new SearchDoc.Tag(e.getKey(), e.getValue()));
+    for(Map.Entry<String, FeatureStoreTag> e : tags.entrySet()) {
+      docTags.add(new SearchDoc.Tag(e.getKey(), e.getValue().getValue()));
     }
     xattr.setTags(docTags);
+    return doc;
+  }
+  
+  private SearchDoc updateKeywords(SearchFSCommand c) throws CommandException {
+    SearchDoc doc =  new SearchDoc();
+    List<String> keywords;
+    if (c.getFeatureGroup() != null) {
+      keywords = keywordCtrl.getKeywords(c.getFeatureGroup());
+    } else if (c.getFeatureView() != null) {
+      keywords = keywordCtrl.getKeywords(c.getFeatureView());
+    } else if (c.getTrainingDataset() != null) {
+      keywords = keywordCtrl.getKeywords(c.getTrainingDataset());
+    } else {
+      throw CommandException.unhandledArtifactType();
+    }
+    SearchDoc.XAttr xattr = new SearchDoc.XAttr();
+    doc.setXattr(xattr);
+    xattr.setKeywords(keywords);
     return doc;
   }
   
@@ -188,8 +215,7 @@ public class SearchFSOpenSearchController {
           FeaturestoreXAttrsConstants.FEATURESTORE);
         xattr.setFeaturestore(converter.unmarshal(featurestoreStr, TrainingDatasetXAttrDTO.class));
       } else {
-        throw new CommandException(RESTCodes.CommandErrorCode.NOT_IMPLEMENTED, Level.WARNING,
-          "unhandled artifact type");
+        throw CommandException.unhandledArtifactType();
       }
     } catch (DatasetException | MetadataException e) {
       String errMsg = "error accessing featurestore xattr";
@@ -204,30 +230,6 @@ public class SearchFSOpenSearchController {
         errMsg, errMsg, e);
     }
     return doc;
-  }
-  
-  private DatasetPath getArtifactPath(SearchFSCommand c) throws CommandException {
-    DatasetPath artifactPath;
-    try {
-      if (c.getFeatureGroup() != null) {
-        String path = featureGroupCtrl.getFeatureGroupLocation(c.getFeatureGroup());
-        artifactPath = datasetHelper.getDatasetPath(c.getProject(), path, DatasetType.FEATURESTORE);
-      } else if (c.getFeatureView() != null) {
-        String path = featureViewCtrl.getLocation(c.getFeatureView());
-        artifactPath = datasetHelper.getDatasetPath(c.getProject(), path, DatasetType.DATASET);
-      } else if (c.getTrainingDataset() != null) {
-        String path = c.getTrainingDataset().getTagPath();
-        artifactPath = datasetHelper.getDatasetPath(c.getProject(), path, DatasetType.DATASET);
-      } else {
-        throw new CommandException(RESTCodes.CommandErrorCode.NOT_IMPLEMENTED, Level.WARNING,
-          "unhandled artifact type");
-      }
-    } catch(FeaturestoreException | DatasetException e) {
-      String errMsg = "command failed on artifact path generation";
-      throw new CommandException(RESTCodes.CommandErrorCode.FEATURESTORE_ACCESS_ERROR, Level.WARNING,
-        errMsg, errMsg, e);
-    }
-    return artifactPath;
   }
   
   private XContentBuilder docBuilder(SearchDoc doc) throws CommandException {

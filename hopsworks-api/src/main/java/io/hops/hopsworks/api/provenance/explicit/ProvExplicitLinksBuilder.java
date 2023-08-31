@@ -39,7 +39,7 @@ import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
-import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
@@ -106,7 +106,7 @@ public class ProvExplicitLinksBuilder {
   
   public ProvExplicitLinkDTO<FeaturegroupDTO> buildFGLinks(UriInfo uriInfo, ResourceRequest resourceRequest,
                                       Project accessProject, Users user, ProvExplicitLink<Featuregroup> links)
-    throws DatasetException, SchematizedTagException, MetadataException, ServiceException,
+    throws DatasetException, FeatureStoreMetadataException, MetadataException, ServiceException,
            GenericException, FeaturestoreException, IOException {
     return (ProvExplicitLinkDTO<FeaturegroupDTO>)build(uriInfo, resourceRequest, accessProject, user, links);
   }
@@ -114,7 +114,7 @@ public class ProvExplicitLinksBuilder {
   public ProvExplicitLinkDTO<FeatureViewDTO> buildFVLinks(UriInfo uriInfo, ResourceRequest resourceRequest,
                                                           Project accessProject, Users user,
                                                           ProvExplicitLink<FeatureView> links)
-    throws DatasetException, SchematizedTagException, MetadataException, ServiceException,
+    throws DatasetException, FeatureStoreMetadataException, MetadataException, ServiceException,
            GenericException, FeaturestoreException, IOException {
     return (ProvExplicitLinkDTO<FeatureViewDTO>)build(uriInfo, resourceRequest, accessProject, user, links);
   }
@@ -122,7 +122,7 @@ public class ProvExplicitLinksBuilder {
   public ProvExplicitLinkDTO<TrainingDatasetDTO> buildTDLinks(UriInfo uriInfo, ResourceRequest resourceRequest,
                                                           Project accessProject, Users user,
                                                           ProvExplicitLink<TrainingDataset> links)
-    throws DatasetException, SchematizedTagException, MetadataException, ServiceException,
+    throws DatasetException, FeatureStoreMetadataException, MetadataException, ServiceException,
            GenericException, FeaturestoreException, IOException {
     return (ProvExplicitLinkDTO<TrainingDatasetDTO>)build(uriInfo, resourceRequest, accessProject, user, links);
   }
@@ -130,7 +130,7 @@ public class ProvExplicitLinksBuilder {
   public ProvExplicitLinkDTO<?> build(UriInfo uriInfo, ResourceRequest resourceRequest,
                                       Project accessProject, Users user, ProvExplicitLink<?> links)
     throws GenericException, FeaturestoreException, DatasetException, ServiceException, MetadataException,
-           SchematizedTagException, IOException {
+           FeatureStoreMetadataException, IOException {
     boolean expandLink = resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.PROVENANCE);
     boolean expandArtifact = resourceRequest != null
       && resourceRequest.contains(ResourceRequest.Name.PROVENANCE_ARTIFACTS);
@@ -167,7 +167,7 @@ public class ProvExplicitLinksBuilder {
   
   private ProvExplicitLinkDTO featureGroupLink(UriInfo uriInfo, Project accessProject, Users user,
                                                boolean expandArtifact, ProvExplicitLink links)
-    throws FeaturestoreException, ServiceException, MetadataException, SchematizedTagException, DatasetException,
+    throws FeaturestoreException, ServiceException, MetadataException, FeatureStoreMetadataException, DatasetException,
            IOException {
     ProvExplicitLinkDTO<FeaturegroupDTO> linksDTO = new ProvExplicitLinkDTO<>();
     RestDTO artifactDTO;
@@ -197,7 +197,7 @@ public class ProvExplicitLinksBuilder {
   private ProvExplicitLinkDTO featureViewLink(UriInfo uriInfo, Project accessProject, Users user,
                                               boolean expandArtifact, ProvExplicitLink links)
     throws FeaturestoreException, DatasetException, ServiceException, MetadataException,
-           SchematizedTagException, IOException {
+           FeatureStoreMetadataException, IOException {
     ProvExplicitLinkDTO<FeatureViewDTO> linksDTO = new ProvExplicitLinkDTO<>();
     RestDTO artifactDTO;
     if(links.isDeleted()) {
@@ -241,7 +241,7 @@ public class ProvExplicitLinksBuilder {
   
   private ProvExplicitLinkDTO trainingDatasetLink(UriInfo uriInfo, Project accessProject, Users user,
                                                   boolean expandArtifact, ProvExplicitLink links)
-    throws FeaturestoreException, DatasetException, ServiceException, MetadataException, SchematizedTagException,
+    throws FeaturestoreException, DatasetException, ServiceException, MetadataException, FeatureStoreMetadataException,
            IOException {
     ProvExplicitLinkDTO<TrainingDatasetDTO> linksDTO = new ProvExplicitLinkDTO<>();
     RestDTO artifactDTO;
@@ -272,7 +272,7 @@ public class ProvExplicitLinksBuilder {
   
   private void traverseLinks(UriInfo uriInfo, Project accessProject, Users user, ProvExplicitLinkDTO<?> linksDTO,
                              boolean expandArtifact, ProvExplicitLink<?> links)
-    throws FeaturestoreException, ServiceException, MetadataException, SchematizedTagException, DatasetException,
+    throws FeaturestoreException, ServiceException, MetadataException, FeatureStoreMetadataException, DatasetException,
            IOException {
     if(linksDTO.getNode().isAccessible()) {
       for (ProvExplicitLink<?> downstreamLink : links.getDownstream()) {
@@ -290,7 +290,7 @@ public class ProvExplicitLinksBuilder {
   
   private ProvExplicitLinkDTO<?> traverseLinksInt(UriInfo uriInfo, Project accessProject, Users user,
                                                   boolean expandArtifact, ProvExplicitLink link)
-    throws FeaturestoreException, ServiceException, DatasetException, MetadataException, SchematizedTagException,
+    throws FeaturestoreException, ServiceException, DatasetException, MetadataException, FeatureStoreMetadataException,
            IOException {
     switch(link.getArtifactType()) {
       case FEATURE_GROUP:

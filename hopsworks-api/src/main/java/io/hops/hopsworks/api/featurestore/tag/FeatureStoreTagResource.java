@@ -19,23 +19,17 @@ package io.hops.hopsworks.api.featurestore.tag;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
-import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.api.tags.TagBuilder;
 import io.hops.hopsworks.api.tags.TagsExpansionBeanParam;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.commands.featurestore.search.SearchFSCommandLogger;
-import io.hops.hopsworks.common.dataset.util.DatasetPath;
-import io.hops.hopsworks.common.tags.AttachTagResult;
-import io.hops.hopsworks.common.tags.TagControllerIface;
+import io.hops.hopsworks.common.featurestore.metadata.FeatureStoreTagControllerIface;
+import io.hops.hopsworks.common.featurestore.metadata.AttachMetadataResult;
 import io.hops.hopsworks.common.tags.TagsDTO;
-import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
-import io.hops.hopsworks.exceptions.MetadataException;
-import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.metadata.FeatureStoreTag;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -60,7 +54,9 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -68,13 +64,9 @@ import java.util.stream.Collectors;
 public abstract class FeatureStoreTagResource {
   
   @Inject
-  private TagControllerIface tagController;
+  protected FeatureStoreTagControllerIface tagController;
   @EJB
-  private TagBuilder tagBuilder;
-  @EJB
-  private JWTHelper jwtHelper;
-  @EJB
-  protected SearchFSCommandLogger searchCommandLogger;
+  protected FeatureStoreTagBuilder tagBuilder;
   
   protected Project project;
   protected Featurestore featureStore;
@@ -97,10 +89,18 @@ public abstract class FeatureStoreTagResource {
     this.featureStore = featureStore;
   }
   
-  protected abstract DatasetPath getDatasetPath() throws DatasetException, FeaturestoreException;
-  protected abstract void logTagsUpdateForSearch() throws FeaturestoreException;
-  protected abstract Integer getItemId();
-  protected abstract ResourceRequest.Name getItemType();
+  protected abstract Optional<FeatureStoreTag> getTag(String name) throws FeatureStoreMetadataException;
+  protected abstract Map<String, FeatureStoreTag> getTags();
+  protected abstract AttachMetadataResult<FeatureStoreTag> putTag(String name, String value)
+    throws FeatureStoreMetadataException, FeaturestoreException;
+  protected abstract AttachMetadataResult<FeatureStoreTag> putTags(Map<String, String> tags)
+    throws FeatureStoreMetadataException, FeaturestoreException;
+  protected abstract void deleteTag(String name) throws FeatureStoreMetadataException, FeaturestoreException;
+  protected abstract void deleteTags() throws FeaturestoreException;
+  protected abstract TagsDTO buildPutTags(UriInfo uriInfo, ResourceRequest request, Map<String, FeatureStoreTag> tags)
+    throws FeatureStoreMetadataException;
+  protected abstract TagsDTO buildGetTags(UriInfo uriInfo, ResourceRequest request, Map<String, FeatureStoreTag> tags)
+    throws FeatureStoreMetadataException;
   
   @ApiOperation(value = "Create or update one tag", response = TagsDTO.class)
   @PUT
@@ -117,13 +117,9 @@ public abstract class FeatureStoreTagResource {
                          @Context UriInfo uriInfo,
                          @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name,
                          @ApiParam(value = "Value to set for the tag") String value)
-          throws MetadataException, SchematizedTagException, DatasetException, FeaturestoreException {
-    Users user = jwtHelper.getUserPrincipal(sc);
-    AttachTagResult result = tagController.upsert(user, getDatasetPath(), name, value);
-    logTagsUpdateForSearch();
-    FeatureStoreTagUri tagUri = new FeatureStoreTagUri(uriInfo, featureStore.getId(), getItemType(), getItemId());
-    TagsDTO dto = tagBuilder.build(tagUri, getDatasetPath(), result.getItems());
-    
+    throws FeatureStoreMetadataException, FeaturestoreException {
+    AttachMetadataResult<FeatureStoreTag> result = putTag(name, value);
+    TagsDTO dto = buildPutTags(uriInfo, new ResourceRequest(ResourceRequest.Name.TAGS), result.getItems());
     UriBuilder builder = uriInfo.getAbsolutePathBuilder();
     if(result.isCreated()) {
       return Response.created(builder.build()).entity(dto).build();
@@ -141,33 +137,26 @@ public abstract class FeatureStoreTagResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
-  public Response bulkPutTags(@Context SecurityContext sc, @Context UriInfo uriInfo,
-                              @Context HttpServletRequest req,
-                              TagsDTO tags)
-          throws MetadataException, SchematizedTagException, DatasetException, FeaturestoreException {
-    
-    Users user = jwtHelper.getUserPrincipal(sc);
-    AttachTagResult result;
-    
-    if(tags.getItems() == null || tags.getItems().isEmpty()) {
-      result = tagController.upsert(user, getDatasetPath(), tags.getName(), tags.getValue());
+  public Response putTags(@Context SecurityContext sc, @Context UriInfo uriInfo,
+                          @Context HttpServletRequest req,
+                          TagsDTO tagsDTO)
+    throws FeatureStoreMetadataException, FeaturestoreException {
+  
+    Map<String, String> tags;
+    if(tagsDTO.getItems() == null || tagsDTO.getItems().isEmpty()) {
+      tags = new HashMap<>();
+      tags.put(tagsDTO.getName(), tagsDTO.getValue());
     } else {
-      result = tagController.upsertAll(user, getDatasetPath(), tagsToMap(tags));
+      tags = tagsDTO.getItems().stream().collect(Collectors.toMap(TagsDTO::getName, TagsDTO::getValue));
     }
-    logTagsUpdateForSearch();
-    FeatureStoreTagUri tagUri = new FeatureStoreTagUri(uriInfo, featureStore.getId(), getItemType(), getItemId());
-    TagsDTO dto = tagBuilder.build(tagUri, getDatasetPath(), result.getItems());
-    
+    AttachMetadataResult<FeatureStoreTag> result = putTags(tags);
+    TagsDTO dto = buildPutTags(uriInfo, new ResourceRequest(ResourceRequest.Name.TAGS), result.getItems());
     UriBuilder builder = uriInfo.getAbsolutePathBuilder();
     if(result.isCreated()) {
       return Response.created(builder.build()).entity(dto).build();
     } else {
       return Response.ok(builder.build()).entity(dto).build();
     }
-  }
-  
-  private Map<String, String> tagsToMap(TagsDTO tags) {
-    return tags.getItems().stream().collect(Collectors.toMap(TagsDTO::getName, TagsDTO::getValue));
   }
   
   @ApiOperation( value = "Get all tags attached", response = TagsDTO.class)
@@ -181,13 +170,11 @@ public abstract class FeatureStoreTagResource {
   public Response getTags(@Context SecurityContext sc, @Context UriInfo uriInfo,
                           @Context HttpServletRequest req,
                           @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
-          throws DatasetException, MetadataException, SchematizedTagException, FeaturestoreException {
-    
-    Users user = jwtHelper.getUserPrincipal(sc);
+    throws FeatureStoreMetadataException {
+    Map<String, FeatureStoreTag> result = getTags();
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
     resourceRequest.setExpansions(tagsExpansionBeanParam.getResources());
-    FeatureStoreTagUri tagUri = new FeatureStoreTagUri(uriInfo, featureStore.getId(), getItemType(), getItemId());
-    TagsDTO dto = tagBuilder.build(tagUri, resourceRequest, user, getDatasetPath());
+    TagsDTO dto = buildGetTags(uriInfo, resourceRequest, result);
     return Response.status(Response.Status.OK).entity(dto).build();
   }
   
@@ -204,14 +191,19 @@ public abstract class FeatureStoreTagResource {
                          @Context HttpServletRequest req,
                          @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name,
                          @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
-          throws DatasetException, MetadataException, SchematizedTagException, FeaturestoreException {
-    
-    Users user = jwtHelper.getUserPrincipal(sc);
-    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
-    resourceRequest.setExpansions(tagsExpansionBeanParam.getResources());
-    FeatureStoreTagUri tagUri = new FeatureStoreTagUri(uriInfo, featureStore.getId(), getItemType(), getItemId());
-    TagsDTO dto = tagBuilder.buildAsMap(tagUri, resourceRequest, user, getDatasetPath(), name);
-    return Response.status(Response.Status.OK).entity(dto).build();
+    throws FeatureStoreMetadataException {
+    Optional<FeatureStoreTag> result = getTag(name);
+    if(result.isPresent()) {
+      ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
+      resourceRequest.setExpansions(tagsExpansionBeanParam.getResources());
+      Map<String, FeatureStoreTag> resultAux = new HashMap<>();
+      resultAux.put(result.get().getSchema().getName(), result.get());
+      //TODO - this should return single element. Doing this for backwards compatibility
+      TagsDTO dto = buildGetTags(uriInfo, resourceRequest, resultAux);
+      return Response.status(Response.Status.OK).entity(dto).build();
+    } else {
+      return Response.status(Response.Status.NOT_FOUND).build();
+    }
   }
   
   @ApiOperation( value = "Delete all attached tags")
@@ -224,11 +216,8 @@ public abstract class FeatureStoreTagResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response deleteTags(@Context SecurityContext sc,
                              @Context HttpServletRequest req)
-          throws DatasetException, MetadataException, FeaturestoreException {
-    
-    Users user = jwtHelper.getUserPrincipal(sc);
-    tagController.deleteAll(user, getDatasetPath());
-    logTagsUpdateForSearch();
+    throws FeaturestoreException {
+    deleteTags();
     return Response.noContent().build();
   }
   
@@ -244,11 +233,8 @@ public abstract class FeatureStoreTagResource {
   public Response deleteTag(@Context SecurityContext sc,
                             @Context HttpServletRequest req,
                             @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name)
-          throws DatasetException, MetadataException, FeaturestoreException {
-    
-    Users user = jwtHelper.getUserPrincipal(sc);
-    tagController.delete(user, getDatasetPath(), name);
-    logTagsUpdateForSearch();
+    throws FeaturestoreException, FeatureStoreMetadataException {
+    deleteTag(name);
     return Response.noContent().build();
   }
 }

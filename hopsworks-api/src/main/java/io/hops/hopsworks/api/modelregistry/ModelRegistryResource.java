@@ -32,7 +32,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ModelRegistryException;
-import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -91,7 +91,7 @@ public class ModelRegistryResource {
     @BeanParam ModelRegistryBeanParam modelRegistryBeanParam,
     @BeanParam Pagination pagination,
     @Context UriInfo uriInfo,
-    @Context SecurityContext sc) throws GenericException, ModelRegistryException, SchematizedTagException,
+    @Context SecurityContext sc) throws GenericException, ModelRegistryException, FeatureStoreMetadataException,
           MetadataException {
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELREGISTRIES);
@@ -118,7 +118,7 @@ public class ModelRegistryResource {
           @BeanParam ModelRegistryBeanParam modelRegistryBeanParam,
           @BeanParam Pagination pagination,
           @Context UriInfo uriInfo,
-          @Context SecurityContext sc) throws GenericException, ModelRegistryException, SchematizedTagException,
+          @Context SecurityContext sc) throws GenericException, ModelRegistryException, FeatureStoreMetadataException,
           MetadataException {
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELREGISTRIES);

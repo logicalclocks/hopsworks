@@ -21,7 +21,7 @@ import io.hops.hopsworks.common.tags.TagControllerIface;
 import io.hops.hopsworks.common.tags.TagsDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.MetadataException;
-import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.EJB;
@@ -40,7 +40,7 @@ public class TagBuilder {
   private TagSchemasBuilder tagSchemasBuilder;
   
   public TagsDTO build(TagUri tagUri, ResourceRequest resourceRequest, Users user, DatasetPath path)
-    throws DatasetException, MetadataException, SchematizedTagException {
+    throws DatasetException, MetadataException, FeatureStoreMetadataException {
     TagsDTO dto = tagUri.addUri(new TagsDTO(), path);
     if (resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.TAGS)) {
       Map<String, String> tags = tagController.getAll(user, path);
@@ -58,7 +58,7 @@ public class TagBuilder {
   
   public TagsDTO build(TagUri tagUri, ResourceRequest resourceRequest, Users user, DatasetPath path,
                        String name)
-    throws SchematizedTagException, DatasetException, MetadataException {
+    throws FeatureStoreMetadataException, DatasetException, MetadataException {
     TagsDTO dto = tagUri.addUri(new TagsDTO(), path, name);
     if (resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.TAGS)) {
       String value = tagController.get(user, path, name);
@@ -72,7 +72,7 @@ public class TagBuilder {
   @Deprecated
   public TagsDTO buildAsMap(TagUri tagUri, ResourceRequest resourceRequest, Users user, DatasetPath path,
                             String name)
-    throws SchematizedTagException, DatasetException, MetadataException {
+    throws FeatureStoreMetadataException, DatasetException, MetadataException {
     TagsDTO dto = tagUri.addUri(new TagsDTO(), path, name);
     if (resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.TAGS)) {
       TagsDTO item = tagUri.addUri(new TagsDTO(), path, name);
@@ -84,15 +84,8 @@ public class TagBuilder {
     return dto;
   }
   
-  public TagsDTO build(TagUri tagUri, DatasetPath path, String name, String value)
-    throws SchematizedTagException {
-    TagsDTO dto = tagUri.addUri(new TagsDTO(), path, name);
-    buildBase(dto, name, value);
-    return dto;
-  }
-  
   public TagsDTO build(TagUri tagUri, DatasetPath path, Map<String, String> tags)
-    throws SchematizedTagException {
+    throws FeatureStoreMetadataException {
     TagsDTO dto = tagUri.addUri(new TagsDTO(), path);
     for(Map.Entry<String, String> tag : tags.entrySet()) {
       TagsDTO item = tagUri.addUri(new TagsDTO(), path, tag.getKey());
@@ -104,7 +97,7 @@ public class TagBuilder {
   
   private TagsDTO buildFull(TagsDTO dto, TagUri tagUri, ResourceRequest resourceRequest,
                             String name, String value)
-    throws SchematizedTagException {
+    throws FeatureStoreMetadataException {
     buildBase(dto, name, value);
     dto.setSchema(tagSchemasBuilder.build(tagUri.getUriInfo(), resourceRequest, name));
     return dto;

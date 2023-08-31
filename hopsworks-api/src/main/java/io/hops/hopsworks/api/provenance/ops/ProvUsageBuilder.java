@@ -43,7 +43,7 @@ import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
-import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -86,7 +86,7 @@ public class ProvUsageBuilder {
   
   public ProvArtifactUsageParentDTO buildAccessible(UriInfo uriInfo, Users user, DatasetPath targetEndpoint,
     String artifactId, Set<ProvUsageType> type)
-    throws ProvenanceException, GenericException, DatasetException, MetadataException, SchematizedTagException {
+    throws ProvenanceException, GenericException, DatasetException, MetadataException, FeatureStoreMetadataException {
     if(!accessController.hasAccess(targetEndpoint.getAccessProject(), targetEndpoint.getDataset())) {
       throw new GenericException(RESTCodes.GenericErrorCode.NOT_AUTHORIZED_TO_ACCESS, Level.FINE);
     }
