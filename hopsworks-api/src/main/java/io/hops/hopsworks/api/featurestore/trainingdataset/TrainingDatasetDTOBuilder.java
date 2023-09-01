@@ -92,9 +92,11 @@ public class TrainingDatasetDTOBuilder {
             queryBuilder.build(query, trainingDataset.getFeaturestore(), project, user).getFilter()
         );
       }
-      trainingDatasetDTO.setTags(tagsBuilder.build(uriInfo, resourceRequest, project.getId(),
-        trainingDataset.getFeaturestore().getId(), ResourceRequest.Name.TRAININGDATASETS, trainingDataset.getId(),
-        tagController.getTags(trainingDataset)));
+      if(resourceRequest.contains(ResourceRequest.Name.TAGS)) {
+        trainingDatasetDTO.setTags(tagsBuilder.build(uriInfo, resourceRequest, project.getId(),
+          trainingDataset.getFeaturestore().getId(), ResourceRequest.Name.TRAININGDATASETS, trainingDataset.getId(),
+          tagController.getTags(trainingDataset)));
+      }
     }
     return trainingDatasetDTO;
   }
