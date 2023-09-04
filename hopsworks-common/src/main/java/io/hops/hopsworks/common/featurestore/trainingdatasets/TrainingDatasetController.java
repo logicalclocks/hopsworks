@@ -52,13 +52,11 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.security.QuotasEnforcement;
 import io.hops.hopsworks.common.security.QuotaEnforcementException;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.JobException;
-import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
@@ -126,8 +124,6 @@ public class TrainingDatasetController {
   private ExternalTrainingDatasetController externalTrainingDatasetController;
   @EJB
   private TrainingDatasetInputValidation trainingDatasetInputValidation;
-  @EJB
-  private HopsFSProvenanceController fsProvenanceController;
   @EJB
   private DistributedFsService dfs;
   @EJB
@@ -259,7 +255,7 @@ public class TrainingDatasetController {
 
   public TrainingDatasetDTO createTrainingDataset(Users user, Project project, Featurestore featurestore,
       FeatureView featureView, TrainingDatasetDTO trainingDatasetDTO)
-      throws FeaturestoreException, ProvenanceException, IOException, ServiceException, CloudException {
+      throws FeaturestoreException, IOException, ServiceException, CloudException {
     // Name of Training data = <feature view name>_<feature view version>, version is needed
     // because there can be multiple training dataset of same name from different version of feature view
     trainingDatasetDTO.setName(featureView.getName() + "_" + featureView.getVersion());
@@ -275,7 +271,7 @@ public class TrainingDatasetController {
 
   public TrainingDatasetDTO createTrainingDataset(Users user, Project project, Featurestore featurestore,
                                                  TrainingDatasetDTO trainingDatasetDTO)
-      throws FeaturestoreException, ProvenanceException, IOException, ServiceException, CloudException {
+      throws FeaturestoreException, IOException, ServiceException, CloudException {
 
     // If the training dataset is constructed from a query, verify that it compiles correctly
     Query query = null;
@@ -291,7 +287,7 @@ public class TrainingDatasetController {
 
   private TrainingDatasetDTO createTrainingDataset(Users user, Project project, Featurestore featurestore,
       FeatureView featureView, TrainingDatasetDTO trainingDatasetDTO, Query query, Boolean skipFeature)
-      throws FeaturestoreException, ProvenanceException, IOException, ServiceException, CloudException {
+      throws FeaturestoreException, IOException, ServiceException, CloudException {
     featurestoreUtils.verifyUserProjectEqualsFsProject(user, project, featurestore,
         FeaturestoreUtils.ActionMessage.CREATE_TRAINING_DATASET);
 
@@ -387,8 +383,7 @@ public class TrainingDatasetController {
       completeTrainingDatasetDTO = aux.getValue0();
       searchCommandLogger.create(aux.getValue1());
       if (featureView == null) {
-        fsProvenanceController.trainingDatasetAttachXAttr(tagPath, completeTrainingDatasetDTO, udfso);
-        searchCommandLogger.updateFeaturestore(aux.getValue1());
+        searchCommandLogger.updateMetadata(aux.getValue1());
       }
       activityFacade.persistActivity(ActivityFacade.CREATED_TRAINING_DATASET +
           completeTrainingDatasetDTO.getName(), project, user, ActivityFlag.SERVICE);

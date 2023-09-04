@@ -40,7 +40,6 @@ import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProjectException;
-import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -129,7 +128,7 @@ public class TrainingDatasetResource {
       @Context
           UriInfo uriInfo,
       TrainingDatasetDTO trainingDatasetDTO)
-      throws FeaturestoreException, ProvenanceException, IOException, ServiceException, CloudException {
+      throws FeaturestoreException, IOException, ServiceException, CloudException {
     Users user = jWTHelper.getUserPrincipal(sc);
     TrainingDatasetDTO createdTrainingDatasetDTO =
         trainingDatasetController.createTrainingDataset(user, project, featurestore, featureView, trainingDatasetDTO);

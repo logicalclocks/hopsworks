@@ -447,8 +447,8 @@ public class SearchFSCommandExecutor {
             searchController.updateKeywords(c.getInodeId(), c);
             return Try.apply(() -> true);
           }
-          case UPDATE_FEATURESTORE: {
-            searchController.setFeaturestore(c.getInodeId(), c);
+          case UPDATE_METADATA: {
+            searchController.updateMetadata(c.getInodeId(), c);
             return Try.apply(() -> true);
           }
           default :

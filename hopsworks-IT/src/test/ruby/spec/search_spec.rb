@@ -109,8 +109,8 @@ describe "On #{ENV['OS']}" do
       tds[2] = {}
       tds[2][:name] = "td_something3"
       td3_features = [
-          { name: "dog", featuregroup: "fg", type: "INT"},
-          { name: "feature2", featuregroup: "fg", type: "INT"}
+          { name: "dog", type: "INT"},
+          { name: "feature2", type: "INT"}
       ]
       td_json, _ = create_hopsfs_training_dataset_checked(project[:id], featurestore_id, connector, name: tds[2][:name], features: td3_features)
       tds[2][:id] = td_json[:id]
