@@ -30,7 +30,6 @@ import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.MetadataException;
-import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -103,7 +102,7 @@ public class FeatureViewResource {
           HttpServletRequest req,
       @Context
           UriInfo uriInfo,
-      FeatureViewDTO featureViewDTO) throws FeaturestoreException, ProvenanceException, ServiceException, IOException,
+      FeatureViewDTO featureViewDTO) throws FeaturestoreException, ServiceException, IOException,
                                             FeatureStoreMetadataException, MetadataException, DatasetException {
     if (featureViewDTO == null) {
       throw new IllegalArgumentException("Input JSON for creating a new Feature View cannot be null");
