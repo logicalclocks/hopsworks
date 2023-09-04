@@ -42,14 +42,9 @@ import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStora
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
-import io.hops.hopsworks.common.security.QuotasEnforcement;
-import io.hops.hopsworks.common.security.QuotaEnforcementException;
 import io.hops.hopsworks.common.provenance.explicit.FeatureGroupLinkController;
+import io.hops.hopsworks.common.security.QuotaEnforcementException;
+import io.hops.hopsworks.common.security.QuotasEnforcement;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
@@ -57,7 +52,6 @@ import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
-import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.SchemaException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
@@ -110,15 +104,9 @@ public class FeaturegroupController {
   @EJB
   private FeaturestoreInputValidation featurestoreInputValidation;
   @EJB
-  private HopsFSProvenanceController fsController;
-  @EJB
   private StatisticsController statisticsController;
   @EJB
-  private DistributedFsService dfs;
-  @EJB
   private Settings settings;
-  @EJB
-  private HdfsUsersController hdfsUsersController;
   @EJB
   private OnlineFeaturestoreController onlineFeaturestoreController;
   @EJB
@@ -169,7 +157,7 @@ public class FeaturegroupController {
    * @throws SQLException
    */
   public FeaturegroupDTO clearFeaturegroup(Featuregroup featuregroup, Project project, Users user)
-    throws FeaturestoreException, SQLException, ProvenanceException, IOException, ServiceException,
+    throws FeaturestoreException, SQLException, IOException, ServiceException,
            KafkaException, SchemaException, ProjectException, UserException, HopsSecurityException, JobException,
            GenericException {
 
@@ -201,12 +189,11 @@ public class FeaturegroupController {
    * @return
    * @throws FeaturestoreException
    * @throws SQLException
-   * @throws ProvenanceException
    * @throws ServiceException
    */
   public FeaturegroupDTO createFeaturegroup(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
                                             Project project, Users user)
-    throws FeaturestoreException, ServiceException, SQLException, ProvenanceException, IOException,
+    throws FeaturestoreException, ServiceException, SQLException, IOException,
            KafkaException, SchemaException, ProjectException, UserException, HopsSecurityException, JobException,
            GenericException {
 
@@ -240,7 +227,7 @@ public class FeaturegroupController {
 
   public FeaturegroupDTO createFeaturegroupNoValidation(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
                                                       Project project, Users user)
-    throws FeaturestoreException, SQLException, ProvenanceException, ServiceException, KafkaException,
+    throws FeaturestoreException, SQLException, ServiceException, KafkaException,
            SchemaException, ProjectException, UserException, IOException, HopsSecurityException, JobException,
            GenericException {
 
@@ -284,18 +271,7 @@ public class FeaturegroupController {
     }
 
     FeaturegroupDTO completeFeaturegroupDTO = convertFeaturegrouptoDTO(featuregroup, project, user);
-
-    //Extract metadata
-    String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
-    DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsername);
-    try {
-      String fgPath = Utils.getFeaturestorePath(featurestore.getProject(), settings)
-          + "/" + Utils.getFeaturegroupName(featuregroup);
-      fsController.featuregroupAttachXAttrs(fgPath, completeFeaturegroupDTO, udfso);
-      searchCommandLogger.updateFeaturestore(featuregroup);
-    } finally {
-      dfs.closeDfsClient(udfso);
-    }
+    searchCommandLogger.updateMetadata(featuregroup);
 
     // Log activity
     fsActivityFacade.logMetadataActivity(user, featuregroup, FeaturestoreActivityMeta.FG_CREATED, null);
@@ -443,7 +419,7 @@ public class FeaturegroupController {
   public FeaturegroupDTO updateFeaturegroupMetadata(Project project, Users user, Featurestore featurestore,
                                                     Featuregroup featuregroup,
                                                     FeaturegroupDTO featuregroupDTO)
-      throws FeaturestoreException, SQLException, ProvenanceException, ServiceException, SchemaException,
+      throws FeaturestoreException, SQLException, ServiceException, SchemaException,
         KafkaException {
     featurestoreUtils.verifyUserProjectEqualsFsProjectAndDataOwner(user, project, featuregroup.getFeaturestore(),
         FeaturestoreUtils.ActionMessage.UPDATE_FEATURE_GROUP_METADATA);
@@ -481,21 +457,8 @@ public class FeaturegroupController {
     }
 
     featuregroup = featuregroupFacade.updateFeaturegroupMetadata(featuregroup);
-
-    featuregroupDTO = convertFeaturegrouptoDTO(featuregroup, project, user);
-
-    String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
-    DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsername);
-    try {
-      String fgPath = Utils.getFeaturestorePath(featurestore.getProject(), settings)
-          + "/" + Utils.getFeaturegroupName(featuregroup);
-      fsController.featuregroupAttachXAttrs(fgPath, featuregroupDTO, udfso);
-      searchCommandLogger.updateFeaturestore(featuregroup);
-    } finally {
-      dfs.closeDfsClient(udfso);
-    }
-
-    return featuregroupDTO;
+    searchCommandLogger.updateMetadata(featuregroup);
+    return convertFeaturegrouptoDTO(featuregroup, project, user);
   }
 
   /**

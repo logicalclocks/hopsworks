@@ -33,12 +33,10 @@ import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.provenance.explicit.FeatureViewLinkController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.JobException;
-import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivityMeta;
@@ -87,8 +85,6 @@ public class FeatureViewController {
   @EJB
   private FeaturestoreConnectorFacade featurestoreConnectorFacade;
   @EJB
-  private HopsFSProvenanceController fsProvenanceController;
-  @EJB
   private FeaturestoreActivityFacade fsActivityFacade;
   @EJB
   private FeaturestoreUtils featurestoreUtils;
@@ -108,7 +104,7 @@ public class FeatureViewController {
   private SearchFSCommandLogger searchCommandLogger;
 
   public FeatureView createFeatureView(Project project, Users user, FeatureView featureView, Featurestore featurestore)
-    throws FeaturestoreException, ProvenanceException, IOException {
+    throws FeaturestoreException, IOException {
     featurestoreUtils.verifyUserProjectEqualsFsProject(user, project, featurestore,
         FeaturestoreUtils.ActionMessage.CREATE_FEATURE_VIEW);
 
@@ -155,10 +151,8 @@ public class FeatureViewController {
 
       activityFacade.persistActivity(ActivityFacade.CREATED_FEATURE_VIEW + featureView.getName(), project, user,
           ActivityFlag.SERVICE);
-
-      fsProvenanceController.featureViewAttachXAttr(path.toString(), featureView, udfso);
+      searchCommandLogger.updateMetadata(featureView);
       featureViewLinkController.createParentLinks(featureView);
-      searchCommandLogger.updateFeaturestore(featureView);
       return featureView;
     } finally {
       if (udfso != null) {

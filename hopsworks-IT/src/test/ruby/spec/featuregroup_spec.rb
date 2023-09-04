@@ -1657,7 +1657,7 @@ describe "On #{ENV['OS']}" do
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         # search
-        wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+        wait_result = wait_on_command_search(repeat: 30)
         expect(wait_result["success"]).to be(true), wait_result["msg"]
         expected_hits1 = []
         project_search_test(project, "testfeature2", "featuregroup", expected_hits1)
@@ -1687,7 +1687,7 @@ describe "On #{ENV['OS']}" do
                                                           description: new_description, features: new_schema)
         parsed_json = JSON.parse(json_result)
         expect_status_details(200)
-        wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+        wait_result = wait_on_command_search(repeat: 30)
         expect(wait_result["success"]).to be(true), wait_result["msg"]
         # search
         expected_hits2 = [{:name => featuregroup_name, :highlight => "features", :parentProjectName => project[:projectname]}]

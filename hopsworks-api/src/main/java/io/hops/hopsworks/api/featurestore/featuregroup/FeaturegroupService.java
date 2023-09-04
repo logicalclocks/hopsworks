@@ -52,7 +52,6 @@ import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
-import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.SchemaException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
@@ -267,7 +266,7 @@ public class FeaturegroupService {
         project, user);
       GenericEntity<FeaturegroupDTO> featuregroupGeneric = new GenericEntity<FeaturegroupDTO>(createdFeaturegroup) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(featuregroupGeneric).build();
-    } catch (SQLException | ProvenanceException | IOException | HopsSecurityException | JobException e) {
+    } catch (SQLException | IOException | HopsSecurityException | JobException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestore.getId(), e.getMessage(), e);
     }
@@ -412,7 +411,7 @@ public class FeaturegroupService {
     try {
       FeaturegroupDTO newFeatureGroup = featuregroupController.clearFeaturegroup(featuregroup, project, user);
       return Response.ok().entity(newFeatureGroup).build();
-    } catch (SQLException | IOException | ProvenanceException | HopsSecurityException | JobException e) {
+    } catch (SQLException | IOException  | HopsSecurityException | JobException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CLEAR_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
               ", featuregroupId: " + featuregroupId, e.getMessage(), e);
@@ -453,7 +452,7 @@ public class FeaturegroupService {
       @ApiParam(value = "deprecate", example = "true")
       @QueryParam("deprecate") Boolean deprecate,
       FeaturegroupDTO featuregroupDTO)
-      throws FeaturestoreException, SQLException, ProvenanceException, ServiceException, SchemaException,
+      throws FeaturestoreException, SQLException, ServiceException, SchemaException,
       KafkaException, ProjectException, UserException, IOException, HopsSecurityException {
     if (updateMetadata || updateStatsConfig) {
       if (featuregroupDTO == null) {
