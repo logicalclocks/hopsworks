@@ -32,6 +32,8 @@ import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobCon
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.OpenSearchTags;
 
 import java.io.File;
 import java.io.IOException;
@@ -155,7 +157,12 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
 
     addToSparkEnvironment(sparkProps, "SPARK_HOME", settings.getSparkDir(), HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps, "SPARK_CONF_DIR", settings.getSparkConfDir(), HopsUtils.IGNORE);
-    addToSparkEnvironment(sparkProps, "ELASTIC_ENDPOINT", settings.getOpenSearchRESTEndpoint(), HopsUtils.IGNORE);
+
+    String elasticEndpoint = (settings.isOpenSearchHTTPSEnabled() ? "https://" : "http://") +
+        serviceDiscoveryController.constructServiceAddressWithPort(
+            HopsworksService.OPENSEARCH.getNameWithTag(OpenSearchTags.rest));
+    addToSparkEnvironment(sparkProps, "ELASTIC_ENDPOINT", elasticEndpoint, HopsUtils.IGNORE);
+
     addToSparkEnvironment(sparkProps, "HADOOP_VERSION", settings.getHadoopVersion(), HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps, "HOPSWORKS_VERSION", settings.getHopsworksVersion(), HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps, "TENSORFLOW_VERSION", settings.getTensorflowVersion(), HopsUtils.IGNORE);
@@ -510,7 +517,6 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     extraJavaOptions.put(Settings.HOPSWORKS_REST_ENDPOINT_PROPERTY, hopsworksRestEndpoint);
     extraJavaOptions.put(Settings.HOPSUTIL_INSECURE_PROPERTY, String.valueOf(settings.isHopsUtilInsecure()));
     extraJavaOptions.put(Settings.SERVER_TRUSTSTORE_PROPERTY, Settings.SERVER_TRUSTSTORE_PROPERTY);
-    extraJavaOptions.put(Settings.HOPSWORKS_OPENSEARCH_ENDPOINT_PROPERTY, settings.getOpenSearchRESTEndpoint());
     extraJavaOptions.put(Settings.HOPSWORKS_PROJECTID_PROPERTY, Integer.toString(project.getId()));
     extraJavaOptions.put(Settings.HOPSWORKS_PROJECTNAME_PROPERTY, project.getName());
     extraJavaOptions.put(Settings.SPARK_JAVA_LIBRARY_PROP, settings.getHadoopSymbolicLinkDir() + "/lib/native/");
