@@ -137,9 +137,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_LOCALHOST = "localhost";
   private static final String VARIABLE_REQUESTS_VERIFY = "requests_verify";
   private static final String VARIABLE_CLOUD= "cloud";
-  private static final String VARIABLE_OPENSEARCH_IP = "elastic_ip";
-  private static final String VARIABLE_OPENSEARCH_PORT = "elastic_port";
-  private static final String VARIABLE_OPENSEARCH_REST_PORT = "elastic_rest_port";
   private static final String VARIABLE_OPENSEARCH_LOGS_INDEX_EXPIRATION = "elastic_logs_index_expiration";
   private static final String VARIABLE_SPARK_USER = "spark_user";
   private static final String VARIABLE_HDFS_SUPERUSER = "hdfs_user";
@@ -473,18 +470,6 @@ public class Settings implements Serializable {
     return defaultValue;
   }
 
-  private String setIpVar(String varName, String defaultValue) {
-    Optional<Variables> variable = findById(varName);
-    if (variable.isPresent()) {
-      String value = variable.get().getValue();
-      if (!Strings.isNullOrEmpty(value) && Ip.validIp(value)) {
-        return value;
-      }
-    }
-
-    return defaultValue;
-  }
-
   private Boolean setBoolVar(String varName, Boolean defaultValue) {
     Optional<Variables> variable = findById(varName);
     if (variable.isPresent()) {
@@ -667,11 +652,6 @@ public class Settings implements Serializable {
       SERVICE_DISCOVERY_DOMAIN = setStrVar(VARIABLE_SERVICE_DISCOVERY_DOMAIN, SERVICE_DISCOVERY_DOMAIN);
       AIRFLOW_DIR = setDirVar(VARIABLE_AIRFLOW_DIR, AIRFLOW_DIR);
       AIRFLOW_USER = setStrVar(VARIABLE_AIRFLOW_USER, AIRFLOW_USER);
-      String openSearchIps = setStrVar(VARIABLE_OPENSEARCH_IP,
-          OpenSearchSettings.OPENSEARCH_IP_DEFAULT);
-      int openSearchPort = setIntVar(VARIABLE_OPENSEARCH_PORT, OpenSearchSettings.OPENSEARCH_PORT_DEFAULT);
-      int openSearchRestPort = setIntVar(VARIABLE_OPENSEARCH_REST_PORT,
-          OpenSearchSettings.OPENSEARCH_REST_PORT_DEFAULT);
       boolean openSearchSecurityEnabled =
           setBoolVar(VARIABLE_OPENSEARCH_SECURITY_ENABLED,
               OpenSearchSettings.OPENSEARCH_SECURTIY_ENABLED_DEFAULT);
@@ -689,8 +669,7 @@ public class Settings implements Serializable {
           OpenSearchSettings.OPENSEARCH_JWT_URL_PARAMETER_DEFAULT);
       long openSearchJWTEXPMS = setLongVar(VARIABLE_OPENSEARCH_JWT_EXP_MS,
           OpenSearchSettings.OPENSEARCH_JWT_EXP_MS_DEFAULT);
-      OPENSEARCH_SETTINGS = new OpenSearchSettings(openSearchIps, openSearchPort,
-          openSearchRestPort, openSearchSecurityEnabled, openSearchHttpsEnabled,
+      OPENSEARCH_SETTINGS = new OpenSearchSettings(openSearchSecurityEnabled, openSearchHttpsEnabled,
           openSearchAdminUser, openSearchAdminPassword, openSearchJWTEnabled,
           openSearchJWTUrlParameter, openSearchJWTEXPMS, openSearchServiceLogUser);
       OpenSearch_LOGS_INDEX_EXPIRATION = setLongVar(VARIABLE_OPENSEARCH_LOGS_INDEX_EXPIRATION,
@@ -1573,32 +1552,7 @@ public class Settings implements Serializable {
   
   // OpenSearch
   OpenSearchSettings OPENSEARCH_SETTINGS;
-  
-  public synchronized List<String> getOpenSearchIps(){
-    checkCache();
-    return OPENSEARCH_SETTINGS.getOpenSearchIps();
-  }
-  
-  public synchronized int getOpenSearchPort() {
-    checkCache();
-    return OPENSEARCH_SETTINGS.getOpenSearchPort();
-  }
-  
-  public synchronized int getOpenSearchRESTPort() {
-    checkCache();
-    return OPENSEARCH_SETTINGS.getOpenSearchRESTPort();
-  }
-  
-  public synchronized String getOpenSearchEndpoint() {
-    checkCache();
-    return OPENSEARCH_SETTINGS.getOpenSearchEndpoint();
-  }
 
-  public synchronized String getOpenSearchRESTEndpoint() {
-    checkCache();
-    return OPENSEARCH_SETTINGS.getOpenSearchRESTEndpoint();
-  }
-  
   public synchronized boolean isOpenSearchSecurityEnabled() {
     checkCache();
     return OPENSEARCH_SETTINGS.isOpenSearchSecurityEnabled();

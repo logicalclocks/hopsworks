@@ -15,11 +15,15 @@
  */
 package io.hops.hopsworks.common.opensearch;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import com.logicalclocks.servicediscoverclient.service.Service;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
-import io.hops.hopsworks.common.util.Ip;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.OpenSearchTags;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -44,12 +48,9 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -63,6 +64,8 @@ public class OpenSearchClient {
   private Settings settings;
   @EJB
   private BaseHadoopClientsService clientsService;
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
 
   private static final Logger LOG = Logger.getLogger(OpenSearchClient.class.getName());
 
@@ -90,9 +93,15 @@ public class OpenSearchClient {
     elasticClient = null;
   }
 
-  public synchronized RestHighLevelClient getClient() throws OpenSearchException {
+  public synchronized RestHighLevelClient getClient() throws OpenSearchException, ServiceDiscoveryException {
     if (elasticClient == null) {
-      HttpHost[] elasticAddrs = getElasticIps();
+      Service elasticService = serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
+              HopsworksService.OPENSEARCH.getNameWithTag(OpenSearchTags.rest));
+      HttpHost elasticAddr = new HttpHost(
+          elasticService.getName(),
+          elasticService.getPort(),
+          settings.isOpenSearchHTTPSEnabled() ? "https" : "http");
+
       final boolean isSecurityEnabled =
         settings.isOpenSearchSecurityEnabled();
 
@@ -124,7 +133,7 @@ public class OpenSearchClient {
       final CredentialsProvider finalCredentialsProvider = credentialsProvider;
 
       elasticClient = new RestHighLevelClient(
-        RestClient.builder(elasticAddrs)
+        RestClient.builder(elasticAddr)
           .setHttpClientConfigCallback(httpAsyncClientBuilder -> {
             httpAsyncClientBuilder.setDefaultIOReactorConfig(
               IOReactorConfig.custom().setIoThreadCount(Settings.OPENSEARCH_KIBANA_NO_CONNECTIONS).build());
@@ -139,30 +148,6 @@ public class OpenSearchClient {
           }));
     }
     return elasticClient;
-  }
-
-  private HttpHost[] getElasticIps() throws OpenSearchException {
-    boolean isHTTPS = settings.isOpenSearchHTTPSEnabled();
-    List<String> addrs = settings.getOpenSearchIps();
-    HttpHost[] hosts = new HttpHost[addrs.size()];
-    int index = 0;
-    for (String addr : addrs) {
-      // Validate the ip address pulled from the variables
-      if (!Ip.validIp(addr)) {
-        try {
-          InetAddress.getByName(addr);
-        } catch (UnknownHostException e) {
-          throw new OpenSearchException(RESTCodes.OpenSearchErrorCode.OPENSEARCH_CONNECTION_ERROR,
-            Level.INFO, "Error while parsing elasticsearch ips", e.getMessage(), e);
-        }
-      }
-      hosts[index] = new HttpHost(addr,
-        settings.getOpenSearchRESTPort(),
-        isHTTPS ? "https" : "http");
-      index++;
-    }
-
-    return hosts;
   }
 
   private void shutdownClient() throws OpenSearchException {

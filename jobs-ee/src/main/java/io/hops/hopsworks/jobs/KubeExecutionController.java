@@ -72,6 +72,7 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.servicediscovery.HopsworksService;
 import io.hops.hopsworks.servicediscovery.tags.GlassfishTags;
 import io.hops.hopsworks.servicediscovery.tags.LogstashTags;
+import io.hops.hopsworks.servicediscovery.tags.OpenSearchTags;
 import org.apache.commons.io.FilenameUtils;
 import org.javatuples.Pair;
 
@@ -581,13 +582,17 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     Execution execution, String certificatesDir, String secretsDir, String anacondaEnv,
     DockerJobConfiguration dockerJobConfiguration, ResourceRequirements resourceRequirements)
     throws ServiceDiscoveryException, IOException, ApiKeyException {
-    
+
+    String elasticEndpoint = (settings.isOpenSearchHTTPSEnabled() ? "https://" : "http://") +
+        serviceDiscoveryController.constructServiceAddressWithPort(
+            HopsworksService.OPENSEARCH.getNameWithTag(OpenSearchTags.rest));
+
     List<EnvVar> environment = new ArrayList<>();
     switch (jobType) {
       case PYTHON:
         environment.add(new EnvVarBuilder().withName("SPARK_HOME").withValue(settings.getSparkDir()).build());
         environment.add(new EnvVarBuilder().withName("SPARK_CONF_DIR").withValue(settings.getSparkConfDir()).build());
-        environment.add(new EnvVarBuilder().withName("ELASTIC_ENDPOINT").withValue(settings.getOpenSearchRESTEndpoint())
+        environment.add(new EnvVarBuilder().withName("ELASTIC_ENDPOINT").withValue(elasticEndpoint)
           .build());
         environment.add(new EnvVarBuilder().withName("HADOOP_VERSION").withValue(settings.getHadoopVersion()).build());
         environment.add(new EnvVarBuilder().withName("HOPSWORKS_VERSION").withValue(settings.getHopsworksVersion())

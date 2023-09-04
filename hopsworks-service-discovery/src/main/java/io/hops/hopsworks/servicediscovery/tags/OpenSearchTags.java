@@ -16,7 +16,8 @@
 package io.hops.hopsworks.servicediscovery.tags;
 
 public enum OpenSearchTags implements ServiceTags {
-  monitoring("monitoring");
+  monitoring("monitoring"),
+  rest("rest");
 
   private final String value;
 

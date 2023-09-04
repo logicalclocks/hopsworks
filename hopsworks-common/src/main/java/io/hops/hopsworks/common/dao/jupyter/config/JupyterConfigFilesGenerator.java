@@ -75,6 +75,7 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.servicediscovery.HopsworksService;
 import io.hops.hopsworks.servicediscovery.tags.GlassfishTags;
 import io.hops.hopsworks.servicediscovery.tags.NamenodeTags;
+import io.hops.hopsworks.servicediscovery.tags.OpenSearchTags;
 import org.apache.commons.io.FileUtils;
 
 import javax.ejb.EJB;
@@ -231,6 +232,9 @@ public class JupyterConfigFilesGenerator {
         .getAnyAddressOfServiceWithDNS(HopsworksService.NAMENODE.getNameWithTag(NamenodeTags.rpc));
     String hopsworksRestEndpoint = "https://" + serviceDiscoveryController
         .constructServiceFQDNWithPort(HopsworksService.GLASSFISH.getNameWithTag(GlassfishTags.hopsworks));
+    String elasticEndpoint = (settings.isOpenSearchHTTPSEnabled() ? "https://" : "http://") +
+        serviceDiscoveryController.constructServiceAddressWithPort(
+            HopsworksService.OPENSEARCH.getNameWithTag(OpenSearchTags.rest));
     DockerJobConfiguration dockerJobConfiguration = (DockerJobConfiguration)js.getDockerConfig();
 
     JupyterContentsManager jcm = JupyterContentsManager.HDFS_CONTENTS_MANAGER;
@@ -240,7 +244,7 @@ public class JupyterConfigFilesGenerator {
         .setNamenodePort(String.valueOf(namenode.getPort()))
         .setContentsManager(jcm.getClassName())
         .setHopsworksEndpoint(hopsworksRestEndpoint)
-        .setElasticEndpoint(settings.getOpenSearchRESTEndpoint())
+        .setElasticEndpoint(elasticEndpoint)
         .setPort(port)
         .setBaseDirectory(js.getBaseDir())
         .setHdfsUser(hdfsUser)

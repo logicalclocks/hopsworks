@@ -37,6 +37,7 @@ import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.servicediscovery.HopsworksService;
 import io.hops.hopsworks.servicediscovery.tags.GlassfishTags;
+import io.hops.hopsworks.servicediscovery.tags.OpenSearchTags;
 import org.json.JSONObject;
 
 import javax.ejb.EJB;
@@ -222,8 +223,11 @@ public class KubeTransformerUtils {
       new EnvVarBuilder().withName(key).withValue(value).build()));
     
     // HOPSWORKS PYTHON API
-    envVars.add(new EnvVarBuilder().withName("ELASTIC_ENDPOINT").withValue(settings.getOpenSearchRESTEndpoint())
-      .build());
+    String elasticEndpoint = (settings.isOpenSearchHTTPSEnabled() ? "https://" : "http://") +
+        serviceDiscoveryController.constructServiceAddressWithPort(
+            HopsworksService.OPENSEARCH.getNameWithTag(OpenSearchTags.rest));
+    envVars.add(new EnvVarBuilder().withName("ELASTIC_ENDPOINT").withValue(elasticEndpoint)
+        .build());
   
     // DEPLOYMENT INFO
     envVars.add(new EnvVarBuilder().withName("DEPLOYMENT_NAME").withValue(serving.getName()).build());

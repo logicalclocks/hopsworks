@@ -16,17 +16,10 @@
 package io.hops.hopsworks.common.util;
 
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class OpenSearchSettings {
-  public final static String OPENSEARCH_IP_DEFAULT ="127.0.0.1";
-  public final static int OPENSEARCH_PORT_DEFAULT = 9300;
-  public final static int OPENSEARCH_REST_PORT_DEFAULT = 9200;
   public final static boolean OPENSEARCH_SECURTIY_ENABLED_DEFAULT = false;
   public final static boolean OPENSEARCH_HTTPS_ENABLED_DEFAULT = false;
   public final static String OPENSEARCH_ADMIN_USER_DEFAULT ="admin";
-  public final static String OPENSEARCH_ADMIN_SERVICE_LOG_USER_DEFAULT ="service_log_viewer";
   public final static String OPENSEARCH_ADMIN_PASSWORD_DEFAULT ="adminpw";
   public final static boolean OPENSEARCH_JWT_ENABLED_DEFAULT = false;
   public final static String OPENSEARCH_JWT_URL_PARAMETER_DEFAULT ="jt";
@@ -38,9 +31,6 @@ public class OpenSearchSettings {
   public final static Integer DEFAULT_SCROLL_PAGE_SIZE = 1000;
   public final static Integer MAX_SCROLL_PAGE_SIZE = 10000;
   
-  private final List<String> openSearchIps;
-  private final int openSearchPort;
-  private final int openSearchRestPort;
   private final boolean openSearchSecurityEnabled;
   private final boolean httpsEnabled;
   private final String adminUser;
@@ -52,20 +42,9 @@ public class OpenSearchSettings {
   
   private int rrIndex = 0;
   
-  public OpenSearchSettings(String openSearchIps, int openSearchPort, int openSearchRestPort,
-                            boolean openSearchSecurityEnabled, boolean httpsEnabled, String adminUser,
+  public OpenSearchSettings(boolean openSearchSecurityEnabled, boolean httpsEnabled, String adminUser,
                             String adminPassword, boolean openSearchJWTEnabled, String openSearchJWTURLParameter,
                             long openSearchJWTExpMs, String serviceLogUser){
-    String[] ips = openSearchIps.split(",");
-    List<String> validIps = new ArrayList<>();
-    for (String ip : ips) {
-      if (Ip.validIp(ip)) {
-        validIps.add(ip);
-      }
-    }
-    this.openSearchIps = validIps;
-    this.openSearchPort = openSearchPort;
-    this.openSearchRestPort = openSearchRestPort;
     this.openSearchSecurityEnabled = openSearchSecurityEnabled;
     this.httpsEnabled = httpsEnabled;
     this.adminUser = adminUser;
@@ -75,35 +54,7 @@ public class OpenSearchSettings {
     this.openSearchJWTExpMs = openSearchJWTExpMs;
     this.serviceLogUser = serviceLogUser;
   }
-  
-  public List<String> getOpenSearchIps() {
-    return openSearchIps;
-  }
-  
-  public String getOpenSearchEndpoint() {
-    return getOpenSearchIp() + ":" + openSearchPort;
-  }
-  
-  public String getOpenSearchRESTEndpoint() {
-    return (isHttpsEnabled() ? "https" :
-        "http") + "://" + getOpenSearchIp() + ":" + openSearchRestPort;
-  }
-  
-  public int getOpenSearchPort() {
-    return openSearchPort;
-  }
-  
-  public int getOpenSearchRESTPort() {
-    return openSearchRestPort;
-  }
-  
-  private String getOpenSearchIp(){
-    if(rrIndex == openSearchIps.size()){
-      rrIndex = 0;
-    }
-    return openSearchIps.get(rrIndex++);
-  }
-  
+
   public boolean isOpenSearchSecurityEnabled() {
     return openSearchSecurityEnabled;
   }

@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.common.util;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.serving.ServingConfig;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.hdfs.Utils;
@@ -23,6 +24,8 @@ import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.common.util.templates.ConfigProperty;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.OpenSearchTags;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,10 +33,11 @@ import java.util.Map;
 public class FlinkConfigurationUtil extends ConfigurationUtil {
   @Override
   public Map<String, String> setFrameworkProperties(Project project, JobConfiguration jobConfiguration,
-    Settings settings, String hdfsUser, Users hopsworksUser,
-    Map<String, String> extraJavaOptions, String kafkaBrokersString,
-    String hopsworksRestEndpoint, ServingConfig servingConfig,
-    ServiceDiscoveryController serviceDiscoveryController) {
+                                                    Settings settings, String hdfsUser, Users hopsworksUser,
+                                                    Map<String, String> extraJavaOptions, String kafkaBrokersString,
+                                                    String hopsworksRestEndpoint, ServingConfig servingConfig,
+                                                    ServiceDiscoveryController serviceDiscoveryController)
+      throws ServiceDiscoveryException {
     FlinkJobConfiguration flinkJobConfiguration = (FlinkJobConfiguration) jobConfiguration;
     
     Map<String, ConfigProperty> flinkProps = new HashMap<>();
@@ -56,7 +60,12 @@ public class FlinkConfigurationUtil extends ConfigurationUtil {
     extraJavaOptions.put(Settings.HOPSWORKS_REST_ENDPOINT_PROPERTY, hopsworksRestEndpoint);
     extraJavaOptions.put(Settings.HOPSUTIL_INSECURE_PROPERTY, String.valueOf(settings.isHopsUtilInsecure()));
     extraJavaOptions.put(Settings.SERVER_TRUSTSTORE_PROPERTY, Settings.SERVER_TRUSTSTORE_PROPERTY);
-    extraJavaOptions.put(Settings.HOPSWORKS_OPENSEARCH_ENDPOINT_PROPERTY, settings.getOpenSearchRESTEndpoint());
+
+    String elasticEndpoint = (settings.isOpenSearchHTTPSEnabled() ? "https://" : "http://") +
+        serviceDiscoveryController.constructServiceAddressWithPort(
+            HopsworksService.OPENSEARCH.getNameWithTag(OpenSearchTags.rest));
+    extraJavaOptions.put(Settings.HOPSWORKS_OPENSEARCH_ENDPOINT_PROPERTY, elasticEndpoint);
+
     extraJavaOptions.put(Settings.HOPSWORKS_PROJECTID_PROPERTY, Integer.toString(project.getId()));
     extraJavaOptions.put(Settings.HOPSWORKS_PROJECTNAME_PROPERTY, project.getName());
     extraJavaOptions.put(Settings.HOPSWORKS_DOMAIN_CA_TRUSTSTORE_PROPERTY, Settings.DOMAIN_CA_TRUSTSTORE);
