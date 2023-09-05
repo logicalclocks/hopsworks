@@ -431,16 +431,16 @@ public class FeaturestoreStorageConnectorController {
         project, user, ActivityFlag.SERVICE);
   }
   
-  public FeaturestoreStorageConnectorDTO getOnlineFeaturestoreConnector(Users user, Project project,
-                                                                        Featurestore featurestore)
+  public FeaturestoreStorageConnectorDTO getOnlineFeaturestoreConnector(Users user, Project userProject)
       throws FeaturestoreException {
-    String dbUsername = onlineFeaturestoreController.onlineDbUsername(project, user);
+    Featurestore userFeatureStore = featurestoreController.getProjectFeaturestore(userProject);
+    String dbUsername = onlineFeaturestoreController.onlineDbUsername(userProject, user);
     Optional<FeaturestoreConnector> featurestoreConnector = featurestoreConnectorFacade
-        .findByFeaturestoreName(featurestore,
+        .findByFeaturestoreName(userFeatureStore,
             dbUsername + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX);
 
     if (featurestoreConnector.isPresent()) {
-      return convertToConnectorDTO(user, project, featurestoreConnector.get());
+      return convertToConnectorDTO(user, userProject, featurestoreConnector.get());
     } else {
       return null;
     }
