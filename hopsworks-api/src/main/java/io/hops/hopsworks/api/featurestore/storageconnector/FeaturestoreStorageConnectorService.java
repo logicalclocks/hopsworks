@@ -323,7 +323,7 @@ public class FeaturestoreStorageConnectorService {
     }
     Users user = jWTHelper.getUserPrincipal(sc);
     FeaturestoreStorageConnectorDTO featurestoreJdbcConnectorDTO =
-            storageConnectorController.getOnlineFeaturestoreConnector(user, project, featurestore);
+            storageConnectorController.getOnlineFeaturestoreConnector(user, project);
     GenericEntity<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOGenericEntity =
             new GenericEntity<FeaturestoreStorageConnectorDTO>(featurestoreJdbcConnectorDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)

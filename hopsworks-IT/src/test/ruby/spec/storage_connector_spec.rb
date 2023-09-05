@@ -485,6 +485,38 @@ describe "On #{ENV['OS']}" do
           expect(arguments_hash.find{ |item| item['name'] == 'driver' }['value']).to eql("com.mysql.cj.jdbc.Driver")
           expect(arguments_hash.find{ |item| item['name'] == 'isolationLevel' }['value']).to eql("NONE")
         end
+
+        it "should get online storage connector from base project when accessing a shared feature store" do
+          project = get_project
+          base_featurestore_id = get_featurestore_id(project.id)
+          reset_session
+
+          #create another project
+          projectname = "project_#{short_random_id}"
+          shared_fs_project = create_project_by_name(projectname)
+          shared_fs_id = get_featurestore_id(shared_fs_project.id)
+          # login with user for project and share dataset
+          create_session(shared_fs_project[:username], "Pass123")
+          featurestore = "#{shared_fs_project[:projectname].downcase}_featurestore.db"
+          share_dataset(shared_fs_project, featurestore, project[:projectname], datasetType: "&type=FEATURESTORE")
+          reset_session
+          #login with user for shared_fs_project and accept dataset
+          create_session(project[:username],"Pass123")
+          accept_dataset(project, "#{shared_fs_project[:projectname]}::#{featurestore}", datasetType: "&type=FEATURESTORE")
+
+          base_project_connector = "#{project['projectname']}_#{@user['username']}_onlinefeaturestore"
+          connector_name = "onlinefeaturestore"
+
+          #connector from shared fs should use base project connector
+          connector_json = get_storage_connector(project['id'], shared_fs_id, connector_name)
+          connector = JSON.parse(connector_json)
+          expect(connector["name"]).to eql(base_project_connector)
+
+          #connector from base should use base project connector
+          connector_json = get_storage_connector(project['id'], base_featurestore_id, connector_name)
+          connector = JSON.parse(connector_json)
+          expect(connector["name"]).to eql(base_project_connector)
+        end
       end
 
       context "with storage connector flags disabled" do
