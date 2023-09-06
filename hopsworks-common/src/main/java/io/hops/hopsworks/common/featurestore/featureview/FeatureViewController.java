@@ -290,7 +290,6 @@ public class FeatureViewController {
       throws FeaturestoreException {
     List<ServingKey> servingKeys = Lists.newArrayList();
     Set<String> prefixFeatureNames = Sets.newHashSet();
-    Set<Integer> featureGroupIdAdded = Sets.newHashSet();
     Optional<TrainingDatasetJoin> leftJoin =
         featureView.getJoins().stream().filter(join -> join.getIndex().equals(0)).findFirst();
     // If a feature group is deleted, the corresponding join will be deleted by cascade.
@@ -341,7 +340,11 @@ public class FeatureViewController {
         } else {
           servingKey.setPrefix(join.getPrefix());
         }
-        tempPrefixFeatureNames.add((join.getPrefix() == null ? "" : join.getPrefix()) + servingKey.getFeatureName());
+        prefixFeatureNames.add(
+            (servingKey.getPrefix() == null ? "" : servingKey.getPrefix()) + servingKey.getFeatureName());
+        // use this and mark it as processed primary key so that it do not need to be processed again in the next step.
+        tempPrefixFeatureNames.add(
+            (join.getPrefix() == null ? "" : join.getPrefix()) + servingKey.getFeatureName());
         servingKeys.add(servingKey);
       }
 
@@ -359,14 +362,13 @@ public class FeatureViewController {
           servingKey.setJoinIndex(join.getIndex());
           servingKey.setFeatureView(featureView);
           servingKeys.add(servingKey);
+          prefixFeatureNames.add(
+              (servingKey.getPrefix() == null ? "" : servingKey.getPrefix()) + servingKey.getFeatureName());
           tempPrefixFeatureNames.add(
               (join.getPrefix() == null ? "" : join.getPrefix()) + servingKey.getFeatureName());
         }
       }
-      prefixFeatureNames.addAll(tempPrefixFeatureNames);
-      featureGroupIdAdded.add(join.getFeatureGroup().getId());
     }
-    // pk from label only fg and not left most fg is not mandatory
     Set<Featuregroup> labelOnlyFgs = featureView.getFeatures().stream()
         .collect(Collectors.groupingBy(TrainingDatasetFeature::getFeatureGroup))
         .entrySet()
@@ -374,16 +376,22 @@ public class FeatureViewController {
         .filter(entry -> entry.getValue().stream().allMatch(TrainingDatasetFeature::isLabel))
         .map(Map.Entry::getKey)
         .collect(Collectors.toSet());
+    List<ServingKey> filteredServingKeys = Lists.newArrayList();
     for (ServingKey servingKey : servingKeys) {
+      // pk from label only fg is not mandatory. But the pk needs to be kept if it is joint by another key
+      // because the value of the pk is needed to propagate to the other key.
       if (labelOnlyFgs.contains(servingKey.getFeatureGroup())) {
         // Check if the serving key belongs to a left most fg by checking if the key was required by other fg.
         if (servingKeys.stream()
-            .noneMatch(key -> (servingKey.getPrefix() + servingKey.getFeatureName()).equals(key.getJoinOn()))) {
-          servingKey.setRequired(false);
+            .anyMatch(key -> ((servingKey.getPrefix() == null ? "" : servingKey.getPrefix())
+                + servingKey.getFeatureName()).equals(key.getJoinOn()))) {
+          filteredServingKeys.add(servingKey);
         }
+      } else {
+        filteredServingKeys.add(servingKey);
       }
     }
-    return servingKeys;
+    return filteredServingKeys;
   }
 
   private String getPrefixCheckCollision(Set<String> prefixFeatureNames, String featureName, String prefix) {

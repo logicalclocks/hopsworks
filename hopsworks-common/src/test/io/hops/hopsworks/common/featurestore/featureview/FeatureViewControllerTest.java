@@ -47,27 +47,32 @@ public class FeatureViewControllerTest {
   private Featuregroup fgOneKeyDiffName;
   private Featuregroup fgTwoKey1;
   private Featuregroup fgNoKey5;
+  private Featuregroup fgLabel6;
 
   private List<TrainingDatasetFeature> tdf1;
   private List<TrainingDatasetFeature> tdf2;
   private List<TrainingDatasetFeature> tdf3;
   private List<TrainingDatasetFeature> tdf4;
   private List<TrainingDatasetFeature> tdf5;
+  private List<TrainingDatasetFeature> tdf6;
+
 
   private TrainingDatasetJoin join1;
   private TrainingDatasetJoin join2;
   private TrainingDatasetJoin join3;
   private TrainingDatasetJoin join4;
   private TrainingDatasetJoin join5;
+  private TrainingDatasetJoin join6;
 
   @Before
   public void before() {
     target.setFeaturegroupController(featuregroupController);
-    fgOneKey1 = createFg(1, "", 1);
-    fgOneKey2 = createFg(1, "", 2);
-    fgOneKeyDiffName = createFg(1, "diff_", 3);
-    fgTwoKey1 = createFg(2, "", 4);
-    fgNoKey5 = createFg(0, "", 1);
+    fgOneKey1 = createFg(1, "", 1, false);
+    fgOneKey2 = createFg(1, "", 2, false);
+    fgOneKeyDiffName = createFg(1, "diff_", 3, false);
+    fgTwoKey1 = createFg(2, "", 4, false);
+    fgNoKey5 = createFg(0, "", 1, false);
+    fgLabel6 = createFg(1, "", 6, true);
 
     tdf1 = getTdFeature(fgOneKey1);
     join1 = new TrainingDatasetJoin();
@@ -93,9 +98,14 @@ public class FeatureViewControllerTest {
     join5 = new TrainingDatasetJoin();
     join5.setFeatureGroup(fgNoKey5);
     join5.setFeatures(tdf5);
+
+    tdf6 = getTdFeatureLabelOnly(fgLabel6);
+    join6 = new TrainingDatasetJoin();
+    join6.setFeatureGroup(fgLabel6);
+    join6.setFeatures(tdf6);
   }
 
-  public Featuregroup createFg(Integer nPk, String pkPrefix, Integer fgId) {
+  public Featuregroup createFg(Integer nPk, String pkPrefix, Integer fgId, Boolean label) {
     Featuregroup fg1 = new Featuregroup();
     CachedFeaturegroup cacheFg1 = new CachedFeaturegroup();
     fg1.setCachedFeaturegroup(cacheFg1);
@@ -129,6 +139,16 @@ public class FeatureViewControllerTest {
       tdf.setName(feature.getName());
       tdfs.add(tdf);
     }
+    return tdfs;
+  }
+
+  private List<TrainingDatasetFeature> getTdFeatureLabelOnly(Featuregroup fg) {
+    List<TrainingDatasetFeature> tdfs = Lists.newArrayList();
+    TrainingDatasetFeature tdf = new TrainingDatasetFeature();
+    tdf.setFeatureGroup(fg);
+    tdf.setName("label");
+    tdf.setLabel(true);
+    tdfs.add(tdf);
     return tdfs;
   }
 
@@ -420,15 +440,17 @@ public class FeatureViewControllerTest {
     join4.setConditions(Lists.newArrayList(condition));
     join4.setPrefix("");
     join4.setIdx(1);
-    fv.setJoins(Lists.newArrayList(join1, join4));
+    fv.setJoins(Lists.newArrayList(join1, join4, join4));
 
     List<ServingKey> actual = target.getServingKeys(null, null, fv);
 
     // validate
-    Assert.assertEquals(3, actual.size());
+    Assert.assertEquals(5, actual.size());
     validate(actual.get(0), true, "pk1", fgOneKey1, "", null);
     validate(actual.get(1), false, "pk2", fgTwoKey1, "", "pk1");
     validate(actual.get(2), true, "pk1", fgTwoKey1, "0_", null);
+    validate(actual.get(3), false, "pk2", fgTwoKey1, "", "pk1");
+    validate(actual.get(4), true, "pk1", fgTwoKey1, "1_", null);
   }
 
   @Test
@@ -612,6 +634,67 @@ public class FeatureViewControllerTest {
     // validate
     Assert.assertEquals(1, actual.size());
     validate(actual.get(0), true, "pk1", fgOneKey2, "", "feature1");
+  }
+
+  @Test
+  public void getServingKeys_joinRightLabelOnlyFg() throws Exception {
+    doReturn(getFgFeature(fgOneKey1)).when(featuregroupController).getFeatures(eq(fgOneKey1), any(), any());
+    doReturn(getFgFeature(fgLabel6)).when(featuregroupController).getFeatures(eq(fgLabel6), any(), any());
+
+    FeatureView fv = new FeatureView();
+    // set tdf
+    List<TrainingDatasetFeature> tdfs = Lists.newArrayList();
+    tdfs.addAll(tdf1);
+    tdfs.addAll(tdf6);
+    fv.setFeatures(tdfs);
+    // set join
+    join1.setConditions(Lists.newArrayList());
+    join1.setPrefix("");
+    join1.setIdx(0);
+    TrainingDatasetJoinCondition condition = new TrainingDatasetJoinCondition();
+    condition.setLeftFeature("pk1");
+    condition.setRightFeature("pk1");
+    join6.setConditions(Lists.newArrayList(condition));
+    join6.setPrefix("fg2_");
+    join6.setIdx(1);
+    fv.setJoins(Lists.newArrayList(join1, join6));
+
+    List<ServingKey> actual = target.getServingKeys(null, null, fv);
+
+    // validate
+    Assert.assertEquals(1, actual.size());
+    validate(actual.get(0), true, "pk1", fgOneKey1, "", null);
+  }
+
+  @Test
+  public void getServingKeys_joinLeftLabelOnlyFg() throws Exception {
+    doReturn(getFgFeature(fgLabel6)).when(featuregroupController).getFeatures(eq(fgLabel6), any(), any());
+    doReturn(getFgFeature(fgOneKey1)).when(featuregroupController).getFeatures(eq(fgOneKey1), any(), any());
+
+    FeatureView fv = new FeatureView();
+    // set tdf
+    List<TrainingDatasetFeature> tdfs = Lists.newArrayList();
+    tdfs.addAll(tdf1);
+    tdfs.addAll(tdf6);
+    fv.setFeatures(tdfs);
+    // set join
+    join6.setConditions(Lists.newArrayList());
+    join6.setPrefix("");
+    join6.setIdx(0);
+    TrainingDatasetJoinCondition condition = new TrainingDatasetJoinCondition();
+    condition.setLeftFeature("pk1");
+    condition.setRightFeature("pk1");
+    join1.setConditions(Lists.newArrayList(condition));
+    join1.setPrefix("fg2_");
+    join1.setIdx(1);
+    fv.setJoins(Lists.newArrayList(join6, join1));
+
+    List<ServingKey> actual = target.getServingKeys(null, null, fv);
+
+    // validate
+    Assert.assertEquals(2, actual.size());
+    validate(actual.get(0), true, "pk1", fgLabel6, "", null);
+    validate(actual.get(1), false, "pk1", fgOneKey1, "fg2_", "pk1");
   }
 
   private void validate(ServingKey servingKey, Boolean required, String featureName, Featuregroup fg, String prefix,
