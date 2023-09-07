@@ -58,14 +58,14 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO<FeaturegroupDTO> {
   private Boolean onlineEnabled = false;
   @JsonSetter(nulls = Nulls.SKIP)
   private Boolean deprecated = false;
+  private String topicName;
   
   public FeaturegroupDTO() {
   }
 
   public FeaturegroupDTO(Integer featurestoreId, String featurestoreName, Integer id, String name, Integer version,
-    String onlineTopicName, Boolean deprecated) {
+                         Boolean deprecated) {
     super(featurestoreId, featurestoreName, id, name, version);
-    this.onlineTopicName = onlineTopicName;
     this.deprecated = deprecated;
   }
 
@@ -75,6 +75,7 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO<FeaturegroupDTO> {
         featuregroup.getId(), new StatisticsConfigDTO(featuregroup.getStatisticsConfig()));
     this.eventTime = featuregroup.getEventTime();
     this.deprecated = featuregroup.isDeprecated();
+    this.topicName = featuregroup.getTopicName();
   }
   
   // for testing
@@ -122,6 +123,14 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO<FeaturegroupDTO> {
     this.onlineEnabled = onlineEnabled;
   }
 
+  public String getTopicName() {
+    return topicName;
+  }
+
+  public void setTopicName(String topicName) {
+    this.topicName = topicName;
+  }
+    
   public Boolean getDeprecated() {
     return deprecated;
   }

@@ -127,6 +127,8 @@ public class Featuregroup implements Serializable {
   private String eventTime;
   @Column(name = "online_enabled")
   private boolean onlineEnabled;
+  @Column(name = "topic_name")
+  private String topicName;
   @Column(name = "deprecated")
   private boolean deprecated;
   @NotNull
@@ -309,6 +311,14 @@ public class Featuregroup implements Serializable {
     this.onlineEnabled = onlineEnabled;
   }
 
+  public String getTopicName() {
+    return topicName;
+  }
+
+  public void setTopicName(String topicName) {
+    this.topicName = topicName;
+  }
+
   public boolean isDeprecated() {
     return deprecated;
   }
@@ -337,6 +347,7 @@ public class Featuregroup implements Serializable {
     if (!Objects.equals(streamFeatureGroup, that.streamFeatureGroup)) return false;
     if (!Objects.equals(eventTime, that.eventTime)) return false;
     if (!Objects.equals(onlineEnabled, that.onlineEnabled)) return false;
+    if (!Objects.equals(topicName, that.topicName)) return false;
     if (!Objects.equals(deprecated, that.deprecated)) return false;
     if (!Objects.equals(expectationSuite, that.expectationSuite)) return false;
     return Objects.equals(statisticsConfig, that.statisticsConfig);
@@ -358,6 +369,7 @@ public class Featuregroup implements Serializable {
     result = 31 * result + (statisticsConfig != null ? statisticsConfig.hashCode() : 0);
     result = 31 * result + (eventTime != null ? eventTime.hashCode() : 0);
     result = 31 * result + (onlineEnabled ? 1: 0);
+    result = 31 * result + (topicName != null ? topicName.hashCode() : 0);
     result = 31 * result + (deprecated ? 1: 0);
     result = 31 * result + (expectationSuite != null ? expectationSuite.hashCode(): 0);
     return result;

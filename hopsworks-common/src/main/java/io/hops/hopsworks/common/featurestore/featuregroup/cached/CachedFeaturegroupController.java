@@ -295,9 +295,7 @@ public class CachedFeaturegroupController {
 
     if (settings.isOnlineFeaturestore() && featuregroup.isOnlineEnabled()) {
       cachedFeaturegroupDTO.setOnlineEnabled(true);
-      cachedFeaturegroupDTO.setOnlineTopicName(onlineFeaturegroupController
-              .onlineFeatureGroupTopicName(project.getId(), featuregroup.getId(),
-                Utils.getFeaturegroupName(featuregroup)));
+      cachedFeaturegroupDTO.setOnlineTopicName(Utils.getFeatureGroupTopicName(featuregroup));
     }
     cachedFeaturegroupDTO.setName(featuregroup.getName());
     cachedFeaturegroupDTO.setTimeTravelFormat(featuregroup.getCachedFeaturegroup().getTimeTravelFormat());
@@ -517,10 +515,10 @@ public class CachedFeaturegroupController {
     }
 
     if(!featuregroup.isOnlineEnabled()) {
+      featuregroup.setOnlineEnabled(true);
       onlineFeaturegroupController.setupOnlineFeatureGroup(featurestore, featuregroup, features, project, user);
     }
     //Set foreign key of the cached feature group to the new online feature group
-    featuregroup.setOnlineEnabled(true);
     featureGroupFacade.updateFeaturegroupMetadata(featuregroup);
   }
   

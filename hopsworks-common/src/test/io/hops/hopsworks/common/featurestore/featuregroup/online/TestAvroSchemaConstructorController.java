@@ -18,6 +18,9 @@ package io.hops.hopsworks.common.featurestore.featuregroup.online;
 
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import org.apache.avro.Schema;
 import org.junit.Assert;
 import org.junit.Before;
@@ -157,15 +160,26 @@ public class TestAvroSchemaConstructorController {
   
   @Test
   public void testConstructSchema() throws Exception {
+    Project project = new Project();
+    project.setName("project_name");
+
+    Featurestore featureStore = new Featurestore();
+    featureStore.setProject(project);
+
+    Featuregroup featuregroup = new Featuregroup();
+    featuregroup.setName("fg");
+    featuregroup.setVersion(1);
+    featuregroup.setFeaturestore(featureStore);
+
     List<FeatureGroupFeatureDTO> schema = new ArrayList<>();
     schema.add(new FeatureGroupFeatureDTO("feature0", "int", ""));
     schema.add(new FeatureGroupFeatureDTO("feature1", "map<string,array<int>>", ""));
     schema.add(new FeatureGroupFeatureDTO("feature2", "struct<label:int,value:binary>", ""));
-    String result = avroSchemaConstructorController.constructSchema("fg", "fs", schema);
+    String result = avroSchemaConstructorController.constructSchema(featuregroup, schema);
     Assert.assertEquals("{\n" +
       "  \"type\" : \"record\",\n" +
-      "  \"name\" : \"fg\",\n" +
-      "  \"namespace\" : \"fs\",\n" +
+      "  \"name\" : \"fg_1\",\n" +
+      "  \"namespace\" : \"project_name_featurestore.db\",\n" +
       "  \"fields\" : [ {\n" +
       "    \"name\" : \"feature0\",\n" +
       "    \"type\" : [ \"null\", \"int\" ]\n" +
@@ -199,6 +213,17 @@ public class TestAvroSchemaConstructorController {
 
   @Test
   public void testConstructSchemaOverlyComplexFeatures() throws Exception {
+    Project project = new Project();
+    project.setName("project_name");
+
+    Featurestore featureStore = new Featurestore();
+    featureStore.setProject(project);
+
+    Featuregroup featuregroup = new Featuregroup();
+    featuregroup.setName("fg");
+    featuregroup.setVersion(1);
+    featuregroup.setFeaturestore(featureStore);
+
     List<FeatureGroupFeatureDTO> schema = new ArrayList<>();
     schema.add(new FeatureGroupFeatureDTO("feature3", "struct<label1:string,value:struct<label2:string,value2:int>>",
       ""));
@@ -206,11 +231,11 @@ public class TestAvroSchemaConstructorController {
     schema.add(new FeatureGroupFeatureDTO("feature5", "struct<key:string,item1:struct<subkey:string," +
       "item2:array<int>>>", ""));
     schema.add(new FeatureGroupFeatureDTO("feature6", "array<struct<test:string,val:int>>", ""));
-    String result = avroSchemaConstructorController.constructSchema("fg", "fs", schema);
+    String result = avroSchemaConstructorController.constructSchema(featuregroup, schema);
     Assert.assertEquals("{\n" +
         "  \"type\" : \"record\",\n" +
-        "  \"name\" : \"fg\",\n" +
-        "  \"namespace\" : \"fs\",\n" +
+        "  \"name\" : \"fg_1\",\n" +
+        "  \"namespace\" : \"project_name_featurestore.db\",\n" +
         "  \"fields\" : [ {\n" +
         "    \"name\" : \"feature3\",\n" +
         "    \"type\" : [ \"null\", {\n" +

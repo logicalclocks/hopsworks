@@ -65,14 +65,9 @@ public class ProjectDTO {
   private boolean isPreinstalledDockerImage;
   private boolean isOldDockerImage;
   private CreationStatus creationStatus;
+  private String featureStoreTopic;
 
   public ProjectDTO() {
-  }
-
-  public ProjectDTO(Integer projectId, String projectName, String owner) {
-    this.projectId = projectId;
-    this.projectName = projectName;
-    this.owner = owner;
   }
 
   public ProjectDTO(Project project, Long inodeid, List<String> services,
@@ -91,6 +86,7 @@ public class ProjectDTO {
     this.isPreinstalledDockerImage = isPreinstalledDockerImage;
     this.isOldDockerImage = isOldDockerImage;
     this.creationStatus = project.getCreationStatus();
+    this.featureStoreTopic = project.getTopicName();
   }
 
   public ProjectDTO(Project project, Long inodeid, List<String> services,
@@ -110,20 +106,7 @@ public class ProjectDTO {
     this.isPreinstalledDockerImage = isPreinstalledDockerImage;
     this.isOldDockerImage = isOldDockerImage;
     this.creationStatus = project.getCreationStatus();
-  }
-
-  public ProjectDTO(Integer projectId, String projectName, String owner,
-                    Date created, String description, boolean isPreinstalledDockerImage,
-                    boolean isOldDockerImage, List<String> services, List<ProjectTeam> projectTeam) {
-    this.projectId = projectId;
-    this.projectName = projectName;
-    this.owner = owner;
-    this.created = created;
-    this.description = description;
-    this.isPreinstalledDockerImage = isPreinstalledDockerImage;
-    this.isOldDockerImage = isOldDockerImage;
-    this.services = services;
-    this.projectTeam = projectTeam;
+    this.featureStoreTopic = project.getTopicName();
   }
 
   public Integer getProjectId() {
@@ -236,6 +219,14 @@ public class ProjectDTO {
   
   public void setCreationStatus(CreationStatus creationStatus) {
     this.creationStatus = creationStatus;
+  }
+
+  public String getFeatureStoreTopic() {
+    return featureStoreTopic;
+  }
+
+  public void setFeatureStoreTopic(String topicName) {
+    this.featureStoreTopic = topicName;
   }
   
   @Override

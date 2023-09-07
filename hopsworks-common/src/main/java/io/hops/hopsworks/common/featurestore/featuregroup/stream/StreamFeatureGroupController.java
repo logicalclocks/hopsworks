@@ -86,23 +86,14 @@ public class StreamFeatureGroupController {
    * @param featuregroup the entity to convert
    * @return the converted DTO representation
    */
-  public StreamFeatureGroupDTO convertStreamFeatureGroupToDTO(Featuregroup featuregroup, Project project, Users user)
-          throws FeaturestoreException, ServiceException {
+  public StreamFeatureGroupDTO convertStreamFeatureGroupToDTO(Featuregroup featuregroup)
+    throws ServiceException {
     StreamFeatureGroupDTO streamFeatureGroupDTO = new StreamFeatureGroupDTO(featuregroup);
-
-    if (featuregroup.isOnlineEnabled()) {
-      streamFeatureGroupDTO.setOnlineTopicName(onlineFeaturegroupController
-        .onlineFeatureGroupTopicName(project.getId(), featuregroup.getId(),
-          Utils.getFeaturegroupName(featuregroup)));
-    } else {
-      streamFeatureGroupDTO.setOnlineTopicName(offlineStreamFeatureGroupTopicName(project.getId(),
-        featuregroup.getId(), Utils.getFeaturegroupName(featuregroup)));
-    }
-
+    streamFeatureGroupDTO.setOnlineTopicName(Utils.getFeatureGroupTopicName(featuregroup));
     streamFeatureGroupDTO.setName(featuregroup.getName());
     streamFeatureGroupDTO.setDescription(featuregroup.getDescription());
     streamFeatureGroupDTO.setOnlineEnabled(featuregroup.isOnlineEnabled());
-
+    
     streamFeatureGroupDTO.setLocation(
             featurestoreUtils.resolveLocation(featuregroupController.getFeatureGroupLocation(featuregroup)));
     return streamFeatureGroupDTO;
@@ -243,7 +234,7 @@ public class StreamFeatureGroupController {
         onlineFeaturegroupController.alterOnlineFeatureGroupSchema(
           featuregroup, newFeatures, featuregroupDTO.getFeatures(), project, user);
       } else {
-        alterOfflineStreamFeatureGroupSchema(featuregroup, featuregroupDTO.getFeatures(), project);
+        onlineFeaturegroupController.alterFeatureGroupSchema(featuregroup, featuregroupDTO.getFeatures(), project);
       }
 
       // Log schema change
@@ -268,36 +259,5 @@ public class StreamFeatureGroupController {
       }
     }
     streamFeatureGroupFacade.updateMetadata(streamFeatureGroup);
-  }
-
-  public void deleteOfflineStreamFeatureGroupTopic(Project project, Featuregroup featureGroup)
-      throws SchemaException, KafkaException {
-    String topicName = offlineStreamFeatureGroupTopicName(
-      project.getId(), featureGroup.getId(), Utils.getFeaturegroupName(featureGroup));
-    onlineFeaturegroupController.deleteFeatureGroupKafkaTopic(project, topicName);
-  }
-
-  private void alterOfflineStreamFeatureGroupSchema(Featuregroup featureGroup,
-                                                    List<FeatureGroupFeatureDTO> fullNewSchema, Project project)
-      throws SchemaException, KafkaException, FeaturestoreException {
-    String topicName = offlineStreamFeatureGroupTopicName(
-      project.getId(), featureGroup.getId(), Utils.getFeaturegroupName(featureGroup));
-    onlineFeaturegroupController.alterFeatureGroupSchema(featureGroup, fullNewSchema, topicName, project);
-  }
-  
-  public void setupOfflineStreamFeatureGroup(Project project, Featuregroup featureGroup,
-                                             List<FeatureGroupFeatureDTO> features)
-      throws SchemaException, KafkaException, FeaturestoreException {
-    String featureGroupEntityName = Utils.getFeaturegroupName(featureGroup);
-    String topicName = offlineStreamFeatureGroupTopicName(
-      project.getId(), featureGroup.getId(), featureGroupEntityName);
-    
-    onlineFeaturegroupController.createFeatureGroupKafkaTopic(project, featureGroupEntityName, topicName,
-            features);
-  }
-
-  public String offlineStreamFeatureGroupTopicName(Integer projectId, Integer featureGroupId,
-                                                   String featureGroupEntityName) {
-    return projectId.toString() + "_" + featureGroupId.toString() + "_" + featureGroupEntityName;
   }
 }

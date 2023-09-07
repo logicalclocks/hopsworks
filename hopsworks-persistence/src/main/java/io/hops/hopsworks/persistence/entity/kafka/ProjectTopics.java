@@ -113,7 +113,7 @@ public class ProjectTopics implements Serializable {
   private Project project;
 
   @JoinColumn(name = "subject_id", referencedColumnName = "id")
-  @ManyToOne(optional = false)
+  @ManyToOne
   private Subjects subjects;
 
   public ProjectTopics() {
