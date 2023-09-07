@@ -42,7 +42,6 @@ package io.hops.hopsworks.common.dao.kafka;
 import io.hops.hopsworks.common.api.RestDTO;
 
 import java.io.Serializable;
-import javax.ws.rs.core.UriInfo;
 
 public class TopicDTO extends RestDTO<TopicDTO> implements Serializable {
 
@@ -66,37 +65,11 @@ public class TopicDTO extends RestDTO<TopicDTO> implements Serializable {
 
   public TopicDTO() {
   }
-  
-  public TopicDTO(UriInfo uriInfo) {
-    this.setHref(uriInfo.getAbsolutePathBuilder().build());
-  }
-
-  public TopicDTO(String name) {
-    this.name = name;
-  }
-  
-  public TopicDTO(String name, Integer ownerProjectId, String schemaName, Integer schemaVersion, String
-    schemaContent, Boolean isShared, Boolean accepted) {
-    this.name = name;
-    this.ownerProjectId = ownerProjectId;
-    this.schemaName = schemaName;
-    this.schemaVersion = schemaVersion;
-    this.schemaContent = schemaContent;
-    this.isShared = isShared;
-    this.accepted = accepted;
-  }
 
   public TopicDTO(String name, Integer numOfReplicas, Integer numOfPartitions) {
     this.name = name;
     this.numOfReplicas = numOfReplicas;
     this.numOfPartitions = numOfPartitions;
-  }
-
-  public TopicDTO(String name, String schemaName, Integer schemaVersion, Boolean isShared) {
-    this.name = name;
-    this.schemaName = schemaName;
-    this.schemaVersion = schemaVersion;
-    this.isShared = isShared;
   }
 
   public TopicDTO(String name, Integer numOfReplicas, Integer numOfPartitions,
@@ -106,17 +79,6 @@ public class TopicDTO extends RestDTO<TopicDTO> implements Serializable {
     this.numOfPartitions = numOfPartitions;
     this.schemaName = schemaName;
     this.schemaVersion = schemaVersion;
-  }
-  
-  public TopicDTO(String name, Integer numOfReplicas, Integer numOfPartitions,
-    String schemaName, Integer schemaVersion, Integer ownerProjectId, Boolean isShared) {
-    this.name = name;
-    this.numOfReplicas = numOfReplicas;
-    this.numOfPartitions = numOfPartitions;
-    this.schemaName = schemaName;
-    this.schemaVersion = schemaVersion;
-    this.isShared = isShared;
-    this.ownerProjectId = ownerProjectId;
   }
   
   public TopicDTO(String topicName, String subject, Integer subjectVersion, String schema) {

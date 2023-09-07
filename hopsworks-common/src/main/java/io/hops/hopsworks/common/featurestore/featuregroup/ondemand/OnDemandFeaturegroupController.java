@@ -158,9 +158,7 @@ public class OnDemandFeaturegroupController {
 
   public OnDemandFeaturegroupDTO convertOnDemandFeatureGroupToDTO(String featureStoreName, Featuregroup featureGroup,
     FeaturestoreStorageConnectorDTO storageConnectorDTO) {
-    String onlineTopicName = onlineFeatureGroupController.onlineFeatureGroupTopicName(
-      featureGroup.getFeaturestore().getProject().getId(),
-      featureGroup.getId(), Utils.getFeaturegroupName(featureGroup));
+    String onlineTopicName = Utils.getFeatureGroupTopicName(featureGroup);
     return new OnDemandFeaturegroupDTO(featureStoreName, featureGroup, storageConnectorDTO, null, onlineTopicName);
   }
 
@@ -330,9 +328,9 @@ public class OnDemandFeaturegroupController {
     UserException, IOException, HopsSecurityException {
     List<FeatureGroupFeatureDTO> features = getFeaturesDTO(featuregroup);
     if(!featuregroup.isOnlineEnabled()) {
+      featuregroup.setOnlineEnabled(true);
       onlineFeatureGroupController.setupOnlineFeatureGroup(featurestore, featuregroup, features, project, user);
     }
-    featuregroup.setOnlineEnabled(true);
     featureGroupFacade.updateFeaturegroupMetadata(featuregroup);
   }
 }

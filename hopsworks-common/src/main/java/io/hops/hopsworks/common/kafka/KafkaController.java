@@ -193,11 +193,14 @@ public class KafkaController {
   
     List<TopicDTO> topics = new ArrayList<>();
     for (ProjectTopics pt : ptList) {
-      topics.add(
-          new TopicDTO(pt.getTopicName(),
-              pt.getSubjects().getSubject(),
-              pt.getSubjects().getVersion(),
-              false));
+      TopicDTO topicDTO = new TopicDTO(pt.getTopicName(), pt.getNumOfReplicas(), pt.getNumOfPartitions());
+      Subjects subjects = pt.getSubjects();
+      if (subjects != null) {
+        topicDTO.setSchemaName(subjects.getSubject());
+        topicDTO.setSchemaVersion(subjects.getVersion());
+      }
+      topicDTO.setShared(false);
+      topics.add(topicDTO);
     }
     return topics;
   }
@@ -214,10 +217,13 @@ public class KafkaController {
   
   private ProjectTopics createTopicInProject(Project project, TopicDTO topicDto) throws KafkaException {
     
-    Subjects schema =
-      subjectsFacade.findSubjectByNameAndVersion(project, topicDto.getSchemaName(), topicDto.getSchemaVersion())
-        .orElseThrow(() ->
-          new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_NOT_FOUND, Level.FINE, "topic: " + topicDto.getName()));
+    Subjects subjects = null;
+    if (topicDto.getSchemaName() != null && topicDto.getSchemaVersion() != null) {
+      subjects = subjectsFacade
+              .findSubjectByNameAndVersion(project, topicDto.getSchemaName(), topicDto.getSchemaVersion())
+              .orElseThrow(() -> new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_NOT_FOUND, Level.FINE,
+                      "topic: " + topicDto.getName()));
+    }
     
     // create the topic in kafka
     try {
@@ -243,7 +249,7 @@ public class KafkaController {
      * user. Hence, the above schema query will be empty.
      */
     ProjectTopics pt = new ProjectTopics(topicDto.getName(), topicDto.getNumOfPartitions(),
-        topicDto.getNumOfReplicas(), project, schema);
+        topicDto.getNumOfReplicas(), project, subjects);
     
     projectTopicsFacade.save(pt);
     
@@ -316,22 +322,6 @@ public class KafkaController {
         brokers.size());
   }
 
-  public void updateTopicSchemaVersion(Project project, String topicName, Integer schemaVersion) throws KafkaException {
-    Optional<ProjectTopics> optionalPt = projectTopicsFacade.findTopicByNameAndProject(project, topicName);
-
-    if (optionalPt.isPresent()) {
-      ProjectTopics pt = optionalPt.get();
-      String schemaName = pt.getSubjects().getSubject();
-
-      Subjects st = subjectsFacade.findSubjectByNameAndVersion(project, schemaName, schemaVersion)
-          .orElseThrow(() ->
-              new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_VERSION_NOT_FOUND, Level.FINE,
-                  "schema: " + schemaName + ", version: " + schemaVersion));
-
-      projectTopicsFacade.updateTopicSchemaVersion(pt, st);
-    }
-  }
-  
   public SubjectDTO getSubjectForTopic(Project project, String topic) throws KafkaException {
     Optional<ProjectTopics> pt = projectTopicsFacade.findTopicByNameAndProject(project, topic);
     if (!pt.isPresent()) {

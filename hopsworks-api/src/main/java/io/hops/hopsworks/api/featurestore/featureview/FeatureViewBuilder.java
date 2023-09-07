@@ -36,7 +36,6 @@ import io.hops.hopsworks.common.featurestore.query.QueryController;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
 import io.hops.hopsworks.common.featurestore.query.pit.PitJoinController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
-import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.MetadataException;
@@ -161,7 +160,7 @@ public class FeatureViewBuilder {
         base.setQuery(queryBuilder.build(query, featureView.getFeaturestore(), project, user));
       }
       if (resourceRequest.contains(ResourceRequest.Name.FEATURES)) {
-        base.setFeatures(makeFeatures(featureView, project));
+        base.setFeatures(makeFeatures(featureView));
       }
       if (resourceRequest.contains(ResourceRequest.Name.KEYWORDS)) {
         List<String> keywords = keywordCtrl.getKeywords(featureView);
@@ -193,7 +192,7 @@ public class FeatureViewBuilder {
     return featureViewDTO;
   }
 
-  private List<TrainingDatasetFeatureDTO> makeFeatures(FeatureView featureView, Project project) {
+  private List<TrainingDatasetFeatureDTO> makeFeatures(FeatureView featureView) {
     List<TrainingDatasetFeature> tdFeatures = featureViewController.getFeaturesSorted(featureView.getFeatures());
     Map<Integer, String> fsLookupTable = trainingDatasetController.getFsLookupTableFeatures(tdFeatures);
     return tdFeatures
@@ -204,8 +203,6 @@ public class FeatureViewBuilder {
                     fsLookupTable.get(f.getFeatureGroup().getFeaturestore().getId()),
                     f.getFeatureGroup().getId(), f.getFeatureGroup().getName(),
                     f.getFeatureGroup().getVersion(),
-                    onlineFeaturegroupController.onlineFeatureGroupTopicName(project.getId(),
-                        f.getFeatureGroup().getId(), Utils.getFeaturegroupName(f.getFeatureGroup())),
                     f.getFeatureGroup().isDeprecated())
                 : null,
             f.getIndex(), f.isLabel()))

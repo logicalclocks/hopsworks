@@ -94,7 +94,7 @@ module FeaturestoreHelper
 
   def create_cached_featuregroup(project_id, featurestore_id, features: nil, featuregroup_name: nil, online:false,
                                  version: 1, featuregroup_description: nil, statistics_config: nil, time_travel_format:
-                                 "NONE", event_time: nil, expectation_suite: nil, parents: nil)
+                                 "NONE", event_time: nil, expectation_suite: nil, parents: nil, topic_name: nil)
     type = "cachedFeaturegroupDTO"
     features = features == nil ? [{type: "INT", name: "testfeature", description: "testfeaturedescription",
                                    primary: true, onlineType: "INT", partition: false}] : features
@@ -110,7 +110,8 @@ module FeaturestoreHelper
         onlineEnabled: online,
         timeTravelFormat: time_travel_format,
         eventTime: event_time,
-        parents: parents
+        parents: parents,
+        topicName: topic_name
     }
     unless statistics_config == nil
       json_data[:statisticsConfig] = statistics_config
@@ -128,7 +129,7 @@ module FeaturestoreHelper
   def create_stream_featuregroup(project_id, featurestore_id, features: nil, featuregroup_name: nil,
                                  version: 1, featuregroup_description: nil, statistics_config: nil,
                                  event_time: nil, deltaStreamerJobConf: nil, materialize_offline: false,
-                                 commit_time: nil, online_enabled: true)
+                                 commit_time: nil, online_enabled: true, topic_name: nil)
     type = "streamFeatureGroupDTO"
     featuregroupType = "STREAM_FEATURE_GROUP"
     features = features == nil ? [{type: "INT", name: "testfeature", description: "testfeaturedescription",
@@ -146,7 +147,8 @@ module FeaturestoreHelper
         featuregroupType: featuregroupType,
         eventTime: event_time,
         deltaStreamerJobConf: deltaStreamerJobConf,
-        onlineEnabled: online_enabled
+        onlineEnabled: online_enabled,
+        topicName: topic_name
     }
     unless statistics_config == nil
       json_data[:statisticsConfig] = statistics_config
@@ -199,7 +201,7 @@ module FeaturestoreHelper
 
   def create_on_demand_featuregroup(project_id, featurestore_id, jdbcconnectorId, name: nil, version: 1, query: nil,
                                     features: nil, data_format: nil, options: nil, event_time: nil,
-                                    online_enabled: false)
+                                    online_enabled: false, topic_name: nil)
     type = "onDemandFeaturegroupDTO"
     featuregroupType = "ON_DEMAND_FEATURE_GROUP"
     create_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups"
@@ -221,7 +223,8 @@ module FeaturestoreHelper
         query: query,
         featuregroupType: featuregroupType,
         eventTime: event_time,
-        onlineEnabled: online_enabled
+        onlineEnabled: online_enabled,
+        topicName: topic_name
     }
 
     unless data_format == nil
@@ -841,7 +844,7 @@ module FeaturestoreHelper
     return "featurestore_tour_job"
   end
 
-  def create_cached_featuregroup_with_partition(project_id, featurestore_id, time_travel_format: "NONE", online: false)
+  def create_cached_featuregroup_with_partition(project_id, featurestore_id, time_travel_format: "NONE", online: false, topic_name: nil)
     type = "cachedFeaturegroupDTO"
     featuregroupType = "CACHED_FEATURE_GROUP"
     create_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups"
@@ -871,7 +874,8 @@ module FeaturestoreHelper
         type: type,
         featuregroupType: featuregroupType,
         timeTravelFormat: time_travel_format,
-        onlineEnabled: online
+        onlineEnabled: online,
+        topicName: topic_name
     }
     json_data = json_data.to_json
     json_result = post create_featuregroup_endpoint, json_data

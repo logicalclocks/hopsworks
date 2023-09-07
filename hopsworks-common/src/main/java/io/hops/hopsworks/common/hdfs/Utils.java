@@ -40,6 +40,7 @@
 package io.hops.hopsworks.common.hdfs;
 
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Strings;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
@@ -60,6 +61,8 @@ import org.apache.hadoop.fs.Path;
 public final class Utils {
 
   private static final Logger logger = Logger.getLogger(Utils.class.getName());
+
+  private static final String FEATURE_STORE_SUFFIX = "_featurestore.db";
 
   public static String getFileName(String path) {
     int lastSlash = path.lastIndexOf("/");
@@ -142,7 +145,7 @@ public final class Utils {
   }
   
   public static String getFeaturestoreName(Project project) {
-    return project.getName().toLowerCase() + "_featurestore.db";
+    return project.getName().toLowerCase() + FEATURE_STORE_SUFFIX;
   }
   
   public static String getFeaturestorePath(Project project, Settings settings) {
@@ -163,6 +166,23 @@ public final class Utils {
   
   public static String getFeatureStoreEntityName(String entityName, Integer version) {
     return entityName + "_" + version.toString();
+  }
+
+  public static String getFeatureGroupTopicName(Featuregroup featureGroup) {
+    if (!Strings.isNullOrEmpty(featureGroup.getTopicName())) {
+      return featureGroup.getTopicName();
+    }
+
+    Project project = featureGroup.getFeaturestore().getProject();
+    if (!Strings.isNullOrEmpty(project.getTopicName())) {
+      return project.getTopicName();
+    }
+
+    String topicName = project.getName();
+    if (featureGroup.isOnlineEnabled()) {
+      topicName += "_onlinefs";
+    }
+    return topicName;
   }
 
   /**

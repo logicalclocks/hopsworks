@@ -18,7 +18,9 @@ package io.hops.hopsworks.common.featurestore.featuregroup.online;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
@@ -40,8 +42,11 @@ public class AvroSchemaConstructorController {
   
   public AvroSchemaConstructorController() {}
   
-  public String constructSchema(String featureGroupEntityName, String featureStoreName,
-                                List<FeatureGroupFeatureDTO> schema) throws FeaturestoreException {
+  public String constructSchema(Featuregroup featuregroup, List<FeatureGroupFeatureDTO> schema)
+      throws FeaturestoreException {
+    String featureGroupEntityName = Utils.getFeaturegroupName(featuregroup);
+    String featureStoreName = Utils.getFeaturestoreName(featuregroup.getFeaturestore().getProject());
+
     SchemaBuilder.TypeBuilder<Schema> avroSchema = SchemaBuilder.builder();
     
     // top level needs to be record
