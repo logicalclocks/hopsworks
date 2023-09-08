@@ -138,7 +138,7 @@ public class SearchFSCommandExecutor {
       try {
         processInt();
       } catch (Exception t) {
-        LOGGER.log(Level.INFO, "Command processing failed with error:", t);
+        LOGGER.log(Level.INFO, "Command processing failed with error:", t.getStackTrace());
       }
     }
     schedule();

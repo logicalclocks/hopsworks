@@ -63,7 +63,7 @@ public class FeaturestoreKeywordBuilder {
   private URI uri(UriInfo uriInfo, Project project,
                   Featurestore featurestore, TrainingDataset trainingDataset) {
     return uri(uriInfo, project, featurestore)
-        .path(ResourceRequest.Name.FEATUREGROUPS.toString().toLowerCase())
+        .path(ResourceRequest.Name.TRAININGDATASETS.toString().toLowerCase())
         .path(Integer.toString(trainingDataset.getId()))
         .path(ResourceRequest.Name.KEYWORDS.toString().toLowerCase())
         .build();
