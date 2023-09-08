@@ -107,7 +107,42 @@ public class AsynchronousGitCommandExecutor {
     }
   }
 
+  @Asynchronous
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  public void cancelGitExecution(GitOpExecution execution, String message) {
+    if (execution.getState().isFinalState()) {
+      return;
+    }
+    try {
+      gitOpExecutionFacade.updateState(execution, GitOpExecutionState.CANCELLED, message);
+      GitRepository repository = execution.getRepository();
+      int maxTries = 10; // wait time if the container is not launched
+      while (maxTries > 0 && org.opensearch.common.Strings.isNullOrEmpty(repository.getCid())) {
+        Optional<GitRepository> optional = gitRepositoryFacade.findById(repository.getId());
+        if (optional.isPresent()) {
+          repository = optional.get();
+        }
+        try {
+          Thread.sleep(100);
+        } catch (InterruptedException e) {
+          LOGGER.log(Level.INFO, "Interrupted while waiting for the git container to start");
+        }
+        maxTries--;
+      }
+      gitCommandOperationUtil.shutdownCommandService(repository, execution);
+    } catch (Exception e) {
+      LOGGER.log(Level.INFO, "Error when cancelling git execution with ID: " + execution.getId(), e);
+    }
+  }
+
   private void updateExecutionStateToFail(GitOpExecution gitOpExecution) {
+    // Get latest execution object
+    Optional<GitOpExecution> optional = gitOpExecutionFacade.findByIdAndRepository(gitOpExecution.getRepository(),
+        gitOpExecution.getId());
+    gitOpExecution = optional.get();
+    if (gitOpExecution.getState() == GitOpExecutionState.CANCELLED) {
+      return;
+    }
     gitCommandOperationUtil.cleanUp(gitOpExecution.getRepository().getProject(),
         gitOpExecution.getUser(), gitOpExecution.getConfigSecret());
     gitOpExecutionFacade.updateState(gitOpExecution, GitOpExecutionState.FAILED, "Could not launch " +

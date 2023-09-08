@@ -373,7 +373,7 @@ public class OpenSearchController {
   public void deleteProjectIndices(Project project) throws OpenSearchException {
     //Get all project indices
     String[] indices = elasticClientCtrl.mngIndicesGetByRegex(new String[]{project.getName() +
-        "_(((logs|serving)-\\d{4}.\\d{2}.\\d{2}))", "(((onlinefs)_" + project.getId() + "-\\d{4}.\\d{2}.\\d{2}))"});
+        "_(((logs|serving|git)-\\d{4}.\\d{2}.\\d{2}))", "(((onlinefs)_" + project.getId() + "-\\d{4}.\\d{2}.\\d{2}))"});
     for (String index : indices) {
       try {
         elasticClientCtrl.mngIndexDelete(index);

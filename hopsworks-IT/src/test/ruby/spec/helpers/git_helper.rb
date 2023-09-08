@@ -292,6 +292,12 @@ module GitHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/git/repository/#{repository_id}/execution#{query}"
   end
 
+  def cancel_git_execution(project_id, repository_id, execution_id)
+    put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/git/repository/#{repository_id}/execution/#{execution_id}/state", {executionState: 'Cancelled', message: 'Cancelled'}.to_json
+  end
+
+
+
   def git_file_add_or_delete(project, repository_id, repo_full_path, filename, action)
     dsname = repo_full_path.gsub("/Projects/#{project[:projectname]}", "")
     if action == "add"

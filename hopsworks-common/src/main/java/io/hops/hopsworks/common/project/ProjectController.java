@@ -2315,6 +2315,7 @@ public class ProjectController {
   
     try {
       openSearchController.createIndexPattern(project, user, projectName + Settings.OPENSEARCH_LOGS_INDEX_PATTERN);
+      openSearchController.createIndexPattern(project, user, projectName + Settings.OPENSEARCH_GIT_INDEX_PATTERN);
     } catch (OpenSearchException e) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_INDEX_ERROR, Level.SEVERE, "Could " +
         "provision project on Kibana. Contact an administrator if problem persists. Reason: " + e.getUsrMsg(),

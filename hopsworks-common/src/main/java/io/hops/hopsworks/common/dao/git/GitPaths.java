@@ -28,7 +28,7 @@ public class GitPaths {
 
   public GitPaths(String privateDir, String secretConfig) {
     this.gitPath = privateDir + secretConfig;
-    this.logDirPath = gitPath + File.separator + "logs";
+    this.logDirPath = gitPath + File.separator + "git_logs";
     this.confDirPath = gitPath + File.separator + "conf";
     this.certificatesDirPath = gitPath + File.separator + "certificates";
     this.runDirPath = gitPath + File.separator + "run";

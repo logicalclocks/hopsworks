@@ -465,7 +465,7 @@ describe "On #{ENV['OS']}" do
     end
     describe "Git operation" do
       after :each do
-        setVar("git_command_timeout_minutes", 60)
+        setVar("git_command_timeout_minutes", 15)
         create_session(@project[:username], "Pass123")
       end
       it "should indicate ongoing operation in the repository" do
@@ -516,6 +516,21 @@ describe "On #{ENV['OS']}" do
             get_git_execution_object(@project[:id], repository_id, execution_id)
             json_body[:state] == "Timedout"
           end
+        ensure
+          delete_repository(@project[:id], repository_id)
+        end
+      end
+      it 'should cancel a git execution' do
+        begin
+          clone_config = get_clone_config("GitHub", @project[:projectname])
+          repository_id, _ = clone_repo(@project[:id], clone_config)
+          git_status(@project[:id], repository_id)
+          expect_status_details(200)
+          execution_id = json_body[:id]
+          # cancel the execution
+          cancel_git_execution(@project[:id],  repository_id, execution_id)
+          expect_status_details(200)
+          wait_for_git_operation_completed(@project[:id], repository_id, execution_id, "Cancelled")
         ensure
           delete_repository(@project[:id], repository_id)
         end

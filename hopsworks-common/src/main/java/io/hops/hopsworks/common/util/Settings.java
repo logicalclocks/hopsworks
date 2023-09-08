@@ -1988,6 +1988,8 @@ public class Settings implements Serializable {
   public static final String OPENSEARCH_PYPI_LIBRARIES_INDEX_PATTERN_PREFIX = "pypi_libraries_";
   public static final String OPENSEARCH_LOGS_INDEX_PATTERN = "_" + Settings.OPENSEARCH_LOGS_INDEX + "-*";
   public static final String OPENSEARCH_SERVING_INDEX = "serving";
+
+  public static final String OPENSEARCH_GIT_INDEX = "git";
   public static final String OPENSEARCH_SERVICES_INDEX = ".services";
   public static final String OPEN_SEARCH_ONLINEFS_INDEX = "onlinefs";
 
@@ -1997,6 +1999,8 @@ public class Settings implements Serializable {
   public static final String OPENSEARCH_SERVICES_INDEX_REGEX = OPENSEARCH_SERVICES_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
   public static final String OPENSEARCH_PYPI_LIBRARIES_INDEX_REGEX =
     OPENSEARCH_PYPI_LIBRARIES_INDEX_PATTERN_PREFIX + "*";
+  public static final String OPENSEARCH_GIT_INDEX_REGEX = ".*_" + OPENSEARCH_GIT_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
+  public static final String OPENSEARCH_GIT_INDEX_PATTERN = "_" + OPENSEARCH_GIT_INDEX + "-*";
   public static final String OPENSEARCH_ONLINEFS_INDEX_REGEX =
       OPEN_SEARCH_ONLINEFS_INDEX + "_\\d+-\\d{4}.\\d{2}.\\d{2}";
 
