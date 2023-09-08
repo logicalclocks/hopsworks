@@ -107,11 +107,11 @@ public abstract class FeatureStoreTagResource {
   @Path("/{name}")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
-    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
-    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response putTag(@Context SecurityContext sc,
                          @Context HttpServletRequest req,
                          @Context UriInfo uriInfo,
@@ -132,7 +132,7 @@ public abstract class FeatureStoreTagResource {
   @PUT
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
@@ -162,7 +162,7 @@ public abstract class FeatureStoreTagResource {
   @ApiOperation( value = "Get all tags attached", response = TagsDTO.class)
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
@@ -182,7 +182,7 @@ public abstract class FeatureStoreTagResource {
   @GET
   @Path("/{name}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
@@ -209,7 +209,7 @@ public abstract class FeatureStoreTagResource {
   @ApiOperation( value = "Delete all attached tags")
   @DELETE
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
@@ -225,7 +225,7 @@ public abstract class FeatureStoreTagResource {
   @DELETE
   @Path("/{name}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},

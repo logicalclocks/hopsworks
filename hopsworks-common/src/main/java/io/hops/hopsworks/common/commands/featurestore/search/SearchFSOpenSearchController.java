@@ -240,13 +240,15 @@ public class SearchFSOpenSearchController {
   private FeatureViewXAttrDTO getFVXAttr(FeatureView featureView) {
     Map<Integer, FeaturegroupXAttr.SimplifiedDTO> featuregroups = new HashMap<>();
     for(TrainingDatasetFeature feature : featureView.getFeatures()) {
-      FeaturegroupXAttr.SimplifiedDTO featuregroup = featuregroups.get(feature.getFeatureGroup().getId());
-      if(featuregroup == null) {
-        featuregroup = new FeaturegroupXAttr.SimplifiedDTO(feature.getFeatureGroup().getFeaturestore().getId(),
-          feature.getFeatureGroup().getName(), feature.getFeatureGroup().getVersion());
-        featuregroups.put(feature.getFeatureGroup().getId(), featuregroup);
+      if (feature.getFeatureGroup() != null) {
+        FeaturegroupXAttr.SimplifiedDTO featuregroup = featuregroups.get(feature.getFeatureGroup().getId());
+        if (featuregroup == null) {
+          featuregroup = new FeaturegroupXAttr.SimplifiedDTO(feature.getFeatureGroup().getFeaturestore().getId(),
+            feature.getFeatureGroup().getName(), feature.getFeatureGroup().getVersion());
+          featuregroups.put(feature.getFeatureGroup().getId(), featuregroup);
+        }
+        featuregroup.addFeature(feature.getName());
       }
-      featuregroup.addFeature(feature.getName());
     }
     return new FeatureViewXAttrDTO(featureView.getFeaturestore().getId(),
       featureView.getDescription(),
@@ -274,13 +276,15 @@ public class SearchFSOpenSearchController {
   private List<FeaturegroupXAttr.SimplifiedDTO> fromTrainingDatasetQuery(TrainingDatasetDTO trainingDatasetDTO) {
     Map<Integer, FeaturegroupXAttr.SimplifiedDTO> featuregroups = new HashMap<>();
     for(TrainingDatasetFeatureDTO feature : trainingDatasetDTO.getFeatures()) {
-      FeaturegroupXAttr.SimplifiedDTO featuregroup = featuregroups.get(feature.getFeaturegroup().getId());
-      if(featuregroup == null) {
-        featuregroup = new FeaturegroupXAttr.SimplifiedDTO(feature.getFeaturegroup().getFeaturestoreId(),
-          feature.getFeaturegroup().getName(), feature.getFeaturegroup().getVersion());
-        featuregroups.put(feature.getFeaturegroup().getId(), featuregroup);
+      if(feature.getFeaturegroup() != null) {
+        FeaturegroupXAttr.SimplifiedDTO featuregroup = featuregroups.get(feature.getFeaturegroup().getId());
+        if (featuregroup == null) {
+          featuregroup = new FeaturegroupXAttr.SimplifiedDTO(feature.getFeaturegroup().getFeaturestoreId(),
+            feature.getFeaturegroup().getName(), feature.getFeaturegroup().getVersion());
+          featuregroups.put(feature.getFeaturegroup().getId(), featuregroup);
+        }
+        featuregroup.addFeature(feature.getName());
       }
-      featuregroup.addFeature(feature.getName());
     }
     return new ArrayList<>(featuregroups.values());
   }
