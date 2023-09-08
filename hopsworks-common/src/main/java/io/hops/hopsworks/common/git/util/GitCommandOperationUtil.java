@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.common.git.util;
 
+import io.hops.hopsworks.common.dao.git.GitOpExecutionFacade;
 import io.hops.hopsworks.common.dao.git.GitPaths;
 import io.hops.hopsworks.common.dao.git.GitRepositoryFacade;
 import io.hops.hopsworks.common.git.BasicAuthSecrets;
@@ -40,6 +41,7 @@ import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.opensearch.common.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -66,8 +68,14 @@ public class GitCommandOperationUtil {
   public static final String COMMAND_LOG_FILE_NAME = "command_output.log";
   public static final String HOPSFS_MOUNT_LOG_FILE_NAME = "hopsfs_mount.log";
 
+  //we want to put some information to elastic via the logfile name. This is seperator for the attributes.
+  // Will work if the repository name will not contain this pattern
+  private static final String LOG_ATTRIBUTES_SEPERATOR = "--s--";
+
   @EJB
   private GitRepositoryFacade gitRepositoryFacade;
+  @EJB
+  private GitOpExecutionFacade executionFacade;
   @EJB
   private CertificateMaterializer certificateMaterializer;
   @EJB
@@ -92,9 +100,13 @@ public class GitCommandOperationUtil {
     FileUtils.deleteQuietly(new File(gitHomePath));
   }
 
-  public String getLogFileFullPath(String logDirPath, String hdfsUsername, Integer executionId,
+  public String getLogFileFullPath(GitOpExecution execution, String logDirPath, String hdfsUsername,
                                    String logFileName) {
-    return logDirPath + File.separator + hdfsUsername + "-" + executionId + "-" + logFileName;
+    return logDirPath + File.separator + hdfsUsername
+        + LOG_ATTRIBUTES_SEPERATOR  + execution.getId()
+        + LOG_ATTRIBUTES_SEPERATOR + execution.getRepository().getName()
+        + LOG_ATTRIBUTES_SEPERATOR + execution.getGitCommandConfiguration().getCommandType()
+        + LOG_ATTRIBUTES_SEPERATOR + logFileName;
   }
 
   public void generatePaths(GitPaths gitPaths) throws GitOpException {
@@ -129,6 +141,8 @@ public class GitCommandOperationUtil {
       new File(gitPaths.getRunDirPath()).mkdirs();
       new File(gitPaths.getTokenPath()).mkdirs();
       new File(gitPaths.getConfDirPath()).mkdirs();
+
+      Files.setPosixFilePermissions(Paths.get(gitPaths.getLogDirPath()), perms);
     } catch (IOException ex) {
       removeProjectUserDirRecursive(gitPaths);
       throw new GitOpException(RESTCodes.GitOpErrorCode.GIT_PATHS_CREATION_ERROR, Level.SEVERE, "Failed to " +
@@ -229,8 +243,17 @@ public class GitCommandOperationUtil {
     } catch (Exception e) {
       LOGGER.log(Level.SEVERE, "Failed to update repository pid", e);
     }
+    killGitContainer(execution, cid);
+    cleanUp(repository.getProject(), execution.getUser(), getGitHome(execution.getConfigSecret()));
+  }
+
+  public void killGitContainer(GitOpExecution execution, String containerId) {
+    if (Strings.isNullOrEmpty(containerId)) {
+      return;
+    }
     String gitHomePath = getGitHome(execution.getConfigSecret());
-    String hdfsUsername = hdfsUsersController.getHdfsUserName(repository.getProject(), execution.getUser());
+    String hdfsUsername = hdfsUsersController.getHdfsUserName(execution.getRepository().getProject(),
+        execution.getUser());
     String prog = settings.getSudoersDir() + "/git.sh";
     int exitValue = 0;
     ProcessDescriptor.Builder pdBuilder = new ProcessDescriptor.Builder()
@@ -238,7 +261,7 @@ public class GitCommandOperationUtil {
         .addCommand(prog)
         .addCommand("kill")
         .addCommand(gitHomePath)
-        .addCommand(cid)
+        .addCommand(containerId)
         .addCommand(hdfsUsername)
         .redirectErrorStream(true)
         .setWaitTimeout(10L, TimeUnit.SECONDS);
@@ -255,7 +278,6 @@ public class GitCommandOperationUtil {
           "Exited with " + exitValue + "Failed to shutdown git container executing command for user "
               + hdfsUsername);
     }
-    cleanUp(repository.getProject(), execution.getUser(), gitHomePath);
   }
 
   public String getGitHome(String secret) {
