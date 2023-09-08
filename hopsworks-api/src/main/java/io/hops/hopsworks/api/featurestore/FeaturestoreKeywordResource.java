@@ -20,7 +20,6 @@ import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
-import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
@@ -28,14 +27,12 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController
 import io.hops.hopsworks.common.featurestore.keyword.KeywordDTO;
 import io.hops.hopsworks.common.featurestore.metadata.FeatureStoreKeywordControllerIface;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
-import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
@@ -72,8 +69,6 @@ public class FeaturestoreKeywordResource {
   private FeaturegroupController featuregroupController;
   @EJB
   private FeatureViewController featureViewController;
-  @EJB
-  private JWTHelper jwtHelper;
   @EJB
   private FeaturestoreKeywordBuilder featurestoreKeywordBuilder;
   @Inject
@@ -145,7 +140,7 @@ public class FeaturestoreKeywordResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create keywords or replace existing ones")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
@@ -177,7 +172,7 @@ public class FeaturestoreKeywordResource {
 
   @DELETE
   @ApiOperation(value = "Delete a keyword")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
@@ -186,9 +181,7 @@ public class FeaturestoreKeywordResource {
                                  @Context UriInfo uriInfo,
                                  @Context HttpServletRequest req,
                                  @QueryParam("keyword") String keyword)
-      throws FeaturestoreException, MetadataException {
-    Users user = jwtHelper.getUserPrincipal(sc);
-
+      throws FeaturestoreException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
     KeywordDTO dto;
     if (featuregroup != null) {
