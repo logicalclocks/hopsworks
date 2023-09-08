@@ -38,7 +38,9 @@ public enum GitOpExecutionState {
   @XmlEnumValue("Submitted")
   SUBMITTED("Submitted"),
   @XmlEnumValue("Timedout")
-  TIMEDOUT("Timedout");
+  TIMEDOUT("Timedout"),
+  @XmlEnumValue("Cancelled")
+  CANCELLED("Cancelled");
 
   private final String executionState;
 
@@ -66,6 +68,7 @@ public enum GitOpExecutionState {
       case KILLED:
       case INITIALIZATION_FAILED:
       case TIMEDOUT:
+      case CANCELLED:
         return true;
       default:
         return false;
@@ -74,6 +77,6 @@ public enum GitOpExecutionState {
 
   public static Set<GitOpExecutionState> getFinalStates() {
     return EnumSet.
-        of(SUCCESS, FAILED, KILLED, INITIALIZATION_FAILED, TIMEDOUT);
+        of(SUCCESS, FAILED, KILLED, INITIALIZATION_FAILED, TIMEDOUT, CANCELLED);
   }
 }

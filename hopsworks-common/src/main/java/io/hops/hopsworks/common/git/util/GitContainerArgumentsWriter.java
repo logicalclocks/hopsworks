@@ -93,10 +93,10 @@ public class GitContainerArgumentsWriter {
     String hdfsUser = hdfsUsersController.getHdfsUserName(gitOpExecution.getRepository().getProject(),
         gitOpExecution.getUser());
     //Separate log file names for git logs
-    String fullCommandLogFilePath = gitCommandOperationUtil.getLogFileFullPath(gitPaths.getLogDirPath(), hdfsUser,
-        gitOpExecution.getId(), GitCommandOperationUtil.COMMAND_LOG_FILE_NAME);
-    String fullHopsfsMountLogFilePath = gitCommandOperationUtil.getLogFileFullPath(gitPaths.getLogDirPath(), hdfsUser,
-        gitOpExecution.getId(), GitCommandOperationUtil.HOPSFS_MOUNT_LOG_FILE_NAME);
+    String fullCommandLogFilePath = gitCommandOperationUtil.getLogFileFullPath(gitOpExecution, gitPaths.getLogDirPath(),
+        hdfsUser, GitCommandOperationUtil.COMMAND_LOG_FILE_NAME);
+    String fullHopsfsMountLogFilePath = gitCommandOperationUtil.getLogFileFullPath(gitOpExecution,
+        gitPaths.getLogDirPath(), hdfsUser, GitCommandOperationUtil.HOPSFS_MOUNT_LOG_FILE_NAME);
 
     String gitCommand = gitOpExecution.getGitCommandConfiguration().getCommandType().getGitCommand();
     return GitContainerLaunchScriptArgumentTemplateBuilder.newBuilder()

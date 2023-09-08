@@ -2413,7 +2413,8 @@ public class RESTCodes {
             Response.Status.FORBIDDEN),
     READ_ONLY_REPOSITORY(36, "Repository is read only", Response.Status.BAD_REQUEST),
     ERROR_VALIDATING_REPOSITORY_PATH(37, "Error validating git repository path",
-        Response.Status.INTERNAL_SERVER_ERROR);
+        Response.Status.INTERNAL_SERVER_ERROR),
+    ERROR_CANCELLING_GIT_EXECUTION(38, "Failed to cancel git execution", Response.Status.BAD_REQUEST);
     private Integer code;
     private String message;
     private Response.Status respStatus;

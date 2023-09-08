@@ -110,6 +110,7 @@ public class OpenSearchCleaner {
       String indexRegex = "(" + Settings.OPENSEARCH_LOG_INDEX_REGEX + ")" +
           "|(" + Settings.OPENSEARCH_SERVING_INDEX_REGEX + ")" +
           "|(" + Settings.OPENSEARCH_SERVICES_INDEX_REGEX + ")" +
+          "|(" + Settings.OPENSEARCH_GIT_INDEX_REGEX + ")" +
           "|(" + Settings.OPENSEARCH_ONLINEFS_INDEX_REGEX + ")";
       Map<String, Long> indices = elasticClientCtrl.mngIndicesGetByRegex(indexRegex, creationTimeParser);
       for (String index : indices.keySet()) {

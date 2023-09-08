@@ -101,6 +101,7 @@ public class GitOpExecutionFacade extends AbstractFacade<GitOpExecutionFacade> {
       exec.setExecutionStop(System.currentTimeMillis());
     }
     em.merge(exec);
+    em.flush();
     return exec;
   }
 }

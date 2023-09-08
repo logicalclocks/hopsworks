@@ -181,7 +181,8 @@ public class GitExecutionController {
     return executionObj.get();
   }
 
-  public GitOpExecution updateGitExecutionState(Project project, Users hopsworksUser,
+
+  public synchronized GitOpExecution updateGitExecutionState(Project project, Users hopsworksUser,
                                                 GitCommandExecutionStateUpdateDTO stateDTO, Integer repositoryId,
                                                 Integer executionId)
       throws IllegalArgumentException, GitOpException {
@@ -191,31 +192,45 @@ public class GitExecutionController {
     }
     LOGGER.log(Level.INFO, "Updating execution, Id = " + executionId + " to " + newState.getExecutionState());
     GitRepository repository = commandConfigurationValidator.verifyRepository(project, hopsworksUser, repositoryId);
-    GitOpExecution exec = getExecutionInRepository(repository, executionId);
-    exec.setCommandResultMessage(stateDTO.getMessage());
+    GitOpExecution execution = getExecutionInRepository(repository, executionId);
     if (newState.isFinalState()) {
       if (newState == GitOpExecutionState.SUCCESS) {
-        //Every successful operation should update the repository current commit and branch
-        repository.setCurrentBranch(stateDTO.getBranch());
-        repository.setCurrentCommit(stateDTO.getCommitHash());
-        GitCommandConfiguration executedCommandConfig = exec.getGitCommandConfiguration();
-        if (executedCommandConfig.getCommandType() == GitCommandType.DELETE_BRANCH) {
-          //if we deleted a branch then we should also delete all the commits for this branch
-          gitCommitsFacade.deleteAllInBranchAndRepository(executedCommandConfig.getBranchName(), repository);
-        }
-        if (executedCommandConfig.getCommandType() == GitCommandType.ADD_REMOTE ||
-            executedCommandConfig.getCommandType() == GitCommandType.DELETE_REMOTE) {
-          //Update the remotes which are in the execution final message
-          String remotesJson = exec.getCommandResultMessage();
-          if (!Strings.isNullOrEmpty(remotesJson)) {
-            gitRepositoryRemotesFacade.updateRepositoryRemotes(gitCommandOperationUtil.convertToRemote(repository,
-                remotesJson), repository);
-          }
-        }
+        finalizeSuccessfulExecution(execution, stateDTO);
       }
-      gitRepositoryFacade.updateRepositoryCid(repository, null);
-      gitCommandOperationUtil.cleanUp(project, hopsworksUser, exec.getConfigSecret());
+      if (newState == GitOpExecutionState.CANCELLED) {
+        gitCommandExecutor.cancelGitExecution(execution,  stateDTO.getMessage());
+        return execution;
+      }
+      execution = getExecutionInRepository(repository, executionId);
+      if (execution.getState() != GitOpExecutionState.CANCELLED) {
+        gitRepositoryFacade.updateRepositoryCid(repository, null);
+        gitCommandOperationUtil.cleanUp(project, hopsworksUser, execution.getConfigSecret());
+      }
     }
-    return gitOpExecutionFacade.updateState(exec, newState, stateDTO.getMessage());
+    if (execution.getState() == GitOpExecutionState.CANCELLED) {
+      return execution;
+    }
+    return gitOpExecutionFacade.updateState(execution, newState, stateDTO.getMessage());
+  }
+
+  private void finalizeSuccessfulExecution(GitOpExecution execution, GitCommandExecutionStateUpdateDTO stateDTO) {
+    //Every successful operation should update the repository current commit and branch
+    GitRepository repository = execution.getRepository();
+    repository.setCurrentBranch(stateDTO.getBranch());
+    repository.setCurrentCommit(stateDTO.getCommitHash());
+    GitCommandConfiguration executedCommandConfig = execution.getGitCommandConfiguration();
+    if (executedCommandConfig.getCommandType() == GitCommandType.DELETE_BRANCH) {
+      //if we deleted a branch then we should also delete all the commits for this branch
+      gitCommitsFacade.deleteAllInBranchAndRepository(executedCommandConfig.getBranchName(), repository);
+    }
+    if (executedCommandConfig.getCommandType() == GitCommandType.ADD_REMOTE ||
+        executedCommandConfig.getCommandType() == GitCommandType.DELETE_REMOTE) {
+      //Update the remotes which are in the execution final message
+      String remotesJson = execution.getCommandResultMessage();
+      if (!Strings.isNullOrEmpty(remotesJson)) {
+        gitRepositoryRemotesFacade.updateRepositoryRemotes(gitCommandOperationUtil.convertToRemote(repository,
+            remotesJson), repository);
+      }
+    }
   }
 }
