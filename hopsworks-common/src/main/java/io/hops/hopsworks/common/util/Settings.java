@@ -330,6 +330,10 @@ public class Settings implements Serializable {
   private final static String VARIABLE_ENABLE_BIGQUERY_STORAGE_CONNECTORS = "enable_bigquery_storage_connectors";
   private final static String VARIABLE_CONNECTOR_IMAGE_VERSION = "testconnector_image_version";
 
+  // BYOK
+
+  private final static String VARIABLE_ENABLE_BRING_YOUR_OWN_KAFKA = "enable_bring_your_own_kafka";
+
   //OpenSearch Security
   private static final String VARIABLE_OPENSEARCH_SECURITY_ENABLED = "elastic_opendistro_security_enabled";
   private static final String VARIABLE_OPENSEARCH_HTTPS_ENABLED = "elastic_https_enabled";
@@ -850,6 +854,9 @@ public class Settings implements Serializable {
               ENABLE_GCS_STORAGE_CONNECTORS);
       ENABLE_BIGQUERY_STORAGE_CONNECTORS = setBoolVar(VARIABLE_ENABLE_BIGQUERY_STORAGE_CONNECTORS,
               ENABLE_BIGQUERY_STORAGE_CONNECTORS);
+
+      ENABLE_BRING_YOUR_OWN_KAFKA = setBoolVar(VARIABLE_ENABLE_BRING_YOUR_OWN_KAFKA,
+          ENABLE_BRING_YOUR_OWN_KAFKA);
   
       TESTCONNECTOR_IMAGE_VERSION = setStrVar(VARIABLE_CONNECTOR_IMAGE_VERSION, "0.1");
       YARN_RUNTIME = setStrVar(VARIABLE_YARN_RUNTIME, YARN_RUNTIME);
@@ -3366,6 +3373,13 @@ public class Settings implements Serializable {
     checkCache();
     return ENABLE_BIGQUERY_STORAGE_CONNECTORS;
   }
+
+  private boolean ENABLE_BRING_YOUR_OWN_KAFKA = false;
+  public synchronized boolean isBringYourOwnKafkaEnabled() {
+    checkCache();
+    return ENABLE_BRING_YOUR_OWN_KAFKA;
+  }
+
   // test connectors docker
   private String TESTCONNECTOR_IMAGE_VERSION = "0.1";
   

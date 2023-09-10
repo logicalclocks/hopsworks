@@ -41,6 +41,7 @@ import io.hops.hopsworks.common.featurestore.storageconnectors.snowflake.Feature
 import io.hops.hopsworks.common.featurestore.storageconnectors.snowflake.FeaturestoreSnowflakeConnectorDTO;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.kafka.KafkaBrokers;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
@@ -102,6 +103,8 @@ public class FeaturestoreStorageConnectorController {
   private KafkaBrokers kafkaBrokers;
   @EJB
   private FeaturestoreController featurestoreController;
+  @EJB
+  private Settings settings;
 
   private static final String KAFKA_STORAGE_CONNECTOR_NAME = "kafka_connector";
 
@@ -165,7 +168,7 @@ public class FeaturestoreStorageConnectorController {
             featurestoreConnectorFacade.findByFeaturestoreName(featureStore, KAFKA_STORAGE_CONNECTOR_NAME);
 
     FeatureStoreKafkaConnectorDTO kafkaConnectorDTO;
-    if (featurestoreConnector.isPresent()) {
+    if (featurestoreConnector.isPresent() && settings.isBringYourOwnKafkaEnabled()) {
       // connector found
       FeaturestoreConnector connector = featurestoreConnector.get();
       if (!connector.getConnectorType().equals(FeaturestoreConnectorType.KAFKA)) {

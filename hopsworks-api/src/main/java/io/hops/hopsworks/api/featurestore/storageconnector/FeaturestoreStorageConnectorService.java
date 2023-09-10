@@ -338,7 +338,7 @@ public class FeaturestoreStorageConnectorService {
    * @throws FeaturestoreException
    */
   @GET
-  @Path("/kafka_connector")
+  @Path("/kafka_connector/byok")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
