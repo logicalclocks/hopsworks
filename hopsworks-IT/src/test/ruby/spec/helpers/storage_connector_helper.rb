@@ -48,7 +48,7 @@ module StorageConnectorHelper
   end
   
   def get_online_kafka_storage_connector(project_id, featurestore_id)
-    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/kafka_connector"
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/kafka_connector/byok"
   end
 
   def create_hopsfs_connector(project_id, featurestore_id, datasetName: "Resources")
