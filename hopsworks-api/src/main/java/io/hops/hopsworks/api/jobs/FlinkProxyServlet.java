@@ -17,6 +17,7 @@ package io.hops.hopsworks.api.jobs;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyFilter;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.proxy.ProxyServlet;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
@@ -62,6 +63,8 @@ public class FlinkProxyServlet extends ProxyServlet {
   private UserFacade userFacade;
   @EJB
   private ApiKeyController apiKeyController;
+  @EJB
+  private JWTHelper jwtHelper;
   
   // A request will come in with the format:
   // hopsworks-api/flink/<yarnappid>
@@ -72,19 +75,27 @@ public class FlinkProxyServlet extends ProxyServlet {
     throws ServletException, IOException {
     Users user;
     if (servletRequest.getUserPrincipal() == null) {
-      // Check if API key is provided
+      // Check if API key or Bearer is provided
       String authorizationHeader = servletRequest.getHeader("Authorization");
       if (Strings.isNullOrEmpty(authorizationHeader)) {
-        servletResponse.sendError(401, "API key was not provided");
+        servletResponse.sendError(401, "API key or Bearer was not provided");
         return;
       } else {
-        try {
-          String key = authorizationHeader.substring(ApiKeyFilter.API_KEY.length()).trim();
-          ApiKey apiKey = apiKeyController.getApiKey(key);
-          user = apiKey.getUser();
-        } catch (ApiKeyException e) {
-          servletResponse.sendError(401, "Could not validate API key");
-          return;
+        if (authorizationHeader.startsWith(ApiKeyFilter.API_KEY)){
+          try {
+            String key = authorizationHeader.substring(ApiKeyFilter.API_KEY.length()).trim();
+            ApiKey apiKey = apiKeyController.getApiKey(key);
+            user = apiKey.getUser();
+          } catch (ApiKeyException e) {
+            servletResponse.sendError(401, "Could not validate API key");
+            return;
+          }
+        } else {
+          // Bearer was provided
+          user = jwtHelper.getUserPrincipal(servletRequest);
+          if (user == null) {
+            return;
+          }
         }
       }
     } else {
