@@ -35,8 +35,38 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["name"]).to eql(featuregroup_name)
         expect(parsed_json["type"]).to eql("streamFeatureGroupDTO")
         expect(parsed_json["timeTravelFormat"]).to eql("HUDI")
-        expect(parsed_json["onlineTopicName"]).to eql(project.id.to_s + "_" + parsed_json["id"].to_s + "_" +
-                                                        featuregroup_name + "_" + parsed_json["version"].to_s + "_onlinefs")
+        expect(parsed_json["onlineTopicName"]).to end_with("_onlinefs")
+
+        job_name =  featuregroup_name + "_" + parsed_json["version"].to_s + "_" + "offline_fg_materialization"
+        job_json_result = get_job(project.id, job_name, expected_status: 200)
+        job_parsed_json = JSON.parse(job_json_result)
+        expect(job_parsed_json["name"]).to eql(job_name)
+        expect(job_parsed_json["config"]["mainClass"]).to eql("com.logicalclocks.utils.MainClass")
+        expect(job_parsed_json["config"]["spark.executor.instances"]).to eql(2)
+        expect(job_parsed_json["config"]["spark.executor.cores"]).to eql(2)
+        expect(job_parsed_json["config"]["spark.executor.memory"]).to eql(1500)
+        expect(job_parsed_json["config"]["spark.dynamicAllocation.enabled"]).to eql(true)
+        expect(job_parsed_json["config"]["spark.dynamicAllocation.minExecutors"]).to eql(2)
+        expect(job_parsed_json["config"]["spark.dynamicAllocation.maxExecutors"]).to eql(10)
+        expect(job_parsed_json["config"]["spark.dynamicAllocation.initialExecutors"]).to eql(1)
+        expect(job_parsed_json["config"]["spark.blacklist.enabled"]).to eql(false)
+      end
+
+      it "should be able to add a stream featuregroup to the featurestore using specified topic" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        topic_name = "topic_#{random_id}_onlinefs"
+        json_result, featuregroup_name = create_stream_featuregroup(project.id, featurestore_id, topic_name:topic_name)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(201)
+        expect(parsed_json.key?("id")).to be true
+        expect(parsed_json.key?("featurestoreName")).to be true
+        expect(parsed_json.key?("name")).to be true
+        expect(parsed_json["featurestoreName"]).to eql(project.projectname.downcase + "_featurestore")
+        expect(parsed_json["name"]).to eql(featuregroup_name)
+        expect(parsed_json["type"]).to eql("streamFeatureGroupDTO")
+        expect(parsed_json["timeTravelFormat"]).to eql("HUDI")
+        expect(parsed_json["onlineTopicName"]).to eql(topic_name)
 
         job_name =  featuregroup_name + "_" + parsed_json["version"].to_s + "_" + "offline_fg_materialization"
         job_json_result = get_job(project.id, job_name, expected_status: 200)
@@ -66,8 +96,38 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["name"]).to eql(featuregroup_name)
         expect(parsed_json["type"]).to eql("streamFeatureGroupDTO")
         expect(parsed_json["onlineEnabled"]).to be false
-        expect(parsed_json["onlineTopicName"]).to eql(project.id.to_s + "_" + parsed_json["id"].to_s + "_" +
-                                                        featuregroup_name + "_" + parsed_json["version"].to_s)
+        expect(parsed_json["onlineTopicName"]).to eql(project.projectname)
+
+        job_name =  featuregroup_name + "_" + parsed_json["version"].to_s + "_" + "offline_fg_materialization"
+        job_json_result = get_job(project.id, job_name, expected_status: 200)
+        job_parsed_json = JSON.parse(job_json_result)
+        expect(job_parsed_json["name"]).to eql(job_name)
+        expect(job_parsed_json["config"]["mainClass"]).to eql("com.logicalclocks.utils.MainClass")
+        expect(job_parsed_json["config"]["spark.executor.instances"]).to eql(2)
+        expect(job_parsed_json["config"]["spark.executor.cores"]).to eql(2)
+        expect(job_parsed_json["config"]["spark.executor.memory"]).to eql(1500)
+        expect(job_parsed_json["config"]["spark.dynamicAllocation.enabled"]).to eql(true)
+        expect(job_parsed_json["config"]["spark.dynamicAllocation.minExecutors"]).to eql(2)
+        expect(job_parsed_json["config"]["spark.dynamicAllocation.maxExecutors"]).to eql(10)
+        expect(job_parsed_json["config"]["spark.dynamicAllocation.initialExecutors"]).to eql(1)
+        expect(job_parsed_json["config"]["spark.blacklist.enabled"]).to eql(false)
+      end
+
+      it "should be able to add an offline only stream feature group to the feature store using specified topic" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        topic_name = "topic_#{random_id}_onlinefs"
+        json_result, featuregroup_name = create_stream_featuregroup(project.id, featurestore_id, online_enabled: false, topic_name:topic_name)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(201)
+        expect(parsed_json.key?("id")).to be true
+        expect(parsed_json.key?("featurestoreName")).to be true
+        expect(parsed_json.key?("name")).to be true
+        expect(parsed_json["featurestoreName"]).to eql(project.projectname.downcase + "_featurestore")
+        expect(parsed_json["name"]).to eql(featuregroup_name)
+        expect(parsed_json["type"]).to eql("streamFeatureGroupDTO")
+        expect(parsed_json["onlineEnabled"]).to be false
+        expect(parsed_json["onlineTopicName"]).to eql(topic_name)
 
         job_name =  featuregroup_name + "_" + parsed_json["version"].to_s + "_" + "offline_fg_materialization"
         job_json_result = get_job(project.id, job_name, expected_status: 200)
@@ -137,13 +197,12 @@ describe "On #{ENV['OS']}" do
         json_result, featuregroup_name = create_stream_featuregroup(project.id, featurestore_id)
         parsed_json = JSON.parse(json_result)
         expect_status_details(201)
-        topic_name = project.id.to_s + "_" + parsed_json["id"].to_s + "_" + featuregroup_name + "_" +
-          parsed_json["version"].to_s + "_onlinefs"
+        topic_name = project.projectname + "_onlinefs"
         get_project_topics(project.id)
         expect_status_details(200)
         topic = json_body[:items].select{|topic| topic[:name] == topic_name}
         expect(topic.length).to eq(1)
-        get_subject_schema(project, topic[0][:name], 1)
+        get_subject_schema(project, featuregroup_name + "_" + parsed_json["version"].to_s, 1)
         expect_status_details(200)
       end
 
@@ -153,13 +212,12 @@ describe "On #{ENV['OS']}" do
         json_result, featuregroup_name = create_stream_featuregroup(project.id, featurestore_id, online_enabled: false)
         parsed_json = JSON.parse(json_result)
         expect_status_details(201)
-        topic_name = project.id.to_s + "_" + parsed_json["id"].to_s + "_" + featuregroup_name + "_" +
-          parsed_json["version"].to_s
+        topic_name = project.projectname
         get_project_topics(project.id)
         expect_status_details(200)
         topic = json_body[:items].select{|topic| topic[:name] == topic_name}
         expect(topic.length).to eq(1)
-        get_subject_schema(project, topic[0][:name], 1)
+        get_subject_schema(project, featuregroup_name + "_" + parsed_json["version"].to_s, 1)
         expect_status_details(200)
       end
 
@@ -439,15 +497,14 @@ describe "On #{ENV['OS']}" do
                                             features: new_schema)
         expect_status_details(200)
 
-        topic_name = project.id.to_s + "_" + parsed_json["id"].to_s + "_" + featuregroup_name + "_" +
-          parsed_json["version"].to_s + "_onlinefs"
+        topic_name = project.projectname + "_onlinefs"
         get_project_topics(project.id)
         expect_status_details(200)
         topic = json_body[:items].select{|topic| topic[:name] == topic_name}
         expect(topic.length).to eq(1)
-        get_subject_schema(project, topic[0][:name], 2)
+        get_subject_schema(project, featuregroup_name + "_" + parsed_json["version"].to_s, 2)
         expect_status_details(200)
-        expect(json_body.to_json).to eql("{\"type\":\"record\",\"name\":\"#{featuregroup_name}\",\"namespace\":" +
+        expect(json_body.to_json).to eql("{\"type\":\"record\",\"name\":\"#{featuregroup_name}_#{parsed_json["version"]}\",\"namespace\":" +
                                            "\"#{project.projectname.downcase}_featurestore.db\",\"fields\":[{\"name\":\"testfeature\"," +
                                            "\"type\":[\"null\",\"int\"]},{\"name\":\"testfeature2\",\"type\":[\"null\",\"double\"]}]}")
       end
@@ -482,15 +539,14 @@ describe "On #{ENV['OS']}" do
                                             features: new_schema)
         expect_status_details(200)
 
-        topic_name = project.id.to_s + "_" + parsed_json["id"].to_s + "_" + featuregroup_name + "_" +
-          parsed_json["version"].to_s
+        topic_name = project.projectname
         get_project_topics(project.id)
         expect_status_details(200)
         topic = json_body[:items].select{|topic| topic[:name] == topic_name}
         expect(topic.length).to eq(1)
-        get_subject_schema(project, topic[0][:name], 2)
+        get_subject_schema(project, featuregroup_name + "_" + parsed_json["version"].to_s, 2)
         expect_status_details(200)
-        expect(json_body.to_json).to eql("{\"type\":\"record\",\"name\":\"#{featuregroup_name}\",\"namespace\":" +
+        expect(json_body.to_json).to eql("{\"type\":\"record\",\"name\":\"#{featuregroup_name}_#{parsed_json["version"]}\",\"namespace\":" +
                                            "\"#{project.projectname.downcase}_featurestore.db\",\"fields\":[{\"name\":\"testfeature\"," +
                                            "\"type\":[\"null\",\"int\"]},{\"name\":\"testfeature2\",\"type\":[\"null\",\"double\"]}]}")
       end

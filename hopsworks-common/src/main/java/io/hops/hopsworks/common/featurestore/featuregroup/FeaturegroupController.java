@@ -267,7 +267,7 @@ public class FeaturegroupController {
     if (settings.isOnlineFeaturestore() && featuregroup.isOnlineEnabled() && !isSpine) {
       onlineFeaturegroupController.setupOnlineFeatureGroup(featurestore, featuregroup, featuresNoHudi, project, user);
     } else if (featuregroupDTO instanceof StreamFeatureGroupDTO && !featuregroupDTO.getOnlineEnabled()) {
-      streamFeatureGroupController.setupOfflineStreamFeatureGroup(project, featuregroup, featuresNoHudi);
+      onlineFeaturegroupController.createFeatureGroupKafkaTopic(project, featuregroup, featuresNoHudi);
     }
 
     FeaturegroupDTO completeFeaturegroupDTO = convertFeaturegrouptoDTO(featuregroup, project, user);
@@ -321,7 +321,7 @@ public class FeaturegroupController {
         return cachedFeaturegroupDTO;
       case STREAM_FEATURE_GROUP:
         StreamFeatureGroupDTO streamFeatureGroupDTO =
-          streamFeatureGroupController.convertStreamFeatureGroupToDTO(featuregroup, project, user);
+          streamFeatureGroupController.convertStreamFeatureGroupToDTO(featuregroup);
         streamFeatureGroupDTO.setFeaturestoreName(featurestoreName);
         if (includeFeatures) {
           streamFeatureGroupDTO.setFeatures(
@@ -634,7 +634,7 @@ public class FeaturegroupController {
           onlineFeaturegroupController.disableOnlineFeatureGroup(featuregroup, project, user);
         } else {
           // only topics need to be deleted, but no RonDB table
-          streamFeatureGroupController.deleteOfflineStreamFeatureGroupTopic(project, featuregroup);
+          onlineFeaturegroupController.deleteFeatureGroupKafkaTopic(project, featuregroup);
         }
         break;
       case ON_DEMAND_FEATURE_GROUP:
@@ -761,6 +761,7 @@ public class FeaturegroupController {
     featuregroup.setOnDemandFeaturegroup(onDemandFeaturegroup);
     featuregroup.setEventTime(featuregroupDTO.getEventTime());
     featuregroup.setOnlineEnabled(settings.isOnlineFeaturestore() && featuregroupDTO.getOnlineEnabled());
+    featuregroup.setTopicName(featuregroupDTO.getTopicName());
 
     StatisticsConfig statisticsConfig = new StatisticsConfig(featuregroupDTO.getStatisticsConfig().getEnabled(),
       featuregroupDTO.getStatisticsConfig().getCorrelations(), featuregroupDTO.getStatisticsConfig().getHistograms(),

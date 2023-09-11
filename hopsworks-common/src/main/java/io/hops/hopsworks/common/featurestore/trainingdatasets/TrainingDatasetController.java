@@ -229,8 +229,6 @@ public class TrainingDatasetController {
                       fsLookupTable.get(f.getFeatureGroup().getFeaturestore().getId()),
                       f.getFeatureGroup().getId(), f.getFeatureGroup().getName(),
                       f.getFeatureGroup().getVersion(),
-                      onlineFeaturegroupController.onlineFeatureGroupTopicName(project.getId(),
-                          f.getFeatureGroup().getId(), Utils.getFeaturegroupName(f.getFeatureGroup())),
                       f.getFeatureGroup().isDeprecated())
                   : null,
               f.getIndex(), f.isLabel()))

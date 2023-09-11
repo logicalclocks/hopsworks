@@ -193,6 +193,9 @@ public class Project implements Serializable {
   @Size(max = 255)
   @Column(name = "docker_image")
   private String dockerImage;
+
+  @Column(name = "topic_name")
+  private String topicName;
   
   @Basic(optional = false)
   @NotNull
@@ -473,6 +476,14 @@ public class Project implements Serializable {
     this.dockerImage = dockerImage;
   }
 
+  public String getTopicName() {
+    return topicName;
+  }
+
+  public void setTopicName(String topicName) {
+    this.topicName = topicName;
+  }
+
   public PythonEnvironment getPythonEnvironment() {
     return this.pythonEnvironment;
   }
@@ -524,6 +535,7 @@ public class Project implements Serializable {
         ", kafkaMaxNumTopics=" + kafkaMaxNumTopics +
         ", lastQuotaUpdate=" + lastQuotaUpdate +
         ", dockerImage='" + dockerImage + '\'' +
+        ", topicName='" + topicName + '\'' +
         ", creationStatus=" + creationStatus +
         ", pythonDepCollection=" + pythonDepCollection +
         ", jupyterProjectCollection=" + jupyterProjectCollection +

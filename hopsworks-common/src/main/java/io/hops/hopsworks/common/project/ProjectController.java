@@ -381,7 +381,7 @@ public class ProjectController {
        * until this project is removed from the database
        */
       try {
-        project = createProjectDbMetadata(projectName, owner, projectDTO.getDescription());
+        project = createProjectDbMetadata(projectName, owner, projectDTO);
         LOGGER.log(Level.INFO, projectCreationLog(projectDTO, "Created DB metadata"));
       } catch (EJBException ex) {
         LOGGER.log(Level.WARNING, null, ex);
@@ -589,7 +589,7 @@ public class ProjectController {
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private Project createProjectDbMetadata(String projectName, Users user, String projectDescription)
+  private Project createProjectDbMetadata(String projectName, Users user, ProjectDTO projectDTO)
       throws ProjectException {
     if (user == null) {
       throw new IllegalArgumentException("User was not provided.");
@@ -605,7 +605,8 @@ public class ProjectController {
     Date now = new Date();
     Project project = new Project(projectName, user, now, settings.getDefaultPaymentType());
     project.setKafkaMaxNumTopics(settings.getKafkaMaxNumTopics());
-    project.setDescription(projectDescription);
+    project.setDescription(projectDTO.getDescription());
+    project.setTopicName(projectDTO.getFeatureStoreTopic());
     project.setCreationStatus(CreationStatus.ONGOING);
 
     //Persist project object
