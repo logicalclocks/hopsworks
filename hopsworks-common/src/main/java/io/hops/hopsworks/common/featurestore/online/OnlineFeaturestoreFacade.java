@@ -16,16 +16,28 @@
 
 package io.hops.hopsworks.common.featurestore.online;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
+import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
+import io.hops.hopsworks.common.security.secrets.SecretsController;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.UserException;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.tags.MysqlTags;
 
-import javax.annotation.Resource;
+import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -47,75 +59,29 @@ public class OnlineFeaturestoreFacade {
 
   private static final Logger LOGGER = Logger.getLogger(OnlineFeaturestoreFacade.class.getName());
 
-  @Resource(name = "jdbc/featurestore")
-  private DataSource featureStoreDataSource;
+  public static final String MYSQL_DRIVER = "com.mysql.cj.jdbc.Driver";
+  public static final String MYSQL_JDBC = "jdbc:mysql://";
+  public static final String MYSQL_PROPERTIES = "?useSSL=false&allowPublicKeyRetrieval=true";
 
-  /**
-   * Gets the size of an online featurestore database. I.e the size of a MySQL-cluster database.
-   *
-   * @param dbName the name of the database
-   * @return the size in MB
-   */
-  public Double getDbSize(String dbName) {
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
+  @EJB
+  private Settings settings;
+  @EJB
+  private OnlineFeaturestoreController onlineFeaturestoreController;
+  @EJB
+  private SecretsController secretsController;
+  @EJB
+  private FeaturestoreUtils featurestoreUtils;
+
+  @PostConstruct
+  public void init() {
     try {
-      ResultSet resultSet = null;
-      try (Connection connection = featureStoreDataSource.getConnection();
-           PreparedStatement pStmt = connection.prepareStatement("SELECT " +
-               "ROUND(SUM(`tables`.`data_length` + `index_length`) / 1024 / 1024, 1) AS 'size_mb' " +
-               "FROM information_schema.`tables` " +
-               "WHERE `tables`.`table_schema`=? GROUP BY `tables`.`table_schema`")) {
-        pStmt.setString(1, dbName);
-        resultSet = pStmt.executeQuery();
-        if (resultSet.next()) {
-          return resultSet.getDouble("size_mb");
-        }
-      } finally {
-        if (resultSet != null) {
-          resultSet.close();
-        }
-      }
-    } catch (SQLException se) {
-      LOGGER.log(Level.SEVERE, "Could not get database size", se);
+      // Load MySQL JDBC Driver
+      Class.forName(MYSQL_DRIVER);
+    } catch (ClassNotFoundException e) {
+      LOGGER.log(Level.SEVERE, "Could not load the MySQL JDBC driver: " + MYSQL_DRIVER, e);
     }
-
-    return 0.0;
-  }
-
-  /**
-   * Gets the features of a online featuregroup from the MySQL metadata
-   *
-   * @param tableName the name of the table of the online featuregroup
-   * @param db the name of the mysql database
-   * @return list of featureDTOs with name,type,comment
-   */
-  public List<FeatureGroupFeatureDTO> getMySQLFeatures(String tableName, String db) throws FeaturestoreException {
-    ArrayList<FeatureGroupFeatureDTO> featureGroupFeatureDTOS = new ArrayList<>();
-    try {
-      ResultSet resultSet = null;
-      try (Connection connection = featureStoreDataSource.getConnection();
-           PreparedStatement pStmt = connection.prepareStatement(
-               "SELECT `COLUMNS`.`COLUMN_NAME`,`COLUMNS`.`COLUMN_TYPE`, `COLUMNS`.`COLUMN_COMMENT` " +
-               "FROM INFORMATION_SCHEMA.`COLUMNS` " +
-               "WHERE `COLUMNS`.`TABLE_NAME`=? AND `COLUMNS`.`TABLE_SCHEMA`=?;")) {
-        pStmt.setString(1, tableName);
-        pStmt.setString(2, db);
-        resultSet = pStmt.executeQuery();
-        while (resultSet.next()) {
-          featureGroupFeatureDTOS.add(new FeatureGroupFeatureDTO(resultSet.getString(1),
-              resultSet.getString(2),
-              resultSet.getString(3)));
-        }
-      } finally {
-        if (resultSet != null) {
-          resultSet.close();
-        }
-      }
-    } catch (SQLException se) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_ONLINE_FEATURES, Level.SEVERE,
-          "Error reading features from schema", se.getMessage(), se);
-    }
-
-    return featureGroupFeatureDTOS;
   }
 
   /**
@@ -159,7 +125,7 @@ public class OnlineFeaturestoreFacade {
    */
   public void createOnlineFeaturestoreUser(String user, String pw) throws FeaturestoreException {
     try {
-      try (Connection connection = featureStoreDataSource.getConnection();
+      try (Connection connection = establishAdminConnection();
            PreparedStatement pStmt = connection.prepareStatement("CREATE USER IF NOT EXISTS ? IDENTIFIED BY ?;")) {
         pStmt.setString(1, user);
         pStmt.setString(2, pw);
@@ -174,37 +140,23 @@ public class OnlineFeaturestoreFacade {
   }
 
   /**
-   * Revokes user privileges for a user on a specific online featurestore
+   * Removes a database user for an online featurestore
    *
-   * @param dbName name of the MYSQL database
-   * @param dbUser the database username to revoke privileges for
+   * @param dbUser the database-username
    */
-  public void revokeUserPrivileges(String dbName, String dbUser) {
-    ResultSet resultSet = null;
+  public void removeOnlineFeaturestoreUser(String dbUser) throws FeaturestoreException {
+    //Prepared statements with parameters can only be done for
+    //WHERE/HAVING Clauses, not names of tables or databases
     try {
-      try (Connection connection = featureStoreDataSource.getConnection();
-         PreparedStatement pStmt = connection.prepareStatement(
-             "SELECT COUNT(*) FROM information_schema.SCHEMA_PRIVILEGES WHERE GRANTEE = ? AND TABLE_SCHEMA = ?")){
-        // If the grant does not exists, MySQL returns a 1141 error which JPA catches and logs it together
-        // with the stack trace, polluting the logs. To avoid this we first query the information_schema
-        // to check that the grant exists, if so, we remove it
-        String grantee = "'" + dbUser + "'@'%'";
-        pStmt.setString(1, grantee);
-        pStmt.setString(2, dbName);
-
-        resultSet = pStmt.executeQuery();
-        if (resultSet.next() && resultSet.getInt(1) != 0) {
-          //Prepared statements with parameters can only be done for
-          //WHERE/HAVING Clauses, not names of tables or databases
-          executeUpdate("REVOKE ALL PRIVILEGES ON " + dbName + ".* FROM " + dbUser + ";");
-        }
-      } finally {
-        if (resultSet != null) {
-          resultSet.close();
-        }
+      try (Connection connection = establishAdminConnection();
+           PreparedStatement pStmt = connection.prepareStatement("DROP USER IF EXISTS ?")) {
+        pStmt.setString(1, dbUser);
+        pStmt.executeUpdate();
       }
-    } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "Exception in revoking the privileges", e);
+    } catch (SQLException se) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_DELETING_ONLINE_FEATURESTORE_USER,
+          Level.SEVERE, "An error occurred when trying to delete the MySQL database user for an online feature store",
+          se.getMessage(), se);
     }
   }
 
@@ -240,9 +192,9 @@ public class OnlineFeaturestoreFacade {
     }
   }
 
-  private void grantUserPrivileges(String dbUser, String grantQuery) throws SQLException {
+  private void grantUserPrivileges(String dbUser, String grantQuery) throws FeaturestoreException, SQLException {
     ResultSet resultSet = null;
-    try (Connection connection = featureStoreDataSource.getConnection();
+    try (Connection connection = establishAdminConnection();
          PreparedStatement pStmt = connection.prepareStatement(
              "SELECT COUNT(*) FROM mysql.user WHERE User = ?")){
       // If the user doesn't exist, the grant permissions will fail blocking the rest of the user assignments
@@ -261,25 +213,77 @@ public class OnlineFeaturestoreFacade {
   }
 
   /**
-   * Removes a database user for an online featurestore
+   * Gets the features of a online featuregroup from the MySQL metadata
    *
-   * @param dbUser the database-username
+   * @param tableName the name of the table of the online featuregroup
+   * @param db the name of the mysql database
+   * @return list of featureDTOs with name,type,comment
    */
-  public void removeOnlineFeaturestoreUser(String dbUser) throws FeaturestoreException {
-    //Prepared statements with parameters can only be done for
-    //WHERE/HAVING Clauses, not names of tables or databases
+  public List<FeatureGroupFeatureDTO> getMySQLFeatures(String tableName, String db) throws FeaturestoreException {
+    ArrayList<FeatureGroupFeatureDTO> featureGroupFeatureDTOS = new ArrayList<>();
     try {
-      try (Connection connection = featureStoreDataSource.getConnection();
-           PreparedStatement pStmt = connection.prepareStatement("DROP USER IF EXISTS ?")) {
-        pStmt.setString(1, dbUser);
-        pStmt.executeUpdate();
+      ResultSet resultSet = null;
+      try (Connection connection = establishAdminConnection();
+           PreparedStatement pStmt = connection.prepareStatement(
+               "SELECT `COLUMNS`.`COLUMN_NAME`,`COLUMNS`.`COLUMN_TYPE`, `COLUMNS`.`COLUMN_COMMENT` " +
+               "FROM INFORMATION_SCHEMA.`COLUMNS` " +
+               "WHERE `COLUMNS`.`TABLE_NAME`=? AND `COLUMNS`.`TABLE_SCHEMA`=?;")) {
+        pStmt.setString(1, tableName);
+        pStmt.setString(2, db);
+        resultSet = pStmt.executeQuery();
+        while (resultSet.next()) {
+          featureGroupFeatureDTOS.add(new FeatureGroupFeatureDTO(resultSet.getString(1),
+              resultSet.getString(2),
+              resultSet.getString(3)));
+        }
+      } finally {
+        if (resultSet != null) {
+          resultSet.close();
+        }
       }
     } catch (SQLException se) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_DELETING_ONLINE_FEATURESTORE_USER,
-          Level.SEVERE, "An error occurred when trying to delete the MySQL database user for an online feature store",
-          se.getMessage(), se);
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_ONLINE_FEATURES, Level.SEVERE,
+          "Error reading features from schema", se.getMessage(), se);
+    }
+
+    return featureGroupFeatureDTOS;
+  }
+
+  /**
+   * Revokes user privileges for a user on a specific online featurestore
+   *
+   * @param dbName name of the MYSQL database
+   * @param dbUser the database username to revoke privileges for
+   */
+  public void revokeUserPrivileges(String dbName, String dbUser) {
+    ResultSet resultSet = null;
+    try {
+      try (Connection connection = establishAdminConnection();
+         PreparedStatement pStmt = connection.prepareStatement(
+             "SELECT COUNT(*) FROM information_schema.SCHEMA_PRIVILEGES WHERE GRANTEE = ? AND TABLE_SCHEMA = ?")){
+        // If the grant does not exists, MySQL returns a 1141 error which JPA catches and logs it together
+        // with the stack trace, polluting the logs. To avoid this we first query the information_schema
+        // to check that the grant exists, if so, we remove it
+        String grantee = "'" + dbUser + "'@'%'";
+        pStmt.setString(1, grantee);
+        pStmt.setString(2, dbName);
+
+        resultSet = pStmt.executeQuery();
+        if (resultSet.next() && resultSet.getInt(1) != 0) {
+          //Prepared statements with parameters can only be done for
+          //WHERE/HAVING Clauses, not names of tables or databases
+          executeUpdate("REVOKE ALL PRIVILEGES ON " + dbName + ".* FROM " + dbUser + ";");
+        }
+      } finally {
+        if (resultSet != null) {
+          resultSet.close();
+        }
+      }
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Exception in revoking the privileges", e);
     }
   }
+
 
   /**
    * Checks if a mysql database exists
@@ -290,7 +294,7 @@ public class OnlineFeaturestoreFacade {
   public Boolean checkIfDatabaseExists(String dbName) {
     try {
       ResultSet resultSet = null;
-      try (Connection connection = featureStoreDataSource.getConnection();
+      try (Connection connection = establishAdminConnection();
            PreparedStatement pStmt = connection.prepareStatement(
                "SELECT `SCHEMA_NAME` FROM `INFORMATION_SCHEMA`.`SCHEMATA` WHERE `SCHEMA_NAME`=?")) {
         pStmt.setString(1, dbName);
@@ -301,9 +305,58 @@ public class OnlineFeaturestoreFacade {
           resultSet.close();
         }
       }
-    } catch (SQLException se) {
+    } catch (SQLException | FeaturestoreException se) {
       LOGGER.log(Level.SEVERE, "Error checking if database exists", se);
       return false;
+    }
+  }
+
+  /**
+   * Runs a update/create SQL query against an online featurestore database, impersonating the user making the request
+   *
+   * @param query the update/create query to run
+   * @param databaseName the name of the database to run the query against
+   * @param project the project of the online featurestore
+   * @param user the user to run the query as
+   * @throws FeaturestoreException
+   * @throws SQLException
+   */
+  public void executeUpdateJDBCQuery(String query, String databaseName, Project project, Users user)
+      throws FeaturestoreException{
+    //Re-create the connection every time since the connection is database and user-specific
+    //Run Query
+    try (Connection conn = establishUserConnection(databaseName, project, user);
+         Statement stmt = conn.createStatement()) {
+      stmt.executeUpdate(query);
+    } catch (SQLException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.MYSQL_JDBC_UPDATE_STATEMENT_ERROR, Level.SEVERE,
+          "project: " + project.getName() + ", Online featurestore database: " + databaseName + " jdbc query: " + query,
+          e.getMessage(), e);
+    }
+  }
+
+  /**
+   * Runs a Read-SQL query against an online featurestore database, impersonating the user making the request
+   *
+   * @param query        the read query
+   * @param databaseName the name of the MySQL database
+   * @param project      the project that owns the online featurestore
+   * @param user         the user making the request
+   * @return parsed resultset
+   * @throws SQLException
+   * @throws FeaturestoreException
+   */
+  public FeaturegroupPreview executeReadJDBCQuery(String query, String databaseName, Project project, Users user)
+      throws FeaturestoreException {
+    try (Connection conn = establishUserConnection(databaseName, project, user);
+         Statement stmt = conn.createStatement()) {
+      //Re-create the connection every time since the connection is database and user-specific
+      ResultSet rs = stmt.executeQuery(query);
+      return featurestoreUtils.parseResultset(rs);
+    } catch (SQLException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.MYSQL_JDBC_READ_QUERY_ERROR, Level.SEVERE,
+          "project: " + project.getName() + ", mysql database: " + databaseName + " jdbc query: " + query,
+          e.getMessage(), e);
     }
   }
 
@@ -330,11 +383,64 @@ public class OnlineFeaturestoreFacade {
     }
   }
 
-  private void executeUpdate(String query) throws SQLException {
-    try (Connection connection = featureStoreDataSource.getConnection();
+  private void executeUpdate(String query) throws SQLException, FeaturestoreException {
+    try (Connection connection = establishAdminConnection();
          Statement stmt = connection.createStatement()) {
       stmt.executeUpdate(query);
     }
   }
 
+  private Connection establishAdminConnection() throws FeaturestoreException {
+    try {
+      return DriverManager.getConnection(getJdbcURL(),
+          settings.getVariableFeaturestoreDbAdminUser(),
+          settings.getVariableFeaturestoreDbAdminPwd());
+    } catch (SQLException | ServiceDiscoveryException e) {
+      throw new FeaturestoreException(
+          RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,
+          Level.SEVERE, e.getMessage(), e.getMessage(), e);
+    }
+  }
+
+  /**
+   * Initializes a JDBC connection MySQL Server using an online featurestore user and password
+   *
+   * @param databaseName name of the MySQL database to open a connection to
+   * @param project      the project of the user making the request
+   * @param user         the user making the request
+   * @return conn the JDBC connection
+   * @throws FeaturestoreException
+   */
+  private Connection establishUserConnection(String databaseName, Project project, Users user)
+      throws FeaturestoreException {
+    String dbUsername = onlineFeaturestoreController.onlineDbUsername(project, user);
+    String password;
+    try {
+      password = secretsController.get(user, dbUsername).getPlaintext();
+    } catch (UserException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
+          Level.SEVERE, "Problem getting secrets for the JDBC connection to the online FS");
+    }
+
+    String jdbcString = "";
+    try {
+      jdbcString = getJdbcURL(databaseName);
+      return DriverManager.getConnection(jdbcString, dbUsername, password);
+    } catch (SQLException | ServiceDiscoveryException e) {
+      throw new FeaturestoreException(
+          RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE, Level.SEVERE,
+          "project: " + project.getName() + ", database: " + databaseName + ", db user:" + dbUsername +
+              ", jdbcString: " + jdbcString, e.getMessage(), e);
+    }
+  }
+
+  public String getJdbcURL() throws ServiceDiscoveryException {
+    return getJdbcURL("");
+  }
+
+  public String getJdbcURL(String dbName) throws ServiceDiscoveryException {
+    return MYSQL_JDBC + serviceDiscoveryController
+        .constructServiceAddressWithPort(HopsworksService.MYSQL.getNameWithTag(MysqlTags.onlinefs))
+        + "/" + dbName + MYSQL_PROPERTIES;
+  }
 }

@@ -22,6 +22,7 @@ import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewFacade;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
+import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
@@ -79,6 +80,8 @@ public class FeaturestoreController {
   private Settings settings;
   @EJB
   private OnlineFeaturestoreController onlineFeaturestoreController;
+  @EJB
+  private OnlineFeaturestoreFacade onlineFeaturestoreFacade;
   @EJB
   private HiveController hiveController;
   @EJB
@@ -375,8 +378,7 @@ public class FeaturestoreController {
       if (settings.isOnlineFeaturestore() &&
           onlineFeaturestoreController.checkIfDatabaseExists(
               onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
-        featurestoreDTO.setMysqlServerEndpoint(onlineFeaturestoreController.getJdbcURL());
-        featurestoreDTO.setOnlineFeaturestoreSize(onlineFeaturestoreController.getDbSize(featurestore));
+        featurestoreDTO.setMysqlServerEndpoint(onlineFeaturestoreFacade.getJdbcURL());
         featurestoreDTO.setOnlineFeaturestoreName(featurestore.getProject().getName());
         featurestoreDTO.setOnlineEnabled(true);
       }

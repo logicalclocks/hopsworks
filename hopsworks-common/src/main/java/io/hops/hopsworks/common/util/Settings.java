@@ -307,6 +307,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_FEATURESTORE_DEFAULT_QUOTA = "featurestore_default_quota";
   private static final String VARIABLE_FEATURESTORE_DEFAULT_STORAGE_FORMAT = "featurestore_default_storage_format";
   private static final String VARIABLE_FEATURESTORE_JDBC_URL = "featurestore_jdbc_url";
+  private static final String VARIABLE_FEATURESTORE_DB_ADMIN_USER = "featurestore_db_admin_user";
+  private static final String VARIABLE_FEATURESTORE_DB_ADMIN_PWD = "featurestore_db_admin_pwd";
   private static final String VARIABLE_ONLINE_FEATURESTORE = "featurestore_online_enabled";
   private static final String VARIABLE_FG_PREVIEW_LIMIT = "fg_preview_limit";
   private static final String VARIABLE_ONLINE_FEATURESTORE_TS = "featurestore_online_tablespace";
@@ -813,6 +815,8 @@ public class Settings implements Serializable {
       FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT =
           setStrVar(VARIABLE_FEATURESTORE_DEFAULT_STORAGE_FORMAT, FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT);
       FEATURESTORE_JDBC_URL = setStrVar(VARIABLE_FEATURESTORE_JDBC_URL, FEATURESTORE_JDBC_URL);
+      FEATURESTORE_DB_ADMIN_USER = setStrVar(VARIABLE_FEATURESTORE_DB_ADMIN_USER, FEATURESTORE_DB_ADMIN_USER);
+      FEATURESTORE_DB_ADMIN_PWD = setStrVar(VARIABLE_FEATURESTORE_DB_ADMIN_PWD, FEATURESTORE_DB_ADMIN_PWD);
       ONLINE_FEATURESTORE = setBoolVar(VARIABLE_ONLINE_FEATURESTORE, ONLINE_FEATURESTORE);
       ONLINE_FEATURESTORE_TS = setStrVar(VARIABLE_ONLINE_FEATURESTORE_TS, ONLINE_FEATURESTORE_TS);
       ONLINEFS_THREAD_NUMBER = setIntVar(VARIABLE_ONLINEFS_THREAD_NUMBER, ONLINEFS_THREAD_NUMBER);
@@ -3437,12 +3441,23 @@ public class Settings implements Serializable {
   }
   
   private String FEATURESTORE_JDBC_URL = "jdbc:mysql://onlinefs.mysql.service.consul:3306/";
-  
   public synchronized String getFeaturestoreJdbcUrl() {
     checkCache();
     return FEATURESTORE_JDBC_URL;
   }
-  
+
+  private String FEATURESTORE_DB_ADMIN_USER = "";
+  public synchronized String getVariableFeaturestoreDbAdminUser() {
+    checkCache();
+    return FEATURESTORE_DB_ADMIN_USER;
+  }
+
+  private String FEATURESTORE_DB_ADMIN_PWD = "";
+  public synchronized String getVariableFeaturestoreDbAdminPwd() {
+    checkCache();
+    return FEATURESTORE_DB_ADMIN_PWD;
+  }
+
   private Boolean REQUESTS_VERIFY = false;
   
   /**

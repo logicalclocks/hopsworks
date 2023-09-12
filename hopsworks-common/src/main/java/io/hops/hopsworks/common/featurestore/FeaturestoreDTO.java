@@ -35,7 +35,6 @@ public class FeaturestoreDTO {
   private String projectName;
   private Integer projectId;
   private String onlineFeaturestoreName;
-  private Double onlineFeaturestoreSize;
   private String offlineFeaturestoreName;
   private String hiveEndpoint;
   private String mysqlServerEndpoint;
@@ -58,7 +57,6 @@ public class FeaturestoreDTO {
     this.offlineFeaturestoreName = null;
     this.hiveEndpoint = null;
     this.mysqlServerEndpoint = null;
-    this.onlineFeaturestoreSize = 0.0;
     this.onlineEnabled = false;
   }
 
@@ -104,16 +102,7 @@ public class FeaturestoreDTO {
   public void setOfflineFeaturestoreName(String offlineFeaturestoreName) {
     this.offlineFeaturestoreName = offlineFeaturestoreName;
   }
-  
-  @XmlElement
-  public Double getOnlineFeaturestoreSize() {
-    return onlineFeaturestoreSize;
-  }
-  
-  public void setOnlineFeaturestoreSize(Double onlineFeaturestoreSize) {
-    this.onlineFeaturestoreSize = onlineFeaturestoreSize;
-  }
-  
+
   @XmlElement
   public String getHiveEndpoint() {
     return hiveEndpoint;
@@ -186,7 +175,6 @@ public class FeaturestoreDTO {
         ", projectName='" + projectName + '\'' +
         ", projectId=" + projectId +
         ", onlineFeaturestoreName='" + onlineFeaturestoreName + '\'' +
-        ", onlineFeaturestoreSize=" + onlineFeaturestoreSize +
         ", offlineFeaturestoreName='" + offlineFeaturestoreName + '\'' +
         ", hiveEndpoint='" + hiveEndpoint + '\'' +
         ", mysqlServerEndpoint='" + mysqlServerEndpoint + '\'' +

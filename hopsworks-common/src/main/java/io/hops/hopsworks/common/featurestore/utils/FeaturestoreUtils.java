@@ -21,6 +21,7 @@ import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -36,10 +37,14 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.servicediscovery.HopsworksService;
 import io.hops.hopsworks.servicediscovery.tags.NamenodeTags;
+import org.javatuples.Pair;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ws.rs.core.UriBuilder;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -256,5 +261,43 @@ public class FeaturestoreUtils {
       .path(ResourceRequest.Name.TRAININGDATASETS.toString().toLowerCase())
       .path(ResourceRequest.Name.VERSION.toString().toLowerCase())
       .path(Integer.toString(trainingDataset.getVersion()));
+  }
+
+
+  /**
+   * Parses a ResultSet from a Hive query into a list of RowValueQueryResultDTOs
+   *
+   * @param rs resultset to parse
+   * @return list of parsed rows
+   * @throws SQLException
+   */
+  public FeaturegroupPreview parseResultset(ResultSet rs) throws SQLException {
+    ResultSetMetaData rsmd = rs.getMetaData();
+    FeaturegroupPreview featuregroupPreview = new FeaturegroupPreview();
+
+    while (rs.next()) {
+      FeaturegroupPreview.Row row = new FeaturegroupPreview.Row();
+
+      for (int i = 1; i <= rsmd.getColumnCount(); i++) {
+        Object columnValue = rs.getObject(i);
+        row.addValue(new Pair<>(parseColumnLabel(rsmd.getColumnLabel(i)),
+            columnValue == null ? null : columnValue.toString()));
+      }
+      featuregroupPreview.addRow(row);
+    }
+
+    return featuregroupPreview;
+  }
+
+  /**
+   * Column labels contain the table name as well. Remove it
+   * @param columnLabel
+   * @return
+   */
+  private String parseColumnLabel(String columnLabel) {
+    if (columnLabel.contains(".")) {
+      return columnLabel.split("\\.")[1];
+    }
+    return columnLabel;
   }
 }
