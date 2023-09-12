@@ -15,17 +15,12 @@
  */
 package io.hops.hopsworks.common.featurestore.online;
 
-import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretsFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
-import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
-import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
 import io.hops.hopsworks.common.featurestore.storageconnectors.StorageConnectorUtil;
-import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -42,24 +37,18 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.secrets.SecretId;
 import io.hops.hopsworks.persistence.entity.user.security.secrets.VisibilityType;
 import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.servicediscovery.HopsworksService;
-import io.hops.hopsworks.servicediscovery.tags.MysqlTags;
 import org.apache.commons.lang3.RandomStringUtils;
 
-import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreFacade.MYSQL_DRIVER;
 
 /**
  * Class controlling the interaction with the online featurestore databases in Hopsworks and the associated
@@ -70,9 +59,7 @@ import java.util.logging.Logger;
 public class OnlineFeaturestoreController {
 
   private static final Logger LOGGER = Logger.getLogger(OnlineFeaturestoreController.class.getName());
-  private static final String MYSQL_DRIVER = "com.mysql.cj.jdbc.Driver";
-  private static final String MYSQL_JDBC = "jdbc:mysql://";
-  private static final String MYSQL_PROPERTIES = "?useSSL=false&allowPublicKeyRetrieval=true";
+
   public static final String ONLINEFS_USERNAME = "onlinefs";
   
   @EJB
@@ -84,137 +71,12 @@ public class OnlineFeaturestoreController {
   @EJB
   private OnlineFeaturestoreFacade onlineFeaturestoreFacade;
   @EJB
-  private CachedFeaturegroupController cachedFeaturegroupController;
-  @EJB
   private ProjectTeamFacade projectTeamFacade;
-  @EJB
-  private UserFacade userFacade;
-  @EJB
-  private ServiceDiscoveryController serviceDiscoveryController;
   @EJB
   private FeaturestoreConnectorFacade featurestoreConnectorFacade;
   @EJB
   private StorageConnectorUtil storageConnectorUtil;
-  
-  @PostConstruct
-  public void init() {
-    try {
-      // Load MySQL JDBC Driver
-      Class.forName(MYSQL_DRIVER);
-    } catch (ClassNotFoundException e) {
-      LOGGER.log(Level.SEVERE, "Could not load the MySQL JDBC driver: " + MYSQL_DRIVER, e);
-    }
-  }
-  
-  /**
-   * Initializes a JDBC connection MySQL Server using an online featurestore user and password
-   *
-   * @param databaseName name of the MySQL database to open a connection to
-   * @param project      the project of the user making the request
-   * @param user         the user making the request
-   * @return conn the JDBC connection
-   * @throws FeaturestoreException
-   */
-  private Connection initConnection(String databaseName, Project project, Users user) throws FeaturestoreException {
-    String jdbcString = "";
-    String dbUsername = onlineDbUsername(project, user);
-    String password = "";
-    try {
-      password = secretsController.get(user, dbUsername).getPlaintext();
-    } catch (UserException e) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
-        Level.SEVERE, "Problem getting secrets for the JDBC connection to the online FS");
-    }
-    try {
-      return DriverManager.getConnection(getJdbcURL(databaseName), dbUsername, password);
-    } catch (SQLException | ServiceDiscoveryException e) {
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE, Level.SEVERE,
-        "project: " + project.getName() + ", database: " + databaseName + ", db user:" + dbUsername +
-                ", jdbcString: " + jdbcString, e.getMessage(), e);
-    }
-  }
 
-  /**
-   * Runs a update/create SQL query against an online featurestore database, impersonating the user making the request
-   *
-   * @param query the update/create query to run
-   * @param databaseName the name of the database to run the query against
-   * @param project the project of the online featurestore
-   * @param user the user to run the query as
-   * @throws FeaturestoreException
-   * @throws SQLException
-   */
-  public void executeUpdateJDBCQuery(String query, String databaseName, Project project, Users user)
-    throws FeaturestoreException, SQLException {
-    //Re-create the connection every time since the connection is database and user-specific
-    Statement stmt = null;
-    Connection conn = null;
-    //Run Query
-    try {
-      conn = initConnection(databaseName, project, user);
-      stmt = conn.createStatement();
-      stmt.executeUpdate(query);
-    } catch (SQLException e) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.MYSQL_JDBC_UPDATE_STATEMENT_ERROR, Level.SEVERE,
-        "project: " + project.getName() + ", Online featurestore database: " + databaseName + " jdbc query: " + query,
-        e.getMessage(), e);
-    } finally {
-      if (stmt != null) {
-        stmt.close();
-      }
-      closeConnection(conn);
-    }
-  }
-  
-  /**
-   * Runs a Read-SQL query against an online featurestore database, impersonating the user making the request
-   *
-   * @param query        the read query
-   * @param databaseName the name of the MySQL database
-   * @param project      the project that owns the online featurestore
-   * @param user         the user making the request
-   * @return parsed resultset
-   * @throws SQLException
-   * @throws FeaturestoreException
-   */
-  public FeaturegroupPreview executeReadJDBCQuery(String query, String databaseName, Project project, Users user)
-      throws SQLException, FeaturestoreException {
-    Connection conn = null;
-    Statement stmt = null;
-    try {
-      //Re-create the connection every time since the connection is database and user-specific
-      conn = initConnection(databaseName, project, user);
-      stmt = conn.createStatement();
-      ResultSet rs = stmt.executeQuery(query);
-      return cachedFeaturegroupController.parseResultset(rs);
-    } catch (SQLException e) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.MYSQL_JDBC_READ_QUERY_ERROR, Level.SEVERE,
-          "project: " + project.getName() + ", mysql database: " + databaseName + " jdbc query: " + query,
-          e.getMessage(), e);
-    } finally {
-      if (stmt != null) {
-        stmt.close();
-      }
-      closeConnection(conn);
-    }
-  }
-
-  /**
-   * Checks if the JDBC connection to MySQL Server is open, and if so closes it.
-   *
-   * @param conn the JDBC connection
-   */
-  private void closeConnection(Connection conn) {
-    try {
-      if (conn != null) {
-        conn.close();
-      }
-    } catch (SQLException e) {
-      LOGGER.log(Level.WARNING, "Error closing MySQL JDBC connection: " +  e);
-    }
-  }
-  
   /**
    * Sets up the online feature store database for a new project and creating a database-user for the project-owner
    *
@@ -528,17 +390,6 @@ public class OnlineFeaturestoreController {
   }
 
   /**
-   * Gets the size of an online featurestore database. I.e the size of a MySQL-cluster database.
-   *
-   * @param featurestore the feature store for which to compute the online size
-   * @return the size in MB
-   */
-  public Double getDbSize(Featurestore featurestore) {
-    String onlineName = getOnlineFeaturestoreDbName(featurestore.getProject());
-    return onlineFeaturestoreFacade.getDbSize(onlineName);
-  }
-
-  /**
    * Checks if a mysql database exists
    *
    * @param dbName the name of the database
@@ -546,15 +397,5 @@ public class OnlineFeaturestoreController {
    */
   public Boolean checkIfDatabaseExists(String dbName) {
     return onlineFeaturestoreFacade.checkIfDatabaseExists(dbName);
-  }
-
-  public String getJdbcURL() throws ServiceDiscoveryException {
-    return getJdbcURL("");
-  }
-
-  private String getJdbcURL(String dbName) throws ServiceDiscoveryException {
-    return MYSQL_JDBC + serviceDiscoveryController
-        .constructServiceAddressWithPort(HopsworksService.MYSQL.getNameWithTag(MysqlTags.onlinefs))
-        + "/" + dbName + MYSQL_PROPERTIES;
   }
 }

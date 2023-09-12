@@ -62,7 +62,6 @@ import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.dialect.HiveSqlDialect;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
-import org.javatuples.Pair;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -74,7 +73,6 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -372,43 +370,6 @@ public class CachedFeaturegroupController {
   }
 
   /**
-   * Parses a ResultSet from a Hive query into a list of RowValueQueryResultDTOs
-   *
-   * @param rs resultset to parse
-   * @return list of parsed rows
-   * @throws SQLException
-   */
-  public FeaturegroupPreview parseResultset(ResultSet rs) throws SQLException {
-    ResultSetMetaData rsmd = rs.getMetaData();
-    FeaturegroupPreview featuregroupPreview = new FeaturegroupPreview();
-
-    while (rs.next()) {
-      FeaturegroupPreview.Row row = new FeaturegroupPreview.Row();
-
-      for (int i = 1; i <= rsmd.getColumnCount(); i++) {
-        Object columnValue = rs.getObject(i);
-        row.addValue(new Pair<>(parseColumnLabel(rsmd.getColumnLabel(i)),
-            columnValue == null ? null : columnValue.toString()));
-      }
-      featuregroupPreview.addRow(row);
-    }
-
-    return featuregroupPreview;
-  }
-
-  /**
-   * Column labels contain the table name as well. Remove it
-   * @param columnLabel
-   * @return
-   */
-  private String parseColumnLabel(String columnLabel) {
-    if (columnLabel.contains(".")) {
-      return columnLabel.split("\\.")[1];
-    }
-    return columnLabel;
-  }
-
-  /**
    * Opens a JDBC connection to HS2 using the given database and project-user and then executes a regular
    * SQL query
    *
@@ -430,7 +391,7 @@ public class CachedFeaturegroupController {
       conn = initConnection(databaseName, project, user);
       stmt = conn.createStatement();
       ResultSet rs = stmt.executeQuery(query);
-      return parseResultset(rs);
+      return featurestoreUtils.parseResultset(rs);
     } catch (SQLException e) {
       //Hive throws a generic HiveSQLException not a specific AuthorizationException
       if (e.getMessage().toLowerCase().contains("permission denied")) {

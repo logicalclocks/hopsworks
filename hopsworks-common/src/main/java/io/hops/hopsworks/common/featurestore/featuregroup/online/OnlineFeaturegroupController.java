@@ -21,7 +21,6 @@ import com.logicalclocks.shaded.org.apache.commons.lang3.StringUtils;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
-import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreFacade;
@@ -93,8 +92,6 @@ public class OnlineFeaturegroupController {
   @EJB
   private ProjectController projectController;
   @EJB
-  private CachedFeaturegroupController cachedFeaturegroupController;
-  @EJB
   private ConstructorController constructorController;
   @EJB
   private FeaturegroupController featuregroupController;
@@ -120,27 +117,26 @@ public class OnlineFeaturegroupController {
        * @throws SQLException
        * @throws FeaturestoreException
        */
-  public void dropMySQLTable(Featuregroup featuregroup, Project project, Users user) throws SQLException,
-    FeaturestoreException {
+  public void dropMySQLTable(Featuregroup featuregroup, Project project, Users user) throws FeaturestoreException {
     //Drop data table
     String query = "DROP TABLE " + featuregroup.getName() + "_" + featuregroup.getVersion() + ";";
-    onlineFeaturestoreController.executeUpdateJDBCQuery(query,
+    onlineFeaturestoreFacade.executeUpdateJDBCQuery(query,
         onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()),
         project, user);
   }
   
   public void createMySQLTable(Featurestore featurestore, String tableName, List<FeatureGroupFeatureDTO> features,
                                              Project project, Users user)
-      throws FeaturestoreException, SQLException{
+      throws FeaturestoreException {
     String dbName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject());
     String createStatement = buildCreateStatement(dbName, tableName, features);
-    onlineFeaturestoreController.executeUpdateJDBCQuery(createStatement, dbName, project, user);
+    onlineFeaturestoreFacade.executeUpdateJDBCQuery(createStatement, dbName, project, user);
   }
   
   public void setupOnlineFeatureGroup(Featurestore featureStore, Featuregroup featureGroup,
                                       List<FeatureGroupFeatureDTO> features, Project project, Users user)
-      throws KafkaException, SchemaException, ProjectException, FeaturestoreException, SQLException,
-      IOException, HopsSecurityException, ServiceException {
+      throws KafkaException, SchemaException, ProjectException, FeaturestoreException, IOException,
+      HopsSecurityException, ServiceException {
     // check if onlinefs user is part of project
     if (project.getProjectTeamCollection().stream().noneMatch(pt ->
       pt.getUser().getUsername().equals(OnlineFeaturestoreController.ONLINEFS_USERNAME))) {
@@ -163,7 +159,7 @@ public class OnlineFeaturegroupController {
   // The topic schema is registered for each feature group
   public void createFeatureGroupKafkaTopic(Project project, Featuregroup featureGroup,
                                            List<FeatureGroupFeatureDTO> features)
-    throws KafkaException, SchemaException, FeaturestoreException {
+      throws KafkaException, SchemaException, FeaturestoreException {
     String avroSchema = avroSchemaConstructorController.constructSchema(featureGroup, features);
     schemasController.validateSchema(project, avroSchema);
 
@@ -181,7 +177,7 @@ public class OnlineFeaturegroupController {
   }
   
   public void deleteFeatureGroupKafkaTopic(Project project, Featuregroup featureGroup)
-    throws KafkaException, SchemaException {
+      throws KafkaException, SchemaException {
     String topicName = Utils.getFeatureGroupTopicName(featureGroup);
     String featureGroupEntityName = Utils.getFeaturegroupName(featureGroup);
     // user might have deleted topic manually
@@ -291,9 +287,9 @@ public class OnlineFeaturegroupController {
 
   public void alterMySQLTableColumns(Featurestore featurestore, String tableName,
                                      List<FeatureGroupFeatureDTO> featureDTOs, Project project, Users user)
-      throws FeaturestoreException, SQLException {
+      throws FeaturestoreException {
     String dbName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject());
-    onlineFeaturestoreController.executeUpdateJDBCQuery(buildAlterStatement(tableName, dbName, featureDTOs), dbName,
+    onlineFeaturestoreFacade.executeUpdateJDBCQuery(buildAlterStatement(tableName, dbName, featureDTOs), dbName,
       project, user);
   }
 
@@ -330,7 +326,7 @@ public class OnlineFeaturegroupController {
    * @throws SQLException
    */
   public FeaturegroupPreview getFeaturegroupPreview(Featuregroup featuregroup, Project project, Users user, int limit)
-      throws FeaturestoreException, SQLException {
+      throws FeaturestoreException {
     String tbl = featuregroupController.getTblName(featuregroup.getName(), featuregroup.getVersion());
 
     List<FeatureGroupFeatureDTO> features =  featuregroupController.getFeatures(featuregroup, project, user);
@@ -352,10 +348,10 @@ public class OnlineFeaturegroupController {
         SqlLiteral.createExactNumeric(String.valueOf(limit), SqlParserPos.ZERO), null);
     String db = onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject());
     try {
-      return onlineFeaturestoreController.executeReadJDBCQuery(
+      return onlineFeaturestoreFacade.executeReadJDBCQuery(
           select.toSqlString(new MysqlSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql(), db, project, user);
     } catch(Exception e) {
-      return onlineFeaturestoreController.executeReadJDBCQuery(
+      return onlineFeaturestoreFacade.executeReadJDBCQuery(
           select.toSqlString(new MysqlSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql(), db, project, user);
     }
   }
