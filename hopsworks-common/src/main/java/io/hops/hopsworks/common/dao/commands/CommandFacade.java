@@ -34,7 +34,7 @@ import java.util.logging.Level;
 
 public abstract class CommandFacade<C extends Command> extends AbstractFacade<C> {
   public static final String STATUS_FIELD = "status";
-  public static final String PROJECT_FIELD = "project";
+  public static final String PROJECT_ID_FIELD = "projectId";
   
   @PersistenceContext(unitName = "kthfsPU")
   protected EntityManager em;
@@ -108,7 +108,7 @@ public abstract class CommandFacade<C extends Command> extends AbstractFacade<C>
     try {
       if(filterBy.getField().equals(STATUS_FIELD)) {
         q.setParameter(filterBy.getField(), CommandStatus.valueOf(filterBy.getParam()));
-      } else if(filterBy.getField().equals(PROJECT_FIELD)){
+      } else if(filterBy.getField().equals(PROJECT_ID_FIELD)){
         q.setParameter(filterBy.getField(), Integer.parseInt(filterBy.getParam()));
       } else {
         String msg = "invalid filter:" + filterBy.toString();
@@ -124,8 +124,7 @@ public abstract class CommandFacade<C extends Command> extends AbstractFacade<C>
   public enum Filters implements CommandFilter {
     STATUS_EQ(STATUS_FIELD, "c.status = :status ", "NEW"),
     STATUS_NEQ(STATUS_FIELD,"c.status != :status ",  "NEW"),
-    PROJECT_ID_EQ(PROJECT_FIELD, "c.project.id = :project", "0"),
-    PROJECT_IS_NULL(PROJECT_FIELD, "c.project IS NULL", null);
+    PROJECT_ID_EQ(PROJECT_ID_FIELD, "c." + PROJECT_ID_FIELD + " = :" + PROJECT_ID_FIELD, "0");
     
     private final String sql;
     private final String field;

@@ -670,4 +670,20 @@ describe "On #{ENV['OS']}" do
       project_search_test(@project, "dog", "trainingdataset", expected_hits3)
     end
   end
+  context "command search process" do
+    it "ensure non existing deleted project gets processed correctly" do
+      wait_result = wait_on_command_search
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+      begin
+        # this is a non existing project
+        command = CommandSearch.create(inode_id: -1, project_id: 100000, op: "DELETE_PROJECT", status: "NEW")
+        expect(CommandSearch.count). to be > 0
+        sleep(2)
+        wait_result = wait_on_command_search(wait_time: 1, repeat: 2)
+        expect(wait_result["success"]).to be(true), wait_result["msg"]
+      ensure
+        CommandSearch.delete(command.id)
+      end
+    end
+  end
 end

@@ -44,7 +44,6 @@ import io.hops.hopsworks.persistence.entity.commands.search.SearchFSCommand;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.metadata.FeatureStoreTag;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFeature;
-import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.opensearch.action.delete.DeleteRequest;
 import org.opensearch.action.index.IndexRequest;
@@ -87,10 +86,10 @@ public class SearchFSOpenSearchController {
   @EJB
   private Settings settings;
   
-  public long deleteProject(Project project) throws OpenSearchException {
+  public long deleteProject(Integer projectId) throws OpenSearchException {
     DeleteByQueryRequest deleteRequest = new DeleteByQueryRequest(Settings.FEATURESTORE_INDEX);
     deleteRequest.setQuery(QueryBuilders.matchQuery(
-      FeaturestoreXAttrsConstants.PROJECT_ID, project.getId()));
+      FeaturestoreXAttrsConstants.PROJECT_ID, projectId));
     return opensearchClient.deleteByQuery(deleteRequest);
   }
   
@@ -154,7 +153,7 @@ public class SearchFSOpenSearchController {
   
   private SearchDoc create(SearchFSCommand c) throws CommandException {
     SearchDoc doc =  new SearchDoc();
-    doc.setProjectId(c.getProject().getId());
+    doc.setProjectId(c.getProjectId());
     doc.setProjectName(c.getProject().getName());
   
     String featureStorePath = Utils.getFeaturestorePath(c.getProject(), settings);
