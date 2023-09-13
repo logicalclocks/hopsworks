@@ -32,7 +32,6 @@ import io.hops.hopsworks.persistence.entity.commands.CommandStatus;
 import io.hops.hopsworks.persistence.entity.commands.search.SearchFSCommand;
 import io.hops.hopsworks.persistence.entity.commands.search.SearchFSCommandHistory;
 import io.hops.hopsworks.persistence.entity.commands.search.SearchFSCommandOp;
-import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.annotation.PostConstruct;
@@ -138,7 +137,7 @@ public class SearchFSCommandExecutor {
       try {
         processInt();
       } catch (Exception t) {
-        LOGGER.log(Level.INFO, "Command processing failed with error:", t.getStackTrace());
+        LOGGER.log(Level.INFO, "Command processing failed with error", t);
       }
     }
     schedule();
@@ -160,8 +159,7 @@ public class SearchFSCommandExecutor {
       return;
     }
     Set<Long> updatingDocs = updatingCommands.stream().map(this::getDocId).collect(Collectors.toSet());
-    Map<Integer, Project> updatingProjects = updatingCommands.stream()
-      .collect(Collectors.toMap(c -> c.getProject().getId(), Command::getProject, (p1, p2) -> p1));
+    Set<Integer> updatingProjects = updatingCommands.stream().map(Command::getProjectId).collect(Collectors.toSet());
     
     List<SearchFSCommand> cleaningCommands = commandFacade.findByQuery(queryByStatus(CommandStatus.CLEANING));
     active += cleaningCommands.size();
@@ -169,25 +167,24 @@ public class SearchFSCommandExecutor {
       return;
     }
     Set<Long> cleaningDocs = cleaningCommands.stream().map(this::getDocId).collect(Collectors.toSet());
-    updatingProjects.putAll(cleaningCommands.stream().collect(Collectors.toMap(c -> c.getProject().getId(),
-      Command::getProject, (existingP, newP) -> existingP)));
+    updatingProjects.addAll(cleaningCommands.stream().map(Command::getProjectId).collect(Collectors.toSet()));
     
     Map<Integer, SearchFSCommand> toDeleteProjects = commandFacade.findByQuery(queryDeletedProjects(CommandStatus.NEW))
-      .stream().collect(Collectors.toMap(c -> c.getProject().getId(), c -> c, (existingC, newC) -> existingC));
+      .stream().collect(Collectors.toMap(Command::getProjectId, c -> c, (existingC, newC) -> existingC));
     Map<Integer, SearchFSCommand> deletingProjects
       = commandFacade.findByQuery(queryDeletedProjects(CommandStatus.CLEANING))
-      .stream().collect(Collectors.toMap(c -> c.getProject().getId(), c -> c, (existingC, newC) -> existingC));
+      .stream().collect(Collectors.toMap(Command::getProjectId, c -> c, (existingC, newC) -> existingC));
     
     List<SearchFSCommand> failedCommands = commandFacade.findByQuery(queryByStatus(CommandStatus.FAILED));
     Set<Long> failedDocs = failedCommands.stream().map(this::getDocId).collect(Collectors.toSet());
     
     //clean deleted projects that are not actively worked on
-    Set<Integer> deletedAndNotActive = Sets.difference(toDeleteProjects.keySet(), updatingProjects.keySet());
+    Set<Integer> deletedAndNotActive = Sets.difference(toDeleteProjects.keySet(), updatingProjects);
     for (Integer idx : deletedAndNotActive) {
       cleanDeletedProject(toDeleteProjects.get(idx));
     }
     //determine projects to be excluded
-    Set<Project> excludeProjects = unionProjects(toDeleteProjects, deletingProjects);
+    Set<Integer> excludeProjects = unionProjects(toDeleteProjects, deletingProjects);
     //determine documents to be excluded
     Set<Long> excludeDocs = new HashSet<>();
     excludeDocs.addAll(updatingDocs);
@@ -217,10 +214,10 @@ public class SearchFSCommandExecutor {
     }
   }
   
-  private Set<Project> unionProjects(Map<Integer, SearchFSCommand> p1, Map<Integer, SearchFSCommand> p2) {
-    Set<Project> result = new HashSet<>();
-    p1.values().forEach(c -> result.add(c.getProject()));
-    p2.values().forEach(c -> result.add(c.getProject()));
+  private Set<Integer> unionProjects(Map<Integer, SearchFSCommand> p1, Map<Integer, SearchFSCommand> p2) {
+    Set<Integer> result = new HashSet<>();
+    p1.values().forEach(c -> result.add(c.getProjectId()));
+    p2.values().forEach(c -> result.add(c.getProjectId()));
     return result;
   }
   
@@ -230,20 +227,20 @@ public class SearchFSCommandExecutor {
       Try<Boolean> result = processFunction().apply(command);
       try {
         if(result.checkedGet()) {
-          List<SearchFSCommand> toSkip = commandFacade.findByQuery(queryByProject(command.getProject(),
+          List<SearchFSCommand> toSkip = commandFacade.findByQuery(queryByProject(command.getProjectId(),
             SearchFSCommandOp.DELETE_PROJECT));
           toSkip.forEach(c -> removeCommand(c, CommandStatus.SKIPPED));
           removeCommand(command, CommandStatus.SUCCESS);
         }
       } catch (Throwable t) {
         LOGGER.log(Level.INFO, "Project:{0} clean failed with error:{1}",
-          new Object[]{command.getProject().getId(), t.getStackTrace()});
+          new Object[]{command.getProjectId(), t.getStackTrace()});
         failCommand(command, t.getMessage());
       }
     });
   }
   
-  private Set<Long> cleanDeletedArtifacts(Set<Project> excludeProjects, Set<Long> excludeDocs, int maxOngoing)
+  private Set<Long> cleanDeletedArtifacts(Set<Integer> excludeProjects, Set<Long> excludeDocs, int maxOngoing)
     throws CommandException {
     Set<Long> deleting = new HashSet<>();
     List<SearchFSCommand> toDelete = commandFacade
@@ -276,7 +273,7 @@ public class SearchFSCommandExecutor {
     });
   }
   
-  private Set<Long> cleanDeleteCascadedArtifacts(Set<Project> excludeProjects, Set<Long> excludeDocs, int maxOngoing) {
+  private Set<Long> cleanDeleteCascadedArtifacts(Set<Integer> excludeProjects, Set<Long> excludeDocs, int maxOngoing) {
     Set<Long> deleting = new HashSet<>();
     List<SearchFSCommand> toDelete = commandFacade.findDeleteCascaded(excludeProjects, excludeDocs, maxOngoing);
     for(SearchFSCommand command : toDelete) {
@@ -298,7 +295,7 @@ public class SearchFSCommandExecutor {
     cleanDeletedArtifact(deleteArtifact);
   }
   
-  private Set<Long> processArtifacts(Set<Project> excludeProjects, Set<Long> excludeDocs, int maxOngoing) {
+  private Set<Long> processArtifacts(Set<Integer> excludeProjects, Set<Long> excludeDocs, int maxOngoing) {
     Set<Long> processing = new HashSet<>();
     List<SearchFSCommand> toProcess = commandFacade.findToProcess(excludeProjects, excludeDocs, maxOngoing);
     for(SearchFSCommand command : toProcess) {
@@ -342,9 +339,9 @@ public class SearchFSCommandExecutor {
     return new QueryParam(null, null, filters, null);
   }
   
-  private QueryParam queryByProject(Project project, SearchFSCommandOp notOp) {
+  private QueryParam queryByProject(Integer projectId, SearchFSCommandOp notOp) {
     Set<AbstractFacade.FilterBy> filters = new HashSet<>();
-    filters.add(new CommandFilterBy(CommandFacade.Filters.PROJECT_ID_EQ, project.getId().toString()));
+    filters.add(new CommandFilterBy(CommandFacade.Filters.PROJECT_ID_EQ, projectId.toString()));
     filters.add(new CommandFilterBy(SearchFSCommandFacade.SearchFSFilters.OP_NEQ, notOp.name()));
     return new QueryParam(null, null, filters, null);
   }
@@ -420,7 +417,7 @@ public class SearchFSCommandExecutor {
   private Try<Boolean> processCommand(SearchFSCommand c) {
     try {
       if(c.getOp().equals(SearchFSCommandOp.DELETE_PROJECT)) {
-        searchController.deleteProject(c.getProject());
+        searchController.deleteProject(c.getProjectId());
         return Try.apply(() -> true);
       } else if (c.getOp().equals(SearchFSCommandOp.DELETE_ARTIFACT)) {
         searchController.delete(c.getInodeId());

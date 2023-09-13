@@ -23,7 +23,6 @@ import io.hops.hopsworks.common.dao.commands.CommandFilter;
 import io.hops.hopsworks.persistence.entity.commands.CommandStatus;
 import io.hops.hopsworks.persistence.entity.commands.search.SearchFSCommand;
 import io.hops.hopsworks.persistence.entity.commands.search.SearchFSCommandOp;
-import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.Stateless;
@@ -51,7 +50,7 @@ public class SearchFSCommandFacade extends CommandFacade<SearchFSCommand> {
     return SearchFSCommand.TABLE_NAME;
   }
   
-  public List<SearchFSCommand> findByQuery(QueryParam queryParam, Set<Project> excludeProjects, Set<Long> excludeDocs)
+  public List<SearchFSCommand> findByQuery(QueryParam queryParam, Set<Integer> excludeProjects, Set<Long> excludeDocs)
     throws CommandException {
     if(queryParam == null) {
       throw new CommandException(RESTCodes.CommandErrorCode.INVALID_SQL_QUERY, Level.INFO, "query param is null");
@@ -59,7 +58,7 @@ public class SearchFSCommandFacade extends CommandFacade<SearchFSCommand> {
     String queryStrPrefix = "SELECT c FROM " + getTableName() + " c ";
     String queryStr = buildQuery(queryStrPrefix, queryParam.getFilters(), queryParam.getSorts(), "");
     if(!excludeProjects.isEmpty()) {
-      queryStr += " AND c." + PROJECT_FIELD + " NOT IN :exclude_" + PROJECT_FIELD;
+      queryStr += " AND c." + PROJECT_ID_FIELD + " NOT IN :exclude_" + PROJECT_ID_FIELD;
     }
     if(!excludeDocs.isEmpty()) {
       queryStr += " AND c." + DOC_ID_FIELD + " NOT IN :exclude_" + DOC_ID_FIELD;
@@ -70,7 +69,7 @@ public class SearchFSCommandFacade extends CommandFacade<SearchFSCommand> {
       q.setMaxResults(queryParam.getLimit());
     }
     if(!excludeProjects.isEmpty()) {
-      q.setParameter("exclude_" + PROJECT_FIELD, excludeProjects);
+      q.setParameter("exclude_" + PROJECT_ID_FIELD, excludeProjects);
     }
     if(!excludeDocs.isEmpty()) {
       q.setParameter("exclude_" + DOC_ID_FIELD, excludeDocs);
@@ -78,7 +77,7 @@ public class SearchFSCommandFacade extends CommandFacade<SearchFSCommand> {
     return q.getResultList();
   }
   
-  public List<SearchFSCommand> findToProcess(Set<Project> excludeProjects, Set<Long> excludeDocs, int limit) {
+  public List<SearchFSCommand> findToProcess(Set<Integer> excludeProjects, Set<Long> excludeDocs, int limit) {
     UnaryOperator<String> filterFoLive = tableName -> {
       String filter = "(";
       filter += tableName + "." + FEATURE_GROUP_FIELD + " IS NOT NULL OR ";
@@ -90,7 +89,7 @@ public class SearchFSCommandFacade extends CommandFacade<SearchFSCommand> {
     return findToProcessInt(excludeProjects, excludeDocs, limit, filterFoLive);
   }
   
-  public List<SearchFSCommand> findDeleteCascaded(Set<Project> excludeProjects, Set<Long> excludeDocs, int limit) {
+  public List<SearchFSCommand> findDeleteCascaded(Set<Integer> excludeProjects, Set<Long> excludeDocs, int limit) {
     UnaryOperator<String> filterForDeleteCascaded = tableName -> {
       String filter = "(";
       filter += tableName + "." + FEATURE_GROUP_FIELD + " IS NULL AND ";
@@ -102,7 +101,7 @@ public class SearchFSCommandFacade extends CommandFacade<SearchFSCommand> {
     return findToProcessInt(excludeProjects, excludeDocs, limit, filterForDeleteCascaded);
   }
   
-  private List<SearchFSCommand> findToProcessInt(Set<Project> excludeProjects, Set<Long> excludeDocs, int limit,
+  private List<SearchFSCommand> findToProcessInt(Set<Integer> excludeProjects, Set<Long> excludeDocs, int limit,
                                                  UnaryOperator<String> queryAppendFilter) {
     String queryStr = "";
     queryStr += "SELECT jc FROM " + getTableName() + " jc WHERE jc.id IN (";
@@ -112,7 +111,7 @@ public class SearchFSCommandFacade extends CommandFacade<SearchFSCommand> {
     queryStr += " WHERE c.status = :status";
     queryStr += " AND " + queryAppendFilter.apply("c");
     if(!excludeProjects.isEmpty()) {
-      queryStr += " AND c." + PROJECT_FIELD + " NOT IN :exclude_" + PROJECT_FIELD;
+      queryStr += " AND c." + PROJECT_ID_FIELD + " NOT IN :exclude_" + PROJECT_ID_FIELD;
     }
     if(!excludeDocs.isEmpty()) {
       queryStr += " AND c." + DOC_ID_FIELD + " NOT IN :exclude_" + DOC_ID_FIELD;
@@ -124,7 +123,7 @@ public class SearchFSCommandFacade extends CommandFacade<SearchFSCommand> {
     TypedQuery<SearchFSCommand> query = em.createQuery(queryStr, entityClass);
     query.setParameter("status", CommandStatus.NEW);
     if (!excludeProjects.isEmpty()) {
-      query.setParameter("exclude_" + PROJECT_FIELD, excludeProjects);
+      query.setParameter("exclude_" + PROJECT_ID_FIELD, excludeProjects);
     }
     if (!excludeDocs.isEmpty()) {
       query.setParameter("exclude_" + DOC_ID_FIELD, excludeDocs);
