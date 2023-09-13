@@ -58,6 +58,10 @@ public class SearchFSCommandLogger {
   @EJB
   private Settings settings;
   
+  public long count() {
+    return commandFacade.count();
+  }
+  
   public void create(Featuregroup featureGroup) throws FeaturestoreException {
     SearchFSCommand command = getCommand(featureGroup, SearchFSCommandOp.CREATE);
     commandFacade.persistAndFlush(command);
