@@ -136,4 +136,8 @@ module AdminHelper
      create_session(user[:email], password)
   end
 
+  def feature_store_reindex
+    with_admin_session
+    post "#{ENV['HOPSWORKS_API']}/admin/search/featurestore/reindex"
+  end
 end
