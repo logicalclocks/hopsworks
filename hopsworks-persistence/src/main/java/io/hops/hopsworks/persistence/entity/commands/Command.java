@@ -41,6 +41,8 @@ public abstract class Command {
   @JoinColumn(name = "project_id", referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Project project;
+  @Column(name = "project_id", insertable = false, updatable = false)
+  private Integer projectId;
   @Basic(optional = false)
   @NotNull
   @Size(min = 1, max = 20)
@@ -65,6 +67,10 @@ public abstract class Command {
   
   public Project getProject() {
     return project;
+  }
+  
+  public Integer getProjectId() {
+    return projectId;
   }
   
   public CommandStatus getStatus() {
