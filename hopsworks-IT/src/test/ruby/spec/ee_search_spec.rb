@@ -633,5 +633,41 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
+
+    it "reindex" do
+      wait_result = wait_on_command_search
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+
+      user_params = {email: "user1_#{random_id}@email.com", first_name: "User", last_name: "1", password: "Pass123"}
+      create_user_with_role(user_params, "HOPS_USER")
+      create_session(user_params[:email], user_params[:password])
+
+      @project = create_project
+      @fgs = featuregroups_setup(@project)
+      @fv_fg = create_cached_featuregroup_checked2(@project.id, name: "fg")
+      @fvs = feature_view_setup(@project, @fv_fg)
+      @tds = trainingdataset_setup(@project)
+
+      wait_result = wait_on_command_search
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+      feature_store_reindex
+      expect(CommandSearch.count).to be > 0
+      wait_result = wait_on_command_search
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+
+      create_session(user_params[:email], user_params[:password])
+      expected_hits1 = [{:name => @fgs[1][:name], :highlight => "tags", :parentProjectName => @project[:projectname]},
+                        {:name => @fgs[2][:name], :highlight => "tags", :parentProjectName => @project[:projectname]},
+                        {:name => @fgs[3][:name], :highlight => "tags", :parentProjectName => @project[:projectname]}]
+      project_search_test(@project, "dog", "featuregroup", expected_hits1)
+      expected_hits2 = [{:name => @fvs[1][:name], :highlight => "tags", :parentProjectName => @project[:projectname]},
+                        {:name => @fvs[2][:name], :highlight => "tags", :parentProjectName => @project[:projectname]},
+                        {:name => @fvs[3][:name], :highlight => "tags", :parentProjectName => @project[:projectname]}]
+      project_search_test(@project, "dog", "featureview", expected_hits2, result_type: "featureViews")
+      expected_hits3 = [{:name => @tds[1][:name], :highlight => "tags", :parentProjectName => @project[:projectname]},
+                        {:name => @tds[2][:name], :highlight => "tags", :parentProjectName => @project[:projectname]},
+                        {:name => @tds[3][:name], :highlight => "tags", :parentProjectName => @project[:projectname]}]
+      project_search_test(@project, "dog", "trainingdataset", expected_hits3)
+    end
   end
 end

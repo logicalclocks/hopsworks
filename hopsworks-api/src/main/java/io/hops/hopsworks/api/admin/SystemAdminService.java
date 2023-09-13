@@ -47,11 +47,15 @@ import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.audit.logger.annotation.Secret;
+import io.hops.hopsworks.common.commands.CommandException;
+import io.hops.hopsworks.common.commands.featurestore.search.SearchFSCommandStatus;
+import io.hops.hopsworks.common.commands.featurestore.search.SearchFSReindexer;
 import io.hops.hopsworks.common.dao.kafka.TopicDefaultValueDTO;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.security.ServiceJWTKeepAlive;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -110,6 +114,8 @@ public class SystemAdminService {
   private ServiceJWTKeepAlive serviceJWTKeepAlive;
   @EJB
   private KafkaController kafkaController;
+  @EJB
+  private SearchFSReindexer searchFSReindexer;
   
   /**
    * Admin endpoint that changes the master encryption password used to encrypt the certificates' password
@@ -232,5 +238,21 @@ public class SystemAdminService {
   public Response getElasticAdminToken(@Context SecurityContext sc) throws OpenSearchException {
     OpenSearchJWTResponseDTO responseDTO = jWTHelper.createTokenForELKAsAdmin();
     return Response.ok().entity(responseDTO).build();
+  }
+  
+  @GET
+  @Path("/search/featurestore/status")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response statusSearchFeatureStore(@Context SecurityContext sc, @Context HttpServletRequest req) {
+    SearchFSCommandStatus status = searchFSReindexer.status();
+    return Response.ok().entity(status).build();
+  }
+  
+  @POST
+  @Path("/search/featurestore/reindex")
+  public Response reindexSearchFeatureStoreIndex(@Context SecurityContext sc, @Context HttpServletRequest req)
+    throws OpenSearchException, FeaturestoreException, CommandException {
+    searchFSReindexer.reindex();
+    return Response.noContent().build();
   }
 }
