@@ -91,7 +91,7 @@ public class SearchFSCommandHistory implements CommandHistory, Serializable {
   
   public SearchFSCommandHistory(SearchFSCommand command) {
     this.id = command.getId();
-    this.projectId = command.getProject() != null ? command.getProject().getId() : null;
+    this.projectId = command.getProjectId();
     this.status = command.getStatus();
     this.errorMsg = command.getErrorMsg();
     this.featureGroupId = command.getFeatureGroup() != null ? command.getFeatureGroup().getId() : null;
