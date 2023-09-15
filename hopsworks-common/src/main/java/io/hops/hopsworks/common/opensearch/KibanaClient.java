@@ -17,12 +17,12 @@ package io.hops.hopsworks.common.opensearch;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
+import io.hops.hopsworks.httpclient.HttpRetryableAction;
+import io.hops.hopsworks.httpclient.NotFoundClientProtocolException;
+import io.hops.hopsworks.httpclient.NotRetryableClientProtocolException;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.proxies.client.HttpRetryableAction;
-import io.hops.hopsworks.common.proxies.client.NotFoundClientProtocolException;
-import io.hops.hopsworks.common.proxies.client.NotRetryableClientProtocolException;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.OpenSearchException;

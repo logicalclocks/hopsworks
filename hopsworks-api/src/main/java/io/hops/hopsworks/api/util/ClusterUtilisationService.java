@@ -48,7 +48,7 @@ import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.proxies.client.HttpClient;
-import io.hops.hopsworks.common.proxies.client.HttpConnectionManagerBuilder;
+import io.hops.hopsworks.httpclient.HttpConnectionManagerBuilder;
 import io.hops.hopsworks.common.pythonresources.PythonResourcesController;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.exceptions.ServiceException;

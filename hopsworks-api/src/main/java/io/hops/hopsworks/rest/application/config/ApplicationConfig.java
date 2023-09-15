@@ -42,6 +42,7 @@ package io.hops.hopsworks.rest.application.config;
 import io.hops.hopsworks.api.admin.UsersAdminResource;
 import io.hops.hopsworks.api.admin.alert.AdminAlertResource;
 import io.hops.hopsworks.api.admin.alert.silence.AdminSilenceResource;
+import io.hops.hopsworks.multiregion.MultiRegionFilter;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -143,5 +144,8 @@ public class ApplicationConfig extends ResourceConfig {
 
     register(org.glassfish.jersey.jackson.JacksonFeature.class);
     register(io.hops.hopsworks.filters.CustomJsonProvider.class);
+
+    // Multi Region filter
+    register(MultiRegionFilter.class);
   }
 }

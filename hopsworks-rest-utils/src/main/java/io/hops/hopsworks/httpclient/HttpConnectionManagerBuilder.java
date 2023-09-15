@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.common.proxies.client;
+package io.hops.hopsworks.httpclient;
 
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;

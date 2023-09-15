@@ -13,16 +13,37 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.servicediscovery;
 
-public class Utilities {
-  private static final String CONSUL_SERVICE_TEMPLATE = "%s.service.%s";
+package io.hops.hopsworks.multiregion;
 
-  public static String constructServiceFQDN(String serviceDomain,
-                                            String serviceDiscoveryDomain) {
-    if (serviceDomain.endsWith(".")) {
-      serviceDomain = serviceDomain.substring(0, serviceDomain.length() - 1);
-    }
-    return String.format(CONSUL_SERVICE_TEMPLATE, serviceDomain, serviceDiscoveryDomain);
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class MultiRegionWatchdogDTO {
+
+  String active;
+  String secondary;
+
+  public MultiRegionWatchdogDTO() {
+  }
+
+  public MultiRegionWatchdogDTO(String active) {
+    this.active = active;
+  }
+
+  public String getActive() {
+    return active;
+  }
+
+  public void setActive(String active) {
+    this.active = active;
+  }
+
+  public String getSecondary() {
+    return secondary;
+  }
+
+  public void setSecondary(String secondary) {
+    this.secondary = secondary;
   }
 }

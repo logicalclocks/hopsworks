@@ -3,6 +3,7 @@
  */
 package io.hops.hopsworks.remote.user.rest.application.config;
 
+import io.hops.hopsworks.multiregion.MultiRegionFilter;
 import io.hops.hopsworks.remote.user.api.AuthResource;
 import io.hops.hopsworks.remote.user.api.exception.mapper.RESTApiThrowableMapper;
 import io.hops.hopsworks.remote.user.api.krb.KrbConfigResource;
@@ -30,7 +31,10 @@ public class ApplicationConfig extends ResourceConfig {
     register(RESTApiThrowableMapper.class);
     register(AuthFilter.class);
     register(JWTAutoRenewFilter.class);
-  
+
+    // Multi Region filter
+    register(MultiRegionFilter.class);
+
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
     //swagger
     register(io.swagger.jaxrs.listing.ApiListingResource.class);

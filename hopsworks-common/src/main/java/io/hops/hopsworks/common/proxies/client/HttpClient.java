@@ -23,6 +23,8 @@ import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryExcept
 import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.httpclient.HttpConnectionManagerBuilder;
+import io.hops.hopsworks.httpclient.NotRetryableClientProtocolException;
 import io.hops.hopsworks.servicediscovery.HopsworksService;
 import io.hops.hopsworks.servicediscovery.tags.GlassfishTags;
 import org.apache.http.HttpHeaders;
@@ -92,29 +94,6 @@ public class HttpClient {
   public void destroy() {
     if (connectionManager != null) {
       connectionManager.shutdown();
-    }
-  }
-
-  public static class ObjectResponseHandler<T> implements ResponseHandler<T> {
-
-    private Class<T> cls;
-    private ObjectMapper objectMapper;
-
-    public ObjectResponseHandler(Class<T> cls, ObjectMapper objectMapper) {
-      this.cls = cls;
-      this.objectMapper = objectMapper;
-    }
-
-    @Override
-    public T handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
-      String responseJson = EntityUtils.toString(response.getEntity(), Charset.defaultCharset());
-      if (response.getStatusLine().getStatusCode() / 100 == 2) {
-        return objectMapper.readValue(responseJson, cls);
-      } else if (response.getStatusLine().getStatusCode() / 100 == 5) {
-        throw new IOException(responseJson);
-      } else {
-        throw new NotRetryableClientProtocolException(responseJson);
-      }
     }
   }
 

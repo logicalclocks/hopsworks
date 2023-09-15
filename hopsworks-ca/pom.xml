@@ -79,6 +79,10 @@
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-service-discovery</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.hops.hopsworks</groupId>
+      <artifactId>hopsworks-multiregion</artifactId>
+    </dependency>
 
    <dependency>
       <groupId>commons-io</groupId>

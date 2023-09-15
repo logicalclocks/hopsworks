@@ -64,6 +64,7 @@
     <module>hopsworks-alert</module>
     <module>tags-ee</module>
     <module>hopsworks-service-discovery</module>
+    <module>hopsworks-multiregion</module>
   </modules>
 
   <properties>
@@ -578,6 +579,11 @@
       <dependency>
         <groupId>io.hops.hopsworks</groupId>
         <artifactId>hopsworks-persistence</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.hops.hopsworks</groupId>
+        <artifactId>hopsworks-multiregion</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

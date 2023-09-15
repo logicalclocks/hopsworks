@@ -20,7 +20,7 @@ import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryExcept
 import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.proxies.client.HttpClient;
-import io.hops.hopsworks.common.proxies.client.NotRetryableClientProtocolException;
+import io.hops.hopsworks.httpclient.NotRetryableClientProtocolException;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.restutils.RESTCodes;

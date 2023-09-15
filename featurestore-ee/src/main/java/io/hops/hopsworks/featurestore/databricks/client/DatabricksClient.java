@@ -6,9 +6,10 @@ package io.hops.hopsworks.featurestore.databricks.client;
 
 import com.damnhandy.uri.template.UriTemplate;
 import io.hops.hopsworks.common.proxies.client.HttpClient;
-import io.hops.hopsworks.common.proxies.client.HttpRetryableAction;
-import io.hops.hopsworks.common.proxies.client.NotRetryableClientProtocolException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.httpclient.HttpRetryableAction;
+import io.hops.hopsworks.httpclient.NotRetryableClientProtocolException;
+import io.hops.hopsworks.httpclient.ObjectResponseHandler;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
@@ -107,7 +108,7 @@ public class DatabricksClient {
       @Override
       public List<DbCluster> performAction() throws ClientProtocolException, IOException {
         return httpClient.execute(dbInstanceHost, listRequest,
-            new HttpClient.ObjectResponseHandler<>(DbClusterListResponse.class, httpClient.getObjectMapper()))
+            new ObjectResponseHandler<>(DbClusterListResponse.class, httpClient.getObjectMapper()))
             .getClusters();
       }
     });
@@ -125,7 +126,7 @@ public class DatabricksClient {
       @Override
       public DbCluster performAction() throws ClientProtocolException, IOException {
         return httpClient.execute(dbInstanceHost, getClusterRequest,
-            new HttpClient.ObjectResponseHandler<>(DbCluster.class, httpClient.getObjectMapper()));
+            new ObjectResponseHandler<>(DbCluster.class, httpClient.getObjectMapper()));
       }
     });
   }
@@ -239,7 +240,7 @@ public class DatabricksClient {
       @Override
       public DbfsClose performAction() throws ClientProtocolException, IOException {
         return httpClient.execute(dbInstanceHost, createRequest,
-            new HttpClient.ObjectResponseHandler<>(DbfsClose.class, httpClient.getObjectMapper()));
+            new ObjectResponseHandler<>(DbfsClose.class, httpClient.getObjectMapper()));
       }
     });
   }

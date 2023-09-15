@@ -40,6 +40,7 @@
 package io.hops.hopsworks.ca.api;
 
 import io.hops.hopsworks.ca.api.exception.mapper.CAThrowableMapper;
+import io.hops.hopsworks.multiregion.MultiRegionFilter;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -74,5 +75,7 @@ public class ApplicationConfig extends ResourceConfig {
     //swagger
     register(io.swagger.jaxrs.listing.ApiListingResource.class);
     register(io.swagger.jaxrs.listing.SwaggerSerializers.class);
+
+    register(MultiRegionFilter.class);
   }
 }

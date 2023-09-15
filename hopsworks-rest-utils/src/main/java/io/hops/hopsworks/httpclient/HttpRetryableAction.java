@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.proxies.client;
+package io.hops.hopsworks.httpclient;
 
 import org.apache.hadoop.util.BackOff;
 import org.apache.hadoop.util.ExponentialBackOff;

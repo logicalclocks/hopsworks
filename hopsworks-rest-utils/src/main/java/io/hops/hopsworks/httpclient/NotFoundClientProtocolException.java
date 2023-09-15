@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2019, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2020, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -13,25 +13,12 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-
-package io.hops.hopsworks.common.proxies.client;
+package io.hops.hopsworks.httpclient;
 
 import org.apache.http.client.ClientProtocolException;
 
-public class NotRetryableClientProtocolException extends ClientProtocolException {
-  public NotRetryableClientProtocolException() {
-    super();
-  }
-  
-  public NotRetryableClientProtocolException(final String message) {
+public class NotFoundClientProtocolException extends ClientProtocolException {
+  public NotFoundClientProtocolException(final String message) {
     super(message);
-  }
-  
-  public NotRetryableClientProtocolException(final Throwable cause) {
-    super(cause);
-  }
-  
-  public NotRetryableClientProtocolException(final String message, final Throwable cause) {
-    super(message, cause);
   }
 }

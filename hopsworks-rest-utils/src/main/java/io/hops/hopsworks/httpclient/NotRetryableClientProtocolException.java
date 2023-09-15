@@ -14,8 +14,24 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.proxies.client;
+package io.hops.hopsworks.httpclient;
 
-public interface RetryableAction<T> {
-  T tryAction() throws Exception;
+import org.apache.http.client.ClientProtocolException;
+
+public class NotRetryableClientProtocolException extends ClientProtocolException {
+  public NotRetryableClientProtocolException() {
+    super();
+  }
+  
+  public NotRetryableClientProtocolException(final String message) {
+    super(message);
+  }
+  
+  public NotRetryableClientProtocolException(final Throwable cause) {
+    super(cause);
+  }
+  
+  public NotRetryableClientProtocolException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

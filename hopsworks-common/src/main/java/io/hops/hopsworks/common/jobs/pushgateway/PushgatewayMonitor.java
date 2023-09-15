@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.proxies.client.HttpClient;
 import io.hops.hopsworks.common.util.PayaraClusterManager;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
+import io.hops.hopsworks.httpclient.ObjectResponseHandler;
 import io.hops.hopsworks.servicediscovery.HopsworksService;
 import io.hops.hopsworks.servicediscovery.tags.PrometheusTags;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -114,7 +115,7 @@ public class PushgatewayMonitor {
             HopsworksService.PROMETHEUS.getNameWithTag(PrometheusTags.pushgateway));
     HttpHost pushgatewayHost = new HttpHost(pushgatewayService.getAddress(), pushgatewayService.getPort());
     return httpClient.execute(pushgatewayHost, new HttpGet(METRICS_ENDPOINT),
-        new HttpClient.ObjectResponseHandler<>(PushgatewayResults.class, httpClient.getObjectMapper()));
+        new ObjectResponseHandler<>(PushgatewayResults.class, httpClient.getObjectMapper()));
   }
 
   // Iterate over all labels and extract the unique app_id currently exported in

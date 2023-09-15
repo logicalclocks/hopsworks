@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.util;
 import com.hazelcast.cluster.Member;
 import com.hazelcast.core.HazelcastInstance;
 import fish.payara.nucleus.cluster.PayaraCluster;
+import io.hops.hopsworks.multiregion.MultiRegionController;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.ConcurrencyManagement;
@@ -41,6 +42,9 @@ public class PayaraClusterManager {
   private static final String DAS_NAME = "server";
   @Inject
   private HazelcastInstance hazelcastInstance;
+  @Inject
+  private MultiRegionController multiRegionController;
+
   private PayaraCluster cluster;
   
   private static final int DEFAULT_DAS_PORT = 4900;
@@ -96,6 +100,14 @@ public class PayaraClusterManager {
   }
   
   public boolean amIThePrimary() {
+    // Check if we are on the primary region
+    if (multiRegionController.blockSecondaryOperation()) {
+      // we should be blocking operations on the secondary cluster. return false so that the operation
+      // is not executed as if this was not a primary region
+      return false;
+    }
+
+    // check if we are the primary node on the primary region
     try {
       if (hazelcastInstance == null || hazelcastInstance.getCluster().getMembers().size() < 2) {
         return true;

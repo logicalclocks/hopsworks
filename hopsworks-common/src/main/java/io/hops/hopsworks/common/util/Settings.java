@@ -414,7 +414,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_DOCKER_CGROUP_MONITOR_INTERVAL = "docker_cgroup_monitor_interval";
   private static final String VARIABLE_DOCKER_CGROUP_PARENT = "docker_cgroup_parent";
 
-
   private static final String VARIABLE_SKIP_NAMESPACE_CREATION =
       "kube_skip_namespace_creation";
   public enum KubeType{

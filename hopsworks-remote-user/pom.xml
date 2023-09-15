@@ -38,6 +38,10 @@
       <artifactId>hopsworks-rest-utils</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.hops.hopsworks</groupId>
+      <artifactId>hopsworks-multiregion</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.nimbusds</groupId>
       <artifactId>oauth2-oidc-sdk</artifactId>
     </dependency>

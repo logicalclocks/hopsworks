@@ -82,6 +82,10 @@
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
+      <artifactId>hopsworks-multiregion</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-alert</artifactId>
       <type>ejb</type>
       <scope>provided</scope>
