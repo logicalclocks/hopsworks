@@ -224,12 +224,7 @@ public class HopsFSProvenanceController {
   
   public ProvTypeDTO getMetaStatus(Users user, Project project, Boolean searchable) throws ProvenanceException {
     if(searchable != null && searchable) {
-      ProvTypeDTO projectMetaStatus = getProjectProvType(user, project);
-      if(Inode.MetaStatus.DISABLED.equals(projectMetaStatus.getMetaStatus())) {
-        return Provenance.Type.META.dto;
-      } else {
-        return projectMetaStatus;
-      }
+      return getProjectProvType(user, project);
     } else {
       return Provenance.Type.DISABLED.dto;
     }
