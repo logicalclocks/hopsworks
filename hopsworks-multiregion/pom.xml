@@ -28,7 +28,7 @@
     <groupId>io.hops.hopsworks</groupId>
     <artifactId>hopsworks-multiregion</artifactId>
     <version>3.4.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>ejb</packaging>
     <description>Hopsworks MultiRegion</description>
     <name>hopsworks-multiregion</name>
 
@@ -67,4 +67,14 @@
             <artifactId>mockito-core</artifactId>
         </dependency>
     </dependencies>
+
+    <build>
+        <finalName>hopsworks-multiregion</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-ejb-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project>
