@@ -18,7 +18,7 @@
 package io.hops.hopsworks.multiregion;
 
 import javax.annotation.Priority;
-import javax.ejb.EJB;
+import javax.inject.Inject;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -30,7 +30,7 @@ import java.io.IOException;
 @Priority(Priorities.AUTHENTICATION - 1)
 public class MultiRegionFilter implements ContainerRequestFilter {
 
-  @EJB
+  @Inject
   private MultiRegionController multiRegionController;
 
   @Override
