@@ -213,6 +213,10 @@ public class OnlineFeaturegroupController {
       throws FeaturestoreException, SQLException, SchemaException, KafkaException {
     dropMySQLTable(featureGroup, project, user);
     String topicName = Utils.getFeatureGroupTopicName(featureGroup);
+    String featureGroupEntityName = Utils.getFeaturegroupName(featureGroup);
+    if (!subjectsController.getSubjectVersions(project, featureGroupEntityName).isEmpty()) {
+      subjectsController.deleteSubject(project, featureGroupEntityName);
+    }
     // HOPSWORKS-3252 - we keep kafka topics in order to avoid consumers getting blocked
     // deleteFeatureGroupKafkaTopic(project, topicName);
   }
