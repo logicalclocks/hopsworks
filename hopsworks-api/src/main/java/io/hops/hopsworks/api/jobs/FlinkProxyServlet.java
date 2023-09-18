@@ -16,7 +16,8 @@
 package io.hops.hopsworks.api.jobs;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.api.filter.apiKey.ApiKeyFilter;
+import io.hops.hopsworks.api.auth.key.ApiKeyFilter;
+import io.hops.hopsworks.api.auth.key.ApiKeyUtilities;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.proxy.ProxyServlet;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
@@ -25,7 +26,6 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.jobs.flink.FlinkMasterAddrCache;
-import io.hops.hopsworks.common.user.security.apiKey.ApiKeyController;
 import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.jobs.history.YarnApplicationstate;
@@ -62,7 +62,7 @@ public class FlinkProxyServlet extends ProxyServlet {
   @EJB
   private UserFacade userFacade;
   @EJB
-  private ApiKeyController apiKeyController;
+  private ApiKeyUtilities apiKeyUtilities;
   @EJB
   private JWTHelper jwtHelper;
   
@@ -84,7 +84,7 @@ public class FlinkProxyServlet extends ProxyServlet {
         if (authorizationHeader.startsWith(ApiKeyFilter.API_KEY)){
           try {
             String key = authorizationHeader.substring(ApiKeyFilter.API_KEY.length()).trim();
-            ApiKey apiKey = apiKeyController.getApiKey(key);
+            ApiKey apiKey = apiKeyUtilities.getApiKey(key);
             user = apiKey.getUser();
           } catch (ApiKeyException e) {
             servletResponse.sendError(401, "Could not validate API key");

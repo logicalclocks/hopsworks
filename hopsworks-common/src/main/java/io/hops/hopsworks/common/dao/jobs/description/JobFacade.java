@@ -40,9 +40,9 @@
 package io.hops.hopsworks.common.dao.jobs.description;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.persistence.InvalidQueryException;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.exceptions.InvalidQueryException;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.ScheduleDTO;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;

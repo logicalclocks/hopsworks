@@ -17,7 +17,7 @@ package io.hops.hopsworks.api.admin.projects;
 
 import io.hops.hopsworks.api.admin.dto.ProjectAdminInfoDTO;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;

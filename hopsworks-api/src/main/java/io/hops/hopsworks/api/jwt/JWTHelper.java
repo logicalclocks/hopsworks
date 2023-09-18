@@ -17,15 +17,13 @@ package io.hops.hopsworks.api.jwt;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.base.Strings;
+import io.hops.hopsworks.api.auth.UserUtilities;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.user.ServiceJWTDTO;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.opensearch.OpenSearchJWTController;
-import io.hops.hopsworks.common.user.UsersController;
-import io.hops.hopsworks.common.util.DateUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.jwt.Constants;
@@ -43,7 +41,6 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.BbcGroup;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
-import org.apache.commons.lang3.tuple.Pair;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -57,8 +54,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -95,7 +90,7 @@ public class JWTHelper {
   @EJB
   private BbcGroupFacade bbcGroupFacade;
   @EJB
-  private UsersController userController;
+  private UserUtilities userUtilities;
   @EJB
   private Settings settings;
   @EJB
@@ -250,7 +245,7 @@ public class JWTHelper {
   public String createToken(Users user, String[] audience, String issuer, Date expiresAt, Map<String, Object> claims)
       throws NoSuchAlgorithmException, SigningKeyNotFoundException, DuplicateSigningKeyException {
     SignatureAlgorithm alg = SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg());
-    String[] roles = userController.getUserRoles(user).toArray(new String[0]);
+    String[] roles = userUtilities.getUserRoles(user).toArray(new String[0]);
     
     claims = jwtController.addDefaultClaimsIfMissing(claims, true, settings.getJWTExpLeewaySec(), roles);
     return jwtController.createToken(settings.getJWTSigningKeyName(), false, issuer, audience, expiresAt,
@@ -423,7 +418,7 @@ public class JWTHelper {
     if (!UserAccountStatus.ACTIVATED_ACCOUNT.equals(user.getStatus())) {
       throw new NotRenewableException("User not active");
     }
-    List<String> roles = userController.getUserRoles(user);
+    List<String> roles = userUtilities.getUserRoles(user);
     return jwtController.autoRenewToken(decodedJWT, roles.toArray(new String[0]));
   }
 
@@ -448,56 +443,6 @@ public class JWTHelper {
     DecodedJWT jwt = jwtController.decodeToken(token);
     int expLeeway = jwtController.getExpLeewayClaim(jwt);
     return new JWTResponseDTO(token, newExp, nbf, expLeeway);
-  }
-  
-  /**
-   * Helper method to generate one-time tokens for service JWT renewal and renew the
-   * master service JWT
-   * @param token2renew Service JWT to renew
-   * @param oneTimeRenewalToken Valid one-time token associated with the master token to be renewed.
-   *                            One time tokens are generated once a service is logged-in and every time
-   *                            it renews its master token
-   * @param user Logged in user
-   * @param remoteHostname Hostname of the machine the service runs
-   * @return Renewed master service JWT and five one-time tokens used to renew it
-   * @throws JWTException
-   * @throws NoSuchAlgorithmException
-   */
-  public ServiceJWTDTO renewServiceToken(JsonWebTokenDTO token2renew, String oneTimeRenewalToken,
-      Users user, String remoteHostname) throws JWTException, NoSuchAlgorithmException {
-    if (Strings.isNullOrEmpty(oneTimeRenewalToken)) {
-      throw new VerificationException("Service renewal token cannot be null or empty");
-    }
-    if (user == null) {
-      DecodedJWT decodedJWT = jwtController.decodeToken(oneTimeRenewalToken);
-      throw new VerificationException("Could not find user associated with JWT with ID: " + decodedJWT.getId());
-    }
-    
-    LocalDateTime now = DateUtils.getNow();
-    Date expiresAt = token2renew.getExpiresAt() != null ? token2renew.getExpiresAt()
-        : DateUtils.localDateTime2Date(now.plus(settings.getServiceJWTLifetimeMS(), ChronoUnit.MILLIS));
-    Date notBefore = token2renew.getNbf() != null ? token2renew.getNbf()
-        : DateUtils.localDateTime2Date(now);
-    
-    List<String> userRoles = userController.getUserRoles(user);
-    Pair<String, String[]> renewedTokens = jwtController.renewServiceToken(oneTimeRenewalToken, token2renew.getToken(),
-        expiresAt, notBefore, settings.getServiceJWTLifetimeMS(), user.getUsername(),
-        userRoles, SERVICE_RENEW_JWT_AUDIENCE, remoteHostname, settings.getJWTIssuer(),
-        settings.getJWTSigningKeyName(), false);
-  
-    int expLeeway = jwtController.getExpLeewayClaim(jwtController.decodeToken(renewedTokens.getLeft()));
-    JWTResponseDTO renewedServiceToken = new JWTResponseDTO(renewedTokens.getLeft(), expiresAt, notBefore, expLeeway);
-    
-    return new ServiceJWTDTO(renewedServiceToken, renewedTokens.getRight());
-  }
-  
-  /**
-   * Invalidate a service master token and delete the signing key of the temporary
-   * one-time tokens.
-   * @param serviceToken2invalidate
-   */
-  public void invalidateServiceToken(String serviceToken2invalidate) {
-    jwtController.invalidateServiceToken(serviceToken2invalidate, settings.getJWTSigningKeyName());
   }
   
   /**
@@ -638,7 +583,7 @@ public class JWTHelper {
     throws DuplicateSigningKeyException, SigningKeyNotFoundException, NoSuchAlgorithmException {
     SignatureAlgorithm alg = SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg());
     Date expiresAt = new Date(System.currentTimeMillis() + settings.getJWTLifetimeMs());
-    String[] userRoles = userController.getUserRoles(user).toArray(new String[0]);
+    String[] userRoles = userUtilities.getUserRoles(user).toArray(new String[0]);
     String[] audience = new String[] {Audience.PROXY};
     Map<String, Object> claims = new HashMap<>();
     claims.put(ROLES, userRoles);

@@ -16,12 +16,11 @@
 
 package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 
-import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
-import io.hops.hopsworks.common.dao.AbstractFacade.CollectionInfo;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.util.AbstractFacade;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -88,7 +87,8 @@ public class FeatureGroupCommitController {
     return featureGroupCommitFacade.countCommitsInRange(featuregroup.getId(), startTimestamp, endTimestamp);
   }
 
-  public CollectionInfo getCommitDetails(Integer featureGroupId, Integer limit, Integer offset,
+  public AbstractFacade.CollectionInfo getCommitDetails(
+                                         Integer featureGroupId, Integer limit, Integer offset,
                                          Set<? extends AbstractFacade.SortBy> sort,
                                          Set<? extends AbstractFacade.FilterBy> filters) {
 

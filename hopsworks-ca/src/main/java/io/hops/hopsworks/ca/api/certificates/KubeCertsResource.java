@@ -39,18 +39,23 @@
 
 package io.hops.hopsworks.ca.api.certificates;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import com.google.common.base.Strings;
 import io.hops.hopsworks.ca.api.filter.Audience;
 import io.hops.hopsworks.ca.api.filter.NoCacheResponse;
 import io.hops.hopsworks.ca.controllers.CAException;
 import io.hops.hopsworks.ca.controllers.CAInitializationException;
+import io.hops.hopsworks.ca.controllers.CertificateNotFoundException;
 import io.hops.hopsworks.ca.controllers.PKI;
 import io.hops.hopsworks.ca.controllers.PKIUtils;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.apache.commons.lang3.tuple.Pair;
+import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.operator.OperatorCreationException;
 
 import javax.ejb.EJB;
@@ -68,6 +73,8 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 
 import static io.hops.hopsworks.ca.controllers.CertificateType.KUBE;
@@ -88,6 +95,7 @@ public class KubeCertsResource{
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens={Audience.SERVICES}, allowedUserRoles={"AGENT"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.AUTH}, allowedUserRoles = {"AGENT"})
   public Response signCSR(CSRView csrView) throws CAException {
     if (csrView == null || csrView.getCsr() == null || csrView.getCsr().isEmpty()) {
       throw new IllegalArgumentException("Empty CSR");
@@ -109,15 +117,32 @@ public class KubeCertsResource{
   @ApiOperation(value = "Revoke KubeCA certificates")
   @DELETE
   @JWTRequired(acceptedTokens={Audience.SERVICES}, allowedUserRoles={"AGENT"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.AUTH}, allowedUserRoles = {"AGENT"})
   public Response revokeCertificate(
-      @ApiParam(value = "Identifier of the Certificate to revoke", required = true) @QueryParam("certId") String certId)
-      throws CAException {
-    if (certId == null || certId.isEmpty()) {
+      @ApiParam(value = "Identifier of the Certificate to revoke", required = true)
+      @QueryParam("certId") String certId,
+      @ApiParam(value = "Flag whether certId is a full RFC4514 Distinguished Name string")
+      @QueryParam("exact") Boolean exact) throws CAException {
+    if (Strings.isNullOrEmpty(certId)) {
       throw new IllegalArgumentException("Empty certificate identifier");
     }
 
+    final List<X500Name> subjectsToRevoke = new ArrayList<>();
     try {
-      pki.revokeCertificate(certId, KUBE);
+      if (!Boolean.TRUE.equals(exact)) {
+        X500Name certificateName = pkiUtils.parseCertificateSubjectName(certId, KUBE);
+        List<String> subjects = pkiUtils.findAllValidSubjectsWithPartialMatch(certificateName.toString());
+        subjects.forEach(s -> subjectsToRevoke.add(new X500Name(s)));
+      } else {
+        subjectsToRevoke.add(new X500Name(certId));
+      }
+      if (subjectsToRevoke.isEmpty()) {
+        throw new CertificateNotFoundException("Could not find a VALID certificate with ID: " + certId + " Is " +
+            "exact X509 Name: " + exact);
+      }
+      for (X500Name n : subjectsToRevoke) {
+        pki.revokeCertificate(n, KUBE);
+      }
       return Response.ok().build();
     } catch (InvalidNameException | GeneralSecurityException | CAInitializationException ex) {
       throw pkiUtils.certificateRevocationExceptionConvertToCAException(ex, KUBE);
@@ -128,6 +153,7 @@ public class KubeCertsResource{
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens={Audience.SERVICES}, allowedUserRoles={"AGENT"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.AUTH}, allowedUserRoles = {"AGENT"})
   public Response getCACert() throws CAException {
     try {
       Pair<String, String> chainOfTrust = pki.getChainOfTrust(pkiUtils.getResponsibleCA(KUBE));

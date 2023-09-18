@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2019, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2023, Hopsworks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -13,28 +13,25 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.common.dao.user.security.apiKey;
 
-import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiKeyScope;
+package io.hops.hopsworks.api.auth;
+
+import io.hops.hopsworks.persistence.entity.user.BbcGroup;
+import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.Stateless;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 @Stateless
-public class ApiKeyScopeFacade extends AbstractFacade<ApiKeyScope> {
-  
-  @PersistenceContext(unitName = "kthfsPU")
-  private EntityManager em;
-  
-  public ApiKeyScopeFacade() {
-    super(ApiKeyScope.class);
+public class UserUtilities {
+  public List<String> getUserRoles(Users p) {
+    Collection<BbcGroup> groupList = p.getBbcGroupCollection();
+    List<String> list = new ArrayList<>();
+    for (BbcGroup g : groupList) {
+      list.add(g.getGroupName());
+    }
+    return list;
   }
-  
-  @Override
-  protected EntityManager getEntityManager() {
-    return em;
-  }
-  
 }

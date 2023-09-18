@@ -39,6 +39,8 @@
 package io.hops.hopsworks.api.user;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.api.auth.UserStatusValidator;
+import io.hops.hopsworks.api.auth.UserUtilities;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.JWTNotRequired;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
@@ -49,7 +51,6 @@ import io.hops.hopsworks.common.dao.user.UsersDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.QrCode;
-import io.hops.hopsworks.common.user.UserStatusValidator;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.DateUtils;
 import io.hops.hopsworks.common.util.Settings;
@@ -79,7 +80,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.CookieParam;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -129,7 +129,9 @@ public class AuthService {
   private Settings settings;
   @EJB
   private JWTController jwtController;
-  
+  @EJB
+  private UserUtilities userUtilities;
+
   @GET
   @Path("session")
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
@@ -139,7 +141,7 @@ public class AuthService {
     json.setData(req.getRemoteUser());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
-  
+
   @GET
   @Path("jwt/session")
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
@@ -256,7 +258,7 @@ public class AuthService {
     LocalDateTime masterExpiration = DateUtils.getNow().plus(settings.getServiceJWTLifetimeMS(), ChronoUnit.MILLIS);
     LocalDateTime notBefore = jwtController.computeNotBefore4ServiceRenewalTokens(masterExpiration);
     LocalDateTime expiresAt = notBefore.plus(settings.getServiceJWTLifetimeMS(), ChronoUnit.MILLIS);
-    List<String> userRoles = userController.getUserRoles(user);
+    List<String> userRoles = userUtilities.getUserRoles(user);
     
     JsonWebToken renewalJWTSpec = new JsonWebToken();
     renewalJWTSpec.setSubject(user.getUsername());
@@ -291,19 +293,7 @@ public class AuthService {
       throw ex;
     }
   }
-  
-  @DELETE
-  @Path("/service")
-  @Produces(MediaType.APPLICATION_JSON)
-  @JWTNotRequired
-  public Response serviceLogout(@Context HttpServletRequest request) throws UserException, InvalidationException {
-    if (jWTHelper.validToken(request, settings.getJWTIssuer())) {
-      jwtController.invalidateServiceToken(jWTHelper.getAuthToken(request), settings.getJWTSigningKeyName());
-    }
-    logoutAndInvalidateSession(request, null);
-    return Response.ok().build();
-  }
-  
+
   @GET
   @Path("isAdmin")
   @Produces(MediaType.APPLICATION_JSON)
@@ -318,7 +308,7 @@ public class AuthService {
     }
     return Response.ok(json).build();
   }
-  
+
   @POST
   @Path("register")
   @Produces(MediaType.APPLICATION_JSON)
@@ -451,7 +441,7 @@ public class AuthService {
       throw new UserException(RESTCodes.UserErrorCode.NO_ROLE_FOUND, Level.FINE,
         null, RESTCodes.UserErrorCode.NO_ROLE_FOUND.getMessage());
     }
-    
+
     statusValidator.checkStatus(user.getStatus());
     try {
       req.login(user.getEmail(), password);

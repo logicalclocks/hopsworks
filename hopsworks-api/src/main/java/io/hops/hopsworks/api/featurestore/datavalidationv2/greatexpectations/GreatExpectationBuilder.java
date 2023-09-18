@@ -17,11 +17,11 @@
 package io.hops.hopsworks.api.featurestore.datavalidationv2.greatexpectations;
 
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.AbstractFacade.CollectionInfo;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteController;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.GreatExpectation;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.util.AbstractFacade;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -59,7 +59,8 @@ public class GreatExpectationBuilder {
     GreatExpectationDTO dtos = new GreatExpectationDTO();
     uri(dtos, uriInfo, project, featurestore);
 
-    CollectionInfo<GreatExpectation> greatExpectations = expectationSuiteController.getAllGreatExpectations();
+    AbstractFacade.CollectionInfo<GreatExpectation> greatExpectations = expectationSuiteController
+        .getAllGreatExpectations();
     dtos.setItems(greatExpectations.getItems().stream()
           .map(greatExpectation -> build(
             uriInfo, project, featurestore, greatExpectation))

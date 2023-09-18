@@ -27,7 +27,7 @@ import io.hops.hopsworks.api.featurestore.transformationFunction.TransformationF
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
@@ -111,7 +111,7 @@ public class FeaturestoreService {
   public void setProjectId(Integer projectId) {
     this.project = projectFacade.find(projectId);
   }
-  
+
   /**
    * Endpoint for getting the list of featurestores for the project
    *
@@ -150,7 +150,7 @@ public class FeaturestoreService {
         new GenericEntity<List<FeaturestoreDTO>>(featurestores) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featurestoresGeneric).build();
   }
-  
+
   /**
    * Endpoint for getting a featurestore with a particular Id
    *

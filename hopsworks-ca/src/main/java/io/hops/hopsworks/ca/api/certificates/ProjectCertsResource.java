@@ -17,6 +17,7 @@
 package io.hops.hopsworks.ca.api.certificates;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.ca.api.filter.Audience;
 import io.hops.hopsworks.ca.api.filter.NoCacheResponse;
 import io.hops.hopsworks.ca.controllers.CAException;
@@ -24,6 +25,7 @@ import io.hops.hopsworks.ca.controllers.CAInitializationException;
 import io.hops.hopsworks.ca.controllers.PKI;
 import io.hops.hopsworks.ca.controllers.PKIUtils;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -63,7 +65,8 @@ public class ProjectCertsResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens={Audience.SERVICES}, allowedUserRoles={"AGENT"})
-  public Response signCSR(CSRView csrView) throws IOException, CAException {
+  @ApiKeyRequired(acceptedScopes = {ApiScope.AUTH}, allowedUserRoles = {"AGENT"})
+  public Response signCSR(CSRView csrView) throws CAException {
     if (csrView == null || Strings.isNullOrEmpty(csrView.getCsr())) {
       throw new IllegalArgumentException("Empty CSR");
     }
@@ -83,6 +86,7 @@ public class ProjectCertsResource {
   @ApiOperation(value = "Revoke Project certificate")
   @DELETE
   @JWTRequired(acceptedTokens={Audience.SERVICES}, allowedUserRoles={"AGENT"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.AUTH}, allowedUserRoles = {"AGENT"})
   public Response revokeCertificate(
       @ApiParam(value = "Identifier of the Certificate to revoke", required = true) @QueryParam("certId") String certId)
     throws IOException, CAException {

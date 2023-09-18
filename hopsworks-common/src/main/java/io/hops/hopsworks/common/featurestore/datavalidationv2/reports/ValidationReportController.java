@@ -18,9 +18,6 @@ package io.hops.hopsworks.common.featurestore.datavalidationv2.reports;
 
 import io.hops.hopsworks.alerting.api.alert.dto.PostableAlert;
 import io.hops.hopsworks.common.alert.AlertController;
-import io.hops.hopsworks.common.dao.AbstractFacade.CollectionInfo;
-import io.hops.hopsworks.common.dao.AbstractFacade.FilterBy;
-import io.hops.hopsworks.common.dao.AbstractFacade.SortBy;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
@@ -48,6 +45,7 @@ import io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlert;
 import io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlertStatus;
 import io.hops.hopsworks.persistence.entity.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.util.AbstractFacade;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -116,8 +114,9 @@ public class ValidationReportController {
     return validationReport.get();
   }
 
-  public CollectionInfo<ValidationReport> getAllValidationReportByFeatureGroup(Integer offset, Integer limit,
-    Set<? extends SortBy> sorts, Set<? extends FilterBy> filters, Featuregroup featuregroup) {
+  public AbstractFacade.CollectionInfo<ValidationReport> getAllValidationReportByFeatureGroup(
+      Integer offset, Integer limit, Set<? extends AbstractFacade.SortBy> sorts,
+      Set<? extends AbstractFacade.FilterBy> filters, Featuregroup featuregroup) {
     return validationReportFacade.findByFeaturegroup(offset, limit, sorts, filters, featuregroup);
   }
 

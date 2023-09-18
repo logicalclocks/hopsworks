@@ -69,6 +69,12 @@
 
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
+      <artifactId>hopsworks-api-auth</artifactId>
+      <type>ejb</type>
+    </dependency>
+
+    <dependency>
+      <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-jwt</artifactId>
       <type>ejb</type>
     </dependency>

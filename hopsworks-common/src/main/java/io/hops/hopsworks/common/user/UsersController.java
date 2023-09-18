@@ -41,6 +41,7 @@ package io.hops.hopsworks.common.user;
 
 import com.google.common.base.Strings;
 import com.google.zxing.WriterException;
+import io.hops.hopsworks.api.auth.UserStatusValidator;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UsersDTO;
@@ -80,7 +81,6 @@ import javax.validation.ConstraintViolationException;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -593,15 +593,6 @@ public class UsersController {
       return false;
     }
     return user.getBbcGroupCollection().contains(group);
-  }
-
-  public List<String> getUserRoles(Users p) {
-    Collection<BbcGroup> groupList = p.getBbcGroupCollection();
-    List<String> list = new ArrayList<>();
-    for (BbcGroup g : groupList) {
-      list.add(g.getGroupName());
-    }
-    return list;
   }
 
   /**

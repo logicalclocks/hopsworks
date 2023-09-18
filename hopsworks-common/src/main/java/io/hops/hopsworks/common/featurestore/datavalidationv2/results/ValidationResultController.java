@@ -16,15 +16,13 @@
 
 package io.hops.hopsworks.common.featurestore.datavalidationv2.results;
 
-import io.hops.hopsworks.common.dao.AbstractFacade.CollectionInfo;
-import io.hops.hopsworks.common.dao.AbstractFacade.FilterBy;
-import io.hops.hopsworks.common.dao.AbstractFacade.SortBy;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.expectations.ExpectationFacade;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.Expectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationReport;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationResult;
+import io.hops.hopsworks.persistence.entity.util.AbstractFacade;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -63,8 +61,9 @@ public class ValidationResultController {
   @EJB
   private FeaturestoreFacade featurestoreFacade;
 
-  public CollectionInfo<ValidationResult> getAllValidationResultByExpectationId (Integer offset, Integer limit,
-    Set<? extends SortBy> sorts, Set<? extends FilterBy> filters, Integer expectationId) {
+  public AbstractFacade.CollectionInfo<ValidationResult> getAllValidationResultByExpectationId (
+      Integer offset, Integer limit, Set<? extends AbstractFacade.SortBy> sorts,
+      Set<? extends AbstractFacade.FilterBy> filters, Integer expectationId) {
     Optional<Expectation> optExpectation = expectationFacade.findById(expectationId);
     Expectation expectation;
 
