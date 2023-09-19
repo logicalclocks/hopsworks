@@ -126,12 +126,13 @@ public class OnlineFeaturestoreFacade {
   public void createOnlineFeaturestoreUser(String user, String pw) throws FeaturestoreException {
     try {
       try (Connection connection = establishAdminConnection();
-           PreparedStatement pStmt = connection.prepareStatement("CREATE USER IF NOT EXISTS ? IDENTIFIED BY ?;")) {
+           PreparedStatement pStmt = connection.prepareStatement("CREATE USER IF NOT EXISTS ? IDENTIFIED BY ?;");
+           Statement stmt = connection.createStatement()) {
         pStmt.setString(1, user);
         pStmt.setString(2, pw);
         pStmt.executeUpdate();
+        stmt.executeUpdate("GRANT NDB_STORED_USER ON *.* TO " + user + ";");
       }
-      executeUpdate("GRANT NDB_STORED_USER ON *.* TO " + user + ";");
     } catch (SQLException se) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_CREATING_ONLINE_FEATURESTORE_USER,
           Level.SEVERE, "Error occurred when trying to create the MySQL database user for an online feature store",
