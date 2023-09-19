@@ -146,7 +146,7 @@ public class SearchFSCommandExecutor {
   
   private void processInt() throws CommandException {
     if (!payaraClusterManager.amIThePrimary()) {
-      LOGGER.log(Level.INFO, "not primary");
+      LOGGER.log(Level.FINE, "not primary");
       return;
     }
     
