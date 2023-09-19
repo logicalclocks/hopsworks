@@ -43,6 +43,8 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -91,13 +93,17 @@ public class OnlineFeaturestoreController {
         Level.FINE, "Online feature store service is not enabled for this Hopsworks instance");
     }
     String db = getOnlineFeaturestoreDbName(featurestore.getProject());
-
-    // Create dataset
-    onlineFeaturestoreFacade.createOnlineFeaturestoreDatabase(db);
-
-    // Create kafka offset table
-    onlineFeaturestoreFacade.createOnlineFeaturestoreKafkaOffsetTable(db);
-
+    try (Connection connection = onlineFeaturestoreFacade.establishAdminConnection()) {
+      // Create dataset
+      onlineFeaturestoreFacade.createOnlineFeaturestoreDatabase(db, connection);
+      
+      // Create kafka offset table
+      onlineFeaturestoreFacade.createOnlineFeaturestoreKafkaOffsetTable(db, connection);
+    } catch (SQLException se) {
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,
+        Level.SEVERE, "Error closing connection", se.getMessage(), se);
+    }
     // Create project owner database user
     createDatabaseUser(user, featurestore, ProjectRoleTypes.DATA_OWNER.getRole());
   }
@@ -201,7 +207,6 @@ public class OnlineFeaturestoreController {
     }
 
     String dbuser = onlineDbUsername(featurestore.getProject(), user);
-    onlineFeaturestoreFacade.revokeUserPrivileges(db, dbuser);
 
     if (projectRole.equals(ProjectRoleTypes.DATA_OWNER.getRole())) {
       onlineFeaturestoreFacade.grantDataOwnerPrivileges(db, dbuser);
@@ -268,20 +273,25 @@ public class OnlineFeaturestoreController {
       //Nothing to remove
       return;
     }
-
-    for (ProjectTeam member : projectTeamFacade.findMembersByProject(project)) {
-      String dbUser = onlineDbUsername(project, member.getUser());
-      try {
-        secretsController.delete(member.getUser(), dbUser);
-      } catch (UserException e) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
+    try (Connection connection = onlineFeaturestoreFacade.establishAdminConnection()) {
+      for (ProjectTeam member : projectTeamFacade.findMembersByProject(project)) {
+        String dbUser = onlineDbUsername(project, member.getUser());
+        try {
+          secretsController.delete(member.getUser(), dbUser);
+        } catch (UserException e) {
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
             Level.SEVERE, "Problem removing user-secret to online featurestore");
+        }
+        onlineFeaturestoreFacade.removeOnlineFeaturestoreUser(dbUser, connection);
       }
-      onlineFeaturestoreFacade.removeOnlineFeaturestoreUser(dbUser);
+      
+      String db = getOnlineFeaturestoreDbName(project);
+      onlineFeaturestoreFacade.removeOnlineFeaturestoreDatabase(db, connection);
+    } catch (SQLException se) {
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,
+        Level.SEVERE, "Error closing connection", se.getMessage(), se);
     }
-
-    String db = getOnlineFeaturestoreDbName(project);
-    onlineFeaturestoreFacade.removeOnlineFeaturestoreDatabase(db);
   }
   
   public void removeOnlineFeaturestoreUser(Featurestore featurestore, Users user) throws FeaturestoreException {
@@ -295,7 +305,13 @@ public class OnlineFeaturestoreController {
 
     SecretId id = new SecretId(user.getUid(), dbUser);
     secretsFacade.deleteSecret(id);
-    onlineFeaturestoreFacade.removeOnlineFeaturestoreUser(dbUser);
+    try (Connection connection = onlineFeaturestoreFacade.establishAdminConnection()) {
+      onlineFeaturestoreFacade.removeOnlineFeaturestoreUser(dbUser, connection);
+    } catch (SQLException se) {
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,
+        Level.SEVERE, "Error closing connection", se.getMessage(), se);
+    }
 
     featurestoreConnectorFacade.deleteByFeaturestoreName(featurestore,
         dbUser + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX);
@@ -354,7 +370,6 @@ public class OnlineFeaturestoreController {
                                           String featureStoreDb, DatasetAccessPermission permission)
       throws FeaturestoreException {
     String dbUser = onlineDbUsername(project, user);
-    onlineFeaturestoreFacade.revokeUserPrivileges(featureStoreDb, dbUser);
 
     if (permission == DatasetAccessPermission.READ_ONLY ||
         (permission == DatasetAccessPermission.EDITABLE_BY_OWNERS &&

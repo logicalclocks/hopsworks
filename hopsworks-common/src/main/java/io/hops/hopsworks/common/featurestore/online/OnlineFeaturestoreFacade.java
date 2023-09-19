@@ -89,12 +89,12 @@ public class OnlineFeaturestoreFacade {
    *
    * @param db name of the database
    */
-  public void createOnlineFeaturestoreDatabase(String db) throws FeaturestoreException {
+  public void createOnlineFeaturestoreDatabase(String db, Connection connection) throws FeaturestoreException {
     //Prepared statements with parameters can only be done for
     //WHERE/HAVING Clauses, not names of tables or databases
     //Don't add 'IF EXISTS', this call should fail if the database already exists
     try {
-      executeUpdate("CREATE DATABASE " + db + ";");
+      executeUpdate("CREATE DATABASE " + db + ";", connection);
     } catch (SQLException se) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_CREATING_ONLINE_FEATURESTORE_DB,
           Level.SEVERE, "Error running create query", se.getMessage(), se);
@@ -106,11 +106,11 @@ public class OnlineFeaturestoreFacade {
    *
    * @param db name of the table
    */
-  public void removeOnlineFeaturestoreDatabase(String db) throws FeaturestoreException {
+  public void removeOnlineFeaturestoreDatabase(String db, Connection connection) throws FeaturestoreException {
     //Prepared statements with parameters can only be done for
     //WHERE/HAVING Clauses, not names of tables or databases
     try {
-      executeUpdate("DROP DATABASE IF EXISTS " + db + ";");
+      executeUpdate("DROP DATABASE IF EXISTS " + db + ";", connection);
     } catch (SQLException se) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_DELETING_ONLINE_FEATURESTORE_DB,
           Level.SEVERE, "Error running drop query", se.getMessage(), se);
@@ -145,12 +145,11 @@ public class OnlineFeaturestoreFacade {
    *
    * @param dbUser the database-username
    */
-  public void removeOnlineFeaturestoreUser(String dbUser) throws FeaturestoreException {
+  public void removeOnlineFeaturestoreUser(String dbUser, Connection connection) throws FeaturestoreException {
     //Prepared statements with parameters can only be done for
     //WHERE/HAVING Clauses, not names of tables or databases
     try {
-      try (Connection connection = establishAdminConnection();
-           PreparedStatement pStmt = connection.prepareStatement("DROP USER IF EXISTS ?")) {
+      try (PreparedStatement pStmt = connection.prepareStatement("DROP USER IF EXISTS ?")) {
         pStmt.setString(1, dbUser);
         pStmt.executeUpdate();
       }
@@ -169,7 +168,7 @@ public class OnlineFeaturestoreFacade {
    */
   public void grantDataOwnerPrivileges(String dbName, String dbUser) throws FeaturestoreException {
     try {
-      grantUserPrivileges(dbUser, "GRANT ALL PRIVILEGES ON " + dbName + ".* TO " + dbUser + ";");
+      grantUserPrivileges(dbUser, "GRANT ALL PRIVILEGES ON " + dbName + ".* TO " + dbUser + ";", dbName);
     } catch (SQLException se) {
       throw new FeaturestoreException(
           RESTCodes.FeaturestoreErrorCode.ERROR_GRANTING_ONLINE_FEATURESTORE_USER_PRIVILEGES, Level.SEVERE,
@@ -185,7 +184,7 @@ public class OnlineFeaturestoreFacade {
    */
   public void grantDataScientistPrivileges(String dbName, String dbUser) throws FeaturestoreException {
     try {
-      grantUserPrivileges(dbUser, "GRANT SELECT ON " + dbName + ".* TO " + dbUser + ";");
+      grantUserPrivileges(dbUser, "GRANT SELECT ON " + dbName + ".* TO " + dbUser + ";", dbName);
     } catch (SQLException se) {
       throw new FeaturestoreException(
           RESTCodes.FeaturestoreErrorCode.ERROR_GRANTING_ONLINE_FEATURESTORE_USER_PRIVILEGES, Level.SEVERE,
@@ -193,7 +192,8 @@ public class OnlineFeaturestoreFacade {
     }
   }
 
-  private void grantUserPrivileges(String dbUser, String grantQuery) throws FeaturestoreException, SQLException {
+  private void grantUserPrivileges(String dbUser, String grantQuery, String dbName) throws FeaturestoreException,
+      SQLException {
     ResultSet resultSet = null;
     try (Connection connection = establishAdminConnection();
          PreparedStatement pStmt = connection.prepareStatement(
@@ -202,9 +202,10 @@ public class OnlineFeaturestoreFacade {
       // check if the user exists before executing the granting command
       pStmt.setString(1, dbUser);
       resultSet = pStmt.executeQuery();
-
+  
       if (resultSet.next() && resultSet.getInt(1) != 0) {
-        executeUpdate(grantQuery);
+        revokeUserPrivileges(dbName, dbUser, connection);
+        executeUpdate(grantQuery, connection);
       }
     } finally {
       if (resultSet != null) {
@@ -257,23 +258,32 @@ public class OnlineFeaturestoreFacade {
    * @param dbUser the database username to revoke privileges for
    */
   public void revokeUserPrivileges(String dbName, String dbUser) {
+    try {
+      try (Connection connection = establishAdminConnection()) {
+        revokeUserPrivileges(dbName, dbUser, connection);
+      }
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Exception in revoking the privileges", e);
+    }
+  }
+  
+  public void revokeUserPrivileges(String dbName, String dbUser, Connection connection) {
     ResultSet resultSet = null;
     try {
-      try (Connection connection = establishAdminConnection();
-         PreparedStatement pStmt = connection.prepareStatement(
-             "SELECT COUNT(*) FROM information_schema.SCHEMA_PRIVILEGES WHERE GRANTEE = ? AND TABLE_SCHEMA = ?")){
+      try (PreparedStatement pStmt = connection.prepareStatement(
+        "SELECT COUNT(*) FROM information_schema.SCHEMA_PRIVILEGES WHERE GRANTEE = ? AND TABLE_SCHEMA = ?")){
         // If the grant does not exists, MySQL returns a 1141 error which JPA catches and logs it together
         // with the stack trace, polluting the logs. To avoid this we first query the information_schema
         // to check that the grant exists, if so, we remove it
         String grantee = "'" + dbUser + "'@'%'";
         pStmt.setString(1, grantee);
         pStmt.setString(2, dbName);
-
+        
         resultSet = pStmt.executeQuery();
         if (resultSet.next() && resultSet.getInt(1) != 0) {
           //Prepared statements with parameters can only be done for
           //WHERE/HAVING Clauses, not names of tables or databases
-          executeUpdate("REVOKE ALL PRIVILEGES ON " + dbName + ".* FROM " + dbUser + ";");
+          executeUpdate("REVOKE ALL PRIVILEGES ON " + dbName + ".* FROM " + dbUser + ";", connection);
         }
       } finally {
         if (resultSet != null) {
@@ -366,7 +376,7 @@ public class OnlineFeaturestoreFacade {
    *
    * @param db name of the database
    */
-  public void createOnlineFeaturestoreKafkaOffsetTable(String db) throws FeaturestoreException {
+  public void createOnlineFeaturestoreKafkaOffsetTable(String db, Connection connection) throws FeaturestoreException {
     //Prepared statements with parameters can only be done for
     //WHERE/HAVING Clauses, not names of tables or databases
     try {
@@ -376,7 +386,7 @@ public class OnlineFeaturestoreFacade {
                       "`partition` SMALLINT NOT NULL,\n" +
                       "`offset` BIGINT UNSIGNED NOT NULL,\n" +
                       "PRIMARY KEY (`topic`,`partition`)\n" +
-                    ") ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs;");
+                    ") ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs;", connection);
     } catch (SQLException se) {
       throw new FeaturestoreException(
               RESTCodes.FeaturestoreErrorCode.ERROR_CREATING_ONLINE_FEATURESTORE_KAFKA_OFFSET_TABLE,
@@ -384,14 +394,13 @@ public class OnlineFeaturestoreFacade {
     }
   }
 
-  private void executeUpdate(String query) throws SQLException, FeaturestoreException {
-    try (Connection connection = establishAdminConnection();
-         Statement stmt = connection.createStatement()) {
+  private void executeUpdate(String query, Connection connection) throws SQLException {
+    try (Statement stmt = connection.createStatement()) {
       stmt.executeUpdate(query);
     }
   }
 
-  private Connection establishAdminConnection() throws FeaturestoreException {
+  public Connection establishAdminConnection() throws FeaturestoreException {
     try {
       return DriverManager.getConnection(getJdbcURL(),
           settings.getVariableFeaturestoreDbAdminUser(),
