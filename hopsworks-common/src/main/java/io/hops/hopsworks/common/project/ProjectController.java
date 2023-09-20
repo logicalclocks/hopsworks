@@ -70,6 +70,7 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FolderNameValidator;
+import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreFacade;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.opensearch.OpenSearchController;
 import io.hops.hopsworks.common.experiments.tensorboard.TensorBoardController;
@@ -180,6 +181,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -287,6 +289,8 @@ public class ProjectController {
   private JupyterFacade jupyterFacade;
   @EJB
   private ProjectServiceFacade projectServiceFacade;
+  @EJB
+  private OnlineFeaturestoreFacade onlineFeaturestoreFacade;
   @EJB
   private ProjectQuotasController projectQuotasController;
   @EJB
@@ -1874,16 +1878,23 @@ public class ProjectController {
       if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE) &&
           settings.isOnlineFeaturestore()) {
         Featurestore featurestore = featurestoreController.getProjectFeaturestore(project);
-        onlineFeaturestoreController.createDatabaseUser(projectTeam.getUser(),
-          featurestore, projectTeam.getTeamRole());
 
-        // give access to the shared online feature stores
-        for (DatasetSharedWith sharedDs : project.getDatasetSharedWithCollection()) {
-          if (sharedDs.getAccepted() && sharedDs.getDataset().getDsType() == DatasetType.FEATURESTORE) {
-            onlineFeaturestoreController
+        try (Connection connection = onlineFeaturestoreFacade.establishAdminConnection()) {
+          onlineFeaturestoreController.createDatabaseUser(projectTeam.getUser(),
+            featurestore, projectTeam.getTeamRole(), connection);
+          // give access to the shared online feature stores
+
+          for (DatasetSharedWith sharedDs : project.getDatasetSharedWithCollection()) {
+            if (sharedDs.getAccepted() && sharedDs.getDataset().getDsType() == DatasetType.FEATURESTORE) {
+              onlineFeaturestoreController
                 .shareOnlineFeatureStore(project, newMember, projectTeam.getTeamRole(),
-                    sharedDs.getDataset().getFeatureStore(), sharedDs.getPermission());
+                  sharedDs.getDataset().getFeatureStore(), sharedDs.getPermission(), connection);
+            }
           }
+        } catch (SQLException e) {
+          throw new FeaturestoreException(
+            RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,
+            Level.SEVERE, e.getMessage(), e.getMessage(), e);
         }
       }
   
@@ -2223,7 +2234,13 @@ public class ProjectController {
     // Update privileges for online feature store
     if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
       Featurestore featurestore = featurestoreController.getProjectFeaturestore(project);
-      onlineFeaturestoreController.updateUserOnlineFeatureStoreDB(user, featurestore, newRole);
+      try (Connection connection = onlineFeaturestoreFacade.establishAdminConnection()) {
+        onlineFeaturestoreController.updateUserOnlineFeatureStoreDB(user, featurestore, newRole, connection);
+      } catch (SQLException e) {
+        throw new FeaturestoreException(
+          RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,
+          Level.SEVERE, e.getMessage(), e.getMessage(), e);
+      }
     }
   }
 

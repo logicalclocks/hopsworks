@@ -123,10 +123,9 @@ public class OnlineFeaturestoreFacade {
    * @param user the database username
    * @param pw the database user password
    */
-  public void createOnlineFeaturestoreUser(String user, String pw) throws FeaturestoreException {
+  public void createOnlineFeaturestoreUser(String user, String pw, Connection connection) throws FeaturestoreException {
     try {
-      try (Connection connection = establishAdminConnection();
-           PreparedStatement pStmt = connection.prepareStatement("CREATE USER IF NOT EXISTS ? IDENTIFIED BY ?;");
+      try (PreparedStatement pStmt = connection.prepareStatement("CREATE USER IF NOT EXISTS ? IDENTIFIED BY ?;");
            Statement stmt = connection.createStatement()) {
         pStmt.setString(1, user);
         pStmt.setString(2, pw);
@@ -166,9 +165,10 @@ public class OnlineFeaturestoreFacade {
    * @param dbName name of the online featurestore database
    * @param dbUser the database-username
    */
-  public void grantDataOwnerPrivileges(String dbName, String dbUser) throws FeaturestoreException {
+  public void grantDataOwnerPrivileges(String dbName, String dbUser, Connection conn) throws FeaturestoreException {
     try {
-      grantUserPrivileges(dbUser, "GRANT ALL PRIVILEGES ON " + dbName + ".* TO " + dbUser + ";", dbName);
+      grantUserPrivileges(dbUser, "GRANT ALL PRIVILEGES ON " + dbName + ".* TO " + dbUser + ";", dbName,
+        conn);
     } catch (SQLException se) {
       throw new FeaturestoreException(
           RESTCodes.FeaturestoreErrorCode.ERROR_GRANTING_ONLINE_FEATURESTORE_USER_PRIVILEGES, Level.SEVERE,
@@ -182,9 +182,9 @@ public class OnlineFeaturestoreFacade {
    * @param dbName name of the online featurestore database
    * @param dbUser the database-username
    */
-  public void grantDataScientistPrivileges(String dbName, String dbUser) throws FeaturestoreException {
+  public void grantDataScientistPrivileges(String dbName, String dbUser, Connection conn) throws FeaturestoreException {
     try {
-      grantUserPrivileges(dbUser, "GRANT SELECT ON " + dbName + ".* TO " + dbUser + ";", dbName);
+      grantUserPrivileges(dbUser, "GRANT SELECT ON " + dbName + ".* TO " + dbUser + ";", dbName, conn);
     } catch (SQLException se) {
       throw new FeaturestoreException(
           RESTCodes.FeaturestoreErrorCode.ERROR_GRANTING_ONLINE_FEATURESTORE_USER_PRIVILEGES, Level.SEVERE,
@@ -192,11 +192,11 @@ public class OnlineFeaturestoreFacade {
     }
   }
 
-  private void grantUserPrivileges(String dbUser, String grantQuery, String dbName) throws FeaturestoreException,
+  private void grantUserPrivileges(String dbUser, String grantQuery, String dbName, Connection conn)
+    throws FeaturestoreException,
       SQLException {
     ResultSet resultSet = null;
-    try (Connection connection = establishAdminConnection();
-         PreparedStatement pStmt = connection.prepareStatement(
+    try (PreparedStatement pStmt = conn.prepareStatement(
              "SELECT COUNT(*) FROM mysql.user WHERE User = ?")){
       // If the user doesn't exist, the grant permissions will fail blocking the rest of the user assignments
       // check if the user exists before executing the granting command
@@ -204,8 +204,8 @@ public class OnlineFeaturestoreFacade {
       resultSet = pStmt.executeQuery();
   
       if (resultSet.next() && resultSet.getInt(1) != 0) {
-        revokeUserPrivileges(dbName, dbUser, connection);
-        executeUpdate(grantQuery, connection);
+        revokeUserPrivileges(dbName, dbUser, conn);
+        executeUpdate(grantQuery, conn);
       }
     } finally {
       if (resultSet != null) {
@@ -249,22 +249,6 @@ public class OnlineFeaturestoreFacade {
     }
 
     return featureGroupFeatureDTOS;
-  }
-
-  /**
-   * Revokes user privileges for a user on a specific online featurestore
-   *
-   * @param dbName name of the MYSQL database
-   * @param dbUser the database username to revoke privileges for
-   */
-  public void revokeUserPrivileges(String dbName, String dbUser) {
-    try {
-      try (Connection connection = establishAdminConnection()) {
-        revokeUserPrivileges(dbName, dbUser, connection);
-      }
-    } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "Exception in revoking the privileges", e);
-    }
   }
   
   public void revokeUserPrivileges(String dbName, String dbUser, Connection connection) {

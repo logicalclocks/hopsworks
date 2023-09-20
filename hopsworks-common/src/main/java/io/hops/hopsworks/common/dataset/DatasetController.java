@@ -1201,7 +1201,13 @@ public class DatasetController {
       unshareFeatureStoreServiceDataset(user, project, targetProject, datasetSharedWith,
           Settings.ServiceDataset.STATISTICS, dfso);
       // Unshare the online feature store
-      onlineFeaturestoreController.unshareOnlineFeatureStore(targetProject, dataset.getFeatureStore());
+      try {
+        onlineFeaturestoreController.unshareOnlineFeatureStore(targetProject, dataset.getFeatureStore());
+      } catch (FeaturestoreException e) {
+        throw new DatasetException(
+          RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR,
+          Level.SEVERE, e.getMessage(), e.getMessage(), e);
+      }
     }
     unshareDs(project, user, datasetSharedWith, dfso);
   }

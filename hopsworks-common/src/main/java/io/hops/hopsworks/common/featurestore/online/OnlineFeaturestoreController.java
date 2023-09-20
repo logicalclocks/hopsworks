@@ -86,26 +86,20 @@ public class OnlineFeaturestoreController {
    * @param featurestore the featurestore metadata entity
    * @throws FeaturestoreException
    */
-  public void setupOnlineFeaturestore(Users user, Featurestore featurestore)
+  public void setupOnlineFeaturestore(Users user, Featurestore featurestore, Connection connection)
     throws FeaturestoreException {
     if (!settings.isOnlineFeaturestore()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
         Level.FINE, "Online feature store service is not enabled for this Hopsworks instance");
     }
     String db = getOnlineFeaturestoreDbName(featurestore.getProject());
-    try (Connection connection = onlineFeaturestoreFacade.establishAdminConnection()) {
       // Create dataset
-      onlineFeaturestoreFacade.createOnlineFeaturestoreDatabase(db, connection);
-      
-      // Create kafka offset table
-      onlineFeaturestoreFacade.createOnlineFeaturestoreKafkaOffsetTable(db, connection);
-    } catch (SQLException se) {
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,
-        Level.SEVERE, "Error closing connection", se.getMessage(), se);
-    }
+    onlineFeaturestoreFacade.createOnlineFeaturestoreDatabase(db, connection);
+
+    // Create kafka offset table
+    onlineFeaturestoreFacade.createOnlineFeaturestoreKafkaOffsetTable(db, connection);
     // Create project owner database user
-    createDatabaseUser(user, featurestore, ProjectRoleTypes.DATA_OWNER.getRole());
+    createDatabaseUser(user, featurestore, ProjectRoleTypes.DATA_OWNER.getRole(), connection);
   }
   
   /**
@@ -115,7 +109,7 @@ public class OnlineFeaturestoreController {
    * @param featurestore the feature store
    * @throws FeaturestoreException
    */
-  public void createDatabaseUser(Users user, Featurestore featurestore, String projectRole)
+  public void createDatabaseUser(Users user, Featurestore featurestore, String projectRole, Connection connection)
       throws FeaturestoreException {
     String db = getOnlineFeaturestoreDbName(featurestore.getProject());
     if (!checkIfDatabaseExists(db)) {
@@ -127,9 +121,9 @@ public class OnlineFeaturestoreController {
     //Generate random pw
     String onlineFsPw = createOnlineFeaturestoreUserSecret(dbUser, user, featurestore.getProject());
     //database is the same as the project name
-    onlineFeaturestoreFacade.createOnlineFeaturestoreUser(dbUser, onlineFsPw);
+    onlineFeaturestoreFacade.createOnlineFeaturestoreUser(dbUser, onlineFsPw, connection);
 
-    updateUserOnlineFeatureStoreDB(user, featurestore, projectRole);
+    updateUserOnlineFeatureStoreDB(user, featurestore, projectRole, connection);
   }
   
   /**
@@ -198,7 +192,8 @@ public class OnlineFeaturestoreController {
    * @param featurestore the feature store
    * @throws FeaturestoreException
    */
-  public void updateUserOnlineFeatureStoreDB(Users user, Featurestore featurestore, String projectRole)
+  public void updateUserOnlineFeatureStoreDB(Users user, Featurestore featurestore, String projectRole,
+                                             Connection connection)
     throws FeaturestoreException {
     String db = getOnlineFeaturestoreDbName(featurestore.getProject());
     if (!settings.isOnlineFeaturestore() || !checkIfDatabaseExists(db)) {
@@ -209,9 +204,9 @@ public class OnlineFeaturestoreController {
     String dbuser = onlineDbUsername(featurestore.getProject(), user);
 
     if (projectRole.equals(ProjectRoleTypes.DATA_OWNER.getRole())) {
-      onlineFeaturestoreFacade.grantDataOwnerPrivileges(db, dbuser);
+      onlineFeaturestoreFacade.grantDataOwnerPrivileges(db, dbuser, connection);
     } else {
-      onlineFeaturestoreFacade.grantDataScientistPrivileges(db, dbuser);
+      onlineFeaturestoreFacade.grantDataScientistPrivileges(db, dbuser, connection);
     }
 
     try {
@@ -332,8 +327,15 @@ public class OnlineFeaturestoreController {
       return;
     }
 
-    for (ProjectTeam member : projectTeamFacade.findMembersByProject(project)) {
-      shareOnlineFeatureStoreUser(project, member.getUser(), member.getTeamRole(), featureStoreDb, permission);
+    try (Connection connection = onlineFeaturestoreFacade.establishAdminConnection()) {
+      for (ProjectTeam member : projectTeamFacade.findMembersByProject(project)) {
+        shareOnlineFeatureStoreUser(project, member.getUser(), member.getTeamRole(), featureStoreDb, permission,
+          connection);
+      }
+    } catch (SQLException e) {
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,
+        Level.SEVERE, e.getMessage(), e.getMessage(), e);
     }
   }
 
@@ -347,14 +349,15 @@ public class OnlineFeaturestoreController {
    * @throws FeaturestoreException
    */
   public void shareOnlineFeatureStore(Project project, Users user, String role, Featurestore featurestore,
-                                      DatasetAccessPermission permission) throws FeaturestoreException {
+                                      DatasetAccessPermission permission, Connection conn)
+    throws FeaturestoreException {
     String featureStoreDb = getOnlineFeaturestoreDbName(featurestore.getProject());
     if (!checkIfDatabaseExists(featureStoreDb)) {
       // Nothing to share
       return;
     }
 
-    shareOnlineFeatureStoreUser(project, user, role, featureStoreDb, permission);
+    shareOnlineFeatureStoreUser(project, user, role, featureStoreDb, permission, conn);
   }
 
   /**
@@ -367,7 +370,7 @@ public class OnlineFeaturestoreController {
    * @throws FeaturestoreException
    */
   private void shareOnlineFeatureStoreUser(Project project, Users user, String role,
-                                          String featureStoreDb, DatasetAccessPermission permission)
+                                          String featureStoreDb, DatasetAccessPermission permission, Connection conn)
       throws FeaturestoreException {
     String dbUser = onlineDbUsername(project, user);
 
@@ -375,10 +378,10 @@ public class OnlineFeaturestoreController {
         (permission == DatasetAccessPermission.EDITABLE_BY_OWNERS &&
             role.equals(ProjectRoleTypes.DATA_SCIENTIST.getRole()))) {
       // Read Only
-      onlineFeaturestoreFacade.grantDataScientistPrivileges(featureStoreDb, dbUser);
+      onlineFeaturestoreFacade.grantDataScientistPrivileges(featureStoreDb, dbUser, conn);
     } else {
       // Write permissions
-      onlineFeaturestoreFacade.grantDataOwnerPrivileges(featureStoreDb, dbUser);
+      onlineFeaturestoreFacade.grantDataOwnerPrivileges(featureStoreDb, dbUser, conn);
     }
   }
 
@@ -391,16 +394,23 @@ public class OnlineFeaturestoreController {
    * @param featurestore: feature store to remove access
    * @throws FeaturestoreException
    */
-  public void unshareOnlineFeatureStore(Project project, Featurestore featurestore) {
+  public void unshareOnlineFeatureStore(Project project, Featurestore featurestore) throws FeaturestoreException {
     String featureStoreDb = getOnlineFeaturestoreDbName(featurestore.getProject());
     if (!checkIfDatabaseExists(featureStoreDb)) {
       // Nothing to share
       return;
     }
 
-    for (ProjectTeam member : projectTeamFacade.findMembersByProject(project)) {
-      String dbUser = onlineDbUsername(project, member.getUser());
-      onlineFeaturestoreFacade.revokeUserPrivileges(featureStoreDb, dbUser);
+
+    try (Connection connection = onlineFeaturestoreFacade.establishAdminConnection()) {
+      for (ProjectTeam member : projectTeamFacade.findMembersByProject(project)) {
+        String dbUser = onlineDbUsername(project, member.getUser());
+        onlineFeaturestoreFacade.revokeUserPrivileges(featureStoreDb, dbUser, connection);
+      }
+    } catch (SQLException e) {
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,
+        Level.SEVERE, e.getMessage(), e.getMessage(), e);
     }
   }
 
