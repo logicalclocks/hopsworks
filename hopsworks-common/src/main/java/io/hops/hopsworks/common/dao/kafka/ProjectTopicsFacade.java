@@ -44,7 +44,7 @@ public class ProjectTopicsFacade extends AbstractFacade<ProjectTopics> {
   }
   
   private static final Logger LOGGER = Logger.getLogger(ProjectTopicsFacade.class.getName());
-  
+
   public List<ProjectTopics> findTopicsByProject (Project project) {
     return em.createNamedQuery("ProjectTopics.findByProject", ProjectTopics.class)
       .setParameter("project", project)

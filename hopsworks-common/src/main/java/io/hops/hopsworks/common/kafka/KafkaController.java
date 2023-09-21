@@ -64,8 +64,10 @@ import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartitionInfo;
 
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
-import javax.ejb.Stateless;
+import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
@@ -80,7 +82,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-@Stateless
+@Singleton
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class KafkaController {
 
@@ -102,7 +105,7 @@ public class KafkaController {
   protected FeaturestoreStorageConnectorController storageConnectorController;
 
   
-  public ProjectTopics createTopic(Project project, TopicDTO topicDto) throws KafkaException {
+  public synchronized ProjectTopics createTopic(Project project, TopicDTO topicDto) throws KafkaException {
     if (externalKafka(project)) {
       return null;
     }
@@ -112,8 +115,8 @@ public class KafkaController {
     }
     
     String topicName = topicDto.getName();
-    
-    if (projectTopicsFacade.findTopicByName(topicDto.getName()).isPresent()) {
+
+    if (projectTopicsFacade.findTopicByName(topicName).isPresent()) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS, Level.FINE, "topic name: " + topicName);
     }
     
@@ -182,10 +185,6 @@ public class KafkaController {
      */
     //remove from zookeeper
     hopsKafkaAdminClient.deleteTopics(topicNameList);
-  }
-  
-  public boolean projectTopicExists(Project project, String topicName) {
-    return projectTopicsFacade.findTopicByNameAndProject(project, topicName).isPresent();
   }
 
   public List<TopicDTO> findTopicsByProject(Project project) {
