@@ -74,7 +74,14 @@ public class SearchFSReindexer {
       throw new CommandException(RESTCodes.CommandErrorCode.INVALID_SQL_QUERY, Level.INFO, msg);
     }
     LOGGER.info("reindexing featurestore search");
-    searchClient.mngIndexDelete(Settings.FEATURESTORE_INDEX);
+    try {
+      searchClient.mngIndexDelete(Settings.FEATURESTORE_INDEX);
+    } catch(OpenSearchException e) {
+      if(e.getErrorCode().equals(RESTCodes.OpenSearchErrorCode.OPENSEARCH_INDEX_NOT_FOUND)) {
+        //index doesn't exist, nothing to delete
+        return;
+      }
+    }
     for (Featurestore featureStore : featurestoreFacade.findAll()) {
       reindex(featureStore);
     }
