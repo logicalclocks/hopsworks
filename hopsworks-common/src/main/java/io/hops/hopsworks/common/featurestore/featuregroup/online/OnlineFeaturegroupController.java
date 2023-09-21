@@ -168,11 +168,17 @@ public class OnlineFeaturegroupController {
     subjectsCompatibilityController.setSubjectCompatibility(project, featureGroupEntityName, SchemaCompatibility.NONE);
 
     String topicName = Utils.getFeatureGroupTopicName(featureGroup);
-    if (!kafkaController.projectTopicExists(project, topicName)) {
+
+    try {
       TopicDTO topicDTO = new TopicDTO(topicName,
           settings.getKafkaDefaultNumReplicas(),
           settings.getOnlineFsThreadNumber());
       kafkaController.createTopic(project, topicDTO);
+    } catch (KafkaException e) {
+      // if topic already exists, no need to create it again.
+      if (e.getErrorCode() != RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS) {
+        throw e;
+      }
     }
   }
   
