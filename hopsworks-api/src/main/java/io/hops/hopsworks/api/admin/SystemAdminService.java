@@ -232,6 +232,7 @@ public class SystemAdminService {
   @GET
   @Path("/search/featurestore/status")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "AGENT"})
   public Response statusSearchFeatureStore(@Context SecurityContext sc, @Context HttpServletRequest req) {
     SearchFSCommandStatus status = searchFSReindexer.status();
     return Response.ok().entity(status).build();
@@ -239,6 +240,7 @@ public class SystemAdminService {
   
   @POST
   @Path("/search/featurestore/reindex")
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "AGENT"})
   public Response reindexSearchFeatureStoreIndex(@Context SecurityContext sc, @Context HttpServletRequest req)
     throws OpenSearchException, FeaturestoreException, CommandException {
     searchFSReindexer.reindex();
