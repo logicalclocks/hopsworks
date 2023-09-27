@@ -53,6 +53,7 @@ public class MultiRegionConfiguration {
     MULTIREGION_WATCHDOG_URL("multiregion_watchdog_url", ""),
     MULTIREGION_WATCHDOG_REGION("multiregion_watchdog_region", ""),
     HOPSWORKS_DOMAIN_DIR("hopsworks_dir", "/srv/hops/domains/domain1"),
+    SERVICE_DISCOVERY_DOMAIN("service_discovery_domain", "consul"),
     HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD("hopsworks_master_password", "adminpw");
 
     private String key;

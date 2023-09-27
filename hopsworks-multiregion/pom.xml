@@ -42,6 +42,10 @@
             <groupId>io.hops.hopsworks</groupId>
             <artifactId>hopsworks-rest-utils</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.hops.hopsworks</groupId>
+            <artifactId>hopsworks-service-discovery</artifactId>
+        </dependency>
 
         <!-- External dependencies -->
         <dependency>

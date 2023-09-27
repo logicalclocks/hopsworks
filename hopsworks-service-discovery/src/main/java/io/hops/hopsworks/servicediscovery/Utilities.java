@@ -17,6 +17,7 @@ package io.hops.hopsworks.servicediscovery;
 
 public class Utilities {
   private static final String CONSUL_SERVICE_TEMPLATE = "%s.service.%s";
+  private static final String CONSUL_SERVICE_REGION_TEMPLATE = "%s.service.%s.%s";
 
   public static String constructServiceFQDN(String serviceDomain,
                                             String serviceDiscoveryDomain) {
@@ -24,5 +25,14 @@ public class Utilities {
       serviceDomain = serviceDomain.substring(0, serviceDomain.length() - 1);
     }
     return String.format(CONSUL_SERVICE_TEMPLATE, serviceDomain, serviceDiscoveryDomain);
+  }
+
+  public static String constructServiceFQDNWithRegion(String serviceDomain,
+                                                      String region,
+                                                      String serviceDiscoveryDomain) {
+    if (serviceDomain.endsWith(".")) {
+      serviceDomain = serviceDomain.substring(0, serviceDomain.length() - 1);
+    }
+    return String.format(CONSUL_SERVICE_REGION_TEMPLATE, serviceDomain, region, serviceDiscoveryDomain);
   }
 }

@@ -17,21 +17,31 @@
 
 package io.hops.hopsworks.multiregion;
 
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.Utilities;
+import io.hops.hopsworks.servicediscovery.tags.GlassfishTags;
+
 import javax.annotation.Priority;
 import javax.inject.Inject;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 @Provider
-@Priority(Priorities.AUTHENTICATION - 1)
+@PreMatching
+@Priority(Priorities.USER)
 public class MultiRegionFilter implements ContainerRequestFilter {
 
   @Inject
   private MultiRegionController multiRegionController;
+  @Inject
+  private MultiRegionConfiguration multiRegionConfiguration;
 
   @Override
   public void filter(ContainerRequestContext containerRequestContext) throws IOException {
@@ -44,7 +54,22 @@ public class MultiRegionFilter implements ContainerRequestFilter {
         multiRegionController.blockSecondaryOperation()) {
       // the request is not a get operation - meaning someone is trying to write something.
       // we should only allow it if we are the primary region
-      containerRequestContext.abortWith(Response.status(Response.Status.FORBIDDEN).build());
+      URI requestURI = containerRequestContext.getUriInfo().getRequestUri();
+      URI forwardURI = null;
+      try {
+        forwardURI = new URI(requestURI.getScheme(),
+            Utilities.constructServiceFQDNWithRegion(
+                HopsworksService.GLASSFISH.getNameWithTag(GlassfishTags.hopsworks),
+                multiRegionController.getPrimaryRegionName(),
+                multiRegionConfiguration.getString(
+                    MultiRegionConfiguration.MultiRegionConfKeys.SERVICE_DISCOVERY_DOMAIN))
+                + ":" + requestURI.getPort(),
+            requestURI.getPath(), requestURI.getQuery(), requestURI.getFragment());
+      } catch (URISyntaxException e) {
+        throw new IOException(e);
+      }
+
+      containerRequestContext.abortWith(Response.temporaryRedirect(forwardURI).build());
     }
   }
 }

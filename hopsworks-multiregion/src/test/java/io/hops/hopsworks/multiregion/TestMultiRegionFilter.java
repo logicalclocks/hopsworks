@@ -30,6 +30,7 @@ import org.mockito.MockitoAnnotations;
 import javax.ws.rs.core.Response;
 
 import java.io.IOException;
+import java.net.URI;
 
 public class TestMultiRegionFilter {
 
@@ -38,6 +39,12 @@ public class TestMultiRegionFilter {
 
   @Mock
   private MultiRegionController multiRegionController;
+  @Mock
+  private MultiRegionConfiguration multiRegionConfiguration;
+
+  private final URI requestUri = URI.create("https://localhost:8181/hopsworks-api/api/project");
+  private final URI relocationUri =
+      URI.create("https://hopsworks.glassfish.service.stockholm.consul:8181/hopsworks-api/api/project");
 
   @Before
   public void before() throws Exception {
@@ -86,31 +93,41 @@ public class TestMultiRegionFilter {
   }
 
   @Test
-  public void testForbidPostSecondary() throws IOException {
+  public void testRedirectPostSecondary() throws IOException {
     Mockito.when(multiRegionController.isEnabled()).thenReturn(true);
+    Mockito.when(multiRegionController.getPrimaryRegionName()).thenReturn("stockholm");
     Mockito.when(multiRegionController.blockSecondaryOperation()).thenReturn(true);
+    Mockito.when(multiRegionConfiguration
+        .getString(MultiRegionConfiguration.MultiRegionConfKeys.SERVICE_DISCOVERY_DOMAIN)).thenReturn("consul");
 
     ContainerRequest containerRequest =
-        new ContainerRequest(null, null, "POST", null,
+        new ContainerRequest(null, requestUri, "POST", null,
             new MapPropertiesDelegate());
 
     multiRegionFilter.filter(containerRequest);
 
-    Assert.assertEquals(Response.Status.FORBIDDEN.getStatusCode(), containerRequest.getAbortResponse().getStatus());
+    Assert.assertEquals(Response.Status.TEMPORARY_REDIRECT.getStatusCode(),
+        containerRequest.getAbortResponse().getStatus());
+    Assert.assertEquals(relocationUri, containerRequest.getAbortResponse().getLocation());
   }
 
   @Test
-  public void testForbidPutSecondary() throws IOException {
+  public void testRedirectPutSecondary() throws IOException {
     Mockito.when(multiRegionController.isEnabled()).thenReturn(true);
+    Mockito.when(multiRegionController.getPrimaryRegionName()).thenReturn("stockholm");
     Mockito.when(multiRegionController.blockSecondaryOperation()).thenReturn(true);
+    Mockito.when(multiRegionConfiguration
+        .getString(MultiRegionConfiguration.MultiRegionConfKeys.SERVICE_DISCOVERY_DOMAIN)).thenReturn("consul");
 
     ContainerRequest containerRequest =
-        new ContainerRequest(null, null, "PUT", null,
+        new ContainerRequest(null, requestUri, "PUT", null,
             new MapPropertiesDelegate());
 
     multiRegionFilter.filter(containerRequest);
 
-    Assert.assertEquals(Response.Status.FORBIDDEN.getStatusCode(), containerRequest.getAbortResponse().getStatus());
+    Assert.assertEquals(Response.Status.TEMPORARY_REDIRECT.getStatusCode(),
+        containerRequest.getAbortResponse().getStatus());
+    Assert.assertEquals(relocationUri, containerRequest.getAbortResponse().getLocation());
   }
 
   @Test
