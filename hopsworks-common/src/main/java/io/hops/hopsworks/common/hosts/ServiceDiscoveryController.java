@@ -25,6 +25,7 @@ import com.logicalclocks.servicediscoverclient.resolvers.Type;
 import com.logicalclocks.servicediscoverclient.service.Service;
 import com.logicalclocks.servicediscoverclient.service.ServiceQuery;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.multiregion.MultiRegionController;
 import io.hops.hopsworks.servicediscovery.HopsworksService;
 import io.hops.hopsworks.servicediscovery.Utilities;
 import org.apache.commons.lang3.NotImplementedException;
@@ -57,6 +58,8 @@ public class ServiceDiscoveryController {
 
   @EJB
   private Settings settings;
+  @EJB
+  private MultiRegionController multiRegionController;
 
   @PostConstruct
   public void init() {
@@ -77,7 +80,13 @@ public class ServiceDiscoveryController {
 
   @Lock(LockType.READ)
   public String constructServiceFQDN(String serviceDomain) {
-    return Utilities.constructServiceFQDN(serviceDomain, settings.getServiceDiscoveryDomain());
+    if (multiRegionController.isEnabled()) {
+      return Utilities.constructServiceFQDNWithRegion(serviceDomain,
+          multiRegionController.getPrimaryRegionName(),
+          settings.getServiceDiscoveryDomain());
+    } else {
+      return Utilities.constructServiceFQDN(serviceDomain, settings.getServiceDiscoveryDomain());
+    }
   }
 
   @Lock(LockType.READ)
