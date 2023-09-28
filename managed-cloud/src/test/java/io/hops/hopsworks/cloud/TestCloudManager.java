@@ -42,7 +42,7 @@ public class TestCloudManager {
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
     Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     Map<String, CloudNode> workers = new HashMap<>();
-    workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running", CloudNodeType.Worker));
+    workers.put("host1", new CloudNode("id", "host1", "ip1", "type1", "running", CloudNodeType.Worker));
     
     Configuration conf = new Configuration();
 
@@ -143,10 +143,10 @@ public class TestCloudManager {
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
     Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     Map<String, CloudNode> workers = new HashMap<>();
-    workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running", CloudNodeType.Worker));
-    workers.put("host2", new CloudNode("id", "host2", "ip2", 0, "type1", "running", CloudNodeType.Worker));
-    workers.put("host3", new CloudNode("id", "host3", "ip3", 0, "type1", "running", CloudNodeType.Worker));
-    workers.put("host4", new CloudNode("id", "host4", "ip4", 0, "type1", "running", CloudNodeType.Worker));
+    workers.put("host1", new CloudNode("id", "host1", "ip1", "type1", "running", CloudNodeType.Worker));
+    workers.put("host2", new CloudNode("id", "host2", "ip2", "type1", "running", CloudNodeType.Worker));
+    workers.put("host3", new CloudNode("id", "host3", "ip3", "type1", "running", CloudNodeType.Worker));
+    workers.put("host4", new CloudNode("id", "host4", "ip4", "type1", "running", CloudNodeType.Worker));
     
     Configuration conf = new Configuration();
 
@@ -338,8 +338,8 @@ public class TestCloudManager {
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
     Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     Map<String, CloudNode> workers = new HashMap<>();
-    workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running", CloudNodeType.Worker));
-    workers.put("host2", new CloudNode("id", "host2", "ip2", 0, "type1", "running", CloudNodeType.Worker));
+    workers.put("host1", new CloudNode("id", "host1", "ip1", "type1", "running", CloudNodeType.Worker));
+    workers.put("host2", new CloudNode("id", "host2", "ip2", "type1", "running", CloudNodeType.Worker));
 
     Configuration conf = new Configuration();
 
@@ -396,8 +396,8 @@ public class TestCloudManager {
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
     Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     Map<String, CloudNode> workers = new HashMap<>();
-    workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running", CloudNodeType.Worker));
-    workers.put("host2", new CloudNode("id", "host2", "ip2", 0, "type1", "running", CloudNodeType.Worker));
+    workers.put("host1", new CloudNode("id", "host1", "ip1", "type1", "running", CloudNodeType.Worker));
+    workers.put("host2", new CloudNode("id", "host2", "ip2", "type1", "running", CloudNodeType.Worker));
 
     Configuration conf = new Configuration();
 
@@ -449,8 +449,8 @@ public class TestCloudManager {
   @Test
   public void testDecommissionNodesThatDoNotExistInCloud() throws Exception {
     Map<String, CloudNode> workers = new HashMap<>();
-    CloudNode cloudNode1 = new CloudNode("id1", "host1", "10.0.0.1", 0, "type1", "running", CloudNodeType.Worker);
-    CloudNode cloudNode2 = new CloudNode("id2", "host2", "10.0.0.2", 0, "type1", "running", CloudNodeType.Worker);
+    CloudNode cloudNode1 = new CloudNode("id1", "host1", "10.0.0.1", "type1", "running", CloudNodeType.Worker);
+    CloudNode cloudNode2 = new CloudNode("id2", "host2", "10.0.0.2", "type1", "running", CloudNodeType.Worker);
     workers.put("host1", cloudNode1);
     workers.put("host2", cloudNode2);
 
@@ -506,10 +506,10 @@ public class TestCloudManager {
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
     Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     Map<String, CloudNode> workers = new HashMap<>();
-    workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running", CloudNodeType.Worker));
-    workers.put("host2", new CloudNode("id", "host2", "ip2", 0, "type1", "running", CloudNodeType.Worker));
-    workers.put("host3", new CloudNode("id", "host3", "ip3", 0, "type1", "running", CloudNodeType.Worker));
-    workers.put("host4", new CloudNode("id", "host4", "ip4", 0, "type1", "running", CloudNodeType.Worker));
+    workers.put("host1", new CloudNode("id", "host1", "ip1", "type1", "running", CloudNodeType.Worker));
+    workers.put("host2", new CloudNode("id", "host2", "ip2", "type1", "running", CloudNodeType.Worker));
+    workers.put("host3", new CloudNode("id", "host3", "ip3", "type1", "running", CloudNodeType.Worker));
+    workers.put("host4", new CloudNode("id", "host4", "ip4", "type1", "running", CloudNodeType.Worker));
     
     Configuration conf = new Configuration();
 
@@ -588,11 +588,11 @@ public class TestCloudManager {
     Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
 
     List<CloudNode> cloudNodes = new ArrayList<>();
-    cloudNodes.add(new CloudNode("id", "host1", "ip1", 0, "type1", "running", CloudNodeType.Worker));
-    cloudNodes.add(new CloudNode("id", "host2", "ip2", 0, "type1", "running", CloudNodeType.Secondary));
-    cloudNodes.add( new CloudNode("id", "host3", "ip3", 0, "type1", "running", CloudNodeType.Secondary));
-    cloudNodes.add(new CloudNode("id", "host4", "ip4", 0, "type1", "running", CloudNodeType.NDB_MGM));
-    cloudNodes.add(new CloudNode("id", "host5", "ip5", 0, "type1", "running", CloudNodeType.Worker));
+    cloudNodes.add(new CloudNode("id", "host1", "ip1", "type1", "running", CloudNodeType.Worker));
+    cloudNodes.add(new CloudNode("id", "host2", "ip2", "type1", "running", CloudNodeType.Secondary));
+    cloudNodes.add( new CloudNode("id", "host3", "ip3", "type1", "running", CloudNodeType.Secondary));
+    cloudNodes.add(new CloudNode("id", "host4", "ip4", "type1", "running", CloudNodeType.NDB_MGM));
+    cloudNodes.add(new CloudNode("id", "host5", "ip5", "type1", "running", CloudNodeType.Worker));
 
     HostsController hostsController = Mockito.mock(HostsController.class);
     HostsFacade hostsFacade = Mockito.mock(HostsFacade.class);
@@ -616,11 +616,11 @@ public class TestCloudManager {
   public void testFilterCloudNodesByType() {
     CloudManager cloudManager = new CloudManager();
     Map<String, CloudNode> allNodes = new HashMap<>();
-    allNodes.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running", CloudNodeType.Worker));
-    allNodes.put("host2", new CloudNode("id", "host2", "ip2", 0, "type1", "running", CloudNodeType.Secondary));
-    allNodes.put("host3", new CloudNode("id", "host3", "ip3", 0, "type1", "running", CloudNodeType.Secondary));
-    allNodes.put("host4", new CloudNode("id", "host4", "ip4", 0, "type1", "running", CloudNodeType.NDB_MGM));
-    allNodes.put("host5", new CloudNode("id", "host5", "ip5", 0, "type1", "running", CloudNodeType.Worker));
+    allNodes.put("host1", new CloudNode("id", "host1", "ip1", "type1", "running", CloudNodeType.Worker));
+    allNodes.put("host2", new CloudNode("id", "host2", "ip2", "type1", "running", CloudNodeType.Secondary));
+    allNodes.put("host3", new CloudNode("id", "host3", "ip3", "type1", "running", CloudNodeType.Secondary));
+    allNodes.put("host4", new CloudNode("id", "host4", "ip4", "type1", "running", CloudNodeType.NDB_MGM));
+    allNodes.put("host5", new CloudNode("id", "host5", "ip5", "type1", "running", CloudNodeType.Worker));
 
     Map<String, CloudNode> filtered = cloudManager.filterCloudNodesByType(allNodes, CloudNodeType.Worker);
     Assert.assertEquals(2, filtered.size());

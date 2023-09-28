@@ -171,29 +171,16 @@ public class CloudManager {
       long pendingVcores = 0;
       long allocatedMemoryMB = 0;
       long pendingMemoryMB = 0;
-      long allocatedGPUs = 0;
-      long pendingGPUs = 0;
       if(qs!=null){
         allocatedVcores = qs.getAllocatedVCores();
         pendingVcores = qs.getPendingVCores();
         allocatedMemoryMB = qs.getAllocatedMemoryMB();
         pendingMemoryMB = qs.getPendingMemoryMB();
-        if (qs.getAllocatedResources().getResources().length > 2) {
-          //we only have vcore, memory and gpus in our clusters.
-          //Yarn set vcores and memory at indexes 0 and 1 so index 2 will be gpus.
-          allocatedGPUs = qs.getAllocatedResources().getResourceInformation(2).getValue();
-        }
-        
-        if (qs.getPendingResources().getResources().length > 2) {
-          //we only have vcore, memory and gpus in our clusters.
-          //Yarn set vcores and memory at indexes 0 and 1 so index 2 will be gpus.
-          pendingGPUs = qs.getPendingResources().getResourceInformation(2).getValue();
-        }
       }
       //send heartbeat to hopsworks-cloud
       HeartbeatRequest request = new HeartbeatRequest(new ArrayList<>(toSend.getDecommissioned()),
         new ArrayList<>(toSend.getDecommissioning()), commandsStatus, firstHeartbeat, allocatedVcores, pendingVcores,
-        allocatedMemoryMB, pendingMemoryMB, allocatedGPUs, pendingGPUs
+        allocatedMemoryMB, pendingMemoryMB
       );
       
       toSend = new DecommissionStatus();
@@ -302,7 +289,6 @@ public class CloudManager {
         HostDTO hostDTO = new HostDTO();
         hostDTO.setHostname(worker.getHost());
         hostDTO.setHostIp(worker.getIp());
-        hostDTO.setNumGpus(worker.getNumGPUs());
         hostsController.addOrUpdateClusterNode(worker.getHost(), hostDTO);
       }
     }

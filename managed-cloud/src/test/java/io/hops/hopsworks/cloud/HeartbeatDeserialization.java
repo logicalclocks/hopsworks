@@ -113,40 +113,40 @@ public class HeartbeatDeserialization {
   
   private HeartbeatRequest constructHeartbeatRequest() {
     List<CloudNode> decommissioningNodes = new ArrayList<>(2);
-    decommissioningNodes.add(new CloudNode("node0", "host0", "ip", 0, "instanceType", "running", CloudNodeType.Worker));
-    decommissioningNodes.add(new CloudNode("node1", "host1", "ip", 2, "instanceType1", "running", CloudNodeType.Worker));
+    decommissioningNodes.add(new CloudNode("node0", "host0", "ip", "instanceType", "running", CloudNodeType.Worker));
+    decommissioningNodes.add(new CloudNode("node1", "host1", "ip", "instanceType1", "running", CloudNodeType.Worker));
 
     List<CloudNode> decommissionedNodes = new ArrayList<>(2);
-    decommissionedNodes.add(new CloudNode("node2", "host23", "ip", 0, "instanceType", "running", CloudNodeType.Worker));
-    decommissionedNodes.add(new CloudNode("node3", "host24", "ip2", 5, "instanceType5", "running", CloudNodeType.Worker));
+    decommissionedNodes.add(new CloudNode("node2", "host23", "ip", "instanceType", "running", CloudNodeType.Worker));
+    decommissionedNodes.add(new CloudNode("node3", "host24", "ip2", "instanceType5", "running", CloudNodeType.Worker));
 
     Map<String, CommandStatus> commandsStatus = new HashMap<>(2);
     commandsStatus.put("1", new CommandStatus(CommandStatus.CLOUD_COMMAND_STATUS.NEW, "message"));
     commandsStatus.put("2", new CommandStatus(CommandStatus.CLOUD_COMMAND_STATUS.ONGOING, "message1"));
 
-    return constructHeartbeatRequest(decommissioningNodes, decommissionedNodes, commandsStatus, -1, -1, -1, -1, -1, -1);
+    return constructHeartbeatRequest(decommissioningNodes, decommissionedNodes, commandsStatus, -1, -1, -1, -1);
   }
 
   private HeartbeatRequest constructEmptyHeartbeatRequest() {
     return constructHeartbeatRequest(Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_MAP, -1, -1, -1,
-        -1, -1, -1);
+        -1);
   }
 
   private HeartbeatRequest constructHeartbeatRequest(List<CloudNode> ingNodes, List<CloudNode> edNodes,
           Map<String, CommandStatus> cst, long allocatedVcores, long pendingVcores,
-          long allocatedMemoryMB, long pendingMemoryMB, long allocatedGPUs, long pendingGPUs) {
+          long allocatedMemoryMB, long pendingMemoryMB) {
     final HeartbeatRequest hr = new HeartbeatRequest(ingNodes, edNodes, cst, allocatedVcores, pendingVcores,
-          allocatedMemoryMB, pendingMemoryMB, allocatedGPUs, pendingGPUs);
+          allocatedMemoryMB, pendingMemoryMB);
     hr.setVersion(Version.V010);
     return hr;
   }
 
   private HeartbeatResponse constructHeartbeatResponse() {
     List<CloudNode> workers = new ArrayList<>(2);
-    workers.add(new CloudNode("node0", "host0", "ip", 0, "instanceType", "running", CloudNodeType.Worker));
-    workers.add(new CloudNode("node1", "host1", "ip", 2, "instanceType1", "running", CloudNodeType.Worker));
-    workers.add(new CloudNode("node1", "host1", "ip", 2, "instanceType1", "running", CloudNodeType.Secondary));
-    workers.add(new CloudNode("node1", "host1", "ip", 2, "instanceType1", "running", CloudNodeType.Secondary));
+    workers.add(new CloudNode("node0", "host0", "ip", "instanceType", "running", CloudNodeType.Worker));
+    workers.add(new CloudNode("node1", "host1", "ip", "instanceType1", "running", CloudNodeType.Worker));
+    workers.add(new CloudNode("node1", "host1", "ip", "instanceType1", "running", CloudNodeType.Secondary));
+    workers.add(new CloudNode("node1", "host1", "ip", "instanceType1", "running", CloudNodeType.Secondary));
 
     Map<String, Integer> nodesToRemove0 = new HashMap<>();
     nodesToRemove0.put("instance.type.20", 3);
@@ -179,8 +179,8 @@ public class HeartbeatDeserialization {
 
   private HeartbeatResponse constructWorkersHeartbeatResponse() {
     List<CloudNode> workers = new ArrayList<>(2);
-    workers.add(new CloudNode("node0", "host0", "ip", 0, "instanceType", "running", CloudNodeType.Worker));
-    workers.add(new CloudNode("node1", "host1", "ip", 2, "instanceType1", "running", CloudNodeType.Worker));
+    workers.add(new CloudNode("node0", "host0", "ip", "instanceType", "running", CloudNodeType.Worker));
+    workers.add(new CloudNode("node1", "host1", "ip", "instanceType1", "running", CloudNodeType.Worker));
 
     final HeartbeatResponse hr = new HeartbeatResponse(workers, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     hr.setVersion(Version.V010);

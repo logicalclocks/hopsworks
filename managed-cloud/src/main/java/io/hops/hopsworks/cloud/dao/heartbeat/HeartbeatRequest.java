@@ -17,20 +17,18 @@ public class HeartbeatRequest extends BaseMessage {
   private final long allocatedVcores;
   private final long pendingVcores;
   private final long allocatedMemoryMB;
-  private final long pendingMemoryMB; 
-  private final long allocatedGPUs;
-  private final long pendingGPUs;
+  private final long pendingMemoryMB;
   
   public HeartbeatRequest(List<CloudNode> decommissionedNodes, List<CloudNode> decommissioningNodes,
       Map<String, CommandStatus> commandsStatus, long allocatedVcores, long pendingVcores,
-      long allocatedMemoryMB, long pendingMemoryMB, long allocatedGPUs, long pendingGPUs) {
+      long allocatedMemoryMB, long pendingMemoryMB) {
     this(decommissionedNodes, decommissioningNodes, commandsStatus, false, allocatedVcores, pendingVcores,
-        allocatedMemoryMB, pendingMemoryMB, allocatedGPUs, pendingGPUs);
+        allocatedMemoryMB, pendingMemoryMB);
   }
 
   public HeartbeatRequest(List<CloudNode> decommissionedNodes, List<CloudNode> decommissioningNodes,
       Map<String, CommandStatus> commandsStatus, boolean firstHeartBeat, long allocatedVcores, long pendingVcores,
-      long allocatedMemoryMB, long pendingMemoryMB, long allocatedGPUs, long pendingGPUs) {
+      long allocatedMemoryMB, long pendingMemoryMB) {
     this.decommissionedNodes = decommissionedNodes;
     this.decommissioningNodes = decommissioningNodes;
     this.commandsStatus = commandsStatus;
@@ -39,8 +37,6 @@ public class HeartbeatRequest extends BaseMessage {
     this.pendingVcores = pendingVcores;
     this.allocatedMemoryMB = allocatedMemoryMB;
     this.pendingMemoryMB = pendingMemoryMB;
-    this.allocatedGPUs = allocatedGPUs;
-    this.pendingGPUs = pendingGPUs;
   }
 
   public List<CloudNode> getDecommissioningNodes() {

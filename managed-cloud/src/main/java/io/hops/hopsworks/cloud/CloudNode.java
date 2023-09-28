@@ -10,18 +10,16 @@ public class CloudNode {
   private String nodeId;
   private String host;
   private String ip;
-  private Integer numGPUs;
   private String instanceType;
   private String instanceState;
 
   private CloudNodeType nodeType;
 
-  public CloudNode(String nodeId, String host, String ip, Integer numGPUs, String instanceType, String instanceState,
+  public CloudNode(String nodeId, String host, String ip, String instanceType, String instanceState,
                    CloudNodeType nodeType) {
     this.nodeId = nodeId;
     this.host = host;
     this.ip = ip;
-    this.numGPUs = numGPUs;
     this.instanceType = instanceType;
     this.instanceState = instanceState;
     this.nodeType = nodeType;
@@ -49,14 +47,6 @@ public class CloudNode {
 
   public void setIp(String ip) {
     this.ip = ip;
-  }
-
-  public Integer getNumGPUs() {
-    return numGPUs;
-  }
-
-  public void setNumGPUs(Integer numGPUs) {
-    this.numGPUs = numGPUs;
   }
 
   public String getInstanceType() {
@@ -106,7 +96,6 @@ public class CloudNode {
             "nodeId='" + nodeId + '\'' +
             ", host='" + host + '\'' +
             ", ip='" + ip + '\'' +
-            ", numGPUs=" + numGPUs +
             ", instanceType='" + instanceType + '\'' +
             ", instanceState='" + instanceState + '\'' +
             ", nodeType='" + nodeType + '\''+
