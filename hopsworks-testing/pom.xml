@@ -21,14 +21,14 @@
   <parent>
     <artifactId>hopsworks</artifactId>
     <groupId>io.hops</groupId>
-    <version>3.4.0</version>
+    <version>3.4.1</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-testing</artifactId>
   <description>Hopsworks testing</description>
-  <version>3.4.0</version>
+  <version>3.4.1</version>
   <name>hopsworks-testing</name>
   <packaging>war</packaging>
 
