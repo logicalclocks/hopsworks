@@ -217,5 +217,19 @@
   <suppress>
     <notes><![CDATA[file name: payara-embedded-web-5.2022.5.jar]]></notes>
     <cve>CVE-2023-28462</cve>
+    <cve>CVE-2016-4055</cve>
+    <cve>CVE-2023-33265</cve>
+  </suppress>
+  <!-- Not used -->
+  <suppress>
+    <notes><![CDATA[file name: hive-storage-api-2.6.1.2.jar]]></notes>
+    <packageUrl regex="true">^pkg:maven/io\.hops\.hive/hive\-storage\-api@.*$</packageUrl>
+    <cve>CVE-2016-6811</cve>
+    <cve>CVE-2022-25168</cve>
+    <cve>CVE-2022-26612</cve>
+    <cve>CVE-2020-9492</cve>
+    <cve>CVE-2018-8029</cve>
+    <cve>CVE-2021-33036</cve>
+    <cve>CVE-2018-8009</cve>
   </suppress>
 </suppressions>
