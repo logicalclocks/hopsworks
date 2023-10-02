@@ -638,6 +638,8 @@ public class RESTCodes {
     ENVIRONMENT_BUILD_NOT_FOUND(64, "Build not found in environment history",
         Response.Status.NOT_FOUND),
     ENVIRONMENT_HISTORY_READ_ERROR(65, "Failed to read environment history record from database",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    ENVIRONMENT_HISTORY_CUSTOM_COMMANDS_FILE_READ_ERROR(66, "Failed to read custom command file",
         Response.Status.INTERNAL_SERVER_ERROR);
 
     private Integer code;
@@ -1824,7 +1826,8 @@ public class RESTCodes {
         " please recreate the environment.", Response.Status.INTERNAL_SERVER_ERROR),
     ANACONDA_ENVIRONMENT_REMOVAL_FAILED(15,
       "Deletion of the project's Python environment encountered an issue",
-      Response.Status.INTERNAL_SERVER_ERROR);
+      Response.Status.INTERNAL_SERVER_ERROR),
+    CONDA_COMMAND_DELETE_ERROR(16, "Failed to delete a command", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

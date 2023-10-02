@@ -1808,9 +1808,10 @@ public class Settings implements Serializable {
     return ANACONDA_DIR;
   }
 
-  public static final String DOCKER_CUSTOM_COMMANDS_POST_BUILD_ARTIFACT_DIR_SUFFIX = "_conda_build";
+  public static final String DOCKER_CUSTOM_COMMANDS_POST_BUILD_ARTIFACT_DIR_SUFFIX = "_custom_command_artifacts";
   public static final String DOCKER_CUSTOM_COMMANDS_TEMPLATE_NAME = "custom_docker_commands_template";
   public static final String DOCKER_CUSTOM_COMMANDS_GENERATED_FILE_NAME = "docker_commands_generated";
+  public static final String DOCKER_CUSTOM_COMMANDS_FILE_NAME = "custom_commands.sh";
 
 
   private String condaEnvName = "theenv";

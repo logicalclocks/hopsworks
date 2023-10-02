@@ -28,6 +28,7 @@ public class EnvironmentHistoryDTO extends RestDTO<EnvironmentHistoryDTO> {
   private String environmentName;
   private String previousEnvironment;
   private String yamlFilePath;
+  private String customCommandsFile;
   private List<LibrarySpec> installed;
   private List<LibrarySpec> uninstalled;
   private List<LibraryUpdate> upgraded;
@@ -50,6 +51,10 @@ public class EnvironmentHistoryDTO extends RestDTO<EnvironmentHistoryDTO> {
   public String getYamlFilePath() { return yamlFilePath; }
 
   public void setYamlFilePath(String yamlFilePath) { this.yamlFilePath = yamlFilePath; }
+
+  public String getCustomCommandsFile() { return customCommandsFile; }
+
+  public void setCustomCommandsFile(String customCommandsFile) { this.customCommandsFile = customCommandsFile; }
 
   public List<LibrarySpec> getInstalled() { return installed; }
 

@@ -21,12 +21,15 @@ import io.hops.hopsworks.api.user.UsersBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.python.EnvironmentHistoryFacade;
+import io.hops.hopsworks.common.proxies.client.HttpClient;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.python.environment.EnvironmentHistoryController;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.python.history.EnvironmentDelta;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -51,6 +54,8 @@ public class EnvironmentHistoryBuilder {
   private EnvironmentController environmentController;
   @EJB
   private EnvironmentHistoryController environmentHistoryController;
+  @EJB
+  private HttpClient httpClient;
 
   private final Integer DEFAULT_ENV_DIFFS_LIMIT = 20;
 
@@ -79,7 +84,7 @@ public class EnvironmentHistoryBuilder {
     return resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.ENVIRONMENT_HISTORY);
   }
 
-  public EnvironmentHistoryDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project,
+  public EnvironmentHistoryDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Users user,
                                      String version) throws ServiceException {
     EnvironmentHistoryDTO dto = new EnvironmentHistoryDTO();
     dto.setHref(uri(uriInfo, project, version));
@@ -93,7 +98,7 @@ public class EnvironmentHistoryBuilder {
       List<EnvironmentHistoryDTO> dtos = envDiffs.getItems().stream().map(e ->
       {
         try {
-          return build(uriInfo, resourceRequest, e);
+          return build(uriInfo, resourceRequest, user, e);
         } catch (ServiceException ex) {
           throw new RuntimeException(ex);
         }
@@ -104,24 +109,24 @@ public class EnvironmentHistoryBuilder {
     return dto;
   }
 
-  public EnvironmentHistoryDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Integer buildId)
-      throws ServiceException {
+  public EnvironmentHistoryDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Users user,
+                                     Integer buildId) throws ServiceException {
     Optional<EnvironmentDelta> optional = environmentHistoryFacade.getById(project, buildId);
     if (!optional.isPresent()) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ENVIRONMENT_BUILD_NOT_FOUND,
           Level.FINE, "Build with id: " + buildId + " no found in project environment history");
     }
-    return build(uriInfo, resourceRequest, optional.get());
+    return build(uriInfo, resourceRequest, user, optional.get());
   }
 
-  public EnvironmentHistoryDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
+  public EnvironmentHistoryDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Users user,
                                      EnvironmentDelta environmentDelta) throws ServiceException {
+    ObjectMapper objectMapper = httpClient.getObjectMapper();
     EnvironmentHistoryDTO dto = new EnvironmentHistoryDTO();
     dto.setHref(uri(uriInfo, environmentDelta.getProject(),
         environmentDelta.getProject().getPythonEnvironment().getPythonVersion(), environmentDelta.getId()));
     dto.setExpand(expand(resourceRequest));
     if (dto.isExpand()) {
-      ObjectMapper objectMapper = new ObjectMapper();
       dto.setId(environmentDelta.getId());
       dto.setEnvironmentName(environmentDelta.getDockerImage());
       dto.setPreviousEnvironment(environmentDelta.getPreviousDockerImage());
@@ -141,6 +146,9 @@ public class EnvironmentHistoryBuilder {
           environmentDelta.getDockerImage()));
       dto.setUser(
           usersBuilder.build(uriInfo, resourceRequest.get(ResourceRequest.Name.CREATOR), environmentDelta.getUser()));
+      Optional<Path> optional = environmentHistoryController.getCustomCommandsFileForEnvironment(user,
+          environmentDelta.getProject(), environmentDelta.getDockerImage());
+      optional.ifPresent(path -> dto.setCustomCommandsFile(path.toString()));
     }
     return dto;
   }

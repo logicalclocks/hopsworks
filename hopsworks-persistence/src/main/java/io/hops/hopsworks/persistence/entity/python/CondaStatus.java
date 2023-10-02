@@ -19,5 +19,9 @@ public enum CondaStatus {
   NEW,
   SUCCESS,
   ONGOING,
-  FAILED
+  FAILED;
+
+  public boolean isRunning() {
+    return this == NEW || this == ONGOING;
+  }
 }

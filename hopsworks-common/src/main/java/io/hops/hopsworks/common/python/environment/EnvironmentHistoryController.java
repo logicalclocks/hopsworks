@@ -32,6 +32,7 @@ import io.hops.hopsworks.persistence.entity.python.history.LibrarySpec;
 import io.hops.hopsworks.persistence.entity.python.history.LibraryUpdate;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.hadoop.fs.Path;
 import org.json.JSONArray;
 import org.yaml.snakeyaml.Yaml;
 
@@ -202,6 +203,31 @@ public class EnvironmentHistoryController {
     } catch (IOException e) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ENVIRONMENT_YAML_READ_ERROR,
           Level.SEVERE, "Failed to compute history", e.getMessage(), e);
+    } finally {
+      if (dfso != null) {
+        dfs.closeDfsClient(dfso);
+      }
+    }
+  }
+
+  public Optional<Path> getCustomCommandsFileForEnvironment(Users user, Project project, String dockerImage)
+      throws ServiceException {
+    DistributedFileSystemOps dfso = null;
+    String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
+    try {
+      dfso = dfs.getDfsOps(hdfsUser);
+      Path customCommandsFilePath = new Path(Utils.getProjectPath(project.getName())
+          + Settings.PROJECT_PYTHON_ENVIRONMENT_FILE_DIR
+          + dockerImage
+          + Settings.DOCKER_CUSTOM_COMMANDS_POST_BUILD_ARTIFACT_DIR_SUFFIX,
+          Settings.DOCKER_CUSTOM_COMMANDS_FILE_NAME);
+      if (dfso.exists(customCommandsFilePath)) {
+        return Optional.of(customCommandsFilePath);
+      }
+      return Optional.empty();
+    } catch (IOException e) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ENVIRONMENT_HISTORY_CUSTOM_COMMANDS_FILE_READ_ERROR,
+          Level.SEVERE, "Failed to get the custom commands file path", e.getMessage(), e);
     } finally {
       if (dfso != null) {
         dfs.closeDfsClient(dfso);

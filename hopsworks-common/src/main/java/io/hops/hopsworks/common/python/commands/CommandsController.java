@@ -22,6 +22,7 @@ import io.hops.hopsworks.common.python.library.LibraryController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.PythonException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.jupyter.config.GitBackend;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -77,6 +78,21 @@ public class CommandsController {
   
   public void deleteCommands(Project project) {
     condaCommandFacade.deleteCommandsForEnvironment(project);
+  }
+
+  public void deleteCommand(Project project, Integer commandId) throws PythonException {
+    CondaCommands command = condaCommandFacade.getCommandsForProject(project)
+        .stream()
+        .filter(cc -> cc.getId() == commandId).findFirst().orElseThrow(() ->
+            new PythonException(RESTCodes.PythonErrorCode.CONDA_COMMAND_NOT_FOUND,
+                Level.FINE, "Conda command with Id " + commandId + " not found"));
+    if (command.getStatus().isRunning()) {
+      new PythonException(RESTCodes.PythonErrorCode.CONDA_COMMAND_DELETE_ERROR,
+          Level.FINE, "Cannot delete command: command is already in running state.");
+    }
+    if (CondaOp.isEnvOp(command.getOp())) {
+      condaCommandFacade.removeCondaCommand(command.getId());
+    }
   }
 
   public void create(CondaCommands command) {

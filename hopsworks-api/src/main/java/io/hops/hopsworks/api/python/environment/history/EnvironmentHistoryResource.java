@@ -24,6 +24,7 @@ import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -81,13 +82,15 @@ public class EnvironmentHistoryResource {
                          @Context SecurityContext sc,
                          @BeanParam EnvironmentHistoryBeanParam environmentHistoryBeanParam,
                          @BeanParam Pagination pagination) throws ServiceException {
+    Users hopsworksUser = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ENVIRONMENT_HISTORY);
     resourceRequest.setExpansions(environmentHistoryBeanParam.getExpansions().getResources());
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
     resourceRequest.setFilter(environmentHistoryBeanParam.getFilter());
     resourceRequest.setSort(environmentHistoryBeanParam.getSortBySet());
-    EnvironmentHistoryDTO dto = environmentHistoryBuilder.build(uriInfo, resourceRequest, project, version);
+    EnvironmentHistoryDTO dto =
+        environmentHistoryBuilder.build(uriInfo, resourceRequest, project, hopsworksUser, version);
     return Response.ok().entity(dto).build();
   }
 
@@ -105,9 +108,11 @@ public class EnvironmentHistoryResource {
                                 @Context UriInfo uriInfo,
                                 @BeanParam EnvironmentHistoryBeanParam environmentHistoryBeanParam)
       throws ServiceException {
+    Users hopsworksUser = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ENVIRONMENT_HISTORY);
     resourceRequest.setExpansions(environmentHistoryBeanParam.getExpansions().getResources());
-    EnvironmentHistoryDTO dto = environmentHistoryBuilder.build(uriInfo, resourceRequest, project, buildId);
+    EnvironmentHistoryDTO dto =
+        environmentHistoryBuilder.build(uriInfo, resourceRequest, project, hopsworksUser, buildId);
     return Response.ok().entity(dto).build();
   }
 }
