@@ -299,6 +299,16 @@ describe "On #{ENV['OS']}" do
               expect(async_spotify).not_to be_nil
               expect(async_spotify[:currentVersion]).to eq ("0.4.3")
             end
+            it 'should show custom commands file in the history if the environment was build with custom commands' do
+              uploadFile(@project, "Resources", "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/docker/docker_commands.sh")
+              install_with_custom_commands(@project[:id], ENV['PYTHON_VERSION'], "/Projects/#{@project[:projectname]}/Resources/docker_commands.sh")
+              expect_status_details(200)
+              wait_for_running_command(@project[:id])
+              get_environment_history(@project[:id], ENV['PYTHON_VERSION'], query="?sort_by=id:desc&offset=0&limit=1")
+              expect(json_body[:count]).to be > 0
+              custom_commands_file = json_body[:items][0][:customCommandsFile]
+              expect(custom_commands_file).not_to be_nil
+            end
           end
           describe "filtering" do
             it 'should filter by library' do
@@ -714,10 +724,11 @@ describe "On #{ENV['OS']}" do
             uploadFile(@project, "Resources", "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/docker/docker_commands.sh")
             install_with_custom_commands(@project[:id], ENV['PYTHON_VERSION'], "/Projects/#{@project[:projectname]}/Resources/docker_commands.sh")
             expect_status_details(200)
-            conda_command_id = json_body[:id]
-            # even if the command fails it should version the bash script
-            sleep(180)
-            get_dataset_stat(@project, "Logs/Docker/#{conda_command_id}_conda_build/docker_commands.sh", datasetType: "&type=DATASET")
+            wait_for_running_command(@project[:id])
+            get_environment_history(@project[:id], ENV['PYTHON_VERSION'], query="?sort_by=id:desc&offset=0&limit=1")
+            expect(json_body[:count]).to be > 0
+            custom_commands_file = json_body[:items][0][:customCommandsFile]
+            get_dataset_stat(@project, custom_commands_file, datasetType: "&type=DATASET")
             expect_status_details(200)
           end
         end

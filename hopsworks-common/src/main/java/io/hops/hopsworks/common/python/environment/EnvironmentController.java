@@ -207,16 +207,16 @@ public class EnvironmentController {
 
   public void condaEnvironmentRemove(Project project, Users user) throws PythonException {
 
-    // Delete environment.yml from filesystem, new one will be created upon next environment creation
     DistributedFileSystemOps udfso = null;
     try {
       udfso = dfs.getDfsOps();
+      // Delete environment.yml from filesystem, new one will be created upon next environment creation
       Path pythonPath = new Path(Utils.getProjectPath(project.getName()) +
           Settings.PROJECT_PYTHON_ENVIRONMENT_FILE_DIR);
       if (udfso.exists(pythonPath)) {
         FileStatus[] environmentYamls = udfso.listStatus(pythonPath);
         for (FileStatus file: environmentYamls) {
-          udfso.rm(file.getPath(), false);
+          udfso.rm(file.getPath(), file.isDirectory());
         }
       }
     } catch (IOException ex) {

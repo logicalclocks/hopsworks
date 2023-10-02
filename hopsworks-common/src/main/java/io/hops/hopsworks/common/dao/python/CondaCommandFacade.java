@@ -105,8 +105,7 @@ public class CondaCommandFacade extends AbstractFacade<CondaCommands> {
   public void deleteCommandsForEnvironment(Project proj) {
     List<CondaCommands> commands = getCommandsForProject(proj);
     for (CondaCommands cc : commands) {
-      // delete the conda library command if it has the same name as the input library name
-      if (cc.getOp().equals(CondaOp.CREATE) || cc.getOp().equals(CondaOp.EXPORT)) {
+      if (CondaOp.isEnvOp(cc.getOp()) && !cc.getStatus().isRunning()) {
         em.remove(cc);
       }
     }
@@ -147,7 +146,7 @@ public class CondaCommandFacade extends AbstractFacade<CondaCommands> {
   public CondaCommands findCondaCommand(int commandId) {
     return em.find(CondaCommands.class, commandId);
   }
-  
+
   public CollectionInfo findAllEnvCmdByProject(Integer offset, Integer limit,
       Set<? extends AbstractFacade.FilterBy> filter, Set<? extends AbstractFacade.SortBy> sort, Project project) {
     String queryStr = buildQuery("SELECT c FROM CondaCommands c ", filter, sort,

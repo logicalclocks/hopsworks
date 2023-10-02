@@ -189,9 +189,14 @@ public class LibraryInstaller {
             try {
               allCondaCommandsNewByProject.get(project).sort(ASC_COMPARATOR);
               CondaCommands commandToExecute = allCondaCommandsNewByProject.get(project).get(0);
-              commandsController.updateCondaCommandStatus(
-                commandToExecute.getId(), CondaStatus.ONGOING, commandToExecute.getArg(), commandToExecute.getOp());
-              executorService.submit(() -> condaCommandHandler(commandToExecute));
+              // check if it was not deleted...
+              if (condaCommandFacade.findCondaCommand(commandToExecute.getId()) != null) {
+                LOG.log(Level.FINE, "Command with ID " + commandToExecute.getId() + " not found, skipping...");
+              } else {
+                commandsController.updateCondaCommandStatus(
+                    commandToExecute.getId(), CondaStatus.ONGOING, commandToExecute.getArg(), commandToExecute.getOp());
+                executorService.submit(() -> condaCommandHandler(commandToExecute));
+              }
             } catch (Exception ex) {
               LOG.log(Level.WARNING, "Could not run conda commands for project: " + project, ex);
             }
@@ -337,26 +342,36 @@ public class LibraryInstaller {
       ServiceException, UserException, PythonException {
     Project project = getProject(cc);
     File cwd = dockerFileController.createTmpDir(cc.getProjectId());
+    boolean buildSuccess = false;
+    String nextDockerImageName = getNextDockerImageName(project);
     try{
       String baseImage = projectUtils.getFullDockerImageName(project, false);
       String dockerFileName = "dockerFile_" + cc.getProjectId().getName();
       DockerFileController.BuildImageDetails customCommandsDockerFile
           = dockerFileController.installLibrary(cwd, dockerFileName, baseImage, cc);
-      String nextDockerImageName = getNextDockerImageName(project);
       dockerImageController.buildImage(nextDockerImageName,
           customCommandsDockerFile.dockerFile.getAbsolutePath(),
           cwd,
           customCommandsDockerFile.dockerBuildOpts);
       updateProjectDockerImage(cc, nextDockerImageName);
+      buildSuccess = true;
     } finally {
       try {
-        DistributedFileSystemOps dfso = dfs.getDfsOps();
+        DistributedFileSystemOps dfso = dfs.getDfsOps(cc.getProjectId(), cc.getUserId());
         try {
-          Path artifactPath = new Path(Utils.getProjectPath(project.getName()) + "Logs/Docker",
-              cc.getId() + Settings.DOCKER_CUSTOM_COMMANDS_POST_BUILD_ARTIFACT_DIR_SUFFIX);
+          String artifactDirPrefix = buildSuccess ? nextDockerImageName
+              .substring(nextDockerImageName.lastIndexOf(":") + 1): String.valueOf(cc.getId());
+          Path artifactPath = new Path(Utils.getProjectPath(project.getName()) +
+              Settings.PROJECT_PYTHON_ENVIRONMENT_FILE_DIR,
+              artifactDirPrefix + Settings.DOCKER_CUSTOM_COMMANDS_POST_BUILD_ARTIFACT_DIR_SUFFIX);
           dfso.mkdirs(artifactPath, dfso.getParentPermission(artifactPath));
           File commandsFile = new File(cc.getCustomCommandsFile());
-          dfso.copyFromLocal(false, new Path(cwd.toString(), commandsFile.getName()), artifactPath);
+          // If the build was success we should have a common name for the custom commands file so that
+          // we can retrieve it later. The conda command is deleted
+          String finalCommandsFileName =
+              buildSuccess ? Settings.DOCKER_CUSTOM_COMMANDS_FILE_NAME : cc.getCustomCommandsFile();
+          dfso.copyFromLocal(false, new Path(cwd.toString(), commandsFile.getName()),
+              new Path(artifactPath, finalCommandsFileName));
         } catch (Exception e){
           LOG.log(Level.WARNING, "Failed copy commands file for conda build: " + cc.getId(), e.getMessage());
         } finally {
