@@ -16,7 +16,6 @@
 package io.hops.hopsworks.common.featurestore;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewFacade;
@@ -47,7 +46,6 @@ import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -59,7 +57,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Date;
@@ -104,8 +101,6 @@ public class FeaturestoreController {
   private DistributedFsService dfs;
   @EJB
   private HdfsUsersController hdfsUsersController;
-  @EJB
-  private ProjectTeamFacade projectTeamFacade;
   @EJB
   private FeatureViewFacade featureViewFacade;
 
@@ -277,7 +272,7 @@ public class FeaturestoreController {
     activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR + project.getName(),
         project, project.getOwner(), ActivityFlag.SERVICE);
 
-    createOnlineFeatureStore(project, user, featurestore);
+    createOnlineFeatureStore(project, featurestore);
 
     return featurestore;
   }
@@ -308,21 +303,15 @@ public class FeaturestoreController {
     }
   }
 
-  private void createOnlineFeatureStore(Project project, Users user, Featurestore featurestore)
+  private void createOnlineFeatureStore(Project project, Featurestore featurestore)
       throws FeaturestoreException {
     if (!settings.isOnlineFeaturestore()) {
       return;
     }
 
-    try (Connection connection = onlineFeaturestoreFacade.establishAdminConnection()) {
-      onlineFeaturestoreController.setupOnlineFeaturestore(user, featurestore, connection);
+    try {
       // Create online feature store users for existing team members
-      for (ProjectTeam projectTeam : projectTeamFacade.findMembersByProject(project)) {
-        if (!projectTeam.getUser().equals(user)) {
-          onlineFeaturestoreController.createDatabaseUser(projectTeam.getUser(),
-            featurestore, projectTeam.getTeamRole(), connection);
-        }
-      }
+      onlineFeaturestoreController.setupOnlineFeatureStore(project, featurestore);
     } catch(SQLException e) {
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,
@@ -382,9 +371,7 @@ public class FeaturestoreController {
 
     try {
       featurestoreDTO.setHiveEndpoint(hiveController.getHiveServerInternalEndpoint());
-      if (settings.isOnlineFeaturestore() &&
-          onlineFeaturestoreController.checkIfDatabaseExists(
-              onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
+      if (settings.isOnlineFeaturestore()) {
         featurestoreDTO.setMysqlServerEndpoint(onlineFeaturestoreFacade.getJdbcURL());
         featurestoreDTO.setOnlineFeaturestoreName(featurestore.getProject().getName());
         featurestoreDTO.setOnlineEnabled(true);

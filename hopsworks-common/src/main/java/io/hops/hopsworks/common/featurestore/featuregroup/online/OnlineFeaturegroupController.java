@@ -39,6 +39,7 @@ import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.SchemaException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.multiregion.MultiRegionController;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.kafka.schemas.SchemaCompatibility;
@@ -95,6 +96,8 @@ public class OnlineFeaturegroupController {
   private ConstructorController constructorController;
   @EJB
   private FeaturegroupController featuregroupController;
+  @EJB
+  private MultiRegionController multiRegionController;
   
   private final static List<String> SUPPORTED_MYSQL_TYPES = Arrays.asList("INT", "TINYINT",
     "SMALLINT", "BIGINT", "FLOAT", "DOUBLE", "DECIMAL", "DATE", "TIMESTAMP");
@@ -108,31 +111,6 @@ public class OnlineFeaturegroupController {
     this.settings = settings;
   }
 
-      /**
-       * Drops an online feature group, both the data-table in the database and the metadata record
-       *
-       * @param featuregroup featuregroup to delete
-       * @param project
-       * @param user
-       * @throws SQLException
-       * @throws FeaturestoreException
-       */
-  public void dropMySQLTable(Featuregroup featuregroup, Project project, Users user) throws FeaturestoreException {
-    //Drop data table
-    String query = "DROP TABLE " + featuregroup.getName() + "_" + featuregroup.getVersion() + ";";
-    onlineFeaturestoreFacade.executeUpdateJDBCQuery(query,
-        onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()),
-        project, user);
-  }
-  
-  public void createMySQLTable(Featurestore featurestore, String tableName, List<FeatureGroupFeatureDTO> features,
-                                             Project project, Users user)
-      throws FeaturestoreException {
-    String dbName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject());
-    String createStatement = buildCreateStatement(dbName, tableName, features);
-    onlineFeaturestoreFacade.executeUpdateJDBCQuery(createStatement, dbName, project, user);
-  }
-  
   public void setupOnlineFeatureGroup(Featurestore featureStore, Featuregroup featureGroup,
                                       List<FeatureGroupFeatureDTO> features, Project project, Users user)
       throws KafkaException, SchemaException, ProjectException, FeaturestoreException, IOException,
@@ -153,6 +131,19 @@ public class OnlineFeaturegroupController {
     createMySQLTable(featureStore, featureGroupEntityName, features, project, user);
 
     createFeatureGroupKafkaTopic(project, featureGroup, features);
+  }
+
+  private void createMySQLTable(Featurestore featurestore, String tableName, List<FeatureGroupFeatureDTO> features,
+                                Project project, Users user)
+      throws FeaturestoreException {
+    String dbName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject());
+    String createStatement = buildCreateStatement(dbName, tableName, features);
+    onlineFeaturestoreFacade.executeUpdateJDBCQuery(createStatement, dbName, project, user, null);
+
+    if (multiRegionController.isEnabled()) {
+      onlineFeaturestoreFacade.executeUpdateJDBCQuery(createStatement, dbName, project, user,
+          multiRegionController.getSecondaryRegionName());
+    }
   }
 
   // For ingesting data in the online feature store, we set up a topic for project/feature group
@@ -181,21 +172,7 @@ public class OnlineFeaturegroupController {
       }
     }
   }
-  
-  public void deleteFeatureGroupKafkaTopic(Project project, Featuregroup featureGroup)
-      throws KafkaException, SchemaException {
-    String topicName = Utils.getFeatureGroupTopicName(featureGroup);
-    String featureGroupEntityName = Utils.getFeaturegroupName(featureGroup);
-    // user might have deleted topic manually
-    if (topicName.equals(featureGroup.getTopicName())) {
-      // delete topic only if it is unique to fg
-      kafkaController.removeTopicFromProject(project, topicName);
-    }
-    if (!subjectsController.getSubjectVersions(project, featureGroupEntityName).isEmpty()) {
-      subjectsController.deleteSubject(project, featureGroupEntityName);
-    }
-  }
-  
+
   public void alterOnlineFeatureGroupSchema(Featuregroup featureGroup, List<FeatureGroupFeatureDTO> newFeatures,
                                             List<FeatureGroupFeatureDTO> fullNewSchema,
                                             Project project, Users user)
@@ -216,15 +193,51 @@ public class OnlineFeaturegroupController {
   }
   
   public void disableOnlineFeatureGroup(Featuregroup featureGroup, Project project, Users user)
-      throws FeaturestoreException, SQLException, SchemaException, KafkaException {
+      throws FeaturestoreException, SchemaException, KafkaException {
     dropMySQLTable(featureGroup, project, user);
-    String topicName = Utils.getFeatureGroupTopicName(featureGroup);
     String featureGroupEntityName = Utils.getFeaturegroupName(featureGroup);
     if (!subjectsController.getSubjectVersions(project, featureGroupEntityName).isEmpty()) {
       subjectsController.deleteSubject(project, featureGroupEntityName);
     }
     // HOPSWORKS-3252 - we keep kafka topics in order to avoid consumers getting blocked
     // deleteFeatureGroupKafkaTopic(project, topicName);
+  }
+
+  /**
+   * Drops an online feature group, both the data-table in the database and the metadata record
+   *
+   * @param featuregroup featuregroup to delete
+   * @param project
+   * @param user
+   * @throws SQLException
+   * @throws FeaturestoreException
+   */
+  public void dropMySQLTable(Featuregroup featuregroup, Project project, Users user) throws FeaturestoreException {
+    //Drop data table
+    String query = "DROP TABLE " + featuregroup.getName() + "_" + featuregroup.getVersion() + ";";
+    onlineFeaturestoreFacade.executeUpdateJDBCQuery(query,
+        onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()),
+        project, user, null);
+
+    if (multiRegionController.isEnabled()) {
+      onlineFeaturestoreFacade.executeUpdateJDBCQuery(query,
+          onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()),
+          project, user, multiRegionController.getSecondaryRegionName());
+    }
+  }
+
+  public void deleteFeatureGroupKafkaTopic(Project project, Featuregroup featureGroup)
+      throws KafkaException, SchemaException {
+    String topicName = Utils.getFeatureGroupTopicName(featureGroup);
+    String featureGroupEntityName = Utils.getFeaturegroupName(featureGroup);
+    // user might have deleted topic manually
+    if (topicName.equals(featureGroup.getTopicName())) {
+      // delete topic only if it is unique to fg
+      kafkaController.removeTopicFromProject(project, topicName);
+    }
+    if (!subjectsController.getSubjectVersions(project, featureGroupEntityName).isEmpty()) {
+      subjectsController.deleteSubject(project, featureGroupEntityName);
+    }
   }
 
   public String buildCreateStatement(String dbName, String tableName, List<FeatureGroupFeatureDTO> features) {
@@ -299,8 +312,14 @@ public class OnlineFeaturegroupController {
                                      List<FeatureGroupFeatureDTO> featureDTOs, Project project, Users user)
       throws FeaturestoreException {
     String dbName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject());
-    onlineFeaturestoreFacade.executeUpdateJDBCQuery(buildAlterStatement(tableName, dbName, featureDTOs), dbName,
-      project, user);
+    onlineFeaturestoreFacade.executeUpdateJDBCQuery(
+        buildAlterStatement(tableName, dbName, featureDTOs), dbName, project, user, null);
+
+    if (multiRegionController.isEnabled()) {
+      onlineFeaturestoreFacade.executeUpdateJDBCQuery(
+          buildAlterStatement(tableName, dbName, featureDTOs), dbName, project, user,
+          multiRegionController.getSecondaryRegionName());
+    }
   }
 
   public String getOnlineType(FeatureGroupFeatureDTO featureGroupFeatureDTO) {

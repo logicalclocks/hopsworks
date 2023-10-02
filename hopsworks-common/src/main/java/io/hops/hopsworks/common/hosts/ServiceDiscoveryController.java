@@ -90,6 +90,11 @@ public class ServiceDiscoveryController {
   }
 
   @Lock(LockType.READ)
+  public String constructServiceFQDN(String serviceDomain, String region) {
+    return Utilities.constructServiceFQDNWithRegion(serviceDomain, region, settings.getServiceDiscoveryDomain());
+  }
+
+  @Lock(LockType.READ)
   public String constructServiceFQDNWithPort(String serviceDomain) throws ServiceDiscoveryException {
     Service service = getAnyAddressOfServiceWithDNS(serviceDomain);
     return service.getName() + ":" + service.getPort();
@@ -98,6 +103,12 @@ public class ServiceDiscoveryController {
   @Lock(LockType.READ)
   public String constructServiceAddressWithPort(String serviceDomain) throws ServiceDiscoveryException {
     Service service = getAnyAddressOfServiceWithDNS(serviceDomain);
+    return service.getAddress() + ":" + service.getPort();
+  }
+
+  @Lock(LockType.READ)
+  public String constructServiceAddressWithPort(String serviceDomain, String region) throws ServiceDiscoveryException {
+    Service service = getAnyAddressOfServiceWithDNS(serviceDomain, region);
     return service.getAddress() + ":" + service.getPort();
   }
 
@@ -119,6 +130,13 @@ public class ServiceDiscoveryController {
   @Lock(LockType.READ)
   public Service getAnyAddressOfServiceWithDNS(String serviceDomain) throws ServiceDiscoveryException {
     ServiceQuery serviceQuery = ServiceQuery.of(constructServiceFQDN(serviceDomain), Collections.emptySet());
+    Optional<Service> serviceOpt = getService(Type.DNS, serviceQuery).findAny();
+    return serviceOpt.orElseThrow(() -> new ServiceNotFoundException("Could not find service with: " + serviceQuery));
+  }
+
+  @Lock(LockType.READ)
+  public Service getAnyAddressOfServiceWithDNS(String serviceDomain, String region) throws ServiceDiscoveryException {
+    ServiceQuery serviceQuery = ServiceQuery.of(constructServiceFQDN(serviceDomain, region), Collections.emptySet());
     Optional<Service> serviceOpt = getService(Type.DNS, serviceQuery).findAny();
     return serviceOpt.orElseThrow(() -> new ServiceNotFoundException("Could not find service with: " + serviceQuery));
   }

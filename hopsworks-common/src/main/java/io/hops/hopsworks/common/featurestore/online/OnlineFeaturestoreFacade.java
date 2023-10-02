@@ -30,6 +30,7 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.servicediscovery.HopsworksService;
 import io.hops.hopsworks.servicediscovery.tags.MysqlTags;
+import org.opensearch.common.Strings;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -279,48 +280,11 @@ public class OnlineFeaturestoreFacade {
     }
   }
 
-
-  /**
-   * Checks if a mysql database exists
-   *
-   * @param dbName the name of the database
-   * @return true or false depending on if the database exists or not
-   */
-  public Boolean checkIfDatabaseExists(String dbName) {
-    try {
-      ResultSet resultSet = null;
-      try (Connection connection = establishAdminConnection();
-           PreparedStatement pStmt = connection.prepareStatement(
-               "SELECT `SCHEMA_NAME` FROM `INFORMATION_SCHEMA`.`SCHEMATA` WHERE `SCHEMA_NAME`=?")) {
-        pStmt.setString(1, dbName);
-        resultSet = pStmt.executeQuery();
-        return resultSet.next();
-      } finally {
-        if (resultSet != null) {
-          resultSet.close();
-        }
-      }
-    } catch (SQLException | FeaturestoreException se) {
-      LOGGER.log(Level.SEVERE, "Error checking if database exists", se);
-      return false;
-    }
-  }
-
-  /**
-   * Runs a update/create SQL query against an online featurestore database, impersonating the user making the request
-   *
-   * @param query the update/create query to run
-   * @param databaseName the name of the database to run the query against
-   * @param project the project of the online featurestore
-   * @param user the user to run the query as
-   * @throws FeaturestoreException
-   * @throws SQLException
-   */
-  public void executeUpdateJDBCQuery(String query, String databaseName, Project project, Users user)
+  public void executeUpdateJDBCQuery(String query, String databaseName, Project project, Users user, String region)
       throws FeaturestoreException{
     //Re-create the connection every time since the connection is database and user-specific
     //Run Query
-    try (Connection conn = establishUserConnection(databaseName, project, user);
+    try (Connection conn = establishUserConnection(databaseName, project, user, region);
          Statement stmt = conn.createStatement()) {
       stmt.executeUpdate(query);
     } catch (SQLException e) {
@@ -330,20 +294,9 @@ public class OnlineFeaturestoreFacade {
     }
   }
 
-  /**
-   * Runs a Read-SQL query against an online featurestore database, impersonating the user making the request
-   *
-   * @param query        the read query
-   * @param databaseName the name of the MySQL database
-   * @param project      the project that owns the online featurestore
-   * @param user         the user making the request
-   * @return parsed resultset
-   * @throws SQLException
-   * @throws FeaturestoreException
-   */
   public FeaturegroupPreview executeReadJDBCQuery(String query, String databaseName, Project project, Users user)
       throws FeaturestoreException {
-    try (Connection conn = establishUserConnection(databaseName, project, user);
+    try (Connection conn = establishUserConnection(databaseName, project, user, null);
          Statement stmt = conn.createStatement()) {
       //Re-create the connection every time since the connection is database and user-specific
       ResultSet rs = stmt.executeQuery(query);
@@ -386,26 +339,37 @@ public class OnlineFeaturestoreFacade {
 
   public Connection establishAdminConnection() throws FeaturestoreException {
     try {
-      return DriverManager.getConnection(getJdbcURL(),
-          settings.getVariableFeaturestoreDbAdminUser(),
-          settings.getVariableFeaturestoreDbAdminPwd());
-    } catch (SQLException | ServiceDiscoveryException e) {
+      return establishAdminConnectionInternal(getJdbcURL());
+    } catch (ServiceDiscoveryException e) {
       throw new FeaturestoreException(
           RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,
           Level.SEVERE, e.getMessage(), e.getMessage(), e);
     }
   }
 
-  /**
-   * Initializes a JDBC connection MySQL Server using an online featurestore user and password
-   *
-   * @param databaseName name of the MySQL database to open a connection to
-   * @param project      the project of the user making the request
-   * @param user         the user making the request
-   * @return conn the JDBC connection
-   * @throws FeaturestoreException
-   */
-  private Connection establishUserConnection(String databaseName, Project project, Users user)
+  public Connection establishAdminConnection(String region) throws FeaturestoreException {
+    try {
+      return establishAdminConnectionInternal(getJdbcURL(region));
+    } catch (ServiceDiscoveryException e) {
+      throw new FeaturestoreException(
+          RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,
+          Level.SEVERE, e.getMessage(), e.getMessage(), e);
+    }
+  }
+
+  private Connection establishAdminConnectionInternal(String connectionUrl) throws FeaturestoreException {
+    try {
+      return DriverManager.getConnection(connectionUrl,
+          settings.getVariableFeaturestoreDbAdminUser(),
+          settings.getVariableFeaturestoreDbAdminPwd());
+    } catch (SQLException e) {
+      throw new FeaturestoreException(
+          RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,
+          Level.SEVERE, e.getMessage(), e.getMessage(), e);
+    }
+  }
+
+  private Connection establishUserConnection(String databaseName, Project project, Users user, String region)
       throws FeaturestoreException {
     String dbUsername = onlineFeaturestoreController.onlineDbUsername(project, user);
     String password;
@@ -418,7 +382,7 @@ public class OnlineFeaturestoreFacade {
 
     String jdbcString = "";
     try {
-      jdbcString = getJdbcURL(databaseName);
+      jdbcString = getJdbcURL(databaseName, region);
       return DriverManager.getConnection(jdbcString, dbUsername, password);
     } catch (SQLException | ServiceDiscoveryException e) {
       throw new FeaturestoreException(
@@ -429,12 +393,22 @@ public class OnlineFeaturestoreFacade {
   }
 
   public String getJdbcURL() throws ServiceDiscoveryException {
-    return getJdbcURL("");
+    return getJdbcURL( null);
   }
 
-  public String getJdbcURL(String dbName) throws ServiceDiscoveryException {
-    return MYSQL_JDBC + serviceDiscoveryController
-        .constructServiceAddressWithPort(HopsworksService.MYSQL.getNameWithTag(MysqlTags.onlinefs))
-        + "/" + dbName + MYSQL_PROPERTIES;
+  public String getJdbcURL(String region) throws ServiceDiscoveryException {
+    return getJdbcURL("", region);
+  }
+
+  private String getJdbcURL(String dbName, String region) throws ServiceDiscoveryException {
+    if (Strings.isNullOrEmpty(region)) {
+      return MYSQL_JDBC + serviceDiscoveryController
+          .constructServiceAddressWithPort(HopsworksService.MYSQL.getNameWithTag(MysqlTags.onlinefs))
+          + "/" + dbName + MYSQL_PROPERTIES;
+    } else {
+      return MYSQL_JDBC + serviceDiscoveryController
+          .constructServiceAddressWithPort(HopsworksService.MYSQL.getNameWithTag(MysqlTags.onlinefs), region)
+          + "/" + dbName + MYSQL_PROPERTIES;
+    }
   }
 }
