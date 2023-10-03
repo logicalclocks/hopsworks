@@ -23,7 +23,6 @@ import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.airflow.AirflowController;
 import io.hops.hopsworks.common.airflow.AirflowDagDTO;
-import io.hops.hopsworks.common.airflow.AirflowJWTManager;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.exceptions.AirflowException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -55,8 +54,6 @@ public class AirflowService {
   @EJB
   private JWTHelper jwtHelper;
   @EJB
-  private AirflowJWTManager airflowJWTManager;
-  @EJB
   private AirflowController airflowController;
   private Integer projectId;
   // No @EJB annotation for Project, it's injected explicitly in ProjectService.
@@ -79,20 +76,6 @@ public class AirflowService {
   public Integer getProjectId() {
     return projectId;
   }
-
-  @POST
-  @Path("/jwt")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Generate a JWT for Airflow usage and store it in project's secret directory in Airflow")
-  public Response storeAirflowJWT(@Context HttpServletRequest req,
-                                  @Context SecurityContext sc) throws AirflowException {
-    Users user = jwtHelper.getUserPrincipal(sc);
-    airflowJWTManager.prepareSecurityMaterial(user, project, JWT_AUDIENCE);
-    return Response.noContent().build();
-  }
-
 
   @POST
   @Path("/dag")

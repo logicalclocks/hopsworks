@@ -41,7 +41,7 @@
   <persistence-unit name="kthfsPU" transaction-type="JTA">
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
     <jta-data-source>jdbc/hopsworks</jta-data-source>
-    <class>io.hops.hopsworks.persistence.entity.airflow.MaterializedJWT</class>
+    <class>io.hops.hopsworks.persistence.entity.jupyter.MaterializedJWT</class>
     <class>io.hops.hopsworks.persistence.entity.certificates.UserCerts</class>
     <class>io.hops.hopsworks.persistence.entity.cloud.CloudRoleMapping</class>
     <class>io.hops.hopsworks.persistence.entity.cloud.CloudRoleMappingDefault</class>

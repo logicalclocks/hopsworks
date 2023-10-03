@@ -14,11 +14,11 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.dao.airflow;
+package io.hops.hopsworks.common.dao.jupyter;
 
 
-import io.hops.hopsworks.persistence.entity.airflow.MaterializedJWT;
-import io.hops.hopsworks.persistence.entity.airflow.MaterializedJWTID;
+import io.hops.hopsworks.persistence.entity.jupyter.MaterializedJWT;
+import io.hops.hopsworks.persistence.entity.jupyter.MaterializedJWTID;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -42,14 +42,14 @@ public class MaterializedJWTFacade {
     return entityManager.find(MaterializedJWT.class, identifier);
   }
   
-  public void persist(MaterializedJWT airflowMaterial) {
-    entityManager.persist(airflowMaterial);
+  public void persist(MaterializedJWT jupyterMaterial) {
+    entityManager.persist(jupyterMaterial);
   }
   
   public void delete(MaterializedJWTID identifier) {
-    MaterializedJWT airflowMaterial = findById(identifier);
-    if (airflowMaterial != null) {
-      entityManager.remove(airflowMaterial);
+    MaterializedJWT jupyterMaterial = findById(identifier);
+    if (jupyterMaterial != null) {
+      entityManager.remove(jupyterMaterial);
     }
   }
   
@@ -58,13 +58,7 @@ public class MaterializedJWTFacade {
         MaterializedJWT.class);
     return query.getResultList();
   }
-  
-  public List<MaterializedJWT> findAll4Airflow() {
-    return entityManager.createNamedQuery("MaterializedJWT.findByUsage", MaterializedJWT.class)
-        .setParameter("usage", MaterializedJWTID.USAGE.AIRFLOW)
-        .getResultList();
-  }
-  
+
   public List<MaterializedJWT> findAll4Jupyter() {
     return entityManager.createNamedQuery("MaterializedJWT.findByUsage", MaterializedJWT.class)
         .setParameter("usage", MaterializedJWTID.USAGE.JUPYTER)

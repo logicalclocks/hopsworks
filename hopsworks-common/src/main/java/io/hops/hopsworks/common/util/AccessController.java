@@ -25,6 +25,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
@@ -34,6 +35,8 @@ import java.util.stream.Collectors;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class AccessController {
   private static final Logger LOGGER = Logger.getLogger(AccessController.class.getName());
+  private static final List<String> SERVICE_USERS = Arrays.asList("serving@hopsworks.se", "onlinefs@hopsworks.ai",
+      "airflow@hopsworks.ai");
   
   public boolean hasAccess(Project userProject, Dataset targetDataset) {
     if(targetDataset.getProject().equals(userProject)) {
@@ -63,17 +66,15 @@ public class AccessController {
   
   public Collection<ProjectTeam> getExtendedMembers(Dataset dataset) {
     List<ProjectTeam> members = dataset.getProject().getProjectTeamCollection().stream()
-      // filter serving and onlinefs user
-      .filter(pt -> !pt.getUser().getEmail().equals("serving@hopsworks.se")
-        && !pt.getUser().getEmail().equals("onlinefs@hopsworks.ai"))
+      // filter service users: onlinefs, serving, and airflow
+      .filter(pt -> !SERVICE_USERS.contains(pt.getUser().getEmail()))
       .collect(Collectors.toCollection(ArrayList::new));
     //get members of projects that this dataset has been shared with
     List<ProjectTeam> sharedDatasets = dataset.getDatasetSharedWithCollection().stream()
       .filter(DatasetSharedWith::getAccepted)
       .flatMap((sds) -> sds.getProject().getProjectTeamCollection().stream())
-      // filter serving and onlinefs user
-      .filter(pt -> !pt.getUser().getEmail().equals("serving@hopsworks.se")
-        && !pt.getUser().getEmail().equals("onlinefs@hopsworks.ai"))
+      // filter service users: onlinefs, serving, and airflow
+      .filter(pt -> !SERVICE_USERS.contains(pt.getUser().getEmail()))
       .collect(Collectors.toCollection(ArrayList::new));
     members.addAll(sharedDatasets);
     return members;

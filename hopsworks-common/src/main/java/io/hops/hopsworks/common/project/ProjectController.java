@@ -849,6 +849,7 @@ public class ProjectController {
       case AIRFLOW:
         addServiceDataset(project, user, Settings.ServiceDataset.AIRFLOW, dfso, udfso,
             Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET));
+        addAirflowUser(project);
         airflowController.grantAirflowPermissions(project, udfso);
         break;
     }
@@ -930,6 +931,17 @@ public class ProjectController {
     return addServiceUser(project, OnlineFeaturestoreController.ONLINEFS_USERNAME, ProjectRoleTypes.DATA_SCIENTIST);
   }
 
+  public void addAirflowUser(Project project) {
+    Users airflowUser = userFacade.findByUsername(settings.getAirflowUser());
+    ProjectTeamPK stp = new ProjectTeamPK(project.getId(), airflowUser.getEmail());
+    ProjectTeam st = new ProjectTeam(stp);
+    st.setTeamRole(ProjectRoleTypes.DATA_SCIENTIST.getRole());
+    st.setTimestamp(new Date());
+    st.setUser(airflowUser);
+    st.setProject(project);
+    projectTeamFacade.persistProjectTeam(st);
+  }
+
   private Future<CertificatesController.CertsResult> addServiceServing(Project project, Users user,
     DistributedFileSystemOps dfso, DistributedFileSystemOps udfso, ProvTypeDTO datasetProvCore)
     throws ProjectException, DatasetException, HopsSecurityException,
@@ -977,6 +989,7 @@ public class ProjectController {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_CREATION_ERROR, Level.SEVERE,
         "failed adding service user to project: " + project.getName() + "owner: " + username, e.getMessage(), e);
     }
+
     // trigger project team role add handlers
     ProjectTeamRoleHandler.runProjectTeamRoleAddMembersHandlers(projectTeamRoleHandlers, project,
       Collections.singletonList(serviceUser), ProjectRoleTypes.fromString(st.getTeamRole()), true);

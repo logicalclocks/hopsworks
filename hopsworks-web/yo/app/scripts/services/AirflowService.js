@@ -23,9 +23,6 @@
 angular.module('hopsWorksApp')
         .factory('AirflowService', ['$http', function ($http) {
             return {
-              storeAirflowJWT: function (projectId) {
-                return $http.post('/api/project/' + projectId + "/airflow/jwt")
-              },
               logout: function() {
                 $http.get(getApiLocationBase() + '/airflow/admin/airflow/logout').then(
                   function successCallback(response) {
