@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.persistence.entity.airflow;
+package io.hops.hopsworks.persistence.entity.jupyter;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
@@ -28,7 +28,6 @@ public class MaterializedJWTID implements Serializable {
   
   // Order is important. Always append!
   public enum USAGE {
-    AIRFLOW,
     JUPYTER
   }
   

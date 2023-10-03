@@ -45,6 +45,12 @@ describe "On #{ENV['OS']}" do
         with_valid_project
       end
 
+      it 'should add airflow user to project' do
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
+        airflow_member = json_body.detect { |e| e[:user][:email] == "airflow@hopsworks.ai" }
+        expect(airflow_member).not_to be_nil
+      end
+
       it "should be able to compose DAG" do
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/airflow/secretDir"
         expect_status_details(200)

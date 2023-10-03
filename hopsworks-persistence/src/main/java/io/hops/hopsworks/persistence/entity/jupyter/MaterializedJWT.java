@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.persistence.entity.airflow;
+package io.hops.hopsworks.persistence.entity.jupyter;
 
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;

@@ -259,7 +259,7 @@ public class ProjectService {
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT},
-    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER", "AGENT"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @Produces(MediaType.APPLICATION_JSON)
   public Response getProjectByName(@PathParam("projectName") String projectName,
@@ -272,7 +272,7 @@ public class ProjectService {
   @GET
   @Path("/asShared/getProjectInfo/{projectName}")
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "AGENT"})
   @Produces(MediaType.APPLICATION_JSON)
   public Response getProjectByNameAsShared(@PathParam("projectName") String projectName,
     @Context HttpServletRequest req, @Context SecurityContext sc) throws ProjectException, GenericException {
