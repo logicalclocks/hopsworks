@@ -190,7 +190,7 @@ public class LibraryInstaller {
               allCondaCommandsNewByProject.get(project).sort(ASC_COMPARATOR);
               CondaCommands commandToExecute = allCondaCommandsNewByProject.get(project).get(0);
               // check if it was not deleted...
-              if (condaCommandFacade.findCondaCommand(commandToExecute.getId()) != null) {
+              if (condaCommandFacade.findCondaCommand(commandToExecute.getId()) == null) {
                 LOG.log(Level.FINE, "Command with ID " + commandToExecute.getId() + " not found, skipping...");
               } else {
                 commandsController.updateCondaCommandStatus(
