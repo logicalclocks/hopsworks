@@ -42,7 +42,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -68,8 +67,8 @@ public class CustomCommandsController {
       validateArtifacts(cmdSettings);
     }
     CondaCommands cc = new CondaCommands(users, CondaOp.CUSTOM_COMMANDS, CondaStatus.NEW,
-        CondaInstallType.CUSTOM_COMMANDS, project, null, version, null, new Date(),
-        cmdSettings.getArtifacts(), null, false, null, null);
+      CondaInstallType.CUSTOM_COMMANDS, project, null, version, null, cmdSettings.getArtifacts(), null, false, null,
+      null);
     cc.setCustomCommandsFile(cmdSettings.getCommandsFile());
     commandsController.create(cc);
     return cc;

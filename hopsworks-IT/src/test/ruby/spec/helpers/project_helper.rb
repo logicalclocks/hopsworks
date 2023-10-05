@@ -117,7 +117,8 @@ module ProjectHelper
       method: "post",
       followlocation: true,
       ssl_verifypeer: false,
-      ssl_verifyhost: 0)
+      ssl_verifyhost: 0,
+      forbid_reuse: true)
   end
 
   def delete_project(project)

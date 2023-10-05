@@ -45,6 +45,7 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -175,8 +176,7 @@ public class CondaCommands implements Serializable {
   @Enumerated(EnumType.STRING)
   private CondaInstallType installType;
   @Basic(optional = false)
-  @NotNull
-  @Column(name = "created")
+  @Column(name = "created", insertable = false, updatable = false)
   @Temporal(TemporalType.TIMESTAMP)
   private Date created;
   @JoinColumn(name = "project_id",
@@ -200,17 +200,16 @@ public class CondaCommands implements Serializable {
 
   public CondaCommands() {
   }
-
-  public CondaCommands(Users userId, CondaOp op,
-                       CondaStatus status, CondaInstallType installType, Project project, String lib, String version,
-                       String channelUrl, Date created, String arg, String environmentFile, Boolean installJupyter) {
-    this(userId, op, status, installType, project, lib, version, channelUrl, created, arg,
-        environmentFile, installJupyter, null, null);
+  
+  public CondaCommands(Users userId, CondaOp op, CondaStatus status, CondaInstallType installType, Project project,
+    String lib, String version, String channelUrl, String arg, String environmentFile, Boolean installJupyter) {
+    this(userId, op, status, installType, project, lib, version, channelUrl, arg, environmentFile, installJupyter, null,
+      null);
   }
 
   public CondaCommands(Users userId, CondaOp op,
                        CondaStatus status, CondaInstallType installType, Project project, String lib, String version,
-                       String channelUrl, Date created, String arg, String environmentFile, Boolean installJupyter,
+                       String channelUrl, String arg, String environmentFile, Boolean installJupyter,
                        GitBackend gitBackend, String gitApiKeyName) {
     if (op  == null || project == null) {
       throw new NullPointerException("Op/project cannot be null");
@@ -220,7 +219,6 @@ public class CondaCommands implements Serializable {
     this.projectId = project;
     this.status = status;
     this.installType = installType;
-    this.created = created;
     this.channelUrl = channelUrl;
     this.lib = lib;
     this.version = version;
@@ -369,9 +367,10 @@ public class CondaCommands implements Serializable {
   @Override
   public String toString() {
     String projectName = projectId != null ? projectId.getName() : "unknown";
-    return "[ id=" + id + ", proj=" + projectName  + ", op=" + op + ", installType=" + installType
-        + ", lib=" + lib + ", version=" + version + ", arg=" + arg
-        + ", channel=" + channelUrl + "]";
+    return "[ id=" + id + ", proj=" + projectName + ", op=" + op + ", installType=" + installType
+      + ", lib=" + lib + ", version=" + version + ", arg=" + arg
+      + ", channel=" + channelUrl + ", created=" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(created) +
+      "]";
   }
 
   public Users getUserId() {
