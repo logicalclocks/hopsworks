@@ -769,17 +769,11 @@ angular.module('hopsWorksApp')
             };
 
             self.connectToAirflow = function () {
-              AirflowService.storeAirflowJWT(self.projectId).then(
-                function (success) {
-                  // Open airlfow
-                  var newTab = $window.open('about:blank', '_blank');
-                  $http.get(getApiLocationBase() + "/airflow").then ( function (response) {
+                // Open airlfow
+                var newTab = $window.open('about:blank', '_blank');
+                $http.get(getApiLocationBase() + "/airflow").then ( function (response) {
                     newTab.location.href = getApiLocationBase() + "/airflow/admin";
-                  })
-                }, function (error) {
-                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-                }
-              )
+                })
             };
 
             var kibanaNavVarInitKey = "hopsworks.kibana.navbar.set";
