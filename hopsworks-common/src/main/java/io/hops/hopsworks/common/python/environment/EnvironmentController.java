@@ -48,7 +48,6 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -201,7 +200,7 @@ public class EnvironmentController {
       throw new IllegalStateException("Tried to execute a conda env op on a reserved project name");
     }
     CondaCommands cc = new CondaCommands(user, op, CondaStatus.NEW, CondaInstallType.ENVIRONMENT, proj,
-        pythonVersion, "", "defaults", new Date(), arg, environmentFile, installJupyter);
+        pythonVersion, "", "defaults", arg, environmentFile, installJupyter);
     condaCommandFacade.save(cc);
   }
 
@@ -288,7 +287,7 @@ public class EnvironmentController {
 
     CondaCommands cc = new CondaCommands(user, CondaOp.SYNC_BASE_ENV, CondaStatus.NEW,
         CondaInstallType.ENVIRONMENT, project, settings.getDockerBaseImagePythonVersion(),
-        null, null, new Date(), null, null, false);
+        null, null, null, null, false);
     condaCommandFacade.save(cc);
 
     return projectFacade.update(project);

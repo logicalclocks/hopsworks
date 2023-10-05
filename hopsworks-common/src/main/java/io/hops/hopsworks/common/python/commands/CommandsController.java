@@ -40,7 +40,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -167,9 +166,8 @@ public class CommandsController {
       proj.setPythonDepCollection(depsInProj);
       projectFacade.update(proj);
 
-      CondaCommands cc = new CondaCommands(user, op,
-          CondaStatus.NEW, installType, proj, lib, version, channelUrl,
-          new Date(), arg, null, false, gitBackend, apiKeyName);
+      CondaCommands cc = new CondaCommands(user, op, CondaStatus.NEW, installType, proj, lib, version, channelUrl,
+        arg, null, false, gitBackend, apiKeyName);
       condaCommandFacade.save(cc);
     } catch (Exception ex) {
       throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE, "condaOp failed",

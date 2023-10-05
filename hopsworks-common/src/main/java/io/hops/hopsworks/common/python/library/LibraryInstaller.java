@@ -611,6 +611,10 @@ public class LibraryInstaller {
     }
 
     private int condaCommandCompare(final CondaCommands t, final CondaCommands t1) {
+      int comp = t.getCreated().compareTo(t1.getCreated());
+      if (comp != 0) {
+        return comp;
+      }
       return t.getId().compareTo(t1.getId());
     }
 
