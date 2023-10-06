@@ -34,11 +34,13 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import static io.hops.hopsworks.restutils.RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_ONLINE_FEATUREGROUP;
+import static io.hops.hopsworks.restutils.RESTCodes.FeaturestoreErrorCode.FEATURE_GROUP_DUPLICATE_FEATURE;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -129,6 +131,31 @@ public class FeatureGroupInputValidation {
         COULD_NOT_CREATE_ONLINE_FEATUREGROUP,
         Level.SEVERE,
         "Cannot create an online feature group without a feature schema.");
+    }
+  }
+
+  /**
+   * Make sure all features are unique.
+   * @param featureGroupDTO
+   * @throws FeaturestoreException
+   */
+  public void verifyNoDuplicatedFeatures(FeaturegroupDTO featureGroupDTO)
+      throws FeaturestoreException {
+    List<String> duplicates = featureGroupDTO.getFeatures()
+        .stream()
+        .collect(Collectors.groupingBy(FeatureGroupFeatureDTO::getName, Collectors.counting()))
+        .entrySet()
+        .stream()
+        .filter(e -> e.getValue() > 1)
+        .map(Map.Entry::getKey)
+        .collect(Collectors.toList());
+
+    if (!duplicates.isEmpty()) {
+      throw new FeaturestoreException(
+          FEATURE_GROUP_DUPLICATE_FEATURE,
+          Level.SEVERE,
+          String.format("Cannot create feature group as there are duplicated feature names: %s",
+              StringUtils.join(duplicates, ", ")));
     }
   }
   

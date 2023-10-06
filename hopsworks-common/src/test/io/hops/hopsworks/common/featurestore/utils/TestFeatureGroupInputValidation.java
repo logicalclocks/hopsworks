@@ -86,6 +86,24 @@ public class TestFeatureGroupInputValidation {
     featureGroupInputValidation.verifySchemaProvided(featuregroupDTO);
   }
 
+  @Test
+  public void verifyNoDuplicatedFeatures_success() throws Exception {
+    CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO();
+    featuregroupDTO.setFeatures(features);
+
+    featureGroupInputValidation.verifyNoDuplicatedFeatures(featuregroupDTO);
+  }
+
+  @Test(expected = FeaturestoreException.class)
+  public void verifyNoDuplicatedFeatures_fail() throws Exception {
+    CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO();
+    List<FeatureGroupFeatureDTO> featuresWithDuplicate = new ArrayList<>(features);
+    featuresWithDuplicate.add(new FeatureGroupFeatureDTO("feature", "TIMESTAMP", "", true, false, "10", null));
+    featuregroupDTO.setFeatures(featuresWithDuplicate);
+
+    featureGroupInputValidation.verifyNoDuplicatedFeatures(featuregroupDTO);
+  }
+
   @Test(expected = FeaturestoreException.class)
   public void testVerifyFeatureOfflineTypeProvided_null() throws Exception {
     FeatureGroupFeatureDTO featureDTO = new FeatureGroupFeatureDTO("feature_name", null);
