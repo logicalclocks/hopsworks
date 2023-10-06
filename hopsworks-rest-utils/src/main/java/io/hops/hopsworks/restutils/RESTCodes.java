@@ -1675,7 +1675,8 @@ public class RESTCodes {
         "An error occurred while constructing validation report directory path",
         Response.Status.INTERNAL_SERVER_ERROR),
     SPINE_GROUP_ON_RIGHT_SIDE_OF_JOIN_NOT_ALLOWED(223, "Spine groups cannot be used on the right side" +
-      "of a feature view join.", Response.Status.BAD_REQUEST);
+      "of a feature view join.", Response.Status.BAD_REQUEST),
+    FEATURE_GROUP_DUPLICATE_FEATURE(224, "Feature list contains duplicate", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;
