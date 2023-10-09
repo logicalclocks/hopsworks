@@ -54,6 +54,7 @@ public class AuthStatus {
   private String krb;
   private boolean loginDisabled;
   private boolean registerDisabled;
+
   private List<OpenIdProvider> openIdProviders;
 
   public AuthStatus() {

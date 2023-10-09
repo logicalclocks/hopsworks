@@ -2339,6 +2339,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KRB_AUTH = "kerberos_auth";
   private static final String VARIABLE_LDAP_AUTH = "ldap_auth";
   private static final String VARIABLE_LDAP_GROUP_MAPPING = "ldap_group_mapping";
+  private static final String VARIABLE_LDAP_GROUP_MAPPING_ENABLED = "ldap_group_mapping_enabled";
   private static final String VARIABLE_LDAP_USER_ID = "ldap_user_id";
   private static final String VARIABLE_LDAP_USER_GIVEN_NAME = "ldap_user_givenName";
   private static final String VARIABLE_LDAP_USER_SURNAME = "ldap_user_surname";
@@ -2360,6 +2361,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_OAUTH_LOGOUT_REDIRECT_URI = "oauth_logout_redirect_uri";
   private static final String VARIABLE_OAUTH_ACCOUNT_STATUS = "oauth_account_status";
   private static final String VARIABLE_OAUTH_GROUP_MAPPING = "oauth_group_mapping";
+  private static final String VARIABLE_OAUTH_GROUP_MAPPING_ENABLED = "oauth_group_mapping_enabled";
   
   private static final String VARIABLE_REMOTE_AUTH_NEED_CONSENT = "remote_auth_need_consent";
   
@@ -2379,6 +2381,8 @@ public class Settings implements Serializable {
   private boolean IS_KRB_ENABLED = false;
   private boolean IS_LDAP_ENABLED = false;
   private String LDAP_GROUP_MAPPING = "";
+  //LDAP group to Hopsworks group mapping
+  private boolean LDAP_GROUP_MAPPING_ENABLED = true;
   private String LDAP_USER_ID = "uid"; //login name
   private String LDAP_USER_GIVEN_NAME = "givenName";
   private String LDAP_USER_SURNAME = "sn";
@@ -2400,11 +2404,13 @@ public class Settings implements Serializable {
   private String OAUTH_ENABLED = "false";
   private boolean IS_OAUTH_ENABLED = false;
   private String OAUTH_GROUP_MAPPING = "";
+  private boolean OAUTH_GROUP_MAPPING_ENABLED = true;
   private String OAUTH_REDIRECT_URI_PATH = "hopsworks/callback";
   private String OAUTH_LOGOUT_REDIRECT_URI_PATH = "hopsworks/";
   private String OAUTH_REDIRECT_URI = OAUTH_REDIRECT_URI_PATH;
   private String OAUTH_LOGOUT_REDIRECT_URI = OAUTH_LOGOUT_REDIRECT_URI_PATH;
   private int OAUTH_ACCOUNT_STATUS = 1;
+  //LDAP group to project mapping
   private boolean LDAP_GROUP_MAPPING_SYNC_ENABLED = false;
   private String LDAP_GROUP_MAPPING_SYNC_INTERVAL = "0";
   
@@ -2421,6 +2427,7 @@ public class Settings implements Serializable {
     KRB_AUTH = setVar(VARIABLE_KRB_AUTH, KRB_AUTH);
     LDAP_AUTH = setVar(VARIABLE_LDAP_AUTH, LDAP_AUTH);
     LDAP_GROUP_MAPPING = setVar(VARIABLE_LDAP_GROUP_MAPPING, LDAP_GROUP_MAPPING);
+    LDAP_GROUP_MAPPING_ENABLED = setBoolVar(VARIABLE_LDAP_GROUP_MAPPING_ENABLED, LDAP_GROUP_MAPPING_ENABLED);
     LDAP_USER_ID = setVar(VARIABLE_LDAP_USER_ID, LDAP_USER_ID);
     LDAP_USER_GIVEN_NAME = setVar(VARIABLE_LDAP_USER_GIVEN_NAME, LDAP_USER_GIVEN_NAME);
     LDAP_USER_SURNAME = setVar(VARIABLE_LDAP_USER_SURNAME, LDAP_USER_SURNAME);
@@ -2446,6 +2453,7 @@ public class Settings implements Serializable {
     OAUTH_LOGOUT_REDIRECT_URI = setStrVar(VARIABLE_OAUTH_LOGOUT_REDIRECT_URI, OAUTH_LOGOUT_REDIRECT_URI);
     OAUTH_ACCOUNT_STATUS = setIntVar(VARIABLE_OAUTH_ACCOUNT_STATUS, OAUTH_ACCOUNT_STATUS);
     OAUTH_GROUP_MAPPING = setStrVar(VARIABLE_OAUTH_GROUP_MAPPING, OAUTH_GROUP_MAPPING);
+    OAUTH_GROUP_MAPPING_ENABLED = setBoolVar(VARIABLE_OAUTH_GROUP_MAPPING_ENABLED, OAUTH_GROUP_MAPPING_ENABLED);
   
     REMOTE_AUTH_NEED_CONSENT = setBoolVar(VARIABLE_REMOTE_AUTH_NEED_CONSENT, REMOTE_AUTH_NEED_CONSENT);
     
@@ -2489,6 +2497,11 @@ public class Settings implements Serializable {
   public synchronized String getLdapGroupMapping() {
     checkCache();
     return LDAP_GROUP_MAPPING;
+  }
+  
+  public synchronized boolean isLdapGroupMappingEnabled() {
+    checkCache();
+    return LDAP_GROUP_MAPPING_ENABLED;
   }
 
   public synchronized String getLdapUserId() {
@@ -2579,6 +2592,11 @@ public class Settings implements Serializable {
   public synchronized String getOAuthGroupMapping() {
     checkCache();
     return OAUTH_GROUP_MAPPING;
+  }
+  
+  public synchronized boolean isOAuthGroupMappingEnabled() {
+    checkCache();
+    return OAUTH_GROUP_MAPPING_ENABLED;
   }
   
   public void updateOAuthGroupMapping(String mapping) {

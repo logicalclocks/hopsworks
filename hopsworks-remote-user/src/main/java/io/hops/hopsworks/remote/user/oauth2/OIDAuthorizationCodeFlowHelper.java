@@ -455,10 +455,9 @@ public class OIDAuthorizationCodeFlowHelper {
    */
   public RemoteUserDTO getRemoteUser(BearerAccessToken accessToken, OpenIdProviderConfig providerMetadata,
     OauthClient client) throws IOException, ParseException, URISyntaxException, LoginException {
-    HTTPResponse userInfoHTTPResp = null;
     URI userinfoEndpoint = new URI(providerMetadata.getUserInfoEndpoint());
     UserInfoRequest userInfoReq = new UserInfoRequest(userinfoEndpoint, accessToken);
-    userInfoHTTPResp = userInfoReq.toHTTPRequest().send();
+    HTTPResponse userInfoHTTPResp = userInfoReq.toHTTPRequest().send();
   
     UserInfoResponse userInfoResponse = UserInfoResponse.parse(userInfoHTTPResp);
     if (userInfoResponse instanceof UserInfoErrorResponse) {
@@ -473,30 +472,39 @@ public class OIDAuthorizationCodeFlowHelper {
   
   private List<String> getListOrStringClaim(UserInfo userInfo, String claimName) {
     List<String> groups = new ArrayList<>();
-    if (userInfo.toJSONObject().containsKey(claimName)) {
+    JSONObject userInfoJson = userInfo.toJSONObject();
+    if (userInfoJson.containsKey(claimName)) {
       JSONArray groupList = userInfo.getClaim(claimName, JSONArray.class);
       if (groupList != null) {
         for (Object o : groupList) {
           groups.add((String) o);
         }
       } else {
-        groups.add(userInfo.toJSONObject().getAsString(claimName));
+        groups.add(userInfoJson.getAsString(claimName));
       }
     }
     return groups;
+  }
+  
+  private String getStringClaim(UserInfo userInfo, String claimName) {
+    JSONObject userInfoJson = userInfo.toJSONObject();
+    if (userInfoJson.containsKey(claimName)) {
+      return userInfoJson.getAsString(claimName);
+    }
+    LOGGER.log(Level.WARNING, "Userinfo does not contain claim: {0}.", claimName);
+    return null;
   }
   
   private RemoteUserDTO getRemoteUserFromClaims(BearerAccessToken accessToken, UserInfo userInfo, OauthClient client)
     throws LoginException {
     RemoteUserDTO remoteUserDTO = new RemoteUserDTO();
     remoteUserDTO.setUuid(OpenIdConstant.getUuid(client.getClientId(), userInfo.getSubject().getValue()));
-    remoteUserDTO.setGivenName(userInfo.getGivenName());
-    remoteUserDTO.setSurname(userInfo.getFamilyName());
+    remoteUserDTO.setGivenName(getStringClaim(userInfo, client.getGivenNameClaim()));
+    remoteUserDTO.setSurname(getStringClaim(userInfo, client.getFamilyNameClaim()));
     verifyAndSetEmail(remoteUserDTO, userInfo, client, accessToken);
     
-    //TODO replace all of this by a system in which we can define the mapping during configuration
+    // These are default group claims
     List<String> groups = getListOrStringClaim(userInfo, OpenIdConstant.GROUPS);
-
     groups.addAll(getListOrStringClaim(userInfo, OpenIdConstant.ROLES));
     /*
      * this is the way we set the groups in hopsworks.ai
@@ -504,6 +512,16 @@ public class OIDAuthorizationCodeFlowHelper {
     groups.addAll(getListOrStringClaim(userInfo, OpenIdConstant.COGNITO_USERS_GROUP));
     groups.addAll(getListOrStringClaim(userInfo, OpenIdConstant.COGNITO_ADMINS_GROUP));
     groups.addAll(getListOrStringClaim(userInfo, OpenIdConstant.COGNITO_ORGA_ADMINS_GROUP));
+    
+    // Additional group claim name other than the above
+    if (!Strings.isNullOrEmpty(client.getGroupClaim()) &&
+      !client.getGroupClaim().equals(OpenIdConstant.GROUPS) &&
+      !client.getGroupClaim().equals(OpenIdConstant.ROLES) &&
+      !client.getGroupClaim().equals(OpenIdConstant.COGNITO_USERS_GROUP) &&
+      !client.getGroupClaim().equals(OpenIdConstant.COGNITO_ADMINS_GROUP) &&
+      !client.getGroupClaim().equals(OpenIdConstant.COGNITO_ORGA_ADMINS_GROUP)) {
+      groups.addAll(getListOrStringClaim(userInfo, client.getGroupClaim()));
+    }
     remoteUserDTO.setGroups(groups);
     validateRemoteUser(remoteUserDTO);
     return remoteUserDTO;
@@ -512,8 +530,9 @@ public class OIDAuthorizationCodeFlowHelper {
   private void verifyAndSetEmail(RemoteUserDTO remoteUserDTO, UserInfo userInfo, OauthClient client,
     BearerAccessToken accessToken) throws LoginException {
     Set<String> emails = new HashSet<>();
-    if (userInfo.getEmailAddress() != null) {
-      emails.add(userInfo.getEmailAddress());
+    String userInfoEmail = getStringClaim(userInfo, client.getEmailClaim());
+    if (userInfoEmail != null) {
+      emails.add(userInfoEmail);
     }
     if (client.isVerifyEmail()) {
       remoteUserDTO.setEmailVerified(userInfo.getEmailVerified() != null && userInfo.getEmailVerified());
@@ -530,6 +549,7 @@ public class OIDAuthorizationCodeFlowHelper {
           emails.add(decodedJWT.getClaim(OpenIdConstant.AD_USER_PRINCIPAL_NAME_CLAIM).asString());
         }
       } else if (emails.isEmpty()) {
+        //azure AD will not send email when a user tries to log in with org email. So generate one
         generateEmail(remoteUserDTO, emails);
       }
       remoteUserDTO.setEmailVerified(true);

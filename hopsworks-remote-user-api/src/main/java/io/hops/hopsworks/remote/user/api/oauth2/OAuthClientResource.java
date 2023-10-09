@@ -38,10 +38,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -201,25 +199,32 @@ public class OAuthClientResource {
       oauthClient.setCodeChallengeMethod(oauthClientDTO.getCodeChallengeMethod());
     }
     oauthClient.setVerifyEmail(fromBoolean(oauthClientDTO.getVerifyEmail()));
+    
+    if (!Strings.isNullOrEmpty(oauthClientDTO.getEmailClaim())) {
+      oauthClient.setEmailClaim(oauthClientDTO.getEmailClaim());
+    }
+    if (!Strings.isNullOrEmpty(oauthClientDTO.getFamilyNameClaim())) {
+      oauthClient.setFamilyNameClaim(oauthClientDTO.getFamilyNameClaim());
+    }
+    if (!Strings.isNullOrEmpty(oauthClientDTO.getGivenNameClaim())) {
+      oauthClient.setGivenNameClaim(oauthClientDTO.getGivenNameClaim());
+    }
+    if (!Strings.isNullOrEmpty(oauthClientDTO.getGroupClaim())) {
+      oauthClient.setGroupClaim(oauthClientDTO.getGroupClaim());
+    }
   }
   
   private void updateSettings(OAuthClientDTO oauthClientDTO, UriInfo uriInfo) throws RemoteAuthException {
-    URL base = null;
-    try {
-      if (Strings.isNullOrEmpty(oauthClientDTO.getCallbackURI())) {
-        URI uri = uriInfo.getAbsolutePath();
-        base = new URL(uri.getScheme(), uri.getHost(), uri.getPort(), "/");
-      } else {
-        base = new URL(oauthClientDTO.getCallbackURI());
-      }
-    } catch (MalformedURLException e) {
-      LOGGER.log(Level.WARNING, e.getMessage());
+    String domain;
+    if (Strings.isNullOrEmpty(oauthClientDTO.getCallbackURI())) {
+      domain = uriInfo.getAbsolutePath().toString() + "/";
+    } else {
+      domain = oauthClientDTO.getCallbackURI();
     }
-    String baseUrl = base == null? "" : base.toString();
-    baseUrl = baseUrl.endsWith("/")? baseUrl : baseUrl + "/";
+    
     oAuthController.updateSettings(oauthClientDTO.getNeedConsent(), oauthClientDTO.getRegistrationDisabled(),
-        oauthClientDTO.getActivateUser(), oauthClientDTO.getGroupMapping(), oauthClientDTO.getGroupMappings(), baseUrl,
-        oauthClientDTO.getRejectRemoteNoGroup(), oauthClientDTO.getManagedCloudRedirectUri(),
+      oauthClientDTO.getActivateUser(), oauthClientDTO.getGroupMapping(), oauthClientDTO.getGroupMappings(), domain,
+      oauthClientDTO.getRejectRemoteNoGroup(), oauthClientDTO.getManagedCloudRedirectUri(),
       oauthClientDTO.getManagedCloudLogoutRedirectUri());
   }
   

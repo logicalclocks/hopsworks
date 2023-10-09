@@ -97,7 +97,7 @@ public class OAuthController {
     }
     RemoteUserStateDTO remoteUserStateDTO =
       remoteUserAuthController.getRemoteUserStatus(remoteUserDTO, consent, chosenEmail, RemoteUserType.OAUTH2,
-        UserAccountStatus.fromValue(settings.getOAuthAccountStatus()));
+        UserAccountStatus.fromValue(settings.getOAuthAccountStatus()), settings.isOAuthGroupMappingEnabled());
     if (remoteUserStateDTO.isSaved()) {
       oauthLoginStateFacade.remove(oauthLoginState);
       oidAuthorizationCodeFlowHelper.createOAuthTokens(oidcTokens, remoteUserStateDTO.getRemoteUser().getUid());

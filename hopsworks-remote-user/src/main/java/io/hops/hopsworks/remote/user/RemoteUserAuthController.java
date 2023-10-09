@@ -121,34 +121,38 @@ public class RemoteUserAuthController {
    * @throws LoginException
    */
   public RemoteUserStateDTO getRemoteUserStatus(RemoteUserDTO userDTO, boolean consent, String chosenEmail,
-    RemoteUserType type, UserAccountStatus status) throws LoginException, UserException {
-    if (userDTO == null || !userDTO.isEmailVerified()) {
+    RemoteUserType type, UserAccountStatus status, boolean updateGroup) throws LoginException, UserException {
+    if (userDTO == null) {
       throw new LoginException("User not found.");
     }
+    //shouldValidateEmailVerified will disable check globally
+    //isEmailVerified is set based on client configuration in OAuth login
+    if (!userDTO.isEmailVerified() && settings.shouldValidateEmailVerified()) {
+      throw new LoginException("User email not yet verified.");
+    }
     RemoteUser remoteUser = remoteUserFacade.findByUUID(userDTO.getUuid());
-    RemoteUserStateDTO remoteUserStateDTO;
     if (remoteUser == null) {
       if (consent) {
         validateRemoteUser(userDTO, chosenEmail);
         remoteUser = createNewRemoteUser(userDTO, chosenEmail, type, status);
-        persistRemoteUser(remoteUser);
+      } else {
+        LOGGER.log(Level.FINE, "Remote user doesn't exists in the database, and consent is false");
       }
-      remoteUserStateDTO = new RemoteUserStateDTO(consent, remoteUser, userDTO);
-      return remoteUserStateDTO;
+      return new RemoteUserStateDTO(consent, remoteUser, userDTO);
     }
-    //update the user groups, in case they have been changed in the identity provider
-    remoteUser = updateGroups(userDTO, remoteUser, type);
-    remoteUserStateDTO = new RemoteUserStateDTO(true, remoteUser, userDTO);
-    if (remoteUserUpdated(userDTO, remoteUser.getUid())) {
-      remoteUser = updateRemoteUser(userDTO, remoteUser);//do we need to ask again?
-      remoteUserStateDTO.setRemoteUser(remoteUser);
-      return remoteUserStateDTO;
+
+    // the user already exists, check if it needs to be updated and return the updated state
+    // update the user groups, in case they have been changed in the identity provider
+    if (updateGroup) {
+      updateGroups(userDTO, remoteUser, type);
     }
-    return remoteUserStateDTO;
+    
+    remoteUser = updateRemoteUser(userDTO, remoteUser);
+    return new RemoteUserStateDTO(true, remoteUser, userDTO);
   }
   
   private RemoteUser createNewRemoteUser(RemoteUserDTO userDTO, String chosenEmail, RemoteUserType type,
-    UserAccountStatus status) throws LoginException {
+    UserAccountStatus status) throws LoginException, UserException {
     String email = userDTO.getEmail().size() == 1 ? userDTO.getEmail().get(0) : chosenEmail;
     Users u = userFacade.findByEmail(email);
     if (u != null) {
@@ -156,7 +160,7 @@ public class RemoteUserAuthController {
     }
     List<String> groups = remoteUserGroupMapper.getMappedGroups(userDTO.getGroups(), type);
     if (settings.getRejectRemoteNoGroup() && groups.isEmpty()) {
-      //the user won't bellong to any group in hopsworks, do not create the user at all
+      //the user won't belong to any group in hopsworks, do not create the user at all
       throw new LoginException("Remote user has no valid groups");
     }
     return createRemoteUser(userDTO.getUuid(), email, userDTO.getGivenName(), userDTO.getSurname(),
@@ -223,8 +227,7 @@ public class RemoteUserAuthController {
         "already exists.");
     }
     List<String> groups = remoteUserGroupMapper.getMappedGroups(userDTO.getGroups(), type);
-    remoteUser = createRemoteUser(userDTO.getUuid(), chosenEmail, fname, lname, type, status, groups);
-    persistRemoteUser(remoteUser);
+    createRemoteUser(userDTO.getUuid(), chosenEmail, fname, lname, type, status, groups);
   }
   
   private String getStringOrDefault(String val, String defaultVal, String msg) throws GenericException {
@@ -248,7 +251,7 @@ public class RemoteUserAuthController {
   }
   
   private RemoteUser createRemoteUser(String uuid, String email, String givenName, String surname,
-    RemoteUserType type, UserAccountStatus status, List<String> groups) {
+    RemoteUserType type, UserAccountStatus status, List<String> groups) throws UserException {
     String authKey = securityUtils.generateSecureRandomString(16);
     Users user = userController.createNewRemoteUser(email.toLowerCase(), givenName, surname, authKey, status);
     BbcGroup group;
@@ -258,7 +261,13 @@ public class RemoteUserAuthController {
         user.getBbcGroupCollection().add(group);
       }
     }
-    return new RemoteUser(uuid, user, authKey, type);
+    RemoteUser remoteUser = new RemoteUser(uuid, user, authKey, type);
+    remoteUserFacade.save(remoteUser);
+    
+    // trigger user account handlers
+    UserAccountHandler.runUserAccountCreateHandlers(userAccountHandlers, remoteUser.getUid());
+    
+    return remoteUser;
   }
   
   private boolean remoteUserUpdated(RemoteUserDTO user, Users uid) {
@@ -269,33 +278,25 @@ public class RemoteUserAuthController {
   }
   
   private RemoteUser updateRemoteUser(RemoteUserDTO user, RemoteUser remoteUser) throws UserException {
-    if (!remoteUser.getUid().getFname().equals(user.getGivenName())) {
+    if (remoteUserUpdated(user, remoteUser.getUid())) {
       remoteUser.getUid().setFname(user.getGivenName());
-    }
-    if (!remoteUser.getUid().getLname().equals(user.getSurname())) {
       remoteUser.getUid().setLname(user.getSurname());
+      RemoteUser updatedUser = remoteUserFacade.update(remoteUser);
+      
+      // trigger user account handlers
+      UserAccountHandler.runUserAccountUpdateHandlers(userAccountHandlers, updatedUser.getUid());
+      
+      return updatedUser;
     }
-    RemoteUser updatedUser = remoteUserFacade.update(remoteUser);
-  
-    // trigger user account handlers
-    UserAccountHandler.runUserAccountUpdateHandlers(userAccountHandlers, updatedUser.getUid());
-    
-    return updatedUser;
-  }
-  
-  private void persistRemoteUser(RemoteUser remoteUser) throws UserException {
-    remoteUserFacade.save(remoteUser);
-    
-    // trigger user account handlers
-    UserAccountHandler.runUserAccountCreateHandlers(userAccountHandlers, remoteUser.getUid());
+    return remoteUser;
   }
   
   private void validateRemoteUser(RemoteUserDTO user, String chosenEmail) throws LoginException {
     if (user.getUuid() == null || user.getUuid().isEmpty()) {
-      throw new LoginException("Could not find UUID for Ldap user.");
+      throw new LoginException("Could not find UUID for remote user.");
     }
     if (user.getEmail() == null || user.getEmail().isEmpty()) {
-      throw new LoginException("Could not find email for Ldap user.");
+      throw new LoginException("Could not find email for remote user.");
     }
     if (user.getEmail().size() != 1 && (chosenEmail == null || chosenEmail.isEmpty())) {
       throw new LoginException("Could not register user. Email not chosen.");
@@ -308,9 +309,6 @@ public class RemoteUserAuthController {
     }
     if (user.getSurname() == null || user.getSurname().isEmpty()) {
       throw new LoginException("Could not find surname for remote user.");
-    }
-    if (!user.isEmailVerified() && settings.shouldValidateEmailVerified()) {
-      throw new LoginException("User email not yet verified.");
     }
   }
   

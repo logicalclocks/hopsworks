@@ -57,6 +57,10 @@ public class OAuthClientBuilder {
     dto.setRegistrationDisabled(settings.isRegistrationDisabled());
     dto.setEndSessionEndpoint(oauthClient.getEndSessionEndpoint());
     dto.setLogoutRedirectParam(oauthClient.getLogoutRedirectParam());
+    dto.setEmailClaim(oauthClient.getEmailClaim());
+    dto.setGroupClaim(oauthClient.getGroupClaim());
+    dto.setFamilyNameClaim(oauthClient.getFamilyNameClaim());
+    dto.setGivenNameClaim(oauthClient.getGivenNameClaim());
     return dto;
   }
   

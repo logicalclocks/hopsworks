@@ -46,6 +46,10 @@ public class OAuthClientDTO extends RestDTO<OAuthClientDTO> {
   private Boolean rejectRemoteNoGroup;
   private String managedCloudRedirectUri;
   private String managedCloudLogoutRedirectUri;
+  private String givenNameClaim;
+  private String familyNameClaim;
+  private String emailClaim;
+  private String groupClaim;
   
   public OAuthClientDTO() {
   }
@@ -272,6 +276,38 @@ public class OAuthClientDTO extends RestDTO<OAuthClientDTO> {
   
   public void setManagedCloudLogoutRedirectUri(String managedCloudLogoutRedirectUri) {
     this.managedCloudLogoutRedirectUri = managedCloudLogoutRedirectUri;
+  }
+  
+  public String getGivenNameClaim() {
+    return givenNameClaim;
+  }
+  
+  public void setGivenNameClaim(String givenNameClaim) {
+    this.givenNameClaim = givenNameClaim;
+  }
+  
+  public String getFamilyNameClaim() {
+    return familyNameClaim;
+  }
+  
+  public void setFamilyNameClaim(String familyNameClaim) {
+    this.familyNameClaim = familyNameClaim;
+  }
+  
+  public String getEmailClaim() {
+    return emailClaim;
+  }
+  
+  public void setEmailClaim(String emailClaim) {
+    this.emailClaim = emailClaim;
+  }
+  
+  public String getGroupClaim() {
+    return groupClaim;
+  }
+  
+  public void setGroupClaim(String groupClaim) {
+    this.groupClaim = groupClaim;
   }
   
   public void validate() throws RemoteAuthException {

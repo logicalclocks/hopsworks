@@ -29,13 +29,16 @@ public class AuthenticationStatus {
   private boolean loginDisabled;
   private boolean registerDisabled;
   private String loginPageOverwrite;
+  private boolean ldapGroupMappingEnabled;
+  private boolean oauthGroupMappingEnabled;
   
   public AuthenticationStatus() {
   }
   
   public AuthenticationStatus(OTPAuthStatus otpAuthStatus, boolean ldapEnabled, boolean krbEnabled,
     boolean oauthEnabled, List<OpenIdProvider> openIdProviders, boolean remoteAuthEnabled, boolean loginDisabled,
-    boolean registerDisabled, String loginPageOverwrite) {
+    boolean registerDisabled, String loginPageOverwrite, boolean ldapGroupMappingEnabled,
+    boolean oauthGroupMappingEnabled) {
     this.otpAuthStatus = otpAuthStatus;
     this.ldapEnabled = ldapEnabled;
     this.krbEnabled = krbEnabled;
@@ -45,6 +48,8 @@ public class AuthenticationStatus {
     this.loginDisabled = loginDisabled;
     this.registerDisabled = registerDisabled;
     this.loginPageOverwrite = loginPageOverwrite;
+    this.ldapGroupMappingEnabled = ldapGroupMappingEnabled;
+    this.oauthGroupMappingEnabled = oauthGroupMappingEnabled;
   }
   
   public OTPAuthStatus getOtpAuthStatus() {
@@ -117,5 +122,21 @@ public class AuthenticationStatus {
 
   public void setLoginPageOverwrite(String loginPageOverwrite) {
     this.loginPageOverwrite = loginPageOverwrite;
+  }
+  
+  public boolean isLdapGroupMappingEnabled() {
+    return ldapGroupMappingEnabled;
+  }
+  
+  public void setLdapGroupMappingEnabled(boolean ldapGroupMappingEnabled) {
+    this.ldapGroupMappingEnabled = ldapGroupMappingEnabled;
+  }
+  
+  public boolean isOauthGroupMappingEnabled() {
+    return oauthGroupMappingEnabled;
+  }
+  
+  public void setOauthGroupMappingEnabled(boolean oauthGroupMappingEnabled) {
+    this.oauthGroupMappingEnabled = oauthGroupMappingEnabled;
   }
 }

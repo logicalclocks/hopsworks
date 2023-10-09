@@ -65,7 +65,7 @@ public class LdapUserController {
       throw new LoginException("Could not reach LDAP server.");
     }
     return remoteUserAuthController.getRemoteUserStatus(userDTO, consent, chosenEmail, RemoteUserType.LDAP,
-      UserAccountStatus.fromValue(settings.getLdapAccountStatus()));
+      UserAccountStatus.fromValue(settings.getLdapAccountStatus()), settings.isLdapGroupMappingEnabled());
   }
   
   /**
@@ -87,7 +87,7 @@ public class LdapUserController {
       throw new LoginException("Could not reach LDAP server.");
     }
     return remoteUserAuthController.getRemoteUserStatus(userDTO, consent, chosenEmail, RemoteUserType.KRB,
-      UserAccountStatus.fromValue(settings.getLdapAccountStatus()));
+      UserAccountStatus.fromValue(settings.getLdapAccountStatus()), settings.isLdapGroupMappingEnabled());
   }
   
   /**
@@ -109,7 +109,7 @@ public class LdapUserController {
       throw new LoginException("Could not reach LDAP server.");
     }
     return remoteUserAuthController.getRemoteUserStatus(userDTO, consent, chosenEmail, RemoteUserType.LDAP,
-      UserAccountStatus.fromValue(settings.getLdapAccountStatus()));
+      UserAccountStatus.fromValue(settings.getLdapAccountStatus()), settings.isLdapGroupMappingEnabled());
   }
   
   public List<String> getLDAPGroups(String groupSearchFilter) {

@@ -147,6 +147,24 @@ public class OauthClient implements Serializable {
   @OneToMany(cascade = CascadeType.ALL,
     mappedBy = "clientId")
   private Collection<OauthLoginState> oauthLoginStateCollection;
+  @Basic(optional = false)
+  @NotNull
+  @Size(max = 256)
+  @Column(name = "given_name_claim")
+  private String givenNameClaim = "given_name";
+  @Basic(optional = false)
+  @NotNull
+  @Size(max = 256)
+  @Column(name = "family_name_claim")
+  private String familyNameClaim = "family_name";
+  @Basic(optional = false)
+  @NotNull
+  @Size(max = 256)
+  @Column(name = "email_claim")
+  private String emailClaim = "email";
+  @Size(max = 256)
+  @Column(name = "group_claim")
+  private String groupClaim;
   
   public OauthClient() {
   }
@@ -323,6 +341,38 @@ public class OauthClient implements Serializable {
     this.verifyEmail = verifyEmail;
   }
   
+  public String getGivenNameClaim() {
+    return givenNameClaim;
+  }
+  
+  public void setGivenNameClaim(String givenNameClaim) {
+    this.givenNameClaim = givenNameClaim;
+  }
+  
+  public String getFamilyNameClaim() {
+    return familyNameClaim;
+  }
+  
+  public void setFamilyNameClaim(String familyNameClaim) {
+    this.familyNameClaim = familyNameClaim;
+  }
+  
+  public String getEmailClaim() {
+    return emailClaim;
+  }
+  
+  public void setEmailClaim(String emailClaim) {
+    this.emailClaim = emailClaim;
+  }
+  
+  public String getGroupClaim() {
+    return groupClaim;
+  }
+  
+  public void setGroupClaim(String groupClaim) {
+    this.groupClaim = groupClaim;
+  }
+  
   @XmlTransient
   @JsonIgnore
   public Collection<OauthLoginState> getOauthLoginStateCollection() {
@@ -356,10 +406,8 @@ public class OauthClient implements Serializable {
   @Override
   public String toString() {
     return "OauthClient{" +
-      "oauthLoginStateCollection=" + oauthLoginStateCollection +
       ", id=" + id +
       ", clientId='" + clientId + '\'' +
-      ", clientSecret='" + clientSecret + '\'' +
       ", providerLogoURI='" + providerLogoURI + '\'' +
       ", providerURI='" + providerURI + '\'' +
       ", providerName='" + providerName + '\'' +
@@ -367,8 +415,19 @@ public class OauthClient implements Serializable {
       ", authorisationEndpoint='" + authorisationEndpoint + '\'' +
       ", tokenEndpoint='" + tokenEndpoint + '\'' +
       ", userInfoEndpoint='" + userInfoEndpoint + '\'' +
+      ", endSessionEndpoint='" + endSessionEndpoint + '\'' +
+      ", logoutRedirectParam='" + logoutRedirectParam + '\'' +
       ", jwksURI='" + jwksURI + '\'' +
       ", providerMetadataEndpointSupported=" + providerMetadataEndpointSupported +
+      ", offlineAccess=" + offlineAccess +
+      ", codeChallenge=" + codeChallenge +
+      ", codeChallengeMethod=" + codeChallengeMethod +
+      ", verifyEmail=" + verifyEmail +
+      ", oauthLoginStateCollection=" + oauthLoginStateCollection +
+      ", givenNameClaim='" + givenNameClaim + '\'' +
+      ", familyNameClaim='" + familyNameClaim + '\'' +
+      ", emailClaim='" + emailClaim + '\'' +
+      ", groupClaim='" + groupClaim + '\'' +
       '}';
   }
 
