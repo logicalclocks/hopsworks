@@ -15,13 +15,16 @@ import io.fabric8.kubernetes.api.model.EmptyDirVolumeSource;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.EnvVarSourceBuilder;
+import io.fabric8.kubernetes.api.model.QuantityBuilder;
 import io.fabric8.kubernetes.api.model.HostPathVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.LifecycleBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodSpecBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
+import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
 import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.SecurityContext;
 import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
@@ -72,6 +75,7 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.servicediscovery.HopsworksService;
 import io.hops.hopsworks.servicediscovery.tags.GlassfishTags;
 import io.hops.hopsworks.servicediscovery.tags.LogstashTags;
+import io.hops.hopsworks.servicediscovery.tags.NamenodeTags;
 import io.hops.hopsworks.servicediscovery.tags.OpenSearchTags;
 import org.apache.commons.io.FilenameUtils;
 import org.javatuples.Pair;
@@ -159,6 +163,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
       execution = executionFacade.update(execution);
 
       DockerJobConfiguration jobConfiguration = (DockerJobConfiguration)job.getJobConfig();
+      String originalParentDir = null;
       try {
         String secretsDir = "/srv/hops/secrets";
         String certificatesDir = "/srv/hops/certificates";
@@ -182,6 +187,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
             //If it is a notebook we need to convert it to a .py file every time the job is run
             String appPath = ((PythonJobConfiguration) job.getJobConfig()).getAppPath();
             if (appPath.endsWith(".ipynb")) {
+              originalParentDir = (new File(appPath)).getParent();
               executionFacade.updateState(execution, JobState.CONVERTING_NOTEBOOK);
               String pyAppPath = HopsUtils.prepJupyterNotebookConversion(execution, hdfsUser, dfs);
               ((PythonJobConfiguration) job.getJobConfig()).setAppPath(pyAppPath);
@@ -211,6 +217,13 @@ public class KubeExecutionController extends AbstractExecutionController impleme
           certificatesDir, secretsDir, settings.getAnacondaProjectDir(), jobConfiguration, resourceRequirements);
         List<EnvVar> sidecarContainerEnv = getSidecarContainerEnv(job.getJobType(), project, execution,
           certificatesDir, hdfsUser);
+
+        if (originalParentDir != null) {
+          originalParentDir = Utils.prepPath(originalParentDir);
+          originalParentDir = originalParentDir.replaceFirst(Utils.getProjectPath(project.getName()), "");
+          primaryContainerEnv.add(new EnvVarBuilder().withName("ORIGINAL_APP_FILE_DIR").withValue(originalParentDir)
+              .build());
+        }
         
         List<Container> containers = buildContainers(job.getJobType(), jobConfiguration, secretsDir,
                 certificatesDir, resourceRequirements, primaryContainerEnv,
@@ -269,13 +282,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     jobSpec.setParallelism(1);
     jobSpec.setAdditionalProperty("backoffLimit", 0);
     jobSpec.setTemplate(new PodTemplateSpecBuilder()
-      .withMetadata(
-              new ObjectMetaBuilder()
-                      .withLabels(ImmutableMap.of(jobType.getName().toLowerCase(), kubeProjectUser,
-                              "execution", Integer.toString(execution.getId()),
-                              "job-type", jobType.getName().toLowerCase(),
-                              "deployment-type", "job"))
-                      .build())
+      .withMetadata(getPodMetadata(kubeProjectUser, execution))
       .withSpec(buildPodSpec(project, secretsName, kubeProjectUser, containers, jobConfiguration))
       .build());
 
@@ -365,6 +372,14 @@ public class KubeExecutionController extends AbstractExecutionController impleme
 
     List<Container> containers = new ArrayList<>();
     if (jobType == JobType.PYTHON) {
+      if (settings.getMountHopsfsInJobContainer()) {
+        ResourceRequirementsBuilder resourceRequirementsBuilder = new ResourceRequirementsBuilder(resourceRequirements);
+        resourceRequirementsBuilder.addToLimits("smarter-devices/fuse", new QuantityBuilder()
+            .withAmount(Integer.toString(1)).build());
+        resourceRequirementsBuilder.addToRequests("smarter-devices/fuse", new QuantityBuilder()
+            .withAmount(Integer.toString(1)).build());
+        resourceRequirements = resourceRequirementsBuilder.build();
+      }
       //Add Job container
       containers.add(new ContainerBuilder()
               .withName(jobType.getName().toLowerCase())
@@ -643,8 +658,6 @@ public class KubeExecutionController extends AbstractExecutionController impleme
           .withValue(settings.getHadoopClasspathGlob()).build());
         environment.add(new EnvVarBuilder().withName("SPARK_CONF_DIR").withValue(settings.getSparkConfDir()).build());
         environment.add(new EnvVarBuilder().withName("ANACONDA_ENV").withValue(anacondaEnv).build());
-        environment.add(new EnvVarBuilder().withName("APP_PATH")
-          .withValue(((PythonJobConfiguration)dockerJobConfiguration).getAppPath()).build());
         environment.add(new EnvVarBuilder().withName("APP_FILE")
           .withValue(FilenameUtils.getName(((PythonJobConfiguration)dockerJobConfiguration).getAppPath())).build());
         environment.add(new EnvVarBuilder().withName("APP_ARGS").withValue(execution.getArgs()).build());
@@ -668,6 +681,23 @@ public class KubeExecutionController extends AbstractExecutionController impleme
         //  HOPSWORKS-3158 add public hopsworks hostname
         environment.add(new EnvVarBuilder().withName("HOPSWORKS_PUBLIC_HOST").
                                            withValue(settings.getHopsworksPublicHost()).build());
+        String appPath = ((PythonJobConfiguration)dockerJobConfiguration).getAppPath();
+        if (settings.getMountHopsfsInJobContainer()) {
+          com.logicalclocks.servicediscoverclient.service.Service hdfsService =
+              serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
+                  HopsworksService.NAMENODE.getNameWithTag(NamenodeTags.rpc));
+          appPath = Utils.prepPath(appPath);
+          appPath = appPath.replaceFirst(Utils.getProjectPath(project.getName()), "");
+          environment.add(new EnvVarBuilder().withName("IS_TLS").withValue(String.valueOf(settings.getHopsRpcTls()))
+              .build());
+          environment.add(new EnvVarBuilder().withName("NAMENODE_IP").withValue(hdfsService.getAddress()).build());
+          environment.add(new EnvVarBuilder().withName("NAMENODE_PORT").withValue(String.valueOf(hdfsService.getPort()))
+              .build());
+          environment.add(new EnvVarBuilder().withName("MOUNT_HOPSFS").withValue(String.valueOf(true)).build());
+          environment.add(new EnvVarBuilder().withName("PROJECT_PATH")
+              .withValue(Utils.getProjectPath(project.getName())).build());
+        }
+        environment.add(new EnvVarBuilder().withName("APP_PATH").withValue(appPath).build());
         break;
       case DOCKER:
         if (dockerJobConfiguration.getEnvVars() != null && !dockerJobConfiguration.getEnvVars().isEmpty()) {
@@ -707,6 +737,29 @@ public class KubeExecutionController extends AbstractExecutionController impleme
         throw new UnsupportedOperationException("Job type not supported: " + jobType);
     }
     return environment;
+  }
+
+  private ObjectMeta getPodMetadata(String kubeProjectUser, Execution execution) {
+    JobType jobType = execution.getJob().getJobType();
+    ObjectMetaBuilder podMetaBuilder = new ObjectMetaBuilder()
+        .withLabels(ImmutableMap.of(jobType.getName().toLowerCase(), kubeProjectUser,
+            "execution", Integer.toString(execution.getId()),
+            "job-type", jobType.getName().toLowerCase(),
+            "deployment-type", "job"));
+    if (settings.getMountHopsfsInJobContainer()) {
+      String apparmorProfile = "unconfined";
+      if (settings.getApplyHopsfsMountApparmor()) {
+        apparmorProfile = "localhost/" + settings.getHopsfsMountApparmorProfile();
+      }
+      podMetaBuilder.withAnnotations(
+          ImmutableMap.of(
+              "container.apparmor.security.beta.kubernetes.io/"
+                  + execution.getJob().getJobType().getName().toLowerCase(),
+              apparmorProfile
+          )
+      );
+    }
+    return podMetaBuilder.build();
   }
 
   @Override

@@ -414,6 +414,11 @@ public class Settings implements Serializable {
   private static final String VARIABLE_DOCKER_CGROUP_MONITOR_INTERVAL = "docker_cgroup_monitor_interval";
   private static final String VARIABLE_DOCKER_CGROUP_PARENT = "docker_cgroup_parent";
 
+
+
+  // Python job
+  private static final String VARIABLE_MOUNT_HOPSFS_IN_PYTHON_JOB_CONTAINER = "mount_hopsfs_in_python_job";
+
   private static final String VARIABLE_SKIP_NAMESPACE_CREATION =
       "kube_skip_namespace_creation";
   public enum KubeType{
@@ -953,6 +958,8 @@ public class Settings implements Serializable {
         COMMAND_SEARCH_FS_HISTORY_CLEAN_PERIOD);
       COMMAND_SEARCH_FS_RETRY_PER_CLEAN_INTERVAL = setIntVar(VARIABLE_COMMAND_SEARCH_FS_RETRY_PER_CLEAN_INTERVAL,
         COMMAND_SEARCH_FS_RETRY_PER_CLEAN_INTERVAL);
+      MOUNT_HOPSFS_IN_PYTHON_JOB_CONTAINER = setBoolVar(VARIABLE_MOUNT_HOPSFS_IN_PYTHON_JOB_CONTAINER,
+          MOUNT_HOPSFS_IN_PYTHON_JOB_CONTAINER);
       cached = true;
     }
   }
@@ -1712,6 +1719,12 @@ public class Settings implements Serializable {
   public synchronized String getHopsfsMountApparmorProfile() {
     checkCache();
     return HOPSFSMOUNT_APPARMOR_PROFILE;
+  }
+
+  private boolean MOUNT_HOPSFS_IN_PYTHON_JOB_CONTAINER = true;
+  public synchronized boolean getMountHopsfsInJobContainer() {
+    checkCache();
+    return MOUNT_HOPSFS_IN_PYTHON_JOB_CONTAINER;
   }
 
   //Git

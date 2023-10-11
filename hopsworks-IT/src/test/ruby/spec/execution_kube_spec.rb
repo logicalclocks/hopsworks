@@ -151,6 +151,14 @@ describe "On #{ENV['OS']}" do
             $job_name = "j_#{short_random_id}"
           end
           describe 'create, get, delete executions' do
+            before(:all) do
+              setVar("mount_hopsfs_in_python_job", "false")
+              create_session(@project[:username], "Pass123")
+            end
+            after(:all) do
+              setVar("mount_hopsfs_in_python_job", "true")
+              create_session(@project[:username], "Pass123")
+            end
             it "should start/stop a job and get its executions" do
               #create job
               create_python_job(@project, $job_name, type)
@@ -283,6 +291,26 @@ describe "On #{ENV['OS']}" do
               execution_id = run_execution(@project[:id], $job_name)
               get_logs(@project, $job_name, execution_id, "out")
               get_logs(@project, $job_name, execution_id, "err")
+            end
+          end
+          describe 'with mounting hopsfs enabled: ' + type do
+            before(:all) do
+              setVar("mount_hopsfs_in_python_job", "true")
+              create_session(@project[:username], "Pass123")
+            end
+            it "should start/stop a job and get its executions" do
+              #create job
+              create_python_job(@project, $job_name, type, job_conf=nil, with_modules=true)
+              #start execution
+              start_execution(@project[:id], $job_name)
+              execution_id = json_body[:id]
+              expect(json_body[:state]).to eq "INITIALIZING"
+              expect(json_body[:finalStatus]).to eq "UNDEFINED"
+              #get execution
+              get_execution(@project[:id], $job_name, json_body[:id])
+              expect(json_body[:id]).to eq(execution_id)
+              #wait till it's finished and start second execution
+              wait_for_execution_completed(@project[:id], $job_name, json_body[:id], "FINISHED", expected_final_status: "SUCCEEDED")
             end
           end
         end

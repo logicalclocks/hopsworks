@@ -166,7 +166,7 @@ module JobHelper
     create_job(project, job_name, job_conf, expected_status: expected_status, error_code: error_code)
   end
 
-  def create_python_job(project, job_name, type, job_conf=nil)
+  def create_python_job(project, job_name, type, job_conf=nil, with_modules=false)
     # need to enable python for conversion .ipynb to .py works
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments"
     if response.code == 404
@@ -180,9 +180,24 @@ module JobHelper
       job_conf["files"] = "hdfs:///Projects/#{project[:projectname]}/Resources/README.md,hdfs:///Projects/#{project[:projectname]}/Resources/spark-examples.jar"
     end
 
+    if with_modules
+      module_dir = "test_module"
+      if !test_dir("/Projects/#{project[:projectname]}/Resources/#{module_dir}")
+        mkdir("/Projects/#{project[:projectname]}/Resources/#{module_dir}", "#{project[:projectname]}__#{@user[:username]}", "#{project[:projectname]}__Resources", 750)
+        # copy the module test file
+        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/hello.py",
+                        "/Projects/#{project[:projectname]}/Resources/#{module_dir}/hello.py", @user[:username],
+                        "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+      end
+    end
+
     if type.eql? "py"
       if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".py")
-        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/test_job.py",
+        test_file="test_job.py"
+        if with_modules
+          test_file="test_job_with_module_import.py"
+        end
+        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/" + test_file,
                         "/Projects/#{project[:projectname]}/Resources/" + job_name + ".py", @user[:username],
                         "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
       end
@@ -190,7 +205,11 @@ module JobHelper
 
     elsif type.eql? "ipynb"
       if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
-        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/test_job.ipynb",
+        test_file="test_job.ipynb"
+        if with_modules
+          test_file="test_job_with_module_import_notebook.ipynb"
+        end
+        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/#{test_file}",
                         "/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username],
                         "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
       end
