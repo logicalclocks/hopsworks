@@ -232,7 +232,7 @@ describe "On #{ENV['OS']}" do
     end
   end
 
-  describe "Jupyter extended", if: ENV['FAST'].eql?("false") do
+  describe "Jupyter extended" do
     remote_fs_drivers = ["hdfscontentsmanager", "hopsfsmount"]
     remote_fs_drivers.each do |driver|
       describe "with jupyter remote filesystem driver:  #{driver}" do
