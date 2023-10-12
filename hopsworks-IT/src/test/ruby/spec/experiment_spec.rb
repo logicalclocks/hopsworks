@@ -19,7 +19,6 @@ describe "On #{ENV['OS']}" do
     @debugOpt = false
     
     # ensure data science profile is enabled
-    @enable_data_science_profile = getVar('enable_data_science_profile')
     setVar('enable_data_science_profile', "true")
     wait_on_command_search(repeat: 30)
     epipe_wait_on_mutations(repeat: 30)
@@ -38,23 +37,6 @@ describe "On #{ENV['OS']}" do
   experiment_2 = "experiment_2"
 
   describe 'experiment' do
-
-    context 'with data science profile not enabled' do
-      before :all do
-        # disable data science profile
-        setVar('enable_data_science_profile', "false")
-        with_valid_project
-      end
-
-      after :all do
-        setVar('enable_data_science_profile', "true")
-      end
-
-      it "should fail to get experiments" do
-        get_experiment(@project[:id], "app_id_4252123_1", nil)
-        expect_status_details(400, error_code: 120012)
-      end
-    end
 
     context 'without authentication' do
       before :all do

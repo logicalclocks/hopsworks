@@ -875,7 +875,6 @@ describe "On #{ENV['OS']}" do
   describe "Model registry tag" do
     before :all do
       # ensure data science profile is enabled
-      @enable_data_science_profile = getVar('enable_data_science_profile')
       setVar('enable_data_science_profile', "true")
 
       with_admin_session
@@ -902,8 +901,6 @@ describe "On #{ENV['OS']}" do
         delete_tag_checked(tag)
       end
       reset_session
-
-      setVar('enable_data_science_profile', @enable_data_science_profile[:value])
     end
 
     context "tagging - same project" do

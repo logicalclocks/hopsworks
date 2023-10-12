@@ -22,14 +22,12 @@ describe "On #{ENV['OS']}" do
 
   before :all do
     # ensure data science profile is enabled
-    @enable_data_science_profile = getVar('enable_data_science_profile')
     setVar('enable_data_science_profile', "true")
   end
 
   after :all do
     clean_all_test_projects(spec: "serving_default_sklearn")
     purge_all_sklearn_serving_instances
-    setVar('enable_data_science_profile', @enable_data_science_profile[:value])
   end
 
   describe 'sklearn_serving' do

@@ -12,7 +12,6 @@ describe "On #{ENV['OS']}" do
     end
 
     # ensure data science profile is enabled
-    @enable_data_science_profile = getVar('enable_data_science_profile')
     setVar('enable_data_science_profile', "true")
 
     with_admin_session()
@@ -26,7 +25,6 @@ describe "On #{ENV['OS']}" do
   after :all do
     clean_all_test_projects(spec: "serving_kserve_tensorflow_inference")
     purge_all_kserve_instances
-    setVar('enable_data_science_profile', @enable_data_science_profile[:value])
   end
 
   describe 'inference' do

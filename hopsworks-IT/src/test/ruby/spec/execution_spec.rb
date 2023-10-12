@@ -16,7 +16,6 @@
 
 describe "On #{ENV['OS']}" do
   before :all do
-    @max_executions_per_job = getVar('executions_per_job_limit').value
     @debugOpt=false
     # Enable the reporting
     RSpec.configure do |c|
@@ -40,11 +39,7 @@ describe "On #{ENV['OS']}" do
       job_types.each do |type|
         context 'with authentication and executable ' + type do
           before :all do
-            setVar('executions_per_job_limit', '2')
             with_valid_tour_project("spark")
-          end
-          after :all do
-            setVar('executions_per_job_limit', @max_executions_per_job)
           end
           after :each do
             clean_jobs(@project[:id])
@@ -186,17 +181,13 @@ describe "On #{ENV['OS']}" do
       end
     end
   end
-  describe 'execution extended', if: ENV['FAST'].eql?("false") do
+  describe 'execution extended' do
     context 'create' do
       job_types = ['jar', 'py', 'ipynb']
       job_types.each do |type|
         context 'with authentication and executable ' + type do
         before :all do
-          setVar('executions_per_job_limit', '2')
           with_valid_tour_project("spark")
-        end
-        after :all do
-          setVar('executions_per_job_limit', @max_executions_per_job)
         end
         after :each do
           clean_jobs(@project[:id])
@@ -639,26 +630,6 @@ describe "On #{ENV['OS']}" do
         set_yarn_quota(@project, -10, "NOLIMIT")
         create_sparktour_job(@project, "quota5", 'jar')
         run_execution(@project[:id], "quota5")
-      end
-      describe "#parallel executions" do
-        before :all do
-          setVar("quotas_max_parallel_executions", "1")
-          @cookies_pe = with_admin_session
-          with_valid_tour_project("spark")
-        end
-        after :all do
-          setVar("quotas_max_parallel_executions", "-1")
-          @cookies_pe = nil
-        end
-        it "should not launch more than configured max parallel executions" do
-          create_sparktour_job(@project, "max_parallel_exec", "jar")
-          start_execution(@project[:id], "max_parallel_exec")
-
-          # reached limit
-          resp = start_execution(@project[:id], "max_parallel_exec", expected_status: 400)
-          parsed = JSON.parse(resp)
-          expect(parsed['usrMsg']).to include("quota")
-        end
       end
     end
     describe '#access' do

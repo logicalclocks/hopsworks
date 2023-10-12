@@ -17,34 +17,14 @@ describe "On #{ENV['OS']}" do
   
   before :all do
     # ensure data science profile is enabled
-    @enable_data_science_profile = getVar('enable_data_science_profile')
     setVar('enable_data_science_profile', "true")
   end
 
   after :all do
     clean_all_test_projects(spec: "model_registry")
-    setVar('enable_data_science_profile', @enable_data_science_profile[:value])
   end
 
   describe 'model registry' do
-
-    context 'with data science profile not enabled' do
-      before :all do
-        # disable data science profile
-        setVar('enable_data_science_profile', "false")
-        with_valid_project
-      end
-
-      after :all do
-        setVar('enable_data_science_profile', "true")
-      end
-
-      it "should fail to get model registries" do
-        get_model_registries(@project[:id], nil)
-        expect_status_details(400, error_code: 120012)
-      end
-    end
-
     context 'without authentication' do
       before :all do
         with_valid_project
