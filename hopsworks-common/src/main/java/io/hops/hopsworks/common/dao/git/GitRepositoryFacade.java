@@ -121,7 +121,9 @@ public class GitRepositoryFacade extends AbstractFacade<GitRepository> {
   }
 
   public GitRepository updateRepository(GitRepository repository) {
-    return super.update(repository);
+    repository = em.merge(repository);
+    em.flush();
+    return repository;
   }
 
   public GitRepository updateRepositoryCid(GitRepository repository, String pid) {

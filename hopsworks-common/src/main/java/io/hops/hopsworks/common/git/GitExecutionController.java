@@ -195,7 +195,7 @@ public class GitExecutionController {
     GitOpExecution execution = getExecutionInRepository(repository, executionId);
     if (newState.isFinalState()) {
       if (newState == GitOpExecutionState.SUCCESS) {
-        finalizeSuccessfulExecution(execution, stateDTO);
+        repository = finalizeSuccessfulExecution(execution, stateDTO);
       }
       if (newState == GitOpExecutionState.CANCELLED) {
         gitCommandExecutor.cancelGitExecution(execution,  stateDTO.getMessage());
@@ -213,11 +213,13 @@ public class GitExecutionController {
     return gitOpExecutionFacade.updateState(execution, newState, stateDTO.getMessage());
   }
 
-  private void finalizeSuccessfulExecution(GitOpExecution execution, GitCommandExecutionStateUpdateDTO stateDTO) {
+  private GitRepository finalizeSuccessfulExecution(GitOpExecution execution,
+                                                    GitCommandExecutionStateUpdateDTO stateDTO) {
     //Every successful operation should update the repository current commit and branch
     GitRepository repository = execution.getRepository();
     repository.setCurrentBranch(stateDTO.getBranch());
     repository.setCurrentCommit(stateDTO.getCommitHash());
+    GitRepository updateRepository = gitRepositoryFacade.updateRepository(repository);
     GitCommandConfiguration executedCommandConfig = execution.getGitCommandConfiguration();
     if (executedCommandConfig.getCommandType() == GitCommandType.DELETE_BRANCH) {
       //if we deleted a branch then we should also delete all the commits for this branch
@@ -232,5 +234,6 @@ public class GitExecutionController {
             remotesJson), repository);
       }
     }
+    return updateRepository;
   }
 }
