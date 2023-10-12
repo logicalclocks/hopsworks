@@ -67,4 +67,86 @@ describe "On #{ENV['OS']}" do
       expect_status_details(401)
     end
   end
+
+  describe 'with variable' do
+    describe 'quotas_max_parallel_executions' do
+      context "enabled" do
+        before :all do
+          setVar("quotas_max_parallel_executions", "1")
+          @cookies_pe = with_admin_session
+          with_valid_tour_project("spark")
+        end
+        after :all do
+          setVar("quotas_max_parallel_executions", "-1")
+          @cookies_pe = nil
+        end
+        it "should not launch more than configured max parallel executions" do
+          create_sparktour_job(@project, "max_parallel_exec", "jar")
+          start_execution(@project[:id], "max_parallel_exec")
+
+          # reached limit
+          resp = start_execution(@project[:id], "max_parallel_exec", expected_status: 400)
+          parsed = JSON.parse(resp)
+          expect(parsed['usrMsg']).to include("quota")
+        end
+      end
+    end
+
+    describe 'enable_data_science_profile' do
+      context 'disabled' do
+        before :all do
+          # disable data science profile
+          setVar('enable_data_science_profile', "false")
+          with_valid_project
+        end
+
+        after :all do
+          setVar('enable_data_science_profile', "true")
+        end
+
+        it "should fail to get models" do
+          get_models(@project[:id], nil)
+          expect_status_details(400, error_code: 120012)
+          get_model(@project[:id], "mnist_1")
+          expect_status_details(400, error_code: 120012)
+        end
+
+        it "should fail to get model registries" do
+          get_model_registries(@project[:id], nil)
+          expect_status_details(400, error_code: 120012)
+        end
+
+        it "should fail to get experiments" do
+          get_experiment(@project[:id], "app_id_4252123_1", nil)
+          expect_status_details(400, error_code: 120012)
+        end
+
+        it "should fail to get servings" do
+          get_servings(@project, nil)
+          expect_status_details(400, error_code: 120012)
+        end
+      end
+    end
+
+    describe 'quotas_model_deployments_total' do
+      context "enabled" do
+        before :all do
+          setVar("quotas_model_deployments_total", "1")
+          @local_project = create_project
+        end
+        after :all do
+          setVar("quotas_model_deployments_total", "-1")
+          purge_all_tf_serving_instances
+          delete_all_servings(@local_project.id)
+        end
+        it "should fail to create serving if quota has been reached" do
+          ## This deployument should go through
+          with_tensorflow_serving(@local_project.id, @local_project.projectname, @user.username)
+
+          ## Second deployment should fail because quota has been reached
+          create_tensorflow_serving(@local_project.id, @local_project.projectname, expected_status: 400)
+        end
+      end
+    end
+  end
 end

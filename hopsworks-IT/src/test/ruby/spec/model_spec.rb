@@ -20,7 +20,6 @@ describe "On #{ENV['OS']}" do
     @cleanup = true
     
     # ensure data science profile is enabled
-    @enable_data_science_profile = getVar('enable_data_science_profile')
     setVar('enable_data_science_profile', "true")
     wait_on_command_search(repeat: 30)
     epipe_wait_on_mutations(repeat: 30)
@@ -39,26 +38,6 @@ describe "On #{ENV['OS']}" do
   experiment_2 = "experiment_2"
 
   describe 'model' do
-
-    context 'with data science profile not enabled' do
-      before :all do
-        # disable data science profile
-        setVar('enable_data_science_profile', "false")
-
-        with_valid_project
-      end
-
-      after :all do
-        setVar('enable_data_science_profile', "true")
-      end
-
-      it "should fail to get models" do
-        get_models(@project[:id], nil)
-        expect_status_details(400, error_code: 120012)
-        get_model(@project[:id], "mnist_1")
-        expect_status_details(400, error_code: 120012)
-      end
-    end
 
     context 'without authentication' do
       before :all do
