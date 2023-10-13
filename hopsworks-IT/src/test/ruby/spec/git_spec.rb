@@ -214,6 +214,14 @@ describe "On #{ENV['OS']}" do
       end
     end
     describe "Perform operations on the cloned repositories" do
+      before(:all) do
+        setVar("enable_read_only_git_repositories", "false")
+        create_session(@project[:username], "Pass123")
+      end
+      after(:all) do
+        setVar("enable_read_only_git_repositories", "true")
+        create_session(@project[:username], "Pass123")
+      end
       after :each do
         get_project_git_repositories(@project[:id])
         if json_body[:count] > 0
