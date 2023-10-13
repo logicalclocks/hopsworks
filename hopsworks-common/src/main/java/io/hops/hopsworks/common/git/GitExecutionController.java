@@ -227,8 +227,8 @@ public class GitExecutionController {
     }
     if (executedCommandConfig.getCommandType() == GitCommandType.ADD_REMOTE ||
         executedCommandConfig.getCommandType() == GitCommandType.DELETE_REMOTE) {
-      //Update the remotes which are in the execution final message
-      String remotesJson = execution.getCommandResultMessage();
+      //Update the remotes which are in the stateDTO final message
+      String remotesJson = stateDTO.getMessage();
       if (!Strings.isNullOrEmpty(remotesJson)) {
         gitRepositoryRemotesFacade.updateRepositoryRemotes(gitCommandOperationUtil.convertToRemote(repository,
             remotesJson), repository);
