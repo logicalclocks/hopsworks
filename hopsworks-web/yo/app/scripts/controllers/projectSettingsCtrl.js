@@ -50,39 +50,8 @@ angular.module('hopsWorksApp')
             self.projectId = $routeParams.projectID;
             self.quotas = {};
             self.versions = [];
-            self.pia = {
-              "id": "",
-              "personalData": "",
-              "howDataCollected": "",
-              "specifiedExplicitLegitimate": 0,
-              "consentProcess": "",
-              "consentBasis": "",
-              "dataMinimized": 0,
-              "dataUptodate": 0,
-              "usersInformed_how": "",
-              "userControlsDataCollectionRetention": "",
-              "dataEncrypted": 0,
-              "dataAnonymized": 0,
-              "dataPseudonymized": 0,
-              "dataBackedup": 0,
-              "dataSecurityMeasures": "",
-              "dataPortabilityMeasure": "",
-              "subjectAccessRights": "",
-              "risks": ""
-            };
             self.cloudRoleMappings = undefined;
             self.setDefaultWorking = false;
-
-            var getPia = function () {
-              ProjectService.getPia({id: self.projectId}).$promise.then(
-                function (success) {
-                  self.pia = success;
-                }, function (error) {
-                  growl.error(error.data.errorMsg, {title: 'Error getting Pia', ttl: 5000});
-                  $location.path('/');
-              });
-            };
-            getPia();
 
             var getCloudRoleMappings = function () {
               ProjectService.getCloudRoleMappings({id: self.projectId}).$promise.then(
@@ -98,28 +67,6 @@ angular.module('hopsWorksApp')
               e.clearSelection();
             };
             
-            self.savePia = function () {
-              var forms = document.getElementsByClassName('needs-validation');
-              Array.prototype.filter.call(forms, function (form) {
-                form.addEventListener('submit', function (event) {
-                  if (form.checkValidity() === false) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                  }
-                  form.classList.add('was-validated');
-                }, false);
-              });
-
-              ProjectService.savePia({id: self.projectId}, self.pia)
-                .$promise.then(function (success) {
-                    growl.success("Saved Pia", {title: 'Saved', ttl: 2000});
-                  }, function (error) {
-                    self.working = false;
-                    growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
-                });
-            };
-
-
             self.getQuotas = function () {
               ProjectService.getQuotas({id: self.projectId}).$promise.then(
                       function (response) {
