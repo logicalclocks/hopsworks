@@ -121,7 +121,6 @@
     <class>io.hops.hopsworks.persistence.entity.project.Project</class>
     <class>io.hops.hopsworks.persistence.entity.project.service.ProjectServices</class>
     <class>io.hops.hopsworks.persistence.entity.project.team.ProjectTeam</class>
-    <class>io.hops.hopsworks.persistence.entity.project.pia.Pia</class>
     <class>io.hops.hopsworks.persistence.entity.project.jobs.DefaultJobConfiguration</class>
     <class>io.hops.hopsworks.persistence.entity.provenance.FeatureGroupLink</class>
     <class>io.hops.hopsworks.persistence.entity.provenance.FeatureViewLink</class>

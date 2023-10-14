@@ -68,7 +68,6 @@ import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.project.pia.PiaFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
@@ -104,7 +103,6 @@ import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.jobs.quota.YarnPriceMultiplicator;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.project.pia.Pia;
 import io.hops.hopsworks.persistence.entity.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -198,8 +196,6 @@ public class ProjectService {
   private DistributedFsService dfs;
   @EJB
   private AuthController authController;
-  @EJB
-  private PiaFacade piaFacade;
   @EJB
   private JWTHelper jWTHelper;
   @Inject
@@ -721,32 +717,6 @@ public class ProjectService {
     return this.activitiesResource;
   }
 
-  @PUT
-  @Path("{projectId}/pia")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response updatePia(Pia pia, @PathParam("projectId") Integer projectId, @Context SecurityContext sc) {
-    piaFacade.mergeUpdate(pia, projectId);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
-  }
-
-  @GET
-  @Path("{projectId}/pia")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response getPia(@PathParam("projectId") Integer projectId, @Context SecurityContext sc)
-    throws ProjectException {
-    Project project = projectController.findProjectById(projectId);
-    if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
-    }
-    Pia pia = piaFacade.findByProject(projectId);
-    GenericEntity<Pia> genericPia = new GenericEntity<Pia>(pia) {
-    };
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(genericPia).build();
-  }
-  
   @ApiOperation(value = "Model inference sub-resource",
       tags = {"Inference"})
   @Path("/{projectId}/inference")

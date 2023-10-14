@@ -250,134 +250,7 @@
                   </div>
                 </div>
               </uib-tab>
-              <uib-tab index="2" heading="PIA">
-                <h2>Privacy Impact Assessment</h2>
-
-                <form ng-submit="projectSettingsCtrl.savePia()" name="piaForm" class="needs-validation" novalidate>
-                  <div class="form-group">
-                    <label for="personal_data" class="control-label">What Personal Data is Processed?</label>
-                    <textarea ng-model="projectSettingsCtrl.pia.personalData" maxlength="4000"
-                              class="form-control" cols="40" id="personal_data"
-                              name="personal_data" rows="4"></textarea>
-                  </div>
-
-                  <div class="form-group">
-                    <label for="how_data_collected" class="control-label">How is that data collected and retained?</label>
-                    <textarea ng-model="projectSettingsCtrl.pia.howDataCollected" maxlength="2000"
-                              class="form-control" cols="40" id="how_data_collected"
-                              name="how_data_collected" rows="4"></textarea>
-                  </div>
-                  <div class="form-group">
-                    <input type="checkbox" ng-model="projectSettingsCtrl.pia.specifiedExplicitLegitimate"
-                           name="specified_explicit_legitimate" ng-true-value="1" ng-false-value="0">
-                    <label for="specified_explicit_legitimate" class="control-label"> The data collection and processing is specified, explicit, and legitimate.</label>
-                  </div>
-
-                  <div class="form-group">
-                    <label for="consent_process" class="control-label">What is the process for granting consent for the data processing, and is consent explicit and verifiable?</label>
-                    <textarea ng-model="projectSettingsCtrl.pia.consentProcess" maxlength="1000"
-                              class="form-control" cols="40" id="consent_process"
-                              name="consent_process" rows="4"></textarea>
-                  </div>
-                  <div class="form-group">
-                    <label for="consent_basis" class="control-label">What is the basis of the consent for the data processing? If not based on consent, what is the legal basis for the data processing?</label>
-                    <textarea ng-model="projectSettingsCtrl.pia.consentBasis" maxlength="1000"
-                              class="form-control" cols="40" id="consent_basis"
-                              name="consent_basis" rows="4"></textarea>
-                  </div>
-
-                  <div class="form-group">
-                    <input type="checkbox" ng-model="projectSettingsCtrl.pia.dataMinimized"  name="data_minimized"
-                           ng-true-value="1" ng-false-value="0">
-                    <label for="data_minimized" class="control-label"> Is the data minimized to what is explicitly required?</label>
-                  </div>
-                  <div class="form-group">
-                    <input type="checkbox" ng-model="projectSettingsCtrl.pia.dataUptodate"  name="data_uptodate"
-                           ng-true-value="1" ng-false-value="0">
-                    <label for="data_uptodate" class="control-label">Is the data collection and processing specified, explicit, and legitimate?</label>
-                  </div>
-                  <div class="form-group">
-                    <label for="users_informed_how" class="control-label">How are users informed about the data processing?</label>
-                    <textarea ng-model="projectSettingsCtrl.pia.usersInformedHow" maxlength="500"
-                              class="form-control" cols="40" id="users_informed_how"
-                              name="users_informed_how" rows="4"></textarea>
-                  </div>
-                  <div class="form-group">
-                    <label for="user_controls_data_collection_retention" class="control-label">What controls do users have over the data collection and retention?</label>
-                    <textarea ng-model="projectSettingsCtrl.pia.userControlsDataCollectionRetention" maxlength="500"
-                              class="form-control" cols="40" id="user_controls_data_collection_retention"
-                              name="user_controls_data_collection_retention" rows="4"></textarea>
-                  </div>
-                  <div class="form-group">
-                    <input type="checkbox" ng-model="projectSettingsCtrl.pia.dataEncrypted"  name="data_encrypted"
-                           ng-true-value="1" ng-false-value="0">
-                    <label for="data_encrypted" class="control-label">Is the data encrypted?</label>
-                  </div>
-
-                  <div class="form-group">
-                    <label class="control-label">Is the data anonymized or pseudonymized?</label>
-                    <div class="radio">
-                      <label>
-                        <input type="radio" name="data_anonymization" value="1"
-                               ng-model="projectSettingsCtrl.pia.dataAnonymized" >
-                        Anonymized
-                      </label>
-                    </div>
-                    <div class="radio">
-                      <label>
-                        <input type="radio"  name="data_anonymization" value="1"
-                               ng-model="projectSettingsCtrl.pia.dataPseudonymized">
-                        Pseudonymized
-                      </label>
-                    </div>
-                    <div class="radio">
-                      <label>
-                        <input type="radio"  name="data_anonymization" value="none"
-                               ng-click="projectSettingsCtrl.pia.data_pseudonymized = 0; projectSettingsCtrl.pia.data_anonymized = 0">
-                        Neither
-                      </label>
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <input type="checkbox" ng-model="projectSettingsCtrl.pia.dataBackedup"  name="data_backedup"
-                           ng-true-value="1" ng-false-value="0">
-                    <label for="data_backedup" class="control-label">Is the data backed up at a remote location/project?</label>
-                  </div>
-                  <div class="form-group">
-                    <label for="data_security_measures" class="control-label">Describe any additional technical and security measures in this project.</label>
-                    <textarea ng-model="projectSettingsCtrl.pia.data_securityMeasures" maxlength="500"
-                              class="form-control" cols="40" id="data_security_measures"
-                              name="data_security_measures" rows="4"></textarea>
-                  </div>
-                  <div class="form-group">
-                    <label for="data_portability_measure" class="control-label">What controls do users have over the data collection and retention?</label>
-                    <textarea ng-model="projectSettingsCtrl.pia.dataPortabilityMeasure" maxlength="500"
-                              class="form-control" cols="40" id="data_portability_measure"
-                              name="data_portability_measure" rows="4"></textarea>
-                  </div>
-                  <div class="form-group">
-                    <label for="subject_access_rights" class="control-label">Describe the Subject Access Rights:</label>
-                    <i class="fa fa-info-circle" uib-tooltip="How does the data subject exercise their access rights? How does the data subject exercise their right to data portability? How does the data subject exercise their rights to erasure and the right to be forgotten? How does the data subject exercise their right to restrict and object?" style="margin-left: 10px"></i>
-                    <textarea ng-model="projectSettingsCtrl.pia.subjectAccessRights" maxlength="500"
-                              class="form-control" cols="40" id="subject_access_rights"
-                              name="subject_access_rights" rows="4"></textarea>
-                  </div>
-                  <div class="form-group">
-                    <label for="risks" class="control-label">Describe the risks.</label>
-                    <i class="fa fa-info-circle" uib-tooltip="What are the risks to the data subjects if the data is misused, mis-accessed, or breached? What are the risks to the data subjects if the data is modified?
-                       What are the risks to the data subjects if the data is lost? What are the main sources of risk?
-                       What steps have been taken to mitigate those risks?" style="margin-left: 10px"></i>
-                    <textarea ng-model="projectSettingsCtrl.pia.risks" maxlength="500"
-                              class="form-control" cols="40" id="risks"
-                              name="risks" rows="4"></textarea>
-                  </div>
-
-                  <div class="form-group">
-                    <button type="submit" class="btn btn-primary">Save</button>
-                  </div>
-                </form>
-              </uib-tab>
-              <uib-tab index="3" heading="Versions">
+              <uib-tab index="2" heading="Versions">
                 <h3>Hopsworks Software Versions</h3>
                 <table st-table="rowCollection" class="table table-striped" ng-show="projectSettingsCtrl.versions.length > 0">
                   <thead>
@@ -398,7 +271,7 @@
                   </tbody>
                 </table>
               </uib-tab>
-              <uib-tab index="4" heading="Provenance">
+              <uib-tab index="3" heading="Provenance">
                 <h3>Hopsworks Provenance Settings</h3>
                 <div class="panel panel-default"  style="width: 800px; background-color: #F7F7F7;" ng-controller="ProvenanceCtrl as provenanceCtrl">
                   <div class="panel-body">
@@ -485,7 +358,7 @@
                   </div>
                 </div>
               </uib-tab>
-              <uib-tab index="5" heading="Project Alerts">
+              <uib-tab index="4" heading="Project Alerts">
                 <h3>Project alert settings </h3>
                 <div class="row" ng-controller="AlertManagerCtrl as alertsCtrl">
                   <div class="col-sm-6">
