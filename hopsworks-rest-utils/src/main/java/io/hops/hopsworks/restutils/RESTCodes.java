@@ -760,7 +760,8 @@ public class RESTCodes {
       Response.Status.SERVICE_UNAVAILABLE),
     TOPIC_DELETION_FAILED(22, "Could not delete Kafka topics.", Response.Status.INTERNAL_SERVER_ERROR),
     TOPIC_FETCH_FAILED(23, "Could not fetch topic details.", Response.Status.INTERNAL_SERVER_ERROR),
-    TOPIC_CREATION_FAILED(24, "Could not create topic.", Response.Status.INTERNAL_SERVER_ERROR);
+    TOPIC_CREATION_FAILED(24, "Could not create topic.", Response.Status.INTERNAL_SERVER_ERROR),
+    BROKER_MISSING(25, "Could not find a broker endpoint.", Response.Status.NOT_FOUND);
 
 
     private Integer code;

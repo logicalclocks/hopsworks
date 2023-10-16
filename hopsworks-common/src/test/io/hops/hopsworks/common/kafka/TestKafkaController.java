@@ -48,7 +48,6 @@ public class TestKafkaController {
   @Test
   public void testCheckReplication() throws KafkaException {
     // Arrange
-    Mockito.doReturn(false).when(kafkaController).externalKafka(Mockito.any());
     List<String> brokers = Collections.nCopies(10, "endpoint");
     Mockito.doReturn(brokers).when(kafkaController.kafkaBrokers).getBrokerEndpoints(Mockito.any());
     TopicDTO topicDTO = new TopicDTO();
@@ -64,9 +63,21 @@ public class TestKafkaController {
   @Test(expected = KafkaException.class)
   public void testCheckReplicationTooFewBrokers() throws KafkaException {
     // Arrange
-    Mockito.doReturn(false).when(kafkaController).externalKafka(Mockito.any());
     List<String> brokers = Collections.nCopies(1, "endpoint");
     Mockito.doReturn(brokers).when(kafkaController.kafkaBrokers).getBrokerEndpoints(Mockito.any());
+    TopicDTO topicDTO = new TopicDTO();
+    topicDTO.setNumOfReplicas(10);
+
+    // Act
+    kafkaController.checkReplication(topicDTO);
+
+    // Assert
+  }
+
+  @Test(expected = KafkaException.class)
+  public void testCheckReplicationNoBrokers() throws KafkaException {
+    // Arrange
+    Mockito.doReturn(new ArrayList<>()).when(kafkaController.kafkaBrokers).getBrokerEndpoints(Mockito.any());
     TopicDTO topicDTO = new TopicDTO();
     topicDTO.setNumOfReplicas(10);
 
@@ -142,6 +153,8 @@ public class TestKafkaController {
   @Test(expected = NullPointerException.class)
   public void testCreateTopicInternalKafka() throws KafkaException {
     // Arrange
+    List<String> brokers = Collections.nCopies(10, "endpoint");
+    Mockito.doReturn(brokers).when(kafkaController.kafkaBrokers).getBrokerEndpoints(Mockito.any());
     Mockito.doReturn(false).when(kafkaController).externalKafka(Mockito.any());
 
     // Act
