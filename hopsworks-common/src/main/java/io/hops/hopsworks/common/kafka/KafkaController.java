@@ -132,6 +132,9 @@ public class KafkaController {
 
   protected void checkReplication(TopicDTO topicDto) throws KafkaException {
     List<String> brokerEndpoints = kafkaBrokers.getBrokerEndpoints(KafkaBrokers.BrokerProtocol.INTERNAL);
+    if (brokerEndpoints.isEmpty()) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.BROKER_MISSING, Level.FINE);
+    }
     if (brokerEndpoints.size() < topicDto.getNumOfReplicas()) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_REPLICATION_ERROR, Level.FINE,
           "maximum: " + brokerEndpoints.size());
