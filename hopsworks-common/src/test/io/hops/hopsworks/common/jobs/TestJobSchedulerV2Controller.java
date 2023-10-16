@@ -233,6 +233,7 @@ public class TestJobSchedulerV2Controller {
 
     JobScheduleV2DTO updatedJobScheduleDTO = new JobScheduleV2DTO();
     updatedJobScheduleDTO.setEnabled(true);
+    updatedJobScheduleDTO.setCronExpression("0 */10 * ? * * *");
     target.updateSchedule(updatedJobScheduleDTO);
     verify(jobScheduleV2Facade, times(1)).update(argumentCaptor.capture());
 
@@ -266,6 +267,7 @@ public class TestJobSchedulerV2Controller {
     JobScheduleV2DTO updatedJobScheduleDTO = new JobScheduleV2DTO();
     updatedJobScheduleDTO.setEnabled(true);
     updatedJobScheduleDTO.setStartDateTime(newStartDateTime.toInstant());
+    updatedJobScheduleDTO.setCronExpression("0 */10 * ? * * *");
     target.updateSchedule(updatedJobScheduleDTO);
 
     verify(jobScheduleV2Facade, times(1)).update(argumentCaptor.capture());
@@ -297,6 +299,7 @@ public class TestJobSchedulerV2Controller {
     JobScheduleV2DTO updatedJobScheduleDTO = new JobScheduleV2DTO();
     updatedJobScheduleDTO.setEnabled(true);
     updatedJobScheduleDTO.setStartDateTime(startDateTime.toInstant());
+    updatedJobScheduleDTO.setCronExpression("0 */10 * ? * * *");
     target.updateSchedule(updatedJobScheduleDTO);
 
     verify(jobScheduleV2Facade, times(1)).update(argumentCaptor.capture());
@@ -324,6 +327,7 @@ public class TestJobSchedulerV2Controller {
 
     JobScheduleV2DTO updatedJobScheduleDTO = new JobScheduleV2DTO();
     updatedJobScheduleDTO.setEnabled(false);
+    updatedJobScheduleDTO.setCronExpression("0 0 0 ? * 1 *");
     target.updateSchedule(updatedJobScheduleDTO);
 
     verify(jobScheduleV2Facade, times(1)).update(argumentCaptor.capture());
@@ -331,5 +335,30 @@ public class TestJobSchedulerV2Controller {
     JobScheduleV2 capturedSchedule = argumentCaptor.getValue();
     Assert.assertEquals(false, capturedSchedule.getEnabled());
     Assert.assertEquals(nextExecutionTime, capturedSchedule.getNextExecutionDateTime());
+  }
+
+  @Test
+  public void testUpdateCronExpression() throws JobException {
+    Instant nextExecutionTime = Instant.now();
+
+    JobScheduleV2 scheduler = new JobScheduleV2();
+    scheduler.setEnabled(true);
+    scheduler.setCronExpression("0 0 0 ? * 1 *");
+    scheduler.setNextExecutionDateTime(nextExecutionTime);
+
+    Mockito.when(jobScheduleV2Facade.getById(any())).thenReturn(Optional.of(scheduler));
+    Mockito.when(jobScheduleV2Facade.update(any(JobScheduleV2.class))).thenReturn(scheduler);
+    ArgumentCaptor<JobScheduleV2> argumentCaptor = ArgumentCaptor.forClass(JobScheduleV2.class);
+
+    String updatedCronExpression = "0 */5 */5 ? * 1 *";
+    JobScheduleV2DTO updatedJobScheduleDTO = new JobScheduleV2DTO();
+    updatedJobScheduleDTO.setCronExpression(updatedCronExpression);
+    updatedJobScheduleDTO.setEnabled(true);
+    target.updateSchedule(updatedJobScheduleDTO);
+
+    verify(jobScheduleV2Facade, times(1)).update(argumentCaptor.capture());
+
+    JobScheduleV2 capturedSchedule = argumentCaptor.getValue();
+    Assert.assertEquals(updatedCronExpression, capturedSchedule.getCronExpression());
   }
 }

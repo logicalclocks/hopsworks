@@ -108,6 +108,7 @@ public class JobScheduleV2Controller {
     JobScheduleV2 jobSchedule = jobScheduleFacade.getById(jobScheduleV2DTO.getId())
             .orElseThrow(() -> new JobException(RESTCodes.JobErrorCode.JOB_SCHEDULE_NOT_FOUND, Level.FINE));
     jobSchedule.setEnabled(jobScheduleV2DTO.getEnabled());
+    jobSchedule.setCronExpression(jobScheduleV2DTO.getCronExpression());
     jobSchedule.setStartDateTime(jobScheduleV2DTO.getStartDateTime());
     jobSchedule.setEndDateTime(jobScheduleV2DTO.getEndDateTime());
 
