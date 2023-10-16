@@ -557,14 +557,13 @@ describe "On #{ENV['OS']}" do
           @connector_name = parsed_json["name"]
 
           # disable kafka storage connectors
-          setVar('enable_kafka_storage_connectors', @enable_kafka_storage_connectors[:value])
+          setVar('enable_kafka_storage_connectors',"false")
 
           create_session(@project[:username], "Pass123")
         end
 
         after :all do
           # enable kafka storage connectors temporarily
-          @enable_kafka_storage_connectors = getVar('enable_kafka_storage_connectors')
           setVar('enable_kafka_storage_connectors', "true")
 
           create_session(@project[:username], "Pass123")
