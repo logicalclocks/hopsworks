@@ -72,6 +72,7 @@ import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import static io.hops.hopsworks.ca.controllers.CertificateType.HOST;
 
@@ -80,6 +81,7 @@ import static io.hops.hopsworks.ca.controllers.CertificateType.HOST;
 public class HostCertsResource {
 
   private static final String REVOKE_CERTIFICATES_PATTERN = "^%s__.*__[0-9]+.*";
+  private static final Logger LOGGER = Logger.getLogger(HostCertsResource.class.getName());
 
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -105,6 +107,13 @@ public class HostCertsResource {
       String stringifiedCert = pkiUtils.convertToPEM(signedCert);
       Pair<String, String> chainOfTrust = pki.getChainOfTrust(pkiUtils.getResponsibleCA(HOST));
       CSRView signedCsr = new CSRView(stringifiedCert, chainOfTrust.getLeft(), chainOfTrust.getRight());
+      if (!Strings.isNullOrEmpty(csrView.getPrivateKey())) {
+        PKIUtils.KeyStores<String> keyStores = pkiUtils.createB64Keystores(csrView.getPrivateKey(), signedCert,
+            pkiUtils.loadCertificate(chainOfTrust.getRight()), pkiUtils.loadCertificate(chainOfTrust.getLeft()));
+        signedCsr.setKeyStore(keyStores.getKeyStore());
+        signedCsr.setTrustStore(keyStores.getTrustStore());
+        signedCsr.setPassword(new String(keyStores.getPassword()));
+      }
       GenericEntity<CSRView> csrViewGenericEntity = new GenericEntity<CSRView>(signedCsr) { };
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(csrViewGenericEntity).build();
     } catch (IOException | GeneralSecurityException | OperatorCreationException | CAInitializationException ex) {

@@ -21,28 +21,54 @@ import io.hops.hopsworks.ca.persistence.PKICertificateFacade;
 import io.hops.hopsworks.persistence.entity.pki.CAType;
 import io.hops.hopsworks.persistence.entity.pki.PKICertificate;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStrictStyle;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.cert.CertIOException;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMDecryptorProvider;
+import org.bouncycastle.openssl.PEMEncryptedKeyPair;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaMiscPEMGenerator;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
+import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.util.io.pem.PemObjectGenerator;
 import org.bouncycastle.util.io.pem.PemWriter;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.naming.InvalidNameException;
+import java.io.ByteArrayOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.io.StringReader;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.nio.file.Path;
+import java.security.GeneralSecurityException;
 import java.security.KeyException;
+import java.security.KeyPair;
+import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.Security;
 import java.security.SignatureException;
 import java.security.cert.CRLException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.security.cert.X509Extension;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -78,7 +104,18 @@ public class PKIUtils {
     TIME_SUFFIXES.put("d", ChronoUnit.DAYS);
   }
   private static final Pattern TIME_CONF_PATTERN = Pattern.compile("([0-9]+)([a-z]+)?");
+  private static final Base64 B64 = new Base64();
+  private JcaPEMKeyConverter pemKeyConverter;
+  private JcaX509CertificateConverter x509Converter;
 
+
+
+  @PostConstruct
+  public void init() {
+    Security.addProvider(new BouncyCastleProvider());
+    pemKeyConverter = new JcaPEMKeyConverter().setProvider(new BouncyCastleProvider());
+    x509Converter = new JcaX509CertificateConverter().setProvider(new BouncyCastleProvider());
+  }
 
   public X500Name parseCertificateSubjectName(String subject, CertificateType certificateType)
       throws InvalidNameException {
@@ -289,5 +326,112 @@ public class PKIUtils {
       throw new IllegalArgumentException("Invalid time suffix in configuration: " + configurationTime);
     }
     return timeUnitStr == null ? ChronoUnit.MINUTES : TIME_SUFFIXES.get(timeUnitStr.toLowerCase());
+  }
+
+  public KeyPair loadKeyPair(String privateKey, String password) throws IOException {
+    return loadKeyPair(new StringReader(privateKey), password);
+  }
+
+  public KeyPair loadKeyPair(Path path, String password) throws IOException  {
+    return loadKeyPair(new FileReader(path.toFile()), password);
+  }
+
+  private KeyPair loadKeyPair(Reader reader, String password) throws IOException {
+    try (PEMParser pemParser = new PEMParser(reader)) {
+      Object object = pemParser.readObject();
+      KeyPair kp;
+      if (object instanceof PEMEncryptedKeyPair) {
+        PEMEncryptedKeyPair ekp = (PEMEncryptedKeyPair) object;
+        PEMDecryptorProvider decryptorProvider = new JcePEMDecryptorProviderBuilder().build(password.toCharArray());
+        kp = pemKeyConverter.getKeyPair(ekp.decryptKeyPair(decryptorProvider));
+      } else if (object instanceof PEMKeyPair) {
+        // PKCS1
+        PEMKeyPair ukp = (PEMKeyPair) object;
+        kp = pemKeyConverter.getKeyPair(ukp);
+      } else if (object instanceof PrivateKeyInfo) {
+        // PKCS8
+        PrivateKey privateKey = pemKeyConverter.getPrivateKey((PrivateKeyInfo) object);
+        kp = new KeyPair(null, privateKey);
+      } else {
+        throw new UnsupportedEncodingException("Unsupported keypair encoding");
+      }
+      return kp;
+    }
+  }
+
+  public X509Certificate loadCertificate(Path path) throws IOException, CertificateException {
+    return loadCertificate(new FileReader(path.toFile()));
+  }
+
+  public X509Certificate loadCertificate(String certificate) throws IOException, CertificateException {
+    return loadCertificate(new StringReader(certificate));
+  }
+
+  private X509Certificate loadCertificate(Reader reader) throws IOException, CertificateException {
+    try (PEMParser pemParser = new PEMParser(reader)) {
+      Object object = pemParser.readObject();
+      if (object instanceof X509CertificateHolder) {
+        return x509Converter.getCertificate((X509CertificateHolder) object);
+      }
+      return null;
+    }
+  }
+
+  public KeyStores<String> createB64Keystores(String privateKey, X509Certificate certificate,
+      X509Certificate issuer, X509Certificate root) throws GeneralSecurityException, IOException {
+
+    try (ByteArrayOutputStream keyStore = new ByteArrayOutputStream();
+         ByteArrayOutputStream trustStore = new ByteArrayOutputStream()) {
+      char[] password = createKeystores(privateKey, certificate, issuer, root, keyStore, trustStore);
+      return new KeyStores<>(B64.encodeToString(keyStore.toByteArray()), B64.encodeToString(trustStore.toByteArray()),
+          password);
+    }
+  }
+
+  public char[] createKeystores(String privateKey, X509Certificate certificate, X509Certificate issuer,
+      X509Certificate root, OutputStream keyStore, OutputStream trustStore)
+      throws GeneralSecurityException, IOException {
+    PrivateKey key = loadKeyPair(new StringReader(privateKey), "").getPrivate();
+    char[] password = RandomStringUtils.randomAlphanumeric(15, 20).toCharArray();
+    KeyStore ks = KeyStore.getInstance("JKS");
+    ks.load(null, null);
+    X509Certificate[] chain = new X509Certificate[2];
+    chain[0] = certificate;
+    chain[1] = issuer;
+    ks.setKeyEntry("own", key, password, chain);
+    ks.store(keyStore, password);
+
+
+    KeyStore ts = KeyStore.getInstance("JKS");
+    ts.load(null, null);
+    ts.setCertificateEntry("hw_root_ca", root);
+    ts.store(trustStore, password);
+    keyStore.flush();
+    trustStore.flush();
+    return password;
+  }
+
+  public static class KeyStores<T> {
+    private final T keyStore;
+    private final T trustStore;
+    private final char[] password;
+
+    public KeyStores(T keyStore, T trustStore, char[] password) {
+      this.keyStore = keyStore;
+      this.trustStore = trustStore;
+      this.password = password;
+    }
+
+    public T getKeyStore() {
+      return keyStore;
+    }
+
+    public T getTrustStore() {
+      return trustStore;
+    }
+
+    public char[] getPassword() {
+      return password;
+    }
   }
 }

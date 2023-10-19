@@ -47,10 +47,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @ApiModel(value = "Represents a certificate signing request")
 public class CSRView {
+  private String privateKey;
   private String csr;
   private String signedCert;
   private String intermediateCaCert;
   private String rootCaCert;
+  private String keyStore;
+  private String trustStore;
+  private String password;
 
   public CSRView() {
 
@@ -72,6 +76,15 @@ public class CSRView {
   public CSRView(String rootCaCert, String intermediateCaCert) {
     this.intermediateCaCert = intermediateCaCert;
     this.rootCaCert = rootCaCert;
+  }
+
+  @ApiModelProperty(value = "PKCS8 encoded private key used to create Java keystore")
+  public String getPrivateKey() {
+    return privateKey;
+  }
+
+  public void setPrivateKey(String privateKey) {
+    this.privateKey = privateKey;
   }
 
   @ApiModelProperty(value = "String containing the certificate signing request", required = true)
@@ -108,5 +121,33 @@ public class CSRView {
 
   public void setRootCaCert(String rootCaCert) {
     this.rootCaCert = rootCaCert;
+  }
+
+  @ApiModelProperty(value = "Base64 encoded keystore containing signed certificate and intermediate CA locked by " +
+      "password")
+  public String getKeyStore() {
+    return keyStore;
+  }
+
+  public void setKeyStore(String keyStore) {
+    this.keyStore = keyStore;
+  }
+
+  @ApiModelProperty(value = "Base64 encoded trustore containing Hopsworks root CA certificate locked by password")
+  public String getTrustStore() {
+    return trustStore;
+  }
+
+  public void setTrustStore(String trustStore) {
+    this.trustStore = trustStore;
+  }
+
+  @ApiModelProperty(value = "Randomly generated password to protect keystore and truststore")
+  public String getPassword() {
+    return password;
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
   }
 }
