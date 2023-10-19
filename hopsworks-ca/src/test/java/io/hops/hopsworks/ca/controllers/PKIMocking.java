@@ -96,7 +96,7 @@ public class PKIMocking {
     pki.setCaConf(conf);
   }
 
-  protected String stringifyCSR(PKCS10CertificationRequest csr) throws IOException {
+  protected static String stringifyCSR(PKCS10CertificationRequest csr) throws IOException {
     try (StringWriter sw = new StringWriter()) {
       PemWriter pw = new JcaPEMWriter(sw);
       PemObjectGenerator pog = new JcaMiscPEMGenerator(csr);

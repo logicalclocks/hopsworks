@@ -92,12 +92,7 @@ import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.cert.jcajce.JcaX509v2CRLBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openssl.PEMDecryptorProvider;
-import org.bouncycastle.openssl.PEMEncryptedKeyPair;
-import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
-import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
-import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
@@ -197,7 +192,6 @@ public class PKI {
   private KeyFactory keyFactory;
   private JcaX509CertificateConverter converter;
   private JcaX509CRLConverter crlConverter;
-  private JcaPEMKeyConverter pemKeyConverter;
   private CAsConfiguration conf;
   private static final Map<CAType, X500Name> CA_SUBJECT_NAME = new HashMap<>(3);
   private static final String CA_INIT_LOCK = "caInitLock";
@@ -241,7 +235,6 @@ public class PKI {
       keyFactory = KeyFactory.getInstance("RSA");
       converter = new JcaX509CertificateConverter().setProvider(new BouncyCastleProvider());
       crlConverter = new JcaX509CRLConverter().setProvider(new BouncyCastleProvider());
-      pemKeyConverter = new JcaPEMKeyConverter().setProvider(new BouncyCastleProvider());
       configure();
     } catch (GeneralSecurityException ex) {
       throw new RuntimeException("Failed to initialize PKI", ex);
@@ -521,7 +514,7 @@ public class PKI {
 
   protected KeyPair loadKeyPairFromFile(String owner) throws IOException {
     Path keyPath = getPathToPrivateKey(owner);
-    return loadKeyPair(keyPath, getPrivateFileKeyPassword(owner));
+    return pkiUtils.loadKeyPair(keyPath, getPrivateFileKeyPassword(owner));
   }
 
   private String getPrivateFileKeyPassword(String owner) {
@@ -550,22 +543,6 @@ public class PKI {
       throw new FileNotFoundException("File " + path.toFile() + " does not exist");
     }
     return path;
-  }
-
-  private KeyPair loadKeyPair(Path path, String password) throws IOException  {
-    try (PEMParser pemParser = new PEMParser(new FileReader(path.toFile()))) {
-      Object object = pemParser.readObject();
-      KeyPair kp;
-      if (object instanceof PEMEncryptedKeyPair) {
-        PEMEncryptedKeyPair ekp = (PEMEncryptedKeyPair) object;
-        PEMDecryptorProvider decryptorProvider = new JcePEMDecryptorProviderBuilder().build(password.toCharArray());
-        kp = pemKeyConverter.getKeyPair(ekp.decryptKeyPair(decryptorProvider));
-      } else {
-        PEMKeyPair ukp = (PEMKeyPair) object;
-        kp = pemKeyConverter.getKeyPair(ukp);
-      }
-      return kp;
-    }
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -633,7 +610,7 @@ public class PKI {
   @VisibleForTesting
   protected X509Certificate loadCACertificate(CAType type) throws IOException, CertificateException {
     Path certPath = getCACertificatePath(type);
-    return loadCertificate(certPath);
+    return pkiUtils.loadCertificate(certPath);
   }
 
   private Path getCACertificatePath(CAType type) throws FileNotFoundException {
@@ -655,16 +632,6 @@ public class PKI {
       throw new FileNotFoundException("File " + path.toFile() + " does not exist");
     }
     return path;
-  }
-
-  private X509Certificate loadCertificate(Path path) throws IOException, CertificateException {
-    try (PEMParser pemParser = new PEMParser(new FileReader(path.toFile()))) {
-      Object object = pemParser.readObject();
-      if (object instanceof X509CertificateHolder) {
-        return converter.getCertificate((X509CertificateHolder) object);
-      }
-      return null;
-    }
   }
 
   protected Optional<X509Certificate> loadCertificate(String subject) throws IOException, CertificateException {
