@@ -249,10 +249,10 @@ public abstract class YarnJob extends HopsJob {
         public Void run() {
           YarnClientWrapper yarnClientWrapper = null;
           try {
-            yarnClientWrapper = services.getYarnClientService().getYarnClient(hdfsUser.getUserName());
-            yarnClient = yarnClientWrapper.getYarnClient();
             boolean proceed = false;
             try {
+              yarnClientWrapper = services.getYarnClientService().getYarnClient(hdfsUser.getUserName());
+              yarnClient = yarnClientWrapper.getYarnClient();
               proceed = setupJob();
             } catch (Exception ex) {
               LOG.log(Level.SEVERE, "Job Initialization Failed", ex);
