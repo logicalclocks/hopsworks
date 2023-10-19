@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
 import io.hops.hopsworks.common.featurestore.storageconnectors.StorageConnectorUtil;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.UserException;
@@ -49,6 +50,7 @@ import javax.ejb.TransactionAttributeType;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -83,6 +85,8 @@ public class OnlineFeaturestoreController {
   private StorageConnectorUtil storageConnectorUtil;
   @EJB
   private MultiRegionController multiRegionController;
+  @EJB
+  private ProjectUtils projectUtils;
 
   public void setupOnlineFeatureStore(Project project, Featurestore featurestore)
       throws FeaturestoreException, SQLException {
@@ -102,11 +106,10 @@ public class OnlineFeaturestoreController {
       throws FeaturestoreException {
     String db = getOnlineFeaturestoreDbName(featurestore.getProject());
     onlineFeaturestoreFacade.createOnlineFeaturestoreDatabase(db, connection);
-
     // Create kafka offset table
     onlineFeaturestoreFacade.createOnlineFeaturestoreKafkaOffsetTable(db, connection);
-    for (ProjectTeam projectTeam : projectTeamFacade.findMembersByProject(project)) {
-      createDatabaseUser(projectTeam.getUser(), featurestore, projectTeam.getTeamRole(), connection);
+    for (ProjectTeam member : projectUtils.getProjectTeamCollection(project)) {
+      createDatabaseUser(member.getUser(), featurestore, member.getTeamRole(), connection);
     }
   }
 
@@ -273,9 +276,9 @@ public class OnlineFeaturestoreController {
   public void shareOnlineFeatureStore(Project project, Featurestore featurestore,
                                       DatasetAccessPermission permission) throws FeaturestoreException {
     String featureStoreDb = getOnlineFeaturestoreDbName(featurestore.getProject());
-
+    Collection<ProjectTeam> projectTeam = projectUtils.getProjectTeamCollection(project);
     try (Connection connection = onlineFeaturestoreFacade.establishAdminConnection()) {
-      for (ProjectTeam member : projectTeamFacade.findMembersByProject(project)) {
+      for (ProjectTeam member : projectTeam) {
         shareOnlineFeatureStoreUser(project, member.getUser(), member.getTeamRole(), featureStoreDb, permission,
             connection);
       }
@@ -288,7 +291,7 @@ public class OnlineFeaturestoreController {
     if (multiRegionController.isEnabled()) {
       try (Connection connection =
                onlineFeaturestoreFacade.establishAdminConnection(multiRegionController.getSecondaryRegionName())) {
-        for (ProjectTeam member : projectTeamFacade.findMembersByProject(project)) {
+        for (ProjectTeam member : projectTeam) {
           shareOnlineFeatureStoreUser(project, member.getUser(), member.getTeamRole(), featureStoreDb, permission,
               connection);
         }
@@ -337,8 +340,9 @@ public class OnlineFeaturestoreController {
   public void unshareOnlineFeatureStore(Project project, Featurestore featurestore) throws FeaturestoreException {
     String featureStoreDb = getOnlineFeaturestoreDbName(featurestore.getProject());
 
+    Collection<ProjectTeam> projectTeam = projectUtils.getProjectTeamCollection(project);
     try (Connection connection = onlineFeaturestoreFacade.establishAdminConnection()) {
-      for (ProjectTeam member : projectTeamFacade.findMembersByProject(project)) {
+      for (ProjectTeam member : projectTeam) {
         String dbUser = onlineDbUsername(project, member.getUser());
         onlineFeaturestoreFacade.revokeUserPrivileges(featureStoreDb, dbUser, connection);
       }
@@ -351,7 +355,7 @@ public class OnlineFeaturestoreController {
     if (multiRegionController.isEnabled()) {
       try (Connection connection =
                onlineFeaturestoreFacade.establishAdminConnection(multiRegionController.getSecondaryRegionName())) {
-        for (ProjectTeam member : projectTeamFacade.findMembersByProject(project)) {
+        for (ProjectTeam member : projectTeam) {
           String dbUser = onlineDbUsername(project, member.getUser());
           onlineFeaturestoreFacade.revokeUserPrivileges(featureStoreDb, dbUser, connection);
         }

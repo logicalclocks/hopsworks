@@ -24,6 +24,7 @@ import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.opensearch.OpenSearchController;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -69,6 +70,8 @@ public class OpenSearchHitsBuilder {
   private UserFacade userFacade;
   @EJB
   private HdfsUsersController hdfsUsersController;
+  @EJB
+  private ProjectUtils projectUtils;
   
   public OpenSearchHitDTO buildOpenSearchHits(String searchTerm, Users user)
       throws ServiceException, OpenSearchException {
@@ -298,7 +301,7 @@ public class OpenSearchHitsBuilder {
   
   private List<String> getMembers(Project project) {
     List<String> members = new ArrayList<>();
-    for (ProjectTeam member: project.getProjectTeamCollection()) {
+    for (ProjectTeam member: projectUtils.getProjectTeamCollection(project)) {
       members.add(member.getUser().getFname() + " " + member.getUser().getLname());
     }
     return members;

@@ -39,6 +39,7 @@
 package io.hops.hopsworks.common.security;
 
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.persistence.entity.certificates.UserCerts;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
@@ -122,6 +123,8 @@ public class CertificatesController {
   private Instance<CertificateHandler> certificateHandlers;
   @EJB
   private CAProxy caProxy;
+  @EJB
+  private ProjectUtils projectUtils;
 
   private KeyPairGenerator keyPairGenerator = null;
   private CertificateFactory certificateFactory = null;
@@ -195,7 +198,7 @@ public class CertificatesController {
       throws GenericException, HopsSecurityException, IOException {
     String projectName = project.getName();
 
-    Set<Users> users2deleteCertificates = Optional.ofNullable(project.getProjectTeamCollection())
+    Set<Users> users2deleteCertificates = Optional.ofNullable(projectUtils.getProjectTeamCollection(project))
             .map(Collection::stream).orElse(Stream.empty())
             .map(ProjectTeam::getUser).collect(Collectors.toSet());
     if (owner != null) {

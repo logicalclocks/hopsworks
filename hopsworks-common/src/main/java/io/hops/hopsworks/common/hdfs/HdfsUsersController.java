@@ -41,6 +41,8 @@ package io.hops.hopsworks.common.hdfs;
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsGroupsFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
+import io.hops.hopsworks.common.util.ProjectUtils;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.dataset.PermissionTransition;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
@@ -78,6 +80,10 @@ public class HdfsUsersController {
   private HdfsGroupsFacade hdfsGroupsFacade;
   @EJB
   private DistributedFsService dfsService;
+  @EJB
+  private Settings settings;
+  @EJB
+  private ProjectUtils projectUtils;
 
   /**
    * Creates a new group in HDFS with the name <code>projectName</code> if it
@@ -140,7 +146,7 @@ public class HdfsUsersController {
     addToGroup(hdfsUsername, hdfsGroup.getName(), dfso);
 
     //add every member to the new ds group
-    addMembersToGroups(datasetGroup, datasetAclGroup, dfso, project.getProjectTeamCollection(),
+    addMembersToGroups(datasetGroup, datasetAclGroup, dfso, projectUtils.getProjectTeamCollection(project),
         dataset.getPermission());
   }
   
@@ -769,7 +775,7 @@ public class HdfsUsersController {
   
   public void changePermission(Dataset ds, Project targetProject, PermissionTransition permissionTransition,
     DistributedFileSystemOps dfso) throws IOException {
-    for (ProjectTeam teamMember : targetProject.getProjectTeamCollection()) {
+    for (ProjectTeam teamMember : projectUtils.getProjectTeamCollection(targetProject)) {
       changePermission(ds, teamMember, permissionTransition, dfso);
     }
   }

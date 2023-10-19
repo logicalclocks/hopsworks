@@ -63,6 +63,7 @@ import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -152,6 +153,8 @@ public class DatasetController {
   private OnlineFeaturestoreController onlineFeaturestoreController;
   @EJB
   private HdfsCommandExecutionController hdfsCommandExecutionController;
+  @EJB
+  private ProjectUtils projectUtils;
 
   /**
    * Create a new DataSet. This is, a folder right under the project home
@@ -804,9 +807,9 @@ public class DatasetController {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
-      for (ProjectTeam teamMember : datasetSharedWith.getProject().getProjectTeamCollection()) {
-        hdfsUsersController.addNewMember(datasetSharedWith.getDataset(), datasetSharedWith.getPermission(), teamMember,
-          dfso);
+      for (ProjectTeam teamMember : projectUtils.getProjectTeamCollection(datasetSharedWith.getProject())) {
+        hdfsUsersController.addNewMember(datasetSharedWith.getDataset(), datasetSharedWith.getPermission(),
+            teamMember, dfso);
       }
     } catch (IOException e) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.FINE,
@@ -1278,7 +1281,7 @@ public class DatasetController {
 
   private void removeAllShareMembers(DatasetSharedWith datasetSharedWith, DistributedFileSystemOps dfso)
     throws DatasetException {
-    for (ProjectTeam teamMember : datasetSharedWith.getProject().getProjectTeamCollection()) {
+    for (ProjectTeam teamMember : projectUtils.getProjectTeamCollection(datasetSharedWith.getProject())) {
       try {
         hdfsUsersController.removeMember(datasetSharedWith.getDataset(), datasetSharedWith.getPermission(),
           teamMember, dfso);

@@ -1146,7 +1146,7 @@ public class ProjectController {
         // Get Yarn applications
         List<ApplicationReport> projectApps = null;
         try {
-          Collection<ProjectTeam> team = project.getProjectTeamCollection();
+          Collection<ProjectTeam> team = projectUtils.getProjectTeamCollection(project);
           Set<String> hdfsUsers = new HashSet<>();
           for (ProjectTeam pt : team) {
             String hdfsUsername = hdfsUsersController.getHdfsUserName(project, pt.
@@ -1544,7 +1544,7 @@ public class ProjectController {
    * @param project Project to be deleted
    */
   private void removeCertificatesFromMaterializer(Project project) {
-    for (ProjectTeam team : project.getProjectTeamCollection()) {
+    for (ProjectTeam team : projectUtils.getProjectTeamCollection(project)) {
       certificateMaterializer.forceRemoveLocalMaterial(team.getUser().getUsername(), project.getName(), null, true);
       String remoteCertsDirectory = settings.getHdfsTmpCertDir() + Path.SEPARATOR +
         hdfsUsersController.getHdfsUserName(project, team.getUser());
@@ -1597,7 +1597,7 @@ public class ProjectController {
          * we can't know if the status in "NOT_START" because we should wait for it or because the
          * resourcemanager restarted.
          */
-        Collection<ProjectTeam> team = project.getProjectTeamCollection();
+        Collection<ProjectTeam> team = projectUtils.getProjectTeamCollection(project);
         Set<String> hdfsUsers = new HashSet<>();
         for (ProjectTeam pt : team) {
           String hdfsUsername = hdfsUsersController.getHdfsUserName(project, pt.getUser());
