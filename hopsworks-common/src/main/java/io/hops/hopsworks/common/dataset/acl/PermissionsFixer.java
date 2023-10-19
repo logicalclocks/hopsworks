@@ -26,6 +26,7 @@ import io.hops.hopsworks.common.hdfs.FsPermissions;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
@@ -76,6 +77,9 @@ public class PermissionsFixer {
   private InodeController inodeController;
   @EJB
   private Settings settings;
+  @EJB
+  private ProjectUtils projectUtils;
+
   @Asynchronous
   public void fixPermissions() {
     fixPermissions(0, 0L);
@@ -158,7 +162,8 @@ public class PermissionsFixer {
     testFsPermission(dataset, datasetInode, dfso);
     testAndFixPermissionForAllMembers(dataset.getProject(), dfso, hdfsDatasetGroup, hdfsDatasetAclGroup,
       datasetInode.getHdfsUser(), dataset.getPermission());
-    List<ProjectTeam> datasetTeamCollection = new ArrayList<>(dataset.getProject().getProjectTeamCollection());
+    List<ProjectTeam> datasetTeamCollection =
+        new ArrayList<>(projectUtils.getProjectTeamCollection(dataset.getProject()));
     for (DatasetSharedWith datasetSharedWith : dataset.getDatasetSharedWithCollection()) {
       if (dataset.isPublicDs() && !DatasetAccessPermission.READ_ONLY.equals(datasetSharedWith.getPermission())) {
         datasetSharedWith.setPermission(DatasetAccessPermission.READ_ONLY);
@@ -167,7 +172,7 @@ public class PermissionsFixer {
       if (datasetSharedWith.getAccepted()) {
         testAndFixPermissionForAllMembers(datasetSharedWith.getProject(), dfso, hdfsDatasetGroup, hdfsDatasetAclGroup,
           null, datasetSharedWith.getPermission());
-        datasetTeamCollection.addAll(datasetSharedWith.getProject().getProjectTeamCollection());
+        datasetTeamCollection.addAll(projectUtils.getProjectTeamCollection(dataset.getProject()));
       }
     }
     testAndRemoveUsersFromGroup(datasetTeamCollection, hdfsDatasetGroup, hdfsDatasetAclGroup,
@@ -198,7 +203,7 @@ public class PermissionsFixer {
   private void testAndFixPermissionForAllMembers(Project project, DistributedFileSystemOps dfso,
     HdfsGroups hdfsDatasetGroup, HdfsGroups hdfsDatasetAclGroup, HdfsUsers owner, DatasetAccessPermission permission)
     throws IOException {
-    for (ProjectTeam projectTeam : project.getProjectTeamCollection()) {
+    for (ProjectTeam projectTeam : projectUtils.getProjectTeamCollection(project)) {
       testAndFixPermission(projectTeam, dfso, hdfsDatasetGroup, hdfsDatasetAclGroup, owner, permission);
     }
   }

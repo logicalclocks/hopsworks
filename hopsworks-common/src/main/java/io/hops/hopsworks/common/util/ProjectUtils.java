@@ -44,6 +44,7 @@ import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.DockerJobConfiguration;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.persistence.entity.serving.DockerResourcesConfiguration;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.servicediscovery.HopsworksService;
@@ -52,10 +53,14 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -259,5 +264,16 @@ public class ProjectUtils {
       dockerResourceConfig.setMemory(userKubeMaxMem);
 
     return dockerResourceConfig;
+  }
+
+  /**
+   * Get the project team members except some service users like airflow
+   * @param project
+   * @return
+   */
+  public Collection<ProjectTeam> getProjectTeamCollection(Project project) {
+    List<String> usersToFilter = Arrays.asList(settings.getAirflowUser());
+    return project.getProjectTeamCollection().stream()
+        .filter(m -> !usersToFilter.contains(m.getUser().getUsername())).collect(Collectors.toList());
   }
 }

@@ -71,7 +71,7 @@ module ProjectHelper
   end
 
   def create_project(projectName = nil, 
-                     services: ["JOBS","JUPYTER","HIVE","KAFKA","SERVING", "FEATURESTORE"],
+                     services: ["JOBS","JUPYTER","HIVE","KAFKA","SERVING", "FEATURESTORE", "AIRFLOW"],
                      validate_session: true)
     if validate_session
       with_valid_session
