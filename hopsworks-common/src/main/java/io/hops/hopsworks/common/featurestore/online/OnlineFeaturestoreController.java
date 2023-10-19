@@ -15,13 +15,13 @@
  */
 package io.hops.hopsworks.common.featurestore.online;
 
-import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretsFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
 import io.hops.hopsworks.common.featurestore.storageconnectors.StorageConnectorUtil;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.UserException;
@@ -73,11 +73,11 @@ public class OnlineFeaturestoreController {
   @EJB
   private OnlineFeaturestoreFacade onlineFeaturestoreFacade;
   @EJB
-  private ProjectTeamFacade projectTeamFacade;
-  @EJB
   private FeaturestoreConnectorFacade featurestoreConnectorFacade;
   @EJB
   private StorageConnectorUtil storageConnectorUtil;
+  @EJB
+  private ProjectUtils projectUtils;
 
   /**
    * Sets up the online feature store database for a new project and creating a database-user for the project-owner
@@ -269,7 +269,7 @@ public class OnlineFeaturestoreController {
       return;
     }
     try (Connection connection = onlineFeaturestoreFacade.establishAdminConnection()) {
-      for (ProjectTeam member : projectTeamFacade.findMembersByProject(project)) {
+      for (ProjectTeam member : projectUtils.getProjectTeamCollection(project)) {
         String dbUser = onlineDbUsername(project, member.getUser());
         try {
           secretsController.delete(member.getUser(), dbUser);
@@ -328,7 +328,7 @@ public class OnlineFeaturestoreController {
     }
 
     try (Connection connection = onlineFeaturestoreFacade.establishAdminConnection()) {
-      for (ProjectTeam member : projectTeamFacade.findMembersByProject(project)) {
+      for (ProjectTeam member : projectUtils.getProjectTeamCollection(project)) {
         shareOnlineFeatureStoreUser(project, member.getUser(), member.getTeamRole(), featureStoreDb, permission,
           connection);
       }
@@ -403,7 +403,7 @@ public class OnlineFeaturestoreController {
 
 
     try (Connection connection = onlineFeaturestoreFacade.establishAdminConnection()) {
-      for (ProjectTeam member : projectTeamFacade.findMembersByProject(project)) {
+      for (ProjectTeam member : projectUtils.getProjectTeamCollection(project)) {
         String dbUser = onlineDbUsername(project, member.getUser());
         onlineFeaturestoreFacade.revokeUserPrivileges(featureStoreDb, dbUser, connection);
       }
