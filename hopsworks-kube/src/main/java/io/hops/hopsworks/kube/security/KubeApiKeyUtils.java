@@ -179,10 +179,10 @@ public class KubeApiKeyUtils {
   
   public String getServingApiKeyValueFromKubeSecret(String username, String secretName) throws ApiKeyException {
     Secret secret = null;
-    int retry = 15;
+    int retry = 30;
     do {
       try {
-        Thread.sleep(1000);
+        Thread.sleep(5000);
       } catch (InterruptedException e) {
         logger.log(INFO,
           "Cannot wait before retrieving the serving API key secret for user " + username);
