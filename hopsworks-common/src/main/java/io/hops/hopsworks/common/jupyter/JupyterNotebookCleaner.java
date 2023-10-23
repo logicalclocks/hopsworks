@@ -68,8 +68,7 @@ import java.util.logging.Logger;
 @DependsOn("Settings")
 public class JupyterNotebookCleaner {
 
-  private static final  Logger LOGGER = Logger.getLogger(
-      JupyterNotebookCleaner.class.getName());
+  private static final  Logger LOGGER = Logger.getLogger(JupyterNotebookCleaner.class.getName());
 
   @EJB
   private JupyterFacade jupyterFacade;
@@ -108,6 +107,11 @@ public class JupyterNotebookCleaner {
     if (!payaraClusterManager.amIThePrimary()) {
       return;
     }
+    doCleanup();
+  }
+
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  public void doCleanup() {
     try {
       LOGGER.log(Level.FINE, "Running JupyterNotebookCleaner.");
       // 1. Get all Running Jupyter Notebook Servers
@@ -120,8 +124,8 @@ public class JupyterNotebookCleaner {
           if (!jp.isNoLimit() && jp.getExpires().before(currentDate)) {
             try {
               LOGGER.log(Level.FINE,
-                  "Shutting down expired notebook user: " + jp.getUser().getUsername()
-                      + " project: " + jp.getProject().getName());
+                "Shutting down expired notebook user: " + jp.getUser().getUsername()
+                  + " project: " + jp.getProject().getName());
               jupyterController.shutdown(jp.getProject(), jp.getUser(), jp.getSecret(), jp.getCid(), jp.getPort());
             } catch (Exception e) {
               LOGGER.log(Level.SEVERE, "Failed to cleanup notebook with port " + jp.getPort(), e);

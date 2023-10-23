@@ -48,7 +48,7 @@ module CommandHelper
     result[0]
   end
 
-  def wait_on_command_search(wait_time: 10, repeat: 6)
+  def wait_on_command_search(wait_time: 20, repeat: 6)
     result = wait_on_command(wait_time: wait_time, repeat: repeat) do
       count = CommandSearch.count
       count

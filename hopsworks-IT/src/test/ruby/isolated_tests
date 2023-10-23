@@ -3,11 +3,9 @@ variables_spec.rb
 agent_spec.rb
 admin_hosts_spec.rb
 audit_spec.rb
-ee_epipe_spec.rb
 ee_search_spec.rb
 ee_tags_spec.rb
 epipe_spec.rb
-ee_epipe_spec.rb
 prov_ops_spec.rb
 prov_state_spec.rb
 search_spec.rb

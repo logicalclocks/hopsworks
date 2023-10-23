@@ -141,7 +141,7 @@ describe "On #{ENV['OS']}" do
     expect(parsed_result_update['dataset']).to eql(dataset)
     expect(parsed_result_update['queryTable']).to eql(table)
     expect(parsed_result_update['queryTable']).to eql(table)
-    expect(parsed_result_update['arguments']).to eql([])
+    expect(parsed_result_update['arguments']).to be_empty
   end
 
   it 'should fail to update non existing connector' do

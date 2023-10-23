@@ -717,8 +717,8 @@ describe "On #{ENV['OS']}" do
                                            "(SELECT `fg1`.`a_testfeature` `a_testfeature`, `fg1`.`a_testfeature1` `a_testfeature1`, `fg1`.`a_testfeature` `join_pk_a_testfeature`, `fg1`.`event_time` `join_evt_event_time`, `fg0`.`b_testfeature1` `b_testfeature1`, RANK() OVER (PARTITION BY `fg0`.`a_testfeature`, `fg1`.`event_time` ORDER BY `fg0`.`event_time` DESC) pit_rank_hopsworks\n" +
                                            "FROM `#{project_name.downcase}_featurestore`.`#{fg_a_name}_1` `fg1`\n" +
                                            "INNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_b_name}_1` `fg0` ON `fg1`.`a_testfeature` = `fg0`.`a_testfeature` AND `fg1`.`event_time` >= `fg0`.`event_time`\n" +
-                                           "WHERE (`fg1`.`a_testfeature` = 10 OR `fg0`.`b_testfeature1` = 10) AND `fg0`.`b_testfeature2` = 10) NA\n" +
-                                           "WHERE `pit_rank_hopsworks` = 1) (SELECT `right_fg0`.`a_testfeature` `a_testfeature`, `right_fg0`.`a_testfeature1` `a_testfeature1`, `right_fg0`.`b_testfeature1` `b_testfeature1`\nFROM right_fg0)")
+                                           "WHERE `fg0`.`b_testfeature2` = 10) NA\n" +
+                                           "WHERE `pit_rank_hopsworks` = 1) (SELECT `right_fg0`.`a_testfeature` `a_testfeature`, `right_fg0`.`a_testfeature1` `a_testfeature1`, `right_fg0`.`b_testfeature1` `b_testfeature1`\nFROM right_fg0\nWHERE `right_fg0`.`a_testfeature` = 10 OR `right_fg0`.`b_testfeature1` = 10)")
       end
 
       it "should be able to create stream feature group with many features and get features in specific order on get" do
