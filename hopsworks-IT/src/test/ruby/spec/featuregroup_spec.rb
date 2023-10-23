@@ -2077,8 +2077,9 @@ describe "On #{ENV['OS']}" do
         expect_status_details(200)
         topic = json_body[:items].select{|topic| topic[:name] == topic_name}
         expect(topic.length).to eq(1)
+        #disableOnline=true should delete the subject
         get_subject_schema(project, featuregroup_name + "_" + parsed_json["version"].to_s, 1)
-        expect_status_details(200)
+        expect_status_details(404)
       end
 
       it "should be possible to preview from online storage of an on-demand/external feature group" do
@@ -2645,8 +2646,8 @@ describe "On #{ENV['OS']}" do
 
         # add sample ros
         OnlineFg.db_name = project[:projectname]
-        OnlineFg.create(testfeature: 1).save
-        OnlineFg.create(testfeature: 2).save
+        OnlineFg.create(testfeature: 3).save
+        OnlineFg.create(testfeature: 4).save
 
         get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/preview?storage=online&limit=1"
         expect_status_details(200)
@@ -3012,9 +3013,10 @@ describe "On #{ENV['OS']}" do
           topic = []
         end
         expect(topic.length).to eq(1)
+        #disableOnline=true should delete the subject
         get_subject_schema(project, featuregroup_name + "_" + parsed_json["version"].to_s, 1)
-        expect_status_details(200)
-        expect(json_body[:error_code]).to eql(nil)
+        expect_status_details(404)
+        expect(json_body[:error_code]).to eql(40401)
       end
 
        it "should update avro schema when features are appended to existing online feature group" do

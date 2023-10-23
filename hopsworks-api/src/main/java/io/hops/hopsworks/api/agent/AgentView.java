@@ -17,6 +17,7 @@
 
 package io.hops.hopsworks.api.agent;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import io.hops.hopsworks.common.agent.AgentController;
 import io.hops.hopsworks.persistence.entity.command.SystemCommand;
 import io.swagger.annotations.ApiModel;
@@ -33,25 +34,30 @@ import java.util.List;
 public class AgentView {
   // Register
   @XmlElement(name = "host-id")
+  @JsonAlias({"host-id"})
   private String hostId;
   private String password;
   private String hadoopHome;
   
   // Heartbeat
   @XmlElement(name = "agent-time")
+  @JsonAlias({"agent-time"})
   private Long agentTime;
   @XmlElement(name = "num-gpus")
+  @JsonAlias({"num-gpus"})
   private Integer numGpus;
   @XmlElement(name = "memory-capacity")
+  @JsonAlias({"memory-capacity"})
   private Long memoryCapacity;
   private Integer cores;
   @XmlElement(name = "private-ip")
+  @JsonAlias({"private-ip"})
   private String privateIp;
-  @XmlElement(name = "services")
+
   private List<ServiceView> services;
   @XmlElement(name = "system-commands")
+  @JsonAlias({"system-commands"})
   private List<SystemCommandView> systemCommands;
-  @XmlElement(name = "recover")
   private Boolean recover;
   
   public AgentView() {

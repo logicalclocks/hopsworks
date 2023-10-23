@@ -148,5 +148,53 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
+    describe "allowed maximum number of executions per job" do
+      before :all do
+        @exec_per_job = getVar('executions_per_job_limit')
+        setVar('executions_per_job_limit', 2)
+        with_valid_tour_project("spark")
+      end
+      after :all do
+        setVar('executions_per_job_limit', @exec_per_job [:value])
+        clean_jobs(@project[:id])
+      end
+      it "should not start more than the allowed maximum number of executions per job" do
+        job_name = "demo_job_3"
+        create_sparktour_job(@project, job_name, 'jar')
+        begin
+          start_execution(@project[:id], job_name)
+          execution_id1 = json_body[:id]
+          start_execution(@project[:id], job_name)
+          execution_id2 = json_body[:id]
+          start_execution(@project[:id], job_name, expected_status: 400, error_code: 130040)
+        ensure
+          wait_for_execution_completed(@project[:id], job_name, execution_id1, "FINISHED") unless execution_id1.nil?
+          wait_for_execution_completed(@project[:id], job_name, execution_id2, "FINISHED") unless execution_id2.nil?
+        end
+      end
+    end
+    describe "with quota enabled" do
+      before :all do
+        setVar("quotas_model_deployments_running", "1")
+        @local_project = create_project
+        with_tensorflow_serving(@local_project.id, @local_project.projectname, @user.username)
+      end
+      after :all do
+        setVar("quotas_model_deployments_running", "-1")
+        purge_all_tf_serving_instances
+        delete_all_servings(@local_project.id)
+      end
+      it "should fail to start serving if quota has been reached" do
+        ## This deployment should start
+        start_serving(@local_project, @serving)
+
+        second_serving = create_tensorflow_serving(@local_project.id, @local_project.projectname)
+        ## Starting this one should fail because quota has beed reached
+        post "#{ENV['HOPSWORKS_API']}/project/#{@local_project.id}/serving/#{second_serving.id}?action=start"
+        expect_status_details(400)
+        parsed = JSON.parse(response)
+        expect(parsed['devMsg']).to include("quota")
+      end
+    end
   end
 end

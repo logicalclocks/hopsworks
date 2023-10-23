@@ -122,6 +122,8 @@ RSpec.configure do |config|
   config.example_status_persistence_file_path = "#{ENV['PROJECT_DIR']}#{ENV['RSPEC_TEST_STATUS']}"
   # uncomment next line if you need to clean hdfs and hopsworks db before test.
   # config.before(:suite) { clean_test_data }
+  config.before(:suite) { try_start_all_services } # make sure all services are running
+
   config.after(:suite) {
     # If we are not using Jenkins, then clean the data
     if ARGV.grep(/spec\.rb/).empty? && (!ENV['JENKINS'] || ENV['JENKINS'] == "false")
@@ -143,6 +145,22 @@ end
 Airborne.configure do |config|
   config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
   config.timeout = 120
+end
+
+def try_start_all_services
+  begin
+    command = "/srv/hops/kagent/kagent/bin/start-all-local-services.sh"
+    if ENV['OS'] == 'ubuntu'
+      sh.exec!(command) # hopsworks0
+    else
+      sh.exec!(command) # hopsworks0
+      sh.exec!("su vagrant -c \"ssh -o StrictHostKeyChecking=no hopsworks1 -t 'sudo #{command}'\"")
+      sh.exec!("su vagrant -c \"ssh -o StrictHostKeyChecking=no hopsworks2 -t 'sudo #{command}'\"")
+      sh.exec!("su vagrant -c \"ssh -o StrictHostKeyChecking=no hopsworks3 -t 'sudo #{command}'\"")
+    end
+  rescue
+    puts 'Failed to start all services.'
+  end
 end
 
 def clean_test_data

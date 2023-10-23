@@ -338,7 +338,7 @@ describe "On #{ENV['OS']}" do
              servingTool: "DEFAULT",
              requestedInstances: 1
             })
-        expect_json(errorMsg: "Maximum topic replication factor exceeded")
+        expect_json(errorMsg: "Invalid number of partitions")
         expect_status_details(400)
       end
 

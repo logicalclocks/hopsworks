@@ -130,8 +130,8 @@ module JupyterHelper
       pp "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/recent" if (defined?(@debugOpt)) && @debugOpt
       get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/recent"
       expect_status_details(200)
-	  begin
-		expect(json_body[:items]).not_to be_nil
+	    begin
+		    expect(json_body[:items]).not_to be_nil
         expect(json_body[:items].length).to eql(expected_count)
         { 'success' => true }
       rescue RSpec::Expectations::ExpectationNotMetError => e

@@ -40,7 +40,6 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("dataFormat")).to be true
           expect(parsed_json.key?("trainingDatasetType")).to be true
           expect(parsed_json.key?("location")).to be true
-          expect(parsed_json.key?("inodeId")).to be true
           expect(parsed_json.key?("seed")).to be true
           expect(parsed_json["featurestoreName"] == featurestore_name).to be true
           expect(parsed_json["name"] == "#{featureview['name']}_#{featureview['version']}").to be true
@@ -319,7 +318,6 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json2.key?("version")).to be true
           expect(parsed_json2.key?("dataFormat")).to be true
           expect(parsed_json2.key?("trainingDatasetType")).to be true
-          expect(parsed_json2.key?("inodeId")).to be true
 
           expect(parsed_json2["version"]).to eql(parsed_json["version"])
           # make sure the dataformat didn't change

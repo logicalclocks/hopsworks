@@ -85,20 +85,22 @@ describe "On #{ENV['OS']}" do
             secret_dir, staging_dir, settings = start_jupyter(@project)
 
             jupyter_running(@project, expected_status: 200)
+            if ENV['OS'] == "ubuntu"
+              # Token is in staging_dir if not kube
+              jwt_file = File.join(staging_dir, "token.jwt")
+              expect(File.file? jwt_file).to be true
 
-            jwt_file = File.join(staging_dir, "token.jwt")
-            expect(File.file? jwt_file).to be true
+              jupyter_dir = Variables.find_by(id: "jupyter_dir").value
+              project_username = "#{@project[:projectname]}__#{@user[:username]}"
+              path2secret = File.join(jupyter_dir, "Projects", @project[:projectname], project_username, secret_dir, "certificates")
 
-            jupyter_dir = Variables.find_by(id: "jupyter_dir").value
-            project_username = "#{@project[:projectname]}__#{@user[:username]}"
-            path2secret = File.join(jupyter_dir, "Projects", @project[:projectname], project_username, secret_dir, "certificates")
-
-            kstore_file = File.join(path2secret, "#{project_username}__kstore.jks")
-            expect(File.file? kstore_file).to be true
-            tstore_file = File.join(path2secret, "#{project_username}__tstore.jks")
-            expect(File.file? tstore_file).to be true
-            password_file = File.join(path2secret, "#{project_username}__cert.key")
-            expect(File.file? password_file).to be true
+              kstore_file = File.join(path2secret, "#{project_username}__kstore.jks")
+              expect(File.file? kstore_file).to be true
+              tstore_file = File.join(path2secret, "#{project_username}__tstore.jks")
+              expect(File.file? tstore_file).to be true
+              password_file = File.join(path2secret, "#{project_username}__cert.key")
+              expect(File.file? password_file).to be true
+            end
 
             # Check that the logs are written in the opensearch index.
             begin
@@ -212,17 +214,18 @@ describe "On #{ENV['OS']}" do
             expect_status_details(200)
             notebook_file = json_body[:items].detect { |d| d[:attributes][:name] == "export_model.ipynb" }
             expect(notebook_file).to be_present
-
-            create_dir(@project, "Resources/test_dir", query: "&type=DATASET")
+            # test_dir will be created for each kernel
+            test_dir = "test_dir#{short_random_id}"
+            create_dir(@project, "Resources/#{test_dir}", query: "&type=DATASET")
             expect_status_details(201)
 
-            copy_dataset(@project, "Resources/export_model.ipynb", "/Projects/#{@project[:projectname]}/Resources/test_dir/[export model].ipynb", datasetType: "&type=DATASET")
+            copy_dataset(@project, "Resources/export_model.ipynb", "/Projects/#{@project[:projectname]}/Resources/#{test_dir}/[export model].ipynb", datasetType: "&type=DATASET")
             expect_status_details(204)
 
-            get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/convertIPythonNotebook/Resources/test_dir/%5Bexport%20model%5D.ipynb"
+            get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/convertIPythonNotebook/Resources/#{test_dir}/%5Bexport%20model%5D.ipynb"
             expect_status_details(200)
 
-            get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Resources/test_dir/?action=listing&expand=inodes"
+            get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Resources/#{test_dir}/?action=listing&expand=inodes"
             expect_status_details(200)
             python_file = json_body[:items].detect { |d| d[:attributes][:name] == "[export model].py" }
             expect(python_file).to be_present
@@ -282,11 +285,13 @@ describe "On #{ENV['OS']}" do
             get_settings(@project)
             shutdownLevel=6
             settings = json_body
-            settings[:distributionStrategy] = ""
             settings[:shutdownLevel] = shutdownLevel
             settings[:pythonKernel] = false
             settings[:jobConfig][:"spark.executor.memory"] = 1023
             start_jupyter(@project, settings: settings, expected_status: 400, error_code: 130029)
+            # set back spark.executor.memory=1024
+            settings[:jobConfig][:"spark.executor.memory"] = 1024
+            update_jupyter(@project, settings)
           end
 
           it "should not allow starting multiple notebook servers" do
@@ -301,11 +306,10 @@ describe "On #{ENV['OS']}" do
             secret_dir, staging_dir, settings = start_jupyter(@project, shutdownLevel=6, baseDir=nil, noLimit=true)
             jupyter_running(@project, expected_status: 200)
 
-            parsed_json = JSON.parse(json_result)
-            expect(parsed_json["noLimit"]).to eq(true)
+            expect(json_body[:noLimit]).to eq(true)
 
             stop_jupyter(@project)
-            jupyter_runningt(@project, expected_status: 404)
+            jupyter_running(@project, expected_status: 404)
           end
 
           it "should allow multiple restarts" do
@@ -326,11 +330,15 @@ describe "On #{ENV['OS']}" do
             jupyter_running(@project, expected_status: 200)
             json_body[:minutesUntilExpiration].should be < 2
 
-            wait_for_me_time(90, 5) do
-              jupyter_running(@project)
+            wait_for_me_time(180, 5) do
+              jupyter_running(@project, expected_status: 200)
               is_running = response.code == resolve_status(200, response.code)
               { 'success' => is_running }
             end
+            # JupyterNotebookCleaner is running every 30min it does not make sense to wait 30min in a test
+            get "#{ENV['HOPSWORKS_TESTING']}/test/jupyter/cleanup"
+            expect_status(200) # No detail returned
+
             jupyter_running(@project, expected_status: 404)
           end
 
@@ -343,6 +351,9 @@ describe "On #{ENV['OS']}" do
             json_body[:minutesUntilExpiration].should be > initial_minutes_left-3
 
             sleep(90)
+            get "#{ENV['HOPSWORKS_TESTING']}/test/jupyter/cleanup"
+            expect_status(200) # No detail returned
+
             jupyter_running(@project, expected_status: 200)
 
             json_body[:minutesUntilExpiration].should be < initial_minutes_left

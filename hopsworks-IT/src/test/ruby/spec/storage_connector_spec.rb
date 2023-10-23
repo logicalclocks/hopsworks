@@ -526,7 +526,7 @@ describe "On #{ENV['OS']}" do
         # StorageConnectorUtils.isStorageConnectorTypeEnabled() decides which connector type is enabled, and Unit tests can be found in the corresponding folder.
 
         before :all do
-          # enable kafka storage connectors temporarily
+          # enable kafka storage connectors if not enabled
           @enable_kafka_storage_connectors = getVar('enable_kafka_storage_connectors')
           setVar('enable_kafka_storage_connectors', "true")
 
@@ -557,7 +557,7 @@ describe "On #{ENV['OS']}" do
           @connector_name = parsed_json["name"]
 
           # disable kafka storage connectors
-          setVar('enable_kafka_storage_connectors',"false")
+          setVar('enable_kafka_storage_connectors', "false")
 
           create_session(@project[:username], "Pass123")
         end
@@ -574,7 +574,7 @@ describe "On #{ENV['OS']}" do
           delete_connector(project.id, featurestore_id, @connector_name)
           expect_status_details(200)
 
-          # disable kafka storage connectors
+          # set back default value
           setVar('enable_kafka_storage_connectors', @enable_kafka_storage_connectors[:value])
 
           create_session(@project[:username], "Pass123")
@@ -966,7 +966,9 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["featurestoreId"]).to eql(featurestore_id)
         expect(parsed_json["name"]).to eql(@connector_name)
         expect(parsed_json["storageConnectorType"]).to eql("KAFKA")
-        expect(parsed_json["bootstrapServers"]).to eql("10.0.2.15:9091")
+        if ENV['OS'] == "ubuntu"
+          expect(parsed_json["bootstrapServers"]).to eql("10.0.2.15:9091")
+        end
         expect(parsed_json["securityProtocol"]).to eql("SSL")
         expect(parsed_json.key?("sslTruststoreLocation")).to be false
         expect(parsed_json.key?("sslTruststorePassword")).to be false
@@ -1027,7 +1029,9 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["featurestoreId"]).to eql(featurestore_id)
         expect(parsed_json["name"]).to eql(@connector_name)
         expect(parsed_json["storageConnectorType"]).to eql("KAFKA")
-        expect(parsed_json["bootstrapServers"]).to eql("10.0.2.15:9091")
+        if ENV['OS'] == "ubuntu"
+          expect(parsed_json["bootstrapServers"]).to eql("10.0.2.15:9091")
+        end
         expect(parsed_json["securityProtocol"]).to eql("SSL")
         expect(parsed_json.key?("sslTruststoreLocation")).to be false
         expect(parsed_json.key?("sslTruststorePassword")).to be false
@@ -1062,7 +1066,9 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["featurestoreId"]).to eql(featurestore_id)
         expect(parsed_json["name"]).to eql(@connector_name)
         expect(parsed_json["storageConnectorType"]).to eql("KAFKA")
-        expect(parsed_json["bootstrapServers"]).to eql("10.0.2.15:9091")
+        if ENV['OS'] == "ubuntu"
+          expect(parsed_json["bootstrapServers"]).to eql("10.0.2.15:9091")
+        end
         expect(parsed_json["securityProtocol"]).to eql("SSL")
         expect(parsed_json.key?("sslTruststoreLocation")).to be false
         expect(parsed_json.key?("sslTruststorePassword")).to be false
