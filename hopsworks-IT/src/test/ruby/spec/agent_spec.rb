@@ -38,12 +38,12 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should not be able to register" do
-        post @register_resource, {"host-id": "host0", password: "password"}
+        post @register_resource, {"host-id": "host0", "private-ip": "10.0.0.15", password: "password"}
         expect_status_details(401)
       end
 
       it "should not be able to heartbeat" do
-        post @heartbeat_resource, {"host-id": "host0", agentTime: "1234"}
+        post @heartbeat_resource, {"host-id": "host0", "private-ip": "10.0.1.15", agentTime: "1234"}
         expect_status_details(401)
       end
     end
@@ -72,14 +72,19 @@ describe "On #{ENV['OS']}" do
         before(:all) do
           @random_host = "host_#{short_random_id}"
         end
-        it "should not be able to register" do
-          post @register_resource, {"host-id": @random_host, password: "some_pass"}
-          expect_status_details(404, error_code: 100025)
+        after(:all) do
+          host = find_by_hostname(@random_host)
+          host.destroy
+        end
+        # [HWORKS-705] allowed any host to register and heartbeat
+        it "should be able to register random host" do
+          post @register_resource, {"host-id": @random_host, "private-ip": "10.0.12.15", password: "some_pass"}
+          expect_status_details(200)
         end
 
-        it "should not be able to heartbeat" do
-          post @heartbeat_resource, {"host-id": @random_host, agentTime: "1234"}
-          expect_status_details(404)
+        it "should be able to heartbeat to random host" do
+          post @heartbeat_resource, {"host-id": @random_host, "private-ip": "10.0.12.15", "agent-time": "1234"}
+          expect_status_details(200)
         end
       end
 
@@ -97,15 +102,15 @@ describe "On #{ENV['OS']}" do
         it "should be able to register" do
           host = find_by_hostname(@hostname)
           expect(host.registered).to eq(false)
-          post @register_resource, {"host-id": @hostname, password: "pass123"}
+          post @register_resource, {"host-id": @hostname, "private-ip": "10.0.4.15", password: "pass123"}
           expect_status_details(200)
           host = find_by_hostname(@hostname)
           expect(host.registered).to eq(true)
         end
 
         it "should be able to heartbeat" do
-          post @register_resource, {"host-id": @hostname, password: "pass123"}
-          post @heartbeat_resource, {"host-id": @hostname, "num-gpus": 0, "agent-time": 1,
+          post @register_resource, {"host-id": @hostname, "private-ip": "10.0.5.15", password: "pass123"}
+          post @heartbeat_resource, {"host-id": @hostname, "private-ip": "10.0.6.15", "num-gpus": 0, "agent-time": 1,
                                      "cores": 4, "memory-capacity": 2}
           expect_status_details(200)
           host = find_by_hostname(@hostname)

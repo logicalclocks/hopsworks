@@ -1717,7 +1717,7 @@ describe "On #{ENV['OS']}" do
         end
         it 'should get 0 result if offset >= len.' do
           get_datasets_in_path(@project, @dataset[:inode_name], query: "&sort_by=id:asc&limit=10&offset=2500")
-          expect(json_body[:items]).to be nil
+          expect(json_body[:items]).to be_empty
         end
       end
     end

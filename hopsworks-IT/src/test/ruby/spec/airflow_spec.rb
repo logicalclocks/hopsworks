@@ -52,15 +52,14 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should be able to compose DAG" do
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/airflow/secretDir"
-        expect_status_details(200)
-        secret_dir = response.body
-        
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/airflow/dag", @dag_definition
         expect_status_details(200)
-        airflow_dir = Variables.find_by(id: "airflow_dir")
-        dag_file = File.join(airflow_dir.value, "dags", secret_dir, "#{@dag_name}.py")
-        expect(File.exists?(dag_file)).to be true
+
+        get_dataset_stat(@project, "Airflow/#{@dag_name}.py", datasetType: "&type=DATASET")
+        expect_status_details(200)
+        ds = json_body
+        expect(ds[:attributes][:name]).to eq ("#{@dag_name}.py")
+        expect(ds[:attributes][:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
       end
     end
   end

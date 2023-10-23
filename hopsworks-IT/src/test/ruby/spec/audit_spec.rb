@@ -37,6 +37,12 @@ describe "On #{ENV['OS']}" do
     end
   end
   describe "Log" do
+    before(:all) do
+      #Logs can end up on any node in HA
+      if ENV['OS'] == "centos"
+        skip "These tests do not run on centos"
+      end
+    end
     context 'user login' do
       it 'should add row to log file' do
         newUser = create_user

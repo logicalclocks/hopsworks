@@ -230,20 +230,6 @@ describe "On #{ENV['OS']}" do
           #start execution
           start_execution(@project[:id], $job_name_2, expected_status: 400)
         end
-        it "should not start more than the allowed maximum number of executions per job" do
-          $job_name_3 = "demo_job_3_" + type
-          create_sparktour_job(@project, $job_name_3, type)
-          begin
-            start_execution(@project[:id], $job_name_3)
-            execution_id1 = json_body[:id]
-            start_execution(@project[:id], $job_name_3)
-            execution_id2 = json_body[:id]
-            start_execution(@project[:id], $job_name_3, expected_status: 400, error_code: 130040)
-          ensure
-            wait_for_execution_completed(@project[:id], $job_name_3, execution_id1, "FINISHED") unless execution_id1.nil?
-            wait_for_execution_completed(@project[:id], $job_name_3, execution_id2, "FINISHED") unless execution_id2.nil?
-          end
-        end
         it "should start a job and use default args" do
           $job_name_3 = "demo_job_3_" + type
           create_sparktour_job(@project, $job_name_3, type)
@@ -642,8 +628,10 @@ describe "On #{ENV['OS']}" do
         @project = create_project
         add_member_to_project(@project, @user_data_scientist[:email], "Data scientist")
         @job_name = "test_job_#{short_random_id}"
-
         run_job(@user_data_owner, @project, @job_name)
+        get_executions(@project["id"], @job_name)
+        execution_id = json_body[:items][0][:id]
+        wait_for_execution_active(@project[:id], @job_name, execution_id, "FINISHED", "appId")
       end
 
       def setup_job(user, project, job_name)

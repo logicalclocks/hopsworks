@@ -1640,7 +1640,7 @@ describe "On #{ENV['OS']}" do
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         # search
-        wait_result = wait_on_command_search(repeat: 30)
+        wait_result = wait_on_command_search(wait_time: 30, repeat: 6)
         expect(wait_result["success"]).to be(true), wait_result["msg"]
         expected_hits1 = []
         project_search_test(project, "testfeature2", "featuregroup", expected_hits1)
@@ -1894,6 +1894,7 @@ describe "On #{ENV['OS']}" do
                 type: "INT",
                 name: "testfeature",
                 description: "new description",
+                primary: true,
             },
             {
                 type: "INT",
@@ -2056,8 +2057,9 @@ describe "On #{ENV['OS']}" do
         expect_status_details(200)
         topic = json_body[:items].select{|topic| topic[:name] == topic_name}
         expect(topic.length).to eq(1)
+        #disableOnline=true should delete the subject
         get_subject_schema(project, featuregroup_name + "_" + parsed_json["version"].to_s, 1)
-        expect_status_details(200)
+        expect_status_details(404)
       end
 
       it "should be possible to preview from online storage of an on-demand/external feature group" do
@@ -2641,8 +2643,8 @@ describe "On #{ENV['OS']}" do
 
         # add sample ros
         OnlineFg.db_name = project[:projectname]
-        OnlineFg.create(testfeature: 1).save
-        OnlineFg.create(testfeature: 2).save
+        OnlineFg.create(testfeature: 3).save
+        OnlineFg.create(testfeature: 4).save
 
         get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/preview?storage=online&limit=1"
         expect_status_details(200)
@@ -2963,7 +2965,7 @@ describe "On #{ENV['OS']}" do
         expect_status_details(200)
       end
 
-      it "should not delete kafka topic and schema when disabling online serving for a feature group" do
+      it "should not delete kafka topic when disabling online serving for a feature group" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
@@ -2982,9 +2984,10 @@ describe "On #{ENV['OS']}" do
           topic = []
         end
         expect(topic.length).to eq(1)
+        #disableOnline=true should delete the subject
         get_subject_schema(project, featuregroup_name + "_" + parsed_json["version"].to_s, 1)
-        expect_status_details(200)
-        expect(json_body[:error_code]).to eql(nil)
+        expect_status_details(404)
+        expect(json_body[:error_code]).to eql(40401)
       end
 
        it "should update avro schema when features are appended to existing online feature group" do
@@ -3444,7 +3447,7 @@ describe "On #{ENV['OS']}" do
 
         create_session(@user_data_owner[:email], @user_data_owner_params[:password])
         delete_featuregroup_checked(@project1[:id], fs["featurestoreId"], fg[:id])
-        
+
         get_featuregroup(@project1[:id], fg[:name], fs_id: fs["featurestoreId"])
         expect_status_details(404)
       end

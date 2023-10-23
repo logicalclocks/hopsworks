@@ -30,6 +30,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.testing.provenance.TestProjectProvenanceResource.class);
     register(io.hops.hopsworks.testing.provenance.TestProvenanceService.class);
     register(io.hops.hopsworks.testing.user.TestAuditedUserAdministration.class);
+    register(io.hops.hopsworks.testing.project.TestJupyterService.class);
     
     //swagger
     register(io.swagger.jaxrs.listing.ApiListingResource.class);

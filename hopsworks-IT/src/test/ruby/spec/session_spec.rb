@@ -85,15 +85,14 @@ describe "On #{ENV['OS']}" do
         expect_status_details(200)
       end
 
-      it "should fail to login if false login > 20 for agent" do
+      it "should not fail to login if false login > 20 for agent" do
         params={}
         user = create_user_with_role(params, "AGENT")
         set_false_login(user, 21)
         try_login(user, "Pass1234")
         expect_status_details(401)
         try_login(user, "Pass123")
-        expect_json(errorCode: 160007)
-        expect_status_details(401)
+        expect_status_details(200)
       end
 
       it "should fail to login with blocked account (status 4)" do
