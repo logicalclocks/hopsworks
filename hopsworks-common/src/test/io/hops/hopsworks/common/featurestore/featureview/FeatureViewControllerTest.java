@@ -440,7 +440,18 @@ public class FeatureViewControllerTest {
     join4.setConditions(Lists.newArrayList(condition));
     join4.setPrefix("");
     join4.setIdx(1);
-    fv.setJoins(Lists.newArrayList(join1, join4, join4));
+    TrainingDatasetJoin join4Other = new TrainingDatasetJoin(
+        join4.getTrainingDataset(),
+        join4.getFeatureGroup(),
+        join4.getFeatureGroupCommitId(),
+        join4.getType(),
+        2,
+        join4.getPrefix()
+    );
+    join4Other.setFeatures(join4.getFeatures());
+    join4Other.setConditions(join4.getConditions());
+
+    fv.setJoins(Lists.newArrayList(join1, join4, join4Other));
 
     List<ServingKey> actual = target.getServingKeys(null, null, fv);
 
@@ -448,9 +459,9 @@ public class FeatureViewControllerTest {
     Assert.assertEquals(5, actual.size());
     validate(actual.get(0), true, "pk1", fgOneKey1, "", null);
     validate(actual.get(1), false, "pk2", fgTwoKey1, "", "pk1");
-    validate(actual.get(2), true, "pk1", fgTwoKey1, "0_", null);
+    validate(actual.get(2), true, "pk1", fgTwoKey1, "fgId_4_1_", null);
     validate(actual.get(3), false, "pk2", fgTwoKey1, "", "pk1");
-    validate(actual.get(4), true, "pk1", fgTwoKey1, "1_", null);
+    validate(actual.get(4), true, "pk1", fgTwoKey1, "fgId_4_2_", null);
   }
 
   @Test
@@ -556,7 +567,7 @@ public class FeatureViewControllerTest {
     // validate
     Assert.assertEquals(2, actual.size());
     validate(actual.get(0), true, "pk1", fgOneKey1, null, null);
-    validate(actual.get(1), true, "pk1", fgOneKey2, "0_", "feature1");
+    validate(actual.get(1), true, "pk1", fgOneKey2, "fgId_2_1_", "feature1");
   }
 
   @Test
@@ -587,7 +598,7 @@ public class FeatureViewControllerTest {
     // validate
     Assert.assertEquals(2, actual.size());
     validate(actual.get(0), true, "pk1", fgOneKey1, null, null);
-    validate(actual.get(1), true, "pk1", fgOneKey2, "0_", null);
+    validate(actual.get(1), true, "pk1", fgOneKey2, "fgId_2_1_", null);
   }
 
   @Test

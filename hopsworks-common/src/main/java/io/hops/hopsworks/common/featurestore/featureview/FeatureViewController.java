@@ -335,8 +335,10 @@ public class FeatureViewController {
         servingKey.setJoinIndex(join.getIndex());
         // Set new prefix only if the key is required
         if (servingKey.getRequired()) {
-          servingKey.setPrefix(
-              getPrefixCheckCollision(prefixFeatureNames, servingKey.getFeatureName(), join.getPrefix()));
+          servingKey.setPrefix(getPrefixCheckCollision(
+              prefixFeatureNames, servingKey.getFeatureName(), join.getPrefix(), join.getFeatureGroup().getId(),
+              join.getIndex())
+          );
         } else {
           servingKey.setPrefix(join.getPrefix());
         }
@@ -356,7 +358,9 @@ public class FeatureViewController {
         if (!tempPrefixFeatureNames.contains(prefixFeatureName)) {
           ServingKey servingKey = new ServingKey();
           servingKey.setFeatureName(pk.getName());
-          servingKey.setPrefix(getPrefixCheckCollision(prefixFeatureNames, pk.getName(), join.getPrefix()));
+          servingKey.setPrefix(getPrefixCheckCollision(
+              prefixFeatureNames, pk.getName(), join.getPrefix(), join.getFeatureGroup().getId(), join.getIndex())
+          );
           servingKey.setRequired(true);
           servingKey.setFeatureGroup(join.getFeatureGroup());
           servingKey.setJoinIndex(join.getIndex());
@@ -394,7 +398,8 @@ public class FeatureViewController {
     return filteredServingKeys;
   }
 
-  private String getPrefixCheckCollision(Set<String> prefixFeatureNames, String featureName, String prefix) {
+  private String getPrefixCheckCollision(Set<String> prefixFeatureNames, String featureName, String prefix,
+      Integer featureGroupId, Integer joinIndex) {
     String prefixFeatureName = featureName;
     if (!Strings.isNullOrEmpty(prefix)) {
       prefixFeatureName = prefix + featureName;
@@ -402,15 +407,11 @@ public class FeatureViewController {
     if (prefixFeatureNames.contains(prefixFeatureName)) {
       // conflict with pk of other feature group, set new prefix
       String defaultPrefix;
-      int i = 0;
-      do {
-        if (Strings.isNullOrEmpty(prefix)) {
-          defaultPrefix = String.format("%d_", i);
-        } else {
-          defaultPrefix = String.format("%d_%s", i, prefix);
-        }
-        i++;
-      } while (prefixFeatureNames.contains(defaultPrefix + featureName));
+      if (Strings.isNullOrEmpty(prefix)) {
+        defaultPrefix = String.format("fgId_%d_%d_", featureGroupId, joinIndex);
+      } else {
+        defaultPrefix = String.format("fgId_%d_%d_%s", featureGroupId, joinIndex, prefix);
+      }
       return defaultPrefix;
     } else {
       return prefix;
