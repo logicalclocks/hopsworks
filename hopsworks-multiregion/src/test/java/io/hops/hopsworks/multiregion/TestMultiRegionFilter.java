@@ -111,6 +111,28 @@ public class TestMultiRegionFilter {
     Assert.assertEquals(relocationUri, containerRequest.getAbortResponse().getLocation());
   }
 
+  // Some clients will omit port 443 for https because it's standard
+  @Test
+  public void testRedirectPostSecondaryOnStandardPort() throws IOException {
+    Mockito.when(multiRegionController.isEnabled()).thenReturn(true);
+    Mockito.when(multiRegionController.getPrimaryRegionName()).thenReturn("stockholm");
+    Mockito.when(multiRegionController.blockSecondaryOperation()).thenReturn(true);
+    Mockito.when(multiRegionConfiguration
+        .getString(MultiRegionConfiguration.MultiRegionConfKeys.SERVICE_DISCOVERY_DOMAIN)).thenReturn("consul");
+    URI requestUri = URI.create("https://localhost/hopsworks-api/api/project");
+    URI relocationUri = URI.create("https://hopsworks.glassfish.service.stockholm" +
+        ".consul:443/hopsworks-api/api/project");
+    ContainerRequest containerRequest =
+        new ContainerRequest(null, requestUri, "POST", null,
+            new MapPropertiesDelegate());
+
+    multiRegionFilter.filter(containerRequest);
+
+    Assert.assertEquals(Response.Status.TEMPORARY_REDIRECT.getStatusCode(),
+        containerRequest.getAbortResponse().getStatus());
+    Assert.assertEquals(relocationUri, containerRequest.getAbortResponse().getLocation());
+  }
+
   @Test
   public void testRedirectPutSecondary() throws IOException {
     Mockito.when(multiRegionController.isEnabled()).thenReturn(true);

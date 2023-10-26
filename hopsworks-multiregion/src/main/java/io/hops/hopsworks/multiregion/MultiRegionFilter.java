@@ -57,13 +57,20 @@ public class MultiRegionFilter implements ContainerRequestFilter {
       URI requestURI = containerRequestContext.getUriInfo().getRequestUri();
       URI forwardURI = null;
       try {
+        int port = requestURI.getPort();
+        if (port < 0) {
+          if (requestURI.getScheme().equals("https")) {
+            port = 443;
+          } else {
+            port = 80;
+          }
+        }
         forwardURI = new URI(requestURI.getScheme(),
             Utilities.constructServiceFQDNWithRegion(
                 HopsworksService.GLASSFISH.getNameWithTag(GlassfishTags.hopsworks),
                 multiRegionController.getPrimaryRegionName(),
                 multiRegionConfiguration.getString(
-                    MultiRegionConfiguration.MultiRegionConfKeys.SERVICE_DISCOVERY_DOMAIN))
-                + ":" + requestURI.getPort(),
+                    MultiRegionConfiguration.MultiRegionConfKeys.SERVICE_DISCOVERY_DOMAIN)) + ":" + port,
             requestURI.getPath(), requestURI.getQuery(), requestURI.getFragment());
       } catch (URISyntaxException e) {
         throw new IOException(e);
