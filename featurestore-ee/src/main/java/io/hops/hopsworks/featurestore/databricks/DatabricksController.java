@@ -83,8 +83,9 @@ public class DatabricksController {
 
   private static final String INIT_SCRIPT =
       "#!/bin/sh\n" +
+      "sleep 10\n" + //Sleep is needed for DBFS client to initialize properly
       "tar -xf {0}/apache-hive-*-bin.tar.gz -C /tmp\n" +
-      "mv /tmp/apache-hive-*-bin {1}\n" +
+      "mv -f /tmp/apache-hive-*-bin {1}\n" +
       "chmod -R +xr {0}\n";
 
   @EJB
@@ -179,14 +180,14 @@ public class DatabricksController {
 
     DbCluster dbCluster = databricksClient.getCluster(dbInstanceUrl, clusterId, token);
 
+    // Upload client jars
+    List<String> dbfsJars = uploadClientJars(dbInstanceUrl, baseClientDbfsPath, token);
+
     // Upload or refresh init script
     uploadInitScript(dbInstanceUrl, baseDbfsPath, baseClientDbfsPath, token);
 
     // Upload or refresh the certificates on dbfs
     uploadCertificastes(dbInstanceUrl, targetUser, project, baseDbfsPath, token);
-
-    // Upload client jars
-    List<String> dbfsJars = uploadClientJars(dbInstanceUrl, baseClientDbfsPath, token);
 
     // edit cluster configuration
     editCluster(dbInstanceUrl, dbCluster, project, targetUser, baseDbfsPath, token);

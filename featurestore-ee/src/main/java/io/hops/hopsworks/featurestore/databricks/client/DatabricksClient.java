@@ -17,7 +17,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.glassfish.jersey.internal.util.Base64;
+import org.apache.commons.codec.binary.Base64;
 
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
@@ -252,7 +252,8 @@ public class DatabricksClient {
     int read = 0;
     while ((read = inputStream.read(data)) > -1) {
       // Send any pending block data
-      sendBlock(dbInstanceHost, token, dbfsClose, Base64.encodeAsString(Arrays.copyOf(data, read)));
+      sendBlock(dbInstanceHost, token, dbfsClose,
+              Base64.encodeBase64String(Arrays.copyOf(data, read)));
     }
   }
 
