@@ -75,7 +75,6 @@ public class MultiRegionWatchdog {
   private void setupWatchdog() {
     Long watchdogFrequency = multiRegionConfiguration.getInterval(
         MultiRegionConfiguration.MultiRegionConfKeys.MULTIREGION_WATCHDOG_INTERVAL);
-    timerService.createTimer(watchdogFrequency, watchdogFrequency, "MultiRegion Watchdog frequency");
 
     watchdogHost = HttpHost.create(
         multiRegionConfiguration.getString(MultiRegionConfiguration.MultiRegionConfKeys.MULTIREGION_WATCHDOG_URL));
@@ -97,6 +96,8 @@ public class MultiRegionWatchdog {
           .setConnectionManager(connectionManager)
           .setKeepAliveStrategy((httpResponse, httpContext) -> 300)
           .build();
+      updateWatchdog();
+      timerService.createTimer(0L, watchdogFrequency, "MultiRegion Watchdog frequency");
     } catch (IOException | GeneralSecurityException ex) {
       LOGGER.log(Level.SEVERE, "Could not setup watchdog", ex);
       throw new RuntimeException(ex);
@@ -115,18 +116,22 @@ public class MultiRegionWatchdog {
 
   @Timeout
   public void updateWatchdog(Timer timer) throws IOException {
+    updateWatchdog();
+  }
+
+  private void updateWatchdog() {
     try {
       MultiRegionWatchdogDTO multiRegionWatchdogDTO = pollJudge();
-
       multiRegionController.setPrimaryRegionName(multiRegionWatchdogDTO.getActive());
       multiRegionController.setSecondaryRegionName(multiRegionWatchdogDTO.getSecondary());
       multiRegionController.setPrimaryRegion(multiRegionWatchdogDTO.getActive().equalsIgnoreCase(
           multiRegionConfiguration.getString(MultiRegionConfiguration.MultiRegionConfKeys.MULTIREGION_WATCHDOG_REGION)
       ));
     } catch (IOException e)  {
+      LOGGER.log(Level.SEVERE, "Could not poll Judge service", e);
       // exception has happened while contacting the judge, we should disable writes for safety
-      multiRegionController.setPrimaryRegionName("");
-      multiRegionController.setSecondaryRegionName("");
+      multiRegionController.setPrimaryRegionName("could-not-poll-judge");
+      multiRegionController.setSecondaryRegionName("could-not-poll-judge");
       multiRegionController.setPrimaryRegion(false);
     }
   }
