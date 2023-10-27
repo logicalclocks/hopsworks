@@ -54,6 +54,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController.ONLINEFS_USERNAME;
+import static io.hops.hopsworks.common.serving.inference.logger.KafkaInferenceLogger.SERVING_MANAGER_USERNAME;
+
 @Singleton
 @AccessTimeout(value = 10, unit = TimeUnit.SECONDS)
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -172,7 +175,7 @@ public class PermissionsFixer {
       if (datasetSharedWith.getAccepted()) {
         testAndFixPermissionForAllMembers(datasetSharedWith.getProject(), dfso, hdfsDatasetGroup, hdfsDatasetAclGroup,
           null, datasetSharedWith.getPermission());
-        datasetTeamCollection.addAll(projectUtils.getProjectTeamCollection(dataset.getProject()));
+        datasetTeamCollection.addAll(projectUtils.getProjectTeamCollection(datasetSharedWith.getProject()));
       }
     }
     testAndRemoveUsersFromGroup(datasetTeamCollection, hdfsDatasetGroup, hdfsDatasetAclGroup,
@@ -238,8 +241,9 @@ public class PermissionsFixer {
   
   private void testAndFixPermission(ProjectTeam projectTeam, DistributedFileSystemOps dfso, HdfsGroups hdfsDatasetGroup,
     HdfsGroups hdfsDatasetAclGroup, HdfsUsers owner, DatasetAccessPermission permission) throws IOException {
-    if (projectTeam.getUser().getUsername().equals("srvmanager")) {
-      return;//Does this user need to be in groups?
+    if (projectTeam.getUser().getUsername().equals(SERVING_MANAGER_USERNAME) ||
+      projectTeam.getUser().getUsername().equals(ONLINEFS_USERNAME)) {
+      return;
     }
     String hdfsUsername = hdfsUsersController.getHdfsUserName(projectTeam.getProject(), projectTeam.getUser());
     HdfsUsers hdfsUser = hdfsUsersController.getOrCreateUser(hdfsUsername, dfso);
