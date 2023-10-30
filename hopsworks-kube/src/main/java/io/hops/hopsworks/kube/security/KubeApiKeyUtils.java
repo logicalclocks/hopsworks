@@ -179,7 +179,7 @@ public class KubeApiKeyUtils {
   
   public String getServingApiKeyValueFromKubeSecret(String username, String secretName) throws ApiKeyException {
     Secret secret = null;
-    int retry = 30;
+    int retry = 60;
     do {
       try {
         Thread.sleep(5000);
