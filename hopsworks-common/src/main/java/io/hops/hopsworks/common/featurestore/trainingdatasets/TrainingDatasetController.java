@@ -1094,6 +1094,14 @@ public class TrainingDatasetController {
     // Keep a map feature store id -> feature store name
     Map<Integer, String> fsLookup = getFsLookupTableJoins(joins);
 
+    if (joins.size() == 0) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_NOT_FOUND,
+          Level.FINE,
+          "Failed to construct the query because the query contains no features."
+              + " It is possible that some feature groups are deleted. Please create a new query."
+      );
+    }
+
     Query query = new Query(
         fsLookup.get(joins.get(0).getFeatureGroup().getFeaturestore().getId()),
         onlineFeaturestoreController
