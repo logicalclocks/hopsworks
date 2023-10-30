@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.featurestore.query.Feature;
 import io.hops.hopsworks.common.featurestore.query.Query;
 import io.hops.hopsworks.common.featurestore.query.join.Join;
 import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionDTO;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlCondition;
 import io.hops.hopsworks.common.featurestore.query.filter.Filter;
@@ -52,6 +53,7 @@ import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.
 import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic.AND;
 import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic.OR;
 import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic.SINGLE;
+import static io.hops.hopsworks.restutils.RESTCodes.FeaturestoreErrorCode.FEATURE_NOT_FOUND;
 import static org.mockito.Mockito.doReturn;
 
 public class TrainingDatasetControllerTest {
@@ -451,6 +453,18 @@ public class TrainingDatasetControllerTest {
     Assert.assertFalse(result.getDeletedFeatureGroups().isEmpty());
     Assert.assertEquals(1, result.getDeletedFeatureGroups().size());
     Assert.assertEquals("feature_missing", result.getDeletedFeatureGroups().get(0));
+  }
+
+  @Test
+  public void testGetQuery_noFeature() {
+    try {
+      target.getQuery(new ArrayList<>(), Collections.emptyList(), Collections.emptyList(),
+          Mockito.mock(Project.class), Mockito.mock(Users.class), false);
+
+      Assert.fail("Expected FeaturestoreException, but no exception was thrown.");
+    } catch (FeaturestoreException e) {
+      Assert.assertEquals(FEATURE_NOT_FOUND, e.getErrorCode());
+    }
   }
 
   @Test
