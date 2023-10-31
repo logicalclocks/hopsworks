@@ -149,7 +149,7 @@ public class TestCertificateRevocation extends PKIMocking {
         new JcaContentSignerBuilder("SHA256withRSA").build(requesterKeypair.getPrivate()));
     String stringifiedCSR = stringifyCSR(csr);
 
-    pki.signCertificateSigningRequest(stringifiedCSR, CertificateType.HOST);
+    pki.signCertificateSigningRequest(stringifiedCSR, CertificateType.HOST, null);
     Mockito.verify(pkiCertificateFacade, Mockito.atLeastOnce()).saveCertificate(pkiCertificateCaptor.capture());
     // First 3 captures come from PKI initialization
     PKICertificate pkiCertificate = pkiCertificateCaptor.getAllValues().get(3);

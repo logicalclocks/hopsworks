@@ -115,7 +115,6 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
-import java.security.InvalidKeyException;
 import java.security.KeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
@@ -779,11 +778,9 @@ public class PKI {
     return certificate;
   }
 
-  public X509Certificate signCertificateSigningRequest(String csrStr, CertificateType certificateType)
-      throws CAInitializationException, IOException, CertificateEncodingException, CACertificateNotFoundException,
-      CertificateAlreadyExistsException, KeyException, NoSuchAlgorithmException, CertIOException,
-      OperatorCreationException, CertificateException, InvalidKeyException, SignatureException,
-      CertificationRequestValidationException {
+  public X509Certificate signCertificateSigningRequest(String csrStr, CertificateType certificateType, String region)
+      throws CAInitializationException, IOException, KeyException, NoSuchAlgorithmException,
+      OperatorCreationException, CertificateException, SignatureException, CertificationRequestValidationException {
     try {
       maybeInitializeCA();
     } catch (Exception ex) {
@@ -793,8 +790,8 @@ public class PKI {
     CAType caType = pkiUtils.getResponsibleCA(certificateType);
     Function<ExtensionsBuilderParameter, Void>[] certificateExtensionsBuilder = getExtensionsBuilders(caType,
         certificateType);
-    X509Certificate certificate = signCertificateSigningRequest(csrStr, certificateType, caType,
-        certificateExtensionsBuilder);
+    X509Certificate certificate =
+        signCertificateSigningRequest(csrStr, certificateType, caType, region, certificateExtensionsBuilder);
     LOGGER.log(Level.FINE, "Signed certificate and going to Save");
     saveNewCertificate(caType, certificate);
     LOGGER.log(Level.FINE, "Saved certificate");
@@ -861,7 +858,7 @@ public class PKI {
 
         Optional<String> l = parseX509Locality(b.certificationRequest);
         if (l.isPresent()) {
-          GeneralName[] sanForUsername = getSanForUsername(l.get());
+          GeneralName[] sanForUsername = getSanForUsername(l.get(), b.region);
           appendSubjectAlternativeNames(b.certificateBuilder, sanForUsername);
 
           final Set<String> extraSanSet = new HashSet<>();
@@ -874,7 +871,7 @@ public class PKI {
             }
           });
           if (!extraSanSet.isEmpty()) {
-            appendSubjectAlternativeNames(b.certificateBuilder, convertToGeneralNames(extraSanSet, false));
+            appendSubjectAlternativeNames(b.certificateBuilder, convertToGeneralNames(extraSanSet, false, null));
           }
         }
       } catch (CertIOException ex) {
@@ -884,7 +881,7 @@ public class PKI {
     return null;
   };
 
-  GeneralName[] getSanForUsername(String username) {
+  GeneralName[] getSanForUsername(String username, String region) {
     String normalizedUsername = usernamesConfiguration.getNormalizedUsername(username);
     if (normalizedUsername == null) {
       return EMTPY_GENERAL_NAMES;
@@ -892,39 +889,39 @@ public class PKI {
     switch (normalizedUsername) {
       case "glassfish":
       case "glassfishinternal":
-        return convertToGeneralNames(HopsworksService.GLASSFISH.domains(), true);
+        return convertToGeneralNames(HopsworksService.GLASSFISH.domains(), true, region);
       case "hdfs":
         return convertToGeneralNames(mergeSets(
             HopsworksService.NAMENODE.domains(),
-            HopsworksService.SPARK_HISTORY_SERVER.domains()), true);
+            HopsworksService.SPARK_HISTORY_SERVER.domains()), true, region);
       case "hive":
-        return convertToGeneralNames(HopsworksService.HIVE.domains(), true);
+        return convertToGeneralNames(HopsworksService.HIVE.domains(), true, region);
       case "livy":
-        return convertToGeneralNames(HopsworksService.LIVY.domains(), true);
+        return convertToGeneralNames(HopsworksService.LIVY.domains(), true, region);
       case "flink":
-        return convertToGeneralNames(HopsworksService.FLINK.domains(), true);
+        return convertToGeneralNames(HopsworksService.FLINK.domains(), true, region);
       case "consul":
-        return convertToGeneralNames(HopsworksService.CONSUL.domains(), true);
+        return convertToGeneralNames(HopsworksService.CONSUL.domains(), true, region);
       case "hopsmon":
-        return convertToGeneralNames(HopsworksService.PROMETHEUS.domains(), true);
+        return convertToGeneralNames(HopsworksService.PROMETHEUS.domains(), true, region);
       case "zookeeper":
-        return convertToGeneralNames(HopsworksService.ZOOKEEPER.domains(), true);
+        return convertToGeneralNames(HopsworksService.ZOOKEEPER.domains(), true, region);
       case "rmyarn":
-        return convertToGeneralNames(HopsworksService.RESOURCE_MANAGER.domains(), true);
+        return convertToGeneralNames(HopsworksService.RESOURCE_MANAGER.domains(), true, region);
       case "onlinefs":
         Set<String> onlinefsDomain = new HashSet<>();
         onlinefsDomain.add(HopsworksService.MYSQL.getNameWithTag(MysqlTags.onlinefs));
-        return convertToGeneralNames(onlinefsDomain, true);
+        return convertToGeneralNames(onlinefsDomain, true, region);
       case "elastic":
-        return convertToGeneralNames(HopsworksService.LOGSTASH.domains(), true);
+        return convertToGeneralNames(HopsworksService.LOGSTASH.domains(), true, region);
       case "flyingduck":
-        return convertToGeneralNames(HopsworksService.FLYING_DUCK.domains(), true);
+        return convertToGeneralNames(HopsworksService.FLYING_DUCK.domains(), true, region);
       case "kagent":
-        return convertToGeneralNames(HopsworksService.DOCKER_REGISTRY.domains(), true);
+        return convertToGeneralNames(HopsworksService.DOCKER_REGISTRY.domains(), true, region);
       case "mysql":
         return convertToGeneralNames(mergeSets(
             HopsworksService.MYSQL.domains(),
-            HopsworksService.RDRS.domains()), true);
+            HopsworksService.RDRS.domains()), true, region);
       default:
         return EMTPY_GENERAL_NAMES;
     }
@@ -938,15 +935,17 @@ public class PKI {
     return merged;
   }
 
-  GeneralName[] convertToGeneralNames(Set<String> domains, boolean isServiceDiscoveryDomain) {
+  GeneralName[] convertToGeneralNames(Set<String> domains, boolean isServiceDiscoveryDomain, String region) {
     GeneralName[] names = new GeneralName[domains.size()];
     Iterator<String> i = domains.iterator();
     int idx = 0;
     while (i.hasNext()) {
       String domain = i.next();
-      names[idx] = new GeneralName(GeneralName.dNSName,
-          isServiceDiscoveryDomain ? Utilities.constructServiceFQDN(domain,
-          caConf.getString(CAConf.CAConfKeys.SERVICE_DISCOVERY_DOMAIN)) : domain);
+      String fqdn = domain;
+      if (isServiceDiscoveryDomain) {
+        fqdn = Utilities.constructServiceFQDN(domain, caConf.getString(CAConf.CAConfKeys.SERVICE_DISCOVERY_DOMAIN));
+      }
+      names[idx] = new GeneralName(GeneralName.dNSName, fqdn);
       idx++;
     }
     return names;
@@ -992,22 +991,27 @@ public class PKI {
     private final X509v3CertificateBuilder certificateBuilder;
     private final PKCS10CertificationRequest certificationRequest;
     private final CertificateType certificateType;
+    private final String region;
 
     private ExtensionsBuilderParameter(X509v3CertificateBuilder certificateBuilder,
-        PKCS10CertificationRequest certificationRequest, CertificateType certificateType) {
+                                       PKCS10CertificationRequest certificationRequest,
+                                       CertificateType certificateType, String region) {
       this.certificateBuilder = certificateBuilder;
       this.certificationRequest = certificationRequest;
       this.certificateType = certificateType;
+      this.region = region;
     }
 
     static ExtensionsBuilderParameter of(X509v3CertificateBuilder certificateBuilder,
-        PKCS10CertificationRequest certificationRequest, CertificateType certificateType) {
-      return new ExtensionsBuilderParameter(certificateBuilder, certificationRequest, certificateType);
+                                         PKCS10CertificationRequest certificationRequest,
+                                         CertificateType certificateType,
+                                         String region) {
+      return new ExtensionsBuilderParameter(certificateBuilder, certificationRequest, certificateType, region);
     }
 
     @VisibleForTesting
     static ExtensionsBuilderParameter of(X509v3CertificateBuilder certificateBuilder) {
-      return new ExtensionsBuilderParameter(certificateBuilder, null, CertificateType.APP);
+      return new ExtensionsBuilderParameter(certificateBuilder, null, CertificateType.APP, null);
     }
   }
 
@@ -1034,12 +1038,11 @@ public class PKI {
     return EMTPY_CERTIFICATES_EXTENSION_BUILDERS;
   }
 
-  protected X509Certificate signCertificateSigningRequest(String csrStr, CertificateType certificateType, CAType caType,
-      Function<ExtensionsBuilderParameter, Void>[] extensionsBuilders)
-      throws IOException, CertificateEncodingException, CACertificateNotFoundException,
-      CertificateAlreadyExistsException, KeyException, NoSuchAlgorithmException, CertIOException,
-      OperatorCreationException, CertificateException, InvalidKeyException, SignatureException,
-      CertificationRequestValidationException {
+  protected X509Certificate signCertificateSigningRequest(String csrStr, CertificateType certificateType,
+                                                       CAType caType, String region,
+                                                       Function<ExtensionsBuilderParameter, Void>[] extensionsBuilders)
+      throws IOException, KeyException, NoSuchAlgorithmException, OperatorCreationException, CertificateException,
+      SignatureException, CertificationRequestValidationException {
     LOGGER.log(Level.FINE, "Signing CSR for type " + certificateType);
     PKCS10CertificationRequest csr = parseCertificateRequest(csrStr);
     if (!certificateType.equals(CertificateType.APP)) {
@@ -1094,7 +1097,7 @@ public class PKI {
             extUtils.createSubjectKeyIdentifier(csr.getSubjectPublicKeyInfo()));
     try {
       for (Function<ExtensionsBuilderParameter, Void> f : extensionsBuilders) {
-        f.apply(ExtensionsBuilderParameter.of(builder, csr, certificateType));
+        f.apply(ExtensionsBuilderParameter.of(builder, csr, certificateType, region));
       }
     } catch (Exception ex) {
       throw new CertIOException("Failed to add extension to certificate", ex);

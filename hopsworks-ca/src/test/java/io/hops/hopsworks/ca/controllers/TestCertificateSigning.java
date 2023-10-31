@@ -100,7 +100,7 @@ public class TestCertificateSigning extends PKIMocking {
     Assert.assertTrue(l.isPresent());
     Assert.assertEquals("hdfs", l.get());
 
-    X509Certificate certificate = pki.signCertificateSigningRequest(stringifiedCSR, CertificateType.APP);
+    X509Certificate certificate = pki.signCertificateSigningRequest(stringifiedCSR, CertificateType.APP, null);
     Assert.assertEquals(csr.getSubject().toString(), certificate.getSubjectDN().toString());
     Assert.assertEquals(pki.getCaCertificates().get(CAType.INTERMEDIATE).getSubjectDN().toString(),
         certificate.getIssuerDN().toString());
@@ -146,7 +146,7 @@ public class TestCertificateSigning extends PKIMocking {
 
 
     thrown.expect(CertificateAlreadyExistsException.class);
-    pki.signCertificateSigningRequest(stringifiedCSR, CertificateType.APP);
+    pki.signCertificateSigningRequest(stringifiedCSR, CertificateType.APP, null);
   }
 
   @Test
@@ -181,7 +181,7 @@ public class TestCertificateSigning extends PKIMocking {
         new JcaContentSignerBuilder("SHA256withRSA").build(requesterKeypair.getPrivate()));
     String stringifiedCSR = stringifyCSR(csr);
 
-    X509Certificate certificate = pki.signCertificateSigningRequest(stringifiedCSR, CertificateType.HOST);
+    X509Certificate certificate = pki.signCertificateSigningRequest(stringifiedCSR, CertificateType.HOST, null);
     Assert.assertNotNull(certificate);
   }
 
@@ -216,7 +216,7 @@ public class TestCertificateSigning extends PKIMocking {
       return null;
     };
     Function<PKI.ExtensionsBuilderParameter, Void>[] extensionsBuilders = new Function[]{ extensionsBuilder };
-    pki.signCertificateSigningRequest(stringifiedCSR, CertificateType.APP, CAType.INTERMEDIATE, extensionsBuilders);
+    pki.signCertificateSigningRequest(stringifiedCSR, CertificateType.APP, CAType.INTERMEDIATE, null, extensionsBuilders);
     Assert.assertTrue(check.get());
   }
 
@@ -525,7 +525,8 @@ public class TestCertificateSigning extends PKIMocking {
         csr.getSubjectPublicKeyInfo());
 
 
-    pki.SAN_CERTIFICATE_EXTENSIONS_BUILDER.apply(PKI.ExtensionsBuilderParameter.of(builder, csr, CertificateType.HOST));
+    pki.SAN_CERTIFICATE_EXTENSIONS_BUILDER.apply(
+        PKI.ExtensionsBuilderParameter.of(builder, csr, CertificateType.HOST, null));
     ContentSigner signer = new JcaContentSignerBuilder(PKI.SIGNATURE_ALGORITHM)
         .build(keyPair.getPrivate());
     X509CertificateHolder holder = builder.build(signer);
@@ -560,7 +561,8 @@ public class TestCertificateSigning extends PKIMocking {
         csr.getSubjectPublicKeyInfo());
 
 
-    pki.SAN_CERTIFICATE_EXTENSIONS_BUILDER.apply(PKI.ExtensionsBuilderParameter.of(builder, csr, CertificateType.HOST));
+    pki.SAN_CERTIFICATE_EXTENSIONS_BUILDER.apply(
+        PKI.ExtensionsBuilderParameter.of(builder, csr, CertificateType.HOST, null));
     signer = new JcaContentSignerBuilder(PKI.SIGNATURE_ALGORITHM).build(keyPair.getPrivate());
     holder = builder.build(signer);
     Assert.assertEquals(1, holder.getNonCriticalExtensionOIDs().size());
@@ -594,7 +596,8 @@ public class TestCertificateSigning extends PKIMocking {
         csr.getSubjectPublicKeyInfo());
 
 
-    pki.SAN_CERTIFICATE_EXTENSIONS_BUILDER.apply(PKI.ExtensionsBuilderParameter.of(builder, csr, CertificateType.HOST));
+    pki.SAN_CERTIFICATE_EXTENSIONS_BUILDER.apply(
+        PKI.ExtensionsBuilderParameter.of(builder, csr, CertificateType.HOST, null));
     signer = new JcaContentSignerBuilder(PKI.SIGNATURE_ALGORITHM).build(keyPair.getPrivate());
     holder = builder.build(signer);
     Assert.assertEquals(1, holder.getNonCriticalExtensionOIDs().size());
@@ -624,7 +627,8 @@ public class TestCertificateSigning extends PKIMocking {
         csr.getSubjectPublicKeyInfo());
 
 
-    pki.SAN_CERTIFICATE_EXTENSIONS_BUILDER.apply(PKI.ExtensionsBuilderParameter.of(builder, csr, CertificateType.HOST));
+    pki.SAN_CERTIFICATE_EXTENSIONS_BUILDER.apply(
+        PKI.ExtensionsBuilderParameter.of(builder, csr, CertificateType.HOST, null));
     signer = new JcaContentSignerBuilder(PKI.SIGNATURE_ALGORITHM).build(keyPair.getPrivate());
     holder = builder.build(signer);
     Assert.assertEquals(1, holder.getNonCriticalExtensionOIDs().size());

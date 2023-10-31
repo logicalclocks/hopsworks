@@ -66,7 +66,7 @@ public class TestCreateKeystores extends PKIMocking {
     PKCS10CertificationRequest csr = csrBuilder.build(
         new JcaContentSignerBuilder("SHA256withRSA").build(requesterKeypair.getPrivate()));
     String stringifiedCSR = stringifyCSR(csr);
-    X509Certificate certificate = pki.signCertificateSigningRequest(stringifiedCSR, CertificateType.APP);
+    X509Certificate certificate = pki.signCertificateSigningRequest(stringifiedCSR, CertificateType.APP, null);
     Assert.assertNotNull(certificate);
 
     X509Certificate rootCA = pki.getCaCertificates().get(CAType.ROOT);

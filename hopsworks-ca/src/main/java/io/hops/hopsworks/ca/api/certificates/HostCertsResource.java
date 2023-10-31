@@ -103,7 +103,7 @@ public class HostCertsResource {
     }
 
     try {
-      X509Certificate signedCert = pki.signCertificateSigningRequest(csrView.getCsr(), HOST);
+      X509Certificate signedCert = pki.signCertificateSigningRequest(csrView.getCsr(), HOST, csrView.getRegion());
       String stringifiedCert = pkiUtils.convertToPEM(signedCert);
       Pair<String, String> chainOfTrust = pki.getChainOfTrust(pkiUtils.getResponsibleCA(HOST));
       CSRView signedCsr = new CSRView(stringifiedCert, chainOfTrust.getLeft(), chainOfTrust.getRight());
