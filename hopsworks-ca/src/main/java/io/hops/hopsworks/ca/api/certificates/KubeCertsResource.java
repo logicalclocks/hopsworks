@@ -94,7 +94,7 @@ public class KubeCertsResource{
     }
 
     try {
-      X509Certificate signedCert = pki.signCertificateSigningRequest(csrView.getCsr(), KUBE);
+      X509Certificate signedCert = pki.signCertificateSigningRequest(csrView.getCsr(), KUBE, csrView.getRegion());
       String stringifiedCert = pkiUtils.convertToPEM(signedCert);
       Pair<String, String> chainOfTrust = pki.getChainOfTrust(pkiUtils.getResponsibleCA(KUBE));
       CSRView signedCsr = new CSRView(stringifiedCert, chainOfTrust.getLeft(), chainOfTrust.getRight());

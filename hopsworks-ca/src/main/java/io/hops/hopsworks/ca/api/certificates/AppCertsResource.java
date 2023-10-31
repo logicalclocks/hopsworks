@@ -98,7 +98,7 @@ public class AppCertsResource {
     }
 
     try {
-      X509Certificate signedCert = pki.signCertificateSigningRequest(csrView.getCsr(), APP);
+      X509Certificate signedCert = pki.signCertificateSigningRequest(csrView.getCsr(), APP, null);
       String stringifiedCert = pkiUtils.convertToPEM(signedCert);
       Pair<String, String> chainOfTrust = pki.getChainOfTrust(pkiUtils.getResponsibleCA(APP));
       CSRView signedCsr = new CSRView(stringifiedCert, chainOfTrust.getLeft(), chainOfTrust.getRight());

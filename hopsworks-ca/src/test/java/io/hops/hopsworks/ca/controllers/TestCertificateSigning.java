@@ -100,7 +100,7 @@ public class TestCertificateSigning extends PKIMocking {
     Assert.assertTrue(l.isPresent());
     Assert.assertEquals("hdfs", l.get());
 
-    X509Certificate certificate = pki.signCertificateSigningRequest(stringifiedCSR, CertificateType.APP);
+    X509Certificate certificate = pki.signCertificateSigningRequest(stringifiedCSR, CertificateType.APP, null);
     Assert.assertEquals(csr.getSubject().toString(), certificate.getSubjectDN().toString());
     Assert.assertEquals(pki.getCaCertificates().get(CAType.INTERMEDIATE).getSubjectDN().toString(),
         certificate.getIssuerDN().toString());
@@ -146,7 +146,7 @@ public class TestCertificateSigning extends PKIMocking {
 
 
     thrown.expect(CertificateAlreadyExistsException.class);
-    pki.signCertificateSigningRequest(stringifiedCSR, CertificateType.APP);
+    pki.signCertificateSigningRequest(stringifiedCSR, CertificateType.APP, null);
   }
 
   @Test
@@ -181,7 +181,7 @@ public class TestCertificateSigning extends PKIMocking {
         new JcaContentSignerBuilder("SHA256withRSA").build(requesterKeypair.getPrivate()));
     String stringifiedCSR = stringifyCSR(csr);
 
-    X509Certificate certificate = pki.signCertificateSigningRequest(stringifiedCSR, CertificateType.HOST);
+    X509Certificate certificate = pki.signCertificateSigningRequest(stringifiedCSR, CertificateType.HOST, null);
     Assert.assertNotNull(certificate);
   }
 
@@ -216,7 +216,7 @@ public class TestCertificateSigning extends PKIMocking {
       return null;
     };
     Function<PKI.ExtensionsBuilderParameter, Void>[] extensionsBuilders = new Function[]{ extensionsBuilder };
-    pki.signCertificateSigningRequest(stringifiedCSR, CertificateType.APP, CAType.INTERMEDIATE, extensionsBuilders);
+    pki.signCertificateSigningRequest(stringifiedCSR, CertificateType.APP, CAType.INTERMEDIATE, null, extensionsBuilders);
     Assert.assertTrue(check.get());
   }
 
@@ -525,7 +525,8 @@ public class TestCertificateSigning extends PKIMocking {
         csr.getSubjectPublicKeyInfo());
 
 
-    pki.SAN_CERTIFICATE_EXTENSIONS_BUILDER.apply(PKI.ExtensionsBuilderParameter.of(builder, csr, CertificateType.HOST));
+    pki.SAN_CERTIFICATE_EXTENSIONS_BUILDER.apply(
+        PKI.ExtensionsBuilderParameter.of(builder, csr, CertificateType.HOST, null));
     ContentSigner signer = new JcaContentSignerBuilder(PKI.SIGNATURE_ALGORITHM)
         .build(keyPair.getPrivate());
     X509CertificateHolder holder = builder.build(signer);
@@ -560,7 +561,8 @@ public class TestCertificateSigning extends PKIMocking {
         csr.getSubjectPublicKeyInfo());
 
 
-    pki.SAN_CERTIFICATE_EXTENSIONS_BUILDER.apply(PKI.ExtensionsBuilderParameter.of(builder, csr, CertificateType.HOST));
+    pki.SAN_CERTIFICATE_EXTENSIONS_BUILDER.apply(
+        PKI.ExtensionsBuilderParameter.of(builder, csr, CertificateType.HOST, null));
     signer = new JcaContentSignerBuilder(PKI.SIGNATURE_ALGORITHM).build(keyPair.getPrivate());
     holder = builder.build(signer);
     Assert.assertEquals(1, holder.getNonCriticalExtensionOIDs().size());
@@ -594,7 +596,8 @@ public class TestCertificateSigning extends PKIMocking {
         csr.getSubjectPublicKeyInfo());
 
 
-    pki.SAN_CERTIFICATE_EXTENSIONS_BUILDER.apply(PKI.ExtensionsBuilderParameter.of(builder, csr, CertificateType.HOST));
+    pki.SAN_CERTIFICATE_EXTENSIONS_BUILDER.apply(
+        PKI.ExtensionsBuilderParameter.of(builder, csr, CertificateType.HOST, null));
     signer = new JcaContentSignerBuilder(PKI.SIGNATURE_ALGORITHM).build(keyPair.getPrivate());
     holder = builder.build(signer);
     Assert.assertEquals(1, holder.getNonCriticalExtensionOIDs().size());
@@ -624,7 +627,8 @@ public class TestCertificateSigning extends PKIMocking {
         csr.getSubjectPublicKeyInfo());
 
 
-    pki.SAN_CERTIFICATE_EXTENSIONS_BUILDER.apply(PKI.ExtensionsBuilderParameter.of(builder, csr, CertificateType.HOST));
+    pki.SAN_CERTIFICATE_EXTENSIONS_BUILDER.apply(
+        PKI.ExtensionsBuilderParameter.of(builder, csr, CertificateType.HOST, null));
     signer = new JcaContentSignerBuilder(PKI.SIGNATURE_ALGORITHM).build(keyPair.getPrivate());
     holder = builder.build(signer);
     Assert.assertEquals(1, holder.getNonCriticalExtensionOIDs().size());
@@ -636,7 +640,73 @@ public class TestCertificateSigning extends PKIMocking {
     Assert.assertTrue(containsSAN(cert, "host2", 2));
   }
 
-  private boolean containsSAN(X509Certificate certificate, String expectedValue, Integer expectedType) throws Exception {
+  @Test
+  public void testSANCertificateExtensionsBuilderDNSSANWithRegion() throws Exception {
+    Gson gson = new Gson();
+
+    SubjectAlternativeName hdfsExtraSan = new SubjectAlternativeName(Arrays.asList("h0.hopsworks.ai"), null);
+    Map<String, SubjectAlternativeName> extraSans = new HashMap<>();
+    extraSans.put("hdfs", hdfsExtraSan);
+
+    IntermediateCAConfiguration interCaConf = new IntermediateCAConfiguration(null, null, extraSans);
+
+    CAsConfiguration casConf = new CAsConfiguration(null, interCaConf, null);
+    String jsonConf = gson.toJson(casConf);
+
+    CAConf caConf = Mockito.mock(CAConf.class);
+    Mockito.when(caConf.getString(Mockito.eq(CAConf.CAConfKeys.CA_CONFIGURATION))).thenReturn(jsonConf);
+    Mockito.when(caConf.getString(Mockito.eq(CAConf.CAConfKeys.SERVICE_DISCOVERY_DOMAIN))).thenReturn("consul");
+
+    UsernamesConfiguration usernamesConf = Mockito.mock(UsernamesConfiguration.class);
+    Mockito.when(usernamesConf.getNormalizedUsername(Mockito.eq("hdfs")))
+        .thenReturn(UsernamesConfiguration.Username.HDFS.name().toLowerCase());
+
+    PKI pki = new PKI();
+    pki.setCaConf(caConf);
+    pki.setUsernamesConfiguration(usernamesConf);
+    pki.init();
+    KeyPair keyPair = pki.generateKeyPair();
+
+    JcaX509CertificateConverter converter = new JcaX509CertificateConverter();
+
+    JcaContentSignerBuilder contentSigner = new JcaContentSignerBuilder("SHA256withRSA");
+    X500Name requesterName = new X500Name("CN=host1,L=hdfs");
+    JcaPKCS10CertificationRequestBuilder csrBuilder = new JcaPKCS10CertificationRequestBuilder(requesterName,
+        keyPair.getPublic());
+    PKCS10CertificationRequest csr = csrBuilder.build(contentSigner.build(keyPair.getPrivate()));
+
+    // hdfs certificate
+
+    X509v3CertificateBuilder builder = new X509v3CertificateBuilder(
+        new X500Name("CN=root"),
+        BigInteger.ONE,
+        Date.from(Instant.now()),
+        Date.from(Instant.now().plus(10, ChronoUnit.DAYS)),
+        csr.getSubject(),
+        csr.getSubjectPublicKeyInfo());
+
+    pki.SAN_CERTIFICATE_EXTENSIONS_BUILDER.apply(
+        PKI.ExtensionsBuilderParameter.of(builder, csr, CertificateType.HOST, "myregion"));
+    ContentSigner signer = new JcaContentSignerBuilder(PKI.SIGNATURE_ALGORITHM)
+        .build(keyPair.getPrivate());
+    X509CertificateHolder holder = builder.build(signer);
+    Assert.assertEquals(1, holder.getNonCriticalExtensionOIDs().size());
+    X509Certificate cert = converter.getCertificate(holder);
+    Collection<List<?>> sans = cert.getSubjectAlternativeNames();
+
+    Assert.assertEquals(7, sans.size());
+    // 2 is the code for SAN dnsName
+    Assert.assertTrue(containsSAN(cert, "host1", 2));
+    Assert.assertTrue(containsSAN(cert, "namenode.service.myregion.consul", 2));
+    Assert.assertTrue(containsSAN(cert, "rpc.namenode.service.myregion.consul", 2));
+    Assert.assertTrue(containsSAN(cert, "http.namenode.service.myregion.consul", 2));
+    Assert.assertTrue(containsSAN(cert, "monitoring.namenode.service.myregion.consul", 2));
+    Assert.assertTrue(containsSAN(cert, "sparkhistoryserver.service.myregion.consul", 2));
+    Assert.assertTrue(containsSAN(cert, "h0.hopsworks.ai", 2));
+  }
+
+
+    private boolean containsSAN(X509Certificate certificate, String expectedValue, Integer expectedType) throws Exception {
     Collection<List<?>> sans = certificate.getSubjectAlternativeNames();
     Iterator<List<?>> sansIter = sans.iterator();
     while (sansIter.hasNext()) {

@@ -69,7 +69,7 @@ public class ProjectCertsResource {
     }
 
     try {
-      X509Certificate signedCert = pki.signCertificateSigningRequest(csrView.getCsr(), PROJECT);
+      X509Certificate signedCert = pki.signCertificateSigningRequest(csrView.getCsr(), PROJECT, null);
       String stringifiedCert = pkiUtils.convertToPEM(signedCert);
       Pair<String, String> chainOfTrust = pki.getChainOfTrust(pkiUtils.getResponsibleCA(PROJECT));
       CSRView signedCsr = new CSRView(stringifiedCert, chainOfTrust.getLeft(), chainOfTrust.getRight());

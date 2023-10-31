@@ -55,6 +55,7 @@ public class CSRView {
   private String keyStore;
   private String trustStore;
   private String password;
+  private String region;
 
   public CSRView() {
 
@@ -149,5 +150,14 @@ public class CSRView {
 
   public void setPassword(String password) {
     this.password = password;
+  }
+
+  @ApiModelProperty(value = "Consul region to inject in the SAN Domain names")
+  public String getRegion() {
+    return region;
+  }
+
+  public void setRegion(String region) {
+    this.region = region;
   }
 }
