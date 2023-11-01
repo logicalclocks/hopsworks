@@ -380,8 +380,7 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
 
     containers.add(new ContainerBuilder()
       .withName("filebeat")
-      .withImage(ProjectUtils.getRegistryURL(settings,
-          serviceDiscoveryController) +
+      .withImage(ProjectUtils.getRegistryURL(settings, serviceDiscoveryController, null) +
           "/filebeat:" + settings.
           getHopsworksVersion())
       .withImagePullPolicy(settings.getKubeImagePullPolicy())

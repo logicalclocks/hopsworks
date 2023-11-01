@@ -26,6 +26,7 @@ import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.PythonException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.multiregion.MultiRegionController;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
@@ -53,6 +54,8 @@ public class DockerImageController {
   private ProjectUtils projectUtils;
   @EJB
   private OSProcessExecutor osProcessExecutor;
+  @EJB
+  private MultiRegionController multiRegionController;
   
   @VisibleForTesting
   public DockerImageController(Settings settings,
@@ -78,6 +81,8 @@ public class DockerImageController {
       .addCommand("create")
       .addCommand(dockerFilePath)
       .addCommand(projectUtils.getRegistryURL() + "/" + dockerImageName)
+      .addCommand(multiRegionController.isEnabled() ?
+            (projectUtils.getRegistryURL(multiRegionController.getSecondaryRegionName()) + "/" + dockerImageName) : "")
       .redirectErrorStream(true)
       .setCurrentWorkingDirectory(cwd)
       .setWaitTimeout(1, TimeUnit.HOURS)
@@ -118,6 +123,8 @@ public class DockerImageController {
       .addCommand("create")
       .addCommand(dockerFilePath)
       .addCommand(projectUtils.getRegistryURL() + "/" + dockerImageName)
+      .addCommand(multiRegionController.isEnabled() ?
+          (projectUtils.getRegistryURL(multiRegionController.getSecondaryRegionName()) + "/" + dockerImageName) : "")
       .addCommand("'" + String.join(" ", dockerBuildOpts) + "'")
       .redirectErrorStream(true)
       .setCurrentWorkingDirectory(cwd)

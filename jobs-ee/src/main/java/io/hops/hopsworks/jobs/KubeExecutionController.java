@@ -413,8 +413,8 @@ public class KubeExecutionController extends AbstractExecutionController impleme
 
       containers.add(new ContainerBuilder()
               .withName("filebeat")
-              .withImage(ProjectUtils.getRegistryURL(settings,
-                      serviceDiscoveryController) + "/filebeat:" + settings.getHopsworksVersion())
+              .withImage(ProjectUtils.getRegistryURL(settings, serviceDiscoveryController, null)
+                  + "/filebeat:" + settings.getHopsworksVersion())
               .withImagePullPolicy(settings.getKubeImagePullPolicy())
               .withEnv(sidecarContainerEnv)
               .withVolumeMounts(

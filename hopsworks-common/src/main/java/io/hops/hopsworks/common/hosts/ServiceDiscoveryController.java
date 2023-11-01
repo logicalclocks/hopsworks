@@ -148,6 +148,15 @@ public class ServiceDiscoveryController {
     Optional<Service> serviceOpt = client.getServiceSRVOnly(serviceQuery).findAny();
     return serviceOpt.orElseThrow(() -> new ServiceNotFoundException("Could not find service with: " + serviceQuery));
   }
+
+  @Lock(LockType.READ)
+  public Service getAnyAddressOfServiceWithDNSSRVOnlyWithRegion(String serviceDomain, String region)
+      throws ServiceDiscoveryException {
+    ServiceQuery serviceQuery = ServiceQuery.of(constructServiceFQDN(serviceDomain, region), Collections.emptySet());
+    DnsResolver client = (DnsResolver) getClient(Type.DNS);
+    Optional<Service> serviceOpt = client.getServiceSRVOnly(serviceQuery).findAny();
+    return serviceOpt.orElseThrow(() -> new ServiceNotFoundException("Could not find service with: " + serviceQuery));
+  }
   
   @Lock(LockType.READ)
   public String getConsulServerAddress() throws ServiceDiscoveryException {

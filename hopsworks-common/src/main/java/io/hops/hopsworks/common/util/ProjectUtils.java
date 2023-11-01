@@ -164,7 +164,7 @@ public class ProjectUtils {
   public static String getFullDockerImageName(Project project, Settings settings,
       ServiceDiscoveryController serviceDiscoveryController, boolean useBase) throws ServiceDiscoveryException {
     String imageName = getDockerImageName(project, settings, useBase);
-    return getRegistryURL(settings, serviceDiscoveryController) + "/" + imageName;
+    return getRegistryURL(settings, serviceDiscoveryController, null) + "/" + imageName;
   }
   
   public static String getDockerImageName(Project project, Settings settings, boolean useBase) {
@@ -182,19 +182,30 @@ public class ProjectUtils {
   }
 
   public String getFullDockerImageName(String imageName) throws ServiceDiscoveryException {
-    return getRegistryURL(settings, serviceDiscoveryController) + "/" + imageName;
+    return getRegistryURL(settings, serviceDiscoveryController, null) + "/" + imageName;
   }
 
-  public String getRegistryURL() throws
+  public String getRegistryURL() throws ServiceDiscoveryException {
+    return getRegistryURL(settings, serviceDiscoveryController, null);
+  }
+
+  public String getRegistryURL(String region) throws
       ServiceDiscoveryException {
-    return getRegistryURL(settings, serviceDiscoveryController);
+    return getRegistryURL(settings, serviceDiscoveryController, region);
   }
   
   public static String getRegistryURL(Settings settings,
-      ServiceDiscoveryController serviceDiscoveryController) throws
-      ServiceDiscoveryException {
-    com.logicalclocks.servicediscoverclient.service.Service registry = serviceDiscoveryController
-        .getAnyAddressOfServiceWithDNSSRVOnly(HopsworksService.DOCKER_REGISTRY.getName());
+                                      ServiceDiscoveryController serviceDiscoveryController, String region)
+      throws ServiceDiscoveryException {
+    com.logicalclocks.servicediscoverclient.service.Service registry;
+    if (Strings.isNullOrEmpty(region)) {
+      registry = serviceDiscoveryController
+           .getAnyAddressOfServiceWithDNSSRVOnly(HopsworksService.DOCKER_REGISTRY.getName());
+    } else {
+      registry = serviceDiscoveryController
+          .getAnyAddressOfServiceWithDNSSRVOnlyWithRegion(HopsworksService.DOCKER_REGISTRY.getName(), region);
+    }
+
     Integer registryPort = registry.getPort();
     // In case of a ManagedDockerRegistry do not just use Consul domain name
     // but instead get the resolved address **regardless** if it is on-prem
@@ -232,8 +243,7 @@ public class ProjectUtils {
   }
   
   public String getFullBaseImageName() throws ServiceDiscoveryException {
-    return getRegistryURL(settings, serviceDiscoveryController) + "/" +
-        settings.getBaseDockerImagePythonName();
+    return getRegistryURL(settings, serviceDiscoveryController, null) + "/" + settings.getBaseDockerImagePythonName();
   }
   
   public String getProjectNameFromDockerImageName(String imageName) {
