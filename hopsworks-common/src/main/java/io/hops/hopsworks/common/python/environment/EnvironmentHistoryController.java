@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.common.python.environment;
 
+import aQute.bnd.version.maven.ComparableVersion;
 import com.google.common.collect.Sets;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.python.EnvironmentHistoryFacade;
@@ -159,7 +160,7 @@ public class EnvironmentHistoryController {
     common.stream().forEach(lib -> {
       String currentVersion = currentMap.get(lib.getLibrary());
       String oldVersion = oldMap.get(lib.getLibrary());
-      int compare = currentVersion.compareTo(oldVersion);
+      int compare = new ComparableVersion(currentVersion).compareTo(new ComparableVersion(oldVersion));
       if (compare > 0) {
         upgraded.add(new LibraryUpdate(lib.getLibrary(), oldVersion, currentVersion));
       } else if (compare < 0) {
