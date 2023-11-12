@@ -47,16 +47,15 @@ angular.module('hopsWorksApp')
           '$http', 'AuthService', 'UtilsService', 'ElasticService', 'DelaProjectService',
           'DelaService', 'md5', 'ModalService', 'ProjectService', 'growl',
           'MessageService', '$routeParams', '$window', 'HopssiteService', 'BannerService',
-          'AirflowService', 'PaginationService', 'VariablesService', 'StorageService',
+          'PaginationService', 'VariablesService', 'StorageService',
           function ($q, $interval, $location, $scope, $rootScope, $http, AuthService, UtilsService,
                   ElasticService, DelaProjectService, DelaService, md5, ModalService, 
                   ProjectService, growl,
                   MessageService, $routeParams, $window, HopssiteService, BannerService,
-                  AirflowService, PaginationService, VariablesService, StorageService) {
+                  PaginationService, VariablesService, StorageService) {
             var self = this;
 
             const MAX_IN_MEMORY_ITEMS = 1000;
-            self.ui = "/hopsworks-api/airflow/login?q=username=";
 
             self.email = StorageService.get('email');
             self.emailHash = md5.createHash(self.email || '');
@@ -86,8 +85,6 @@ angular.module('hopsWorksApp')
             };
 
             self.logout = function () {
-              AirflowService.logout();
-
               AuthService.logout(self.user).then(
                 function (success) {
                     AuthService.cleanSession();
