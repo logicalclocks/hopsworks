@@ -322,26 +322,6 @@ angular.module('hopsWorksApp', [
                           }]
                       }
                     })
-                    .when('/project/:projectID/airflow', {
-                      templateUrl: 'views/airflow.html',
-                      controller: 'ProjectCtrl as projectCtrl',
-                      resolve: {
-                        auth: ['$q', '$route', 'AuthGuardService',
-                          function ($q, $route, AuthGuardService) {
-                              return AuthGuardService.guardProject($q, $route.current.params.projectID);
-                          }]
-                      }
-                    })
-                    .when('/project/:projectID/airflow/dagcomposer', {
-                      templateUrl: 'views/dagComposer.html',
-                      controller: 'ProjectCtrl as projectCtrl',
-                      resolve: {
-                        auth: ['$q', '$route', 'AuthGuardService',
-                        function ($q, $route, AuthGuardService) {
-                          return AuthGuardService.guardProject($q, $route.current.params.projectID);
-                        }]
-                      }
-                    })
                     .when('/project/:projectID/newjob', {
                       templateUrl: 'views/newJob.html',
                       controller: 'ProjectCtrl as projectCtrl',

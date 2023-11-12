@@ -46,10 +46,10 @@ angular.module('hopsWorksApp')
         .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route', '$timeout', '$window', 'UtilsService',
           'growl', 'ProjectService', 'ModalService', 'ActivityService', 'DataSetService',
           'UserService', 'TourService', 'PythonService', 'StorageService', 'CertService', 'VariablesService', 'FileSaver', 'Blob',
-          'AirflowService', '$http',
+          '$http',
         function ($scope, $rootScope, $location, $routeParams, $route, $timeout, $window, UtilsService, growl, ProjectService,
                   ModalService, ActivityService, DataSetService, UserService, TourService, PythonService,
-                    StorageService, CertService, VariablesService, FileSaver, Blob, AirflowService, $http) {
+                    StorageService, CertService, VariablesService, FileSaver, Blob, $http) {
 
             var self = this;
             self.loadedView = false;
@@ -325,14 +325,6 @@ angular.module('hopsWorksApp')
               self.goToUrl('rstudio');
             };
 
-            self.goToDagComposer = function() {
-              self.goToUrl('airflow/dagcomposer');
-            };
-
-            self.goToAirflow = function () {
-              self.goToUrl('airflow');
-            };
-
             self.goToJobs = function () {
               self.toggleKibanaNavBar();
               self.goToUrl('jobs');
@@ -384,6 +376,10 @@ angular.module('hopsWorksApp')
 
             self.goToFeaturestore = function () {
                 $window.location.href = '/p/' + self.projectId;
+            };
+
+            self.goToAirflow = function () {
+                $window.location.href = '/p/' + self.projectId + '/airflow';
             };
 
             self.goToPython = function () {
@@ -766,14 +762,6 @@ angular.module('hopsWorksApp')
 
             self.openWindow = function () {
               $window.open(self.ui, '_blank');
-            };
-
-            self.connectToAirflow = function () {
-                // Open airlfow
-                var newTab = $window.open('about:blank', '_blank');
-                $http.get(getApiLocationBase() + "/airflow").then ( function (response) {
-                    newTab.location.href = getApiLocationBase() + "/airflow/admin";
-                })
             };
 
             var kibanaNavVarInitKey = "hopsworks.kibana.navbar.set";

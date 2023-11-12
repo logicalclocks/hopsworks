@@ -1173,36 +1173,6 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            addOperator2AirflowDag: function(size, operator, jobs, addedOperators) {
-                var modalInstance = $uibModal.open({
-                    templateUrl: 'views/airflowDagOperatorProperties.html',
-                    controller: 'DagComposerModalsCtrl as dagComposerModalsCtrl',
-                    size: size,
-                    resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
-                                    });
-                            }],
-                            operator: function() {
-                                return operator;
-                            },
-                            jobs: function() {
-                                return jobs;
-                            },
-                            addedOperators: function() {
-                                return addedOperators;
-                            }
-                    }
-                });
-                return modalInstance.result;
-            },
             selectFromList: function(size, msg, list) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/selectFromList.html',
