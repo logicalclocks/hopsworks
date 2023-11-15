@@ -1,0 +1,683 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+   <base>
+      <metadata>
+         <name>memory.maxHeap</name>
+         <mbean>java.lang:type=Memory/HeapMemoryUsage#max</mbean>
+         <type>gauge</type>
+         <unit>bytes</unit>
+         <displayName>HeapMemory Max Usage</displayName>
+         <description>Displays the maximum amount of memory in bytes that can be used for HeapMemory.</description>
+      </metadata>
+      <metadata>
+         <name>memory.usedHeap</name>
+         <mbean>java.lang:type=Memory/HeapMemoryUsage#used</mbean>
+         <type>gauge</type>
+         <unit>bytes</unit>
+         <displayName>HeapMemory Used</displayName>
+         <description>Displays the amount of used memory in bytes.</description>
+      </metadata>
+      <metadata>
+         <name>memory.committedHeap</name>
+         <mbean>java.lang:type=Memory/HeapMemoryUsage#committed</mbean>
+         <type>gauge</type>
+         <unit>bytes</unit>
+         <displayName>HeapMemory Committed</displayName>
+         <description>Displays the amount of memory in bytes that is committed for the JVM to use.</description>
+      </metadata>
+      <metadata>
+         <name>thread.count</name>
+         <mbean>java.lang:type=Threading/ThreadCount</mbean>
+         <type>counter</type>
+         <unit>none</unit>
+         <displayName>Current Thread count</displayName>
+         <description>Displays the current number of live threads including both daemon and non-daemon threads.</description>
+      </metadata>
+      <metadata>
+         <name>thread.daemon.count</name>
+         <mbean>java.lang:type=Threading/DaemonThreadCount</mbean>
+         <type>counter</type>
+         <unit>none</unit>
+         <displayName>Daemon Thread Count</displayName>
+         <description>Displays the current number of live daemon threads.</description>
+      </metadata>
+      <metadata>
+         <name>thread.max.count</name>
+         <mbean>java.lang:type=Threading/PeakThreadCount</mbean>
+         <type>counter</type>
+         <unit>none</unit>
+         <displayName>Peak Thread Count</displayName>
+         <description>Displays the peak live thread count since the Java virtual machine started or peak was reset. This includes daemon and non-daemon threads.</description>
+      </metadata>
+      <metadata>
+         <name>classloader.currentLoadedClass.count</name>
+         <mbean>java.lang:type=ClassLoading/LoadedClassCount</mbean>
+         <type>counter</type>
+         <unit>none</unit>
+         <displayName>Currently Loaded Class Count</displayName>
+         <description>Displays the number of classes that are currently loaded in the JVM.</description>
+      </metadata>
+      <metadata>
+         <name>classloader.totalLoadedClass.count</name>
+         <mbean>java.lang:type=ClassLoading/TotalLoadedClassCount</mbean>
+         <type>counter</type>
+         <unit>none</unit>
+         <displayName>Total Loaded Class Count</displayName>
+         <description>Displays the total number of classes that have been loaded since the JVM has started execution.</description>
+      </metadata>
+      <metadata>
+         <name>classloader.totalUnloadedClass.count</name>
+         <mbean>java.lang:type=ClassLoading/UnloadedClassCount</mbean>
+         <type>counter</type>
+         <unit>none</unit>
+         <displayName>Total Unloaded Class Count</displayName>
+         <description>Displays the total number of classes unloaded since the JVM has started execution.</description>
+      </metadata>
+      <metadata>
+         <name>cpu.availableProcessors</name>
+         <mbean>java.lang:type=OperatingSystem/AvailableProcessors</mbean>
+         <type>gauge</type>
+         <unit>none</unit>
+         <displayName>Available Processors</displayName>
+         <description>Displays the number of processors available to the JVM. This value may change during a particular invocation of the virtual machine.</description>
+      </metadata>
+      <metadata>
+         <name>cpu.systemLoadAverage</name>
+         <mbean>java.lang:type=OperatingSystem/SystemLoadAverage</mbean>
+         <type>gauge</type>
+         <unit>none</unit>
+         <displayName>System Load Average</displayName>
+         <description>Displays the system load average for the last minute. The system load average is the sum of the number of runnable entities queued to the available processors and the number of runnable entities running on the available processors averaged over a period of time. The way in which the load average is calculated is operating system specific but is typically a damped time-dependent average. If the load average is not available, a negative value is displayed. This attribute is designed to provide a hint about the system load and may be queried frequently. The load average may be unavailable on some platform where it is expensive to implement this method.</description>
+      </metadata>
+      <metadata>
+         <name>jvm.uptime</name>
+         <mbean>java.lang:type=Runtime/Uptime</mbean>
+         <type>gauge</type>
+         <unit>milliseconds</unit>
+         <displayName>JVM Uptime</displayName>
+         <description>Displays the uptime of the JVM in milliseconds.</description>
+      </metadata>
+      <metadata>
+         <name>gc.%s.count</name>
+         <mbean>java.lang:type=GarbageCollector,name=%s/CollectionCount</mbean>
+         <type>counter</type>
+         <unit>none</unit>
+         <displayName>Garbage Collection Count</displayName>
+         <description>Displays the total number of collections that have occurred. This attribute lists -1 if the collection count is undefined for this collector.</description>
+      </metadata>
+      <metadata>
+         <name>gc.%s.time</name>
+         <mbean>java.lang:type=GarbageCollector,name=%s/CollectionTime</mbean>
+         <type>counter</type>
+         <unit>milliseconds</unit>
+         <displayName>Garbage Collection Time</displayName>
+         <description>Displays the approximate accumulated collection elapsed time in milliseconds. This attribute displays -1 if the collection elapsed time is undefined for this collector. The JVM implementation may use a high resolution timer to measure the elapsed time. This attribute may display the same value even if the collection count has been incremented if the collection elapsed time is very short.</description>
+      </metadata>
+   </base>
+   <vendor>
+      <metadata>
+         <name>http_service_server_request_countopenconnections_count</name>
+         <mbean>amx:type=request-mon,pp=/mon/server-mon[${instance}],name=http-service/server/request/countopenconnections#count</mbean>
+         <description>The number of open connections</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>http_service_server_request_countrequests_count</name>
+         <mbean>amx:type=request-mon,pp=/mon/server-mon[${instance}],name=http-service/server/request/countrequests#count</mbean>
+         <description>The number of requests received</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>http_service_server_request_maxtime_count</name>
+         <mbean>amx:type=request-mon,pp=/mon/server-mon[${instance}],name=http-service/server/request/maxtime#count</mbean>
+         <description>Longest response time for a request; not a cumulative value, but the largest response time from among the response times</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>http_service_server_request_countother_count</name>
+         <mbean>amx:type=request-mon,pp=/mon/server-mon[${instance}],name=http-service/server/request/countother#count</mbean>
+         <description>Number of responses with a status code outside the 2xx, 3xx, 4xx, and 5xx range</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>http_service_server_request_maxopenconnections_count</name>
+         <mbean>amx:type=request-mon,pp=/mon/server-mon[${instance}],name=http-service/server/request/maxopenconnections#count</mbean>
+         <description>The maximum number of open connections</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>http_service_server_request_count200_count</name>
+         <mbean>amx:type=request-mon,pp=/mon/server-mon[${instance}],name=http-service/server/request/count200#count</mbean>
+         <description>Number of responses with a status code equal to 200</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>http_service_server_request_count2xx_count</name>
+         <mbean>amx:type=request-mon,pp=/mon/server-mon[${instance}],name=http-service/server/request/count2xx#count</mbean>
+         <description>Number of responses with a status code in the 2xx range</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>http_service_server_request_countbytestransmitted_count</name>
+         <mbean>amx:type=request-mon,pp=/mon/server-mon[${instance}],name=http-service/server/request/countbytestransmitted#count</mbean>
+         <description>The number of bytes transmitted</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>http_service_server_request_count302_count</name>
+         <mbean>amx:type=request-mon,pp=/mon/server-mon[${instance}],name=http-service/server/request/count302#count</mbean>
+         <description>Number of responses with a status code equal to 302</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>http_service_server_request_count401_count</name>
+         <mbean>amx:type=request-mon,pp=/mon/server-mon[${instance}],name=http-service/server/request/count401#count</mbean>
+         <description>Number of responses with a status code equal to 401</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>http_service_server_request_count5xx_count</name>
+         <mbean>amx:type=request-mon,pp=/mon/server-mon[${instance}],name=http-service/server/request/count5xx#count</mbean>
+         <description>Number of responses with a status code in the 5xx range</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>http_service_server_request_count3xx_count</name>
+         <mbean>amx:type=request-mon,pp=/mon/server-mon[${instance}],name=http-service/server/request/count3xx#count</mbean>
+         <description>Number of responses with a status code in the 3xx range</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>http_service_server_request_count400_count</name>
+         <mbean>amx:type=request-mon,pp=/mon/server-mon[${instance}],name=http-service/server/request/count400#count</mbean>
+         <description>Number of responses with a status code equal to 400</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>http_service_server_request_count4xx_count</name>
+         <mbean>amx:type=request-mon,pp=/mon/server-mon[${instance}],name=http-service/server/request/count4xx#count</mbean>
+         <description>Number of responses with a status code in the 4xx range</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>http_service_server_request_countbytesreceived_count</name>
+         <mbean>amx:type=request-mon,pp=/mon/server-mon[${instance}],name=http-service/server/request/countbytesreceived#count</mbean>
+         <description>The number of bytes received</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>http_service_server_request_count304_count</name>
+         <mbean>amx:type=request-mon,pp=/mon/server-mon[${instance}],name=http-service/server/request/count304#count</mbean>
+         <description>Number of responses with a status code equal to 304</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>http_service_server_request_count403_count</name>
+         <mbean>amx:type=request-mon,pp=/mon/server-mon[${instance}],name=http-service/server/request/count403#count</mbean>
+         <description>Number of responses with a status code equal to 403</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>http_service_server_request_errorcount_count</name>
+         <mbean>amx:type=request-mon,pp=/mon/server-mon[${instance}],name=http-service/server/request/errorcount#count</mbean>
+         <description>Cumulative value of the error count, with error count representing the number of cases where the response code was greater than or equal to 400</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>http_service_server_request_count404_count</name>
+         <mbean>amx:type=request-mon,pp=/mon/server-mon[${instance}],name=http-service/server/request/count404#count</mbean>
+         <description>Number of responses with a status code equal to 404</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>http_service_server_request_count503_count</name>
+         <mbean>amx:type=request-mon,pp=/mon/server-mon[${instance}],name=http-service/server/request/count503#count</mbean>
+         <description>Number of responses with a status code equal to 503</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>http_service_server_request_processingtime_count</name>
+         <mbean>amx:type=request-mon,pp=/mon/server-mon[${instance}],name=http-service/server/request/processingtime#count</mbean>
+         <description>Average request processing time</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>network_http_listener_2_thread_pool_corethreads_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=thread-pool-mon,name=network/http-listener-2/thread-pool/corethreads#count</mbean>
+         <description>Core number of threads in the thread pool</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>network_http_listener_2_thread_pool_totalexecutedtasks_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=thread-pool-mon,name=network/http-listener-2/thread-pool/totalexecutedtasks#count</mbean>
+         <description>Provides the total number of tasks, which were executed by the thread pool</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>network_http_listener_2_thread_pool_maxthreads_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=thread-pool-mon,name=network/http-listener-2/thread-pool/maxthreads#count</mbean>
+         <description>Maximum number of threads allowed in the thread pool</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>network_http_listener_2_thread_pool_currentthreadcount_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=thread-pool-mon,name=network/http-listener-2/thread-pool/currentthreadcount#count</mbean>
+         <description>Provides the number of request processing threads currently in the listener thread pool</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>network_http_listener_2_thread_pool_currentthreadsbusy_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=thread-pool-mon,name=network/http-listener-2/thread-pool/currentthreadsbusy#count</mbean>
+         <description>Provides the number of request processing threads currently in use in the listener thread pool serving requests.</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_hopsworksPool_numconncreated_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/hopsworksPool/numconncreated#count</mbean>
+         <description>No description available for getNumConnCreated</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_hopsworksPool_numconnfree_current</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/hopsworksPool/numconnfree#current</mbean>
+         <description>No description available for getNumConnFree</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_hopsworksPool_numconnreleased_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/hopsworksPool/numconnreleased#count</mbean>
+         <description>No description available for getNumConnReleased</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_hopsworksPool_numpotentialconnleak_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/hopsworksPool/numpotentialconnleak#count</mbean>
+         <description>No description available for getNumPotentialConnLeakCount</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_hopsworksPool_numconnfailedvalidation_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/hopsworksPool/numconnfailedvalidation#count</mbean>
+         <description>No description available for getNumConnFailedValidation</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_hopsworksPool_connrequestwaittime_current</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/hopsworksPool/connrequestwaittime#current</mbean>
+         <description>No description available for getConnRequestWaitTime</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_hopsworksPool_numconnacquired_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/hopsworksPool/numconnacquired#count</mbean>
+         <description>No description available for getNumConnAcquired</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_hopsworksPool_numconndestroyed_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/hopsworksPool/numconndestroyed#count</mbean>
+         <description>No description available for getNumConnDestroyed</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_hopsworksPool_averageconnwaittime_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/hopsworksPool/averageconnwaittime#count</mbean>
+         <description>No description available for getAverageConnWaitTime</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_hopsworksPool_numconnsuccessfullymatched_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/hopsworksPool/numconnsuccessfullymatched#count</mbean>
+         <description>No description available for getNumConnSuccessfullyMatched</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_hopsworksPool_numconnused_current</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/hopsworksPool/numconnused#current</mbean>
+         <description>No description available for getNumConnUsed</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_hopsworksPool_numconnnotsuccessfullymatched_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/hopsworksPool/numconnnotsuccessfullymatched#count</mbean>
+         <description>No description available for getNumConnNotSuccessfullyMatched</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_hopsworksPool_waitqueuelength_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/hopsworksPool/waitqueuelength#count</mbean>
+         <description>No description available for getWaitQueueLength</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_hopsworksPool_numconntimedout_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/hopsworksPool/numconntimedout#count</mbean>
+         <description>No description available for getNumConnTimedOut</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_ejbTimerPool_numconncreated_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/ejbTimerPool/numconncreated#count</mbean>
+         <description>No description available for getNumConnCreated</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_ejbTimerPool_numconnfree_current</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/ejbTimerPool/numconnfree#current</mbean>
+         <description>No description available for getNumConnFree</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_ejbTimerPool_numconnreleased_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/ejbTimerPool/numconnreleased#count</mbean>
+         <description>No description available for getNumConnReleased</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_ejbTimerPool_numpotentialconnleak_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/ejbTimerPool/numpotentialconnleak#count</mbean>
+         <description>No description available for getNumPotentialConnLeakCount</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_ejbTimerPool_numconnfailedvalidation_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/ejbTimerPool/numconnfailedvalidation#count</mbean>
+         <description>No description available for getNumConnFailedValidation</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_ejbTimerPool_connrequestwaittime_current</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/ejbTimerPool/connrequestwaittime#current</mbean>
+         <description>No description available for getConnRequestWaitTime</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_ejbTimerPool_numconnacquired_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/ejbTimerPool/numconnacquired#count</mbean>
+         <description>No description available for getNumConnAcquired</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_ejbTimerPool_numconndestroyed_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/ejbTimerPool/numconndestroyed#count</mbean>
+         <description>No description available for getNumConnDestroyed</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_ejbTimerPool_averageconnwaittime_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/ejbTimerPool/averageconnwaittime#count</mbean>
+         <description>No description available for getAverageConnWaitTime</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_ejbTimerPool_numconnsuccessfullymatched_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/ejbTimerPool/numconnsuccessfullymatched#count</mbean>
+         <description>No description available for getNumConnSuccessfullyMatched</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_ejbTimerPool_numconnused_current</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/ejbTimerPool/numconnused#current</mbean>
+         <description>No description available for getNumConnUsed</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_ejbTimerPool_numconnnotsuccessfullymatched_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/ejbTimerPool/numconnnotsuccessfullymatched#count</mbean>
+         <description>No description available for getNumConnNotSuccessfullyMatched</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_ejbTimerPool_waitqueuelength_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/ejbTimerPool/waitqueuelength#count</mbean>
+         <description>No description available for getWaitQueueLength</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>resources_ejbTimerPool_numconntimedout_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=jdbc-connection-pool-mon,name=resources/ejbTimerPool/numconntimedout#count</mbean>
+         <description>No description available for getNumConnTimedOut</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>executorService_concurrent_hopsExecutorService_PoolSize_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=managed-executor-service-mon,name=executorService/concurrent/hopsExecutorService/PoolSize#count</mbean>
+         <description>The current number of threads in the pool</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>executorService_concurrent_hopsExecutorService_ActiveCount_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=managed-executor-service-mon,name=executorService/concurrent/hopsExecutorService/ActiveCount#count</mbean>
+         <description>The approximate number of active threads</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>executorService_concurrent_hopsExecutorService_CompletedTaskCount_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=managed-executor-service-mon,name=executorService/concurrent/hopsExecutorService/CompletedTaskCount#count</mbean>
+         <description>Number of tasks completed</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>executorService_concurrent_hopsExecutorService_LargestPoolSize_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=managed-executor-service-mon,name=executorService/concurrent/hopsExecutorService/LargestPoolSize#count</mbean>
+         <description>The largest number of threads that have ever simultaneously been in the pool</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>executorService_concurrent_hopsExecutorService_TaskCount_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=managed-executor-service-mon,name=executorService/concurrent/hopsExecutorService/TaskCount#count</mbean>
+         <description>Total number of tasks ever scheduled</description>
+         <type>gauge</type>
+      </metadata>
+     <metadata>
+       <name>executorService_concurrent_condaExecutorService_PoolSize_count</name>
+       <mbean>amx:pp=/mon/server-mon[${instance}],type=managed-executor-service-mon,name=executorService/concurrent/condaExecutorService/PoolSize#count</mbean>
+       <description>The current number of threads in the pool</description>
+       <type>gauge</type>
+     </metadata>
+     <metadata>
+       <name>executorService_concurrent_condaExecutorService_ActiveCount_count</name>
+       <mbean>amx:pp=/mon/server-mon[${instance}],type=managed-executor-service-mon,name=executorService/concurrent/condaExecutorService/ActiveCount#count</mbean>
+       <description>The approximate number of active threads</description>
+       <type>gauge</type>
+     </metadata>
+     <metadata>
+       <name>executorService_concurrent_condaExecutorService_CompletedTaskCount_count</name>
+       <mbean>amx:pp=/mon/server-mon[${instance}],type=managed-executor-service-mon,name=executorService/concurrent/condaExecutorService/CompletedTaskCount#count</mbean>
+       <description>Number of tasks completed</description>
+       <type>gauge</type>
+     </metadata>
+     <metadata>
+       <name>executorService_concurrent_condaExecutorService_LargestPoolSize_count</name>
+       <mbean>amx:pp=/mon/server-mon[${instance}],type=managed-executor-service-mon,name=executorService/concurrent/condaExecutorService/LargestPoolSize#count</mbean>
+       <description>The largest number of threads that have ever simultaneously been in the pool</description>
+       <type>gauge</type>
+     </metadata>
+     <metadata>
+       <name>executorService_concurrent_condaExecutorService_TaskCount_count</name>
+       <mbean>amx:pp=/mon/server-mon[${instance}],type=managed-executor-service-mon,name=executorService/concurrent/condaExecutorService/TaskCount#count</mbean>
+       <description>Total number of tasks ever scheduled</description>
+       <type>gauge</type>
+     </metadata>
+     <metadata>
+         <name>executorService_concurrent_jupyterExecutorService_PoolSize_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=managed-executor-service-mon,name=executorService/concurrent/jupyterExecutorService/PoolSize#count</mbean>
+         <description>The current number of threads in the pool</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>executorService_concurrent_jupyterExecutorService_ActiveCount_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=managed-executor-service-mon,name=executorService/concurrent/jupyterExecutorService/ActiveCount#count</mbean>
+         <description>The approximate number of active threads</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>executorService_concurrent_jupyterExecutorService_LargestPoolSize_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=managed-executor-service-mon,name=executorService/concurrent/jupyterExecutorService/LargestPoolSize#count</mbean>
+         <description>The largest number of threads that have ever simultaneously been in the pool</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>network_http_listener_2_connection_queue_peakqueued_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=connection-queue-mon,name=network/http-listener-2/connection-queue/peakqueued#count</mbean>
+         <description>Largest number of connections that were in the queue simultaneously</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>network_http_listener_2_connection_queue_maxqueued_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=connection-queue-mon,name=network/http-listener-2/connection-queue/maxqueued#count</mbean>
+         <description>Maximum size of the connection queue</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>network_http_listener_2_connection_queue_countoverflows_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=connection-queue-mon,name=network/http-listener-2/connection-queue/countoverflows#count</mbean>
+         <description>Number of times the queue has been too full to accommodate a connection</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>network_http_listener_2_connection_queue_counttotalconnections_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=connection-queue-mon,name=network/http-listener-2/connection-queue/counttotalconnections#count</mbean>
+         <description>Total number of connections that have been accepted</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>network_http_listener_2_connection_queue_countopenconnections_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=connection-queue-mon,name=network/http-listener-2/connection-queue/countopenconnections#count</mbean>
+         <description>The number of open/active connections</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>network_http_listener_2_connection_queue_countqueued_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=connection-queue-mon,name=network/http-listener-2/connection-queue/countqueued#count</mbean>
+         <description>Number of connections currently in the queue</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>network_http_listener_2_connection_queue_countqueued1minuteaverage_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=connection-queue-mon,name=network/http-listener-2/connection-queue/countqueued1minuteaverage#count</mbean>
+         <description>Average number of connections queued in the last 1 minute</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>network_http_listener_2_connection_queue_countqueued5minutesaverage_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=connection-queue-mon,name=network/http-listener-2/connection-queue/countqueued5minutesaverage#count</mbean>
+         <description>Average number of connections queued in the last 5 minutes</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>network_http_listener_2_connection_queue_countqueued15minutesaverage_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=connection-queue-mon,name=network/http-listener-2/connection-queue/countqueued15minutesaverage#count</mbean>
+         <description>Average number of connections queued in the last 15 minutes</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>network_http_listener_2_connection_queue_tickstotalqueued_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=connection-queue-mon,name=network/http-listener-2/connection-queue/tickstotalqueued#count</mbean>
+         <description>(Unsupported) Total number of ticks that connections have spent in the queue</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>network_http_listener_2_connection_queue_counttotalqueued_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=connection-queue-mon,name=network/http-listener-2/connection-queue/counttotalqueued#count</mbean>
+         <description>Total number of connections that have been queued</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>jvm_memory_committedheapsize_count_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=memory-mon,name=jvm/memory/committedheapsize-count#count</mbean>
+         <description>amount of memory in bytes that is committed for the Java virtual machine to use</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>jvm_memory_maxheapsize_count_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=memory-mon,name=jvm/memory/maxheapsize-count#count</mbean>
+         <description>maximum amount of memory in bytes that can be used for memory management</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>jvm_memory_maxnonheapsize_count_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=memory-mon,name=jvm/memory/maxnonheapsize-count#count</mbean>
+         <description>maximum amount of memory in bytes that can be used for memory management</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>jvm_memory_usedheapsize_count_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=memory-mon,name=jvm/memory/usedheapsize-count#count</mbean>
+         <description>amount of used memory in bytes</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>jvm_memory_committednonheapsize_count_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=memory-mon,name=jvm/memory/committednonheapsize-count#count</mbean>
+         <description>amount of memory in bytes that is committed for the Java virtual machine to use</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>jvm_memory_initnonheapsize_count_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=memory-mon,name=jvm/memory/initnonheapsize-count#count</mbean>
+         <description>amount of memory in bytes that the Java virtual machine initially requests from the operating system for memory management</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>jvm_memory_objectpendingfinalizationcount_count_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=memory-mon,name=jvm/memory/objectpendingfinalizationcount-count#count</mbean>
+         <description>approximate number of objects for which finalization is pending</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>jvm_memory_usednonheapsize_count_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=memory-mon,name=jvm/memory/usednonheapsize-count#count</mbean>
+         <description>amount of used memory in bytes</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>jvm_memory_initheapsize_count_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=memory-mon,name=jvm/memory/initheapsize-count#count</mbean>
+         <description>amount of memory in bytes that the Java virtual machine initially requests from the operating system for memory management</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>transaction_service_committedcount_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=transaction-service-mon,name=transaction-service/committedcount#count</mbean>
+         <description>Provides the number of transactions that have been committed.</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>transaction_service_rolledbackcount_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=transaction-service-mon,name=transaction-service/rolledbackcount#count</mbean>
+         <description>Provides the number of transactions that have been rolled back.</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>transaction_service_activecount_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=transaction-service-mon,name=transaction-service/activecount#count</mbean>
+         <description>Provides the number of transactions that are currently active.</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>jvm_garbage_collectors_PS_MarkSweep_collectioncount_count_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=garbage-collector-mon,name=jvm/garbage-collectors/PS MarkSweep/collectioncount-count#count</mbean>
+         <description>Total number of collections that have occurred</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>jvm_garbage_collectors_PS_MarkSweep_collectiontime_count_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=garbage-collector-mon,name=jvm/garbage-collectors/PS MarkSweep/collectiontime-count#count</mbean>
+         <description>Approximate accumulated collection elapsed time in milliseconds</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>jvm_garbage_collectors_PS_Scavenge_collectioncount_count_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=garbage-collector-mon,name=jvm/garbage-collectors/PS Scavenge/collectioncount-count#count</mbean>
+         <description>Total number of collections that have occurred</description>
+         <type>gauge</type>
+      </metadata>
+      <metadata>
+         <name>jvm_garbage_collectors_PS_Scavenge_collectiontime_count_count</name>
+         <mbean>amx:pp=/mon/server-mon[${instance}],type=garbage-collector-mon,name=jvm/garbage-collectors/PS Scavenge/collectiontime-count#count</mbean>
+         <description>Approximate accumulated collection elapsed time in milliseconds</description>
+         <type>gauge</type>
+      </metadata>
+   </vendor>
+</config>
