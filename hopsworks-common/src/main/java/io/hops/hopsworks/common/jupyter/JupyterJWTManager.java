@@ -285,7 +285,12 @@ public class JupyterJWTManager {
       }
     }
   }
-  
+
+  private String printJupyterJWT(JupyterJWTDTO token) {
+    return String.format("ProjectID: %d - UserID: %d - CID/Port: %s/%d",
+        token.getProjectId(), token.getUserId(), token.getPidAndPort().cid, token.getPidAndPort().port);
+  }
+
   @Lock(LockType.WRITE)
   @AccessTimeout(value = 500)
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -318,9 +323,13 @@ public class JupyterJWTManager {
             jwtTokenWriter.writeToken(settings, renewedJWT);
             renewedJWTs.add(renewedJWT);
           } catch (JWTException ex) {
-            LOG.log(Level.WARNING, "Could not renew Jupyter JWT for " + element, ex);
+            LOG.log(Level.WARNING, "Could not renew Jupyter JWT for " + printJupyterJWT(element)
+                + " Removing token from JupyterJWTCache", ex);
+            removeToken(element.getPidAndPort());
           } catch (IOException ex) {
-            LOG.log(Level.WARNING, "Could not write renewed Jupyter JWT to file for " + element, ex);
+            LOG.log(Level.WARNING, "Could not write renewed Jupyter JWT to file for " + printJupyterJWT(element)
+                + " Removing token from JupyterJWTCache", ex);
+            removeToken(element.getPidAndPort());
             if (newToken != null) {
               try {
                 jwtController.invalidate(newToken);

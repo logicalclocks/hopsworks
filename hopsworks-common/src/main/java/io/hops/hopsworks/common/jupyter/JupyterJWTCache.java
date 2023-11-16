@@ -97,7 +97,9 @@ public class JupyterJWTCache {
       pidAndPortToJWTMap.remove(pidAndPort);
     } else {
       JupyterJWT jupyterJWT = pidAndPortToJWT.remove(pidAndPort);
-      jupyterJWTs.remove(new JupyterJWTDTO(jupyterJWT));
+      if (jupyterJWT != null) {
+        jupyterJWTs.remove(new JupyterJWTDTO(jupyterJWT));
+      }
     }
   }
   
