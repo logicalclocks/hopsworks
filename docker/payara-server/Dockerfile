@@ -83,9 +83,12 @@ RUN wget -O ${PAYARA_DIR}/glassfish/domains/domain1/lib/mysql-connector-java-8.0
 
 RUN mkdir /opt/payara/k8s
 
+COPY --chown=payara:payara scripts/test-script /opt/payara/k8s/
+COPY --chown=payara:payara scripts/ready.sh /opt/payara/k8s/
 COPY --chown=payara:payara scripts/init_2_change_password.sh ${SCRIPT_DIR}/
 COPY --chown=payara:payara scripts/init_3_download_hopsworks.sh ${SCRIPT_DIR}/
 COPY --chown=payara:payara metrics.xml ${PAYARA_DIR}/glassfish/domains/domain1/config/
 
+RUN chmod +x /opt/payara/k8s/ready.sh
 RUN chmod +x ${SCRIPT_DIR}/init_2_change_password.sh
 RUN chmod +x ${SCRIPT_DIR}/init_3_download_hopsworks.sh

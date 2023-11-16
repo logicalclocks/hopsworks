@@ -12,12 +12,12 @@ ASADMIN_COMMAND="${ASADMIN} -I false -T -a -H ${PAYARA_DAS_HOST} -p ${PAYARA_DAS
 
 while true ;
 do
-    result="$(eval "${ASADMIN_COMMAND}" | wc -l)"
+    result="$(eval ${ASADMIN_COMMAND} | wc -l)"
     exit_code=$?
     echo "DEBUG: Command result = $result"
     if [[ $exit_code -eq 0 && $result -eq $REPLICA_COUNT ]] ; then
         echo "All instances are running!"
-        sleep "${INSTANCE_STARTUP_DELAY}" # give the instances time to start
+        sleep ${INSTANCE_STARTUP_DELAY} # give the instances time to start
         break
     fi
     sleep 2

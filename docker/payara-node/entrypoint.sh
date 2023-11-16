@@ -17,4 +17,4 @@ done
 
 set -e
 
-"${SCRIPT_DIR}"/entrypoint.sh
+"${SCRIPT_DIR}"/register.sh
