@@ -133,18 +133,25 @@ public class PitJoinController {
 
       // Add filters if needed
       List<Feature> originalFeatures = new ArrayList<>(join.getRightQuery().getFeatures());
+      
       if (query.getFilter() != null) {
         // if all filters are on left-sided features, add them to the base/inner query
-        if (baseQuery.getFilter() == null && !constructorController.collectFeaturesFromFilter(query.getFilter()
-                ).stream().anyMatch(f -> !query.getFeatures().contains(f))) {
+        List<Feature> leftQueryFilterFeatures = constructorController.collectFeaturesFromFilter(query.getFilter());
+        if (baseQuery.getFilter() == null && !leftQueryFilterFeatures
+              .stream().anyMatch(f -> !query.getAvailableFeatures().contains(f))) {
           baseQuery.setFilter(query.getFilter());
-        }
-        // else, filters will be added to the outer query and relevant features need to be selected in the subquery
-        else {
-          List<Feature> filterFeatures = constructorController.collectFeaturesFromFilter(query.getFilter(),
-                          join.getRightQuery()).stream().filter(f -> !join.getRightQuery().getFeatures().contains(f))
-                  .collect(Collectors.toList());
-          join.getRightQuery().getFeatures().addAll(filterFeatures);
+        } else {
+          // else, filters will be added to the outer query and relevant features need to be selected in the subquery
+          List<Feature> filterOuterQueryFeatures = constructorController.collectFeaturesFromFilter(query.getFilter(),
+              join.getRightQuery()).stream()
+            .filter(f -> !join.getRightQuery().getAvailableFeatures().contains(f))
+            .collect(Collectors.toList());
+          List<Feature> filterLFeatures = constructorController.collectFeaturesFromFilter(query.getFilter(),
+              join.getLeftQuery()).stream()
+            .filter(f -> !join.getLeftQuery().getAvailableFeatures().contains(f))
+            .collect(Collectors.toList());
+          filterOuterQueryFeatures.addAll(filterLFeatures);
+          join.getRightQuery().getFeatures().addAll(filterOuterQueryFeatures);
         }
       }
 
