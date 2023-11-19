@@ -131,16 +131,18 @@ describe "On #{ENV['OS']}" do
         end
 
 
-        it "should be able to create sql string with different type of event time filter" do
+        it "should be able to create sql string with different type of event time filter without them included in the selected feature list" do
           featurestore_id = get_featurestore_id(@project.id)
           project_name = @project.projectname.downcase
           featurestore_name = get_featurestore_name(@project.id)
           featuregroup_suffix = short_random_id
           features_a = [
-            { type: "INT", name: "id", primary: true },
-            { type: "DATE", name: "ts_date" },
-            { type: "TIMESTAMP", name: "ts" },
+            {type: "INT", name: "id", primary: true },
+            {type: "INT", name: "a_testfeature1"},
+            {type: "INT", name: "a_testfeature2"},
+            {type: "TIMESTAMP", name: "ts" },
           ]
+
           fg = create_cached_featuregroup_checked_return_fg(@project.id, featurestore_id,
                                                          "test_fg_a#{featuregroup_suffix}",
                                                      features: features_a,
@@ -150,16 +152,16 @@ describe "On #{ENV['OS']}" do
               id: fg[:id],
               type: fg[:type]
             },
-            leftFeatures: [{ name: 'ts_date' }, { name: 'ts' }],
+            leftFeatures: [{ name: 'a_testfeature1' }, { name: 'a_testfeature2' }],
             filter: {
               type: "AND",
               leftFilter: {
                 feature: {
-                  name: "ts_date",
+                  name: "a_testfeature1",
                   featureGroupId: fg[:id]
                 },
                 condition: "GREATER_THAN",
-                value: "2022-01-01"
+                value: 0
               },
               rightFilter: {
                 feature: {
@@ -177,15 +179,102 @@ describe "On #{ENV['OS']}" do
           parsed_query_result = JSON.parse(query_result)
 
           expect(parsed_query_result['query']).to eql(
-                                                    "SELECT `fg0`.`ts_date` `ts_date`, `fg0`.`ts` `ts`\n" +
+                                                    "SELECT `fg0`.`a_testfeature1` `a_testfeature1`, `fg0`.`a_testfeature2` `a_testfeature2`\n" +
                                                       "FROM `#{featurestore_name}`.`test_fg_a#{featuregroup_suffix}_1` `fg0`\n" +
-                                                      "WHERE `fg0`.`ts_date` > DATE '#{query[:filter][:leftFilter][:value]}' AND `fg0`.`ts` > TIMESTAMP '#{query[:filter][:rightFilter][:value]}.000'"
+                                                      "WHERE `fg0`.`a_testfeature1` > #{query[:filter][:leftFilter][:value]} AND `fg0`.`ts` > TIMESTAMP '#{query[:filter][:rightFilter][:value]}.000'"
                                                   )
 
           expect(parsed_query_result['queryOnline']).to eql(
-                                                          "SELECT `fg0`.`ts_date` `ts_date`, `fg0`.`ts` `ts`\n" +
+                                                          "SELECT `fg0`.`a_testfeature1` `a_testfeature1`, `fg0`.`a_testfeature2` `a_testfeature2`\n" +
                                                 "FROM `#{project_name.downcase}`.`test_fg_a#{featuregroup_suffix}_1` `fg0`\n" +
-                                                "WHERE `fg0`.`ts_date` > DATE '#{query[:filter][:leftFilter][:value]}' AND `fg0`.`ts` > TIMESTAMP '#{query[:filter][:rightFilter][:value]}.000'"
+                                                "WHERE `fg0`.`a_testfeature1` > #{query[:filter][:leftFilter][:value]} AND `fg0`.`ts` > TIMESTAMP '#{query[:filter][:rightFilter][:value]}.000'"
+                                                        )
+        end
+
+
+        it "should be able to create sql string  in joins with different type of event time filter without them included in the selected feature list" do
+          featurestore_id = get_featurestore_id(@project.id)
+          project_name = @project.projectname.downcase
+          featurestore_name = get_featurestore_name(@project.id)
+          featuregroup_suffix = short_random_id
+          features_a = [
+            {type: "INT", name: "id", primary: true },
+            {type: "INT", name: "a_testfeature1"},
+            {type: "INT", name: "a_testfeature2"},
+            {type: "TIMESTAMP", name: "ts" },
+          ]
+
+         features_b = [
+            {type: "INT", name: "id", primary: true },
+            {type: "INT", name: "b_testfeature1"},
+            {type: "INT", name: "b_testfeature2"},
+            {type: "TIMESTAMP", name: "ts" },
+          ]
+
+          fg_a = create_cached_featuregroup_checked_return_fg(@project.id, featurestore_id,
+                                                         "test_fg_a#{featuregroup_suffix}",
+                                                     features: features_a,
+                                                     event_time: "ts")
+
+          fg_b = create_cached_featuregroup_checked_return_fg(@project.id, featurestore_id,
+                                                         "test_fg_b#{featuregroup_suffix}",
+                                                     features: features_b,
+                                                     event_time: "ts")
+
+          query = {
+                      leftFeatureGroup: {
+                        id: fg_a[:id],
+                        type: fg_a[:type]
+                      },
+                      leftFeatures: [{name: 'a_testfeature1'}, {name: 'a_testfeature2'}],
+                      joins: [{
+                                  query: {
+                                      leftFeatureGroup: {
+                                        id: fg_b[:id],
+                                        type: fg_b[:type]
+                                      },
+                                      leftFeatures: [{name: 'b_testfeature1'}, {name: 'b_testfeature2'}],
+                                  }
+                              }
+                      ],
+                      filter: {
+                        type: "AND",
+                        leftFilter: {
+                          feature: {
+                            name: "a_testfeature1",
+                            featureGroupId: fg_a[:id]
+                          },
+                          condition: "GREATER_THAN",
+                          value: 0
+                        },
+                        rightFilter: {
+                          feature: {
+                            name: "ts",
+                            featureGroupId: fg_a[:id]
+                          },
+                          condition: "GREATER_THAN",
+                          value: "2022-02-01 00:00:00"
+                        }
+                      }
+
+                  }
+
+          query_result = put "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/query", query.to_json
+          expect_status_details(200)
+          parsed_query_result = JSON.parse(query_result)
+
+          expect(parsed_query_result['query']).to eql(
+                                                    "SELECT `fg1`.`a_testfeature1` `a_testfeature1`, `fg1`.`a_testfeature2` `a_testfeature2`, `fg0`.`b_testfeature1` `b_testfeature1`, `fg0`.`b_testfeature2` `b_testfeature2`\n" +
+                                                      "FROM `#{featurestore_name}`.`test_fg_a#{featuregroup_suffix}_1` `fg1`\n" +
+                                                      "INNER JOIN `#{featurestore_name}`.`test_fg_b#{featuregroup_suffix}_1` `fg0` ON `fg1`.`id` = `fg0`.`id`\n" +
+                                                      "WHERE `fg1`.`a_testfeature1` > #{query[:filter][:leftFilter][:value]} AND `fg1`.`ts` > TIMESTAMP '#{query[:filter][:rightFilter][:value]}.000'"
+                                                  )
+
+          expect(parsed_query_result['queryOnline']).to eql(
+                                                    "SELECT `fg1`.`a_testfeature1` `a_testfeature1`, `fg1`.`a_testfeature2` `a_testfeature2`, `fg0`.`b_testfeature1` `b_testfeature1`, `fg0`.`b_testfeature2` `b_testfeature2`\n" +
+                                                      "FROM `#{project_name.downcase}`.`test_fg_a#{featuregroup_suffix}_1` `fg1`\n" +
+                                                      "INNER JOIN `#{project_name.downcase}`.`test_fg_b#{featuregroup_suffix}_1` `fg0` ON `fg1`.`id` = `fg0`.`id`\n" +
+                                                      "WHERE `fg1`.`a_testfeature1` > #{query[:filter][:leftFilter][:value]} AND `fg1`.`ts` > TIMESTAMP '#{query[:filter][:rightFilter][:value]}.000'"
                                                         )
         end
       end

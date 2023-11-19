@@ -334,26 +334,30 @@ public class ConstructorController {
   public List<Feature> collectFeaturesFromFilter(FilterLogic filter) {
     return this.collectFeaturesFromFilter(filter, null);
   }
-
+  
   public List<Feature> collectFeaturesFromFilter(FilterLogic filter, Query query) {
     List<Feature> features = new ArrayList<>();
-    if (filter.getLeftFilter() != null) {
-      features.addAll(filter.getLeftFilter().getFeatures().stream().filter(f ->
-              (query == null || f.getFeatureGroup().equals( query.getFeaturegroup()))).collect(Collectors.toList()));
-    }
-    if (filter.getRightFilter() != null) {
-      features.addAll(filter.getRightFilter().getFeatures().stream().filter(f ->
-              (query == null || f.getFeatureGroup().equals( query.getFeaturegroup()))).collect(Collectors.toList()));
-    }
-    if (filter.getLeftLogic() != null) {
-      features.addAll(this.collectFeaturesFromFilter(filter.getLeftLogic(), query));
-    }
-    if (filter.getRightLogic() != null) {
-      features.addAll(this.collectFeaturesFromFilter(filter.getRightLogic(), query));
-    }
+    collectFeatureFromFilter(filter, features, query);
     return features;
   }
-
+  
+  private void collectFeatureFromFilter(FilterLogic filter, List<Feature> features, Query query) {
+    if(filter.getLeftFilter() != null) {
+      features.addAll(filter.getLeftFilter().getFeatures().stream().filter(f ->
+        (query == null || f.getFeatureGroup().equals( query.getFeaturegroup()))).collect(Collectors.toList()));
+    }
+    if(filter.getRightFilter() != null) {
+      features.addAll(filter.getRightFilter().getFeatures().stream().filter(f ->
+        (query == null || f.getFeatureGroup().equals( query.getFeaturegroup()))).collect(Collectors.toList()));
+    }
+    if(filter.getLeftLogic() !=null) {
+      collectFeatureFromFilter(filter.getLeftLogic(), features, query);
+    }
+    if(filter.getRightLogic() !=null) {
+      collectFeatureFromFilter(filter.getRightLogic(), features, query);
+    }
+  }
+  
   private SqlNode generateCachedTableNode(Query query, boolean online) {
     List<String> tableIdentifierStr = new ArrayList<>();
     if (online) {
