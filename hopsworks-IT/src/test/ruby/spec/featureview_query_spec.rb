@@ -86,6 +86,102 @@ describe "On #{ENV['OS']}" do
           expect(parsed_query_result["filter"]["leftFilter"]["value"]).to eql(query[:filter][:leftFilter][:value])
         end
 
+        it "should be able to retrieve original query with nested filters" do
+          featurestore_id = get_featurestore_id(@project.id)
+          featurestore_name = get_featurestore_name(@project.id)
+          featuregroup_suffix = short_random_id
+          query = make_sample_query(@project, featurestore_id, featuregroup_suffix: featuregroup_suffix)
+          inner_filter = {
+                  type: "SINGLE",
+                  leftFilter: {
+                    feature: {
+                      name: "b_testfeature1",
+                      featureGroupId: query[:joins][0][:query][:leftFeatureGroup][:id]
+                    },
+                    condition: "GREATER_THAN",
+                    value: "0"
+                  }
+                }
+          query[:joins][0][:query][:filter] = inner_filter
+          json_result = create_feature_view(@project.id, featurestore_id, query)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          feature_view_name = parsed_json["name"]
+          feature_view_version = parsed_json["version"]
+          query_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/featureview/#{feature_view_name}/version/#{feature_view_version}/query"
+          expect_status_details(200)
+          parsed_query_result = JSON.parse(query_result)
+          expect(parsed_query_result["featureStoreId"]).to eql(featurestore_id)
+          expect(parsed_query_result["featureStoreName"]).to eql(featurestore_name)
+          expect(parsed_query_result["leftFeatureGroup"]["id"]).to eql(query[:leftFeatureGroup][:id])
+          expect(parsed_query_result["leftFeatures"][0]["name"]).to eql(query[:leftFeatures][0][:name])
+          expect(parsed_query_result["leftFeatures"][1]["name"]).to eql(query[:leftFeatures][1][:name])
+          expect(parsed_query_result["joins"][0]["query"]["leftFeatureGroup"]["id"]).to eql(query[:joins][0][:query][:leftFeatureGroup][:id])
+          expect(parsed_query_result["joins"][0]["query"]["leftFeatures"][0]["name"]).to eql(query[:joins][0][:query][:leftFeatures][1][:name])
+          expect(parsed_query_result["filter"]["type"]).to eql("AND")
+          expect(parsed_query_result["filter"]["leftFilter"]["feature"]["name"]).to eql(query[:filter][:leftFilter][:feature][:name])
+          expect(parsed_query_result["filter"]["leftFilter"]["condition"]).to eql(query[:filter][:leftFilter][:condition])
+          expect(parsed_query_result["filter"]["leftFilter"]["value"]).to eql(query[:filter][:leftFilter][:value])
+          expect(parsed_query_result["filter"]["rightFilter"]["feature"]["name"]).to eql(inner_filter[:leftFilter][:feature][:name])
+          expect(parsed_query_result["filter"]["rightFilter"]["condition"]).to eql(inner_filter[:leftFilter][:condition])
+          expect(parsed_query_result["filter"]["rightFilter"]["value"]).to eql(inner_filter[:leftFilter][:value])
+        end
+
+        it "should be able to retrieve original query with nested filter logic" do
+          featurestore_id = get_featurestore_id(@project.id)
+          featurestore_name = get_featurestore_name(@project.id)
+          featuregroup_suffix = short_random_id
+          query = make_sample_query(@project, featurestore_id, featuregroup_suffix: featuregroup_suffix)
+          inner_filter = {
+                  type: "OR",
+                  leftFilter: {
+                    feature: {
+                      name: "b_testfeature1",
+                      featureGroupId: query[:joins][0][:query][:leftFeatureGroup][:id]
+                    },
+                    condition: "GREATER_THAN",
+                    value: "0"
+                  },
+                  rightFilter: {
+                    feature: {
+                      name: "b_testfeature1",
+                      featureGroupId: query[:joins][0][:query][:leftFeatureGroup][:id]
+                    },
+                    condition: "LESS_THAN",
+                    value: "10"
+                  }
+                }
+          query[:joins][0][:query][:filter] = inner_filter
+          json_result = create_feature_view(@project.id, featurestore_id, query)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          feature_view_name = parsed_json["name"]
+          feature_view_version = parsed_json["version"]
+          query_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/featureview/#{feature_view_name}/version/#{feature_view_version}/query"
+          expect_status_details(200)
+          parsed_query_result = JSON.parse(query_result)
+          expect(parsed_query_result["featureStoreId"]).to eql(featurestore_id)
+          expect(parsed_query_result["featureStoreName"]).to eql(featurestore_name)
+          expect(parsed_query_result["leftFeatureGroup"]["id"]).to eql(query[:leftFeatureGroup][:id])
+          expect(parsed_query_result["leftFeatures"][0]["name"]).to eql(query[:leftFeatures][0][:name])
+          expect(parsed_query_result["leftFeatures"][1]["name"]).to eql(query[:leftFeatures][1][:name])
+          expect(parsed_query_result["joins"][0]["query"]["leftFeatureGroup"]["id"]).to eql(query[:joins][0][:query][:leftFeatureGroup][:id])
+          expect(parsed_query_result["joins"][0]["query"]["leftFeatures"][0]["name"]).to eql(query[:joins][0][:query][:leftFeatures][1][:name])
+          expect(parsed_query_result["filter"]["type"]).to eql("AND")
+          expect(parsed_query_result["filter"]["leftFilter"]["feature"]["name"]).to eql(query[:filter][:leftFilter][:feature][:name])
+          expect(parsed_query_result["filter"]["leftFilter"]["condition"]).to eql(query[:filter][:leftFilter][:condition])
+          expect(parsed_query_result["filter"]["leftFilter"]["value"]).to eql(query[:filter][:leftFilter][:value])
+          expect(parsed_query_result["filter"]["rightLogic"]["type"]).to eql("OR")
+          expect(parsed_query_result["filter"]["rightLogic"]["leftFilter"]["feature"]["name"]).to eql(inner_filter[:leftFilter][:feature][:name])
+          expect(parsed_query_result["filter"]["rightLogic"]["leftFilter"]["condition"]).to eql(inner_filter[:leftFilter][:condition])
+          expect(parsed_query_result["filter"]["rightLogic"]["leftFilter"]["value"]).to eql(inner_filter[:leftFilter][:value])
+          expect(parsed_query_result["filter"]["rightLogic"]["rightFilter"]["feature"]["name"]).to eql(inner_filter[:rightFilter][:feature][:name])
+          expect(parsed_query_result["filter"]["rightLogic"]["rightFilter"]["condition"]).to eql(inner_filter[:rightFilter][:condition])
+          expect(parsed_query_result["filter"]["rightLogic"]["rightFilter"]["value"]).to eql(inner_filter[:rightFilter][:value])
+        end
+
         it "should be able to create batch query using retrieved query" do
           featurestore_id = get_featurestore_id(@project.id)
           featurestore_name = get_featurestore_name(@project.id)
