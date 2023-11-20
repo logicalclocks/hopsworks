@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlCondition.GREATER_THAN;
+import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlCondition.LESS_THAN;
 import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic.AND;
 import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic.OR;
 import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic.SINGLE;
@@ -525,5 +526,97 @@ public class TrainingDatasetControllerTest {
     Assert.assertEquals("fg1_", f2.getTrainingDatasetJoin().getPrefix());
     Assert.assertEquals(f2.getTransformationFunction().getId(), tfDto2.getId());
 
+  }
+
+  @Test
+  public void testCollectFilters_filterLogic() throws Exception {
+    // prepare Query
+    Query query = new Query();
+    Feature feature1 = new Feature("f1", false);
+    query.setFeatures(Lists.newArrayList(feature1));
+    query.setFeaturegroup(new Featuregroup(1));
+    Query joinQuery = new Query();
+    Feature feature2 = new Feature("f2", false);
+    feature2.setPrefix("fg1_");
+    joinQuery.setFeatures(Lists.newArrayList(feature2));
+    joinQuery.setFeaturegroup(new Featuregroup(1));
+    FilterLogic innerFilter = new FilterLogic();
+    innerFilter.setType(AND);
+    innerFilter.setLeftFilter(new Filter(feature2, GREATER_THAN, "2"));
+    innerFilter.setRightFilter(new Filter(feature2, LESS_THAN, "20"));
+    joinQuery.setFilter(innerFilter);
+    query.setJoins(Lists.newArrayList(
+        new Join(null, joinQuery, null, null, null, "fg1_", null))
+    );
+    FilterLogic outerFilter = new FilterLogic();
+    outerFilter.setType(AND);
+    outerFilter.setLeftFilter(new Filter(feature1, GREATER_THAN, "3"));
+    outerFilter.setRightFilter(new Filter(feature1, LESS_THAN, "30"));
+    query.setFilter(outerFilter);
+    FeatureView fv = new FeatureView();
+    fv.setId(999);
+
+    List<TrainingDatasetFilter> actual = target.collectFilters(query, null);
+    List<TrainingDatasetFilter> expected = new ArrayList<>();
+    expected.add(createTrainingDatasetFilter(null, AND, "L"));
+    expected.add(createTrainingDatasetFilter(null, AND, "L.L"));
+    expected.add(createTrainingDatasetFilter(
+        createTrainingDatasetFilterCondition(feature1.getName(), GREATER_THAN, "3"),
+        SINGLE, "L.L.L"));
+    expected.add(createTrainingDatasetFilter(
+        createTrainingDatasetFilterCondition(feature1.getName(), LESS_THAN, "30"),
+        SINGLE, "L.L.R"));
+    expected.add(createTrainingDatasetFilter(null, AND, "L.R"));
+    expected.add(createTrainingDatasetFilter(
+        createTrainingDatasetFilterCondition(feature2.getName(), GREATER_THAN, "2"),
+        SINGLE, "L.R.L"));
+    expected.add(createTrainingDatasetFilter(
+        createTrainingDatasetFilterCondition(feature2.getName(), LESS_THAN, "20"),
+        SINGLE, "L.R.R"));
+
+    Assert.assertEquals(expected.size(), actual.size());
+    Assert.assertTrue(expected.containsAll(actual));
+    Assert.assertTrue(actual.containsAll(expected));
+  }
+
+  @Test
+  public void testCollectFilters_filter() throws Exception {
+    // prepare Query
+    Query query = new Query();
+    Feature feature1 = new Feature("f1", false);
+    query.setFeatures(Lists.newArrayList(feature1));
+    query.setFeaturegroup(new Featuregroup(1));
+    Query joinQuery = new Query();
+    Feature feature2 = new Feature("f2", false);
+    feature2.setPrefix("fg1_");
+    joinQuery.setFeatures(Lists.newArrayList(feature2));
+    joinQuery.setFeaturegroup(new Featuregroup(1));
+    FilterLogic innerFilter = new FilterLogic();
+    innerFilter.setType(SINGLE);
+    innerFilter.setLeftFilter(new Filter(feature2, GREATER_THAN, "2"));
+    joinQuery.setFilter(innerFilter);
+    query.setJoins(Lists.newArrayList(
+        new Join(null, joinQuery, null, null, null, "fg1_", null))
+    );
+    FilterLogic outerFilter = new FilterLogic();
+    outerFilter.setType(SINGLE);
+    outerFilter.setLeftFilter(new Filter(feature1, GREATER_THAN, "3"));
+    query.setFilter(outerFilter);
+    FeatureView fv = new FeatureView();
+    fv.setId(999);
+
+    List<TrainingDatasetFilter> actual = target.collectFilters(query, null);
+    List<TrainingDatasetFilter> expected = new ArrayList<>();
+    expected.add(createTrainingDatasetFilter(null, AND, "L"));
+    expected.add(createTrainingDatasetFilter(
+        createTrainingDatasetFilterCondition(feature1.getName(), GREATER_THAN, "3"),
+        SINGLE, "L.L"));
+    expected.add(createTrainingDatasetFilter(
+        createTrainingDatasetFilterCondition(feature2.getName(), GREATER_THAN, "2"),
+        SINGLE, "L.R"));
+
+    Assert.assertEquals(expected.size(), actual.size());
+    Assert.assertTrue(expected.containsAll(actual));
+    Assert.assertTrue(actual.containsAll(expected));
   }
 }

@@ -118,8 +118,7 @@ public class FeatureViewBuilder {
       List<TrainingDatasetFeature> features = trainingDatasetController.collectFeatures(query, featureDTOs,
           null, featureView, 0, tdJoins, 0);
       featureView.setFeatures(features);
-      List<TrainingDatasetFilter> filters = trainingDatasetController.convertToFilterEntities(query.getFilter(),
-          featureView, "L");
+      List<TrainingDatasetFilter> filters = trainingDatasetController.collectFilters(query, featureView);
       featureView.setFilters(filters);
     }
   }
