@@ -1,13 +1,8 @@
 #!/bin/bash
 
-MYSQL_CMD="mysql --host=${MYSQL_HOST} --user=${MYSQL_USER} --password=${MYSQL_PASSWORD}"
-
-until ${MYSQL_CMD} --execute="SELECT 1;"; do
- echo 'waiting for mysql' 
- sleep 2
-done
-
 set -e
+
+MYSQL_CMD="mysql --host=${MYSQL_HOST} --user=${MYSQL_USER} --password=${MYSQL_PASSWORD}"
 
 echo "${GRANT_HOST:='%'}"
 #create database
@@ -27,7 +22,7 @@ if [[ -n "${AIRFLOW_DB}" ]]; then
   ${MYSQL_CMD} --execute="CREATE DATABASE IF NOT EXISTS ${AIRFLOW_DB} CHARACTER SET latin1;"
   echo "Creating user '${AIRFLOW_MYSQL_USER}'@'${GRANT_HOST}'"
   ${MYSQL_CMD} --execute="CREATE USER IF NOT EXISTS '${AIRFLOW_MYSQL_USER}'@'${GRANT_HOST}' IDENTIFIED WITH mysql_native_password BY '${AIRFLOW_MYSQL_PASSWORD}'"
-  echo "GRANT NDB_STORED_USER ON *.* TO '${AIRFLOW_MYSQL_USER}'@'${MYSQL_HOST}'"
+  echo "GRANT NDB_STORED_USER ON *.* TO '${AIRFLOW_MYSQL_USER}'@'${GRANT_HOST}'"
   ${MYSQL_CMD} --execute="GRANT NDB_STORED_USER ON *.* TO '${AIRFLOW_MYSQL_USER}'@'${GRANT_HOST}';"
   echo "GRANT ALL PRIVILEGES ON ${AIRFLOW_DB}.* TO '${AIRFLOW_MYSQL_USER}'@'${GRANT_HOST}'"
   ${MYSQL_CMD} --execute="GRANT ALL PRIVILEGES ON ${AIRFLOW_DB}.* TO '${AIRFLOW_MYSQL_USER}'@'${GRANT_HOST}'"

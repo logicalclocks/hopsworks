@@ -1,3227 +1,2732 @@
--- ----------------------------------------------------------------------------
--- MySQL Workbench Migration
--- Migrated Schemata: hopsworks
--- Source Schemata: hopsworks
--- Created: Tue Oct 24 13:52:16 2023
--- Workbench Version: 8.0.32
--- ----------------------------------------------------------------------------
+-- MySQL dump 10.13  Distrib 5.7.25-ndb-7.6.9, for linux-glibc2.12 (x86_64)
+--
+-- Host: localhost    Database: hopsworks
+-- ------------------------------------------------------
+-- Server version	5.7.25-ndb-7.6.9-cluster-gpl
 
-SET FOREIGN_KEY_CHECKS = 0;
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT = @@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS = @@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION = @@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8 */;
+/*!40103 SET @OLD_TIME_ZONE = @@TIME_ZONE */;
+/*!40103 SET TIME_ZONE = '+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS = @@UNIQUE_CHECKS, UNIQUE_CHECKS = 0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS = @@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS = 0 */;
+/*!40101 SET @OLD_SQL_MODE = @@SQL_MODE, SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES = @@SQL_NOTES, SQL_NOTES = 0 */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.account_audit
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`account_audit`
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS CREATE_TABLE_SPACE$$
+
+CREATE PROCEDURE CREATE_TABLE_SPACE()
+BEGIN
+    DECLARE lc INTEGER;
+    DECLARE tc INTEGER;
+
+    SELECT count(LOGFILE_GROUP_NAME) INTO lc FROM INFORMATION_SCHEMA.FILES where LOGFILE_GROUP_NAME = "lg_1";
+    IF (lc = 0) THEN
+        CREATE LOGFILE GROUP lg_1 ADD UNDOFILE 'undo_log_0.log' INITIAL_SIZE = 128M ENGINE ndbcluster;
+    ELSE
+        select "The LogFile has already been created" as "";
+    END IF;
+
+
+    SELECT count(TABLESPACE_NAME) INTO tc FROM INFORMATION_SCHEMA.FILES where TABLESPACE_NAME = "ts_1";
+    IF (tc = 0) THEN
+        CREATE TABLESPACE ts_1 ADD datafile 'ts_1_data_file_0.dat' use LOGFILE GROUP lg_1 INITIAL_SIZE = 128M ENGINE ndbcluster;
+    ELSE
+        select "The DataFile has already been created" as "";
+    END IF;
+END$$
+
+DELIMITER ;
+
+CALL CREATE_TABLE_SPACE;
+
+
+--
+-- Table structure for table `account_audit`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `account_audit`
 (
-    `log_id`           BIGINT                              NOT NULL AUTO_INCREMENT,
-    `initiator`        INT                                 NOT NULL,
-    `target`           INT                                 NOT NULL,
-    `action`           VARCHAR(45) CHARACTER SET 'latin1'  NULL DEFAULT NULL,
-    `action_timestamp` TIMESTAMP                           NULL DEFAULT NULL,
-    `message`          VARCHAR(100) CHARACTER SET 'latin1' NULL DEFAULT NULL,
-    `outcome`          VARCHAR(45) CHARACTER SET 'latin1'  NULL DEFAULT NULL,
-    `ip`               VARCHAR(45) CHARACTER SET 'latin1'  NULL DEFAULT NULL,
-    `useragent`        VARCHAR(255) CHARACTER SET 'latin1' NULL DEFAULT NULL,
+    `log_id`           bigint(20) NOT NULL AUTO_INCREMENT,
+    `initiator`        int(11)    NOT NULL,
+    `target`           int(11)    NOT NULL,
+    `action`           varchar(45) COLLATE latin1_general_cs  DEFAULT NULL,
+    `action_timestamp` timestamp  NULL                        DEFAULT NULL,
+    `message`          varchar(100) COLLATE latin1_general_cs DEFAULT NULL,
+    `outcome`          varchar(45) COLLATE latin1_general_cs  DEFAULT NULL,
+    `ip`               varchar(45) COLLATE latin1_general_cs  DEFAULT NULL,
+    `useragent`        varchar(255) COLLATE latin1_general_cs DEFAULT NULL,
     PRIMARY KEY (`log_id`),
-    INDEX `initiator` (`initiator` ASC) VISIBLE,
-    INDEX `target` (`target` ASC) VISIBLE,
-    CONSTRAINT `FK_257_274`
-        FOREIGN KEY (`initiator`)
-            REFERENCES `hopsworks`.`users` (`uid`),
-    CONSTRAINT `FK_257_275`
-        FOREIGN KEY (`target`)
-            REFERENCES `hopsworks`.`users` (`uid`)
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 515
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    KEY `initiator` (`initiator`),
+    KEY `target` (`target`),
+    CONSTRAINT `FK_257_274` FOREIGN KEY (`initiator`) REFERENCES `users` (`uid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT `FK_257_275` FOREIGN KEY (`target`) REFERENCES `users` (`uid`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 515
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.activity
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`activity`
+--
+-- Table structure for table `activity`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `activity`
 (
-    `id`         INT                                 NOT NULL AUTO_INCREMENT,
-    `activity`   VARCHAR(255) CHARACTER SET 'latin1' NOT NULL,
-    `user_id`    INT                                 NOT NULL,
-    `created`    TIMESTAMP                           NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `flag`       VARCHAR(128) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `project_id` INT                                 NOT NULL,
+    `id`         int(11)                                NOT NULL AUTO_INCREMENT,
+    `activity`   varchar(255) COLLATE latin1_general_cs NOT NULL,
+    `user_id`    int(10)                                NOT NULL,
+    `created`    timestamp                              NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `flag`       varchar(128) COLLATE latin1_general_cs          DEFAULT NULL,
+    `project_id` int(11)                                NOT NULL,
     PRIMARY KEY (`id`),
-    INDEX `project_id` (`project_id` ASC) VISIBLE,
-    INDEX `user_id` (`user_id` ASC) VISIBLE,
-    CONSTRAINT `FK_257_296`
-        FOREIGN KEY (`user_id`)
-            REFERENCES `hopsworks`.`users` (`uid`),
-    CONSTRAINT `FK_284_295`
-        FOREIGN KEY (`project_id`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 1547
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    KEY `project_id` (`project_id`),
+    KEY `user_id` (`user_id`),
+    CONSTRAINT `FK_257_296` FOREIGN KEY (`user_id`) REFERENCES `users` (`uid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT `FK_284_295` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 1547
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.alert_manager_config
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`alert_manager_config`
-(
-    `id`      INT        NOT NULL AUTO_INCREMENT,
-    `content` MEDIUMBLOB NOT NULL,
-    `created` TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`)
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+--
+-- Table structure for table `bbc_group`
+--
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.alert_receiver
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`alert_receiver`
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `bbc_group`
 (
-    `id`     INT          NOT NULL AUTO_INCREMENT,
-    `name`   VARCHAR(128) NOT NULL,
-    `config` BLOB         NOT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `name_UNIQUE` (`name` ASC) VISIBLE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.api_key
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`api_key`
-(
-    `id`       INT          NOT NULL AUTO_INCREMENT,
-    `prefix`   VARCHAR(45)  NOT NULL,
-    `secret`   VARCHAR(512) NOT NULL,
-    `salt`     VARCHAR(256) NOT NULL,
-    `created`  TIMESTAMP    NOT NULL,
-    `modified` TIMESTAMP    NOT NULL,
-    `name`     VARCHAR(45)  NOT NULL,
-    `user_id`  INT          NOT NULL,
-    `reserved` TINYINT(1)   NULL DEFAULT '0',
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `prefix_UNIQUE` (`prefix` ASC) VISIBLE,
-    UNIQUE INDEX `index4` (`user_id` ASC, `name` ASC) VISIBLE,
-    INDEX `fk_api_key_1_idx` (`user_id` ASC) VISIBLE,
-    CONSTRAINT `fk_api_key_1`
-        FOREIGN KEY (`user_id`)
-            REFERENCES `hopsworks`.`users` (`uid`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.api_key_scope
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`api_key_scope`
-(
-    `id`      INT         NOT NULL AUTO_INCREMENT,
-    `api_key` INT         NOT NULL,
-    `scope`   VARCHAR(45) NOT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `index2` (`api_key` ASC, `scope` ASC) VISIBLE,
-    CONSTRAINT `fk_api_key_scope_1`
-        FOREIGN KEY (`api_key`)
-            REFERENCES `hopsworks`.`api_key` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.bbc_group
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`bbc_group`
-(
-    `group_name` VARCHAR(20) CHARACTER SET 'latin1'  NOT NULL,
-    `group_desc` VARCHAR(200) CHARACTER SET 'latin1' NULL DEFAULT NULL,
-    `gid`        INT                                 NOT NULL,
+    `group_name` varchar(20) COLLATE latin1_general_cs NOT NULL,
+    `group_desc` varchar(200) COLLATE latin1_general_cs DEFAULT NULL,
+    `gid`        int(11)                               NOT NULL,
     PRIMARY KEY (`gid`)
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.cached_feature
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`cached_feature`
+--
+-- Table structure for table `cluster_cert`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `cluster_cert`
 (
-    `id`                      INT                                NOT NULL AUTO_INCREMENT,
-    `cached_feature_group_id` INT                                NULL     DEFAULT NULL,
-    `stream_feature_group_id` INT                                NULL     DEFAULT NULL,
-    `name`                    VARCHAR(63) CHARACTER SET 'latin1' NOT NULL,
-    `description`             VARCHAR(256)                       NOT NULL DEFAULT '',
+    `id`                       int(11)                               NOT NULL AUTO_INCREMENT,
+    `agent_id`                 int(11)                               NOT NULL,
+    `common_name`              varchar(64) COLLATE latin1_general_cs NOT NULL,
+    `organization_name`        varchar(64) COLLATE latin1_general_cs NOT NULL,
+    `organizational_unit_name` varchar(64) COLLATE latin1_general_cs NOT NULL,
+    `serial_number`            varchar(45) COLLATE latin1_general_cs          DEFAULT NULL,
+    `registration_status`      varchar(45) COLLATE latin1_general_cs NOT NULL,
+    `validation_key`           varchar(128) COLLATE latin1_general_cs         DEFAULT NULL,
+    `validation_key_date`      timestamp                             NULL     DEFAULT NULL,
+    `registration_date`        timestamp                             NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
-    INDEX `cached_feature_group_fk` (`cached_feature_group_id` ASC) VISIBLE,
-    INDEX `stream_feature_group_fk` (`stream_feature_group_id` ASC) VISIBLE,
-    CONSTRAINT `cached_feature_group_fk2`
-        FOREIGN KEY (`cached_feature_group_id`)
-            REFERENCES `hopsworks`.`cached_feature_group` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `stream_feature_group_fk2`
-        FOREIGN KEY (`stream_feature_group_id`)
-            REFERENCES `hopsworks`.`stream_feature_group` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    UNIQUE KEY `organization_name` (`organization_name`, `organizational_unit_name`),
+    UNIQUE KEY `serial_number` (`serial_number`),
+    KEY `agent_id` (`agent_id`),
+    CONSTRAINT `FK_257_552` FOREIGN KEY (`agent_id`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 7
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.cached_feature_extra_constraints
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`cached_feature_extra_constraints`
+--
+-- Table structure for table `conda_commands`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `conda_commands`
 (
-    `id`                      INT                                NOT NULL AUTO_INCREMENT,
-    `cached_feature_group_id` INT                                NULL     DEFAULT NULL,
-    `stream_feature_group_id` INT                                NULL     DEFAULT NULL,
-    `name`                    VARCHAR(63) CHARACTER SET 'latin1' NOT NULL,
-    `primary_column`          TINYINT(1)                         NOT NULL DEFAULT '0',
-    `hudi_precombine_key`     TINYINT(1)                         NOT NULL DEFAULT '0',
+    `id`                   int(11)                               NOT NULL AUTO_INCREMENT,
+    `project_id`           int(11)                               NOT NULL,
+    `op`                   varchar(52) COLLATE latin1_general_cs NOT NULL,
+    `channel_url`          varchar(255) COLLATE latin1_general_cs         DEFAULT NULL,
+    `arg`                  varchar(11000) COLLATE latin1_general_cs       DEFAULT NULL,
+    `lib`                  varchar(255) COLLATE latin1_general_cs         DEFAULT NULL,
+    `version`              varchar(52) COLLATE latin1_general_cs          DEFAULT NULL,
+    `status`               varchar(52) COLLATE latin1_general_cs NOT NULL,
+    `created`              timestamp(3)                          NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `install_type`         varchar(52) COLLATE latin1_general_cs          DEFAULT NULL,
+    `environment_file`     varchar(1000) COLLATE latin1_general_cs        DEFAULT NULL,
+    `custom_commands_file` varchar(255) COLLATE latin1_general_cs         DEFAULT NULL,
+    `install_jupyter`      tinyint(1)                            NOT NULL DEFAULT '0',
+    `git_api_key_name`     VARCHAR(125)                                   DEFAULT NULL,
+    `git_backend`          VARCHAR(45)                                    DEFAULT NULL,
+    `user_id`              int(11)                               NOT NULL,
+    `error_message`        VARCHAR(10000) COLLATE latin1_general_cs       DEFAULT NULL,
     PRIMARY KEY (`id`),
-    INDEX `cached_feature_group_fk` (`cached_feature_group_id` ASC) VISIBLE,
-    INDEX `stream_feature_group_fk` (`stream_feature_group_id` ASC) VISIBLE,
-    CONSTRAINT `cached_feature_group_constraint_fk`
-        FOREIGN KEY (`cached_feature_group_id`)
-            REFERENCES `hopsworks`.`cached_feature_group` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `stream_feature_group_constraint_fk`
-        FOREIGN KEY (`stream_feature_group_id`)
-            REFERENCES `hopsworks`.`stream_feature_group` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    KEY `project_id` (`project_id`),
+    CONSTRAINT `user_fk_conda` FOREIGN KEY (`user_id`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 32
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.cached_feature_group
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`cached_feature_group`
-(
-    `id`                INT NOT NULL AUTO_INCREMENT,
-    `timetravel_format` INT NOT NULL DEFAULT '1',
-    PRIMARY KEY (`id`)
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.cloud_role_mapping
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`cloud_role_mapping`
+--
+-- Table structure for table `environment_history`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `environment_history`
 (
-    `id`           INT           NOT NULL AUTO_INCREMENT,
-    `project_id`   INT           NOT NULL,
-    `project_role` VARCHAR(32)   NOT NULL,
-    `cloud_role`   VARCHAR(2048) NOT NULL,
+    `id`                    int(11)                                                     NOT NULL AUTO_INCREMENT,
+    `project`               int(11)                                                     NOT NULL,
+    `docker_image`          varchar(255) CHARACTER SET latin1 COLLATE latin1_general_cs NOT NULL,
+    `downgraded`            varchar(7000) CHARACTER SET latin1 COLLATE latin1_general_cs         DEFAULT NULL,
+    `installed`             varchar(7000) CHARACTER SET latin1 COLLATE latin1_general_cs         DEFAULT NULL,
+    `uninstalled`           varchar(7000) CHARACTER SET latin1 COLLATE latin1_general_cs         DEFAULT NULL,
+    `upgraded`              varchar(7000) CHARACTER SET latin1 COLLATE latin1_general_cs         DEFAULT NULL,
+    `previous_docker_image` varchar(255) CHARACTER SET latin1 COLLATE latin1_general_cs NOT NULL,
+    `user`                  int(11)                                                     NOT NULL,
+    `created`               timestamp                                                   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
-    UNIQUE INDEX `index3` (`project_id` ASC, `cloud_role`(255) ASC) VISIBLE,
-    UNIQUE INDEX `index4` (`id` ASC, `project_id` ASC, `project_role` ASC) VISIBLE,
-    INDEX `fk_cloud_role_mapping_1_idx` (`project_id` ASC) VISIBLE,
-    CONSTRAINT `fk_cloud_role_mapping_1`
-        FOREIGN KEY (`project_id`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    KEY `env_project_fk` (`project`),
+    CONSTRAINT `env_project_fk` FOREIGN KEY (`project`) REFERENCES `project` (`id`) ON DELETE CASCADE
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.cloud_role_mapping_default
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`cloud_role_mapping_default`
+--
+-- Table structure for table `dataset`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `dataset`
 (
-    `id`           INT         NOT NULL AUTO_INCREMENT,
-    `mapping_id`   INT         NOT NULL,
-    `project_id`   INT         NOT NULL,
-    `project_role` VARCHAR(32) NOT NULL,
+    `id`               int(11)                                NOT NULL AUTO_INCREMENT,
+    `inode_name`       varchar(255) COLLATE latin1_general_cs NOT NULL,
+    `projectId`        int(11)                                NOT NULL,
+    `description`      varchar(2000) COLLATE latin1_general_cs         DEFAULT NULL,
+    `searchable`       tinyint(1)                             NOT NULL DEFAULT '0',
+    `public_ds`        tinyint(1)                             NOT NULL DEFAULT '0',
+    `public_ds_id`     varchar(1000) COLLATE latin1_general_cs         DEFAULT '0',
+    `dstype`           int(11)                                NOT NULL DEFAULT '0',
+    `feature_store_id` int(11)                                         DEFAULT NULL,
+    `permission`       VARCHAR(45)                            NOT NULL DEFAULT 'READ_ONLY',
     PRIMARY KEY (`id`),
-    UNIQUE INDEX `index3` (`project_id` ASC, `project_role` ASC) VISIBLE,
-    UNIQUE INDEX `index4` (`mapping_id` ASC, `project_id` ASC, `project_role` ASC) VISIBLE,
-    INDEX `fk_cloud_role_mapping_default_1_idx` (`mapping_id` ASC, `project_id` ASC, `project_role` ASC) VISIBLE,
-    CONSTRAINT `fk_cloud_role_mapping_default_1`
-        FOREIGN KEY (`mapping_id`, `project_id`, `project_role`)
-            REFERENCES `hopsworks`.`cloud_role_mapping` (`id`, `project_id`, `project_role`)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    KEY `projectId_name` (`projectId`, `inode_name`),
+    KEY `featurestore_fk` (`feature_store_id`),
+    KEY `dataset_name` (`inode_name`),
+    CONSTRAINT `featurestore_fk` FOREIGN KEY (`feature_store_id`) REFERENCES `feature_store` (`id`) ON DELETE SET NULL ON UPDATE NO ACTION,
+    CONSTRAINT `FK_284_434` FOREIGN KEY (`projectId`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 747
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.cluster_cert
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`cluster_cert`
-(
-    `id`                       INT                                 NOT NULL AUTO_INCREMENT,
-    `agent_id`                 INT                                 NOT NULL,
-    `common_name`              VARCHAR(64) CHARACTER SET 'latin1'  NOT NULL,
-    `organization_name`        VARCHAR(64) CHARACTER SET 'latin1'  NOT NULL,
-    `organizational_unit_name` VARCHAR(64) CHARACTER SET 'latin1'  NOT NULL,
-    `serial_number`            VARCHAR(45) CHARACTER SET 'latin1'  NULL     DEFAULT NULL,
-    `registration_status`      VARCHAR(45) CHARACTER SET 'latin1'  NOT NULL,
-    `validation_key`           VARCHAR(128) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `validation_key_date`      TIMESTAMP                           NULL     DEFAULT NULL,
-    `registration_date`        TIMESTAMP                           NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `organization_name` (`organization_name` ASC, `organizational_unit_name` ASC) VISIBLE,
-    UNIQUE INDEX `serial_number` (`serial_number` ASC) VISIBLE,
-    INDEX `agent_id` (`agent_id` ASC) VISIBLE,
-    CONSTRAINT `FK_257_552`
-        FOREIGN KEY (`agent_id`)
-            REFERENCES `hopsworks`.`users` (`uid`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 7
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+--
+-- Table structure for table `dataset_shared_with`
+--
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.command_search_fs
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`command_search_fs`
-(
-    `id`                  BIGINT         NOT NULL AUTO_INCREMENT,
-    `inode_id`            BIGINT         NOT NULL,
-    `project_id`          INT            NULL DEFAULT NULL,
-    `op`                  VARCHAR(20)    NOT NULL,
-    `status`              VARCHAR(20)    NOT NULL,
-    `feature_group_id`    INT            NULL DEFAULT NULL,
-    `feature_view_id`     INT            NULL DEFAULT NULL,
-    `training_dataset_id` INT            NULL DEFAULT NULL,
-    `error_message`       VARCHAR(10000) NULL DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    INDEX `fk_command_search_feature_group` (`feature_group_id` ASC) VISIBLE,
-    INDEX `fk_command_search_feature_view` (`feature_view_id` ASC) VISIBLE,
-    INDEX `fk_command_search_training_dataset` (`training_dataset_id` ASC) VISIBLE,
-    CONSTRAINT `fk_command_search_feature_group`
-        FOREIGN KEY (`feature_group_id`)
-            REFERENCES `hopsworks`.`feature_group` (`id`)
-            ON DELETE SET NULL,
-    CONSTRAINT `fk_command_search_feature_view`
-        FOREIGN KEY (`feature_view_id`)
-            REFERENCES `hopsworks`.`feature_view` (`id`)
-            ON DELETE SET NULL,
-    CONSTRAINT `fk_command_search_training_dataset`
-        FOREIGN KEY (`training_dataset_id`)
-            REFERENCES `hopsworks`.`training_dataset` (`id`)
-            ON DELETE SET NULL
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.command_search_fs_history
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`command_search_fs_history`
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `dataset_shared_with`
 (
-    `h_id`                BIGINT         NOT NULL AUTO_INCREMENT,
-    `executed`            TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `id`                  BIGINT         NOT NULL,
-    `inode_id`            BIGINT         NOT NULL,
-    `project_id`          INT            NULL     DEFAULT NULL,
-    `op`                  VARCHAR(20)    NOT NULL,
-    `status`              VARCHAR(20)    NOT NULL,
-    `feature_group_id`    INT            NULL     DEFAULT NULL,
-    `feature_view_id`     INT            NULL     DEFAULT NULL,
-    `training_dataset_id` INT            NULL     DEFAULT NULL,
-    `error_message`       VARCHAR(10000) NULL     DEFAULT NULL,
-    PRIMARY KEY (`h_id`)
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.conda_commands
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`conda_commands`
-(
-    `id`                   INT                                   NOT NULL AUTO_INCREMENT,
-    `project_id`           INT                                   NOT NULL,
-    `op`                   VARCHAR(52) CHARACTER SET 'latin1'    NOT NULL,
-    `channel_url`          VARCHAR(255) CHARACTER SET 'latin1'   NULL     DEFAULT NULL,
-    `arg`                  VARCHAR(11000) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `lib`                  VARCHAR(255) CHARACTER SET 'latin1'   NULL     DEFAULT NULL,
-    `version`              VARCHAR(52) CHARACTER SET 'latin1'    NULL     DEFAULT NULL,
-    `status`               VARCHAR(52) CHARACTER SET 'latin1'    NOT NULL,
-    `created`              TIMESTAMP(3)                          NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `install_type`         VARCHAR(52) CHARACTER SET 'latin1'    NULL     DEFAULT NULL,
-    `environment_file`     VARCHAR(1000) CHARACTER SET 'latin1'  NULL     DEFAULT NULL,
-    `custom_commands_file` VARCHAR(255) CHARACTER SET 'latin1'   NULL     DEFAULT NULL,
-    `install_jupyter`      TINYINT(1)                            NOT NULL DEFAULT '0',
-    `git_api_key_name`     VARCHAR(125)                          NULL     DEFAULT NULL,
-    `git_backend`          VARCHAR(45)                           NULL     DEFAULT NULL,
-    `user_id`              INT                                   NOT NULL,
-    `error_message`        VARCHAR(10000) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    INDEX `project_id` (`project_id` ASC) VISIBLE,
-    INDEX `user_fk_conda` (`user_id` ASC) VISIBLE,
-    CONSTRAINT `user_fk_conda`
-        FOREIGN KEY (`user_id`)
-            REFERENCES `hopsworks`.`users` (`uid`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 32
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.databricks_instance
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`databricks_instance`
-(
-    `id`          INT          NOT NULL AUTO_INCREMENT,
-    `url`         VARCHAR(255) NOT NULL,
-    `uid`         INT          NOT NULL,
-    `secret_name` VARCHAR(200) NOT NULL,
-    PRIMARY KEY (`id`),
-    INDEX `db_secret_fk` (`uid` ASC, `secret_name` ASC) VISIBLE,
-    CONSTRAINT `databricks_instance_ibfk_1`
-        FOREIGN KEY (`uid`, `secret_name`)
-            REFERENCES `hopsworks`.`secrets` (`uid`, `secret_name`)
-            ON DELETE CASCADE,
-    CONSTRAINT `databricks_instance_ibfk_2`
-        FOREIGN KEY (`uid`)
-            REFERENCES `hopsworks`.`users` (`uid`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.dataset
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`dataset`
-(
-    `id`               INT                                  NOT NULL AUTO_INCREMENT,
-    `inode_name`       VARCHAR(255) CHARACTER SET 'latin1'  NOT NULL,
-    `projectId`        INT                                  NOT NULL,
-    `description`      VARCHAR(2000) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `searchable`       TINYINT(1)                           NOT NULL DEFAULT '0',
-    `public_ds`        TINYINT(1)                           NOT NULL DEFAULT '0',
-    `public_ds_id`     VARCHAR(1000) CHARACTER SET 'latin1' NULL     DEFAULT '0',
-    `dstype`           INT                                  NOT NULL DEFAULT '0',
-    `feature_store_id` INT                                  NULL     DEFAULT NULL,
-    `permission`       VARCHAR(45)                          NOT NULL DEFAULT 'READ_ONLY',
-    PRIMARY KEY (`id`),
-    INDEX `projectId_name` (`projectId` ASC, `inode_name` ASC) VISIBLE,
-    INDEX `featurestore_fk` (`feature_store_id` ASC) VISIBLE,
-    INDEX `dataset_name` (`inode_name` ASC) VISIBLE,
-    CONSTRAINT `featurestore_fk`
-        FOREIGN KEY (`feature_store_id`)
-            REFERENCES `hopsworks`.`feature_store` (`id`)
-            ON DELETE SET NULL,
-    CONSTRAINT `FK_284_434`
-        FOREIGN KEY (`projectId`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 747
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.dataset_request
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`dataset_request`
-(
-    `id`         INT                                                             NOT NULL AUTO_INCREMENT,
-    `dataset`    INT                                                             NOT NULL,
-    `projectId`  INT                                                             NOT NULL,
-    `user_email` VARCHAR(150) CHARACTER SET 'latin1' COLLATE 'latin1_general_cs' NOT NULL,
-    `requested`  TIMESTAMP                                                       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `message`    VARCHAR(3000) CHARACTER SET 'latin1'                            NULL     DEFAULT NULL,
-    `message_id` INT                                                             NULL     DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `index2` (`dataset` ASC, `projectId` ASC) VISIBLE,
-    INDEX `projectId` (`projectId` ASC, `user_email` ASC) VISIBLE,
-    INDEX `message_id` (`message_id` ASC) VISIBLE,
-    CONSTRAINT `FK_302_451`
-        FOREIGN KEY (`projectId`, `user_email`)
-            REFERENCES `hopsworks`.`project_team` (`project_id`, `team_member`)
-            ON DELETE CASCADE,
-    CONSTRAINT `FK_429_449`
-        FOREIGN KEY (`dataset`)
-            REFERENCES `hopsworks`.`dataset` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `FK_438_452`
-        FOREIGN KEY (`message_id`)
-            REFERENCES `hopsworks`.`message` (`id`)
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 3
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.dataset_shared_with
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`dataset_shared_with`
-(
-    `id`          INT         NOT NULL AUTO_INCREMENT,
-    `dataset`     INT         NOT NULL,
-    `project`     INT         NOT NULL,
-    `accepted`    TINYINT(1)  NOT NULL DEFAULT '0',
-    `shared_on`   TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `id`          int(11)     NOT NULL AUTO_INCREMENT,
+    `dataset`     int(11)     NOT NULL,
+    `project`     int(11)     NOT NULL,
+    `accepted`    tinyint(1)  NOT NULL DEFAULT '0',
+    `shared_on`   timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `permission`  VARCHAR(45) NOT NULL DEFAULT 'READ_ONLY',
-    `shared_by`   INT         NULL     DEFAULT NULL,
-    `accepted_by` INT         NULL     DEFAULT NULL,
+    `shared_by`   INT(11)              DEFAULT NULL,
+    `accepted_by` INT(11)              DEFAULT NULL,
     PRIMARY KEY (`id`),
-    UNIQUE INDEX `index2` (`dataset` ASC, `project` ASC) VISIBLE,
-    INDEX `fk_dataset_shared_with_2_idx` (`project` ASC) VISIBLE,
-    INDEX `fk_shared_by` (`shared_by` ASC) VISIBLE,
-    INDEX `fk_accepted_by` (`accepted_by` ASC) VISIBLE,
-    CONSTRAINT `fk_accepted_by`
-        FOREIGN KEY (`accepted_by`)
-            REFERENCES `hopsworks`.`users` (`uid`),
-    CONSTRAINT `fk_dataset_shared_with_1`
-        FOREIGN KEY (`dataset`)
-            REFERENCES `hopsworks`.`dataset` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fk_dataset_shared_with_2`
-        FOREIGN KEY (`project`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fk_shared_by`
-        FOREIGN KEY (`shared_by`)
-            REFERENCES `hopsworks`.`users` (`uid`)
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1;
+    UNIQUE KEY `index2` (`dataset`, `project`),
+    KEY `fk_dataset_shared_with_2_idx` (`project`),
+    CONSTRAINT `fk_dataset_shared_with_1` FOREIGN KEY (`dataset`) REFERENCES `dataset` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fk_dataset_shared_with_2` FOREIGN KEY (`project`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fk_shared_by` FOREIGN KEY (`shared_by`) REFERENCES `users` (`uid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT `fk_accepted_by` FOREIGN KEY (`accepted_by`) REFERENCES `users` (`uid`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.default_job_configuration
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`default_job_configuration`
-(
-    `project_id` INT                                   NOT NULL,
-    `type`       VARCHAR(128) CHARACTER SET 'latin1'   NOT NULL,
-    `config`     VARCHAR(12500) CHARACTER SET 'latin1' NULL DEFAULT NULL,
-    PRIMARY KEY (`project_id`, `type`),
-    CONSTRAINT `FK_JOBCONFIG_PROJECT`
-        FOREIGN KEY (`project_id`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+--
+-- Table structure for table `dataset_request`
+--
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.environment_history
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`environment_history`
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `dataset_request`
 (
-    `id`                    INT                                  NOT NULL AUTO_INCREMENT,
-    `project`               INT                                  NOT NULL,
-    `docker_image`          VARCHAR(255) CHARACTER SET 'latin1'  NOT NULL,
-    `downgraded`            VARCHAR(7000) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `installed`             VARCHAR(7000) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `uninstalled`           VARCHAR(7000) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `upgraded`              VARCHAR(7000) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `previous_docker_image` VARCHAR(255) CHARACTER SET 'latin1'  NOT NULL,
-    `user`                  INT                                  NOT NULL,
-    `created`               TIMESTAMP                            NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `id`         int(11)                                NOT NULL AUTO_INCREMENT,
+    `dataset`    int(11)                                NOT NULL,
+    `projectId`  int(11)                                NOT NULL,
+    `user_email` varchar(150) COLLATE latin1_general_cs NOT NULL,
+    `requested`  timestamp                              NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `message`    varchar(3000) COLLATE latin1_general_cs         DEFAULT NULL,
+    `message_id` int(11)                                         DEFAULT NULL,
     PRIMARY KEY (`id`),
-    INDEX `env_project_fk` (`project` ASC) VISIBLE,
-    CONSTRAINT `env_project_fk`
-        FOREIGN KEY (`project`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    UNIQUE KEY `index2` (`dataset`, `projectId`),
+    KEY `projectId` (`projectId`, `user_email`),
+    KEY `message_id` (`message_id`),
+    CONSTRAINT `FK_429_449` FOREIGN KEY (`dataset`) REFERENCES `dataset` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `FK_438_452` FOREIGN KEY (`message_id`) REFERENCES `message` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT `FK_302_451` FOREIGN KEY (`projectId`, `user_email`) REFERENCES `project_team` (`project_id`, `team_member`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 3
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.executions
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`executions`
+
+--
+-- Table structure for table `executions`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `executions`
 (
-    `id`              INT                                                             NOT NULL AUTO_INCREMENT,
-    `submission_time` TIMESTAMP                                                       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `user`            VARCHAR(150) CHARACTER SET 'latin1' COLLATE 'latin1_general_cs' NOT NULL,
-    `state`           VARCHAR(128) CHARACTER SET 'latin1'                             NOT NULL,
-    `execution_start` BIGINT                                                          NULL     DEFAULT NULL,
-    `execution_stop`  BIGINT                                                          NULL     DEFAULT NULL,
-    `stdout_path`     VARCHAR(255) CHARACTER SET 'latin1'                             NULL     DEFAULT NULL,
-    `stderr_path`     VARCHAR(255) CHARACTER SET 'latin1'                             NULL     DEFAULT NULL,
-    `hdfs_user`       VARCHAR(255) CHARACTER SET 'latin1'                             NULL     DEFAULT NULL,
-    `args`            VARCHAR(10000) CHARACTER SET 'latin1'                           NOT NULL DEFAULT '',
-    `app_id`          CHAR(45) CHARACTER SET 'latin1'                                 NULL     DEFAULT NULL,
-    `job_id`          INT                                                             NOT NULL,
-    `finalStatus`     VARCHAR(128) CHARACTER SET 'latin1'                             NOT NULL DEFAULT 'UNDEFINED',
-    `progress`        FLOAT                                                           NOT NULL DEFAULT '0',
+    `id`              int(11)                                  NOT NULL AUTO_INCREMENT,
+    `submission_time` timestamp                                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `user`            varchar(150) COLLATE latin1_general_cs   NOT NULL,
+    `state`           varchar(128) COLLATE latin1_general_cs   NOT NULL,
+    `execution_start` bigint(20)                                        DEFAULT NULL,
+    `execution_stop`  bigint(20)                                        DEFAULT NULL,
+    `stdout_path`     varchar(255) COLLATE latin1_general_cs            DEFAULT NULL,
+    `stderr_path`     varchar(255) COLLATE latin1_general_cs            DEFAULT NULL,
+    `hdfs_user`       varchar(255) COLLATE latin1_general_cs            DEFAULT NULL,
+    `args`            varchar(10000) COLLATE latin1_general_cs NOT NULL DEFAULT '',
+    `app_id`          char(45) COLLATE latin1_general_cs                DEFAULT NULL,
+    `job_id`          int(11)                                  NOT NULL,
+    `finalStatus`     varchar(128) COLLATE latin1_general_cs   NOT NULL DEFAULT 'UNDEFINED',
+    `progress`        float                                    NOT NULL DEFAULT '0',
     PRIMARY KEY (`id`),
-    UNIQUE INDEX `app_id` (`app_id` ASC) VISIBLE,
-    INDEX `job_id` (`job_id` ASC) VISIBLE,
-    INDEX `user` (`user` ASC) VISIBLE,
-    INDEX `submission_time_idx` (`submission_time` ASC, `job_id` ASC) VISIBLE,
-    INDEX `state_idx` (`state` ASC, `job_id` ASC) VISIBLE,
-    INDEX `finalStatus_idx` (`finalStatus` ASC, `job_id` ASC) VISIBLE,
-    INDEX `progress_idx` (`progress` ASC, `job_id` ASC) VISIBLE,
-    CONSTRAINT `FK_262_366`
-        FOREIGN KEY (`user`)
-            REFERENCES `hopsworks`.`users` (`email`)
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 23
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    UNIQUE KEY `app_id` (`app_id`),
+    KEY `job_id` (`job_id`),
+    KEY `user` (`user`),
+    KEY `submission_time_idx` (`submission_time`, `job_id`),
+    KEY `state_idx` (`state`, `job_id`),
+    KEY `finalStatus_idx` (`finalStatus`, `job_id`),
+    KEY `progress_idx` (`progress`, `job_id`),
+    CONSTRAINT `FK_262_366` FOREIGN KEY (`user`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 23
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.expectation
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`expectation`
+--
+-- Table structure for table `feature_group`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `feature_group`
 (
-    `id`                   INT           NOT NULL AUTO_INCREMENT,
-    `expectation_suite_id` INT           NOT NULL,
-    `expectation_type`     VARCHAR(150)  NOT NULL,
-    `kwargs`               VARCHAR(5000) NOT NULL,
-    `meta`                 VARCHAR(1000) NULL DEFAULT '{}',
+    `id`                         int(11)       NOT NULL AUTO_INCREMENT,
+    `name`                       varchar(63)   NOT NULL,
+    `feature_store_id`           int(11)       NOT NULL,
+    `created`                    timestamp     NULL     DEFAULT CURRENT_TIMESTAMP,
+    `creator`                    int(11)       NOT NULL,
+    `version`                    int(11)       NOT NULL,
+    `description`                VARCHAR(1000) NULL,
+    `feature_group_type`         INT(11)       NOT NULL DEFAULT '0',
+    `on_demand_feature_group_id` INT(11)       NULL,
+    `cached_feature_group_id`    INT(11)       NULL,
+    `stream_feature_group_id`    INT(11)       NULL,
+    `event_time`                 VARCHAR(63)            DEFAULT NULL,
+    `online_enabled`             TINYINT(1)    NULL,
+    `topic_name`                 VARCHAR(255)           DEFAULT NULL,
+    `deprecated`                 BOOLEAN                DEFAULT FALSE,
     PRIMARY KEY (`id`),
-    INDEX `suite_fk` (`expectation_suite_id` ASC) VISIBLE,
-    CONSTRAINT `suite_fk`
-        FOREIGN KEY (`expectation_suite_id`)
-            REFERENCES `hopsworks`.`expectation_suite` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    UNIQUE KEY `name_version` (`feature_store_id`, `name`, `version`),
+    KEY `feature_store_id` (`feature_store_id`),
+    KEY `creator` (`creator`),
+    KEY `on_demand_feature_group_fk` (`on_demand_feature_group_id`),
+    KEY `cached_feature_group_fk` (`cached_feature_group_id`),
+    KEY `stream_feature_group_fk` (`stream_feature_group_id`),
+    CONSTRAINT `FK_1012_790` FOREIGN KEY (`creator`) REFERENCES `users` (`uid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT `FK_656_740` FOREIGN KEY (`feature_store_id`) REFERENCES `feature_store` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `on_demand_feature_group_fk2` FOREIGN KEY (`on_demand_feature_group_id`) REFERENCES `on_demand_feature_group` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `cached_feature_group_fk` FOREIGN KEY (`cached_feature_group_id`) REFERENCES `cached_feature_group` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `stream_feature_group_fk` FOREIGN KEY (`stream_feature_group_id`) REFERENCES `stream_feature_group` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 13
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.expectation_suite
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`expectation_suite`
+--
+-- Table structure for table `statistics_config`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `statistics_config`
 (
-    `id`                          INT           NOT NULL AUTO_INCREMENT,
-    `feature_group_id`            INT           NOT NULL,
-    `name`                        VARCHAR(63)   NOT NULL,
-    `meta`                        VARCHAR(1000) NULL DEFAULT '{}',
-    `data_asset_type`             VARCHAR(50)   NULL DEFAULT NULL,
-    `ge_cloud_id`                 VARCHAR(200)  NULL DEFAULT NULL,
-    `run_validation`              TINYINT(1)    NULL DEFAULT '1',
-    `validation_ingestion_policy` VARCHAR(25)   NULL DEFAULT NULL,
-    `created_at`                  TIMESTAMP     NULL DEFAULT CURRENT_TIMESTAMP,
+    `id`                  int(11)    NOT NULL AUTO_INCREMENT,
+    `feature_group_id`    int(11),
+    `training_dataset_id` int(11),
+    `descriptive`         TINYINT(1) NOT NULL DEFAULT '1',
+    `correlations`        TINYINT(1) NOT NULL DEFAULT '1',
+    `histograms`          TINYINT(1) NOT NULL DEFAULT '1',
+    `exact_uniqueness`    TINYINT(1) NOT NULL DEFAULT '1',
     PRIMARY KEY (`id`),
-    INDEX `feature_group_suite_fk` (`feature_group_id` ASC) VISIBLE,
-    CONSTRAINT `feature_group_suite_fk`
-        FOREIGN KEY (`feature_group_id`)
-            REFERENCES `hopsworks`.`feature_group` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    KEY `feature_group_id` (`feature_group_id`),
+    KEY `training_dataset_id` (`training_dataset_id`),
+    CONSTRAINT `fg_statistics_config_fk` FOREIGN KEY (`feature_group_id`) REFERENCES `feature_group` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `td_statistics_config_fk` FOREIGN KEY (`training_dataset_id`) REFERENCES `training_dataset` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.feature_group
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`feature_group`
+--
+-- Table structure for table `statistic_columns`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `statistic_columns`
 (
-    `id`                         INT           NOT NULL AUTO_INCREMENT,
-    `name`                       VARCHAR(63)   NOT NULL,
-    `feature_store_id`           INT           NOT NULL,
-    `created`                    TIMESTAMP     NULL     DEFAULT CURRENT_TIMESTAMP,
-    `creator`                    INT           NOT NULL,
-    `version`                    INT           NOT NULL,
-    `description`                VARCHAR(1000) NULL     DEFAULT NULL,
-    `feature_group_type`         INT           NOT NULL DEFAULT '0',
-    `on_demand_feature_group_id` INT           NULL     DEFAULT NULL,
-    `cached_feature_group_id`    INT           NULL     DEFAULT NULL,
-    `stream_feature_group_id`    INT           NULL     DEFAULT NULL,
-    `event_time`                 VARCHAR(63)   NULL     DEFAULT NULL,
-    `online_enabled`             TINYINT(1)    NULL     DEFAULT NULL,
-    `topic_name`                 VARCHAR(255)  NULL     DEFAULT NULL,
-    `deprecated`                 TINYINT(1)    NULL     DEFAULT '0',
+    `id`                   int(11) NOT NULL AUTO_INCREMENT,
+    `statistics_config_id` int(11),
+    `name`                 varchar(500) COLLATE latin1_general_cs DEFAULT NULL,
     PRIMARY KEY (`id`),
-    UNIQUE INDEX `name_version` (`feature_store_id` ASC, `name` ASC, `version` ASC) VISIBLE,
-    INDEX `feature_store_id` (`feature_store_id` ASC) VISIBLE,
-    INDEX `creator` (`creator` ASC) VISIBLE,
-    INDEX `on_demand_feature_group_fk` (`on_demand_feature_group_id` ASC) VISIBLE,
-    INDEX `cached_feature_group_fk` (`cached_feature_group_id` ASC) VISIBLE,
-    INDEX `stream_feature_group_fk` (`stream_feature_group_id` ASC) VISIBLE,
-    CONSTRAINT `cached_feature_group_fk`
-        FOREIGN KEY (`cached_feature_group_id`)
-            REFERENCES `hopsworks`.`cached_feature_group` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `FK_1012_790`
-        FOREIGN KEY (`creator`)
-            REFERENCES `hopsworks`.`users` (`uid`),
-    CONSTRAINT `FK_656_740`
-        FOREIGN KEY (`feature_store_id`)
-            REFERENCES `hopsworks`.`feature_store` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `on_demand_feature_group_fk2`
-        FOREIGN KEY (`on_demand_feature_group_id`)
-            REFERENCES `hopsworks`.`on_demand_feature_group` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `stream_feature_group_fk`
-        FOREIGN KEY (`stream_feature_group_id`)
-            REFERENCES `hopsworks`.`stream_feature_group` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 13
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    KEY `statistics_config_id` (`statistics_config_id`),
+    CONSTRAINT `statistics_config_fk` FOREIGN KEY (`statistics_config_id`) REFERENCES `statistics_config` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.feature_group_alert
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`feature_group_alert`
+--
+-- Table structure for table `feature_store`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `feature_store`
 (
-    `id`               INT                                NOT NULL AUTO_INCREMENT,
-    `feature_group_id` INT                                NOT NULL,
-    `status`           VARCHAR(45) CHARACTER SET 'latin1' NOT NULL,
-    `type`             VARCHAR(45) CHARACTER SET 'latin1' NOT NULL,
-    `severity`         VARCHAR(45) CHARACTER SET 'latin1' NOT NULL,
-    `receiver`         INT                                NOT NULL,
-    `created`          TIMESTAMP                          NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `id`         int(11)                                NOT NULL AUTO_INCREMENT,
+    `name`       varchar(100) COLLATE latin1_general_cs NOT NULL,
+    `project_id` int(11)                                NOT NULL,
+    `created`    timestamp                              NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
-    UNIQUE INDEX `unique_feature_group_alert` (`feature_group_id` ASC, `status` ASC) VISIBLE,
-    INDEX `fk_feature_group_alert_2_idx` (`feature_group_id` ASC) VISIBLE,
-    INDEX `fk_feature_group_alert_1_idx` (`receiver` ASC) VISIBLE,
-    CONSTRAINT `fk_feature_group_alert_1`
-        FOREIGN KEY (`receiver`)
-            REFERENCES `hopsworks`.`alert_receiver` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fk_feature_group_alert_2`
-        FOREIGN KEY (`feature_group_id`)
-            REFERENCES `hopsworks`.`feature_group` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    KEY `project_id` (`project_id`),
+    CONSTRAINT `FK_883_662` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 67
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.feature_group_commit
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`feature_group_commit`
-(
-    `feature_group_id`  INT          NOT NULL,
-    `commit_id`         BIGINT       NOT NULL AUTO_INCREMENT,
-    `committed_on`      TIMESTAMP(6) NOT NULL,
-    `num_rows_updated`  INT          NULL     DEFAULT '0',
-    `num_rows_inserted` INT          NULL     DEFAULT '0',
-    `num_rows_deleted`  INT          NULL     DEFAULT '0',
-    `archived`          TINYINT(1)   NOT NULL DEFAULT '0',
-    PRIMARY KEY (`commit_id`, `feature_group_id`),
-    INDEX `commit_id_idx` (`commit_id` ASC) VISIBLE,
-    INDEX `commit_date_idx` (`committed_on` ASC) VISIBLE,
-    CONSTRAINT `feature_group_fk`
-        FOREIGN KEY (`feature_group_id`)
-            REFERENCES `hopsworks`.`feature_group` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.feature_group_link
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`feature_group_link`
-(
-    `id`                           INT          NOT NULL AUTO_INCREMENT,
-    `feature_group_id`             INT          NOT NULL,
-    `parent_feature_group_id`      INT          NULL DEFAULT NULL,
-    `parent_feature_store`         VARCHAR(100) NOT NULL,
-    `parent_feature_group_name`    VARCHAR(63)  NOT NULL,
-    `parent_feature_group_version` INT          NOT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `link_unique` (`feature_group_id` ASC, `parent_feature_group_id` ASC) VISIBLE,
-    INDEX `feature_group_id_fkc` (`feature_group_id` ASC) VISIBLE,
-    INDEX `parent_feature_group_id_fkc` (`parent_feature_group_id` ASC) VISIBLE,
-    CONSTRAINT `feature_group_id_fkc`
-        FOREIGN KEY (`feature_group_id`)
-            REFERENCES `hopsworks`.`feature_group` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `feature_group_parent_fkc`
-        FOREIGN KEY (`parent_feature_group_id`)
-            REFERENCES `hopsworks`.`feature_group` (`id`)
-            ON DELETE SET NULL
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+--
+-- Table structure for table `feature_store_statistic`
+--
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.feature_store
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`feature_store`
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `feature_store_statistic`
 (
-    `id`         INT                                 NOT NULL AUTO_INCREMENT,
-    `name`       VARCHAR(100) CHARACTER SET 'latin1' NOT NULL,
-    `project_id` INT                                 NOT NULL,
-    `created`    TIMESTAMP                           NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    INDEX `project_id` (`project_id` ASC) VISIBLE,
-    CONSTRAINT `FK_883_662`
-        FOREIGN KEY (`project_id`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 67
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.feature_store_activity
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`feature_store_activity`
-(
-    `id`                   INT          NOT NULL AUTO_INCREMENT,
-    `event_time`           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `uid`                  INT          NOT NULL,
-    `type`                 INT          NOT NULL,
-    `meta_type`            INT          NULL     DEFAULT NULL,
-    `meta_msg`             VARCHAR(255) NULL     DEFAULT NULL,
-    `execution_id`         INT          NULL     DEFAULT NULL,
-    `statistics_id`        INT          NULL     DEFAULT NULL,
-    `commit_id`            BIGINT       NULL     DEFAULT NULL,
-    `feature_group_id`     INT          NULL     DEFAULT NULL,
-    `training_dataset_id`  INT          NULL     DEFAULT NULL,
-    `feature_view_id`      INT          NULL     DEFAULT NULL,
-    `expectation_suite_id` INT          NULL     DEFAULT NULL,
-    `validation_report_id` INT          NULL     DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    INDEX `fsa_feature_view_fk` (`feature_view_id` ASC) VISIBLE,
-    INDEX `fs_act_td_fk` (`training_dataset_id` ASC) VISIBLE,
-    INDEX `fs_act_uid_fk` (`uid` ASC) VISIBLE,
-    INDEX `fs_act_exec_fk` (`execution_id` ASC) VISIBLE,
-    INDEX `fs_act_stat_fk` (`statistics_id` ASC) VISIBLE,
-    INDEX `fs_act_commit_fk` (`feature_group_id` ASC, `commit_id` ASC) VISIBLE,
-    INDEX `fs_act_validationreport_fk` (`validation_report_id` ASC) VISIBLE,
-    INDEX `fs_act_expectationsuite_fk` (`expectation_suite_id` ASC) VISIBLE,
-    CONSTRAINT `fs_act_commit_fk`
-        FOREIGN KEY (`feature_group_id`, `commit_id`)
-            REFERENCES `hopsworks`.`feature_group_commit` (`feature_group_id`, `commit_id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fs_act_exec_fk`
-        FOREIGN KEY (`execution_id`)
-            REFERENCES `hopsworks`.`executions` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fs_act_expectationsuite_fk`
-        FOREIGN KEY (`expectation_suite_id`)
-            REFERENCES `hopsworks`.`expectation_suite` (`id`)
-            ON DELETE SET NULL,
-    CONSTRAINT `fs_act_fg_fk`
-        FOREIGN KEY (`feature_group_id`)
-            REFERENCES `hopsworks`.`feature_group` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fs_act_stat_fk`
-        FOREIGN KEY (`statistics_id`)
-            REFERENCES `hopsworks`.`feature_store_statistic` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fs_act_td_fk`
-        FOREIGN KEY (`training_dataset_id`)
-            REFERENCES `hopsworks`.`training_dataset` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fs_act_uid_fk`
-        FOREIGN KEY (`uid`)
-            REFERENCES `hopsworks`.`users` (`uid`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fs_act_validationreport_fk`
-        FOREIGN KEY (`validation_report_id`)
-            REFERENCES `hopsworks`.`validation_report` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fsa_feature_view_fk`
-        FOREIGN KEY (`feature_view_id`)
-            REFERENCES `hopsworks`.`feature_view` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.feature_store_adls_connector
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`feature_store_adls_connector`
-(
-    `id`               INT          NOT NULL AUTO_INCREMENT,
-    `generation`       INT          NOT NULL,
-    `directory_id`     VARCHAR(40)  NOT NULL,
-    `application_id`   VARCHAR(40)  NOT NULL,
-    `account_name`     VARCHAR(30)  NOT NULL,
-    `container_name`   VARCHAR(65)  NULL DEFAULT NULL,
-    `cred_secret_uid`  INT          NOT NULL,
-    `cred_secret_name` VARCHAR(200) NOT NULL,
-    PRIMARY KEY (`id`),
-    INDEX `adls_cred_secret_fk` (`cred_secret_uid` ASC, `cred_secret_name` ASC) VISIBLE,
-    CONSTRAINT `adls_cred_secret_fk`
-        FOREIGN KEY (`cred_secret_uid`, `cred_secret_name`)
-            REFERENCES `hopsworks`.`secrets` (`uid`, `secret_name`)
-            ON DELETE RESTRICT
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.feature_store_bigquery_connector
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`feature_store_bigquery_connector`
-(
-    `id`                      INT                                 NOT NULL AUTO_INCREMENT,
-    `parent_project`          VARCHAR(1000)                       NOT NULL,
-    `dataset`                 VARCHAR(1000)                       NULL DEFAULT NULL,
-    `query_table`             VARCHAR(1000)                       NULL DEFAULT NULL,
-    `query_project`           VARCHAR(1000)                       NULL DEFAULT NULL,
-    `materialization_dataset` VARCHAR(1000)                       NULL DEFAULT NULL,
-    `arguments`               VARCHAR(2000)                       NULL DEFAULT NULL,
-    `key_path`                VARCHAR(255) CHARACTER SET 'latin1' NULL DEFAULT NULL,
-    PRIMARY KEY (`id`)
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.feature_store_code
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`feature_store_code`
-(
-    `id`                      INT                                 NOT NULL AUTO_INCREMENT,
-    `commit_time`             DATETIME(3)                         NOT NULL,
-    `name`                    VARCHAR(255) CHARACTER SET 'latin1' NOT NULL,
-    `feature_group_id`        INT                                 NULL DEFAULT NULL,
-    `feature_group_commit_id` BIGINT                              NULL DEFAULT NULL,
-    `training_dataset_id`     INT                                 NULL DEFAULT NULL,
-    `application_id`          VARCHAR(50)                         NULL DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    INDEX `feature_group_id` (`feature_group_id` ASC) VISIBLE,
-    INDEX `training_dataset_id` (`training_dataset_id` ASC) VISIBLE,
-    INDEX `feature_group_commit_id_fk` (`feature_group_id` ASC, `feature_group_commit_id` ASC) VISIBLE,
-    CONSTRAINT `fg_ci_fk_fsc`
-        FOREIGN KEY (`feature_group_id`, `feature_group_commit_id`)
-            REFERENCES `hopsworks`.`feature_group_commit` (`feature_group_id`, `commit_id`)
-            ON DELETE SET NULL,
-    CONSTRAINT `fg_fk_fsc`
-        FOREIGN KEY (`feature_group_id`)
-            REFERENCES `hopsworks`.`feature_group` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `td_fk_fsc`
-        FOREIGN KEY (`training_dataset_id`)
-            REFERENCES `hopsworks`.`training_dataset` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.feature_store_connector
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`feature_store_connector`
-(
-    `id`               INT           NOT NULL AUTO_INCREMENT,
-    `feature_store_id` INT           NOT NULL,
-    `name`             VARCHAR(150)  NOT NULL,
-    `description`      VARCHAR(1000) NULL DEFAULT NULL,
-    `type`             INT           NOT NULL,
-    `jdbc_id`          INT           NULL DEFAULT NULL,
-    `s3_id`            INT           NULL DEFAULT NULL,
-    `hopsfs_id`        INT           NULL DEFAULT NULL,
-    `redshift_id`      INT           NULL DEFAULT NULL,
-    `adls_id`          INT           NULL DEFAULT NULL,
-    `snowflake_id`     INT           NULL DEFAULT NULL,
-    `kafka_id`         INT           NULL DEFAULT NULL,
-    `gcs_id`           INT           NULL DEFAULT NULL,
-    `bigquery_id`      INT           NULL DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `fs_conn_name` (`name` ASC, `feature_store_id` ASC) VISIBLE,
-    INDEX `fs_connector_featurestore_fk` (`feature_store_id` ASC) VISIBLE,
-    INDEX `fs_connector_jdbc_fk` (`jdbc_id` ASC) VISIBLE,
-    INDEX `fs_connector_s3_fk` (`s3_id` ASC) VISIBLE,
-    INDEX `fs_connector_hopsfs_fk` (`hopsfs_id` ASC) VISIBLE,
-    INDEX `fs_connector_redshift_fk` (`redshift_id` ASC) VISIBLE,
-    INDEX `fs_connector_adls_fk` (`adls_id` ASC) VISIBLE,
-    INDEX `fs_connector_snowflake_fk` (`snowflake_id` ASC) VISIBLE,
-    INDEX `fs_connector_kafka_fk` (`kafka_id` ASC) VISIBLE,
-    INDEX `fs_connector_gcs_fk` (`gcs_id` ASC) VISIBLE,
-    INDEX `fs_connector_bigquery_fk` (`bigquery_id` ASC) VISIBLE,
-    CONSTRAINT `fs_connector_adls_fk`
-        FOREIGN KEY (`adls_id`)
-            REFERENCES `hopsworks`.`feature_store_adls_connector` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fs_connector_bigquery_fk`
-        FOREIGN KEY (`bigquery_id`)
-            REFERENCES `hopsworks`.`feature_store_bigquery_connector` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fs_connector_featurestore_fk`
-        FOREIGN KEY (`feature_store_id`)
-            REFERENCES `hopsworks`.`feature_store` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fs_connector_gcs_fk`
-        FOREIGN KEY (`gcs_id`)
-            REFERENCES `hopsworks`.`feature_store_gcs_connector` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fs_connector_hopsfs_fk`
-        FOREIGN KEY (`hopsfs_id`)
-            REFERENCES `hopsworks`.`feature_store_hopsfs_connector` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fs_connector_jdbc_fk`
-        FOREIGN KEY (`jdbc_id`)
-            REFERENCES `hopsworks`.`feature_store_jdbc_connector` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fs_connector_kafka_fk`
-        FOREIGN KEY (`kafka_id`)
-            REFERENCES `hopsworks`.`feature_store_kafka_connector` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fs_connector_redshift_fk`
-        FOREIGN KEY (`redshift_id`)
-            REFERENCES `hopsworks`.`feature_store_redshift_connector` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fs_connector_s3_fk`
-        FOREIGN KEY (`s3_id`)
-            REFERENCES `hopsworks`.`feature_store_s3_connector` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fs_connector_snowflake_fk`
-        FOREIGN KEY (`snowflake_id`)
-            REFERENCES `hopsworks`.`feature_store_snowflake_connector` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.feature_store_gcs_connector
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`feature_store_gcs_connector`
-(
-    `id`                     INT                                 NOT NULL AUTO_INCREMENT,
-    `algorithm`              VARCHAR(10)                         NULL DEFAULT NULL,
-    `bucket`                 VARCHAR(1000)                       NOT NULL,
-    `encryption_secret_uid`  INT                                 NULL DEFAULT NULL,
-    `encryption_secret_name` VARCHAR(200)                        NULL DEFAULT NULL,
-    `key_path`               VARCHAR(255) CHARACTER SET 'latin1' NULL DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    INDEX `fk_fs_storage_connector_gcs_idx` (`encryption_secret_uid` ASC, `encryption_secret_name` ASC) VISIBLE,
-    CONSTRAINT `fk_fs_storage_connector_gcs`
-        FOREIGN KEY (`encryption_secret_uid`, `encryption_secret_name`)
-            REFERENCES `hopsworks`.`secrets` (`uid`, `secret_name`)
-            ON DELETE RESTRICT
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.feature_store_hopsfs_connector
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`feature_store_hopsfs_connector`
-(
-    `id`             INT NOT NULL AUTO_INCREMENT,
-    `hopsfs_dataset` INT NOT NULL,
-    PRIMARY KEY (`id`),
-    INDEX `hopsfs_connector_dataset_fk` (`hopsfs_dataset` ASC) VISIBLE,
-    CONSTRAINT `hopsfs_connector_dataset_fk`
-        FOREIGN KEY (`hopsfs_dataset`)
-            REFERENCES `hopsworks`.`dataset` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.feature_store_jdbc_connector
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`feature_store_jdbc_connector`
-(
-    `id`                INT           NOT NULL AUTO_INCREMENT,
-    `connection_string` VARCHAR(5000) NOT NULL,
-    `arguments`         VARCHAR(2000) NULL DEFAULT NULL,
-    PRIMARY KEY (`id`)
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.feature_store_job
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`feature_store_job`
-(
-    `id`                  INT NOT NULL AUTO_INCREMENT,
-    `job_id`              INT NOT NULL,
-    `training_dataset_id` INT NULL DEFAULT NULL,
-    `feature_group_id`    INT NULL DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    INDEX `fs_job_job_fk` (`job_id` ASC) VISIBLE,
-    INDEX `fs_job_td_fk` (`training_dataset_id` ASC) VISIBLE,
-    INDEX `fs_job_fg_fk` (`feature_group_id` ASC) VISIBLE,
-    CONSTRAINT `fs_job_fg_fk`
-        FOREIGN KEY (`feature_group_id`)
-            REFERENCES `hopsworks`.`feature_group` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fs_job_job_fk`
-        FOREIGN KEY (`job_id`)
-            REFERENCES `hopsworks`.`jobs` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fs_job_td_fk`
-        FOREIGN KEY (`training_dataset_id`)
-            REFERENCES `hopsworks`.`training_dataset` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.feature_store_kafka_connector
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`feature_store_kafka_connector`
-(
-    `id`                                    INT                                 NOT NULL AUTO_INCREMENT,
-    `bootstrap_servers`                     VARCHAR(1000)                       NOT NULL,
-    `security_protocol`                     VARCHAR(1000)                       NOT NULL,
-    `ssl_secret_uid`                        INT                                 NULL DEFAULT NULL,
-    `ssl_secret_name`                       VARCHAR(200)                        NULL DEFAULT NULL,
-    `ssl_endpoint_identification_algorithm` VARCHAR(100)                        NULL DEFAULT NULL,
-    `options`                               VARCHAR(2000)                       NULL DEFAULT NULL,
-    `truststore_path`                       VARCHAR(255) CHARACTER SET 'latin1' NULL DEFAULT NULL,
-    `keystore_path`                         VARCHAR(255) CHARACTER SET 'latin1' NULL DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    INDEX `fk_fs_storage_connector_kafka_idx` (`ssl_secret_uid` ASC, `ssl_secret_name` ASC) VISIBLE,
-    CONSTRAINT `fk_fs_storage_connector_kafka`
-        FOREIGN KEY (`ssl_secret_uid`, `ssl_secret_name`)
-            REFERENCES `hopsworks`.`secrets` (`uid`, `secret_name`)
-            ON DELETE RESTRICT
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.feature_store_keyword
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`feature_store_keyword`
-(
-    `id`                  INT          NOT NULL AUTO_INCREMENT,
-    `name`                VARCHAR(255) NOT NULL,
-    `feature_group_id`    INT          NULL DEFAULT NULL,
-    `feature_view_id`     INT          NULL DEFAULT NULL,
-    `training_dataset_id` INT          NULL DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    INDEX `fk_fs_keyword_fg` (`feature_group_id` ASC) VISIBLE,
-    INDEX `fk_fs_keyword_fv` (`feature_view_id` ASC) VISIBLE,
-    INDEX `fk_fs_keyword_td` (`training_dataset_id` ASC) VISIBLE,
-    CONSTRAINT `fk_fs_keyword_fg`
-        FOREIGN KEY (`feature_group_id`)
-            REFERENCES `hopsworks`.`feature_group` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fk_fs_keyword_fv`
-        FOREIGN KEY (`feature_view_id`)
-            REFERENCES `hopsworks`.`feature_view` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fk_fs_keyword_td`
-        FOREIGN KEY (`training_dataset_id`)
-            REFERENCES `hopsworks`.`training_dataset` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.feature_store_redshift_connector
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`feature_store_redshift_connector`
-(
-    `id`                       INT           NOT NULL AUTO_INCREMENT,
-    `cluster_identifier`       VARCHAR(64)   NOT NULL,
-    `database_driver`          VARCHAR(64)   NOT NULL,
-    `database_endpoint`        VARCHAR(128)  NULL DEFAULT NULL,
-    `database_name`            VARCHAR(64)   NULL DEFAULT NULL,
-    `database_port`            INT           NULL DEFAULT NULL,
-    `table_name`               VARCHAR(128)  NULL DEFAULT NULL,
-    `database_user_name`       VARCHAR(128)  NULL DEFAULT NULL,
-    `auto_create`              TINYINT(1)    NULL DEFAULT '0',
-    `database_group`           VARCHAR(2048) NULL DEFAULT NULL,
-    `iam_role`                 VARCHAR(2048) NULL DEFAULT NULL,
-    `arguments`                VARCHAR(2000) NULL DEFAULT NULL,
-    `database_pwd_secret_uid`  INT           NULL DEFAULT NULL,
-    `database_pwd_secret_name` VARCHAR(200)  NULL DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    INDEX `fk_feature_store_redshift_connector_2_idx` (`database_pwd_secret_uid` ASC, `database_pwd_secret_name` ASC) VISIBLE,
-    CONSTRAINT `fk_feature_store_redshift_connector_2`
-        FOREIGN KEY (`database_pwd_secret_uid`, `database_pwd_secret_name`)
-            REFERENCES `hopsworks`.`secrets` (`uid`, `secret_name`)
-            ON DELETE RESTRICT
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.feature_store_s3_connector
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`feature_store_s3_connector`
-(
-    `id`                          INT           NOT NULL AUTO_INCREMENT,
-    `bucket`                      VARCHAR(5000) NOT NULL,
-    `iam_role`                    VARCHAR(2048) NULL DEFAULT NULL,
-    `server_encryption_algorithm` INT           NULL DEFAULT NULL,
-    `server_encryption_key`       VARCHAR(1000) NULL DEFAULT NULL,
-    `key_secret_uid`              INT           NULL DEFAULT NULL,
-    `key_secret_name`             VARCHAR(200)  NULL DEFAULT NULL,
-    `arguments`                   VARCHAR(2000) NULL DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    INDEX `fk_feature_store_s3_connector_1_idx` (`key_secret_uid` ASC, `key_secret_name` ASC) VISIBLE,
-    CONSTRAINT `fk_feature_store_s3_connector_1`
-        FOREIGN KEY (`key_secret_uid`, `key_secret_name`)
-            REFERENCES `hopsworks`.`secrets` (`uid`, `secret_name`)
-            ON DELETE RESTRICT
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.feature_store_snowflake_connector
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`feature_store_snowflake_connector`
-(
-    `id`                       INT           NOT NULL AUTO_INCREMENT,
-    `url`                      VARCHAR(3000) NOT NULL,
-    `database_user`            VARCHAR(128)  NOT NULL,
-    `database_name`            VARCHAR(64)   NOT NULL,
-    `database_schema`          VARCHAR(45)   NOT NULL,
-    `table_name`               VARCHAR(128)  NULL DEFAULT NULL,
-    `role`                     VARCHAR(65)   NULL DEFAULT NULL,
-    `warehouse`                VARCHAR(128)  NULL DEFAULT NULL,
-    `arguments`                VARCHAR(8000) NULL DEFAULT NULL,
-    `application`              VARCHAR(50)   NULL DEFAULT NULL,
-    `database_pwd_secret_uid`  INT           NULL DEFAULT NULL,
-    `database_pwd_secret_name` VARCHAR(200)  NULL DEFAULT NULL,
-    `oauth_token_secret_uid`   INT           NULL DEFAULT NULL,
-    `oauth_token_secret_name`  VARCHAR(200)  NULL DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    INDEX `fk_feature_store_snowflake_connector_2_idx` (`database_pwd_secret_uid` ASC, `database_pwd_secret_name` ASC) VISIBLE,
-    INDEX `fk_feature_store_snowflake_connector_3_idx` (`oauth_token_secret_uid` ASC, `oauth_token_secret_name` ASC) VISIBLE,
-    CONSTRAINT `fk_feature_store_snowflake_connector_2`
-        FOREIGN KEY (`database_pwd_secret_uid`, `database_pwd_secret_name`)
-            REFERENCES `hopsworks`.`secrets` (`uid`, `secret_name`)
-            ON DELETE RESTRICT,
-    CONSTRAINT `fk_feature_store_snowflake_connector_3`
-        FOREIGN KEY (`oauth_token_secret_uid`, `oauth_token_secret_name`)
-            REFERENCES `hopsworks`.`secrets` (`uid`, `secret_name`)
-            ON DELETE RESTRICT
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.feature_store_statistic
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`feature_store_statistic`
-(
-    `id`                      INT           NOT NULL AUTO_INCREMENT,
+    `id`                      int(11)       NOT NULL AUTO_INCREMENT,
     `commit_time`             DATETIME(3)   NOT NULL,
     `file_path`               VARCHAR(1000) NOT NULL,
-    `feature_group_id`        INT           NULL DEFAULT NULL,
-    `feature_group_commit_id` BIGINT        NULL DEFAULT NULL,
-    `training_dataset_id`     INT           NULL DEFAULT NULL,
-    `for_transformation`      TINYINT(1)    NULL DEFAULT '0',
+    `feature_group_id`        INT(11),
+    `feature_group_commit_id` BIGINT(20),
+    `training_dataset_id`     INT(11),
+    `for_transformation`      TINYINT(1) DEFAULT '0',
     PRIMARY KEY (`id`),
-    INDEX `feature_group_id` (`feature_group_id` ASC) VISIBLE,
-    INDEX `training_dataset_id` (`training_dataset_id` ASC) VISIBLE,
-    INDEX `feature_group_commit_id_fk` (`feature_group_id` ASC, `feature_group_commit_id` ASC) VISIBLE,
-    CONSTRAINT `fg_fk_fss`
-        FOREIGN KEY (`feature_group_id`)
-            REFERENCES `hopsworks`.`feature_group` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `td_fk_fss`
-        FOREIGN KEY (`training_dataset_id`)
-            REFERENCES `hopsworks`.`training_dataset` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    KEY `feature_group_id` (`feature_group_id`),
+    KEY `training_dataset_id` (`training_dataset_id`),
+    KEY `feature_group_commit_id_fk` (`feature_group_id`, `feature_group_commit_id`),
+    CONSTRAINT `fg_fk_fss` FOREIGN KEY (`feature_group_id`) REFERENCES `feature_group` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `td_fk_fss` FOREIGN KEY (`training_dataset_id`) REFERENCES `training_dataset` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.feature_store_tag
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`feature_store_tag`
+--
+-- Table structure for table `feature_store_code`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `feature_store_code`
 (
-    `id`         INT            NOT NULL AUTO_INCREMENT,
-    `name`       VARCHAR(255)   NOT NULL,
-    `tag_schema` VARCHAR(13000) NOT NULL DEFAULT '{"type":"string"}',
+    `id`                      int(11)                                                     NOT NULL AUTO_INCREMENT,
+    `commit_time`             DATETIME(3)                                                 NOT NULL,
+    `name`                    varchar(255) CHARACTER SET latin1 COLLATE latin1_general_cs NOT NULL,
+    `feature_group_id`        INT(11),
+    `feature_group_commit_id` BIGINT(20),
+    `training_dataset_id`     INT(11),
+    `application_id`          VARCHAR(50),
     PRIMARY KEY (`id`),
-    UNIQUE INDEX `name_UNIQUE` (`name` ASC) VISIBLE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    KEY `feature_group_id` (`feature_group_id`),
+    KEY `training_dataset_id` (`training_dataset_id`),
+    KEY `feature_group_commit_id_fk` (`feature_group_id`, `feature_group_commit_id`),
+    CONSTRAINT `fg_fk_fsc` FOREIGN KEY (`feature_group_id`) REFERENCES `feature_group` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fg_ci_fk_fsc` FOREIGN KEY (`feature_group_id`, `feature_group_commit_id`) REFERENCES `feature_group_commit` (`feature_group_id`, `commit_id`) ON DELETE SET NULL ON UPDATE NO ACTION,
+    CONSTRAINT `td_fk_fsc` FOREIGN KEY (`training_dataset_id`) REFERENCES `training_dataset` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.feature_store_tag_value
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`feature_store_tag_value`
-(
-    `id`                  INT            NOT NULL AUTO_INCREMENT,
-    `schema_id`           INT            NOT NULL,
-    `feature_group_id`    INT            NULL DEFAULT NULL,
-    `feature_view_id`     INT            NULL DEFAULT NULL,
-    `training_dataset_id` INT            NULL DEFAULT NULL,
-    `value`               VARCHAR(29000) NOT NULL,
-    PRIMARY KEY (`id`),
-    INDEX `fk_fs_tag_value_schema` (`schema_id` ASC) VISIBLE,
-    INDEX `fk_fs_tag_value_fg` (`feature_group_id` ASC) VISIBLE,
-    INDEX `fk_fs_tag_value_fv` (`feature_view_id` ASC) VISIBLE,
-    INDEX `fk_fs_tag_value_td` (`training_dataset_id` ASC) VISIBLE,
-    CONSTRAINT `fk_fs_tag_value_fg`
-        FOREIGN KEY (`feature_group_id`)
-            REFERENCES `hopsworks`.`feature_group` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fk_fs_tag_value_fv`
-        FOREIGN KEY (`feature_view_id`)
-            REFERENCES `hopsworks`.`feature_view` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fk_fs_tag_value_schema`
-        FOREIGN KEY (`schema_id`)
-            REFERENCES `hopsworks`.`feature_store_tag` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fk_fs_tag_value_td`
-        FOREIGN KEY (`training_dataset_id`)
-            REFERENCES `hopsworks`.`training_dataset` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+--
+-- Table structure for table `files_to_remove`
+--
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.feature_view
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`feature_view`
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `files_to_remove`
 (
-    `id`               INT                                   NOT NULL AUTO_INCREMENT,
-    `name`             VARCHAR(63)                           NOT NULL,
-    `feature_store_id` INT                                   NOT NULL,
-    `created`          TIMESTAMP                             NULL DEFAULT CURRENT_TIMESTAMP,
-    `creator`          INT                                   NOT NULL,
-    `version`          INT                                   NOT NULL,
-    `description`      VARCHAR(10000) CHARACTER SET 'latin1' NULL DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `name_version` (`feature_store_id` ASC, `name` ASC, `version` ASC) VISIBLE,
-    INDEX `feature_store_id` (`feature_store_id` ASC) VISIBLE,
-    INDEX `creator` (`creator` ASC) VISIBLE,
-    CONSTRAINT `fv_creator_fk`
-        FOREIGN KEY (`creator`)
-            REFERENCES `hopsworks`.`users` (`uid`),
-    CONSTRAINT `fv_feature_store_id_fk`
-        FOREIGN KEY (`feature_store_id`)
-            REFERENCES `hopsworks`.`feature_store` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 9
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.feature_view_link
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`feature_view_link`
-(
-    `id`                           INT          NOT NULL AUTO_INCREMENT,
-    `feature_view_id`              INT          NOT NULL,
-    `parent_feature_group_id`      INT          NULL DEFAULT NULL,
-    `parent_feature_store`         VARCHAR(100) NOT NULL,
-    `parent_feature_group_name`    VARCHAR(63)  NOT NULL,
-    `parent_feature_group_version` INT          NOT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `link_unique` (`feature_view_id` ASC, `parent_feature_group_id` ASC) VISIBLE,
-    INDEX `feature_view_id_fkc` (`feature_view_id` ASC) VISIBLE,
-    INDEX `feature_view_parent_id_fkc` (`parent_feature_group_id` ASC) VISIBLE,
-    CONSTRAINT `feature_view_id_fkc`
-        FOREIGN KEY (`feature_view_id`)
-            REFERENCES `hopsworks`.`feature_view` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `feature_view_parent_fkc`
-        FOREIGN KEY (`parent_feature_group_id`)
-            REFERENCES `hopsworks`.`feature_group` (`id`)
-            ON DELETE SET NULL
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.files_to_remove
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`files_to_remove`
-(
-    `execution_id` INT                                 NOT NULL,
-    `filepath`     VARCHAR(255) CHARACTER SET 'latin1' NOT NULL,
+    `execution_id` int(11)                                NOT NULL,
+    `filepath`     varchar(255) COLLATE latin1_general_cs NOT NULL,
     PRIMARY KEY (`execution_id`, `filepath`),
-    CONSTRAINT `FK_361_376`
-        FOREIGN KEY (`execution_id`)
-            REFERENCES `hopsworks`.`executions` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    CONSTRAINT `FK_361_376` FOREIGN KEY (`execution_id`) REFERENCES `executions` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.git_commits
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`git_commits`
+
+--
+-- Table structure for table `host_services`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `host_services`
 (
-    `id`              INT                                  NOT NULL AUTO_INCREMENT,
-    `repository`      INT                                  NOT NULL,
-    `branch`          VARCHAR(250) CHARACTER SET 'latin1'  NULL DEFAULT NULL,
-    `hash`            VARCHAR(255) CHARACTER SET 'latin1'  NOT NULL,
-    `message`         VARCHAR(1000) CHARACTER SET 'latin1' NOT NULL,
-    `committer_name`  VARCHAR(1000) CHARACTER SET 'latin1' NOT NULL,
-    `committer_email` VARCHAR(1000) CHARACTER SET 'latin1' NOT NULL,
-    `date`            TIMESTAMP                            NULL DEFAULT NULL,
+    `id`         bigint(20)                            NOT NULL AUTO_INCREMENT,
+    `host_id`    int(11)                               NOT NULL,
+    `pid`        int(11)    DEFAULT NULL,
+    `name`       varchar(48) COLLATE latin1_general_cs NOT NULL,
+    `group_name` varchar(48) COLLATE latin1_general_cs NOT NULL,
+    `status`     int(11)                               NOT NULL,
+    `uptime`     bigint(20) DEFAULT NULL,
+    `startTime`  bigint(20) DEFAULT NULL,
+    `stopTime`   bigint(20) DEFAULT NULL,
     PRIMARY KEY (`id`),
-    INDEX `repository_fk` (`repository` ASC) VISIBLE,
-    CONSTRAINT `repository_fk`
-        FOREIGN KEY (`repository`)
-            REFERENCES `hopsworks`.`git_repositories` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 4119
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    KEY `host_id` (`host_id`),
+    UNIQUE KEY `service_UNIQUE` (`host_id`, `name`),
+    CONSTRAINT `FK_481_491` FOREIGN KEY (`host_id`) REFERENCES `hosts` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 42
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.git_executions
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`git_executions`
+--
+-- Table structure for table `hosts`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `hosts`
 (
-    `id`                   INT                                   NOT NULL AUTO_INCREMENT,
-    `submission_time`      TIMESTAMP                             NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `user`                 INT                                   NOT NULL,
-    `repository`           INT                                   NOT NULL,
-    `execution_start`      BIGINT                                NULL     DEFAULT NULL,
-    `execution_stop`       BIGINT                                NULL     DEFAULT NULL,
-    `command_config`       VARCHAR(11000) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `state`                VARCHAR(128) CHARACTER SET 'latin1'   NOT NULL,
-    `final_result_message` VARCHAR(11000) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `config_secret`        VARCHAR(255) CHARACTER SET 'latin1'   NOT NULL,
-    `hostname`             VARCHAR(128)                          NOT NULL DEFAULT 'localhost',
+    `id`              int(11)                                NOT NULL AUTO_INCREMENT,
+    `hostname`        varchar(128) COLLATE latin1_general_cs NOT NULL,
+    `cores`           int(11)                               DEFAULT NULL,
+    `host_ip`         varchar(128) COLLATE latin1_general_cs NOT NULL,
+    `last_heartbeat`  bigint(20)                            DEFAULT NULL,
+    `memory_capacity` bigint(20)                            DEFAULT NULL,
+    `private_ip`      varchar(15) COLLATE latin1_general_cs DEFAULT NULL,
+    `public_ip`       varchar(15) COLLATE latin1_general_cs DEFAULT NULL,
+    `agent_password`  varchar(25) COLLATE latin1_general_cs DEFAULT NULL,
+    `num_gpus`        tinyint(1)                            DEFAULT '0',
+    `registered`      tinyint(1)                            DEFAULT '0',
     PRIMARY KEY (`id`),
-    INDEX `user` (`user` ASC) VISIBLE,
-    INDEX `git_exec_repo_fkc` (`repository` ASC) VISIBLE,
-    CONSTRAINT `git_exec_repo_fkc`
-        FOREIGN KEY (`repository`)
-            REFERENCES `hopsworks`.`git_repositories` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `git_exec_usr_fkc`
-        FOREIGN KEY (`user`)
-            REFERENCES `hopsworks`.`users` (`uid`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 8251
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    UNIQUE KEY `hostname` (`hostname`),
+    UNIQUE KEY `host_ip` (`host_ip`)
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 6
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.git_repositories
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`git_repositories`
-(
-    `id`             INT                                  NOT NULL AUTO_INCREMENT,
-    `path`           VARCHAR(1000) CHARACTER SET 'latin1' NOT NULL,
-    `name`           VARCHAR(255) CHARACTER SET 'latin1'  NOT NULL,
-    `project`        INT                                  NOT NULL,
-    `provider`       VARCHAR(20) CHARACTER SET 'latin1'   NOT NULL,
-    `current_branch` VARCHAR(250) CHARACTER SET 'latin1'  NULL DEFAULT NULL,
-    `current_commit` VARCHAR(255) CHARACTER SET 'latin1'  NULL DEFAULT NULL,
-    `cid`            VARCHAR(255) CHARACTER SET 'latin1'  NULL DEFAULT NULL,
-    `creator`        INT                                  NOT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `repository_path_constraint_unique` (`path`(255) ASC) VISIBLE,
-    INDEX `project_fk` (`project` ASC) VISIBLE,
-    CONSTRAINT `project_fk`
-        FOREIGN KEY (`project`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 2061
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+--
+-- Table structure for table `invalid_jwt`
+--
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.git_repository_remotes
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`git_repository_remotes`
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `invalid_jwt`
 (
-    `id`          INT                                  NOT NULL AUTO_INCREMENT,
-    `repository`  INT                                  NOT NULL,
-    `remote_name` VARCHAR(255) CHARACTER SET 'latin1'  NOT NULL,
-    `remote_url`  VARCHAR(1000) CHARACTER SET 'latin1' NOT NULL,
-    PRIMARY KEY (`id`),
-    INDEX `git_repository_fk` (`repository` ASC) VISIBLE,
-    CONSTRAINT `git_repository_fk`
-        FOREIGN KEY (`repository`)
-            REFERENCES `hopsworks`.`git_repositories` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 6164
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.great_expectation
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`great_expectation`
-(
-    `id`               INT           NOT NULL AUTO_INCREMENT,
-    `kwargs_template`  VARCHAR(1000) NOT NULL,
-    `expectation_type` VARCHAR(150)  NOT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `unique_great_expectation` (`expectation_type` ASC) VISIBLE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.hdfs_command_execution
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`hdfs_command_execution`
-(
-    `id`           INT           NOT NULL AUTO_INCREMENT,
-    `execution_id` INT           NOT NULL,
-    `command`      VARCHAR(45)   NOT NULL,
-    `submitted`    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `src_path`     VARCHAR(1000) NOT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `uq_execution_id` (`execution_id` ASC) VISIBLE,
-    UNIQUE INDEX `uq_src_path` (`src_path`(255) ASC) VISIBLE,
-    INDEX `fk_hdfs_file_command_1_idx` (`execution_id` ASC) VISIBLE,
-    CONSTRAINT `fk_hdfs_file_command_1`
-        FOREIGN KEY (`execution_id`)
-            REFERENCES `hopsworks`.`executions` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.host_services
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`host_services`
-(
-    `id`         BIGINT                             NOT NULL AUTO_INCREMENT,
-    `host_id`    INT                                NOT NULL,
-    `pid`        INT                                NULL DEFAULT NULL,
-    `name`       VARCHAR(48) CHARACTER SET 'latin1' NOT NULL,
-    `group_name` VARCHAR(48) CHARACTER SET 'latin1' NOT NULL,
-    `status`     INT                                NOT NULL,
-    `uptime`     BIGINT                             NULL DEFAULT NULL,
-    `startTime`  BIGINT                             NULL DEFAULT NULL,
-    `stopTime`   BIGINT                             NULL DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `service_UNIQUE` (`host_id` ASC, `name` ASC) VISIBLE,
-    INDEX `host_id` (`host_id` ASC) VISIBLE,
-    CONSTRAINT `FK_481_491`
-        FOREIGN KEY (`host_id`)
-            REFERENCES `hopsworks`.`hosts` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 42
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.hosts
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`hosts`
-(
-    `id`              INT                                 NOT NULL AUTO_INCREMENT,
-    `hostname`        VARCHAR(128) CHARACTER SET 'latin1' NOT NULL,
-    `cores`           INT                                 NULL DEFAULT NULL,
-    `host_ip`         VARCHAR(128) CHARACTER SET 'latin1' NOT NULL,
-    `last_heartbeat`  BIGINT                              NULL DEFAULT NULL,
-    `memory_capacity` BIGINT                              NULL DEFAULT NULL,
-    `private_ip`      VARCHAR(15) CHARACTER SET 'latin1'  NULL DEFAULT NULL,
-    `public_ip`       VARCHAR(15) CHARACTER SET 'latin1'  NULL DEFAULT NULL,
-    `agent_password`  VARCHAR(25) CHARACTER SET 'latin1'  NULL DEFAULT NULL,
-    `num_gpus`        TINYINT(1)                          NULL DEFAULT '0',
-    `registered`      TINYINT(1)                          NULL DEFAULT '0',
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `hostname` (`hostname` ASC) VISIBLE,
-    UNIQUE INDEX `host_ip` (`host_ip` ASC) VISIBLE
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 6
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.invalid_jwt
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`invalid_jwt`
-(
-    `jti`               VARCHAR(45) CHARACTER SET 'latin1' NOT NULL,
-    `expiration_time`   DATETIME                           NOT NULL,
-    `renewable_for_sec` INT                                NOT NULL,
+    `jti`               varchar(45) COLLATE latin1_general_cs NOT NULL,
+    `expiration_time`   datetime                              NOT NULL,
+    `renewable_for_sec` int(11)                               NOT NULL,
     PRIMARY KEY (`jti`)
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.job_alert
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`job_alert`
+--
+-- Table structure for table `jobs`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `jobs`
 (
-    `id`       INT         NOT NULL AUTO_INCREMENT,
-    `job_id`   INT         NOT NULL,
-    `status`   VARCHAR(45) NOT NULL,
-    `type`     VARCHAR(45) NOT NULL,
-    `severity` VARCHAR(45) NOT NULL,
-    `receiver` INT         NOT NULL,
-    `created`  TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `id`            int(11)                                  NOT NULL AUTO_INCREMENT,
+    `name`          varchar(128) COLLATE latin1_general_cs            DEFAULT NULL,
+    `creation_time` timestamp                                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `project_id`    int(11)                                  NOT NULL,
+    `creator`       varchar(150) COLLATE latin1_general_cs   NOT NULL,
+    `type`          varchar(128) COLLATE latin1_general_cs   NOT NULL,
+    `json_config`   varchar(12500) COLLATE latin1_general_cs NOT NULL,
     PRIMARY KEY (`id`),
-    UNIQUE INDEX `unique_job_alert` (`job_id` ASC, `status` ASC) VISIBLE,
-    INDEX `fk_job_alert_2_idx` (`job_id` ASC) VISIBLE,
-    INDEX `fk_job_alert_1_idx` (`receiver` ASC) VISIBLE,
-    CONSTRAINT `fk_job_alert_1`
-        FOREIGN KEY (`receiver`)
-            REFERENCES `hopsworks`.`alert_receiver` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fk_job_alert_2`
-        FOREIGN KEY (`job_id`)
-            REFERENCES `hopsworks`.`jobs` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    UNIQUE KEY `name_project_idx` (`name`, `project_id`),
+    KEY `project_id` (`project_id`),
+    KEY `creator` (`creator`),
+    KEY `creator_project_idx` (`creator`, `project_id`),
+    KEY `creation_time_project_idx` (`creation_time`, `project_id`),
+    KEY `type_project_id_idx` (`type`, `project_id`),
+    CONSTRAINT `FK_262_353` FOREIGN KEY (`creator`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT `FK_284_352` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 37
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.job_schedule
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`job_schedule`
-(
-    `id`                       INT          NOT NULL AUTO_INCREMENT,
-    `job_id`                   INT          NOT NULL,
-    `start_date_time`          TIMESTAMP    NOT NULL,
-    `end_date_time`            TIMESTAMP    NULL DEFAULT NULL,
-    `enabled`                  TINYINT(1)   NOT NULL,
-    `cron_expression`          VARCHAR(500) NOT NULL,
-    `next_execution_date_time` TIMESTAMP    NULL DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `job_id` (`job_id` ASC) VISIBLE,
-    CONSTRAINT `fk_schedule_job`
-        FOREIGN KEY (`job_id`)
-            REFERENCES `hopsworks`.`jobs` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+--
+-- Table structure for table `jupyter_project`
+--
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.jobs
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`jobs`
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `jupyter_project`
 (
-    `id`            INT                                                             NOT NULL AUTO_INCREMENT,
-    `name`          VARCHAR(128) CHARACTER SET 'latin1'                             NULL     DEFAULT NULL,
-    `creation_time` TIMESTAMP                                                       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `project_id`    INT                                                             NOT NULL,
-    `creator`       VARCHAR(150) CHARACTER SET 'latin1' COLLATE 'latin1_general_cs' NOT NULL,
-    `type`          VARCHAR(128) CHARACTER SET 'latin1'                             NOT NULL,
-    `json_config`   VARCHAR(12500) CHARACTER SET 'latin1'                           NOT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `name_project_idx` (`name` ASC, `project_id` ASC) VISIBLE,
-    INDEX `project_id` (`project_id` ASC) VISIBLE,
-    INDEX `creator` (`creator` ASC) VISIBLE,
-    INDEX `creator_project_idx` (`creator` ASC, `project_id` ASC) VISIBLE,
-    INDEX `creation_time_project_idx` (`creation_time` ASC, `project_id` ASC) VISIBLE,
-    INDEX `type_project_id_idx` (`type` ASC, `project_id` ASC) VISIBLE,
-    CONSTRAINT `FK_262_353`
-        FOREIGN KEY (`creator`)
-            REFERENCES `hopsworks`.`users` (`email`),
-    CONSTRAINT `FK_284_352`
-        FOREIGN KEY (`project_id`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 37
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.jupyter_project
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`jupyter_project`
-(
-    `port`       INT                                 NOT NULL,
-    `uid`        INT                                 NOT NULL,
-    `created`    TIMESTAMP                           NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `expires`    TIMESTAMP                           NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `no_limit`   TINYINT(1)                          NULL     DEFAULT '0',
-    `token`      VARCHAR(255) CHARACTER SET 'latin1' NOT NULL,
-    `secret`     VARCHAR(64) CHARACTER SET 'latin1'  NOT NULL,
-    `cid`        VARCHAR(255) CHARACTER SET 'latin1' NOT NULL,
-    `project_id` INT                                 NOT NULL,
+    `port`       int(11)                                NOT NULL,
+    `uid`        int(11)                                NOT NULL,
+    `created`    timestamp                              NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `expires`    timestamp                              NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `no_limit`   tinyint(1)                                      DEFAULT 0,
+    `token`      varchar(255) COLLATE latin1_general_cs NOT NULL,
+    `secret`     varchar(64) COLLATE latin1_general_cs  NOT NULL,
+    `cid`        varchar(255) COLLATE latin1_general_cs NOT NULL,
+    `project_id` int(11)                                NOT NULL,
     PRIMARY KEY (`port`),
-    UNIQUE INDEX `project_user` (`project_id` ASC, `uid` ASC) VISIBLE,
-    INDEX `project_id` (`project_id` ASC) VISIBLE,
-    INDEX `jp_uid_fk` (`uid` ASC) VISIBLE,
-    CONSTRAINT `FK_284_526`
-        FOREIGN KEY (`project_id`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `jp_uid_fk`
-        FOREIGN KEY (`uid`)
-            REFERENCES `hopsworks`.`users` (`uid`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    UNIQUE KEY `project_user` (`project_id`, `uid`),
+    KEY `project_id` (`project_id`),
+    CONSTRAINT `jp_uid_fk` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `FK_284_526` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.jupyter_settings
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`jupyter_settings`
+--
+-- Table structure for table `jupyter_settings`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `jupyter_settings`
 (
-    `project_id`     INT                                                             NOT NULL,
-    `team_member`    VARCHAR(150) CHARACTER SET 'latin1' COLLATE 'latin1_general_cs' NOT NULL,
-    `secret`         VARCHAR(255) CHARACTER SET 'latin1'                             NOT NULL,
-    `advanced`       TINYINT(1)                                                      NULL     DEFAULT '0',
-    `shutdown_level` INT                                                             NOT NULL DEFAULT '6',
-    `no_limit`       TINYINT(1)                                                      NULL     DEFAULT '0',
-    `base_dir`       VARCHAR(255) CHARACTER SET 'latin1'                             NULL     DEFAULT NULL,
-    `job_config`     VARCHAR(11000) CHARACTER SET 'latin1'                           NULL     DEFAULT NULL,
-    `docker_config`  VARCHAR(1000) CHARACTER SET 'latin1'                            NULL     DEFAULT NULL,
-    `python_kernel`  TINYINT(1)                                                      NULL     DEFAULT '1',
+    `project_id`     int(11)                                NOT NULL,
+    `team_member`    varchar(150) COLLATE latin1_general_cs NOT NULL,
+    `secret`         varchar(255) COLLATE latin1_general_cs NOT NULL,
+    `advanced`       tinyint(1)                                      DEFAULT '0',
+    `shutdown_level` int(11)                                NOT NULL DEFAULT '6',
+    `no_limit`       tinyint(1)                                      DEFAULT 0,
+    `base_dir`       varchar(255) COLLATE latin1_general_cs          DEFAULT NULL,
+    `job_config`     varchar(11000) COLLATE latin1_general_cs        DEFAULT NULL,
+    `docker_config`  varchar(1000) COLLATE latin1_general_cs         DEFAULT NULL,
+    `python_kernel`  TINYINT(1)                                      DEFAULT 1,
     PRIMARY KEY (`project_id`, `team_member`),
-    INDEX `team_member` (`team_member` ASC) VISIBLE,
-    INDEX `secret_idx` (`secret` ASC) VISIBLE,
-    CONSTRAINT `FK_262_309`
-        FOREIGN KEY (`team_member`)
-            REFERENCES `hopsworks`.`users` (`email`)
-            ON DELETE CASCADE,
-    CONSTRAINT `FK_284_308`
-        FOREIGN KEY (`project_id`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    KEY `team_member` (`team_member`),
+    KEY `secret_idx` (`secret`),
+    CONSTRAINT `FK_262_309` FOREIGN KEY (`team_member`) REFERENCES `users` (`email`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `FK_284_308` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.jwt_signing_key
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`jwt_signing_key`
+--
+-- Table structure for table `jwt_signing_key`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `jwt_signing_key`
 (
-    `id`         INT                                 NOT NULL AUTO_INCREMENT,
-    `secret`     VARCHAR(128) CHARACTER SET 'latin1' NOT NULL,
-    `name`       VARCHAR(255) CHARACTER SET 'latin1' NOT NULL,
-    `created_on` TIMESTAMP                           NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `id`         int(11)                                NOT NULL AUTO_INCREMENT,
+    `secret`     varchar(128) COLLATE latin1_general_cs NOT NULL,
+    `name`       varchar(255) COLLATE latin1_general_cs NOT NULL,
+    `created_on` timestamp                              NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
-    UNIQUE INDEX `jwt_signing_key_name_UNIQUE` (`name` ASC) VISIBLE
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 33
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    UNIQUE KEY `jwt_signing_key_name_UNIQUE` (`name`)
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 33
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.maggy_driver
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`maggy_driver`
+--
+-- Table structure for table `maggy_driver`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `maggy_driver`
 (
-    `id`      MEDIUMINT                           NOT NULL AUTO_INCREMENT,
-    `app_id`  CHAR(45) CHARACTER SET 'latin1'     NOT NULL,
-    `host_ip` VARCHAR(128) CHARACTER SET 'latin1' NOT NULL,
-    `port`    INT                                 NOT NULL,
-    `secret`  VARCHAR(128) CHARACTER SET 'latin1' NOT NULL,
-    `created` TIMESTAMP                           NULL DEFAULT CURRENT_TIMESTAMP,
+    `id`      mediumint(9)                           NOT NULL AUTO_INCREMENT,
+    `app_id`  char(45) COLLATE latin1_general_cs     NOT NULL,
+    `host_ip` varchar(128) COLLATE latin1_general_cs NOT NULL,
+    `port`    int(11)                                NOT NULL,
+    `secret`  varchar(128) COLLATE latin1_general_cs NOT NULL,
+    `created` timestamp                              NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
-    INDEX `app_id` (`app_id` ASC, `port` ASC) VISIBLE
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 2
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    KEY `app_id` (`app_id`, `port`)
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 2
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.materialized_jwt
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`materialized_jwt`
+--
+-- Table structure for table `materialized_jwt`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `materialized_jwt`
 (
-    `project_id` INT     NOT NULL,
-    `user_id`    INT     NOT NULL,
-    `usage`      TINYINT NOT NULL,
+    `project_id` int(11)    NOT NULL,
+    `user_id`    int(11)    NOT NULL,
+    `usage`      tinyint(4) NOT NULL,
     PRIMARY KEY (`project_id`, `user_id`, `usage`),
-    INDEX `jwt_material_user` (`user_id` ASC) VISIBLE,
-    CONSTRAINT `jwt_material_project`
-        FOREIGN KEY (`project_id`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `jwt_material_user`
-        FOREIGN KEY (`user_id`)
-            REFERENCES `hopsworks`.`users` (`uid`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    KEY `jwt_material_user` (`user_id`),
+    CONSTRAINT `jwt_material_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `jwt_material_project` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.message
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`message`
+--
+-- Table structure for table `message`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `message`
 (
-    `id`           INT                                                             NOT NULL AUTO_INCREMENT,
-    `user_from`    VARCHAR(150) CHARACTER SET 'latin1' COLLATE 'latin1_general_cs' NULL DEFAULT NULL,
-    `user_to`      VARCHAR(150) CHARACTER SET 'latin1' COLLATE 'latin1_general_cs' NOT NULL,
-    `date_sent`    DATETIME                                                        NOT NULL,
-    `subject`      VARCHAR(128) CHARACTER SET 'latin1'                             NULL DEFAULT NULL,
-    `preview`      VARCHAR(128) CHARACTER SET 'latin1'                             NULL DEFAULT NULL,
-    `content`      VARCHAR(11000) CHARACTER SET 'latin1'                           NOT NULL,
-    `unread`       TINYINT(1)                                                      NOT NULL,
-    `deleted`      TINYINT(1)                                                      NOT NULL,
-    `path`         VARCHAR(600) CHARACTER SET 'latin1'                             NULL DEFAULT NULL,
-    `reply_to_msg` INT                                                             NULL DEFAULT NULL,
+    `id`           int(11)                                  NOT NULL AUTO_INCREMENT,
+    `user_from`    varchar(150) COLLATE latin1_general_cs DEFAULT NULL,
+    `user_to`      varchar(150) COLLATE latin1_general_cs   NOT NULL,
+    `date_sent`    datetime                                 NOT NULL,
+    `subject`      varchar(128) COLLATE latin1_general_cs DEFAULT NULL,
+    `preview`      varchar(128) COLLATE latin1_general_cs DEFAULT NULL,
+    `content`      varchar(11000) COLLATE latin1_general_cs NOT NULL,
+    `unread`       tinyint(1)                               NOT NULL,
+    `deleted`      tinyint(1)                               NOT NULL,
+    `path`         varchar(600) COLLATE latin1_general_cs DEFAULT NULL,
+    `reply_to_msg` int(11)                                DEFAULT NULL,
     PRIMARY KEY (`id`),
-    INDEX `user_from` (`user_from` ASC) VISIBLE,
-    INDEX `user_to` (`user_to` ASC) VISIBLE,
-    INDEX `reply_to_msg` (`reply_to_msg` ASC) VISIBLE,
-    CONSTRAINT `FK_262_441`
-        FOREIGN KEY (`user_from`)
-            REFERENCES `hopsworks`.`users` (`email`)
-            ON DELETE SET NULL,
-    CONSTRAINT `FK_262_442`
-        FOREIGN KEY (`user_to`)
-            REFERENCES `hopsworks`.`users` (`email`)
-            ON DELETE CASCADE,
-    CONSTRAINT `FK_438_443`
-        FOREIGN KEY (`reply_to_msg`)
-            REFERENCES `hopsworks`.`message` (`id`)
-            ON DELETE SET NULL
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 3
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    KEY `user_from` (`user_from`),
+    KEY `user_to` (`user_to`),
+    KEY `reply_to_msg` (`reply_to_msg`),
+    CONSTRAINT `FK_262_441` FOREIGN KEY (`user_from`) REFERENCES `users` (`email`) ON DELETE SET NULL ON UPDATE NO ACTION,
+    CONSTRAINT `FK_262_442` FOREIGN KEY (`user_to`) REFERENCES `users` (`email`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `FK_438_443` FOREIGN KEY (`reply_to_msg`) REFERENCES `message` (`id`) ON DELETE SET NULL ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 3
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.message_to_user
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`message_to_user`
+--
+-- Table structure for table `message_to_user`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `message_to_user`
 (
-    `message`    INT                                                             NOT NULL,
-    `user_email` VARCHAR(150) CHARACTER SET 'latin1' COLLATE 'latin1_general_cs' NOT NULL,
+    `message`    int(11)                                NOT NULL,
+    `user_email` varchar(150) COLLATE latin1_general_cs NOT NULL,
     PRIMARY KEY (`message`, `user_email`),
-    INDEX `user_email` (`user_email` ASC) VISIBLE,
-    CONSTRAINT `FK_262_458`
-        FOREIGN KEY (`user_email`)
-            REFERENCES `hopsworks`.`users` (`email`)
-            ON DELETE CASCADE,
-    CONSTRAINT `FK_438_457`
-        FOREIGN KEY (`message`)
-            REFERENCES `hopsworks`.`message` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    KEY `user_email` (`user_email`),
+    CONSTRAINT `FK_262_458` FOREIGN KEY (`user_email`) REFERENCES `users` (`email`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `FK_438_457` FOREIGN KEY (`message`) REFERENCES `message` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.oauth_client
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`oauth_client`
+--
+-- Table structure for table `oauth_client`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `oauth_client`
 (
-    `id`                                   INT                                  NOT NULL AUTO_INCREMENT,
-    `client_id`                            VARCHAR(256) CHARACTER SET 'latin1'  NOT NULL,
-    `client_secret`                        VARCHAR(2048) CHARACTER SET 'latin1' NOT NULL,
-    `provider_logo_uri`                    VARCHAR(2048) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `provider_uri`                         VARCHAR(2048) CHARACTER SET 'latin1' NOT NULL,
-    `provider_name`                        VARCHAR(256) CHARACTER SET 'latin1'  NOT NULL,
-    `provider_display_name`                VARCHAR(45) CHARACTER SET 'latin1'   NOT NULL,
-    `authorisation_endpoint`               VARCHAR(1024) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `token_endpoint`                       VARCHAR(1024) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `userinfo_endpoint`                    VARCHAR(1024) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `end_session_endpoint`                 VARCHAR(1024) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `logout_redirect_param`                VARCHAR(45) CHARACTER SET 'latin1'   NULL     DEFAULT NULL,
-    `jwks_uri`                             VARCHAR(1024) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `provider_metadata_endpoint_supported` TINYINT(1)                           NOT NULL DEFAULT '0',
-    `offline_access`                       TINYINT(1)                           NOT NULL DEFAULT '0',
-    `code_challenge`                       TINYINT(1)                           NOT NULL DEFAULT '0',
-    `code_challenge_method`                VARCHAR(16) CHARACTER SET 'latin1'   NULL     DEFAULT NULL,
-    `verify_email`                         TINYINT(1)                           NOT NULL DEFAULT '0',
-    `given_name_claim`                     VARCHAR(256) CHARACTER SET 'latin1'  NOT NULL DEFAULT 'given_name',
-    `family_name_claim`                    VARCHAR(256) CHARACTER SET 'latin1'  NOT NULL DEFAULT 'family_name',
-    `email_claim`                          VARCHAR(256) CHARACTER SET 'latin1'  NOT NULL DEFAULT 'email',
-    `group_claim`                          VARCHAR(256) CHARACTER SET 'latin1'  NULL     DEFAULT NULL,
+    `id`                                   int(11)                                 NOT NULL AUTO_INCREMENT,
+    `client_id`                            varchar(256) COLLATE latin1_general_cs  NOT NULL,
+    `client_secret`                        varchar(2048) COLLATE latin1_general_cs NOT NULL,
+    `provider_logo_uri`                    varchar(2048) COLLATE latin1_general_cs          DEFAULT NULL,
+    `provider_uri`                         varchar(2048) COLLATE latin1_general_cs NOT NULL,
+    `provider_name`                        varchar(256) COLLATE latin1_general_cs  NOT NULL,
+    `provider_display_name`                varchar(45) COLLATE latin1_general_cs   NOT NULL,
+    `authorisation_endpoint`               varchar(1024) COLLATE latin1_general_cs          DEFAULT NULL,
+    `token_endpoint`                       varchar(1024) COLLATE latin1_general_cs          DEFAULT NULL,
+    `userinfo_endpoint`                    varchar(1024) COLLATE latin1_general_cs          DEFAULT NULL,
+    `end_session_endpoint`                 VARCHAR(1024) COLLATE latin1_general_cs          DEFAULT NULL,
+    `logout_redirect_param`                VARCHAR(45) COLLATE latin1_general_cs            DEFAULT NULL,
+    `jwks_uri`                             varchar(1024) COLLATE latin1_general_cs          DEFAULT NULL,
+    `provider_metadata_endpoint_supported` tinyint(1)                              NOT NULL DEFAULT '0',
+    `offline_access`                       tinyint(1)                              NOT NULL DEFAULT '0',
+    `code_challenge`                       tinyint(1)                              NOT NULL DEFAULT '0',
+    `code_challenge_method`                varchar(16) COLLATE latin1_general_cs            DEFAULT NULL,
+    `verify_email`                         tinyint(1)                              NOT NULL DEFAULT '0',
+    `given_name_claim`                     varchar(256) COLLATE latin1_general_cs  NOT NULL DEFAULT 'given_name',
+    `family_name_claim`                    varchar(256) COLLATE latin1_general_cs  NOT NULL DEFAULT 'family_name',
+    `email_claim`                          varchar(256) COLLATE latin1_general_cs  NOT NULL DEFAULT 'email',
+    `group_claim`                          varchar(256) COLLATE latin1_general_cs           DEFAULT NULL,
     PRIMARY KEY (`id`),
-    UNIQUE INDEX `client_id_UNIQUE` (`client_id`(255) ASC) VISIBLE,
-    UNIQUE INDEX `provider_name_UNIQUE` (`provider_name`(255) ASC) VISIBLE,
-    KEY `client_id_index` (`client_id`)
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    UNIQUE KEY `client_id_UNIQUE` (`client_id`),
+    UNIQUE KEY `provider_name_UNIQUE` (`provider_name`)
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.oauth_login_state
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`oauth_login_state`
+--
+-- Table structure for table `oauth_login_state`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `oauth_login_state`
 (
-    `id`             INT                                  NOT NULL AUTO_INCREMENT,
-    `state`          VARCHAR(256) CHARACTER SET 'latin1'  NOT NULL,
-    `session_id`     VARCHAR(128) CHARACTER SET 'latin1'  NOT NULL,
-    `client_id`      VARCHAR(256) CHARACTER SET 'latin1'  NOT NULL,
-    `login_time`     TIMESTAMP                            NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `id_token`       VARCHAR(8000) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `access_token`   VARCHAR(8000) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `refresh_token`  VARCHAR(8000) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `nonce`          VARCHAR(128) CHARACTER SET 'latin1'  NOT NULL,
-    `scopes`         VARCHAR(2048) CHARACTER SET 'latin1' NOT NULL,
-    `code_challenge` VARCHAR(128) CHARACTER SET 'latin1'  NULL     DEFAULT NULL,
-    `redirect_uri`   VARCHAR(1024) CHARACTER SET 'latin1' NOT NULL,
+    `id`             int(11)                                 NOT NULL AUTO_INCREMENT,
+    `state`          varchar(256) COLLATE latin1_general_cs  NOT NULL,
+    `session_id`     varchar(128) COLLATE latin1_general_cs  NOT NULL,
+    `client_id`      varchar(256) COLLATE latin1_general_cs  NOT NULL,
+    `login_time`     timestamp                               NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `id_token`       varchar(8000) COLLATE latin1_general_cs          DEFAULT NULL,
+    `access_token`   varchar(8000) COLLATE latin1_general_cs          DEFAULT NULL,
+    `refresh_token`  varchar(8000) COLLATE latin1_general_cs          DEFAULT NULL,
+    `nonce`          varchar(128) COLLATE latin1_general_cs  NOT NULL,
+    `scopes`         VARCHAR(2048) COLLATE latin1_general_cs NOT NULL,
+    `code_challenge` varchar(128) COLLATE latin1_general_cs           DEFAULT NULL,
+    `redirect_uri`   varchar(1024) COLLATE latin1_general_cs NOT NULL,
     PRIMARY KEY (`id`),
-    UNIQUE INDEX `login_state_UNIQUE` (`state`(255) ASC) VISIBLE,
-    INDEX `oauth_login_state_client` (`client_id`(255) ASC) VISIBLE,
-    CONSTRAINT `fk_oauth_login_state_client`
-        FOREIGN KEY (`client_id`)
-            REFERENCES `hopsworks`.`oauth_client` (`client_id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    UNIQUE KEY `login_state_UNIQUE` (`state`),
+    KEY `fk_oauth_login_state_client` (`client_id`),
+    CONSTRAINT `fk_oauth_login_state_client` FOREIGN KEY (`client_id`) REFERENCES `oauth_client` (`client_id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.oauth_token
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`oauth_token`
+--
+-- Table structure for table `oauth_token`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `oauth_token`
 (
-    `id`            INT                                  NOT NULL AUTO_INCREMENT,
-    `user_id`       INT                                  NOT NULL,
-    `id_token`      VARCHAR(8000) CHARACTER SET 'latin1' NOT NULL,
-    `access_token`  VARCHAR(8000) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `refresh_token` VARCHAR(8000) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `login_time`    TIMESTAMP                            NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `id`            int                                     NOT NULL AUTO_INCREMENT,
+    `user_id`       int                                     NOT NULL,
+    `id_token`      varchar(8000) COLLATE latin1_general_cs NOT NULL,
+    `access_token`  varchar(8000) COLLATE latin1_general_cs          DEFAULT NULL,
+    `refresh_token` varchar(8000) COLLATE latin1_general_cs          DEFAULT NULL,
+    `login_time`    timestamp                               NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
-    UNIQUE INDEX `login_state_UNIQUE` (`user_id` ASC) VISIBLE,
-    INDEX `fk_oauth_token_user` (`user_id` ASC) VISIBLE,
-    CONSTRAINT `fk_oauth_token_user`
-        FOREIGN KEY (`user_id`)
-            REFERENCES `hopsworks`.`users` (`uid`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    UNIQUE KEY `login_state_UNIQUE` (`user_id`),
+    KEY `fk_oauth_token_user` (`user_id`),
+    CONSTRAINT `fk_oauth_token_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`uid`) ON DELETE CASCADE
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.on_demand_feature
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`on_demand_feature`
-(
-    `id`                         INT                                   NOT NULL AUTO_INCREMENT,
-    `on_demand_feature_group_id` INT                                   NULL     DEFAULT NULL,
-    `name`                       VARCHAR(1000) CHARACTER SET 'latin1'  NOT NULL,
-    `primary_column`             TINYINT(1)                            NOT NULL DEFAULT '0',
-    `description`                VARCHAR(10000) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `type`                       VARCHAR(1000) CHARACTER SET 'latin1'  NOT NULL,
-    `idx`                        INT                                   NOT NULL DEFAULT '0',
-    `default_value`              VARCHAR(400)                          NULL     DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    INDEX `on_demand_feature_group_fk` (`on_demand_feature_group_id` ASC) VISIBLE,
-    CONSTRAINT `on_demand_feature_group_fk1`
-        FOREIGN KEY (`on_demand_feature_group_id`)
-            REFERENCES `hopsworks`.`on_demand_feature_group` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+--
+-- Table structure for table `ops_log`
+--
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.on_demand_feature_group
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`on_demand_feature_group`
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `ops_log`
 (
-    `id`           INT            NOT NULL AUTO_INCREMENT,
-    `query`        VARCHAR(26000) NULL     DEFAULT NULL,
-    `connector_id` INT            NULL     DEFAULT NULL,
-    `data_format`  VARCHAR(10)    NULL     DEFAULT NULL,
-    `path`         VARCHAR(1000)  NULL     DEFAULT NULL,
-    `spine`        TINYINT(1)     NOT NULL DEFAULT '0',
-    PRIMARY KEY (`id`),
-    INDEX `on_demand_conn_fk` (`connector_id` ASC) VISIBLE,
-    CONSTRAINT `on_demand_conn_fk`
-        FOREIGN KEY (`connector_id`)
-            REFERENCES `hopsworks`.`feature_store_connector` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.on_demand_option
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`on_demand_option`
-(
-    `id`                         INT                                 NOT NULL AUTO_INCREMENT,
-    `on_demand_feature_group_id` INT                                 NULL DEFAULT NULL,
-    `name`                       VARCHAR(255) CHARACTER SET 'latin1' NOT NULL,
-    `value`                      VARCHAR(255) CHARACTER SET 'latin1' NOT NULL,
-    PRIMARY KEY (`id`),
-    INDEX `on_demand_option_key` (`on_demand_feature_group_id` ASC) VISIBLE,
-    CONSTRAINT `on_demand_option_fk`
-        FOREIGN KEY (`on_demand_feature_group_id`)
-            REFERENCES `hopsworks`.`on_demand_feature_group` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.ops_log
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`ops_log`
-(
-    `id`         INT        NOT NULL AUTO_INCREMENT,
-    `op_id`      INT        NOT NULL,
-    `op_on`      TINYINT(1) NOT NULL,
-    `op_type`    TINYINT(1) NOT NULL,
-    `project_id` INT        NOT NULL,
-    `dataset_id` BIGINT     NOT NULL,
-    `inode_id`   BIGINT     NOT NULL,
+    `id`         int(11)    NOT NULL AUTO_INCREMENT,
+    `op_id`      int(11)    NOT NULL,
+    `op_on`      tinyint(1) NOT NULL,
+    `op_type`    tinyint(1) NOT NULL,
+    `project_id` int(11)    NOT NULL,
+    `dataset_id` bigint(20) NOT NULL,
+    `inode_id`   bigint(20) NOT NULL,
     PRIMARY KEY (`id`)
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 308
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 308
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.pki_certificate
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`pki_certificate`
-(
-    `ca`            TINYINT          NOT NULL,
-    `serial_number` BIGINT           NOT NULL,
-    `status`        TINYINT          NOT NULL,
-    `subject`       VARCHAR(255)     NOT NULL,
-    `certificate`   VARBINARY(10000) NULL DEFAULT NULL,
-    `not_before`    DATETIME         NOT NULL,
-    `not_after`     DATETIME         NOT NULL,
-    PRIMARY KEY (`status`, `subject`),
-    INDEX `sn_index` (`serial_number` ASC) VISIBLE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+--
+-- Table structure for table `project`
+--
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.pki_crl
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`pki_crl`
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `project`
 (
-    `type` VARCHAR(20) NOT NULL,
-    `crl`  MEDIUMBLOB  NOT NULL,
-    PRIMARY KEY (`type`)
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.pki_key
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`pki_key`
-(
-    `owner` VARCHAR(100)    NOT NULL,
-    `type`  TINYINT         NOT NULL,
-    `key`   VARBINARY(8192) NOT NULL,
-    PRIMARY KEY (`owner`, `type`)
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.pki_serial_number
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`pki_serial_number`
-(
-    `type`   VARCHAR(20) NOT NULL,
-    `number` BIGINT      NOT NULL,
-    PRIMARY KEY (`type`)
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.project
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`project`
-(
-    `id`                   INT                                                             NOT NULL AUTO_INCREMENT,
-    `projectname`          VARCHAR(100) CHARACTER SET 'latin1'                             NOT NULL,
-    `username`             VARCHAR(150) CHARACTER SET 'latin1' COLLATE 'latin1_general_cs' NOT NULL,
-    `created`              TIMESTAMP                                                       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `description`          VARCHAR(2000) CHARACTER SET 'latin1'                            NULL     DEFAULT NULL,
-    `payment_type`         VARCHAR(255) CHARACTER SET 'latin1'                             NOT NULL DEFAULT 'PREPAID',
-    `last_quota_update`    TIMESTAMP                                                       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `kafka_max_num_topics` INT                                                             NOT NULL DEFAULT '100',
-    `docker_image`         VARCHAR(255) CHARACTER SET 'latin1'                             NULL     DEFAULT NULL,
-    `topic_name`           VARCHAR(255)                                                    NULL     DEFAULT NULL,
-    `python_env_id`        INT                                                             NULL     DEFAULT NULL,
-    `creation_status`      TINYINT(1)                                                      NOT NULL DEFAULT '0',
+    `id`                   int(11)                                NOT NULL AUTO_INCREMENT,
+    `projectname`          varchar(100) COLLATE latin1_general_cs NOT NULL,
+    `username`             varchar(150) COLLATE latin1_general_cs NOT NULL,
+    `created`              timestamp                              NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `description`          varchar(2000) COLLATE latin1_general_cs         DEFAULT NULL,
+    `payment_type`         varchar(255) COLLATE latin1_general_cs NOT NULL DEFAULT 'PREPAID',
+    `last_quota_update`    timestamp                              NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `kafka_max_num_topics` int(11)                                NOT NULL DEFAULT '100',
+    `docker_image`         varchar(255) COLLATE latin1_general_cs          DEFAULT NULL,
+    `topic_name`           VARCHAR(255)                                    DEFAULT NULL,
+    `python_env_id`        int(11)                                         DEFAULT NULL,
+    `creation_status`      tinyint(1)                             NOT NULL DEFAULT '0',
     PRIMARY KEY (`id`),
-    UNIQUE INDEX `projectname` (`projectname` ASC) VISIBLE,
-    INDEX `user_idx` (`username` ASC) VISIBLE,
-    CONSTRAINT `FK_262_290`
-        FOREIGN KEY (`username`)
-            REFERENCES `hopsworks`.`users` (`email`)
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 119
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    UNIQUE KEY `projectname` (`projectname`),
+    KEY `user_idx` (`username`),
+    CONSTRAINT `FK_262_290` FOREIGN KEY (`username`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 119
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.project_pythondeps
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`project_pythondeps`
-(
-    `project_id` INT NOT NULL,
-    `dep_id`     INT NOT NULL,
-    PRIMARY KEY (`project_id`, `dep_id`),
-    INDEX `dep_id` (`dep_id` ASC) VISIBLE,
-    CONSTRAINT `FK_284_513`
-        FOREIGN KEY (`project_id`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `FK_505_514`
-        FOREIGN KEY (`dep_id`)
-            REFERENCES `hopsworks`.`python_dep` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+--
+-- Table structure for table `python_environment`
+--
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.project_service_alert
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`project_service_alert`
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `python_environment`
 (
-    `id`         INT                                NOT NULL AUTO_INCREMENT,
-    `project_id` INT                                NOT NULL,
-    `service`    VARCHAR(32) CHARACTER SET 'latin1' NOT NULL,
-    `status`     VARCHAR(45) CHARACTER SET 'latin1' NOT NULL,
-    `type`       VARCHAR(45) CHARACTER SET 'latin1' NOT NULL,
-    `severity`   VARCHAR(45) CHARACTER SET 'latin1' NOT NULL,
-    `receiver`   INT                                NOT NULL,
-    `created`    TIMESTAMP                          NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `unique_project_service_alert` (`project_id` ASC, `status` ASC) VISIBLE,
-    INDEX `fk_project_service_2_idx` (`project_id` ASC) VISIBLE,
-    INDEX `fk_project_service_alert_1_idx` (`receiver` ASC) VISIBLE,
-    CONSTRAINT `fk_project_service_alert_1`
-        FOREIGN KEY (`receiver`)
-            REFERENCES `hopsworks`.`alert_receiver` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `fk_project_service_alert_2`
-        FOREIGN KEY (`project_id`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.project_services
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`project_services`
-(
-    `project_id` INT                                NOT NULL,
-    `service`    VARCHAR(32) CHARACTER SET 'latin1' NOT NULL,
-    PRIMARY KEY (`project_id`, `service`),
-    CONSTRAINT `FK_284_300`
-        FOREIGN KEY (`project_id`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.project_team
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`project_team`
-(
-    `project_id`  INT                                                             NOT NULL,
-    `team_member` VARCHAR(150) CHARACTER SET 'latin1' COLLATE 'latin1_general_cs' NOT NULL,
-    `team_role`   VARCHAR(32) CHARACTER SET 'latin1'                              NOT NULL,
-    `added`       TIMESTAMP                                                       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`project_id`, `team_member`),
-    INDEX `team_member` (`team_member` ASC) VISIBLE,
-    CONSTRAINT `FK_262_304`
-        FOREIGN KEY (`team_member`)
-            REFERENCES `hopsworks`.`users` (`email`)
-            ON DELETE CASCADE,
-    CONSTRAINT `FK_284_303`
-        FOREIGN KEY (`project_id`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.project_topics
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`project_topics`
-(
-    `topic_name`     VARCHAR(255) CHARACTER SET 'latin1' NOT NULL,
-    `project_id`     INT                                 NOT NULL,
-    `id`             INT                                 NOT NULL AUTO_INCREMENT,
-    `subject_id`     INT                                 NULL DEFAULT NULL,
-    `num_partitions` INT                                 NULL DEFAULT NULL,
-    `num_replicas`   INT                                 NULL DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `topic_name_UNIQUE` (`topic_name` ASC) VISIBLE,
-    UNIQUE INDEX `topic_project` (`topic_name` ASC, `project_id` ASC) VISIBLE,
-    INDEX `project_idx_proj_topics` (`project_id` ASC) VISIBLE,
-    INDEX `subject_idx` (`subject_id` ASC) VISIBLE,
-    CONSTRAINT `project_idx_proj_topics`
-        FOREIGN KEY (`project_id`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `subject_idx`
-        FOREIGN KEY (`subject_id`)
-            REFERENCES `hopsworks`.`subjects` (`id`)
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.python_dep
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`python_dep`
-(
-    `id`           INT                                 NOT NULL AUTO_INCREMENT,
-    `dependency`   VARCHAR(128) CHARACTER SET 'latin1' NOT NULL,
-    `version`      VARCHAR(128) CHARACTER SET 'latin1' NOT NULL,
-    `repo_url`     VARCHAR(255)                        NOT NULL,
-    `preinstalled` TINYINT(1)                          NULL DEFAULT '0',
-    `install_type` INT                                 NOT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `dependency` (`dependency` ASC, `version` ASC, `install_type` ASC, `repo_url` ASC) VISIBLE
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 31
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-
--- ----------------------------------------------------------------------------
--- Table hopsworks.python_environment
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`python_environment`
-(
-    `id`                INT                                   NOT NULL AUTO_INCREMENT,
-    `project_id`        INT                                   NOT NULL,
-    `python_version`    VARCHAR(25) CHARACTER SET 'latin1'    NOT NULL,
+    `id`                int(11)                               NOT NULL AUTO_INCREMENT,
+    `project_id`        int(11)                               NOT NULL,
+    `python_version`    VARCHAR(25) COLLATE latin1_general_cs NOT NULL,
     `jupyter_conflicts` TINYINT(1)                            NOT NULL DEFAULT '0',
-    `conflicts`         VARCHAR(12000) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
+    `conflicts`         VARCHAR(12000) COLLATE latin1_general_cs       DEFAULT NULL,
+    UNIQUE KEY `project_env` (`project_id`),
     PRIMARY KEY (`id`),
-    UNIQUE INDEX `project_env` (`project_id` ASC) VISIBLE,
-    CONSTRAINT `FK_PYTHONENV_PROJECT`
-        FOREIGN KEY (`project_id`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    CONSTRAINT `FK_PYTHONENV_PROJECT` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.remote_group_project_mapping
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`remote_group_project_mapping`
-(
-    `id`           INT          NOT NULL AUTO_INCREMENT,
-    `remote_group` VARCHAR(256) NOT NULL,
-    `project`      INT          NOT NULL,
-    `project_role` VARCHAR(32)  NOT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `index3` (`remote_group`(255) ASC, `project` ASC) VISIBLE,
-    INDEX `fk_remote_group_project_mapping_1_idx` (`project` ASC) VISIBLE,
-    CONSTRAINT `fk_remote_group_project_mapping_1`
-        FOREIGN KEY (`project`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+--
+-- Table structure for table `default_job_configuration`
+--
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.remote_material_references
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`remote_material_references`
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `default_job_configuration`
 (
-    `username`   VARCHAR(128) CHARACTER SET 'latin1' NOT NULL,
-    `path`       VARCHAR(255) CHARACTER SET 'latin1' NOT NULL,
-    `references` INT                                 NOT NULL DEFAULT '0',
-    `lock`       INT                                 NOT NULL DEFAULT '0',
-    `lock_id`    VARCHAR(30) CHARACTER SET 'latin1'  NOT NULL DEFAULT '',
-    PRIMARY KEY (`username`, `path`)
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    `project_id` int(11)                                NOT NULL,
+    `type`       varchar(128) COLLATE latin1_general_cs NOT NULL,
+    `config`     VARCHAR(12500) COLLATE latin1_general_cs DEFAULT NULL,
+    PRIMARY KEY (`project_id`, `type`),
+    CONSTRAINT `FK_JOBCONFIG_PROJECT` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.remote_user
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`remote_user`
-(
-    `id`       INT                                 NOT NULL AUTO_INCREMENT,
-    `type`     VARCHAR(45) CHARACTER SET 'latin1'  NOT NULL,
-    `status`   VARCHAR(45) CHARACTER SET 'latin1'  NOT NULL DEFAULT '0',
-    `auth_key` VARCHAR(64) CHARACTER SET 'latin1'  NOT NULL,
-    `uuid`     VARCHAR(128) CHARACTER SET 'latin1' NOT NULL,
-    `uid`      INT                                 NOT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `uuid_UNIQUE` (`uuid` ASC) VISIBLE,
-    UNIQUE INDEX `uid_UNIQUE` (`uid` ASC) VISIBLE,
-    CONSTRAINT `FK_257_557`
-        FOREIGN KEY (`uid`)
-            REFERENCES `hopsworks`.`users` (`uid`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+--
+-- Table structure for table `project_pythondeps`
+--
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.roles_audit
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`roles_audit`
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `project_pythondeps`
 (
-    `log_id`           BIGINT                              NOT NULL AUTO_INCREMENT,
-    `target`           INT                                 NOT NULL,
-    `initiator`        INT                                 NOT NULL,
-    `action`           VARCHAR(45) CHARACTER SET 'latin1'  NULL DEFAULT NULL,
-    `action_timestamp` TIMESTAMP                           NULL DEFAULT NULL,
-    `message`          VARCHAR(45) CHARACTER SET 'latin1'  NULL DEFAULT NULL,
-    `ip`               VARCHAR(45) CHARACTER SET 'latin1'  NULL DEFAULT NULL,
-    `outcome`          VARCHAR(45) CHARACTER SET 'latin1'  NULL DEFAULT NULL,
-    `useragent`        VARCHAR(255) CHARACTER SET 'latin1' NULL DEFAULT NULL,
-    PRIMARY KEY (`log_id`),
-    INDEX `initiator` (`initiator` ASC) VISIBLE,
-    INDEX `target` (`target` ASC) VISIBLE,
-    CONSTRAINT `FK_257_280`
-        FOREIGN KEY (`initiator`)
-            REFERENCES `hopsworks`.`users` (`uid`),
-    CONSTRAINT `FK_257_281`
-        FOREIGN KEY (`target`)
-            REFERENCES `hopsworks`.`users` (`uid`)
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    `project_id` int(11) NOT NULL,
+    `dep_id`     int(10) NOT NULL,
+    PRIMARY KEY (`project_id`, `dep_id`),
+    KEY `dep_id` (`dep_id`),
+    CONSTRAINT `FK_284_513` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `FK_505_514` FOREIGN KEY (`dep_id`) REFERENCES `python_dep` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs
+    /*!50100 PARTITION BY KEY (project_id) */;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.rstudio_interpreter
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`rstudio_interpreter`
-(
-    `port`          INT                                 NOT NULL,
-    `name`          VARCHAR(255) CHARACTER SET 'latin1' NOT NULL,
-    `created`       TIMESTAMP                           NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `last_accessed` TIMESTAMP                           NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`port`, `name`),
-    CONSTRAINT `FK_575_582`
-        FOREIGN KEY (`port`)
-            REFERENCES `hopsworks`.`rstudio_project` (`port`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+--
+-- Table structure for table `project_services`
+--
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.rstudio_project
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`rstudio_project`
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `project_services`
 (
-    `port`          INT                                 NOT NULL,
-    `created`       TIMESTAMP                           NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `last_accessed` TIMESTAMP                           NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `host_ip`       VARCHAR(255) CHARACTER SET 'latin1' NOT NULL,
-    `token`         VARCHAR(255) CHARACTER SET 'latin1' NOT NULL,
-    `secret`        VARCHAR(64) CHARACTER SET 'latin1'  NOT NULL,
-    `pid`           BIGINT                              NOT NULL,
-    `project_id`    INT                                 NOT NULL,
-    PRIMARY KEY (`port`),
-    INDEX `project_id` (`project_id` ASC) VISIBLE,
-    CONSTRAINT `FK_284_578`
-        FOREIGN KEY (`project_id`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    `project_id` int(11)                               NOT NULL,
+    `service`    varchar(32) COLLATE latin1_general_cs NOT NULL,
+    PRIMARY KEY (`project_id`, `service`),
+    CONSTRAINT `FK_284_300` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.rstudio_settings
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`rstudio_settings`
+--
+-- Table structure for table `project_team`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `project_team`
 (
-    `project_id`                INT                                                             NOT NULL,
-    `team_member`               VARCHAR(150) CHARACTER SET 'latin1' COLLATE 'latin1_general_cs' NOT NULL,
-    `num_tf_ps`                 INT                                                             NULL     DEFAULT '1',
-    `num_tf_gpus`               INT                                                             NULL     DEFAULT '0',
-    `num_mpi_np`                INT                                                             NULL     DEFAULT '1',
-    `appmaster_cores`           INT                                                             NULL     DEFAULT '1',
-    `appmaster_memory`          INT                                                             NULL     DEFAULT '1024',
-    `num_executors`             INT                                                             NULL     DEFAULT '1',
-    `num_executor_cores`        INT                                                             NULL     DEFAULT '1',
-    `executor_memory`           INT                                                             NULL     DEFAULT '1024',
-    `dynamic_initial_executors` INT                                                             NULL     DEFAULT '1',
-    `dynamic_min_executors`     INT                                                             NULL     DEFAULT '1',
-    `dynamic_max_executors`     INT                                                             NULL     DEFAULT '1',
-    `secret`                    VARCHAR(255) CHARACTER SET 'latin1'                             NOT NULL,
-    `log_level`                 VARCHAR(32) CHARACTER SET 'latin1'                              NULL     DEFAULT 'INFO',
-    `mode`                      VARCHAR(32) CHARACTER SET 'latin1'                              NOT NULL,
-    `umask`                     VARCHAR(32) CHARACTER SET 'latin1'                              NULL     DEFAULT '022',
-    `advanced`                  TINYINT(1)                                                      NULL     DEFAULT '0',
-    `archives`                  VARCHAR(1500) CHARACTER SET 'latin1'                            NULL     DEFAULT '',
-    `jars`                      VARCHAR(1500) CHARACTER SET 'latin1'                            NULL     DEFAULT '',
-    `files`                     VARCHAR(1500) CHARACTER SET 'latin1'                            NULL     DEFAULT '',
-    `py_files`                  VARCHAR(1500) CHARACTER SET 'latin1'                            NULL     DEFAULT '',
-    `spark_params`              VARCHAR(6500) CHARACTER SET 'latin1'                            NULL     DEFAULT '',
-    `shutdown_level`            INT                                                             NOT NULL DEFAULT '6',
+    `project_id`  int(11)                                NOT NULL,
+    `team_member` varchar(150) COLLATE latin1_general_cs NOT NULL,
+    `team_role`   varchar(32) COLLATE latin1_general_cs  NOT NULL,
+    `added`       timestamp                              NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`project_id`, `team_member`),
-    INDEX `team_member` (`team_member` ASC) VISIBLE,
-    INDEX `secret_idx` (`secret` ASC) VISIBLE,
-    CONSTRAINT `RS_FK_PROJS`
-        FOREIGN KEY (`project_id`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `RS_FK_USERS`
-        FOREIGN KEY (`team_member`)
-            REFERENCES `hopsworks`.`users` (`email`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    KEY `team_member` (`team_member`),
+    CONSTRAINT `FK_262_304` FOREIGN KEY (`team_member`) REFERENCES `users` (`email`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `FK_284_303` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.schemas
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`schemas`
+--
+-- table structure for table `schemas`
+--
+
+/*!40101 set @saved_cs_client = @@character_set_client */;
+/*!40101 set character_set_client = utf8 */;
+CREATE TABLE `schemas`
 (
-    `id`         INT                                   NOT NULL AUTO_INCREMENT,
-    `schema`     VARCHAR(29000) CHARACTER SET 'latin1' NOT NULL,
-    `project_id` INT                                   NOT NULL,
+    `id`         int(11)                                  NOT NULL AUTO_INCREMENT,
+    `schema`     varchar(29000) COLLATE latin1_general_cs NOT NULL,
+    `project_id` int(11)                                  NOT NULL,
     PRIMARY KEY (`id`),
-    INDEX `project_idx_schemas` (`project_id` ASC) VISIBLE,
-    CONSTRAINT `project_idx_schemas`
-        FOREIGN KEY (`project_id`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    CONSTRAINT `project_idx_schemas` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+--
+-- table structure for table `subjects`
+--
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.secrets
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`secrets`
+/*!40101 set @saved_cs_client = @@character_set_client */;
+/*!40101 set character_set_client = utf8 */;
+CREATE TABLE `subjects`
+(
+    `id`         int(11)                                NOT NULL AUTO_INCREMENT,
+    `subject`    varchar(255) COLLATE latin1_general_cs NOT NULL,
+    `version`    int(11)                                NOT NULL,
+    `schema_id`  int(11)                                NOT NULL,
+    `project_id` int(11)                                NOT NULL,
+    `created_on` timestamp                              NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `project_id_idx` (`project_id`),
+    KEY `created_on_idx` (`created_on`),
+    CONSTRAINT `project_idx_subjects` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `schema_id_idx` FOREIGN KEY (`schema_id`) REFERENCES `schemas` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT `subjects__constraint_key` UNIQUE (`subject`, `version`, `project_id`)
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `subjects_compatibility`
+--
+CREATE TABLE `subjects_compatibility`
+(
+    `id`            int(11)                                                                                                      NOT NULL AUTO_INCREMENT,
+    `subject`       varchar(255) COLLATE latin1_general_cs                                                                       NOT NULL,
+    `compatibility` ENUM ('BACKWARD', 'BACKWARD_TRANSITIVE', 'FORWARD', 'FORWARD_TRANSITIVE', 'FULL', 'FULL_TRANSITIVE', 'NONE') NOT NULL DEFAULT 'BACKWARD',
+    `project_id`    int(11)                                                                                                      NOT NULL,
+    PRIMARY KEY (`id`),
+    CONSTRAINT `subjects_compatibility__constraint_key` UNIQUE (`subject`, `project_id`),
+    CONSTRAINT `project_idx_sub_comp` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+
+--
+-- Table structure for table `project_topics`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `project_topics`
+(
+    `topic_name`     varchar(255) COLLATE latin1_general_cs NOT NULL,
+    `project_id`     int(11)                                NOT NULL,
+    `id`             int(11)                                NOT NULL AUTO_INCREMENT,
+    `subject_id`     int(11) DEFAULT NULL,
+    `num_partitions` int(11) DEFAULT NULL,
+    `num_replicas`   int(11) DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `topic_name_UNIQUE` (`topic_name`),
+    UNIQUE KEY `topic_project` (`topic_name`, `project_id`),
+    CONSTRAINT `project_idx_proj_topics` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `subject_idx` FOREIGN KEY (`subject_id`) REFERENCES `subjects` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `python_dep`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `python_dep`
+(
+    `id`           int(11)                                NOT NULL AUTO_INCREMENT,
+    `dependency`   varchar(128) COLLATE latin1_general_cs NOT NULL,
+    `version`      varchar(128) COLLATE latin1_general_cs NOT NULL,
+    `repo_url`     varchar(255)                           NOT NULL,
+    `preinstalled` tinyint(1) DEFAULT '0',
+    `install_type` int(11)                                NOT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `dependency` (`dependency`, `version`, `install_type`, `repo_url`)
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 31
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `remote_material_references`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `remote_material_references`
+(
+    `username`   varchar(128) COLLATE latin1_general_cs NOT NULL,
+    `path`       varchar(255) COLLATE latin1_general_cs NOT NULL,
+    `references` int(11)                                NOT NULL DEFAULT '0',
+    `lock`       int(1)                                 NOT NULL DEFAULT '0',
+    `lock_id`    varchar(30) COLLATE latin1_general_cs  NOT NULL DEFAULT '',
+    PRIMARY KEY (`username`, `path`)
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `remote_user`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `remote_user`
+(
+    `id`       int(11)                                NOT NULL AUTO_INCREMENT,
+    `type`     varchar(45) COLLATE latin1_general_cs  NOT NULL,
+    `status`   varchar(45) COLLATE latin1_general_cs  NOT NULL DEFAULT '0',
+    `auth_key` varchar(64) COLLATE latin1_general_cs  NOT NULL,
+    `uuid`     varchar(128) COLLATE latin1_general_cs NOT NULL,
+    `uid`      int(11)                                NOT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uuid_UNIQUE` (`uuid`),
+    UNIQUE KEY `uid_UNIQUE` (`uid`),
+    CONSTRAINT `FK_257_557` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `roles_audit`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `roles_audit`
+(
+    `log_id`           bigint(20) NOT NULL AUTO_INCREMENT,
+    `target`           int(11)    NOT NULL,
+    `initiator`        int(11)    NOT NULL,
+    `action`           varchar(45) COLLATE latin1_general_cs  DEFAULT NULL,
+    `action_timestamp` timestamp  NULL                        DEFAULT NULL,
+    `message`          varchar(45) COLLATE latin1_general_cs  DEFAULT NULL,
+    `ip`               varchar(45) COLLATE latin1_general_cs  DEFAULT NULL,
+    `outcome`          varchar(45) COLLATE latin1_general_cs  DEFAULT NULL,
+    `useragent`        varchar(255) COLLATE latin1_general_cs DEFAULT NULL,
+    PRIMARY KEY (`log_id`),
+    KEY `initiator` (`initiator`),
+    KEY `target` (`target`),
+    CONSTRAINT `FK_257_280` FOREIGN KEY (`initiator`) REFERENCES `users` (`uid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT `FK_257_281` FOREIGN KEY (`target`) REFERENCES `users` (`uid`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `rstudio_interpreter`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `rstudio_interpreter`
+(
+    `port`          int(11)                                NOT NULL,
+    `name`          varchar(255) COLLATE latin1_general_cs NOT NULL,
+    `created`       timestamp                              NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_accessed` timestamp                              NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`port`, `name`),
+    CONSTRAINT `FK_575_582` FOREIGN KEY (`port`) REFERENCES `rstudio_project` (`port`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `rstudio_project`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `rstudio_project`
+(
+    `port`          int(11)                                NOT NULL,
+    `created`       timestamp                              NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_accessed` timestamp                              NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `host_ip`       varchar(255) COLLATE latin1_general_cs NOT NULL,
+    `token`         varchar(255) COLLATE latin1_general_cs NOT NULL,
+    `secret`        varchar(64) COLLATE latin1_general_cs  NOT NULL,
+    `pid`           bigint(20)                             NOT NULL,
+    `project_id`    int(11)                                NOT NULL,
+    PRIMARY KEY (`port`),
+    KEY `project_id` (`project_id`),
+    CONSTRAINT `FK_284_578` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `rstudio_settings`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `rstudio_settings`
+(
+    `project_id`                int(11)                                NOT NULL,
+    `team_member`               varchar(150) COLLATE latin1_general_cs NOT NULL,
+    `num_tf_ps`                 int(11)                                         DEFAULT '1',
+    `num_tf_gpus`               int(11)                                         DEFAULT '0',
+    `num_mpi_np`                int(11)                                         DEFAULT '1',
+    `appmaster_cores`           int(11)                                         DEFAULT '1',
+    `appmaster_memory`          int(11)                                         DEFAULT '1024',
+    `num_executors`             int(11)                                         DEFAULT '1',
+    `num_executor_cores`        int(11)                                         DEFAULT '1',
+    `executor_memory`           int(11)                                         DEFAULT '1024',
+    `dynamic_initial_executors` int(11)                                         DEFAULT '1',
+    `dynamic_min_executors`     int(11)                                         DEFAULT '1',
+    `dynamic_max_executors`     int(11)                                         DEFAULT '1',
+    `secret`                    varchar(255) COLLATE latin1_general_cs NOT NULL,
+    `log_level`                 varchar(32) COLLATE latin1_general_cs           DEFAULT 'INFO',
+    `mode`                      varchar(32) COLLATE latin1_general_cs  NOT NULL,
+    `umask`                     varchar(32) COLLATE latin1_general_cs           DEFAULT '022',
+    `advanced`                  tinyint(1)                                      DEFAULT '0',
+    `archives`                  varchar(1500) COLLATE latin1_general_cs         DEFAULT '',
+    `jars`                      varchar(1500) COLLATE latin1_general_cs         DEFAULT '',
+    `files`                     varchar(1500) COLLATE latin1_general_cs         DEFAULT '',
+    `py_files`                  varchar(1500) COLLATE latin1_general_cs         DEFAULT '',
+    `spark_params`              varchar(6500) COLLATE latin1_general_cs         DEFAULT '',
+    `shutdown_level`            int(11)                                NOT NULL DEFAULT '6',
+    PRIMARY KEY (`project_id`, `team_member`),
+    KEY `team_member` (`team_member`),
+    KEY `secret_idx` (`secret`),
+    CONSTRAINT `RS_FK_USERS` FOREIGN KEY (`team_member`) REFERENCES `users` (`email`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `RS_FK_PROJS` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `serving`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `serving`
+(
+    `id`                     int(11)                                NOT NULL AUTO_INCREMENT,
+    `local_port`             int(11)                                         DEFAULT NULL,
+    `cid`                    varchar(255) COLLATE latin1_general_cs          DEFAULT NULL,
+    `project_id`             int(11)                                NOT NULL,
+    `created`                timestamp                              NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `name`                   varchar(255) COLLATE latin1_general_cs NOT NULL,
+    `description`            varchar(1000) COLLATE latin1_general_cs         DEFAULT NULL,
+    `model_path`             varchar(255) COLLATE latin1_general_cs NOT NULL,
+    `artifact_version`       int(11)                                         DEFAULT NULL,
+    `predictor`              varchar(255) COLLATE latin1_general_cs          DEFAULT NULL,
+    `transformer`            varchar(255) COLLATE latin1_general_cs          DEFAULT NULL,
+    `model_name`             varchar(255) COLLATE latin1_general_cs NOT NULL,
+    `model_version`          int(11)                                NOT NULL,
+    `model_framework`        int(11)                                NOT NULL,
+    `local_dir`              varchar(255) COLLATE latin1_general_cs          DEFAULT NULL,
+    `batching_configuration` varchar(255) COLLATE latin1_general_cs          DEFAULT NULL,
+    `optimized`              tinyint(4)                             NOT NULL DEFAULT '0',
+    `instances`              int(11)                                NOT NULL DEFAULT '0',
+    `transformer_instances`  int(11)                                         DEFAULT NULL,
+    `creator`                int(11)                                         DEFAULT NULL,
+    `lock_ip`                varchar(15) COLLATE latin1_general_cs           DEFAULT NULL,
+    `lock_timestamp`         bigint(20)                                      DEFAULT NULL,
+    `kafka_topic_id`         int(11)                                         DEFAULT NULL,
+    `inference_logging`      int(11)                                         DEFAULT NULL,
+    `model_server`           int(11)                                NOT NULL DEFAULT '0',
+    `serving_tool`           int(11)                                NOT NULL DEFAULT '0',
+    `deployed`               timestamp                                       DEFAULT NULL,
+    `revision`               varchar(8)                                      DEFAULT NULL,
+    `predictor_resources`    varchar(1000) COLLATE latin1_general_cs         DEFAULT NULL,
+    `transformer_resources`  varchar(1000) COLLATE latin1_general_cs         DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `Serving_Constraint` (`project_id`, `name`),
+    KEY `user_fk` (`creator`),
+    KEY `kafka_fk` (`kafka_topic_id`),
+    KEY `name_k` (`name`),
+    CONSTRAINT `user_fk_serving` FOREIGN KEY (`creator`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `kafka_fk` FOREIGN KEY (`kafka_topic_id`) REFERENCES `project_topics` (`id`) ON DELETE SET NULL ON UPDATE NO ACTION,
+    CONSTRAINT `FK_284_315` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `system_commands`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `system_commands`
+(
+    `id`        bigint(20)                            NOT NULL AUTO_INCREMENT,
+    `host_id`   int(11)                               NOT NULL,
+    `op`        varchar(50) COLLATE latin1_general_cs NOT NULL,
+    `status`    varchar(20) COLLATE latin1_general_cs NOT NULL,
+    `priority`  int(11)                               NOT NULL DEFAULT '0',
+    `exec_user` varchar(50) COLLATE latin1_general_cs          DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    KEY `host_id` (`host_id`),
+    CONSTRAINT `FK_481_349` FOREIGN KEY (`host_id`) REFERENCES `hosts` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 3816
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `system_commands_args`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `system_commands_args`
+(
+    `id`         int(11)    NOT NULL AUTO_INCREMENT,
+    `command_id` bigint(20) NOT NULL,
+    `arguments`  varchar(13900) COLLATE latin1_general_cs DEFAULT '',
+    PRIMARY KEY (`id`),
+    KEY `command_id_idx` (`command_id`),
+    CONSTRAINT `command_id_fk` FOREIGN KEY (`command_id`) REFERENCES `system_commands` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 3816
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `tensorboard`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `tensorboard`
+(
+    `project_id`    int(11)                                  NOT NULL,
+    `user_id`       int(11)                                  NOT NULL,
+    `endpoint`      varchar(100) COLLATE latin1_general_cs   NOT NULL,
+    `ml_id`         varchar(100) COLLATE latin1_general_cs   NOT NULL,
+    `cid`           varchar(255) COLLATE latin1_general_cs   NOT NULL,
+    `last_accessed` timestamp                                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `hdfs_logdir`   varchar(10000) COLLATE latin1_general_cs NOT NULL,
+    `secret`        varchar(255) COLLATE latin1_general_cs   NOT NULL,
+    PRIMARY KEY (`project_id`, `user_id`),
+    KEY `user_id_fk` (`user_id`),
+    CONSTRAINT `user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `project_id_fk` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+CREATE TABLE `feature_view`
+(
+    `id`               int(11)     NOT NULL AUTO_INCREMENT,
+    `name`             varchar(63) NOT NULL,
+    `feature_store_id` int(11)     NOT NULL,
+    `created`          timestamp   NULL                         DEFAULT CURRENT_TIMESTAMP,
+    `creator`          int(11)     NOT NULL,
+    `version`          int(11)     NOT NULL,
+    `description`      varchar(10000) COLLATE latin1_general_cs DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `name_version` (`feature_store_id`, `name`, `version`),
+    KEY `feature_store_id` (`feature_store_id`),
+    KEY `creator` (`creator`),
+    CONSTRAINT `fv_creator_fk` FOREIGN KEY (`creator`) REFERENCES `users` (`uid`) ON
+        DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT `fv_feature_store_id_fk` FOREIGN KEY (`feature_store_id`) REFERENCES
+        `feature_store` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 9
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+--
+-- Table structure for table `training_dataset`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `training_dataset`
+(
+    `id`                           int(11)                                NOT NULL AUTO_INCREMENT,
+    `name`                         varchar(63)                            NOT NULL,
+    `feature_store_id`             int(11)                                NOT NULL,
+    `created`                      timestamp                              NULL     DEFAULT CURRENT_TIMESTAMP,
+    `creator`                      int(11)                                NOT NULL,
+    `version`                      int(11)                                NOT NULL,
+    `data_format`                  varchar(128) COLLATE latin1_general_cs NOT NULL,
+    `description`                  varchar(10000) COLLATE latin1_general_cs        DEFAULT NULL,
+    `hopsfs_training_dataset_id`   INT(11)                                NULL,
+    `external_training_dataset_id` INT(11)                                NULL,
+    `training_dataset_type`        INT(11)                                NOT NULL DEFAULT '0',
+    `seed`                         BIGINT(11)                             NULL,
+    `query`                        TINYINT(1)                             NOT NULL DEFAULT '0',
+    `coalesce`                     TINYINT(1)                             NOT NULL DEFAULT '0',
+    `train_split`                  VARCHAR(63) COLLATE latin1_general_cs           DEFAULT NULL,
+    `feature_view_id`              INT(11)                                NULL,
+    `start_time`                   TIMESTAMP                              NULL,
+    `end_time`                     TIMESTAMP                              NULL,
+    `sample_ratio`                 FLOAT                                  NULL,
+    `connector_id`                 INT(11)                                NULL,
+    `connector_path`               VARCHAR(1000)                          NULL,
+    `tag_path`                     VARCHAR(1000)                          NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `name_version` (`feature_store_id`, `feature_view_id`, `name`, `version`),
+    KEY `feature_store_id` (`feature_store_id`),
+    KEY `creator` (`creator`),
+    CONSTRAINT `td_feature_view_fk` FOREIGN KEY (`feature_view_id`) REFERENCES
+        `feature_view` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `FK_1012_877` FOREIGN KEY (`creator`) REFERENCES `users` (`uid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT `FK_656_817` FOREIGN KEY (`feature_store_id`) REFERENCES `feature_store` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `td_conn_fk` FOREIGN KEY (`connector_id`) REFERENCES `hopsworks`.`feature_store_connector` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 9
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `training_dataset_feature`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `training_dataset_feature`
+(
+    `id`                      int(11)                                 NOT NULL AUTO_INCREMENT,
+    `training_dataset`        int(11)                                 NULL,
+    `feature_group`           int(11)                                 NULL,
+    `name`                    varchar(1000) COLLATE latin1_general_cs NOT NULL,
+    `type`                    varchar(1000) COLLATE latin1_general_cs,
+    `td_join`                 int(11)                                 NULL,
+    `idx`                     int(11)                                 NULL,
+    `label`                   tinyint(1)                              NOT NULL DEFAULT '0',
+    `transformation_function` int(11)                                 NULL,
+    `feature_view_id`         INT(11)                                 NULL,
+    PRIMARY KEY (`id`),
+    KEY `td_key` (`training_dataset`),
+    KEY `fg_key` (`feature_group`),
+    CONSTRAINT `tdf_feature_view_fk` FOREIGN KEY (`feature_view_id`)
+        REFERENCES `feature_view` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `join_fk_tdf` FOREIGN KEY (`td_join`) REFERENCES `training_dataset_join` (`id`) ON DELETE SET NULL ON UPDATE NO ACTION,
+    CONSTRAINT `td_fk_tdf` FOREIGN KEY (`training_dataset`) REFERENCES `training_dataset` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fg_fk_tdf` FOREIGN KEY (`feature_group`) REFERENCES `feature_group` (`id`) ON DELETE SET NULL ON UPDATE NO ACTION,
+    CONSTRAINT `tfn_fk_tdf` FOREIGN KEY (`transformation_function`) REFERENCES `transformation_function` (`id`) ON DELETE SET NULL ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `training_dataset_join`
+(
+    `id`                      int(11)     NOT NULL AUTO_INCREMENT,
+    `training_dataset`        int(11)     NULL,
+    `feature_group`           int(11)     NULL,
+    `feature_group_commit_id` BIGINT(20)  NULL,
+    `type`                    tinyint(5)  NOT NULL DEFAULT 0,
+    `idx`                     int(11)     NOT NULL DEFAULT 0,
+    `prefix`                  VARCHAR(63) NULL,
+    `feature_view_id`         INT(11)     NULL,
+    PRIMARY KEY (`id`),
+    KEY `fg_key` (`feature_group`),
+    CONSTRAINT `tdj_feature_view_fk` FOREIGN KEY (`feature_view_id`) REFERENCES
+        `feature_view` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `td_fk_tdj` FOREIGN KEY (`training_dataset`) REFERENCES `training_dataset` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fg_left` FOREIGN KEY (`feature_group`) REFERENCES `feature_group` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `training_dataset_join_condition`
+(
+    `id`            int(11)       NOT NULL AUTO_INCREMENT,
+    `td_join`       int(11)       NOT NULL,
+    `left_feature`  VARCHAR(1000) NOT NULL DEFAULT "",
+    `right_feature` VARCHAR(1000) NOT NULL DEFAULT "",
+    PRIMARY KEY (`id`),
+    KEY `join_key` (`td_join`),
+    CONSTRAINT `join_fk_tdjc` FOREIGN KEY (`td_join`) REFERENCES `training_dataset_join` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `on_demand_feature`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `on_demand_feature`
+(
+    `id`                         int(11)                                 NOT NULL AUTO_INCREMENT,
+    `on_demand_feature_group_id` int(11)                                 NULL,
+    `name`                       varchar(1000) COLLATE latin1_general_cs NOT NULL,
+    `primary_column`             tinyint(1)                              NOT NULL DEFAULT '0',
+    `description`                varchar(10000) COLLATE latin1_general_cs,
+    `type`                       varchar(1000) COLLATE latin1_general_cs NOT NULL,
+    `idx`                        int(11)                                 NOT NULL DEFAULT 0,
+    `default_value`              VARCHAR(400)                            NULL,
+    PRIMARY KEY (`id`),
+    KEY `on_demand_feature_group_fk` (`on_demand_feature_group_id`),
+    CONSTRAINT `on_demand_feature_group_fk1` FOREIGN KEY (`on_demand_feature_group_id`) REFERENCES `on_demand_feature_group` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `on_demand_option`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `on_demand_option`
+(
+    `id`                         int(11)                                NOT NULL AUTO_INCREMENT,
+    `on_demand_feature_group_id` int(11)                                NULL,
+    `name`                       varchar(255) COLLATE latin1_general_cs NOT NULL,
+    `value`                      varchar(255) COLLATE latin1_general_cs NOT NULL,
+    PRIMARY KEY (`id`),
+    KEY `on_demand_option_key` (`on_demand_feature_group_id`),
+    CONSTRAINT `on_demand_option_fk` FOREIGN KEY (`on_demand_feature_group_id`) REFERENCES `on_demand_feature_group` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+
+--
+-- Table structure for table `training_dataset_split`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE IF NOT EXISTS `training_dataset_split`
+(
+    `id`                  int(11)                               NOT NULL AUTO_INCREMENT,
+    `training_dataset_id` int(11)                               NOT NULL,
+    `name`                varchar(63) COLLATE latin1_general_cs NOT NULL,
+    `percentage`          float                                 NULL,
+    `split_type`          VARCHAR(40)                           NULL,
+    `start_time`          TIMESTAMP                             NULL,
+    `end_Time`            TIMESTAMP                             NULL,
+    PRIMARY KEY (`id`),
+    KEY `training_dataset_id` (`training_dataset_id`),
+    UNIQUE KEY `dataset_id_split_name` (`training_dataset_id`, `name`),
+    CONSTRAINT `training_dataset_fk` FOREIGN KEY (`training_dataset_id`) REFERENCES `training_dataset` (`id`) ON DELETE
+        CASCADE ON UPDATE NO ACTION
+
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `user_certs`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_certs`
+(
+    `projectname`  varchar(100) COLLATE latin1_general_cs NOT NULL,
+    `username`     varchar(10) COLLATE latin1_general_cs  NOT NULL,
+    `user_key`     varbinary(7000)                        DEFAULT NULL,
+    `user_cert`    varbinary(3000)                        DEFAULT NULL,
+    `user_key_pwd` varchar(200) COLLATE latin1_general_cs DEFAULT NULL,
+    PRIMARY KEY (`projectname`, `username`),
+    KEY `username` (`username`),
+    CONSTRAINT `FK_260_465` FOREIGN KEY (`username`) REFERENCES `users` (`username`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `FK_287_464` FOREIGN KEY (`projectname`) REFERENCES `project` (`projectname`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `user_group`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_group`
+(
+    `uid` int(11) NOT NULL,
+    `gid` int(11) NOT NULL,
+    PRIMARY KEY (`uid`, `gid`),
+    KEY `gid` (`gid`),
+    CONSTRAINT `FK_257_268` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `FK_255_269` FOREIGN KEY (`gid`) REFERENCES `bbc_group` (`gid`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `userlogins`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `userlogins`
+(
+    `login_id`   bigint(20) NOT NULL AUTO_INCREMENT,
+    `ip`         varchar(45) COLLATE latin1_general_cs  DEFAULT NULL,
+    `useragent`  varchar(255) COLLATE latin1_general_cs DEFAULT NULL,
+    `action`     varchar(80) COLLATE latin1_general_cs  DEFAULT NULL,
+    `outcome`    varchar(20) COLLATE latin1_general_cs  DEFAULT NULL,
+    `uid`        int(11)    NOT NULL,
+    `login_date` timestamp  NULL                        DEFAULT NULL,
+    PRIMARY KEY (`login_id`),
+    KEY `login_date` (`login_date`),
+    KEY `uid` (`uid`),
+    CONSTRAINT `FK_257_345` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 316
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `users`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `users`
+(
+    `uid`                    int(11)                                NOT NULL AUTO_INCREMENT,
+    `username`               varchar(10) COLLATE latin1_general_cs  NOT NULL,
+    `password`               varchar(128) COLLATE latin1_general_cs NOT NULL,
+    `email`                  varchar(150) COLLATE latin1_general_cs                 DEFAULT NULL,
+    `fname`                  varchar(30) CHARSET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+    `lname`                  varchar(30) CHARSET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+    `activated`              timestamp                              NOT NULL        DEFAULT CURRENT_TIMESTAMP,
+    `title`                  varchar(10) COLLATE latin1_general_cs                  DEFAULT '-',
+    `false_login`            int(11)                                NOT NULL        DEFAULT '-1',
+    `status`                 int(11)                                NOT NULL        DEFAULT '-1',
+    `isonline`               int(11)                                NOT NULL        DEFAULT '-1',
+    `secret`                 varchar(20) COLLATE latin1_general_cs                  DEFAULT NULL,
+    `validation_key`         varchar(128) COLLATE latin1_general_cs                 DEFAULT NULL,
+    `validation_key_updated` timestamp                                              DEFAULT NULL,
+    `validation_key_type`    VARCHAR(20)                                            DEFAULT NULL,
+    `mode`                   int(11)                                NOT NULL        DEFAULT '0',
+    `password_changed`       timestamp                              NOT NULL        DEFAULT CURRENT_TIMESTAMP,
+    `notes`                  varchar(500) COLLATE latin1_general_cs                 DEFAULT '-',
+    `max_num_projects`       int(11)                                NOT NULL,
+    `num_active_projects`    int(11)                                NOT NULL        DEFAULT '0',
+    `two_factor`             tinyint(1)                             NOT NULL        DEFAULT '1',
+    `tours_state`            tinyint(1)                             NOT NULL        DEFAULT '0',
+    `salt`                   varchar(128) COLLATE latin1_general_cs NOT NULL        DEFAULT '',
+    PRIMARY KEY (`uid`),
+    UNIQUE KEY `username` (`username`),
+    UNIQUE KEY `email` (`email`)
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 10178
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Temporary table structure for view `users_groups`
+--
+
+SET @saved_cs_client = @@character_set_client;
+SET character_set_client = utf8;
+/*!50001 CREATE VIEW `users_groups` AS
+SELECT 1 AS `username`,
+       1 AS `password`,
+       1 AS `secret`,
+       1 AS `email`,
+       1 AS `group_name`
+        */;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Table structure for table `variables`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `variables`
+(
+    `id`         varchar(255) COLLATE latin1_general_cs  NOT NULL,
+    `value`      varchar(1024) COLLATE latin1_general_cs NOT NULL,
+    `visibility` TINYINT                                 NOT NULL DEFAULT 0,
+    `hide`       TINYINT                                 NOT NULL DEFAULT 0,
+    PRIMARY KEY (`id`)
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Final view structure for view `users_groups`
+--
+
+/*!50001 DROP VIEW IF EXISTS `users_groups`*/;
+/*!50001 SET @saved_cs_client = @@character_set_client */;
+/*!50001 SET @saved_cs_results = @@character_set_results */;
+/*!50001 SET @saved_col_connection = @@collation_connection */;
+/*!50001 SET character_set_client = utf8 */;
+/*!50001 SET character_set_results = utf8 */;
+/*!50001 SET collation_connection = utf8_general_ci */;
+/*!50001 CREATE ALGORITHM = UNDEFINED */ /*!50001 VIEW `users_groups` AS
+select `u`.`username`   AS `username`,
+       `u`.`password`   AS `password`,
+       `u`.`secret`     AS `secret`,
+       `u`.`email`      AS `email`,
+       `g`.`group_name` AS `group_name`
+from ((`user_group` `ug` join `users` `u` on ((`u`.`uid` = `ug`.`uid`))) join `bbc_group` `g`
+      on ((`g`.`gid` = `ug`.`gid`)))
+        */;
+/*!50001 SET character_set_client = @saved_cs_client */;
+/*!50001 SET character_set_results = @saved_cs_results */;
+/*!50001 SET collation_connection = @saved_col_connection */;
+/*!40103 SET TIME_ZONE = @OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE = @OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS = @OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS = @OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT = @OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS = @OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION = @OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES = @OLD_SQL_NOTES */;
+
+-- Dump completed on 2019-06-14  8:07:38
+
+CREATE TABLE IF NOT EXISTS `secrets`
 (
     `uid`         INT              NOT NULL,
     `secret_name` VARCHAR(200)     NOT NULL,
     `secret`      VARBINARY(10000) NOT NULL,
     `added_on`    TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `visibility`  TINYINT          NOT NULL,
-    `pid_scope`   INT              NULL     DEFAULT NULL,
+    `pid_scope`   INT                       DEFAULT NULL,
     PRIMARY KEY (`uid`, `secret_name`),
-    CONSTRAINT `secrets_ibfk_1`
-        FOREIGN KEY (`uid`)
-            REFERENCES `hopsworks`.`users` (`uid`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    FOREIGN KEY `secret_uid` (`uid`) REFERENCES `users` (`uid`)
+        ON DELETE CASCADE
+        ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.serving
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`serving`
+CREATE TABLE IF NOT EXISTS `api_key`
 (
-    `id`                     INT                                  NOT NULL AUTO_INCREMENT,
-    `local_port`             INT                                  NULL     DEFAULT NULL,
-    `cid`                    VARCHAR(255) CHARACTER SET 'latin1'  NULL     DEFAULT NULL,
-    `project_id`             INT                                  NOT NULL,
-    `created`                TIMESTAMP                            NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `name`                   VARCHAR(255) CHARACTER SET 'latin1'  NOT NULL,
-    `description`            VARCHAR(1000) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `model_path`             VARCHAR(255) CHARACTER SET 'latin1'  NOT NULL,
-    `artifact_version`       INT                                  NULL     DEFAULT NULL,
-    `predictor`              VARCHAR(255) CHARACTER SET 'latin1'  NULL     DEFAULT NULL,
-    `transformer`            VARCHAR(255) CHARACTER SET 'latin1'  NULL     DEFAULT NULL,
-    `model_name`             VARCHAR(255) CHARACTER SET 'latin1'  NOT NULL,
-    `model_version`          INT                                  NOT NULL,
-    `model_framework`        INT                                  NOT NULL,
-    `local_dir`              VARCHAR(255) CHARACTER SET 'latin1'  NULL     DEFAULT NULL,
-    `batching_configuration` VARCHAR(255) CHARACTER SET 'latin1'  NULL     DEFAULT NULL,
-    `optimized`              TINYINT                              NOT NULL DEFAULT '0',
-    `instances`              INT                                  NOT NULL DEFAULT '0',
-    `transformer_instances`  INT                                  NULL     DEFAULT NULL,
-    `creator`                INT                                  NULL     DEFAULT NULL,
-    `lock_ip`                VARCHAR(15) CHARACTER SET 'latin1'   NULL     DEFAULT NULL,
-    `lock_timestamp`         BIGINT                               NULL     DEFAULT NULL,
-    `kafka_topic_id`         INT                                  NULL     DEFAULT NULL,
-    `inference_logging`      INT                                  NULL     DEFAULT NULL,
-    `model_server`           INT                                  NOT NULL DEFAULT '0',
-    `serving_tool`           INT                                  NOT NULL DEFAULT '0',
-    `deployed`               TIMESTAMP                            NULL     DEFAULT NULL,
-    `revision`               VARCHAR(8)                           NULL     DEFAULT NULL,
-    `predictor_resources`    VARCHAR(1000) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `transformer_resources`  VARCHAR(1000) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
+    `id`       int(11)      NOT NULL AUTO_INCREMENT,
+    `prefix`   varchar(45)  NOT NULL,
+    `secret`   varchar(512) NOT NULL,
+    `salt`     varchar(256) NOT NULL,
+    `created`  timestamp    NOT NULL,
+    `modified` timestamp    NOT NULL,
+    `name`     varchar(45)  NOT NULL,
+    `user_id`  int(11)      NOT NULL,
+    `reserved` tinyint(1) DEFAULT '0',
     PRIMARY KEY (`id`),
-    UNIQUE INDEX `Serving_Constraint` (`project_id` ASC, `name` ASC) VISIBLE,
-    INDEX `user_fk` (`creator` ASC) VISIBLE,
-    INDEX `kafka_fk` (`kafka_topic_id` ASC) VISIBLE,
-    INDEX `name_k` (`name` ASC) VISIBLE,
-    CONSTRAINT `FK_284_315`
-        FOREIGN KEY (`project_id`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `kafka_fk`
-        FOREIGN KEY (`kafka_topic_id`)
-            REFERENCES `hopsworks`.`project_topics` (`id`)
-            ON DELETE SET NULL,
-    CONSTRAINT `user_fk_serving`
-        FOREIGN KEY (`creator`)
-            REFERENCES `hopsworks`.`users` (`uid`)
-            ON DELETE CASCADE
+    UNIQUE KEY `prefix_UNIQUE` (`prefix`),
+    UNIQUE KEY `index4` (`user_id`, `name`),
+    KEY `fk_api_key_1_idx` (`user_id`),
+    CONSTRAINT `fk_api_key_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
 )
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
+    ENGINE = ndbcluster
+    DEFAULT CHARSET = latin1
     COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.serving_key
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`serving_key`
+CREATE TABLE IF NOT EXISTS `api_key_scope`
 (
-    `id`               INT           NOT NULL AUTO_INCREMENT,
-    `prefix`           VARCHAR(63)   NULL     DEFAULT '',
-    `feature_name`     VARCHAR(1000) NOT NULL,
-    `join_on`          VARCHAR(1000) NULL     DEFAULT NULL,
-    `join_index`       INT           NOT NULL,
-    `feature_group_id` INT           NOT NULL,
-    `required`         TINYINT(1)    NOT NULL DEFAULT '0',
-    `feature_view_id`  INT           NULL     DEFAULT NULL,
+    `id`      int(11)     NOT NULL AUTO_INCREMENT,
+    `api_key` int(11)     NOT NULL,
+    `scope`   varchar(45) NOT NULL,
     PRIMARY KEY (`id`),
-    INDEX `feature_view_id` (`feature_view_id` ASC) VISIBLE,
-    INDEX `feature_group_id` (`feature_group_id` ASC) VISIBLE,
-    CONSTRAINT `feature_group_serving_key_fk`
-        FOREIGN KEY (`feature_group_id`)
-            REFERENCES `hopsworks`.`feature_group` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `feature_view_serving_key_fk`
-        FOREIGN KEY (`feature_view_id`)
-            REFERENCES `hopsworks`.`feature_view` (`id`)
-            ON DELETE CASCADE
+    UNIQUE KEY `index2` (`api_key`, `scope`),
+    CONSTRAINT `fk_api_key_scope_1` FOREIGN KEY (`api_key`) REFERENCES `api_key` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
 )
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
+    ENGINE = ndbcluster
+    DEFAULT CHARSET = latin1
     COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.statistic_columns
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`statistic_columns`
+CREATE TABLE IF NOT EXISTS `feature_store_jdbc_connector`
 (
-    `id`                   INT                                 NOT NULL AUTO_INCREMENT,
-    `statistics_config_id` INT                                 NULL DEFAULT NULL,
-    `name`                 VARCHAR(500) CHARACTER SET 'latin1' NULL DEFAULT NULL,
+    `id`                INT(11)       NOT NULL AUTO_INCREMENT,
+    `connection_string` VARCHAR(5000) NOT NULL,
+    `arguments`         VARCHAR(2000) NULL,
+    PRIMARY KEY (`id`)
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+CREATE TABLE IF NOT EXISTS `feature_store_s3_connector`
+(
+    `id`                          INT(11)       NOT NULL AUTO_INCREMENT,
+    `bucket`                      VARCHAR(5000) NOT NULL,
+    `iam_role`                    VARCHAR(2048) DEFAULT NULL,
+    `server_encryption_algorithm` INT(11)       NULL,
+    `server_encryption_key`       VARCHAR(1000) NULL,
+    `key_secret_uid`              INT           DEFAULT NULL,
+    `key_secret_name`             VARCHAR(200)  DEFAULT NULL,
+    `arguments`                   VARCHAR(2000) DEFAULT NULL,
     PRIMARY KEY (`id`),
-    INDEX `statistics_config_id` (`statistics_config_id` ASC) VISIBLE,
-    CONSTRAINT `statistics_config_fk`
-        FOREIGN KEY (`statistics_config_id`)
-            REFERENCES `hopsworks`.`statistics_config` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    KEY `fk_feature_store_s3_connector_1_idx` (`key_secret_uid`, `key_secret_name`),
+    CONSTRAINT `fk_feature_store_s3_connector_1` FOREIGN KEY (`key_secret_uid`, `key_secret_name`)
+        REFERENCES `hopsworks`.`secrets` (`uid`, `secret_name`) ON DELETE RESTRICT
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.statistics_config
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`statistics_config`
+CREATE TABLE IF NOT EXISTS `feature_store_hopsfs_connector`
 (
-    `id`                  INT        NOT NULL AUTO_INCREMENT,
-    `feature_group_id`    INT        NULL     DEFAULT NULL,
-    `training_dataset_id` INT        NULL     DEFAULT NULL,
-    `descriptive`         TINYINT(1) NOT NULL DEFAULT '1',
-    `correlations`        TINYINT(1) NOT NULL DEFAULT '1',
-    `histograms`          TINYINT(1) NOT NULL DEFAULT '1',
-    `exact_uniqueness`    TINYINT(1) NOT NULL DEFAULT '1',
+    `id`             INT(11) NOT NULL AUTO_INCREMENT,
+    `hopsfs_dataset` INT(11) NOT NULL,
     PRIMARY KEY (`id`),
-    INDEX `feature_group_id` (`feature_group_id` ASC) VISIBLE,
-    INDEX `training_dataset_id` (`training_dataset_id` ASC) VISIBLE,
-    CONSTRAINT `fg_statistics_config_fk`
-        FOREIGN KEY (`feature_group_id`)
-            REFERENCES `hopsworks`.`feature_group` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `td_statistics_config_fk`
-        FOREIGN KEY (`training_dataset_id`)
-            REFERENCES `hopsworks`.`training_dataset` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    CONSTRAINT `hopsfs_connector_dataset_fk` FOREIGN KEY (`hopsfs_dataset`)
+        REFERENCES `hopsworks`.`dataset` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.stream_feature_group
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`stream_feature_group`
+CREATE TABLE `feature_store_redshift_connector`
 (
-    `id`                INT NOT NULL AUTO_INCREMENT,
-    `timetravel_format` INT NOT NULL DEFAULT '1',
+    `id`                       int         NOT NULL AUTO_INCREMENT,
+    `cluster_identifier`       varchar(64) NOT NULL,
+    `database_driver`          varchar(64) NOT NULL,
+    `database_endpoint`        varchar(128)  DEFAULT NULL,
+    `database_name`            varchar(64)   DEFAULT NULL,
+    `database_port`            int           DEFAULT NULL,
+    `table_name`               varchar(128)  DEFAULT NULL,
+    `database_user_name`       varchar(128)  DEFAULT NULL,
+    `auto_create`              tinyint(1)    DEFAULT 0,
+    `database_group`           varchar(2048) DEFAULT NULL,
+    `iam_role`                 varchar(2048) DEFAULT NULL,
+    `arguments`                varchar(2000) DEFAULT NULL,
+    `database_pwd_secret_uid`  int           DEFAULT NULL,
+    `database_pwd_secret_name` varchar(200)  DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    KEY `fk_feature_store_redshift_connector_2_idx` (`database_pwd_secret_uid`, `database_pwd_secret_name`),
+    CONSTRAINT `fk_feature_store_redshift_connector_2` FOREIGN KEY (`database_pwd_secret_uid`, `database_pwd_secret_name`)
+        REFERENCES `hopsworks`.`secrets` (`uid`, `secret_name`) ON DELETE RESTRICT
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+CREATE TABLE IF NOT EXISTS `feature_store_adls_connector`
+(
+    `id`               INT(11)      NOT NULL AUTO_INCREMENT,
+    `generation`       INT(11)      NOT NULL,
+    `directory_id`     VARCHAR(40)  NOT NULL,
+    `application_id`   VARCHAR(40)  NOT NULL,
+    `account_name`     VARCHAR(30)  NOT NULL,
+    `container_name`   VARCHAR(65),
+    `cred_secret_uid`  INT          NOT NULL,
+    `cred_secret_name` VARCHAR(200) NOT NULL,
+    PRIMARY KEY (`id`),
+    CONSTRAINT `adls_cred_secret_fk` FOREIGN KEY (`cred_secret_uid`, `cred_secret_name`)
+        REFERENCES `hopsworks`.`secrets` (`uid`, `secret_name`) ON DELETE RESTRICT
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+CREATE TABLE IF NOT EXISTS `feature_store_snowflake_connector`
+(
+    `id`                       INT(11)       NOT NULL AUTO_INCREMENT,
+    `url`                      VARCHAR(3000) NOT NULL,
+    `database_user`            VARCHAR(128)  NOT NULL,
+    `database_name`            VARCHAR(64)   NOT NULL,
+    `database_schema`          VARCHAR(45)   NOT NULL,
+    `table_name`               VARCHAR(128)  DEFAULT NULL,
+    `role`                     VARCHAR(65)   DEFAULT NULL,
+    `warehouse`                VARCHAR(128)  DEFAULT NULL,
+    `arguments`                VARCHAR(8000) DEFAULT NULL,
+    `application`              VARCHAR(50)   DEFAULT NULL,
+    `database_pwd_secret_uid`  INT           DEFAULT NULL,
+    `database_pwd_secret_name` VARCHAR(200)  DEFAULT NULL,
+    `oauth_token_secret_uid`   INT           DEFAULT NULL,
+    `oauth_token_secret_name`  VARCHAR(200)  DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    KEY `fk_feature_store_snowflake_connector_2_idx` (`database_pwd_secret_uid`, `database_pwd_secret_name`),
+    CONSTRAINT `fk_feature_store_snowflake_connector_2` FOREIGN KEY (`database_pwd_secret_uid`, `database_pwd_secret_name`)
+        REFERENCES `hopsworks`.`secrets` (`uid`, `secret_name`) ON DELETE RESTRICT,
+    KEY `fk_feature_store_snowflake_connector_3_idx` (`oauth_token_secret_uid`, `oauth_token_secret_name`),
+    CONSTRAINT `fk_feature_store_snowflake_connector_3` FOREIGN KEY (`oauth_token_secret_uid`, `oauth_token_secret_name`)
+        REFERENCES `hopsworks`.`secrets` (`uid`, `secret_name`) ON DELETE RESTRICT
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+CREATE TABLE IF NOT EXISTS `feature_store_kafka_connector`
+(
+    `id`                                    INT(11)       NOT NULL AUTO_INCREMENT,
+    `bootstrap_servers`                     VARCHAR(1000) NOT NULL,
+    `security_protocol`                     VARCHAR(1000) NOT NULL,
+    `ssl_secret_uid`                        INT           NULL,
+    `ssl_secret_name`                       VARCHAR(200)  NULL,
+    `ssl_endpoint_identification_algorithm` VARCHAR(100)  NULL,
+    `options`                               VARCHAR(2000) NULL,
+    `truststore_path`                       varchar(255) COLLATE latin1_general_cs DEFAULT NULL,
+    `keystore_path`                         varchar(255) COLLATE latin1_general_cs DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    KEY `fk_fs_storage_connector_kafka_idx` (`ssl_secret_uid`, `ssl_secret_name`),
+    CONSTRAINT `fk_fs_storage_connector_kafka` FOREIGN KEY (`ssl_secret_uid`, `ssl_secret_name`) REFERENCES `hopsworks`.`secrets` (`uid`, `secret_name`) ON DELETE RESTRICT
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+
+CREATE TABLE IF NOT EXISTS `feature_store_gcs_connector`
+(
+    `id`                     INT(11)       NOT NULL AUTO_INCREMENT,
+    `algorithm`              VARCHAR(10)   NULL,
+    `bucket`                 VARCHAR(1000) NOT NULL,
+    `encryption_secret_uid`  INT           NULL,
+    `encryption_secret_name` VARCHAR(200)  NULL,
+    `key_path`               varchar(255) COLLATE latin1_general_cs DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    KEY `fk_fs_storage_connector_gcs_idx` (`encryption_secret_uid`, `encryption_secret_name`),
+    CONSTRAINT `fk_fs_storage_connector_gcs` FOREIGN KEY (`encryption_secret_uid`, `encryption_secret_name`) REFERENCES `hopsworks`.`secrets` (`uid`, `secret_name`) ON DELETE RESTRICT
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+
+-- Add bigquery connector
+CREATE TABLE IF NOT EXISTS `feature_store_bigquery_connector`
+(
+    `id`                      int AUTO_INCREMENT,
+    `parent_project`          varchar(1000) NOT NULL,
+    `dataset`                 varchar(1000) NULL,
+    `query_table`             varchar(1000) NULL,
+    `query_project`           varchar(1000) NULL,
+    `materialization_dataset` varchar(1000) NULL,
+    `arguments`               varchar(2000) NULL,
+    `key_path`                varchar(255) COLLATE latin1_general_cs DEFAULT NULL,
+    PRIMARY KEY (`id`)
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+CREATE TABLE IF NOT EXISTS `feature_store_connector`
+(
+    `id`               INT(11)       NOT NULL AUTO_INCREMENT,
+    `feature_store_id` INT(11)       NOT NULL,
+    `name`             VARCHAR(150)  NOT NULL,
+    `description`      VARCHAR(1000) NULL,
+    `type`             INT(11)       NOT NULL,
+    `jdbc_id`          INT(11),
+    `s3_id`            INT(11),
+    `hopsfs_id`        INT(11),
+    `redshift_id`      INT(11),
+    `adls_id`          INT(11),
+    `snowflake_id`     INT(11),
+    `kafka_id`         INT(11),
+    `gcs_id`           INT(11),
+    `bigquery_id`      INT(11),
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `fs_conn_name` (`name`, `feature_store_id`),
+    CONSTRAINT `fs_connector_featurestore_fk` FOREIGN KEY (`feature_store_id`) REFERENCES `hopsworks`.`feature_store` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fs_connector_jdbc_fk` FOREIGN KEY (`jdbc_id`) REFERENCES `hopsworks`.`feature_store_jdbc_connector` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fs_connector_s3_fk` FOREIGN KEY (`s3_id`) REFERENCES `hopsworks`.`feature_store_s3_connector` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fs_connector_hopsfs_fk` FOREIGN KEY (`hopsfs_id`) REFERENCES `hopsworks`.`feature_store_hopsfs_connector` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fs_connector_redshift_fk` FOREIGN KEY (`redshift_id`) REFERENCES `hopsworks`.`feature_store_redshift_connector` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fs_connector_adls_fk` FOREIGN KEY (`adls_id`) REFERENCES `hopsworks`.`feature_store_adls_connector` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fs_connector_snowflake_fk` FOREIGN KEY (`snowflake_id`) REFERENCES `hopsworks`.`feature_store_snowflake_connector` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fs_connector_kafka_fk` FOREIGN KEY (`kafka_id`) REFERENCES `hopsworks`.`feature_store_kafka_connector` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fs_connector_gcs_fk` FOREIGN KEY (`gcs_id`) REFERENCES `hopsworks`.`feature_store_gcs_connector` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fs_connector_bigquery_fk` FOREIGN KEY (`bigquery_id`) REFERENCES `hopsworks`.`feature_store_bigquery_connector` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+CREATE TABLE IF NOT EXISTS `on_demand_feature_group`
+(
+    `id`           INT(11)    NOT NULL AUTO_INCREMENT,
+    `query`        VARCHAR(26000),
+    `connector_id` INT(11)    NULL,
+    `data_format`  VARCHAR(10),
+    `path`         VARCHAR(1000),
+    `spine`        TINYINT(1) NOT NULL DEFAULT 0,
+    PRIMARY KEY (`id`),
+    CONSTRAINT `on_demand_conn_fk` FOREIGN KEY (`connector_id`) REFERENCES `hopsworks`.`feature_store_connector` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+
+CREATE TABLE IF NOT EXISTS `cached_feature_group`
+(
+    `id`                INT(11) NOT NULL AUTO_INCREMENT,
+    `timetravel_format` INT     NOT NULL DEFAULT 1,
+    PRIMARY KEY (`id`)
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+--
+-- Table structure for table `stream_feature_group`
+--
+CREATE TABLE IF NOT EXISTS `stream_feature_group`
+(
+    `id`                INT(11) NOT NULL AUTO_INCREMENT,
+    `timetravel_format` INT     NOT NULL DEFAULT 1,
     PRIMARY KEY (`id`)
 )
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
+    ENGINE = ndbcluster
+    DEFAULT CHARSET = latin1
     COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.subjects
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`subjects`
+--
+-- Table structure for table `cached_feature`
+--
+
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `cached_feature`
 (
-    `id`         INT                                 NOT NULL AUTO_INCREMENT,
-    `subject`    VARCHAR(255) CHARACTER SET 'latin1' NOT NULL,
-    `version`    INT                                 NOT NULL,
-    `schema_id`  INT                                 NOT NULL,
-    `project_id` INT                                 NOT NULL,
-    `created_on` TIMESTAMP                           NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `id`                      int(11)                               NOT NULL AUTO_INCREMENT,
+    `cached_feature_group_id` int(11)                               NULL,
+    `stream_feature_group_id` int(11)                               NULL,
+    `name`                    varchar(63) COLLATE latin1_general_cs NOT NULL,
+    `description`             varchar(256)                          NOT NULL DEFAULT '',
     PRIMARY KEY (`id`),
-    UNIQUE INDEX `subjects__constraint_key` (`subject` ASC, `version` ASC, `project_id` ASC) VISIBLE,
-    INDEX `project_id_idx` (`project_id` ASC) VISIBLE,
-    INDEX `created_on_idx` (`created_on` ASC) VISIBLE,
-    INDEX `schema_id_idx` (`schema_id` ASC) VISIBLE,
-    CONSTRAINT `project_idx_subjects`
+    KEY `cached_feature_group_fk` (`cached_feature_group_id`),
+    KEY `stream_feature_group_fk` (`stream_feature_group_id`),
+    CONSTRAINT `cached_feature_group_fk2` FOREIGN KEY (`cached_feature_group_id`) REFERENCES `cached_feature_group` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `stream_feature_group_fk2` FOREIGN KEY (`stream_feature_group_id`) REFERENCES `stream_feature_group` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+CREATE TABLE `feature_store_job`
+(
+    `id`                  int(11) NOT NULL AUTO_INCREMENT,
+    `job_id`              int(11) NOT NULL,
+    `training_dataset_id` int(11) DEFAULT NULL,
+    `feature_group_id`    INT(11) DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    CONSTRAINT `fs_job_job_fk` FOREIGN KEY (`job_id`) REFERENCES `jobs` (`id`)
+        ON DELETE CASCADE
+        ON UPDATE NO ACTION,
+    CONSTRAINT `fs_job_td_fk` FOREIGN KEY (`training_dataset_id`) REFERENCES `training_dataset` (`id`)
+        ON DELETE CASCADE
+        ON UPDATE NO ACTION,
+    CONSTRAINT `fs_job_fg_fk` FOREIGN KEY (`feature_group_id`) REFERENCES `feature_group` (`id`)
+        ON DELETE CASCADE
+        ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+CREATE TABLE IF NOT EXISTS `feature_store_tag`
+(
+    `id`         int(11)        NOT NULL AUTO_INCREMENT,
+    `name`       varchar(255)   NOT NULL,
+    `tag_schema` varchar(13000) NOT NULL DEFAULT '{"type":"string"}',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `name_UNIQUE` (`name`)
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+CREATE TABLE `remote_group_project_mapping`
+(
+    `id`           int(11)      NOT NULL AUTO_INCREMENT,
+    `remote_group` varchar(256) NOT NULL,
+    `project`      int(11)      NOT NULL,
+    `project_role` varchar(32)  NOT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `index3` (`remote_group`, `project`),
+    KEY `fk_remote_group_project_mapping_1_idx` (`project`),
+    CONSTRAINT `fk_remote_group_project_mapping_1` FOREIGN KEY (`project`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+CREATE TABLE `feature_group_commit`
+(
+    `feature_group_id`  int(11)      NOT NULL, -- from hudi dataset name -> lookup feature_group
+    `commit_id`         BIGINT(20)   NOT NULL AUTO_INCREMENT,
+    `committed_on`      TIMESTAMP(6) NOT NULL,
+    `num_rows_updated`  int(11)               DEFAULT '0',
+    `num_rows_inserted` int(11)               DEFAULT '0',
+    `num_rows_deleted`  int(11)               DEFAULT '0',
+    `archived`          TINYINT(1)   NOT NULL DEFAULT '0',
+    PRIMARY KEY (`feature_group_id`, `commit_id`),
+    KEY `commit_id_idx` (`commit_id`),
+    KEY `commit_date_idx` (`committed_on`),
+    CONSTRAINT `feature_group_fk` FOREIGN KEY (`feature_group_id`) REFERENCES `feature_group` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+CREATE TABLE `cloud_role_mapping`
+(
+    `id`           int(11)       NOT NULL AUTO_INCREMENT,
+    `project_id`   int(11)       NOT NULL,
+    `project_role` varchar(32)   NOT NULL,
+    `cloud_role`   varchar(2048) NOT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `index3` (`project_id`, `cloud_role`),
+    UNIQUE KEY `index4` (`id`, `project_id`, `project_role`),
+    KEY `fk_cloud_role_mapping_1_idx` (`project_id`),
+    CONSTRAINT `fk_cloud_role_mapping_1`
         FOREIGN KEY (`project_id`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `schema_id_idx`
-        FOREIGN KEY (`schema_id`)
-            REFERENCES `hopsworks`.`schemas` (`id`)
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+            REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.subjects_compatibility
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`subjects_compatibility`
+CREATE TABLE `cloud_role_mapping_default`
 (
-    `id`            INT                                                                                                          NOT NULL AUTO_INCREMENT,
-    `subject`       VARCHAR(255) CHARACTER SET 'latin1'                                                                          NOT NULL,
-    `compatibility` ENUM ('BACKWARD', 'BACKWARD_TRANSITIVE', 'FORWARD', 'FORWARD_TRANSITIVE', 'FULL', 'FULL_TRANSITIVE', 'NONE') NOT NULL DEFAULT 'BACKWARD',
-    `project_id`    INT                                                                                                          NOT NULL,
+    `id`           int(11)     NOT NULL AUTO_INCREMENT,
+    `mapping_id`   int(11)     NOT NULL,
+    `project_id`   int(11)     NOT NULL,
+    `project_role` varchar(32) NOT NULL,
     PRIMARY KEY (`id`),
-    UNIQUE INDEX `subjects_compatibility__constraint_key` (`subject` ASC, `project_id` ASC) VISIBLE,
-    INDEX `project_idx_sub_comp` (`project_id` ASC) VISIBLE,
-    CONSTRAINT `project_idx_sub_comp`
-        FOREIGN KEY (`project_id`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    UNIQUE KEY `index3` (`project_id`, `project_role`),
+    UNIQUE KEY `index4` (`mapping_id`, `project_id`, `project_role`),
+    KEY `fk_cloud_role_mapping_default_1_idx` (`mapping_id`, `project_id`, `project_role`),
+    CONSTRAINT `fk_cloud_role_mapping_default_1`
+        FOREIGN KEY (`mapping_id`, `project_id`, `project_role`)
+            REFERENCES `cloud_role_mapping` (`id`, `project_id`, `project_role`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.system_commands
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`system_commands`
+CREATE TABLE `databricks_instance`
 (
-    `id`        BIGINT                             NOT NULL AUTO_INCREMENT,
-    `host_id`   INT                                NOT NULL,
-    `op`        VARCHAR(50) CHARACTER SET 'latin1' NOT NULL,
-    `status`    VARCHAR(20) CHARACTER SET 'latin1' NOT NULL,
-    `priority`  INT                                NOT NULL DEFAULT '0',
-    `exec_user` VARCHAR(50) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
+    `id`          INT(11)      NOT NULL AUTO_INCREMENT,
+    `url`         VARCHAR(255) NOT NULL,
+    `uid`         INT(11)      NOT NULL,
+    `secret_name` VARCHAR(200) NOT NULL,
     PRIMARY KEY (`id`),
-    INDEX `host_id` (`host_id` ASC) VISIBLE,
-    CONSTRAINT `FK_481_349`
-        FOREIGN KEY (`host_id`)
-            REFERENCES `hopsworks`.`hosts` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 3816
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    FOREIGN KEY `db_secret_fk` (`uid`, `secret_name`) REFERENCES `secrets` (`uid`, `secret_name`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    FOREIGN KEY `db_user_fk` (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.system_commands_args
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`system_commands_args`
+CREATE TABLE `cached_feature_extra_constraints`
 (
-    `id`         INT                                   NOT NULL AUTO_INCREMENT,
-    `command_id` BIGINT                                NOT NULL,
-    `arguments`  VARCHAR(13900) CHARACTER SET 'latin1' NULL DEFAULT '',
+    `id`                      int(11)                               NOT NULL AUTO_INCREMENT,
+    `cached_feature_group_id` int(11)                               NULL,
+    `stream_feature_group_id` int(11)                               NULL,
+    `name`                    varchar(63) COLLATE latin1_general_cs NOT NULL,
+    `primary_column`          tinyint(1)                            NOT NULL DEFAULT '0',
+    `hudi_precombine_key`     tinyint(1)                            NOT NULL DEFAULT '0',
     PRIMARY KEY (`id`),
-    INDEX `command_id_idx` (`command_id` ASC) VISIBLE,
-    CONSTRAINT `command_id_fk`
-        FOREIGN KEY (`command_id`)
-            REFERENCES `hopsworks`.`system_commands` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 3816
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    KEY `cached_feature_group_fk` (`cached_feature_group_id`),
+    KEY `stream_feature_group_fk` (`stream_feature_group_id`),
+    CONSTRAINT `stream_feature_group_constraint_fk` FOREIGN KEY (`stream_feature_group_id`) REFERENCES `stream_feature_group` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `cached_feature_group_constraint_fk` FOREIGN KEY (`cached_feature_group_id`) REFERENCES `cached_feature_group` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.tensorboard
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`tensorboard`
+CREATE TABLE IF NOT EXISTS `alert_manager_config`
 (
-    `project_id`    INT                                   NOT NULL,
-    `user_id`       INT                                   NOT NULL,
-    `endpoint`      VARCHAR(100) CHARACTER SET 'latin1'   NOT NULL,
-    `ml_id`         VARCHAR(100) CHARACTER SET 'latin1'   NOT NULL,
-    `cid`           VARCHAR(255) CHARACTER SET 'latin1'   NOT NULL,
-    `last_accessed` TIMESTAMP                             NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `hdfs_logdir`   VARCHAR(10000) CHARACTER SET 'latin1' NOT NULL,
-    `secret`        VARCHAR(255) CHARACTER SET 'latin1'   NOT NULL,
-    PRIMARY KEY (`project_id`, `user_id`),
-    INDEX `user_id_fk` (`user_id` ASC) VISIBLE,
-    CONSTRAINT `project_id_fk`
-        FOREIGN KEY (`project_id`)
-            REFERENCES `hopsworks`.`project` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `user_id_fk`
-        FOREIGN KEY (`user_id`)
-            REFERENCES `hopsworks`.`users` (`uid`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    `id`      int(11)    NOT NULL AUTO_INCREMENT,
+    `content` mediumblob NOT NULL,
+    `created` timestamp  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.training_dataset
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`training_dataset`
+CREATE TABLE IF NOT EXISTS `hopsworks`.`alert_receiver`
 (
-    `id`                           INT                                   NOT NULL AUTO_INCREMENT,
-    `name`                         VARCHAR(63)                           NOT NULL,
-    `feature_store_id`             INT                                   NOT NULL,
-    `created`                      TIMESTAMP                             NULL     DEFAULT CURRENT_TIMESTAMP,
-    `creator`                      INT                                   NOT NULL,
-    `version`                      INT                                   NOT NULL,
-    `data_format`                  VARCHAR(128) CHARACTER SET 'latin1'   NOT NULL,
-    `description`                  VARCHAR(10000) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `hopsfs_training_dataset_id`   INT                                   NULL     DEFAULT NULL,
-    `external_training_dataset_id` INT                                   NULL     DEFAULT NULL,
-    `training_dataset_type`        INT                                   NOT NULL DEFAULT '0',
-    `seed`                         BIGINT                                NULL     DEFAULT NULL,
-    `query`                        TINYINT(1)                            NOT NULL DEFAULT '0',
-    `coalesce`                     TINYINT(1)                            NOT NULL DEFAULT '0',
-    `train_split`                  VARCHAR(63) CHARACTER SET 'latin1'    NULL     DEFAULT NULL,
-    `feature_view_id`              INT                                   NULL     DEFAULT NULL,
-    `start_time`                   TIMESTAMP                             NULL     DEFAULT NULL,
-    `end_time`                     TIMESTAMP                             NULL     DEFAULT NULL,
-    `sample_ratio`                 FLOAT                                 NULL     DEFAULT NULL,
-    `connector_id`                 INT                                   NULL     DEFAULT NULL,
-    `connector_path`               VARCHAR(1000)                         NULL     DEFAULT NULL,
-    `tag_path`                     VARCHAR(1000)                         NULL     DEFAULT NULL,
+    `id`     INT(11)      NOT NULL AUTO_INCREMENT,
+    `name`   VARCHAR(128) NOT NULL,
+    `config` BLOB         NOT NULL,
     PRIMARY KEY (`id`),
-    UNIQUE INDEX `name_version` (`feature_store_id` ASC, `feature_view_id` ASC, `name` ASC, `version` ASC) VISIBLE,
-    INDEX `feature_store_id` (`feature_store_id` ASC) VISIBLE,
-    INDEX `creator` (`creator` ASC) VISIBLE,
-    INDEX `td_feature_view_fk` (`feature_view_id` ASC) VISIBLE,
-    INDEX `td_conn_fk` (`connector_id` ASC) VISIBLE,
-    CONSTRAINT `FK_1012_877`
-        FOREIGN KEY (`creator`)
-            REFERENCES `hopsworks`.`users` (`uid`),
-    CONSTRAINT `FK_656_817`
-        FOREIGN KEY (`feature_store_id`)
-            REFERENCES `hopsworks`.`feature_store` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `td_conn_fk`
-        FOREIGN KEY (`connector_id`)
-            REFERENCES `hopsworks`.`feature_store_connector` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `td_feature_view_fk`
-        FOREIGN KEY (`feature_view_id`)
-            REFERENCES `hopsworks`.`feature_view` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 9
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    UNIQUE KEY `name_UNIQUE` (`name`)
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.training_dataset_feature
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`training_dataset_feature`
+CREATE TABLE IF NOT EXISTS `job_alert`
 (
-    `id`                      INT                                  NOT NULL AUTO_INCREMENT,
-    `training_dataset`        INT                                  NULL     DEFAULT NULL,
-    `feature_group`           INT                                  NULL     DEFAULT NULL,
-    `name`                    VARCHAR(1000) CHARACTER SET 'latin1' NOT NULL,
-    `type`                    VARCHAR(1000) CHARACTER SET 'latin1' NULL     DEFAULT NULL,
-    `td_join`                 INT                                  NULL     DEFAULT NULL,
-    `idx`                     INT                                  NULL     DEFAULT NULL,
-    `label`                   TINYINT(1)                           NOT NULL DEFAULT '0',
-    `transformation_function` INT                                  NULL     DEFAULT NULL,
-    `feature_view_id`         INT                                  NULL     DEFAULT NULL,
+    `id`       int(11)     NOT NULL AUTO_INCREMENT,
+    `job_id`   int(11)     NOT NULL,
+    `status`   varchar(45) NOT NULL,
+    `type`     varchar(45) NOT NULL,
+    `severity` varchar(45) NOT NULL,
+    `receiver` int(11)     NOT NULL,
+    `created`  timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
-    INDEX `td_key` (`training_dataset` ASC) VISIBLE,
-    INDEX `fg_key` (`feature_group` ASC) VISIBLE,
-    INDEX `tdf_feature_view_fk` (`feature_view_id` ASC) VISIBLE,
-    INDEX `join_fk_tdf` (`td_join` ASC) VISIBLE,
-    INDEX `tfn_fk_tdf` (`transformation_function` ASC) VISIBLE,
-    CONSTRAINT `fg_fk_tdf`
-        FOREIGN KEY (`feature_group`)
-            REFERENCES `hopsworks`.`feature_group` (`id`)
-            ON DELETE SET NULL,
-    CONSTRAINT `join_fk_tdf`
-        FOREIGN KEY (`td_join`)
-            REFERENCES `hopsworks`.`training_dataset_join` (`id`)
-            ON DELETE SET NULL,
-    CONSTRAINT `td_fk_tdf`
-        FOREIGN KEY (`training_dataset`)
-            REFERENCES `hopsworks`.`training_dataset` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `tdf_feature_view_fk`
-        FOREIGN KEY (`feature_view_id`)
-            REFERENCES `hopsworks`.`feature_view` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `tfn_fk_tdf`
-        FOREIGN KEY (`transformation_function`)
-            REFERENCES `hopsworks`.`transformation_function` (`id`)
-            ON DELETE SET NULL
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    UNIQUE KEY `unique_job_alert` (`job_id`, `status`),
+    KEY `fk_job_alert_2_idx` (`job_id`),
+    KEY `fk_job_alert_1_idx` (`receiver`),
+    CONSTRAINT `fk_job_alert_1` FOREIGN KEY (`receiver`) REFERENCES `alert_receiver` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_job_alert_2` FOREIGN KEY (`job_id`) REFERENCES `jobs` (`id`) ON DELETE CASCADE
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.training_dataset_filter
--- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `feature_group_alert`
+(
+    `id`               int(11)                               NOT NULL AUTO_INCREMENT,
+    `feature_group_id` int(11)                               NOT NULL,
+    `status`           varchar(45) COLLATE latin1_general_cs NOT NULL,
+    `type`             varchar(45) COLLATE latin1_general_cs NOT NULL,
+    `severity`         varchar(45) COLLATE latin1_general_cs NOT NULL,
+    `receiver`         int(11)                               NOT NULL,
+    `created`          timestamp                             NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `unique_feature_group_alert` (`feature_group_id`, `status`),
+    KEY `fk_feature_group_alert_2_idx` (`feature_group_id`),
+    KEY `fk_feature_group_alert_1_idx` (`receiver`),
+    CONSTRAINT `fk_feature_group_alert_1` FOREIGN KEY (`receiver`) REFERENCES `alert_receiver` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_feature_group_alert_2` FOREIGN KEY (`feature_group_id`) REFERENCES `feature_group` (`id`) ON DELETE CASCADE
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+CREATE TABLE IF NOT EXISTS `project_service_alert`
+(
+    `id`         int(11)                               NOT NULL AUTO_INCREMENT,
+    `project_id` int(11)                               NOT NULL,
+    `service`    VARCHAR(32) COLLATE latin1_general_cs NOT NULL,
+    `status`     varchar(45) COLLATE latin1_general_cs NOT NULL,
+    `type`       varchar(45) COLLATE latin1_general_cs NOT NULL,
+    `severity`   varchar(45) COLLATE latin1_general_cs NOT NULL,
+    `receiver`   int(11)                               NOT NULL,
+    `created`    timestamp                             NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `unique_project_service_alert` (`project_id`, `status`),
+    KEY `fk_project_service_2_idx` (`project_id`),
+    KEY `fk_project_service_alert_1_idx` (`receiver`),
+    CONSTRAINT `fk_project_service_alert_1` FOREIGN KEY (`receiver`) REFERENCES `alert_receiver` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_project_service_alert_2` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+
+CREATE TABLE IF NOT EXISTS `transformation_function`
+(
+    `id`               INT(11)      NOT NULL AUTO_INCREMENT,
+    `name`             VARCHAR(255) NOT NULL,
+    `output_type`      varchar(32)  NOT NULL,
+    `version`          INT(11)      NOT NULL,
+    `feature_store_id` INT(11)      NOT NULL,
+    `created`          timestamp    NULL DEFAULT CURRENT_TIMESTAMP,
+    `creator`          int(11)      NOT NULL,
+    PRIMARY KEY (`id`),
+    CONSTRAINT `feature_store_fn_fk` FOREIGN KEY (`feature_store_id`) REFERENCES `feature_store` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `creator_fn_fk` FOREIGN KEY (`creator`) REFERENCES `users` (`uid`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
 CREATE TABLE IF NOT EXISTS `hopsworks`.`training_dataset_filter`
 (
-    `id`                  INT         NOT NULL AUTO_INCREMENT,
-    `training_dataset_id` INT         NULL DEFAULT NULL,
-    `feature_view_id`     INT         NULL DEFAULT NULL,
-    `type`                VARCHAR(63) NULL DEFAULT NULL,
-    `path`                VARCHAR(63) NULL DEFAULT NULL,
+    `id`                  INT(11)     NOT NULL AUTO_INCREMENT,
+    `training_dataset_id` INT(11)     NULL,
+    `feature_view_id`     INT(11)     NULL,
+    `type`                VARCHAR(63) NULL,
+    `path`                VARCHAR(63) NULL,
     PRIMARY KEY (`id`),
-    INDEX `tdf_training_dataset_fk` (`training_dataset_id` ASC) VISIBLE,
-    INDEX `tdfilter_feature_view_fk` (`feature_view_id` ASC) VISIBLE,
-    CONSTRAINT `tdf_training_dataset_fk`
-        FOREIGN KEY (`training_dataset_id`)
-            REFERENCES `hopsworks`.`training_dataset` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `tdfilter_feature_view_fk`
-        FOREIGN KEY (`feature_view_id`)
-            REFERENCES `hopsworks`.`feature_view` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    CONSTRAINT `tdf_training_dataset_fk` FOREIGN KEY (`training_dataset_id`) REFERENCES `training_dataset` (`id`) ON
+        DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `tdfilter_feature_view_fk` FOREIGN KEY (`feature_view_id`) REFERENCES `feature_view` (`id`)
+        ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.training_dataset_filter_condition
--- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `hopsworks`.`training_dataset_filter_condition`
 (
-    `id`                         INT           NOT NULL AUTO_INCREMENT,
-    `training_dataset_filter_id` INT           NULL DEFAULT NULL,
-    `feature_group_id`           INT           NULL DEFAULT NULL,
-    `feature_name`               VARCHAR(63)   NULL DEFAULT NULL,
-    `filter_condition`           VARCHAR(128)  NULL DEFAULT NULL,
-    `filter_value`               VARCHAR(1024) NULL DEFAULT NULL,
-    `filter_value_fg_id`         INT           NULL DEFAULT NULL,
+    `id`                         INT(11)       NOT NULL AUTO_INCREMENT,
+    `training_dataset_filter_id` INT(11)       NULL,
+    `feature_group_id`           INT(11)       NULL,
+    `feature_name`               VARCHAR(63)   NULL,
+    `filter_condition`           VARCHAR(128)  NULL,
+    `filter_value`               VARCHAR(1024) NULL,
+    `filter_value_fg_id`         INT(11)       NULL,
     PRIMARY KEY (`id`),
-    INDEX `tdfc_training_dataset_filter_fk` (`training_dataset_filter_id` ASC) VISIBLE,
-    INDEX `tdfc_feature_group_fk` (`feature_group_id` ASC) VISIBLE,
-    CONSTRAINT `tdfc_feature_group_fk`
-        FOREIGN KEY (`feature_group_id`)
-            REFERENCES `hopsworks`.`feature_group` (`id`)
-            ON DELETE SET NULL,
-    CONSTRAINT `tdfc_training_dataset_filter_fk`
-        FOREIGN KEY (`training_dataset_filter_id`)
-            REFERENCES `hopsworks`.`training_dataset_filter` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    CONSTRAINT `tdfc_training_dataset_filter_fk` FOREIGN KEY (`training_dataset_filter_id`) REFERENCES `training_dataset_filter` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `tdfc_feature_group_fk` FOREIGN KEY (`feature_group_id`) REFERENCES `feature_group` (`id`) ON DELETE SET NULL ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.training_dataset_join
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`training_dataset_join`
+CREATE TABLE IF NOT EXISTS `git_repositories`
 (
-    `id`                      INT         NOT NULL AUTO_INCREMENT,
-    `training_dataset`        INT         NULL     DEFAULT NULL,
-    `feature_group`           INT         NULL     DEFAULT NULL,
-    `feature_group_commit_id` BIGINT      NULL     DEFAULT NULL,
-    `type`                    TINYINT     NOT NULL DEFAULT '0',
-    `idx`                     INT         NOT NULL DEFAULT '0',
-    `prefix`                  VARCHAR(63) NULL     DEFAULT NULL,
-    `feature_view_id`         INT         NULL     DEFAULT NULL,
+    `id`             int                                                          NOT NULL AUTO_INCREMENT,
+    `path`           varchar(1000) CHARACTER SET latin1 COLLATE latin1_general_cs NOT NULL,
+    `name`           varchar(255) CHARACTER SET latin1 COLLATE latin1_general_cs  NOT NULL,
+    `project`        int                                                          NOT NULL,
+    `provider`       varchar(20) CHARACTER SET latin1 COLLATE latin1_general_cs   NOT NULL,
+    `current_branch` varchar(250) CHARACTER SET latin1 COLLATE latin1_general_cs DEFAULT NULL,
+    `current_commit` varchar(255) CHARACTER SET latin1 COLLATE latin1_general_cs DEFAULT NULL,
+    `cid`            varchar(255) CHARACTER SET latin1 COLLATE latin1_general_cs DEFAULT NULL,
+    `creator`        int                                                          NOT NULL,
     PRIMARY KEY (`id`),
-    INDEX `fg_key` (`feature_group` ASC) VISIBLE,
-    INDEX `tdj_feature_view_fk` (`feature_view_id` ASC) VISIBLE,
-    INDEX `td_fk_tdj` (`training_dataset` ASC) VISIBLE,
-    CONSTRAINT `fg_left`
-        FOREIGN KEY (`feature_group`)
-            REFERENCES `hopsworks`.`feature_group` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `td_fk_tdj`
-        FOREIGN KEY (`training_dataset`)
-            REFERENCES `hopsworks`.`training_dataset` (`id`)
-            ON DELETE CASCADE,
-    CONSTRAINT `tdj_feature_view_fk`
-        FOREIGN KEY (`feature_view_id`)
-            REFERENCES `hopsworks`.`feature_view` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    UNIQUE KEY `repository_path_constraint_unique` (`path`),
+    KEY `project_fk` (`project`),
+    CONSTRAINT `project_fk` FOREIGN KEY (`project`) REFERENCES `project` (`id`) ON DELETE CASCADE
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 2061
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.training_dataset_join_condition
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`training_dataset_join_condition`
+CREATE TABLE IF NOT EXISTS `git_executions`
 (
-    `id`            INT           NOT NULL AUTO_INCREMENT,
-    `td_join`       INT           NOT NULL,
-    `left_feature`  VARCHAR(1000) NOT NULL DEFAULT '',
-    `right_feature` VARCHAR(1000) NOT NULL DEFAULT '',
+    `id`                   int                                                         NOT NULL AUTO_INCREMENT,
+    `submission_time`      timestamp                                                   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `user`                 int                                                         NOT NULL,
+    `repository`           int                                                         NOT NULL,
+    `execution_start`      bigint                                                               DEFAULT NULL,
+    `execution_stop`       bigint                                                               DEFAULT NULL,
+    `command_config`       varchar(11000) CHARACTER SET latin1 COLLATE latin1_general_cs        DEFAULT NULL,
+    `state`                varchar(128) CHARACTER SET latin1 COLLATE latin1_general_cs NOT NULL,
+    `final_result_message` varchar(11000) CHARACTER SET latin1 COLLATE latin1_general_cs        DEFAULT NULL,
+    `config_secret`        varchar(255) CHARACTER SET latin1 COLLATE latin1_general_cs NOT NULL,
+    `hostname`             varchar(128)                                                NOT NULL DEFAULT "localhost",
     PRIMARY KEY (`id`),
-    INDEX `join_key` (`td_join` ASC) VISIBLE,
-    CONSTRAINT `join_fk_tdjc`
-        FOREIGN KEY (`td_join`)
-            REFERENCES `hopsworks`.`training_dataset_join` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    KEY `user` (`user`),
+    KEY `git_exec_repo_fkc` (`repository`),
+    CONSTRAINT `git_exec_repo_fkc` FOREIGN KEY (`repository`) REFERENCES `git_repositories` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `git_exec_usr_fkc` FOREIGN KEY (`user`) REFERENCES `users` (`uid`) ON DELETE CASCADE
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 8251
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.training_dataset_split
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`training_dataset_split`
+CREATE TABLE IF NOT EXISTS `git_commits`
 (
-    `id`                  INT                                NOT NULL AUTO_INCREMENT,
-    `training_dataset_id` INT                                NOT NULL,
-    `name`                VARCHAR(63) CHARACTER SET 'latin1' NOT NULL,
-    `percentage`          FLOAT                              NULL DEFAULT NULL,
-    `split_type`          VARCHAR(40)                        NULL DEFAULT NULL,
-    `start_time`          TIMESTAMP                          NULL DEFAULT NULL,
-    `end_Time`            TIMESTAMP                          NULL DEFAULT NULL,
+    `id`              int                                                          NOT NULL AUTO_INCREMENT,
+    `repository`      int                                                          NOT NULL,
+    `branch`          varchar(250) CHARACTER SET latin1 COLLATE latin1_general_cs       DEFAULT NULL,
+    `hash`            varchar(255) CHARACTER SET latin1 COLLATE latin1_general_cs  NOT NULL,
+    `message`         varchar(1000) CHARACTER SET latin1 COLLATE latin1_general_cs NOT NULL,
+    `committer_name`  varchar(1000) CHARACTER SET latin1 COLLATE latin1_general_cs NOT NULL,
+    `committer_email` varchar(1000) CHARACTER SET latin1 COLLATE latin1_general_cs NOT NULL,
+    `date`            TIMESTAMP                                                    NULL DEFAULT NULL,
     PRIMARY KEY (`id`),
-    UNIQUE INDEX `dataset_id_split_name` (`training_dataset_id` ASC, `name` ASC) VISIBLE,
-    INDEX `training_dataset_id` (`training_dataset_id` ASC) VISIBLE,
-    CONSTRAINT `training_dataset_fk`
-        FOREIGN KEY (`training_dataset_id`)
-            REFERENCES `hopsworks`.`training_dataset` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    KEY `repository_fk` (`repository`),
+    CONSTRAINT `repository_fk` FOREIGN KEY (`repository`) REFERENCES `git_repositories` (`id`) ON DELETE CASCADE
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 4119
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.transformation_function
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`transformation_function`
+CREATE TABLE IF NOT EXISTS `git_repository_remotes`
 (
-    `id`               INT          NOT NULL AUTO_INCREMENT,
-    `name`             VARCHAR(255) NOT NULL,
-    `output_type`      VARCHAR(32)  NOT NULL,
-    `version`          INT          NOT NULL,
-    `feature_store_id` INT          NOT NULL,
-    `created`          TIMESTAMP    NULL DEFAULT CURRENT_TIMESTAMP,
-    `creator`          INT          NOT NULL,
+    `id`          int                                                          NOT NULL AUTO_INCREMENT,
+    `repository`  int                                                          NOT NULL,
+    `remote_name` varchar(255) CHARACTER SET latin1 COLLATE latin1_general_cs  NOT NULL,
+    `remote_url`  varchar(1000) CHARACTER SET latin1 COLLATE latin1_general_cs NOT NULL,
     PRIMARY KEY (`id`),
-    INDEX `feature_store_fn_fk` (`feature_store_id` ASC) VISIBLE,
-    INDEX `creator_fn_fk` (`creator` ASC) VISIBLE,
-    CONSTRAINT `creator_fn_fk`
-        FOREIGN KEY (`creator`)
-            REFERENCES `hopsworks`.`users` (`uid`),
-    CONSTRAINT `feature_store_fn_fk`
-        FOREIGN KEY (`feature_store_id`)
-            REFERENCES `hopsworks`.`feature_store` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    KEY `git_repository_fk` (`repository`),
+    CONSTRAINT `git_repository_fk` FOREIGN KEY (`repository`) REFERENCES `git_repositories` (`id`) ON DELETE CASCADE
+) ENGINE = ndbcluster
+  AUTO_INCREMENT = 6164
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.tutorial
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`tutorial`
+CREATE TABLE IF NOT EXISTS `expectation_suite`
 (
-    `id`          INT          NOT NULL AUTO_INCREMENT,
-    `idx`         INT          NOT NULL,
+    `id`                          INT(11)     NOT NULL AUTO_INCREMENT,
+    `feature_group_id`            INT(11)     NOT NULL,
+    `name`                        VARCHAR(63) NOT NULL,
+    `meta`                        VARCHAR(1000) DEFAULT "{}",
+    `data_asset_type`             VARCHAR(50),
+    `ge_cloud_id`                 VARCHAR(200),
+    `run_validation`              BOOLEAN       DEFAULT TRUE,
+    `validation_ingestion_policy` VARCHAR(25),
+    `created_at`                  timestamp     DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    CONSTRAINT `feature_group_suite_fk` FOREIGN KEY (`feature_group_id`) REFERENCES `feature_group` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+CREATE TABLE IF NOT EXISTS `expectation`
+(
+    `id`                   INT(11)       NOT NULL AUTO_INCREMENT,
+    `expectation_suite_id` INT(11)       NOT NULL,
+    `expectation_type`     VARCHAR(150)  NOT NULL,
+    `kwargs`               VARCHAR(5000) NOT NULL,
+    `meta`                 VARCHAR(1000) DEFAULT "{}",
+    PRIMARY KEY (`id`),
+    CONSTRAINT `suite_fk` FOREIGN KEY (`expectation_suite_id`) REFERENCES `expectation_suite` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+CREATE TABLE IF NOT EXISTS `great_expectation`
+(
+    `id`               INT(11)       NOT NULL AUTO_INCREMENT,
+    `kwargs_template`  VARCHAR(1000) NOT NULL,
+    `expectation_type` VARCHAR(150)  NOT NULL,
+    UNIQUE KEY `unique_great_expectation` (`expectation_type`),
+    PRIMARY KEY (`id`)
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+CREATE TABLE IF NOT EXISTS `validation_report`
+(
+    `id`                    INT(11)                                NOT NULL AUTO_INCREMENT,
+    `feature_group_id`      INT(11)                                NOT NULL,
+    `success`               BOOLEAN                                NOT NULL,
+    `validation_time`       timestamp                              NULL DEFAULT CURRENT_TIMESTAMP,
+    `evaluation_parameters` VARCHAR(1000)                               DEFAULT "{}",
+    `meta`                  VARCHAR(2000)                          NULL DEFAULT "{}",
+    `statistics`            VARCHAR(1000)                          NOT NULL,
+    `file_name`             VARCHAR(255) COLLATE latin1_general_cs NOT NULL,
+    `ingestion_result`      VARCHAR(11)                            NOT NULL,
+    PRIMARY KEY (`id`),
+    CONSTRAINT `feature_group_report_fk` FOREIGN KEY (`feature_group_id`) REFERENCES `feature_group` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+CREATE TABLE IF NOT EXISTS `validation_result`
+(
+    `id`                   INT(11)       NOT NULL AUTO_INCREMENT,
+    `validation_report_id` INT(11)       NOT NULL,
+    `expectation_id`       INT(11)       NOT NULL,
+    `success`              BOOLEAN       NOT NULL,
+    `result`               VARCHAR(1000) NOT NULL,
+    `meta`                 VARCHAR(1000)      DEFAULT "{}",
+    `validation_time`      timestamp     NULL DEFAULT CURRENT_TIMESTAMP,
+    `ingestion_result`     VARCHAR(11)   NOT NULL,
+    `expectation_config`   VARCHAR(2150) NOT NULL,
+    `exception_info`       VARCHAR(1000)      DEFAULT "{}",
+    PRIMARY KEY (`id`),
+    KEY (`expectation_id`),
+    CONSTRAINT `report_fk_validation_result` FOREIGN KEY (`validation_report_id`) REFERENCES `validation_report` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+CREATE TABLE `feature_store_activity`
+(
+    `id`                   INT(11)      NOT NULL AUTO_INCREMENT,
+    `event_time`           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `uid`                  INT(11)      NOT NULL,
+    `type`                 INT(11)      NOT NULL,
+    `meta_type`            INT(11)      NULL,
+    `meta_msg`             VARCHAR(255) NULL,
+    `execution_id`         INT(11)      NULL,
+    `statistics_id`        INT(11)      NULL,
+    `commit_id`            BIGINT(20)   NULL,
+    `feature_group_id`     INT(11)      NULL,
+    `training_dataset_id`  INT(11)      NULL,
+    `feature_view_id`      INT(11)      NULL,
+    `expectation_suite_id` INT(11)      NULL,
+    `validation_report_id` INT(11)      NULL,
+    PRIMARY KEY (`id`),
+    CONSTRAINT `fsa_feature_view_fk` FOREIGN KEY (`feature_view_id`) REFERENCES
+        `feature_view` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fs_act_fg_fk` FOREIGN KEY (`feature_group_id`) REFERENCES `feature_group` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fs_act_td_fk` FOREIGN KEY (`training_dataset_id`) REFERENCES `training_dataset` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fs_act_uid_fk` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fs_act_exec_fk` FOREIGN KEY (`execution_id`) REFERENCES `executions` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fs_act_stat_fk` FOREIGN KEY (`statistics_id`) REFERENCES `feature_store_statistic` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fs_act_commit_fk` FOREIGN KEY (`feature_group_id`, `commit_id`) REFERENCES `feature_group_commit` (`feature_group_id`, `commit_id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fs_act_validationreport_fk` FOREIGN KEY (`validation_report_id`) REFERENCES `validation_report` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fs_act_expectationsuite_fk` FOREIGN KEY (`expectation_suite_id`) REFERENCES `expectation_suite` (`id`) ON DELETE SET NULL ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+CREATE TABLE IF NOT EXISTS `tutorial`
+(
+    `id`          INT(11)      NOT NULL AUTO_INCREMENT,
+    `idx`         INT(5)       NOT NULL,
     `name`        VARCHAR(100) NOT NULL,
     `github_path` VARCHAR(200) NOT NULL,
     `description` VARCHAR(200) NOT NULL,
     PRIMARY KEY (`id`)
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.user_certs
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`user_certs`
+CREATE TABLE IF NOT EXISTS `pki_certificate`
 (
-    `projectname`  VARCHAR(100) CHARACTER SET 'latin1'                            NOT NULL,
-    `username`     VARCHAR(10) CHARACTER SET 'latin1' COLLATE 'latin1_general_cs' NOT NULL,
-    `user_key`     VARBINARY(7000)                                                NULL DEFAULT NULL,
-    `user_cert`    VARBINARY(3000)                                                NULL DEFAULT NULL,
-    `user_key_pwd` VARCHAR(200) CHARACTER SET 'latin1'                            NULL DEFAULT NULL,
-    PRIMARY KEY (`projectname`, `username`),
-    INDEX `username` (`username` ASC) VISIBLE,
-    CONSTRAINT `FK_260_465`
-        FOREIGN KEY (`username`)
-            REFERENCES `hopsworks`.`users` (`username`)
-            ON DELETE CASCADE,
-    CONSTRAINT `FK_287_464`
-        FOREIGN KEY (`projectname`)
-            REFERENCES `hopsworks`.`project` (`projectname`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    `ca`            TINYINT      NOT NULL,
+    `serial_number` BIGINT       NOT NULL,
+    `status`        TINYINT      NOT NULL,
+    `subject`       VARCHAR(255) NOT NULL,
+    `certificate`   VARBINARY(10000),
+    `not_before`    DATETIME     NOT NULL,
+    `not_after`     DATETIME     NOT NULL,
+    PRIMARY KEY (`status`, `subject`) USING HASH,
+    KEY `sn_index` (`serial_number`)
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.user_group
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`user_group`
+CREATE TABLE IF NOT EXISTS `pki_crl`
 (
-    `uid` INT NOT NULL,
-    `gid` INT NOT NULL,
-    PRIMARY KEY (`uid`, `gid`),
-    INDEX `gid` (`gid` ASC) VISIBLE,
-    CONSTRAINT `FK_255_269`
-        FOREIGN KEY (`gid`)
-            REFERENCES `hopsworks`.`bbc_group` (`gid`),
-    CONSTRAINT `FK_257_268`
-        FOREIGN KEY (`uid`)
-            REFERENCES `hopsworks`.`users` (`uid`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    `type` VARCHAR(20) NOT NULL,
+    `crl`  MEDIUMBLOB  NOT NULL,
+    PRIMARY KEY (`type`) USING HASH
+) /*!50100 TABLESPACE `ts_1` STORAGE DISK */
+           ENGINE = ndbcluster COMMENT ='NDB_TABLE=READ_BACKUP=1'
+           DEFAULT CHARSET = latin1
+           COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.userlogins
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`userlogins`
+CREATE TABLE IF NOT EXISTS `pki_key`
 (
-    `login_id`   BIGINT                              NOT NULL AUTO_INCREMENT,
-    `ip`         VARCHAR(45) CHARACTER SET 'latin1'  NULL DEFAULT NULL,
-    `useragent`  VARCHAR(255) CHARACTER SET 'latin1' NULL DEFAULT NULL,
-    `action`     VARCHAR(80) CHARACTER SET 'latin1'  NULL DEFAULT NULL,
-    `outcome`    VARCHAR(20) CHARACTER SET 'latin1'  NULL DEFAULT NULL,
-    `uid`        INT                                 NOT NULL,
-    `login_date` TIMESTAMP                           NULL DEFAULT NULL,
-    PRIMARY KEY (`login_id`),
-    INDEX `login_date` (`login_date` ASC) VISIBLE,
-    INDEX `uid` (`uid` ASC) VISIBLE,
-    CONSTRAINT `FK_257_345`
-        FOREIGN KEY (`uid`)
-            REFERENCES `hopsworks`.`users` (`uid`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 316
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    `owner` VARCHAR(100)    NOT NULL,
+    `type`  TINYINT         NOT NULL,
+    `key`   VARBINARY(8192) NOT NULL,
+    PRIMARY KEY (`owner`, `type`) USING HASH
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.users
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`users`
+CREATE TABLE IF NOT EXISTS `pki_serial_number`
 (
-    `uid`                    INT                                                              NOT NULL AUTO_INCREMENT,
-    `username`               VARCHAR(10) CHARACTER SET 'latin1' COLLATE 'latin1_general_cs'   NOT NULL,
-    `password`               VARCHAR(128) CHARACTER SET 'latin1' COLLATE 'latin1_general_cs'  NOT NULL,
-    `email`                  VARCHAR(150) CHARACTER SET 'latin1' COLLATE 'latin1_general_cs'  NULL     DEFAULT NULL,
-    `fname`                  VARCHAR(30) CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_0900_ai_ci' NULL     DEFAULT NULL,
-    `lname`                  VARCHAR(30) CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_0900_ai_ci' NULL     DEFAULT NULL,
-    `activated`              TIMESTAMP                                                        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `title`                  VARCHAR(10) CHARACTER SET 'latin1' COLLATE 'latin1_general_cs'   NULL     DEFAULT '-',
-    `false_login`            INT                                                              NOT NULL DEFAULT '-1',
-    `status`                 INT                                                              NOT NULL DEFAULT '-1',
-    `isonline`               INT                                                              NOT NULL DEFAULT '-1',
-    `secret`                 VARCHAR(20) CHARACTER SET 'latin1' COLLATE 'latin1_general_cs'   NULL     DEFAULT NULL,
-    `validation_key`         VARCHAR(128) CHARACTER SET 'latin1' COLLATE 'latin1_general_cs'  NULL     DEFAULT NULL,
-    `validation_key_updated` TIMESTAMP                                                        NULL     DEFAULT NULL,
-    `validation_key_type`    VARCHAR(20)                                                      NULL     DEFAULT NULL,
-    `mode`                   INT                                                              NOT NULL DEFAULT '0',
-    `password_changed`       TIMESTAMP                                                        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `notes`                  VARCHAR(500) CHARACTER SET 'latin1' COLLATE 'latin1_general_cs'  NULL     DEFAULT '-',
-    `max_num_projects`       INT                                                              NOT NULL,
-    `num_active_projects`    INT                                                              NOT NULL DEFAULT '0',
-    `two_factor`             TINYINT(1)                                                       NOT NULL DEFAULT '1',
-    `tours_state`            TINYINT(1)                                                       NOT NULL DEFAULT '0',
-    `salt`                   VARCHAR(128) CHARACTER SET 'latin1' COLLATE 'latin1_general_cs'  NOT NULL DEFAULT '',
-    PRIMARY KEY (`uid`),
-    UNIQUE INDEX `username` (`username` ASC) VISIBLE,
-    UNIQUE INDEX `email` (`email` ASC) VISIBLE
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 10178
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    `type`   VARCHAR(20) NOT NULL,
+    `number` BIGINT      NOT NULL,
+    PRIMARY KEY (`type`) USING HASH
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.validation_report
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`validation_report`
+CREATE TABLE IF NOT EXISTS `feature_group_link`
 (
-    `id`                    INT                                 NOT NULL AUTO_INCREMENT,
-    `feature_group_id`      INT                                 NOT NULL,
-    `success`               TINYINT(1)                          NOT NULL,
-    `validation_time`       TIMESTAMP                           NULL DEFAULT CURRENT_TIMESTAMP,
-    `evaluation_parameters` VARCHAR(1000)                       NULL DEFAULT '{}',
-    `meta`                  VARCHAR(2000)                       NULL DEFAULT '{}',
-    `statistics`            VARCHAR(1000)                       NOT NULL,
-    `file_name`             VARCHAR(255) CHARACTER SET 'latin1' NOT NULL,
-    `ingestion_result`      VARCHAR(11)                         NOT NULL,
+    `id`                           int          NOT NULL AUTO_INCREMENT,
+    `feature_group_id`             int(11)      NOT NULL,
+    `parent_feature_group_id`      int(11),
+    `parent_feature_store`         varchar(100) NOT NULL,
+    `parent_feature_group_name`    varchar(63)  NOT NULL,
+    `parent_feature_group_version` int(11)      NOT NULL,
     PRIMARY KEY (`id`),
-    INDEX `feature_group_report_fk` (`feature_group_id` ASC) VISIBLE,
-    CONSTRAINT `feature_group_report_fk`
-        FOREIGN KEY (`feature_group_id`)
-            REFERENCES `hopsworks`.`feature_group` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    UNIQUE KEY `link_unique` (`feature_group_id`, `parent_feature_group_id`),
+    KEY `feature_group_id_fkc` (`feature_group_id`),
+    KEY `parent_feature_group_id_fkc` (`parent_feature_group_id`),
+    CONSTRAINT `feature_group_id_fkc` FOREIGN KEY (`feature_group_id`) REFERENCES `feature_group` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `feature_group_parent_fkc` FOREIGN KEY (`parent_feature_group_id`) REFERENCES `feature_group` (`id`) ON DELETE SET NULL ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.validation_result
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`validation_result`
+CREATE TABLE IF NOT EXISTS `feature_view_link`
 (
-    `id`                   INT           NOT NULL AUTO_INCREMENT,
-    `validation_report_id` INT           NOT NULL,
-    `expectation_id`       INT           NOT NULL,
-    `success`              TINYINT(1)    NOT NULL,
-    `result`               VARCHAR(1000) NOT NULL,
-    `meta`                 VARCHAR(1000) NULL DEFAULT '{}',
-    `validation_time`      TIMESTAMP     NULL DEFAULT CURRENT_TIMESTAMP,
-    `ingestion_result`     VARCHAR(11)   NOT NULL,
-    `expectation_config`   VARCHAR(2150) NOT NULL,
-    `exception_info`       VARCHAR(1000) NULL DEFAULT '{}',
+    `id`                           int          NOT NULL AUTO_INCREMENT,
+    `feature_view_id`              int(11)      NOT NULL,
+    `parent_feature_group_id`      int(11),
+    `parent_feature_store`         varchar(100) NOT NULL,
+    `parent_feature_group_name`    varchar(63)  NOT NULL,
+    `parent_feature_group_version` int(11)      NOT NULL,
     PRIMARY KEY (`id`),
-    INDEX `expectation_id` (`expectation_id` ASC) VISIBLE,
-    INDEX `report_fk_validation_result` (`validation_report_id` ASC) VISIBLE,
-    CONSTRAINT `report_fk_validation_result`
-        FOREIGN KEY (`validation_report_id`)
-            REFERENCES `hopsworks`.`validation_report` (`id`)
-            ON DELETE CASCADE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
+    UNIQUE KEY `link_unique` (`feature_view_id`, `parent_feature_group_id`),
+    KEY `feature_view_id_fkc` (`feature_view_id`),
+    KEY `feature_view_parent_id_fkc` (`parent_feature_group_id`),
+    CONSTRAINT `feature_view_id_fkc` FOREIGN KEY (`feature_view_id`) REFERENCES `feature_view` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `feature_view_parent_fkc` FOREIGN KEY (`parent_feature_group_id`) REFERENCES `feature_group` (`id`) ON DELETE SET NULL ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
 
--- ----------------------------------------------------------------------------
--- Table hopsworks.variables
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `hopsworks`.`variables`
+CREATE TABLE IF NOT EXISTS `hdfs_command_execution`
 (
-    `id`         VARCHAR(255) CHARACTER SET 'latin1'  NOT NULL,
-    `value`      VARCHAR(1024) CHARACTER SET 'latin1' NOT NULL,
-    `visibility` TINYINT                              NOT NULL DEFAULT '0',
-    `hide`       TINYINT                              NOT NULL DEFAULT '0',
-    PRIMARY KEY (`id`)
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = latin1
-    COLLATE = latin1_general_cs;
-SET FOREIGN_KEY_CHECKS = 1;
+    `id`           int           NOT NULL AUTO_INCREMENT,
+    `execution_id` int           NOT NULL,
+    `command`      varchar(45)   NOT NULL,
+    `submitted`    timestamp     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `src_path`     varchar(1000) NOT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uq_execution_id` (`execution_id`),
+    UNIQUE KEY `uq_src_path` (`src_path`),
+    KEY `fk_hdfs_file_command_1_idx` (`execution_id`),
+    CONSTRAINT `fk_hdfs_file_command_1` FOREIGN KEY (`execution_id`) REFERENCES `executions` (`id`) ON DELETE CASCADE
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+-- FSTORE-921
+CREATE TABLE `serving_key`
+(
+    `id`               int(11)       NOT NULL AUTO_INCREMENT,
+    `prefix`           VARCHAR(63)   NULL     DEFAULT '',
+    `feature_name`     VARCHAR(1000) NOT NULL,
+    `join_on`          VARCHAR(1000) NULL,
+    `join_index`       int(11)       NOT NULL,
+    `feature_group_id` INT(11)       NOT NULL,
+    `required`         tinyint(1)    NOT NULL DEFAULT '0',
+    `feature_view_id`  INT(11)       NULL,
+    PRIMARY KEY (`id`),
+    KEY `feature_view_id` (`feature_view_id`),
+    KEY `feature_group_id` (`feature_group_id`),
+    CONSTRAINT `feature_view_serving_key_fk` FOREIGN KEY (`feature_view_id`) REFERENCES `feature_view` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `feature_group_serving_key_fk` FOREIGN KEY (`feature_group_id`) REFERENCES `feature_group` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+CREATE TABLE IF NOT EXISTS `job_schedule`
+(
+    `id`                       int          NOT NULL AUTO_INCREMENT,
+    `job_id`                   int          NOT NULL,
+    `start_date_time`          timestamp    NOT NULL,
+    `end_date_time`            timestamp,
+    `enabled`                  BOOLEAN      NOT NULL,
+    `cron_expression`          varchar(500) NOT NULL,
+    `next_execution_date_time` timestamp,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `job_id` (`job_id`),
+    CONSTRAINT `fk_schedule_job` FOREIGN KEY (`job_id`) REFERENCES `jobs` (`id`) ON DELETE CASCADE
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+CREATE TABLE `command_search_fs`
+(
+    `id`                  bigint      NOT NULL AUTO_INCREMENT,
+    `inode_id`            bigint      NOT NULL,
+    `project_id`          int,
+    `op`                  VARCHAR(20) NOT NULL,
+    `status`              VARCHAR(20) NOT NULL,
+    `feature_group_id`    int(11),
+    `feature_view_id`     int(11),
+    `training_dataset_id` int(11),
+    `error_message`       varchar(10000),
+    PRIMARY KEY (`id`),
+    CONSTRAINT `fk_command_search_feature_group` FOREIGN KEY (`feature_group_id`) REFERENCES `feature_group` (`id`) ON DELETE SET NULL ON UPDATE NO ACTION,
+    CONSTRAINT `fk_command_search_feature_view` FOREIGN KEY (`feature_view_id`) REFERENCES `feature_view` (`id`) ON DELETE SET NULL ON UPDATE NO ACTION,
+    CONSTRAINT `fk_command_search_training_dataset` FOREIGN KEY (`training_dataset_id`) REFERENCES `training_dataset` (`id`) ON DELETE SET NULL ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+CREATE TABLE `command_search_fs_history`
+(
+    `h_id`                bigint      NOT NULL AUTO_INCREMENT,
+    `executed`            timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `id`                  bigint      NOT NULL,
+    `inode_id`            bigint      NOT NULL,
+    `project_id`          int,
+    `op`                  VARCHAR(20) NOT NULL,
+    `status`              VARCHAR(20) NOT NULL,
+    `feature_group_id`    int(11),
+    `feature_view_id`     int(11),
+    `training_dataset_id` int(11),
+    `error_message`       varchar(10000),
+    PRIMARY KEY (`h_id`)
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+CREATE TABLE `feature_store_tag_value`
+(
+    `id`                  int(11)        NOT NULL AUTO_INCREMENT,
+    `schema_id`           int(11)        NOT NULL,
+    `feature_group_id`    int(11),
+    `feature_view_id`     int(11),
+    `training_dataset_id` int(11),
+    `value`               VARCHAR(29000) NOT NULL,
+    PRIMARY KEY (`id`),
+    CONSTRAINT `fk_fs_tag_value_schema` FOREIGN KEY (`schema_id`) REFERENCES `feature_store_tag` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fk_fs_tag_value_fg` FOREIGN KEY (`feature_group_id`) REFERENCES `feature_group` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fk_fs_tag_value_fv` FOREIGN KEY (`feature_view_id`) REFERENCES `feature_view` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fk_fs_tag_value_td` FOREIGN KEY (`training_dataset_id`) REFERENCES `training_dataset` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
+
+CREATE TABLE `feature_store_keyword`
+(
+    `id`                  int(11)      NOT NULL AUTO_INCREMENT,
+    `name`                VARCHAR(255) NOT NULL,
+    `feature_group_id`    int(11),
+    `feature_view_id`     int(11),
+    `training_dataset_id` int(11),
+    PRIMARY KEY (`id`),
+    CONSTRAINT `fk_fs_keyword_fg` FOREIGN KEY (`feature_group_id`) REFERENCES `feature_group` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fk_fs_keyword_fv` FOREIGN KEY (`feature_view_id`) REFERENCES `feature_view` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT `fk_fs_keyword_td` FOREIGN KEY (`training_dataset_id`) REFERENCES `training_dataset` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE = ndbcluster
+  DEFAULT CHARSET = latin1
+  COLLATE = latin1_general_cs;
