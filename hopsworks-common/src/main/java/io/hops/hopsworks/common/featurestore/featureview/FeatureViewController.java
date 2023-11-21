@@ -126,7 +126,7 @@ public class FeatureViewController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_VIEW_ALREADY_EXISTS, Level.FINE,
           "Feature view: " + featureView.getName() + ", version: " + featureView.getVersion());
     }
-
+  
     // Since training dataset created by feature view shares the same name, need to make sure name of feature view
     // do not collide with existing training dataset created without feature view.
     List<TrainingDataset> trainingDatasets = trainingDatasetFacade

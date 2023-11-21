@@ -100,6 +100,22 @@ public class QueryResource {
       @QueryParam("with_label")
       @DefaultValue("false")
           Boolean withLabel,
+      @ApiParam(value = "Get query with primary key features")
+      @QueryParam("with_primary_keys")
+      @DefaultValue("false")
+        Boolean withPrimaryKeys,
+      @ApiParam(value = "Get query with primary event time feature")
+      @QueryParam("with_event_time")
+      @DefaultValue("false")
+        Boolean withEventTime,
+      @ApiParam(value = "Get query with inference helper columns")
+      @QueryParam("inference_helper_columns")
+      @DefaultValue("false")
+          Boolean inferenceHelperColumns,
+      @ApiParam(value = "Get query with training helper columns")
+      @QueryParam("training_helper_columns")
+      @DefaultValue("false")
+        Boolean trainingHelperColumns,
       @ApiParam(value = "Get query in hive format")
       @QueryParam("is_hive_engine")
       @DefaultValue("false")
@@ -110,7 +126,8 @@ public class QueryResource {
   ) throws FeaturestoreException, ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
     Query query = queryController.constructBatchQuery(
-        featureView, project, user, startTime, endTime, withLabel, isHiveEngine, trainingDataVersion);
+        featureView, project, user, startTime, endTime, withLabel, withPrimaryKeys, withEventTime,
+        inferenceHelperColumns, trainingHelperColumns, isHiveEngine, trainingDataVersion);
     return Response.ok().entity(queryBuilder.build(query, featurestore, project, user)).build();
   }
 
@@ -130,7 +147,7 @@ public class QueryResource {
           HttpServletRequest req
   ) throws FeaturestoreException, ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    Query query = queryController.makeQuery(featureView, project, user, true, false);
+    Query query = queryController.makeQuery(featureView, project, user, true, false, false, true, true, false);
     QueryDTO queryDTO = queryBuilder.build(query, featurestore, project, user);
     return Response.ok().entity(queryDTO).build();
   }

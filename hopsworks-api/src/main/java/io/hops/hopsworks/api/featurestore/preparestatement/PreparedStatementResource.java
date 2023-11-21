@@ -95,11 +95,16 @@ public class PreparedStatementResource {
       @ApiParam(value = "get batch serving vectors", example = "false")
       @QueryParam("batch")
       @DefaultValue("false")
-          boolean batch)
+          boolean batch,
+      @ApiParam(value = "get inference helper columns", example = "false")
+      @QueryParam("inference_helper_columns")
+      @DefaultValue("false")
+      boolean inference_helper_columns)
       throws FeaturestoreException {
     Users user = jWTHelper.getUserPrincipal(sc);
     ServingPreparedStatementDTO servingPreparedStatementDTO = preparedStatementBuilder.build(uriInfo,
-       new ResourceRequest(ResourceRequest.Name.PREPAREDSTATEMENTS), project, user, featurestore, featureView, batch);
+       new ResourceRequest(ResourceRequest.Name.PREPAREDSTATEMENTS), project, user, featurestore, featureView, batch,
+      inference_helper_columns);
     return Response.ok().entity(servingPreparedStatementDTO).build();
   }
 }

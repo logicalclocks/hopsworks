@@ -62,7 +62,9 @@ import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivityMeta;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeatureExtraConstraints;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeature;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticColumn;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig;
@@ -235,7 +237,7 @@ public class TrainingDatasetController {
                       f.getFeatureGroup().getVersion(),
                       f.getFeatureGroup().isDeprecated())
                   : null,
-              f.getIndex(), f.isLabel()))
+              f.getIndex(), f.isLabel(), f.isInferenceHelperColumn() , f.isTrainingHelperColumn()))
           .collect(Collectors.toList()));
     }
 
@@ -260,7 +262,7 @@ public class TrainingDatasetController {
     // Name of Training data = <feature view name>_<feature view version>, version is needed
     // because there can be multiple training dataset of same name from different version of feature view
     trainingDatasetDTO.setName(featureView.getName() + "_" + featureView.getVersion());
-    Query query = queryController.makeQuery(featureView, project, user, true, false);
+    Query query = queryController.makeQuery(featureView, project, user, true, false, false, false, false, false);
     if (query.getDeletedFeatureGroups() != null && !query.getDeletedFeatureGroups().isEmpty()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND,
           Level.SEVERE, String.format("Cannot create the training dataset because " +
@@ -634,6 +636,8 @@ public class TrainingDatasetController {
       throws FeaturestoreException {
     List<TrainingDatasetFeature> features = new ArrayList<>();
     boolean isLabel = false;
+    boolean isInferenceHelper = false;
+    boolean isTrainingHelper = false;
     TransformationFunction transformationFunction = null;
     for (Feature f : query.getFeatures()) {
       if (featureDTOs != null && !featureDTOs.isEmpty()) {
@@ -643,14 +647,30 @@ public class TrainingDatasetController {
                 // If feature group is null, it assumes matching name of the label only.
                 && (dto.getFeaturegroup() == null || f.getFeatureGroup().getId().equals(dto.getFeaturegroup().getId()))
         );
+        // identify if it is inference helper feature
+        isInferenceHelper = featureDTOs.stream().anyMatch(dto ->
+          f.getName().equals(dto.getName()) && dto.getInferenceHelperColumn()
+            // If feature group is null, it assumes matching name of the extra feature only.
+            && (dto.getFeaturegroup() == null || f.getFeatureGroup().getId().equals(dto.getFeaturegroup().getId()))
+        );
+  
+        // identify if it is inference training feature
+        isTrainingHelper = featureDTOs.stream().anyMatch(dto ->
+          f.getName().equals(dto.getName()) && dto.getTrainingHelperColumn()
+            // If feature group is null, it assumes matching name of the extra feature only.
+            && (dto.getFeaturegroup() == null || f.getFeatureGroup().getId().equals(dto.getFeaturegroup().getId()))
+        );
+        
         // get transformation function for this feature
         transformationFunction = getTransformationFunction(f, featureDTOs, tdJoins.get(joinIndex).getPrefix());
       }
       features.add(trainingDataset != null ?
           new TrainingDatasetFeature(trainingDataset, tdJoins.get(joinIndex), query.getFeaturegroup(),
-              f.getName(), f.getType(), featureIndex++, isLabel, transformationFunction) :
+          f.getName(), f.getType(), featureIndex++, isLabel, isInferenceHelper, isTrainingHelper,
+            transformationFunction):
           new TrainingDatasetFeature(featureView, tdJoins.get(joinIndex), query.getFeaturegroup(),
-              f.getName(), f.getType(), featureIndex++, isLabel, transformationFunction));
+              f.getName(), f.getType(), featureIndex++, isLabel, isInferenceHelper, isTrainingHelper,
+            transformationFunction));
     }
 
     if (query.getJoins() != null) {
@@ -1076,18 +1096,20 @@ public class TrainingDatasetController {
     // to respect the ordering, all selected features are added to the left most Query instead of splitting them
     // over the querys for their respective origin feature group
     List<TrainingDatasetFeature> tdFeatures = getFeaturesSorted(trainingDataset, withLabel);
-    return getQuery(joins, tdFeatures, trainingDataset.getFilters(), project, user, isHiveEngine);
+    return getQuery(joins, tdFeatures, trainingDataset.getFilters(), project, user, isHiveEngine, false, false);
   }
 
   public Query getQuery(List<TrainingDatasetJoin> joins, List<TrainingDatasetFeature> tdFeatures,
       Collection<TrainingDatasetFilter> trainingDatasetFilters, Project project,
-      Users user, Boolean isHiveEngine) throws FeaturestoreException {
-    return getQuery(joins, tdFeatures, trainingDatasetFilters, project, user, isHiveEngine, Lists.newArrayList());
+      Users user, Boolean isHiveEngine, boolean withPrimaryKeys, boolean withEventTime) throws FeaturestoreException {
+    return getQuery(joins, tdFeatures, trainingDatasetFilters, project, user, isHiveEngine, Lists.newArrayList(),
+      withPrimaryKeys, withEventTime);
   }
-
+  
   public Query getQuery(List<TrainingDatasetJoin> joins, List<TrainingDatasetFeature> tdFeatures,
       Collection<TrainingDatasetFilter> trainingDatasetFilters, Project project,
-      Users user, Boolean isHiveEngine, Collection<TrainingDatasetFilter> extraFilters) throws FeaturestoreException {
+      Users user, Boolean isHiveEngine, Collection<TrainingDatasetFilter> extraFilters, boolean withPrimaryKeys,
+      boolean withEventTime) throws FeaturestoreException {
     // Convert all the TrainingDatasetFeatures to QueryFeatures
     Map<Integer, String> fgAliasLookup = getAliasLookupTable(joins);
 
@@ -1116,11 +1138,12 @@ public class TrainingDatasetController {
     Map<String, Feature> featureLookup = availableFeaturesLookup.values().stream().flatMap(List::stream)
         .collect(Collectors.toMap(
           f -> makeFeatureLookupKey(f.getFeatureGroup().getId(), f.getName()), f -> f, (f1, f2) -> f1));
-
+    
     List<Feature> features = new ArrayList<>();
     for (TrainingDatasetFeature requestedFeature : tdFeatures) {
       Feature tdFeature = featureLookup.get(makeFeatureLookupKey(requestedFeature.getFeatureGroup().getId(),
           requestedFeature.getName()));
+      
       if (tdFeature == null) {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_DOES_NOT_EXIST, Level.FINE,
             "Feature: " + requestedFeature.getName() + " not found in feature group: " +
@@ -1133,7 +1156,11 @@ public class TrainingDatasetController {
           requestedFeature.getIndex());
       features.add(featureWithCorrectAlias);
     }
-
+  
+    // add primary key or event time features, if requested
+    features = addPrimaryKeyEventTimeFeature(features, featureLookup, joins, fgAliasLookup, withEventTime,
+      withPrimaryKeys);
+  
     // Keep a map feature store id -> feature store name
     Map<Integer, String> fsLookup = getFsLookupTableJoins(joins);
 
@@ -1384,5 +1411,68 @@ public class TrainingDatasetController {
     } else {
       return feature.getName();
     }
+  }
+  
+  private void addSelectedFeature(List<String> featureNames, Featuregroup featureGroup,
+    Map<String, Feature> featureLookup, List<Feature> features, TrainingDatasetJoin join,
+    Map<Integer, String> fgAliasLookup) {
+    
+    for (String featureName: featureNames) {
+      Feature feature = featureLookup.get(makeFeatureLookupKey(featureGroup.getId(), featureName));
+      Feature newFeature = new Feature(feature.getName(),
+        fgAliasLookup.get(join.getId()),
+        feature.getType(), feature.getDefaultValue(), join.getPrefix(),
+        join.getFeatureGroup(),
+        null);
+  
+      // check if user already selected feature in the query
+      if (features.stream().noneMatch(f -> f.getName().equals(featureName) &
+        (f.getFeatureGroup().getId().equals(f.getFeatureGroup().getId())))) {
+        features.add(
+          newFeature
+        );
+      }
+    }
+  }
+  
+  private List<Feature> addPrimaryKeyEventTimeFeature(List<Feature> features, Map<String, Feature> featureLookup,
+    List<TrainingDatasetJoin> joins, Map<Integer, String> fgAliasLookup,
+    boolean withEventTime, boolean withPrimaryKeys) {
+    
+    if (withPrimaryKeys || withEventTime) {
+      for (TrainingDatasetJoin join: joins) {
+        List<String> featureNames = new ArrayList<>();
+        // 1st collect primary key and event time feature names in the join
+        if (withEventTime && join.getFeatureGroup().getEventTime() != null) {
+          featureNames.add(join.getFeatureGroup().getEventTime());
+        }
+        
+        if (withPrimaryKeys) {
+          if (join.getFeatureGroup().getStreamFeatureGroup() != null) {
+            featureNames.addAll(join.getFeatureGroup().getStreamFeatureGroup().getFeaturesExtraConstraints().stream()
+              .filter(CachedFeatureExtraConstraints::getPrimary)
+              .map(CachedFeatureExtraConstraints::getName)
+              .collect(Collectors.toList())
+            );
+          }
+          if (join.getFeatureGroup().getCachedFeaturegroup() != null) {
+            featureNames.addAll(join.getFeatureGroup().getCachedFeaturegroup().getFeaturesExtraConstraints().stream()
+              .filter(CachedFeatureExtraConstraints::getPrimary)
+              .map(CachedFeatureExtraConstraints::getName)
+              .collect(Collectors.toList())
+            );
+          }
+          if (join.getFeatureGroup().getOnDemandFeaturegroup() != null)
+            featureNames.addAll(join.getFeatureGroup().getOnDemandFeaturegroup().getFeatures().stream()
+              .filter(OnDemandFeature::getPrimary).map(OnDemandFeature::getName)
+              .collect(Collectors.toList())
+            );
+        }
+        // now add these features to the list
+        addSelectedFeature(featureNames, join.getFeatureGroup(), featureLookup,
+          features, join, fgAliasLookup);
+      }
+    }
+    return features;
   }
 }

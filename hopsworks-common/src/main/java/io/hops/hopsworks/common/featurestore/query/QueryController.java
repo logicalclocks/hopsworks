@@ -512,12 +512,18 @@ public class QueryController {
     }
   }
 
-  public Query makeQuery(FeatureView featureView, Project project, Users user, boolean withLabel, Boolean isHiveEngine)
+  public Query makeQuery(FeatureView featureView, Project project, Users user, boolean withLabel,
+      boolean withPrimaryKeys, boolean withEventTime, boolean inferenceHelperColumns,
+      boolean trainingHelperColumns, Boolean isHiveEngine)
       throws FeaturestoreException {
-    return makeQuery(featureView, project, user, withLabel, isHiveEngine, Lists.newArrayList());
+    return makeQuery(featureView, project, user, withLabel, withPrimaryKeys, withEventTime, inferenceHelperColumns,
+      trainingHelperColumns, isHiveEngine,
+      Lists.newArrayList());
   }
 
-  public Query makeQuery(FeatureView featureView, Project project, Users user, boolean withLabel, Boolean isHiveEngine,
+  public Query makeQuery(FeatureView featureView, Project project, Users user, boolean withLabel,
+      boolean withPrimaryKeys, boolean withEventTime, boolean inferenceHelperColumns,
+      boolean trainingHelperColumns, Boolean isHiveEngine,
       Collection<TrainingDatasetFilter> extraFilters)
       throws FeaturestoreException {
     List<TrainingDatasetJoin> joins = featureView.getJoins().stream()
@@ -536,31 +542,40 @@ public class QueryController {
         })
         // drop label features if desired
         .filter(f -> !f.isLabel() || withLabel)
+        // drop extra features if desired
+        .filter(f -> !f.isInferenceHelperColumn() || inferenceHelperColumns)
+        .filter(f -> !f.isTrainingHelperColumn() || trainingHelperColumns)
         .collect(Collectors.toList());
 
     return trainingDatasetController.getQuery(
-        joins, tdFeatures, featureView.getFilters(), project, user, isHiveEngine, extraFilters);
+        joins, tdFeatures, featureView.getFilters(), project, user, isHiveEngine, extraFilters, withPrimaryKeys,
+        withEventTime);
   }
 
   public Query constructBatchQuery(FeatureView featureView, Project project, Users user, Long startTimestamp,
-      Long endTimestamp, Boolean withLabel, Boolean isHiveEngine, Integer trainingDataVersion)
-      throws FeaturestoreException {
+      Long endTimestamp, Boolean withLabel, Boolean withPrimaryKeys, Boolean withEventTime,
+      Boolean inferenceHelperColumns, Boolean trainingHelperColumns, Boolean isHiveEngine,
+      Integer trainingDataVersion) throws FeaturestoreException {
     Date startTime = startTimestamp == null ? null : new Date(startTimestamp);
     Date endTime = endTimestamp == null ? null : new Date(endTimestamp);
-    return constructBatchQuery(featureView, project, user, startTime, endTime, withLabel, isHiveEngine,
-        trainingDataVersion);
+    return constructBatchQuery(featureView, project, user, startTime, endTime, withLabel, withPrimaryKeys,
+      withEventTime, inferenceHelperColumns, trainingHelperColumns, isHiveEngine, trainingDataVersion);
   }
 
   public Query constructBatchQuery(FeatureView featureView, Project project, Users user, Date startTime,
-      Date endTime, Boolean withLabel, Boolean isHiveEngine, Integer trainingDataVersion)
-      throws FeaturestoreException {
+      Date endTime, Boolean withLabel, Boolean withPrimaryKeys, Boolean withEventTime,
+      Boolean inferenceHelperColumns, Boolean trainingHelperColumns, Boolean isHiveEngine,
+      Integer trainingDataVersion) throws FeaturestoreException {
     Query baseQuery;
     if (trainingDataVersion != null) {
-      baseQuery = makeQuery(featureView, project, user, withLabel, isHiveEngine,
+      baseQuery = makeQuery(featureView, project, user, withLabel, withPrimaryKeys, withEventTime,
+        inferenceHelperColumns,
+          trainingHelperColumns, isHiveEngine,
           trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(featureView, trainingDataVersion)
               .getFilters());
     } else {
-      baseQuery = makeQuery(featureView, project, user, withLabel, isHiveEngine);
+      baseQuery = makeQuery(featureView, project, user, withLabel, withPrimaryKeys, withEventTime,
+        inferenceHelperColumns, trainingHelperColumns, isHiveEngine);
     }
     return appendEventTimeFilter(baseQuery, startTime, endTime);
   }
