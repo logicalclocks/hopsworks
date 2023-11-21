@@ -1069,7 +1069,7 @@ public class TestConstructorController {
     tdFeatures.add(new TrainingDatasetFeature("feature_existing", new Featuregroup()));
   
     Query query = trainingDatasetController.getQuery(new ArrayList<>(), tdFeatures, Collections.emptyList(), project,
-      user, false);
+      user, false, false, false);
     
     FsQueryDTO result = target.construct(query, false, false, project, user);
     Assert.assertEquals("Parent feature groups of the following features are not available anymore: feature_missing", result.getQuery());

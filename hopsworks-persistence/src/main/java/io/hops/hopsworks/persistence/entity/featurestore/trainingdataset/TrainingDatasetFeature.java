@@ -62,6 +62,12 @@ public class TrainingDatasetFeature implements Serializable {
   @Basic(optional = false)
   @Column(name = "label")
   private boolean label;
+  @Basic(optional = false)
+  @Column(name = "inference_helper_column")
+  private boolean inferenceHelperColumn;
+  @Basic(optional = false)
+  @Column(name = "training_helper_column")
+  private boolean trainingHelperColumn;
   @JoinColumn(name = "transformation_function", referencedColumnName = "id")
   private TransformationFunction transformationFunction;
 
@@ -75,8 +81,8 @@ public class TrainingDatasetFeature implements Serializable {
   }
 
   public TrainingDatasetFeature(FeatureView featureView, TrainingDatasetJoin trainingDatasetJoin,
-      Featuregroup featureGroup, String name, String type, Integer index, boolean label,
-      TransformationFunction transformationFunction) {
+      Featuregroup featureGroup, String name, String type, Integer index, boolean label, boolean inferenceHelperColumn,
+      boolean trainingHelperColumn, TransformationFunction transformationFunction) {
     this.featureView = featureView;
     this.trainingDatasetJoin = trainingDatasetJoin;
     this.featureGroup = featureGroup;
@@ -84,11 +90,14 @@ public class TrainingDatasetFeature implements Serializable {
     this.type = type;
     this.index = index;
     this.label = label;
+    this.inferenceHelperColumn = inferenceHelperColumn;
+    this.trainingHelperColumn = trainingHelperColumn;
     this.transformationFunction = transformationFunction;
   }
 
   public TrainingDatasetFeature(TrainingDataset trainingDataset, TrainingDatasetJoin trainingDatasetJoin,
                                 Featuregroup featureGroup, String name, String type, Integer index, boolean label,
+                                boolean inferenceHelperColumn, boolean trainingHelperColumn,
                                 TransformationFunction transformationFunction) {
     this.trainingDataset = trainingDataset;
     this.trainingDatasetJoin = trainingDatasetJoin;
@@ -97,6 +106,8 @@ public class TrainingDatasetFeature implements Serializable {
     this.type = type;
     this.index = index;
     this.label = label;
+    this.inferenceHelperColumn = inferenceHelperColumn;
+    this.trainingHelperColumn = trainingHelperColumn;
     this.transformationFunction = transformationFunction;
   }
 
@@ -177,7 +188,23 @@ public class TrainingDatasetFeature implements Serializable {
   public void setLabel(boolean label) {
     this.label = label;
   }
-
+  
+  public boolean isInferenceHelperColumn() {
+    return inferenceHelperColumn;
+  }
+  
+  public void setInferenceHelperColumn(boolean inferenceHelperColumn) {
+    this.inferenceHelperColumn = inferenceHelperColumn;
+  }
+  
+  public boolean isTrainingHelperColumn() {
+    return trainingHelperColumn;
+  }
+  
+  public void setTrainingHelperColumn(boolean trainingHelperColumn) {
+    this.trainingHelperColumn = trainingHelperColumn;
+  }
+  
   public TransformationFunction getTransformationFunction() {
     return transformationFunction;
   }

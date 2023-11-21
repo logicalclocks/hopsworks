@@ -449,25 +449,24 @@ public class TrainingDatasetControllerTest {
     tdFeatures.add(new TrainingDatasetFeature("feature_existing", new Featuregroup()));
     
     Query result = target.getQuery(new ArrayList<>(), tdFeatures, Collections.emptyList(), Mockito.mock(Project.class),
-      Mockito.mock(Users.class), false);
+      Mockito.mock(Users.class), false, false, false);
   
     Assert.assertFalse(result.getDeletedFeatureGroups().isEmpty());
     Assert.assertEquals(1, result.getDeletedFeatureGroups().size());
     Assert.assertEquals("feature_missing", result.getDeletedFeatureGroups().get(0));
   }
-
+  
   @Test
   public void testGetQuery_noFeature() {
     try {
       target.getQuery(new ArrayList<>(), Collections.emptyList(), Collections.emptyList(),
-          Mockito.mock(Project.class), Mockito.mock(Users.class), false);
-
+        Mockito.mock(Project.class), Mockito.mock(Users.class), false, false, false);
+      
       Assert.fail("Expected FeaturestoreException, but no exception was thrown.");
     } catch (FeaturestoreException e) {
       Assert.assertEquals(FEATURE_NOT_FOUND, e.getErrorCode());
     }
   }
-
   @Test
   public void testCollectFeatures() throws Exception {
     // prepare TransformationFunctionDTO
@@ -485,8 +484,8 @@ public class TrainingDatasetControllerTest {
     FeaturegroupDTO fgDto = new FeaturegroupDTO();
     fgDto.setId(1);
     List<TrainingDatasetFeatureDTO> tdFeatureDtos = new ArrayList<>();
-    tdFeatureDtos.add(new TrainingDatasetFeatureDTO("f1", "double", fgDto, "f1", 0, false, tfDto1));
-    tdFeatureDtos.add(new TrainingDatasetFeatureDTO("fg1_f1", "double", fgDto, "f1", 1, false, tfDto2));
+    tdFeatureDtos.add(new TrainingDatasetFeatureDTO("f1", "double", fgDto, "f1", 0, false, false, false, tfDto1));
+    tdFeatureDtos.add(new TrainingDatasetFeatureDTO("fg1_f1", "double", fgDto, "f1", 1, false, false, false, tfDto2));
     // prepare Query
     Query query = new Query();
     Feature feature1 = new Feature("f1", false);

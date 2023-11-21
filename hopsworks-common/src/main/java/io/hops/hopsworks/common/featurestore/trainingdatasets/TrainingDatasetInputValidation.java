@@ -320,6 +320,12 @@ public class TrainingDatasetInputValidation {
     List<TrainingDatasetFeatureDTO> featuresWithTransformation = featuresDTOs.stream()
         .filter(f -> f.getTransformationFunction() != null)
         .collect(Collectors.toList());
+    List<TrainingDatasetFeatureDTO> inferenceHelperColumns = featuresDTOs.stream()
+      .filter(TrainingDatasetFeatureDTO::getInferenceHelperColumn)
+      .collect(Collectors.toList());
+    List<TrainingDatasetFeatureDTO> trainingHelperColumns = featuresDTOs.stream()
+      .filter(TrainingDatasetFeatureDTO::getTrainingHelperColumn)
+      .collect(Collectors.toList());
     List<Feature> features = collectFeatures(query);
 
     for (TrainingDatasetFeatureDTO label : labels) {
@@ -328,7 +334,21 @@ public class TrainingDatasetInputValidation {
             "Label: " + label.getName() + " is missing");
       }
     }
-
+  
+    for (TrainingDatasetFeatureDTO inferenceHelperColumn : inferenceHelperColumns) {
+      if (features.stream().noneMatch(f -> f.getName().equals(inferenceHelperColumn.getName()))) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.LABEL_NOT_FOUND, Level.FINE,
+          "Inference helper column: " + inferenceHelperColumn.getName() + " is missing");
+      }
+    }
+    
+    for (TrainingDatasetFeatureDTO trainingHelperColumn : trainingHelperColumns) {
+      if (features.stream().noneMatch(f -> f.getName().equals(trainingHelperColumn.getName()))) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HELPER_COL_NOT_FOUND, Level.FINE,
+          "Training helper column: " + trainingHelperColumn.getName() + " is missing");
+      }
+    }
+  
     for (TrainingDatasetFeatureDTO featureWithTransformation : featuresWithTransformation) {
       if (features.stream().noneMatch(f ->
           f.getName().equals(featureWithTransformation.getFeatureGroupFeatureName()))) {

@@ -30,29 +30,35 @@ public class TrainingDatasetFeatureDTO {
   private String featureGroupFeatureName;
   private Integer index;
   private Boolean label = false;
+  private Boolean inferenceHelperColumn = false;
+  private Boolean trainingHelperColumn = false;
   private TransformationFunctionDTO transformationFunction;
 
   public TrainingDatasetFeatureDTO() {
   }
 
   public TrainingDatasetFeatureDTO(String name, String type, FeaturegroupDTO featuregroupDTO, Integer index,
-                                   Boolean label) {
+                                   Boolean label, Boolean inferenceHelperColumn , Boolean trainingHelperColumn) {
     this.name = name;
     this.type = type;
     this.featuregroup = featuregroupDTO;
     this.index = index;
     this.label = label;
+    this.inferenceHelperColumn = inferenceHelperColumn;
+    this.trainingHelperColumn = trainingHelperColumn;
   }
 
   public TrainingDatasetFeatureDTO(String name, String type,
       FeaturegroupDTO featuregroup, String featureGroupFeatureName, Integer index, Boolean label,
-      TransformationFunctionDTO transformationFunction) {
+      Boolean inferenceHelperColumn , Boolean trainingHelperColumn, TransformationFunctionDTO transformationFunction) {
     this.name = name;
     this.type = type;
     this.featuregroup = featuregroup;
     this.featureGroupFeatureName = featureGroupFeatureName;
     this.index = index;
     this.label = label;
+    this.inferenceHelperColumn = inferenceHelperColumn;
+    this.trainingHelperColumn = trainingHelperColumn;
     this.transformationFunction = transformationFunction;
   }
 
@@ -103,7 +109,23 @@ public class TrainingDatasetFeatureDTO {
   public void setLabel(Boolean label) {
     this.label = label;
   }
-
+  
+  public Boolean getInferenceHelperColumn() {
+    return inferenceHelperColumn;
+  }
+  
+  public void setInferenceHelperColumn(Boolean inferenceHelperColumn) {
+    this.inferenceHelperColumn = inferenceHelperColumn;
+  }
+  
+  public Boolean getTrainingHelperColumn() {
+    return trainingHelperColumn;
+  }
+  
+  public void setTrainingHelperColumn(Boolean trainingHelperColumn) {
+    this.trainingHelperColumn = trainingHelperColumn;
+  }
+  
   public TransformationFunctionDTO getTransformationFunction() {
     return transformationFunction;
   }

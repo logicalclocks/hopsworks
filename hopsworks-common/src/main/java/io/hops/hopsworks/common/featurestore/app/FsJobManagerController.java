@@ -332,7 +332,7 @@ public class FsJobManagerController {
       throws FeaturestoreException, JobException, GenericException, ProjectException, ServiceException {
     TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(
         featureView, trainingDatasetVersion);
-    Query query = queryController.makeQuery(featureView, project, user, true, false);
+    Query query = queryController.makeQuery(featureView, project, user, true, false, false, false, false, false);
     QueryDTO queryDTO = queryBuilder.build(query, featureView.getFeaturestore(), project, user);
     return setupTrainingDatasetJob(project, user, trainingDataset, queryDTO, overwrite, writeOptions,
         sparkJobConfiguration, FEATURE_VIEW_TRAINING_DATASET_OP);

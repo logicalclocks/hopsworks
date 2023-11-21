@@ -373,6 +373,212 @@ describe "On #{ENV['OS']}" do
                                                       "WHERE `fg1`.`a_testfeature1` > #{query[:filter][:leftFilter][:value]} AND `fg1`.`ts` > TIMESTAMP '#{query[:filter][:rightFilter][:value]}.000'"
                                                         )
         end
+
+
+
+        it "should be able to create sql string from query with or without helper columns" do
+          project_name = @project.projectname.downcase
+          featurestore_id = get_featurestore_id(@project.id)
+          featurestore_name = get_featurestore_name(@project.id)
+          featuregroup_suffix = short_random_id
+
+          features_1 = [
+                        {"name": "ts", "type": "TIMESTAMP"},
+                        {"name": "pk", "type": "INT", "primary": true},
+                        {"name": "a", "type": "INT"},
+                        {"name": "b", "type": "INT"},
+                        {"name": "c", "type": "INT"}
+                        ]
+
+          features_2 = [
+                        {"name": "ts", "type": "TIMESTAMP"},
+                        {"name": "pk", "type": "INT", "primary": true},
+                        {"name": "d", "type": "INT"},
+                        {"name": "e", "type": "INT"},
+                        {"name": "f", "type": "INT"}
+                        ]
+
+          features_3 = [
+                        {"name": "ts", "type": "TIMESTAMP"},
+                        {"name": "pk", "type": "INT", "primary": true},
+                        {"name": "g", "type": "INT"},
+                        {"name": "h", "type": "INT"},
+                        {"name": "i", "type": "INT"}
+                        ]
+
+          fg1 = create_cached_featuregroup_checked_return_fg(@project.id, featurestore_id,
+                                                         "test_fg_1#{featuregroup_suffix}",
+                                                          features: features_1,
+                                                          event_time: "ts")
+
+          fg2 = create_cached_featuregroup_checked_return_fg(@project.id, featurestore_id,
+                                                         "test_fg_2#{featuregroup_suffix}",
+                                                          features: features_2,
+                                                          event_time: "ts")
+          fg3 = create_cached_featuregroup_checked_return_fg(@project.id, featurestore_id,
+                                                         "test_fg_3#{featuregroup_suffix}",
+                                                          features: features_3,
+                                                          event_time: "ts")
+
+          json_data = {
+                      name: "feature_view_#{random_id}",
+                      version: 1,
+                      description: "testfeatureviewdescription",
+                      query: {
+                        leftFeatureGroup: {id: fg1[:id], type: fg1[:type]},
+                        leftFeatures: [{name: "a"}, {name: "b"}, {name: "c"}],
+                        joins: [
+                          {
+                            query: {
+                              leftFeatureGroup: {id: fg2[:id], type: fg2[:type]},
+                              leftFeatures: [{name: "d"}, {name: "e"}, {name: "f"}],
+                              joins: [],
+                              filter: nil,
+                            },
+                            on: [],
+                            leftOn: [{name: "pk"}],
+                            rightOn: [{name: "pk"}],
+                            type: "INNER",
+                            prefix: nil
+                          },
+                          {
+                            query: {
+                              leftFeatureGroup: {id: fg3[:id], type: fg3[:type]},
+                              leftFeatures: [{name: "g"}, {name: "h"}, {name: "i"}],
+                              joins: [],
+                              filter: nil,
+                            },
+                            on: [],
+                            leftOn: [{name: "pk"}],
+                            rightOn: [{name: "pk"}],
+                            type: "INNER",
+                            prefix: nil
+                          }
+                        ],
+                        filter: nil,
+                      },
+                      features: [
+                                {
+                                  name: "a",
+                                  type: "INT",
+                                  index: 0,
+                                  label: true,
+                                  inferenceHelperColumn: false,
+                                  trainingHelperColumn: false,
+                                  transformationFunction: nil,
+                                  featureGroupFeatureName: nil,
+                                  featuregroup: fg1
+                                },
+                                {
+                                  name: "b",
+                                  type: "INT",
+                                  index: 1,
+                                  label: false,
+                                  inferenceHelperColumn: false,
+                                  trainingHelperColumn: false,
+                                  transformationFunction: nil,
+                                  featureGroupFeatureName: nil,
+                                  featuregroup: fg1
+                                },
+                                {
+                                  name: "c",
+                                  index: 2,
+                                  label: false,
+                                  inferenceHelperColumn: false,
+                                  trainingHelperColumn: false,
+                                  transformationFunction: nil,
+                                  featureGroupFeatureName: nil,
+                                  featuregroup: fg1
+                                },
+                                {
+                                  name: "d",
+                                  index: 3,
+                                  label: false,
+                                  inferenceHelperColumn: true,
+                                  trainingHelperColumn: false,
+                                  transformationFunction: nil,
+                                  featureGroupFeatureName: nil,
+                                  featuregroup: fg2
+                                },
+                                {
+                                  name: "e",
+                                  index: 4,
+                                  label: false,
+                                  inferenceHelperColumn: false,
+                                  trainingHelperColumn: false,
+                                  transformationFunction: nil,
+                                  featureGroupFeatureName: nil,
+                                  featuregroup: fg2
+
+                                },
+                                {
+                                  name: "f",
+                                  index: 5,
+                                  label: false,
+                                  inferenceHelperColumn: false,
+                                  trainingHelperColumn: false,
+                                  transformationFunction: nil,
+                                  featureGroupFeatureName: nil,
+                                  featuregroup: fg2
+
+                                },
+                                {
+                                  name: "g",
+                                  index: 6,
+                                  label: false,
+                                  inferenceHelperColumn: false,
+                                  trainingHelperColumn: true,
+                                  transformationFunction: nil,
+                                  featureGroupFeatureName: nil,
+                                  featuregroup: fg3
+                                },
+                                {
+                                  name: "h",
+                                  index: 7,
+                                  label: false,
+                                  inferenceHelperColumn: false,
+                                  trainingHelperColumn: false,
+                                  transformationFunction: nil,
+                                  featureGroupFeatureName: nil,
+                                  featuregroup: fg3
+                                },
+                                {
+                                  name: "i",
+                                  index: 8,
+                                  label: false,
+                                  inferenceHelperColumn: false,
+                                  trainingHelperColumn: false,
+                                  transformationFunction: nil,
+                                  featureGroupFeatureName: nil,
+                                  featuregroup: fg3
+                                }
+                                ],
+                      type: "featureViewDTO"
+                    }
+
+          json_result = create_feature_view_with_json(@project.id, featurestore_id, json_data)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          feature_view_name = parsed_json["name"]
+          feature_view_version = parsed_json["version"]
+
+          # without helper columns
+          fs_query = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/featureview/#{feature_view_name}/version/#{feature_view_version}/query/batch?start_time=1234&end_time=4321"
+          fs_query_result = put "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/query", JSON.parse(fs_query)
+          parsed_query_result = JSON.parse(fs_query_result)
+          expect(parsed_query_result['query']).to eql("SELECT `fg2`.`b` `b`, `fg2`.`c` `c`, `fg0`.`e` `e`, `fg0`.`f` `f`, `fg1`.`h` `h`, `fg1`.`i` `i`\nFROM `#{featurestore_name}`.`test_fg_1#{featuregroup_suffix}_1` `fg2`\nINNER JOIN `#{featurestore_name}`.`test_fg_2#{featuregroup_suffix}_1` `fg0` ON `fg2`.`pk` = `fg0`.`pk`\nINNER JOIN `#{featurestore_name}`.`test_fg_3#{featuregroup_suffix}_1` `fg1` ON `fg2`.`pk` = `fg1`.`pk`\nWHERE `fg2`.`ts` >= TIMESTAMP '1970-01-01 12:00:01.000' AND `fg2`.`ts` < TIMESTAMP '1970-01-01 12:00:04.000'")
+          expect(parsed_query_result['queryOnline']).to eql("SELECT `fg2`.`b` `b`, `fg2`.`c` `c`, `fg0`.`e` `e`, `fg0`.`f` `f`, `fg1`.`h` `h`, `fg1`.`i` `i`\nFROM `#{project_name.downcase}`.`test_fg_1#{featuregroup_suffix}_1` `fg2`\nINNER JOIN `#{project_name.downcase}`.`test_fg_2#{featuregroup_suffix}_1` `fg0` ON `fg2`.`pk` = `fg0`.`pk`\nINNER JOIN `#{project_name.downcase}`.`test_fg_3#{featuregroup_suffix}_1` `fg1` ON `fg2`.`pk` = `fg1`.`pk`\nWHERE `fg2`.`ts` >= TIMESTAMP '1970-01-01 12:00:01.000' AND `fg2`.`ts` < TIMESTAMP '1970-01-01 12:00:04.000'")
+          expect_status_details(200)
+
+          # with helper columns
+          fs_query = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/featureview/#{feature_view_name}/version/#{feature_view_version}/query/batch?start_time=1234&end_time=4321&with_primary_keys=true&with_event_time=true&inference_helper_columns&inference_helper_columns=true&training_helper_columns=true"
+          fs_query_result = put "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/query", JSON.parse(fs_query)
+          parsed_query_result = JSON.parse(fs_query_result)
+          expect(parsed_query_result['query']).to eql("SELECT `fg2`.`b` `b`, `fg2`.`c` `c`, `fg2`.`ts` `ts`, `fg2`.`pk` `pk`, `fg0`.`e` `e`, `fg0`.`f` `f`, `fg1`.`g` `g`, `fg1`.`h` `h`, `fg1`.`i` `i`\nFROM `#{featurestore_name}`.`test_fg_1#{featuregroup_suffix}_1` `fg2`\nINNER JOIN `#{featurestore_name}`.`test_fg_2#{featuregroup_suffix}_1` `fg0` ON `fg2`.`pk` = `fg0`.`pk`\nINNER JOIN `#{featurestore_name}`.`test_fg_3#{featuregroup_suffix}_1` `fg1` ON `fg2`.`pk` = `fg1`.`pk`\nWHERE `fg2`.`ts` >= TIMESTAMP '1970-01-01 12:00:01.000' AND `fg2`.`ts` < TIMESTAMP '1970-01-01 12:00:04.000'")
+          expect(parsed_query_result['queryOnline']).to eql("SELECT `fg2`.`b` `b`, `fg2`.`c` `c`, `fg2`.`ts` `ts`, `fg2`.`pk` `pk`, `fg0`.`e` `e`, `fg0`.`f` `f`, `fg1`.`g` `g`, `fg1`.`h` `h`, `fg1`.`i` `i`\nFROM `#{project_name.downcase}`.`test_fg_1#{featuregroup_suffix}_1` `fg2`\nINNER JOIN `#{project_name.downcase}`.`test_fg_2#{featuregroup_suffix}_1` `fg0` ON `fg2`.`pk` = `fg0`.`pk`\nINNER JOIN `#{project_name.downcase}`.`test_fg_3#{featuregroup_suffix}_1` `fg1` ON `fg2`.`pk` = `fg1`.`pk`\nWHERE `fg2`.`ts` >= TIMESTAMP '1970-01-01 12:00:01.000' AND `fg2`.`ts` < TIMESTAMP '1970-01-01 12:00:04.000'")
+          expect_status_details(200)
+        end
       end
     end
   end

@@ -88,7 +88,7 @@ public class TrainingDatasetDTOBuilder {
       if (resourceRequest.contains(ResourceRequest.Name.EXTRAFILTER)) {
         FeatureView featureView = trainingDataset.getFeatureView();
         featureView.setFilters(trainingDataset.getFilters());
-        Query query = queryController.makeQuery(featureView, project, user, true, true);
+        Query query = queryController.makeQuery(featureView, project, user, true, false, false, false, false, true);
         trainingDatasetDTO.setExtraFilter(
             queryBuilder.build(query, trainingDataset.getFeaturestore(), project, user).getFilter()
         );

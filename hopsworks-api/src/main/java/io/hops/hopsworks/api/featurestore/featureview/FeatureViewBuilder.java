@@ -155,7 +155,7 @@ public class FeatureViewBuilder {
         base.setQueryString(fsQueryBuilder.build(uriInfo, project, user, featureView));
       }
       if (resourceRequest.contains(ResourceRequest.Name.QUERY)) {
-        Query query = queryController.makeQuery(featureView, project, user, true, false);
+        Query query = queryController.makeQuery(featureView, project, user, true, false, false, true, true, false);
         base.setQuery(queryBuilder.build(query, featureView.getFeaturestore(), project, user));
       }
       if (resourceRequest.contains(ResourceRequest.Name.FEATURES)) {
@@ -204,7 +204,7 @@ public class FeatureViewBuilder {
                     f.getFeatureGroup().getVersion(),
                     f.getFeatureGroup().isDeprecated())
                 : null,
-            f.getIndex(), f.isLabel()))
+            f.getIndex(), f.isLabel(), f.isInferenceHelperColumn(), f.isTrainingHelperColumn()))
         .collect(Collectors.toList());
   }
 }
