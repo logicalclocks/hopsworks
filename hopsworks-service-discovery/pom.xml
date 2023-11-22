@@ -20,14 +20,14 @@
     <parent>
         <artifactId>hopsworks</artifactId>
         <groupId>io.hops</groupId>
-        <version>3.4.2</version>
+        <version>3.4.3</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.hops.hopsworks</groupId>
     <artifactId>hopsworks-service-discovery</artifactId>
-    <version>3.4.2</version>
+    <version>3.4.3</version>
     <packaging>jar</packaging>
     <description>Hopsworks Service Discovery system</description>
     <name>hopsworks-service-discovery</name>
