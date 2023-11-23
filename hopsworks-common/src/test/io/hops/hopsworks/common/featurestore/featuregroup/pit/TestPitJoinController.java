@@ -341,6 +341,7 @@ public class TestPitJoinController {
     Feature leftFilterFeature = new Feature("label", "fg0", fgLeft, "string");
     Feature rightFeatureFilter = new Feature("ft1", "fg1", fgRight, "string");
     outerQueryFilterFeatures.add(leftFilterFeature);
+    outerQueryFilterFeatures.add(leftFilterFeature);
     outerQueryFilterFeatures.add(rightFeatureFilter);
 
     List<Feature> leftFeatures = new ArrayList<>();
@@ -357,10 +358,15 @@ public class TestPitJoinController {
     List<Feature> rightOn = Arrays.asList(new Feature("pk1", "fg1", fgRight), new Feature("pk2", "fg1", fgRight));
     List<SqlCondition> joinOperator = Arrays.asList(SqlCondition.EQUALS, SqlCondition.EQUALS);
 
+    FilterLogic nestedFilter = new FilterLogic();
+    nestedFilter.setType(AND);
+    nestedFilter.setLeftFilter(new Filter(rightFeatureFilter, EQUALS, "test0"));
+    nestedFilter.setRightFilter(new Filter(leftFilterFeature, EQUALS, "test1"));
+
     FilterLogic filter = new FilterLogic();
     filter.setType(AND);
     filter.setLeftFilter(new Filter(leftFilterFeature, EQUALS, "label"));
-    filter.setRightFilter(new Filter(rightFeatureFilter, EQUALS, "test"));
+    filter.setRightLogic(nestedFilter);
 
     Query query = new Query("fs", "project", fgLeft, "fg0", leftFeatures, leftFeatures, false, filter);
     Query right = new Query("fs", "project", fgRight, "fg1", rightFeatures, rightFeatures, false, null);
