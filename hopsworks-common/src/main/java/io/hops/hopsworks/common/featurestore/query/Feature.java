@@ -98,6 +98,14 @@ public class Feature {
   }
 
   // For testing purposes
+  public Feature(String name, String fgAlias, Featuregroup featureGroup, String type) {
+    this.name = name;
+    this.fgAlias = fgAlias;
+    this.featureGroup = featureGroup;
+    this.type = type;
+  }
+
+  // For testing purposes
   public Feature(String name, String fgAlias, Featuregroup featureGroup, String type, String defaultValue) {
     this.name = name;
     this.fgAlias = fgAlias;
