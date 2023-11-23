@@ -49,7 +49,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Stateless
@@ -112,6 +114,16 @@ public class PitJoinController {
                                           List<Feature> outerQueryFilterFeatures,
                                           boolean pushdownOuterQueryFilter) {
     List<SqlCall> subQueries = new ArrayList<>();
+    /*
+     We put the filter features in a set to deduplicate them as we can have filters where the same
+     feature is used multiple time (e.g. feat > 10 and feat < 20).
+     In this case, we want to make sure we select it only once in the subquery, otherwise we'll get a
+     ambiguos column error.
+    */
+    Set<Feature> uniqueOuterJoinFeatures = null;
+    if (outerQueryFilterFeatures != null) {
+      uniqueOuterJoinFeatures = new HashSet<>(outerQueryFilterFeatures);
+    }
 
     // we always re-select all primary key columns of the "label group" in order to be able to perform final join
     List<Feature> additionalPkFeatures = query.getAvailableFeatures().stream().filter(Feature::isPrimary)
@@ -123,12 +135,12 @@ public class PitJoinController {
         null, EVT_JOIN_PREFIX));
     additionalPkFeatures.forEach(f -> f.setFeatureGroup(query.getFeaturegroup()));
 
-    if (outerQueryFilterFeatures != null && !pushdownOuterQueryFilter) {
+    if (uniqueOuterJoinFeatures != null && !pushdownOuterQueryFilter) {
       // We are in any other scenario, we need to make sure that the features are selected in the subquery
       // for the filter to be applied later
 
       // We do it here for the label feature group as it's reused across all the joins
-      List<Feature> missingLeftJoinFeatures = outerQueryFilterFeatures.stream()
+      List<Feature> missingLeftJoinFeatures = uniqueOuterJoinFeatures.stream()
           .filter(f -> f.getFeatureGroup().equals(baseQuery.getFeaturegroup()))
           .filter(f -> !baseQuery.getFeatures().contains(f))
           .collect(Collectors.toList());
@@ -153,13 +165,13 @@ public class PitJoinController {
         // We are in scenario 3/4, so we can safely push down the filter on the left side of the join
         // which here is represented by the baseQuery object
         baseQuery.setFilter(query.getFilter());
-      } else if (outerQueryFilterFeatures != null) {
+      } else if (uniqueOuterJoinFeatures != null) {
         // We are in any other scenario, we need to make sure that the features are selected in the subquery
         // for the filter to be applied later
 
         // Here we need to ensure the features are selected only for the right side of the join
         // as the left side is the label feature group (baseQuery) which is already taken care above.
-        List<Feature> missingRightJoinFeatures = outerQueryFilterFeatures.stream()
+        List<Feature> missingRightJoinFeatures = uniqueOuterJoinFeatures.stream()
             .filter(f -> f.getFeatureGroup().equals(join.getRightQuery().getFeaturegroup()))
             .filter(f -> !join.getRightQuery().getFeatures().contains(f))
             .collect(Collectors.toList());
