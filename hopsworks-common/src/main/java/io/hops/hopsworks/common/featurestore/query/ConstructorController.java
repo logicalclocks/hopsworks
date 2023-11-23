@@ -108,7 +108,7 @@ public class ConstructorController {
   public FsQueryDTO construct(Query query, boolean pitEnabled, boolean isTrainingDataset, Project project, Users user)
       throws FeaturestoreException, ServiceException {
     FsQueryDTO fsQueryDTO = new FsQueryDTO();
-    
+
     if (query.getDeletedFeatureGroups() != null && !query.getDeletedFeatureGroups().isEmpty()) {
       fsQueryDTO.setQuery(String.format("Parent feature groups of the following features are not available anymore: " +
         "%s", String.join(", ", query.getDeletedFeatureGroups())));
@@ -140,7 +140,7 @@ public class ConstructorController {
     return query.getHiveEngine() ? pitQuery.toSqlString(new HiveSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql() :
         pitQuery.toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
   }
-  
+
   public String makePitQueryAsof(Query query, boolean isTrainingDataset) {
     SqlDialect offlineSqlDialect = query.getHiveEngine() ? new HiveSqlDialect(SqlDialect.EMPTY_CONTEXT) :
             new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT);
@@ -334,30 +334,30 @@ public class ConstructorController {
   public List<Feature> collectFeaturesFromFilter(FilterLogic filter) {
     return this.collectFeaturesFromFilter(filter, null);
   }
-  
+
   public List<Feature> collectFeaturesFromFilter(FilterLogic filter, Query query) {
     List<Feature> features = new ArrayList<>();
     collectFeatureFromFilter(filter, features, query);
     return features;
   }
-  
+
   private void collectFeatureFromFilter(FilterLogic filter, List<Feature> features, Query query) {
     if(filter.getLeftFilter() != null) {
       features.addAll(filter.getLeftFilter().getFeatures().stream().filter(f ->
-        (query == null || f.getFeatureGroup().equals( query.getFeaturegroup()))).collect(Collectors.toList()));
+        (query == null || f.getFeatureGroup().equals(query.getFeaturegroup()))).collect(Collectors.toList()));
     }
     if(filter.getRightFilter() != null) {
       features.addAll(filter.getRightFilter().getFeatures().stream().filter(f ->
-        (query == null || f.getFeatureGroup().equals( query.getFeaturegroup()))).collect(Collectors.toList()));
+        (query == null || f.getFeatureGroup().equals(query.getFeaturegroup()))).collect(Collectors.toList()));
     }
-    if(filter.getLeftLogic() !=null) {
+    if(filter.getLeftLogic() != null) {
       collectFeatureFromFilter(filter.getLeftLogic(), features, query);
     }
-    if(filter.getRightLogic() !=null) {
+    if(filter.getRightLogic() != null) {
       collectFeatureFromFilter(filter.getRightLogic(), features, query);
     }
   }
-  
+
   private SqlNode generateCachedTableNode(Query query, boolean online) {
     List<String> tableIdentifierStr = new ArrayList<>();
     if (online) {

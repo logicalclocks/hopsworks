@@ -52,6 +52,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlCondition.EQUALS;
+import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic.AND;
+import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic.SINGLE;
+
 public class TestPitJoinController {
   
   private Featurestore fs;
@@ -230,7 +234,7 @@ public class TestPitJoinController {
     Query baseQuery = new Query(query.getFeatureStore(), query.getProject(), query.getFeaturegroup(), query.getAs(),
      query.getFeatures(), query.getAvailableFeatures(), query.getHiveEngine(), query.getFilter());
     
-    List<SqlCall> result = pitJoinController.generateSubQueries(baseQuery, query, false);
+    List<SqlCall> result = pitJoinController.generateSubQueries(baseQuery, query, false, null, false);
     String expected = "(SELECT `fg0`.`pk1` `pk1`, `fg0`.`pk2` `pk2`, `fg0`.`ts` `ts`, `fg0`.`label` `label`, `fg0`.`pk1` `join_pk_pk1`, `fg0`.`ts` `join_evt_ts`, `fg1`.`pk1` `pk1`, `fg1`.`pk2` `pk2`, `fg1`.`ts` `ts`, `fg1`.`ft1` `ft1`, " +
                               "RANK() OVER (PARTITION BY `fg0`.`pk1`, `fg0`.`pk2`, `fg0`.`ts` ORDER BY `fg1`.`ts` DESC) pit_rank_hopsworks\n" +
                         "FROM `fs`.`fg0_1` `fg0`\n" +
@@ -238,7 +242,217 @@ public class TestPitJoinController {
     Assert.assertEquals(1, result.size());
     Assert.assertEquals(expected, result.get(0).toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
   }
-  
+
+  @Test
+  public void testGenerateSubQueriesSingleWithFilterPushdown() {
+    List<Feature> outerQueryFilterFeatures = new ArrayList<>();
+    Feature filterFeature = new Feature("label", "fg0", fgLeft, "string");
+    outerQueryFilterFeatures.add(filterFeature);
+
+    List<Feature> leftFeatures = new ArrayList<>();
+    leftFeatures.add(new Feature("pk1", "fg0", fgLeft, true));
+    leftFeatures.add(new Feature("pk2", "fg0", fgLeft));
+    leftFeatures.add(new Feature("ts", "fg0", fgLeft));
+    leftFeatures.add(filterFeature);
+
+    List<Feature> rightFeatures = new ArrayList<>();
+    rightFeatures.add(new Feature("pk1", "fg1", fgRight));
+    rightFeatures.add(new Feature("pk2", "fg1", fgRight));
+    rightFeatures.add(new Feature("ts", "fg1", fgRight));
+    rightFeatures.add(new Feature("ft1", "fg1", fgRight));
+
+    List<Feature> leftOn = Arrays.asList(new Feature("pk1", "fg0", fgLeft), new Feature("pk2", "fg0", fgLeft));
+    List<Feature> rightOn = Arrays.asList(new Feature("pk1", "fg1", fgRight), new Feature("pk2", "fg1", fgRight));
+    List<SqlCondition> joinOperator = Arrays.asList(SqlCondition.EQUALS, SqlCondition.EQUALS);
+
+    FilterLogic filter = new FilterLogic();
+    filter.setType(SINGLE);
+    filter.setLeftFilter(new Filter(filterFeature, EQUALS, "label"));
+
+    Query query = new Query("fs", "project", fgLeft, "fg0", leftFeatures, leftFeatures, false, filter);
+    Query right = new Query("fs", "project", fgRight, "fg1", rightFeatures, rightFeatures, false, null);
+
+    Join join = new Join(query, right, leftOn, rightOn, JoinType.INNER, null, joinOperator);
+    query.setJoins(Collections.singletonList(join));
+
+    Query baseQuery = new Query(query.getFeatureStore(), query.getProject(), query.getFeaturegroup(), query.getAs(),
+        query.getFeatures(), query.getAvailableFeatures(), query.getHiveEngine(), query.getFilter());
+
+    List<SqlCall> result = pitJoinController.generateSubQueries(baseQuery, query, false, outerQueryFilterFeatures, true);
+    String expected = "(SELECT `fg0`.`pk1` `pk1`, `fg0`.`pk2` `pk2`, `fg0`.`ts` `ts`, `fg0`.`label` `label`, `fg0`.`pk1` `join_pk_pk1`, `fg0`.`ts` `join_evt_ts`, `fg1`.`pk1` `pk1`, `fg1`.`pk2` `pk2`, `fg1`.`ts` `ts`, `fg1`.`ft1` `ft1`, " +
+        "RANK() OVER (PARTITION BY `fg0`.`pk1`, `fg0`.`pk2`, `fg0`.`ts` ORDER BY `fg1`.`ts` DESC) pit_rank_hopsworks\n" +
+        "FROM `fs`.`fg0_1` `fg0`\n" +
+        "INNER JOIN `fs`.`fg1_1` `fg1` ON `fg0`.`pk1` = `fg1`.`pk1` AND `fg0`.`pk2` = `fg1`.`pk2` AND `fg0`.`ts` >= `fg1`.`ts`\n" +
+        "WHERE `fg0`.`label` = 'label') NA";
+    Assert.assertEquals(1, result.size());
+    Assert.assertEquals(expected, result.get(0).toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
+  }
+
+  @Test
+  public void testGenerateSubQueriesSingleWithFilterNoPushdownButFeatureSelected() {
+    List<Feature> outerQueryFilterFeatures = new ArrayList<>();
+    Feature leftFilterFeature = new Feature("label", "fg0", fgLeft, "string");
+    Feature rightFeatureFilter = new Feature("ft1", "fg1", fgRight, "string");
+    outerQueryFilterFeatures.add(leftFilterFeature);
+    outerQueryFilterFeatures.add(rightFeatureFilter);
+
+    List<Feature> leftFeatures = new ArrayList<>();
+    leftFeatures.add(new Feature("pk1", "fg0", fgLeft, true));
+    leftFeatures.add(new Feature("pk2", "fg0", fgLeft));
+    leftFeatures.add(new Feature("ts", "fg0", fgLeft));
+    leftFeatures.add(leftFilterFeature);
+
+    List<Feature> rightFeatures = new ArrayList<>();
+    rightFeatures.add(new Feature("pk1", "fg1", fgRight));
+    rightFeatures.add(new Feature("pk2", "fg1", fgRight));
+    rightFeatures.add(new Feature("ts", "fg1", fgRight));
+    rightFeatures.add(rightFeatureFilter);
+
+    List<Feature> leftOn = Arrays.asList(new Feature("pk1", "fg0", fgLeft), new Feature("pk2", "fg0", fgLeft));
+    List<Feature> rightOn = Arrays.asList(new Feature("pk1", "fg1", fgRight), new Feature("pk2", "fg1", fgRight));
+    List<SqlCondition> joinOperator = Arrays.asList(SqlCondition.EQUALS, SqlCondition.EQUALS);
+
+    FilterLogic filter = new FilterLogic();
+    filter.setType(AND);
+    filter.setLeftFilter(new Filter(leftFilterFeature, EQUALS, "label"));
+    filter.setRightFilter(new Filter(rightFeatureFilter, EQUALS, "test"));
+
+    Query query = new Query("fs", "project", fgLeft, "fg0", leftFeatures, leftFeatures, false, filter);
+    Query right = new Query("fs", "project", fgRight, "fg1", rightFeatures, rightFeatures, false, null);
+
+    Join join = new Join(query, right, leftOn, rightOn, JoinType.INNER, null, joinOperator);
+    query.setJoins(Collections.singletonList(join));
+
+    Query baseQuery = new Query(query.getFeatureStore(), query.getProject(), query.getFeaturegroup(), query.getAs(),
+        query.getFeatures(), query.getAvailableFeatures(), query.getHiveEngine(), null);
+
+    List<SqlCall> result = pitJoinController.generateSubQueries(baseQuery, query, false, outerQueryFilterFeatures, false);
+    String expected = "(SELECT `fg0`.`pk1` `pk1`, `fg0`.`pk2` `pk2`, `fg0`.`ts` `ts`, `fg0`.`label` `label`, `fg0`.`pk1` `join_pk_pk1`, `fg0`.`ts` `join_evt_ts`, `fg1`.`pk1` `pk1`, `fg1`.`pk2` `pk2`, `fg1`.`ts` `ts`, `fg1`.`ft1` `ft1`, " +
+        "RANK() OVER (PARTITION BY `fg0`.`pk1`, `fg0`.`pk2`, `fg0`.`ts` ORDER BY `fg1`.`ts` DESC) pit_rank_hopsworks\n" +
+        "FROM `fs`.`fg0_1` `fg0`\n" +
+        "INNER JOIN `fs`.`fg1_1` `fg1` ON `fg0`.`pk1` = `fg1`.`pk1` AND `fg0`.`pk2` = `fg1`.`pk2` AND `fg0`.`ts` >= `fg1`.`ts`) NA";
+    Assert.assertEquals(1, result.size());
+    Assert.assertEquals(expected, result.get(0).toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
+  }
+
+  @Test
+  public void testGenerateSubQueriesSingleWithFilterNoPushdownFeaturesNotSelected() {
+    List<Feature> outerQueryFilterFeatures = new ArrayList<>();
+    Feature leftFilterFeature = new Feature("label", "fg0", fgLeft, "string");
+    Feature rightFeatureFilter = new Feature("ft1", "fg1", fgRight, "string");
+    outerQueryFilterFeatures.add(leftFilterFeature);
+    outerQueryFilterFeatures.add(rightFeatureFilter);
+
+    List<Feature> leftFeatures = new ArrayList<>();
+    leftFeatures.add(new Feature("pk1", "fg0", fgLeft, true));
+    leftFeatures.add(new Feature("pk2", "fg0", fgLeft));
+    leftFeatures.add(new Feature("ts", "fg0", fgLeft));
+
+    List<Feature> rightFeatures = new ArrayList<>();
+    rightFeatures.add(new Feature("pk1", "fg1", fgRight));
+    rightFeatures.add(new Feature("pk2", "fg1", fgRight));
+    rightFeatures.add(new Feature("ts", "fg1", fgRight));
+
+    List<Feature> leftOn = Arrays.asList(new Feature("pk1", "fg0", fgLeft), new Feature("pk2", "fg0", fgLeft));
+    List<Feature> rightOn = Arrays.asList(new Feature("pk1", "fg1", fgRight), new Feature("pk2", "fg1", fgRight));
+    List<SqlCondition> joinOperator = Arrays.asList(SqlCondition.EQUALS, SqlCondition.EQUALS);
+
+    FilterLogic filter = new FilterLogic();
+    filter.setType(AND);
+    filter.setLeftFilter(new Filter(leftFilterFeature, EQUALS, "label"));
+    filter.setRightFilter(new Filter(rightFeatureFilter, EQUALS, "test"));
+
+    Query query = new Query("fs", "project", fgLeft, "fg0", leftFeatures, leftFeatures, false, filter);
+    Query right = new Query("fs", "project", fgRight, "fg1", rightFeatures, rightFeatures, false, null);
+
+    Join join = new Join(query, right, leftOn, rightOn, JoinType.INNER, null, joinOperator);
+    query.setJoins(Collections.singletonList(join));
+
+    Query baseQuery = new Query(query.getFeatureStore(), query.getProject(), query.getFeaturegroup(), query.getAs(),
+        query.getFeatures(), query.getAvailableFeatures(), query.getHiveEngine(), null);
+
+    List<SqlCall> result = pitJoinController.generateSubQueries(baseQuery, query, false, outerQueryFilterFeatures, false);
+    String expected = "(SELECT `fg0`.`pk1` `pk1`, `fg0`.`pk2` `pk2`, `fg0`.`ts` `ts`, `fg0`.`label` `label`, `fg0`.`pk1` `join_pk_pk1`, `fg0`.`ts` `join_evt_ts`, `fg1`.`pk1` `pk1`, `fg1`.`pk2` `pk2`, `fg1`.`ts` `ts`, `fg1`.`ft1` `ft1`, " +
+        "RANK() OVER (PARTITION BY `fg0`.`pk1`, `fg0`.`pk2`, `fg0`.`ts` ORDER BY `fg1`.`ts` DESC) pit_rank_hopsworks\n" +
+        "FROM `fs`.`fg0_1` `fg0`\n" +
+        "INNER JOIN `fs`.`fg1_1` `fg1` ON `fg0`.`pk1` = `fg1`.`pk1` AND `fg0`.`pk2` = `fg1`.`pk2` AND `fg0`.`ts` >= `fg1`.`ts`) NA";
+    Assert.assertEquals(1, result.size());
+    Assert.assertEquals(expected, result.get(0).toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
+  }
+
+  @Test
+  public void testGenerateSubQueriesSingleWithFilterNoPushdownFeaturesNotSelectedMultipleJoins() {
+    List<Feature> outerQueryFilterFeatures = new ArrayList<>();
+    Feature leftFilterFeature = new Feature("label", "fg0", fgLeft, "string");
+    Feature rightFeatureFilter = new Feature("ft1", "fg1", fgRight, "string");
+    Feature right1FeatureFilter = new Feature("ft1", "fg2", fgRight1, "string");
+    outerQueryFilterFeatures.add(leftFilterFeature);
+    outerQueryFilterFeatures.add(rightFeatureFilter);
+    outerQueryFilterFeatures.add(right1FeatureFilter);
+
+    List<Feature> leftFeatures = new ArrayList<>();
+    leftFeatures.add(new Feature("pk1", "fg0", fgLeft, true));
+    leftFeatures.add(new Feature("pk2", "fg0", fgLeft));
+    leftFeatures.add(new Feature("ts", "fg0", fgLeft));
+
+    List<Feature> rightFeatures = new ArrayList<>();
+    rightFeatures.add(new Feature("pk1", "fg1", fgRight));
+    rightFeatures.add(new Feature("pk2", "fg1", fgRight));
+    rightFeatures.add(new Feature("ts", "fg1", fgRight));
+
+    List<Feature> rightFeatures1 = new ArrayList<>();
+    rightFeatures1.add(new Feature("pk1", "fg2", fgRight1));
+    rightFeatures1.add(new Feature("ts", "fg2", fgRight1));
+
+    List<Feature> leftOn = Arrays.asList(new Feature("pk1", "fg0", fgLeft), new Feature("pk2", "fg0", fgLeft));
+    List<Feature> rightOn = Arrays.asList(new Feature("pk1", "fg1", fgRight), new Feature("pk2", "fg1", fgRight));
+
+    // join on different pks
+    List<Feature> leftOn1 = Collections.singletonList(new Feature("pk1", "fg0", fgLeft));
+    List<Feature> rightOn1 = Collections.singletonList(new Feature("pk1", "fg2", fgRight1));
+
+    List<SqlCondition> joinOperator = Arrays.asList(SqlCondition.EQUALS, SqlCondition.EQUALS);
+    List<SqlCondition> joinOperator1 = Collections.singletonList(SqlCondition.EQUALS);
+
+    FilterLogic nestedFilter = new FilterLogic();
+    nestedFilter.setType(AND);
+    nestedFilter.setLeftFilter(new Filter(rightFeatureFilter, EQUALS, "test0"));
+    nestedFilter.setRightFilter(new Filter(right1FeatureFilter, EQUALS, "test1"));
+
+    FilterLogic filter = new FilterLogic();
+    filter.setType(AND);
+    filter.setLeftFilter(new Filter(leftFilterFeature, EQUALS, "label"));
+    filter.setRightLogic(nestedFilter);
+
+    Query query = new Query("fs", "project", fgLeft, "fg0", leftFeatures, leftFeatures, false, filter);
+    Query right = new Query("fs", "project", fgRight, "fg1", rightFeatures, rightFeatures, false, null);
+    Query right1 = new Query("fs", "project", fgRight1, "fg2", rightFeatures1, rightFeatures1, false, null);
+
+    Join join = new Join(query, right, leftOn, rightOn, JoinType.INNER, null, joinOperator);
+    Join join1 = new Join(query, right1, leftOn1, rightOn1, JoinType.INNER, null, joinOperator1);
+
+    query.setJoins(Arrays.asList(join, join1));
+
+    Query baseQuery = new Query(query.getFeatureStore(), query.getProject(), query.getFeaturegroup(), query.getAs(),
+        new ArrayList<>(query.getFeatures()), query.getAvailableFeatures(), query.getHiveEngine(), null);
+
+    List<SqlCall> result = pitJoinController.generateSubQueries(baseQuery, query, false, outerQueryFilterFeatures, false);
+    Assert.assertEquals(2, result.size());
+
+    String firstExpected = "(SELECT `fg0`.`pk1` `pk1`, `fg0`.`pk2` `pk2`, `fg0`.`ts` `ts`, `fg0`.`label` `label`, `fg0`.`pk1` `join_pk_pk1`, `fg0`.`ts` `join_evt_ts`, `fg1`.`pk1` `pk1`, `fg1`.`pk2` `pk2`, `fg1`.`ts` `ts`, `fg1`.`ft1` `ft1`, " +
+        "RANK() OVER (PARTITION BY `fg0`.`pk1`, `fg0`.`pk2`, `fg0`.`ts` ORDER BY `fg1`.`ts` DESC) pit_rank_hopsworks\n" +
+        "FROM `fs`.`fg0_1` `fg0`\n" +
+        "INNER JOIN `fs`.`fg1_1` `fg1` ON `fg0`.`pk1` = `fg1`.`pk1` AND `fg0`.`pk2` = `fg1`.`pk2` AND `fg0`.`ts` >= `fg1`.`ts`) NA";
+    Assert.assertEquals(firstExpected, result.get(0).toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
+
+    // In this second case we don't expect to select again the filter features from the label feature group
+    String secondExpected = "(SELECT `fg0`.`pk1` `pk1`, `fg0`.`pk2` `pk2`, `fg0`.`ts` `ts`, `fg0`.`pk1` `join_pk_pk1`, `fg0`.`ts` `join_evt_ts`, `fg2`.`pk1` `pk1`, `fg2`.`ts` `ts`, `fg2`.`ft1` `ft1`, " +
+        "RANK() OVER (PARTITION BY `fg0`.`pk1`, `fg0`.`ts` ORDER BY `fg2`.`ts` DESC) pit_rank_hopsworks\n" +
+        "FROM `fs`.`fg0_1` `fg0`\n" +
+        "INNER JOIN `fs`.`fg2_1` `fg2` ON `fg0`.`pk1` = `fg2`.`pk1` AND `fg0`.`ts` >= `fg2`.`ts`) NA";
+    Assert.assertEquals(secondExpected, result.get(1).toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
+  }
+
   @Test
   public void testWrapSubQueries() {
     List<Feature> leftFeatures = new ArrayList<>();
@@ -266,8 +480,8 @@ public class TestPitJoinController {
     Query baseQuery = new Query(query.getFeatureStore(), query.getProject(), query.getFeaturegroup(), query.getAs(),
       query.getFeatures(), query.getAvailableFeatures(), query.getHiveEngine(), query.getFilter());
 
-    List<SqlSelect> result = pitJoinController.wrapSubQueries(pitJoinController.generateSubQueries(baseQuery, query,
-      false));
+    List<SqlSelect> result = pitJoinController.wrapSubQueries(
+        pitJoinController.generateSubQueries(baseQuery, query, false, null, false));
     String expected = "SELECT *\n" +
                         "FROM (SELECT `fg0`.`pk1` `pk1`, `fg0`.`pk2` `pk2`, `fg0`.`ts` `ts`, `fg0`.`label` `label`, `fg0`.`pk1` `join_pk_pk1`, `fg0`.`ts` `join_evt_ts`, `fg1`.`pk1` `pk1`, `fg1`.`pk2` `pk2`, `fg1`.`ts` `ts`, `fg1`.`ft1` `ft1`, " +
                                        "RANK() OVER (PARTITION BY `fg0`.`pk1`, `fg0`.`pk2`, `fg0`.`ts` ORDER BY `fg1`.`ts` DESC) pit_rank_hopsworks\n" +
@@ -277,7 +491,7 @@ public class TestPitJoinController {
     Assert.assertEquals(1, result.size());
     Assert.assertEquals(expected, result.get(0).toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
   }
-  
+
   @Test
   public void testGenerateSql() {
     List<Feature> leftFeatures = new ArrayList<>();
@@ -335,7 +549,81 @@ public class TestPitJoinController {
                   "INNER JOIN right_fg1 ON `right_fg0`.`join_pk_pk1` = `right_fg1`.`join_pk_pk1` AND `right_fg0`.`join_evt_ts` = `right_fg1`.`join_evt_ts`)";
     Assert.assertEquals(expected, result);
   }
-  
+
+  @Test
+  public void testGenerateSqlFilterNoPushdown() {
+    List<Feature> outerQueryFilterFeatures = new ArrayList<>();
+    Feature leftFilterFeature = new Feature("label", "fg0", fgLeft, "string");
+    Feature rightFeatureFilter = new Feature("ft1", "fg1", fgRight, "string");
+    Feature right1FeatureFilter = new Feature("ft1", "fg2", fgRight1, "string");
+    outerQueryFilterFeatures.add(leftFilterFeature);
+    outerQueryFilterFeatures.add(rightFeatureFilter);
+    outerQueryFilterFeatures.add(right1FeatureFilter);
+
+    List<Feature> leftFeatures = new ArrayList<>();
+    leftFeatures.add(new Feature("pk1", "fg0", fgLeft, true));
+    leftFeatures.add(new Feature("pk2", "fg0", fgLeft));
+    leftFeatures.add(new Feature("ts", "fg0", fgLeft));
+
+    List<Feature> rightFeatures = new ArrayList<>();
+    rightFeatures.add(new Feature("pk1", "fg1", fgRight));
+    rightFeatures.add(new Feature("pk2", "fg1", fgRight));
+    rightFeatures.add(new Feature("ts", "fg1", fgRight));
+
+    List<Feature> rightFeatures1 = new ArrayList<>();
+    rightFeatures1.add(new Feature("pk1", "fg2", fgRight1));
+    rightFeatures1.add(new Feature("ts", "fg2", fgRight1));
+
+    List<Feature> leftOn = Arrays.asList(new Feature("pk1", "fg0", fgLeft), new Feature("pk2", "fg0", fgLeft));
+    List<Feature> rightOn = Arrays.asList(new Feature("pk1", "fg1", fgRight), new Feature("pk2", "fg1", fgRight));
+
+    // join on different pks
+    List<Feature> leftOn1 = Collections.singletonList(new Feature("pk1", "fg0", fgLeft));
+    List<Feature> rightOn1 = Collections.singletonList(new Feature("pk1", "fg2", fgRight1));
+
+    List<SqlCondition> joinOperator = Arrays.asList(SqlCondition.EQUALS, SqlCondition.EQUALS);
+    List<SqlCondition> joinOperator1 = Collections.singletonList(SqlCondition.EQUALS);
+
+    FilterLogic nestedFilter = new FilterLogic();
+    nestedFilter.setType(AND);
+    nestedFilter.setLeftFilter(new Filter(rightFeatureFilter, EQUALS, "test0"));
+    nestedFilter.setRightFilter(new Filter(right1FeatureFilter, EQUALS, "test1"));
+
+    FilterLogic filter = new FilterLogic();
+    filter.setType(AND);
+    filter.setLeftFilter(new Filter(leftFilterFeature, EQUALS, "label"));
+    filter.setRightLogic(nestedFilter);
+
+    Query query = new Query("fs", "project", fgLeft, "fg0", leftFeatures, leftFeatures, false, filter);
+    Query right = new Query("fs", "project", fgRight, "fg1", rightFeatures, rightFeatures, false, null);
+    Query right1 = new Query("fs", "project", fgRight1, "fg2", rightFeatures1, rightFeatures1, false, null);
+
+    Join join = new Join(query, right, leftOn, rightOn, JoinType.INNER, null, joinOperator);
+    Join join1 = new Join(query, right1, leftOn1, rightOn1, JoinType.INNER, null, joinOperator1);
+
+    query.setJoins(Arrays.asList(join, join1));
+
+    String result =
+        pitJoinController.generateSQL(query, false).toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+    String expected = "WITH right_fg0 AS (SELECT *\n" +
+        "FROM (SELECT `fg0`.`pk1` `pk1`, `fg0`.`pk2` `pk2`, `fg0`.`ts` `ts`, `fg0`.`label` `label`, `fg0`.`pk1` `join_pk_pk1`, `fg0`.`ts` `join_evt_ts`, `fg1`.`pk1` `pk1`, `fg1`.`pk2` `pk2`, `fg1`.`ts` `ts`, `fg1`.`ft1` `ft1`, " +
+        "RANK() OVER (PARTITION BY `fg0`.`pk1`, `fg0`.`pk2`, `fg0`.`ts` ORDER BY `fg1`.`ts` DESC) pit_rank_hopsworks\n" +
+        "FROM `fs`.`fg0_1` `fg0`\n" +
+        "INNER JOIN `fs`.`fg1_1` `fg1` ON `fg0`.`pk1` = `fg1`.`pk1` AND `fg0`.`pk2` = `fg1`.`pk2` AND `fg0`.`ts` >= `fg1`.`ts`) NA\n" +
+        "WHERE `pit_rank_hopsworks` = 1), " +
+        "right_fg1 AS (SELECT *\n" +
+        "FROM (SELECT `fg0`.`pk1` `pk1`, `fg0`.`pk2` `pk2`, `fg0`.`ts` `ts`, `fg0`.`pk1` `join_pk_pk1`, `fg0`.`ts` `join_evt_ts`, `fg2`.`pk1` `pk1`, `fg2`.`ts` `ts`, `fg2`.`ft1` `ft1`, " +
+        "RANK() OVER (PARTITION BY `fg0`.`pk1`, `fg0`.`ts` ORDER BY `fg2`.`ts` DESC) pit_rank_hopsworks\n" +
+        "FROM `fs`.`fg0_1` `fg0`\n" +
+        "INNER JOIN `fs`.`fg2_1` `fg2` ON `fg0`.`pk1` = `fg2`.`pk1` AND `fg0`.`ts` >= `fg2`.`ts`) NA\n" +
+        "WHERE `pit_rank_hopsworks` = 1) (" +
+        "SELECT `right_fg0`.`pk1` `pk1`, `right_fg0`.`pk2` `pk2`, `right_fg0`.`ts` `ts`, `right_fg0`.`pk1` `pk1`, `right_fg0`.`pk2` `pk2`, `right_fg0`.`ts` `ts`, `right_fg1`.`pk1` `pk1`, `right_fg1`.`ts` `ts`\n" +
+        "FROM right_fg0\n" +
+        "INNER JOIN right_fg1 ON `right_fg0`.`join_pk_pk1` = `right_fg1`.`join_pk_pk1` AND `right_fg0`.`join_evt_ts` = `right_fg1`.`join_evt_ts`\n" +
+        "WHERE `right_fg0`.`label` = 'label' AND (`right_fg0`.`ft1` = 'test0' AND `right_fg1`.`ft1` = 'test1'))";
+    Assert.assertEquals(expected, result);
+  }
+
   @Test
   public void testGenerateSql_hiveEngine() {
     List<Feature> leftFeatures = new ArrayList<>();
