@@ -21,13 +21,13 @@
     <parent>
         <groupId>io.hops</groupId>
         <artifactId>hopsworks</artifactId>
-        <version>3.5.0-SNAPSHOT</version>
+        <version>3.7.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <groupId>io.hops.hopsworks</groupId>
     <artifactId>hopsworks-multiregion</artifactId>
-    <version>3.5.0-SNAPSHOT</version>
+    <version>3.7.0-SNAPSHOT</version>
     <packaging>ejb</packaging>
     <description>Hopsworks MultiRegion</description>
     <name>hopsworks-multiregion</name>
