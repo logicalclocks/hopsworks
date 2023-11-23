@@ -43,6 +43,14 @@
       <artifactId>hopsworks-persistence</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.hops.hopsworks</groupId>
+      <artifactId>hopsworks-service-discovery</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.hops.hopsworks</groupId>
+      <artifactId>hopsworks-multiregion</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>

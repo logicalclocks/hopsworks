@@ -36,9 +36,13 @@ import io.hops.hopsworks.alerting.api.util.Settings;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerClientCreateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerResponseException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerServerException;
+import io.hops.hopsworks.multiregion.MultiRegionController;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.servicediscovery.HopsworksService;
+import io.hops.hopsworks.servicediscovery.Utilities;
+import io.hops.hopsworks.servicediscovery.tags.PrometheusTags;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -79,6 +83,8 @@ public class AMClient {
   
   @EJB
   private VariablesFacade variablesFacade;
+  @EJB
+  private MultiRegionController multiRegionController;
   @Resource
   TimerService timerService;
 
@@ -117,9 +123,10 @@ public class AMClient {
   }
   
   void tryBuildClient() {
-    String domain = variablesFacade.getVariableValue(VariablesFacade.SERVICE_DISCOVERY_DOMAIN_VARIABLE).orElse("");
+
     try {
-      client = new AlertManagerClient.Builder(ClientBuilder.newClient()).withServiceDN(domain).build();
+      client = new AlertManagerClient.Builder(ClientBuilder.newClient())
+          .withServiceFQDN(alertManagerDomainName()).build();
     } catch (Exception e) {
       LOGGER.log(Level.SEVERE, "Failed to init Alertmanager client. " + e.getMessage());
       initException = e;
@@ -127,6 +134,19 @@ public class AMClient {
     }
   }
   
+  private String alertManagerDomainName() {
+    String domain = variablesFacade.getVariableValue(VariablesFacade.SERVICE_DISCOVERY_DOMAIN_VARIABLE)
+        .orElseThrow(() -> new RuntimeException("Service discovery domain name variable does not exist"));
+    if (multiRegionController.isEnabled()) {
+      return Utilities.constructServiceFQDNWithRegion(
+          HopsworksService.PROMETHEUS.getNameWithTag(PrometheusTags.alertmanager),
+          multiRegionController.getPrimaryRegionName(),
+          domain);
+    }
+    return Utilities.constructServiceFQDN(HopsworksService.PROMETHEUS.getNameWithTag(PrometheusTags.alertmanager),
+        domain);
+  }
+
   void createRetryTimer() {
     long duration = Constants.RETRY_SECONDS * 1000;
     if (count > Constants.NUM_RETRIES) {
