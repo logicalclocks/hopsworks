@@ -31,10 +31,6 @@ fi
 echo "Running flyway migrate"
 flyway -configFiles=config/flyway.conf -validateOnMigrate=false migrate
 
-#create view need to do this on all mysqld servers
-echo "Creating user_groups view"
-${MYSQL_CMD} hopsworks --execute="CREATE OR REPLACE VIEW users_groups AS select u.username AS username, u.password AS password, u.secret AS secret, u.email AS email,g.group_name AS group_name from ((user_group ug join users u on((u.uid = ug.uid))) join bbc_group g on((g.gid = ug.gid)));"
-
 echo "Running dml"
 for version in dml/*.sql; do
   ${MYSQL_CMD} hopsworks < "$version"

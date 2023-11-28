@@ -12,3 +12,7 @@ ALTER TABLE `hopsworks`.`oauth_client` ADD COLUMN `given_name_claim` VARCHAR(255
 ALTER TABLE `hopsworks`.`oauth_client` ADD COLUMN `family_name_claim` VARCHAR(255) NOT NULL DEFAULT 'family_name';
 ALTER TABLE `hopsworks`.`oauth_client` ADD COLUMN `email_claim` VARCHAR(255) NOT NULL DEFAULT 'email';
 ALTER TABLE `hopsworks`.`oauth_client` ADD COLUMN `group_claim` VARCHAR(255) DEFAULT NULL;
+
+-- FSTORE-980: helper columns for feature view
+ALTER TABLE `hopsworks`.`training_dataset_feature` ADD COLUMN `inference_helper_column` tinyint(1) DEFAULT '0';
+ALTER TABLE `hopsworks`.`training_dataset_feature` ADD COLUMN `training_helper_column` tinyint(1) DEFAULT '0';

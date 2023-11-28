@@ -7,6 +7,10 @@ USER root
 RUN apt-get update && apt-get install xz-utils && apt-get install wget -y && apt install dnsutils -y
 
 USER payara
+
+#TODO change download url to https://repo.hops.works/master/hopsworks-jdbcrealm.jar
+RUN wget -O ${PAYARA_DIR}/glassfish/domains/domain1/lib/hopsworks-jdbcrealm.jar https://repo.hops.works/dev/ermias/hopsworks/hopsworks-jdbcrealm.jar
+
 ENV POSTDEPLOY_COMMANDS=/opt/payara/config/post-deploy-commands.asadmin POSTDEPLOY_COMMANDS_FINAL=/opt/payara/config/post-deploy-commands-final.asadmin
 RUN ${PAYARA_DIR}/bin/asadmin start-domain ${DOMAIN_NAME} && \
  for MEMORY_JVM_OPTION in $(${PAYARA_DIR}/bin/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} list-jvm-options --target default-config | grep "Xm[sx]\|Xss"); do \
@@ -56,10 +60,11 @@ RUN ${PAYARA_DIR}/bin/asadmin start-domain ${DOMAIN_NAME} && \
 mail/BBCMail && \
  ${PAYARA_DIR}/bin/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} create-auth-realm \
 --target ${CONFIG} \
---classname=com.sun.enterprise.security.auth.realm.jdbc.JDBCRealm \
---property=jaas-context=jdbcRealm:datasource-jndi=jdbc/hopsworks:user-table=hopsworks.users:user-name-column=email:password-column=password:group-table=hopsworks.users_groups:group-table-user-name-column=email:group-name-column=group_name:digest-algorithm=SHA-256:encoding=Hex \
-kthfsrealm && \
- ${PAYARA_DIR}/bin/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set ${CONFIG}.security-service.default-realm=kthfsrealm  && \
+--login-module=io.hops.hopsworks.realm.jdbc.HopsworksLoginModule \
+--classname=io.hops.hopsworks.realm.jdbc.HopsworksJDBCRealm \
+--property=jaas-context=hopsworksJdbcRealm:datasource-jndi=jdbc/hopsworks:digest-algorithm=SHA-256:encoding=Hex \
+hopsworksrealm && \
+ ${PAYARA_DIR}/bin/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set ${CONFIG}.security-service.default-realm=hopsworksrealm  && \
  ${PAYARA_DIR}/bin/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} create-jndi-resource \
  --restype javax.naming.ldap.LdapContext \
  --factoryclass com.sun.jndi.ldap.LdapCtxFactory \
@@ -79,7 +84,7 @@ rm -rf \
  ${PAYARA_DIR}/glassfish/domains/${DOMAIN_NAME}/logs
 
 #can we do this here? Or add it to helm
-RUN wget -O ${PAYARA_DIR}/glassfish/domains/domain1/lib/mysql-connector-java-8.0.21-bin.jar https://repo.hops.works/master/mysql-connector-java-8.0.21-bin.jar 
+RUN wget -O ${PAYARA_DIR}/glassfish/domains/domain1/lib/mysql-connector-java-8.0.21-bin.jar https://repo.hops.works/master/mysql-connector-java-8.0.21-bin.jar
 
 RUN mkdir /opt/payara/k8s
 
