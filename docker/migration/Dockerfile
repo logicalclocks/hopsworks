@@ -9,9 +9,8 @@ RUN useradd -ms /bin/bash flyway
 
 USER flyway
 COPY --chown=flyway:flyway sql/glassfish_timers.sql /flyway/
-
 COPY --chown=flyway:flyway sql/ddl/"${version}__initial_tables.sql" /flyway/sql/"V${version}__initial_tables.sql"
-COPY --chown=flyway:flyway sql/ddl/updates/"${version}.sql" /flyway/updates/sql/"V${version}__hopsworks.sql"
+COPY --chown=flyway:flyway sql/ddl/updates/*.sql /flyway/updates/sql/
 
 COPY --chown=flyway:flyway migrate.sh /flyway/migrate.sh
 COPY --chown=flyway:flyway upgrade.sh /flyway/upgrade.sh

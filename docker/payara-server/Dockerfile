@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install xz-utils && apt-get install wget -y && apt
 USER payara
 
 #TODO change download url to https://repo.hops.works/master/hopsworks-jdbcrealm.jar
-RUN wget -O ${PAYARA_DIR}/glassfish/domains/domain1/lib/hopsworks-jdbcrealm.jar https://repo.hops.works/dev/ermias/hopsworks/hopsworks-jdbcrealm.jar
+RUN wget -O ${PAYARA_DIR}/glassfish/domains/domain1/lib/hopsworks-realm.jar https://repo.hops.works/dev/ermias/hopsworks/hopsworks-realm.jar
 
 ENV POSTDEPLOY_COMMANDS=/opt/payara/config/post-deploy-commands.asadmin POSTDEPLOY_COMMANDS_FINAL=/opt/payara/config/post-deploy-commands-final.asadmin
 RUN ${PAYARA_DIR}/bin/asadmin start-domain ${DOMAIN_NAME} && \
