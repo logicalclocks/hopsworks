@@ -1,19 +1,3 @@
-/*
- * This file is part of Hopsworks
- * Copyright (C) 2019, Logical Clocks AB. All rights reserved
- *
- * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
- * the GNU Affero General Public License as published by the Free Software Foundation,
- * either version 3 of the License, or (at your option) any later version.
- *
- * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE.  See the GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License along with this program.
- * If not, see <https://www.gnu.org/licenses/>.
- */
-
 package com.predic8.membrane.servlet.embedded;
 
 import com.predic8.membrane.core.exchange.Exchange;
@@ -28,69 +12,94 @@ import com.predic8.membrane.core.transport.http.client.HttpClientConfiguration;
 import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.naming.InitialContext;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.SocketException;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
 public class HopsHttpClient extends HttpClient {
-
   private static final Logger LOGGER = Logger.getLogger(HopsHttpClient.class.getName());
-
   private ManagedExecutorService managedExecutorService;
 
   public HopsHttpClient(HttpClientConfiguration configuration) {
     super(configuration);
-
     try {
       managedExecutorService = InitialContext.doLookup("concurrent/hopsExecutorService");
     } catch (Exception e) {
       LOGGER.log(Level.SEVERE, "Error looking up for the hopsExecutorService", e);
-      // Nothing else we can do here
     }
   }
 
   @Override
-  public void setupConnectionForwarding(Exchange exc, final Connection con, final String protocol,
+  public void setupConnectionForwarding(Exchange exchange, final Connection connection, final String protocol,
                                         StreamPump.StreamPumpStats streamPumpStats) throws SocketException {
-    final AbstractHttpHandler hsr = exc.getHandler();
-    String source = hsr.getRemoteAddress();
-    String dest = con.toString();
-    final StreamPump a;
-    final StreamPump b;
-    if("WebSocket".equals(protocol)){
-      WebSocketStreamPump aTemp = new WebSocketStreamPump(hsr.getSrcIn(), con.out, streamPumpStats,
-          protocol + " " + source + " -> " + dest, exc.getRule(),true,exc);
-      WebSocketStreamPump bTemp = new WebSocketStreamPump(con.in, hsr.getSrcOut(), streamPumpStats,
-          protocol + " " + source + " <- " + dest, exc.getRule(),false, null);
-      aTemp.init(bTemp);
-      bTemp.init(aTemp);
-      a = aTemp;
-      b = bTemp;
+    final AbstractHttpHandler httpHandler = exchange.getHandler();
+    String sourceAddress = httpHandler.getRemoteAddress();
+    String destinationAddress = connection.toString();
+
+    final StreamPump streamPumpForward;
+    final StreamPump streamPumpBackward;
+
+    if ("WebSocket".equals(protocol)) {
+      streamPumpForward = createWebSocketStreamPump(httpHandler.getSrcIn(), connection.out, streamPumpStats,
+              protocol, sourceAddress, destinationAddress, exchange, true);
+      streamPumpBackward = createWebSocketStreamPump(connection.in, httpHandler.getSrcOut(), streamPumpStats,
+              protocol, sourceAddress, destinationAddress, exchange, false);
+      initializeStreamPumps(streamPumpForward, streamPumpBackward);
     } else {
-      a = new StreamPump(hsr.getSrcIn(), con.out, streamPumpStats,
-          protocol + " " + source + " -> " + dest, exc.getRule());
-      b = new StreamPump(con.in, hsr.getSrcOut(), streamPumpStats,
-          protocol + " " + source + " <- " + dest, exc.getRule());
+      streamPumpForward = createStreamPump(httpHandler.getSrcIn(), connection.out, streamPumpStats,
+              protocol, sourceAddress, destinationAddress, exchange);
+      streamPumpBackward = createStreamPump(connection.in, httpHandler.getSrcOut(), streamPumpStats,
+              protocol, sourceAddress, destinationAddress, exchange);
     }
 
-    exc.addExchangeViewerListener(new AbstractExchangeViewerListener() {
+    exchange.addExchangeViewerListener(new AbstractExchangeViewerListener() {
       @Override
       public void setExchangeFinished() {
-        // Backward Thread
-        if (managedExecutorService != null) {
-          managedExecutorService.submit(b);
-        }
-        try {
-          // Onward Thread
-          a.run();
-        } finally {
-          try {
-            con.close();
-          } catch (IOException e) {
-            LOGGER.log(Level.FINE, "", e);
-          }
-        }
+        executeStreamPump(streamPumpBackward);
+        executeStreamPump(streamPumpForward, connection);
       }
     });
+  }
+
+  private StreamPump createStreamPump(InputStream srcIn, OutputStream srcOut, StreamPump.StreamPumpStats stats,
+                                      String protocol, String source, String destination, Exchange exchange) {
+    return new StreamPump(srcIn, srcOut, stats, protocol + " " + source + " -> " + destination, exchange.getRule());
+  }
+
+  private WebSocketStreamPump createWebSocketStreamPump(InputStream srcIn, OutputStream srcOut,
+                                                        StreamPump.StreamPumpStats stats, String protocol,
+                                                        String source, String destination, Exchange exchange,
+                                                        boolean isForwardDirection) {
+    return new WebSocketStreamPump(srcIn, srcOut, stats, protocol + " " + source + (isForwardDirection ? " -> " : " <- ") + destination,
+            exchange.getRule(), isForwardDirection, isForwardDirection ? exchange : null);
+  }
+
+  private void initializeStreamPumps(StreamPump pumpA, StreamPump pumpB) {
+    ((WebSocketStreamPump) pumpA).init((WebSocketStreamPump) pumpB);
+    ((WebSocketStreamPump) pumpB).init((WebSocketStreamPump) pumpA);
+  }
+
+  private void executeStreamPump(StreamPump streamPump) {
+    if (managedExecutorService != null) {
+      managedExecutorService.submit(streamPump);
+    }
+  }
+
+  private void executeStreamPump(StreamPump streamPump, Connection connection) {
+    try {
+      streamPump.run();
+    } finally {
+      closeConnection(connection);
+    }
+  }
+
+  private void closeConnection(Connection connection) {
+    try {
+      connection.close();
+    } catch (IOException e) {
+      LOGGER.log(Level.FINE, "", e);
+    }
   }
 }
