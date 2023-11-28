@@ -34,6 +34,22 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Date;
 
+import io.hops.hopsworks.persistence.entity.util.EntityUtils;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @Entity
 @Table(name = "alert_manager_config",
     catalog = "hopsworks",
@@ -107,22 +123,14 @@ public class AlertManagerConfigEntity implements Serializable {
 
   @Override
   public int hashCode() {
-    int hash = 0;
-    hash += (id != null ? id.hashCode() : 0);
-    return hash;
+    return EntityUtils.hashCode(this.id);
   }
 
   @Override
   public boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof AlertManagerConfigEntity)) {
-      return false;
-    }
-    AlertManagerConfigEntity other = (AlertManagerConfigEntity) object;
-    if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
-      return false;
-    }
-    return true;
+    return object instanceof AlertManagerConfigEntity &&
+            EntityUtils.equals(this, (AlertManagerConfigEntity) object);
   }
 
   @Override
