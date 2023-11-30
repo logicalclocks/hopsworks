@@ -205,6 +205,11 @@
     </dependency>
 
     <dependency>
+      <groupId>commons-validator</groupId>
+      <artifactId>commons-validator</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>fish.payara.extras</groupId>
       <artifactId>payara-embedded-web</artifactId>
       <scope>provided</scope>

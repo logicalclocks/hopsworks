@@ -286,6 +286,16 @@ describe "On #{ENV['OS']}" do
         expect(json_body[:status]).to be == 2
         expect(json_body[:password]).to be_nil
       end
+      it "should register new user with capital letters (should lowercase before saving)" do
+        email = "#{random_id}@EMAIL.com"
+        register_user_as_admin(email, "name", "last", password: "Pass123", maxNumProjects: "5",
+                               status: "ACTIVATED_ACCOUNT")
+        expect_status_details(201)
+        expect(json_body[:maxNumProjects]).to be == 5
+        expect(json_body[:status]).to be == 2
+        expect(json_body[:password]).to be_nil
+        expect(json_body[:email]).to eq(email.downcase)
+      end
       it "should add new activated user to kube config map" do
         if !kserve_installed
           skip "This test only runs with KServe installed"

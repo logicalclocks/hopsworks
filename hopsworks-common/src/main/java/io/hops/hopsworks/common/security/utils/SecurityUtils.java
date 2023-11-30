@@ -118,8 +118,7 @@ public class SecurityUtils {
    */
   public Secret generateSecret(String password) {
     String salt = generateSecureRandomString(RANDOM_KEY_LEN);
-    Secret secret = new Secret(password, salt, UserValidator.PASSWORD_MIN_LENGTH, RANDOM_KEY_LEN);
-    return secret;
+    return new Secret(password, salt, UserValidator.PASSWORD_MIN_LENGTH, RANDOM_KEY_LEN);
   }
   
   /**

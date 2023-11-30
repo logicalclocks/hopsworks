@@ -39,17 +39,19 @@
 
 package io.hops.hopsworks.common.user;
 
-import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.UsersDTO;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.UserException;
+
+import org.apache.commons.validator.routines.EmailValidator;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 
 @Stateless
 public class UserValidator {
@@ -61,18 +63,11 @@ public class UserValidator {
   public static final int TEMP_PASSWORD_LENGTH = 8;
   public static final int PASSWORD_MAX_LENGTH = 255;
   private static final String PASSWORD_PATTERN = "(?=.*[a-z])(?=.*[A-Z])(?=.*[\\d\\W]).*$";
-  private static final String EMAIL_PATTERN = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)"
-    + "*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?";
 
-  public boolean isValidEmail(String email) throws UserException {
-    if (Strings.isNullOrEmpty(email)) {
-      throw new IllegalArgumentException("Email was not provided");
-    }
-    if (!isValid(email, EMAIL_PATTERN)) {
+  public void isValidEmail(String email) throws UserException {
+    if (!EmailValidator.getInstance().isValid(email)) {
       throw new UserException(RESTCodes.UserErrorCode.INVALID_EMAIL, Level.FINE);
     }
-
-    return true;
   }
 
   public boolean isValidPassword(String password, String confirmedPassword) throws UserException {

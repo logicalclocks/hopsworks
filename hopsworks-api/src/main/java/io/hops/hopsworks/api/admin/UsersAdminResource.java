@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.admin;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.admin.dto.NewUserDTO;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
@@ -366,24 +367,29 @@ public class UsersAdminResource {
   }
   
   private Response createUser(String email, String password, String givenName, String surname, int maxNumProjects,
-    String role, UserAccountStatus status, UriInfo uriInfo) throws UserException {
+                              String role, UserAccountStatus status, UriInfo uriInfo) throws UserException {
     UsersDTO newUser = new UsersDTO();
     newUser.setEmail(email);
     newUser.setFirstName(givenName);
     newUser.setLastName(surname);
     newUser.setMaxNumProjects(maxNumProjects > 0 ? maxNumProjects : settings.getMaxNumProjPerUser());
-    String passwordGen = password != null && !password.isEmpty()? password :
-      securityUtils.generateRandomString(UserValidator.TEMP_PASSWORD_LENGTH);
+    newUser.setTos(true);
+
+    String passwordGen = !Strings.isNullOrEmpty(password) ? password :
+        securityUtils.generateRandomString(UserValidator.TEMP_PASSWORD_LENGTH);
     newUser.setChosenPassword(passwordGen);
     newUser.setRepeatedPassword(passwordGen);
-    newUser.setTos(true);
-    userValidator.isValidNewUser(newUser, passwordGen.equals(password));
+
+    userValidator.isValidNewUser(newUser, !Strings.isNullOrEmpty(password));
+
     UserAccountStatus statusDefault = status != null ? status : UserAccountStatus.TEMP_PASSWORD;
-    Users user = usersController.registerUser(newUser, role != null ? role : Settings.DEFAULT_ROLE, statusDefault,
-      UserAccountType.M_ACCOUNT_TYPE);
+    Users user = usersController.registerUser(newUser,
+        role != null ? role : Settings.DEFAULT_ROLE, statusDefault,
+        UserAccountType.M_ACCOUNT_TYPE);
+
     NewUserDTO newUserDTO = new NewUserDTO(user);
     URI href = uriInfo.getAbsolutePathBuilder().path(user.getUid().toString()).build();
-    if (!passwordGen.equals(password)) {
+    if (Strings.isNullOrEmpty(password)) {
       newUserDTO.setPassword(passwordGen);
     }
     return Response.created(href).entity(newUserDTO).build();
