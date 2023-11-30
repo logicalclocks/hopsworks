@@ -123,9 +123,6 @@ public class UsersController {
   private Instance<UserAccountHandler> userAccountHandlers;
 
   public QrCode registerUser(UsersDTO newUser, String validationKeyUrl) throws UserException {
-    if (newUser.getEmail() != null && !newUser.getEmail().isEmpty()) {
-      newUser.setEmail(newUser.getEmail().toLowerCase());
-    }
     userValidator.isValidNewUser(newUser);
     // if setting is changed user should still be able to use her device
     if (!Strings.isNullOrEmpty(settings.getTwoFactorAuth()) &&
@@ -155,15 +152,8 @@ public class UsersController {
     return qrCode;
   }
   
-  public Users registerUser(UsersDTO newUser, String role, UserAccountStatus accountStatus, UserAccountType accountType)
-    throws UserException {
-    if (!Strings.isNullOrEmpty(newUser.getEmail())) {
-      newUser.setEmail(newUser.getEmail().toLowerCase());
-    }
-    userValidator.isValidEmail(newUser.getEmail());
-    if (userFacade.findByEmail(newUser.getEmail()) != null) {
-      throw new UserException(RESTCodes.UserErrorCode.USER_EXISTS, Level.FINE);
-    }
+  public Users registerUser(UsersDTO newUser, String role,
+                            UserAccountStatus accountStatus, UserAccountType accountType) throws UserException {
     Users user = createNewUser(newUser, accountStatus, accountType);
     BbcGroup group = bbcGroupFacade.findByGroupName(role);
     if (group != null) {
@@ -253,7 +243,9 @@ public class UsersController {
     Timestamp now = new Timestamp(new Date().getTime());
     int maxNumProjects = newUser.getMaxNumProjects() > 0? newUser.getMaxNumProjects() : settings.getMaxNumProjPerUser();
 
-    Users user = new Users(uname, secret.getSha256HexDigest(), newUser.getEmail(), newUser.getFirstName(),
+    // Here we need to enforce that the email address is lowercase
+    Users user = new Users(uname, secret.getSha256HexDigest(), newUser.getEmail().toLowerCase(),
+        newUser.getFirstName(),
         newUser.getLastName(), now, "-", accountStatus, otpSecret, activationKey,
         now, ValidationKeyType.EMAIL, accountType, now, maxNumProjects, newUser.isTwoFactor(),
         secret.getSalt(), newUser.getToursState());
