@@ -1,6 +1,6 @@
 FROM payara:5.2022.5
 
-ARG version=3.5.0-SNAPSHOT
+ARG version=3.7.0-SNAPSHOT
 ARG download_url=https://repo.hops.works/master/hopsworks
 ARG frontend_download_url=https://repo.hops.works/master/hopsworks/frontend
 ARG user
