@@ -16,6 +16,5 @@
 package io.hops.hopsworks.persistence.entity.command;
 
 public enum Operation {
-  SERVICE_KEY_ROTATION,
   CONDA_GC
 }

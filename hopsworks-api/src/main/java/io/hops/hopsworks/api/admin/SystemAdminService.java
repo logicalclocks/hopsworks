@@ -202,16 +202,6 @@ public class SystemAdminService {
     RESTApiJsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, "Variables updated");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
   }
-  
-  @POST
-  @Path("/rotate")
-  public Response serviceKeyRotate(@Context HttpServletRequest req, @Context SecurityContext sc) {
-    certificatesMgmService.issueServiceKeyRotationCommand();
-    RESTApiJsonResponse
-      response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, "Key rotation commands " +
-        "issued");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NO_CONTENT).entity(response).build();
-  }
 
   @PUT
   @Path("/servicetoken")

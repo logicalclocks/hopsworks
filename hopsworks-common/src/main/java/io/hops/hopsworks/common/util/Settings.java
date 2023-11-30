@@ -711,8 +711,6 @@ public class Settings implements Serializable {
       WHITELIST_USERS_LOGIN = setStrVar(VARIABLE_WHITELIST_USERS_LOGIN,
           WHITELIST_USERS_LOGIN);
       FIRST_TIME_LOGIN = setStrVar(VARIABLE_FIRST_TIME_LOGIN, FIRST_TIME_LOGIN);
-      serviceKeyRotationEnabled = setBoolVar(SERVICE_KEY_ROTATION_ENABLED_KEY, serviceKeyRotationEnabled);
-      serviceKeyRotationInterval = setStrVar(SERVICE_KEY_ROTATION_INTERVAL_KEY, serviceKeyRotationInterval);
       tensorBoardMaxLastAccessed = setIntVar(TENSORBOARD_MAX_LAST_ACCESSED, tensorBoardMaxLastAccessed);
       sparkUILogsOffset = setIntVar(SPARK_UI_LOGS_OFFSET, sparkUILogsOffset);
       jupyterShutdownTimerInterval = setStrVar(JUPYTER_SHUTDOWN_TIMER_INTERVAL, jupyterShutdownTimerInterval);
@@ -2780,24 +2778,6 @@ public class Settings implements Serializable {
   
   
   //----------------------------END remote user------------------------------------
-
-  // Service key rotation enabled
-  private static final String SERVICE_KEY_ROTATION_ENABLED_KEY = "service_key_rotation_enabled";
-  private boolean serviceKeyRotationEnabled = false;
-
-  public synchronized boolean isServiceKeyRotationEnabled() {
-    checkCache();
-    return serviceKeyRotationEnabled;
-  }
-
-  // Service key rotation interval
-  private static final String SERVICE_KEY_ROTATION_INTERVAL_KEY = "service_key_rotation_interval";
-  private String serviceKeyRotationInterval = "3d";
-
-  public synchronized String getServiceKeyRotationInterval() {
-    checkCache();
-    return serviceKeyRotationInterval;
-  }
 
  // TensorBoard kill rotation interval in milliseconds (should be lower than the TensorBoardKillTimer)
   private static final String TENSORBOARD_MAX_LAST_ACCESSED = "tensorboard_max_last_accessed";

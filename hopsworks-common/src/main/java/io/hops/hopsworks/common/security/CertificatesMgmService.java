@@ -44,15 +44,10 @@ import com.hazelcast.config.MapConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 import com.hazelcast.topic.ITopic;
-import io.hops.hopsworks.common.dao.command.SystemCommandFacade;
-import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.message.MessageController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
-import io.hops.hopsworks.persistence.entity.command.Operation;
-import io.hops.hopsworks.persistence.entity.command.SystemCommand;
-import io.hops.hopsworks.persistence.entity.host.Hosts;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
@@ -65,8 +60,6 @@ import javax.ejb.EJB;
 import javax.ejb.Lock;
 import javax.ejb.LockType;
 import javax.ejb.Singleton;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
@@ -79,7 +72,6 @@ import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -100,10 +92,6 @@ public class CertificatesMgmService {
   private UserFacade userFacade;
   @EJB
   private MessageController messageController;
-  @EJB
-  private SystemCommandFacade systemCommandFacade;
-  @EJB
-  private HostsFacade hostsFacade;
   @Inject
   @Any
   private Instance<MasterPasswordHandler> handlers;
@@ -300,16 +288,7 @@ public class CertificatesMgmService {
   public void updateMasterEncryptionPassword(String newPassword) throws IOException {
     FileUtils.writeStringToFile(masterPasswordFile, newPassword, Charset.defaultCharset());
   }
-  
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public void issueServiceKeyRotationCommand() {
-    List<Hosts> allHosts = hostsFacade.findAll();
-    for (Hosts host : allHosts) {
-      SystemCommand rotateCommand = new SystemCommand(host, Operation.SERVICE_KEY_ROTATION);
-      systemCommandFacade.persist(rotateCommand);
-    }
-  }
-  
+
   private void sendSuccessfulMessage(String successLog, String userRequested) {
     sendInbox(successLog, "Changed successfully", userRequested);
   }
