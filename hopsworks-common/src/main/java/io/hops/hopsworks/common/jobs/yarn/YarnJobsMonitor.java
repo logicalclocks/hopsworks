@@ -141,7 +141,7 @@ public class YarnJobsMonitor implements JobsMonitor {
         while (monitorsIter.hasNext()) {
           Map.Entry<String, YarnMonitor> entry = monitorsIter.next();
           // Check if Value associated with Key is 10
-          if (!executions.keySet().contains(entry.getKey())) {
+          if (!executions.containsKey(entry.getKey())) {
             // Remove the element
             entry.getValue().close();
             monitorsIter.remove();
@@ -213,10 +213,10 @@ public class YarnJobsMonitor implements JobsMonitor {
         monitor.cancelJob(monitor.getApplicationId().toString());
         exec = updateFinalStatus(JobFinalStatus.KILLED, exec);
         exec = updateProgress(0, exec);
-        execFinalizer.finalize(exec, JobState.KILLED);
+        execFinalizer.finalizeExecution(exec, JobState.KILLED);
       } catch (YarnException | IOException ex) {
         LOGGER.log(Level.SEVERE, "Failed to cancel execution, " + exec + " after failing to poll for status.", ex);
-        execFinalizer.finalize(exec, JobState.FRAMEWORK_FAILURE);
+        execFinalizer.finalizeExecution(exec, JobState.FRAMEWORK_FAILURE);
       }
       return null;
     }
