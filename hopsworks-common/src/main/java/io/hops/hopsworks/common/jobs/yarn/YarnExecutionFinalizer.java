@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.common.jobs.yarn;
 
+import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.persistence.entity.project.service.ProjectServiceEnum;
@@ -112,7 +113,7 @@ public class YarnExecutionFinalizer {
         LOGGER.log(Level.SEVERE,"error while aggregation logs" + ex.toString());
       }
       Execution execution = updateExecutionSTDPaths(stdOutFinalDestination, stdErrFinalDestination, exec);
-      finalize(exec, exec.getState());
+      finalizeExecution(exec, exec.getState());
       return new AsyncResult<>(execution);
     } finally {
       dfs.closeDfsClient(udfso);
@@ -121,9 +122,9 @@ public class YarnExecutionFinalizer {
   }
 
   @Asynchronous
-  public void finalize(Execution exec, JobState jobState) {
+  public void finalizeExecution(Execution exec, JobState jobState) {
     //The execution won't exist in the database, if the job has been deleted.
-    if (executionFacade.findById(exec.getId()) != null) {
+    if (executionFacade.findById(exec.getId()).isPresent()) {
       long executionStop = System.currentTimeMillis();
       exec = executionFacade.updateExecutionStop(exec, executionStop);
       executionFacade.updateState(exec, jobState);
@@ -136,8 +137,8 @@ public class YarnExecutionFinalizer {
           "Exception while cleaning after job:{0}, with appId:{1}, some cleaning is probably needed {2}",
           new Object[]{exec.getJob().getName(), exec.getAppId(), ex.getMessage()});
     }
-
-    if (exec.getJob().getJobType().equals(JobType.FLINK)) {
+    Jobs jobs = exec.getJob();
+    if (jobs != null && jobs.getJobType().equals(JobType.FLINK)) {
       cleanCerts(exec);
     }
   }
@@ -172,18 +173,23 @@ public class YarnExecutionFinalizer {
   private void cleanCerts(Execution exec) {
     //Remove local files required for the job (Kafka certs etc.)
     //Search for other jobs using Kafka in the same project. If any active
-    //ones are found
-
-    Collection<ProjectServices> projectServices = exec.getJob().getProject().getProjectServicesCollection();
+    //ones are found.
+    
+    //if job is deleted we can not do a proper cleanup with this exec
+    Jobs jobs = exec.getJob();
+    if (jobs == null) {
+      return;
+    }
+    Collection<ProjectServices> projectServices = jobs.getProject().getProjectServicesCollection();
     Iterator<ProjectServices> iter = projectServices.iterator();
     boolean removeKafkaCerts = true;
     while (iter.hasNext()) {
       ProjectServices projectService = iter.next();
       //If the project is of type KAFKA
       if (projectService.getProjectServicesPK().getService() == ProjectServiceEnum.KAFKA) {
-        List<Execution> execs = executionFacade.findByProjectAndType(exec.getJob().getProject(), JobType.FLINK);
+        List<Execution> execs = executionFacade.findByProjectAndType(jobs.getProject(), JobType.FLINK);
         if (execs != null) {
-          execs.addAll(executionFacade.findByProjectAndType(exec.getJob().getProject(), JobType.SPARK));
+          execs.addAll(executionFacade.findByProjectAndType(jobs.getProject(), JobType.SPARK));
         }
         //Find if this project has running jobs
         if (execs != null && !execs.isEmpty()) {

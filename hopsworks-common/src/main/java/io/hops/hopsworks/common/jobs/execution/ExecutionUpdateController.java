@@ -38,26 +38,44 @@ public class ExecutionUpdateController {
   private AlertController alertController;
   
   public Execution updateProgress(float progress, Execution execution) {
-    return executionFacade.updateProgress(execution, progress);
+    //The execution won't exist in the database, if the job has been deleted.
+    if (executionFacade.findById(execution.getId()).isPresent()) {
+      execution = executionFacade.updateProgress(execution, progress);
+    }
+    return execution;
   }
 
   public Execution updateExecutionStop(long executionStop, Execution execution) {
-    return executionFacade.updateExecutionStop(execution, executionStop);
+    //The execution won't exist in the database, if the job has been deleted.
+    if (executionFacade.findById(execution.getId()).isPresent()) {
+      execution =  executionFacade.updateExecutionStop(execution, executionStop);
+    }
+    return execution;
   }
   
   public Execution updateState(JobState newState, Execution execution) {
-    return executionFacade.updateState(execution, newState);
+    //The execution won't exist in the database, if the job has been deleted.
+    if (executionFacade.findById(execution.getId()).isPresent()) {
+      execution = executionFacade.updateState(execution, newState);
+    }
+    return execution;
   }
   
   public Execution updateStateAndSendAlert(Execution execution) {
-    execution = executionFacade.update(execution);
-    alertController.sendAlert(execution.getState(), execution);
+    //The execution won't exist in the database, if the job has been deleted.
+    if (executionFacade.findById(execution.getId()).isPresent()) {
+      execution = executionFacade.update(execution);
+      alertController.sendAlert(execution.getState(), execution);
+    }
     return execution;
   }
   
   public Execution updateFinalStatusAndSendAlert(JobFinalStatus finalStatus, Execution execution) {
-    execution = executionFacade.updateFinalStatus(execution, finalStatus);
-    alertController.sendAlert(finalStatus, execution);
+    //The execution won't exist in the database, if the job has been deleted.
+    if (executionFacade.findById(execution.getId()).isPresent()) {
+      execution = executionFacade.updateFinalStatus(execution, finalStatus);
+      alertController.sendAlert(finalStatus, execution);
+    }
     return execution;
   }
 }
