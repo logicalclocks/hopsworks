@@ -43,6 +43,7 @@ import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobFinalS
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
 import io.hops.hopsworks.persistence.entity.jobs.description.JobAlert;
 import io.hops.hopsworks.persistence.entity.jobs.description.JobAlertStatus;
+import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlert;
@@ -79,8 +80,11 @@ public class AlertController {
    * @param execution
    */
   public void sendAlert(JobState newState, Execution execution) {
-    List<PostableAlert> postableAlerts = getAlerts(newState, execution);
-    sendJobAlert(postableAlerts, execution.getJob().getProject(), execution.getJob().getName(), execution.getId());
+    Jobs job = execution != null ? execution.getJob() : null;
+    if (job != null) {
+      List<PostableAlert> postableAlerts = getAlerts(newState, execution);
+      sendJobAlert(postableAlerts, job.getProject(), job.getName(), execution.getId());
+    }
   }
 
   /**
@@ -89,8 +93,11 @@ public class AlertController {
    * @param execution
    */
   public void sendAlert(JobFinalStatus newState, Execution execution) {
-    List<PostableAlert> postableAlerts = getAlerts(newState, execution);
-    sendJobAlert(postableAlerts, execution.getJob().getProject(), execution.getJob().getName(), execution.getId());
+    Jobs job = execution != null ? execution.getJob() : null;
+    if (job != null) {
+      List<PostableAlert> postableAlerts = getAlerts(newState, execution);
+      sendJobAlert(postableAlerts, job.getProject(), job.getName(), execution.getId());
+    }
   }
 
   /**
@@ -247,23 +254,25 @@ public class AlertController {
     return postableAlerts;
   }
 
+  //method expects execution not null.
   private List<PostableAlert> getAlerts(JobAlertStatus jobAlertStatus,
     ProjectServiceAlertStatus projectServiceAlertStatus, Execution execution) {
     List<PostableAlert> postableAlerts = new ArrayList<>();
-    if (execution.getJob().getJobAlertCollection() != null && !execution.getJob().getJobAlertCollection().isEmpty()) {
-      for (JobAlert alert : execution.getJob().getJobAlertCollection()) {
+    Jobs job = execution.getJob();
+    if (job != null && job.getJobAlertCollection() != null && !job.getJobAlertCollection().isEmpty()) {
+      for (JobAlert alert : job.getJobAlertCollection()) {
         if (alert.getStatus().equals(jobAlertStatus)) {
-          PostableAlert postableAlert = getPostableAlert(execution.getJob().getProject(), alert.getAlertType(),
-            alert.getSeverity(), alert.getStatus().getName(), execution.getJob().getName(), execution.getId());
+          PostableAlert postableAlert = getPostableAlert(job.getProject(), alert.getAlertType(),
+            alert.getSeverity(), alert.getStatus().getName(), job.getName(), execution.getId());
           postableAlerts.add(postableAlert);
         }
       }
-    } else if (execution.getJob().getProject().getProjectServiceAlerts() != null &&
-      !execution.getJob().getProject().getProjectServiceAlerts().isEmpty()) {
-      for (ProjectServiceAlert alert : execution.getJob().getProject().getProjectServiceAlerts()) {
+    } else if (job != null && job.getProject().getProjectServiceAlerts() != null &&
+      !job.getProject().getProjectServiceAlerts().isEmpty()) {
+      for (ProjectServiceAlert alert : job.getProject().getProjectServiceAlerts()) {
         if (ProjectServiceEnum.JOBS.equals(alert.getService()) && alert.getStatus().equals(projectServiceAlertStatus)) {
-          PostableAlert postableAlert = getPostableAlert(execution.getJob().getProject(), alert.getAlertType(),
-            alert.getSeverity(), alert.getStatus().getName(), execution.getJob().getName(), execution.getId());
+          PostableAlert postableAlert = getPostableAlert(job.getProject(), alert.getAlertType(),
+            alert.getSeverity(), alert.getStatus().getName(), job.getName(), execution.getId());
           postableAlerts.add(postableAlert);
         }
       }
