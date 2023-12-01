@@ -30,6 +30,7 @@ import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.oauth2.sdk.pkce.CodeVerifier;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
+import com.nimbusds.oauth2.sdk.util.JSONUtils;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
@@ -83,7 +84,7 @@ import java.util.logging.Logger;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class OIDAuthorizationCodeFlowHelper {
-  
+
   private final static Logger LOGGER = Logger.getLogger(OIDAuthorizationCodeFlowHelper.class.getName());
 
   @EJB
@@ -98,21 +99,19 @@ public class OIDAuthorizationCodeFlowHelper {
   private UserFacade userFacade;
   @EJB
   private OauthTokenFacade oauthTokenFacade;
-  
+
   /**
-   *
    * @param client
    * @param invalidateCache
    * @return
    * @throws RemoteAuthException
    */
   public OpenIdProviderConfig getOpenIdProviderConfig(OauthClient client, boolean invalidateCache)
-    throws RemoteAuthException {
+      throws RemoteAuthException {
     return oAuthProviderCache.getProviderConfig(client, invalidateCache);
   }
-  
+
   /**
-   *
    * @param providerURI
    * @return
    * @throws IOException
@@ -121,7 +120,7 @@ public class OIDAuthorizationCodeFlowHelper {
   public OpenIdProviderConfig getOpenIdProviderConfig(String providerURI) throws IOException, URISyntaxException {
     return oAuthProviderCache.getProviderConfigFromURI(providerURI);
   }
-  
+
   private Scope getSupportedScope(Set<String> scopesSupported, boolean offlineAccess) {
     Scope scope = new Scope(OpenIdConstant.OPENID_SCOPE, OpenIdConstant.EMAIL_SCOPE, OpenIdConstant.PROFILE_SCOPE);
     if (scopesSupported == null || scopesSupported.isEmpty()) {
@@ -138,23 +137,22 @@ public class OIDAuthorizationCodeFlowHelper {
     }
     return scope;
   }
-  
+
   private Scope getScope(Set<String> scopes) {
     Scope scope = new Scope(scopes.toArray(new String[0]));
     scope.add(OpenIdConstant.OFFLINE_ACCESS_SCOPE);
     scope.add(OpenIdConstant.OPENID_SCOPE);
     return scope;
   }
-  
+
   /**
-   *
    * @param sessionId
    * @param providerName
    * @return
    * @throws URISyntaxException
    */
   public URI getAuthenticationRequestURL(String sessionId, String providerName, String redirectUri, Set<String> scopes)
-    throws URISyntaxException, RemoteAuthException {
+      throws URISyntaxException, RemoteAuthException {
     OauthClient client = oauthClientFacade.findByProviderName(providerName);
     if (client == null) {
       throw new NotFoundException("Client not found.");
@@ -167,30 +165,30 @@ public class OIDAuthorizationCodeFlowHelper {
       codeVerifier = new CodeVerifier();
       codeChallengeMethod = CodeChallengeMethod.parse(client.getCodeChallengeMethod().name());
     }
-    
-    Scope scope = scopes == null || scopes.isEmpty()? getSupportedScope(providerConfig.getScopesSupported(),
-      client.isOfflineAccess()) : getScope(scopes);
+
+    Scope scope = scopes == null || scopes.isEmpty() ? getSupportedScope(providerConfig.getScopesSupported(),
+        client.isOfflineAccess()) : getScope(scopes);
     //set to database redirect uri if empty
     redirectUri = Strings.isNullOrEmpty(redirectUri) ? settings.getOauthRedirectUri(providerName) : redirectUri;
     State state = saveOauthLoginState(sessionId, client, nonce, codeVerifier, redirectUri, scope.toString().replace(
-      " ", " ,"));
+        " ", " ,"));
     URI authEndpoint = new URI(providerConfig.getAuthorizationEndpoint());
     ClientID clientId = new ClientID(client.getClientId());
     ResponseType responseType = new ResponseType(ResponseType.Value.CODE);
-    
+
     AuthenticationRequest authenticationRequest =
-      new AuthenticationRequest.Builder(responseType, scope, clientId,
-        new URI(getRedirectUri(redirectUri, providerName)))
-        .state(state)
-        .nonce(nonce)
-        .codeChallenge(codeVerifier, codeChallengeMethod)
-        .endpointURI(authEndpoint)
-        .build();
+        new AuthenticationRequest.Builder(responseType, scope, clientId,
+            new URI(getRedirectUri(redirectUri, providerName)))
+            .state(state)
+            .nonce(nonce)
+            .codeChallenge(codeVerifier, codeChallengeMethod)
+            .endpointURI(authEndpoint)
+            .build();
     return authenticationRequest.toURI();
   }
-  
+
   public URI getLogoutUrl(String providerName, String redirectURI, Users user) throws URISyntaxException,
-    RemoteAuthException {
+      RemoteAuthException {
     OauthClient client = oauthClientFacade.findByProviderName(providerName);
     if (client == null) {
       throw new NotFoundException("Client not found.");
@@ -200,7 +198,7 @@ public class OIDAuthorizationCodeFlowHelper {
       URI postLogoutRedirectURI = new URI(redirectURI);
       URI logoutURI = new URI(providerConfig.getEndSessionEndpoint());
       LogoutReq.Builder logoutRequestBuilder = new LogoutReq.Builder(logoutURI, new ClientID(client.getClientId()),
-        postLogoutRedirectURI).postLogoutRedirectParam(providerConfig.getLogoutRedirectParam());
+          postLogoutRedirectURI).postLogoutRedirectParam(providerConfig.getLogoutRedirectParam());
       Optional<OauthToken> optionalOauthToken = oauthTokenFacade.findByUser(user);
       if (optionalOauthToken.isPresent()) {
         com.nimbusds.jwt.JWT idToken;
@@ -209,7 +207,7 @@ public class OIDAuthorizationCodeFlowHelper {
         } catch (java.text.ParseException e) {
           LOGGER.log(Level.SEVERE, "Id token ParseException {0}.", e.getMessage());
           throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.TOKEN_PARSE_EXCEPTION, Level.FINE, "Id token " +
-            "ParseException.", e.getMessage());
+              "ParseException.", e.getMessage());
         }
         logoutRequestBuilder.idTokenHint(idToken);
       }
@@ -217,15 +215,15 @@ public class OIDAuthorizationCodeFlowHelper {
     }
     return null;
   }
-  
+
   private State saveOauthLoginState(String sessionId, OauthClient client, Nonce nonce, CodeVerifier codeVerifier,
-    String redirectUri, String scopes) {
+                                    String redirectUri, String scopes) {
     State state = new State();
     /*
      * when using oauth for hopsworks.ai we need to first redirect to hopsworks.ai then to
      * the hopsworks cluster. For this purpose we pass the cluster url in the state
      */
-    if(!settings.getManagedCloudRedirectUri().isEmpty()){
+    if (!settings.getManagedCloudRedirectUri().isEmpty()) {
       state = new State(getRedirectUriPrefix(redirectUri, client.getProviderName()) + "_" + state.getValue());
     }
     int count = 10;
@@ -245,31 +243,30 @@ public class OIDAuthorizationCodeFlowHelper {
     if (oauthLoginState != null) {
       throw new IllegalStateException("Failed to create state.");
     }
-    
+
     oauthLoginState = new OauthLoginState(state.getValue(), client, sessionId,
-      getRedirectUri(redirectUri, client.getProviderName()), scopes);
+        getRedirectUri(redirectUri, client.getProviderName()), scopes);
     oauthLoginState.setNonce(nonce.getValue());
-    oauthLoginState.setCodeChallenge(codeVerifier != null? codeVerifier.getValue() : null);
+    oauthLoginState.setCodeChallenge(codeVerifier != null ? codeVerifier.getValue() : null);
     oauthLoginStateFacade.save(oauthLoginState);
     return state;
   }
-  
+
   private String getRedirectUriPrefix(String redirectUri, String providerName) {
     // equals only if old ui
     // then we need to prefix with OauthRedirectUri skipping managed cloud
     return settings.getOauthRedirectUri(providerName).equals(redirectUri) ? settings.getOauthRedirectUri(providerName
-      ,true) : redirectUri;
+        , true) : redirectUri;
   }
-  
+
   private String getRedirectUri(String redirectUri, String providerName) {
     //if managed cloud and provider is hopsworks.ai use redirect uri from database
     return Objects.equals(providerName, settings.getManagedCloudProviderName()) &&
-      !Strings.isNullOrEmpty(settings.getManagedCloudRedirectUri()) ? settings.getManagedCloudRedirectUri() :
-      redirectUri;
+        !Strings.isNullOrEmpty(settings.getManagedCloudRedirectUri()) ? settings.getManagedCloudRedirectUri() :
+        redirectUri;
   }
-  
+
   /**
-   *
    * @param code
    * @param oauthLoginState
    * @param providerMetadata
@@ -279,26 +276,25 @@ public class OIDAuthorizationCodeFlowHelper {
    * @throws URISyntaxException
    */
   public OIDCTokens requestTokenLogin(String code, OauthLoginState oauthLoginState,
-    OpenIdProviderConfig providerMetadata) throws IOException, ParseException, URISyntaxException,
-    VerificationException {
+                                      OpenIdProviderConfig providerMetadata)
+      throws IOException, ParseException, URISyntaxException, VerificationException {
     OIDCTokens token = requestToken(code, oauthLoginState, providerMetadata);
     oauthLoginState.setIdToken(token.getIDTokenString());
     oauthLoginState.setAccessToken(token.getBearerAccessToken() != null ? token.getBearerAccessToken().getValue() :
-      null);
+        null);
     oauthLoginState.setRefreshToken(token.getRefreshToken() != null ? token.getRefreshToken().getValue() : null);
     oauthLoginStateFacade.update(oauthLoginState);
     return token;
   }
-  
+
   public void createOAuthTokens(OIDCTokens token, Users user) {
     if (user != null) {
       oauthTokenFacade.updateOrCreate(user, token.getIDTokenString(), token.getBearerAccessToken().getValue(),
-        token.getRefreshToken() != null ? token.getRefreshToken().getValue() : null);
+          token.getRefreshToken() != null ? token.getRefreshToken().getValue() : null);
     }
   }
-  
+
   /**
-   *
    * @param code
    * @param oauthLoginState
    * @param providerMetadata
@@ -309,7 +305,7 @@ public class OIDAuthorizationCodeFlowHelper {
    * @throws VerificationException
    */
   public OIDCTokens requestToken(String code, OauthLoginState oauthLoginState, OpenIdProviderConfig providerMetadata)
-    throws IOException, ParseException, URISyntaxException, VerificationException {
+      throws IOException, ParseException, URISyntaxException, VerificationException {
     ClientID clientId = new ClientID(oauthLoginState.getClientId().getClientId());
     Secret secret = new Secret(oauthLoginState.getClientId().getClientSecret());
     ClientSecretBasic clientSecretBasic = new ClientSecretBasic(clientId, secret);
@@ -323,24 +319,23 @@ public class OIDAuthorizationCodeFlowHelper {
     AuthorizationCodeGrant authorizationCodeGrant = new AuthorizationCodeGrant(authCode, redirectURI, pkceVerifier);
     URI tokenEndpoint = new URI(providerMetadata.getTokenEndpoint());
     TokenRequest tokenReq = new TokenRequest(tokenEndpoint, clientSecretBasic, authorizationCodeGrant, scope);
-    
+
     HTTPResponse tokenHTTPResp = tokenReq.toHTTPRequest().send();
     TokenResponse tokenResponse = OIDCTokenResponseParser.parse(tokenHTTPResp);
-    
+
     if (tokenResponse instanceof TokenErrorResponse) {
       ErrorObject error = ((TokenErrorResponse) tokenResponse).getErrorObject();
       LOGGER.log(Level.SEVERE, "Error in token response: {0}", error.getDescription());
       throw new IOException("Error in token response " + error.getDescription());
     }
-    
+
     OIDCTokenResponse accessTokenResponse = (OIDCTokenResponse) tokenResponse;
     OIDCTokens token = accessTokenResponse.getOIDCTokens();
     validateIdTokenWithRetry(token.getIDTokenString(), oauthLoginState, providerMetadata);
     return token;
   }
-  
+
   /**
-   *
    * @param code
    * @param oauthLoginState
    * @param providerMetadata
@@ -351,29 +346,28 @@ public class OIDAuthorizationCodeFlowHelper {
    * @throws IOException
    */
   public OIDCTokens getAccessToken(String code, OauthLoginState oauthLoginState,
-    OpenIdProviderConfig providerMetadata) throws URISyntaxException, VerificationException, ParseException,
-    IOException {
+                                   OpenIdProviderConfig providerMetadata)
+      throws URISyntaxException, VerificationException, ParseException, IOException {
     OIDCTokens token;
     if (oauthLoginState.getAccessToken() == null) {
       token = requestTokenLogin(code, oauthLoginState, providerMetadata);
     } else {
       RefreshToken refreshToken =
-        oauthLoginState.getRefreshToken() != null ? new RefreshToken(oauthLoginState.getRefreshToken()) : null;
+          oauthLoginState.getRefreshToken() != null ? new RefreshToken(oauthLoginState.getRefreshToken()) : null;
       token = new OIDCTokens(oauthLoginState.getIdToken(), new BearerAccessToken(oauthLoginState.getAccessToken()),
-        refreshToken);
+          refreshToken);
     }
     return token;
   }
-  
+
   /**
-   *
    * @param idToken
    * @param oauthLoginState
    * @param providerConfig
    * @throws VerificationException
    */
   public void validateIdTokenWithRetry(String idToken, OauthLoginState oauthLoginState,
-    OpenIdProviderConfig providerConfig) throws VerificationException {
+                                       OpenIdProviderConfig providerConfig) throws VerificationException {
     DecodedJWT jwt = com.auth0.jwt.JWT.decode(idToken);
     int maxAttempts = 2;
     boolean invalidateCache = false;
@@ -394,25 +388,25 @@ public class OIDAuthorizationCodeFlowHelper {
       }
     }
   }
-  
+
   private DecodedJWT validateIdToken(DecodedJWT jwt, OauthLoginState oauthLoginState,
-    OpenIdProviderConfig providerConfig, boolean invalidateCache) throws URISyntaxException, ParseException,
-    JOSEException, java.text.ParseException, IOException {
+                                     OpenIdProviderConfig providerConfig, boolean invalidateCache)
+      throws URISyntaxException, ParseException, JOSEException, java.text.ParseException, IOException {
     OauthClient client = oauthLoginState.getClientId();
     Algorithm alg = getAlgorithm(jwt, client, providerConfig, invalidateCache);
     JWTVerifier verifier = com.auth0.jwt.JWT.require(alg)
-      .withIssuer(providerConfig.getIssuerURI())
-      .withAudience(client.getClientId())//If the ID Token contains multiple audiences, the Client SHOULD verify that
-      // an azp Claim is present.
-      .withClaim(OpenIdConstant.NONCE, oauthLoginState.getNonce())
-      .build();
+        .withIssuer(providerConfig.getIssuerURI())
+        .withAudience(client.getClientId())//If the ID Token contains multiple audiences, the Client SHOULD verify that
+        // an azp Claim is present.
+        .withClaim(OpenIdConstant.NONCE, oauthLoginState.getNonce())
+        .build();
     jwt = verifier.verify(jwt.getToken());
     return jwt;
   }
-  
+
   private Algorithm getAlgorithm(DecodedJWT idToken, OauthClient client, OpenIdProviderConfig providerConfig,
-    boolean invalidateCache) throws IOException, URISyntaxException, java.text.ParseException, JOSEException,
-    ParseException {
+                                 boolean invalidateCache)
+      throws IOException, URISyntaxException, java.text.ParseException, JOSEException, ParseException {
     SignatureAlgorithm algorithm = SignatureAlgorithm.valueOf(idToken.getAlgorithm());
     switch (algorithm) {
       case HS256:
@@ -430,22 +424,21 @@ public class OIDAuthorizationCodeFlowHelper {
       default:
         throw new NotSupportedException("Algorithm not supported.");
     }
-    
+
   }
-  
+
   private RSAPublicKey getRSAJWK(DecodedJWT idToken, OpenIdProviderConfig providerConfig, boolean invalidateCache)
-    throws ParseException, IOException, URISyntaxException, java.text.ParseException, JOSEException {
+      throws ParseException, IOException, URISyntaxException, java.text.ParseException, JOSEException {
     JSONObject key = oAuthProviderCache.getJWK(idToken.getKeyId(), providerConfig, invalidateCache);
     return RSAKey.parse(key.toString()).toRSAPublicKey();
   }
-  
+
   private String getSecret(OauthClient client) throws UnsupportedEncodingException {
     byte[] bytes = client.getClientSecret().getBytes();
     return new String(bytes, "UTF-8");
   }
-  
+
   /**
-   *
    * @param accessToken
    * @param providerMetadata
    * @return
@@ -454,22 +447,23 @@ public class OIDAuthorizationCodeFlowHelper {
    * @throws URISyntaxException
    */
   public RemoteUserDTO getRemoteUser(BearerAccessToken accessToken, OpenIdProviderConfig providerMetadata,
-    OauthClient client) throws IOException, ParseException, URISyntaxException, LoginException {
+                                     OauthClient client)
+      throws IOException, ParseException, URISyntaxException, LoginException {
     URI userinfoEndpoint = new URI(providerMetadata.getUserInfoEndpoint());
     UserInfoRequest userInfoReq = new UserInfoRequest(userinfoEndpoint, accessToken);
     HTTPResponse userInfoHTTPResp = userInfoReq.toHTTPRequest().send();
-  
+
     UserInfoResponse userInfoResponse = UserInfoResponse.parse(userInfoHTTPResp);
     if (userInfoResponse instanceof UserInfoErrorResponse) {
       ErrorObject error = ((UserInfoErrorResponse) userInfoResponse).getErrorObject();
       LOGGER.log(Level.SEVERE, "Error in UserInfo response: {0}", error.getDescription());
       throw new IOException("Error in UserInfo response: " + error.getDescription());
     }
-  
+
     UserInfoSuccessResponse successResponse = (UserInfoSuccessResponse) userInfoResponse;
     return getRemoteUserFromClaims(accessToken, successResponse.getUserInfo(), client);
   }
-  
+
   private List<String> getListOrStringClaim(UserInfo userInfo, String claimName) {
     List<String> groups = new ArrayList<>();
     JSONObject userInfoJson = userInfo.toJSONObject();
@@ -485,24 +479,37 @@ public class OIDAuthorizationCodeFlowHelper {
     }
     return groups;
   }
-  
-  private String getStringClaim(UserInfo userInfo, String claimName) {
+
+  public String getStringClaim(UserInfo userInfo, String claimName) {
     JSONObject userInfoJson = userInfo.toJSONObject();
-    if (userInfoJson.containsKey(claimName)) {
-      return userInfoJson.getAsString(claimName);
+    Object value = userInfo.getClaim(claimName);
+    if (value == null) {
+      LOGGER.log(Level.WARNING, "Userinfo does not contain claim: {0}.", claimName);
+      return null;
     }
-    LOGGER.log(Level.WARNING, "Userinfo does not contain claim: {0}.", claimName);
+
+    try {
+      // In some cases we get the claims wrapped into a list
+      // if that's the case, we select the first element of the list
+      if (List.class.isAssignableFrom(value.getClass())) {
+        return (String) JSONUtils.to(value, List.class).get(0);
+      } else {
+        return JSONUtils.to(value, String.class);
+      }
+    } catch (ParseException e) {
+      // This is safe as we check the value early
+    }
     return null;
   }
-  
+
   private RemoteUserDTO getRemoteUserFromClaims(BearerAccessToken accessToken, UserInfo userInfo, OauthClient client)
-    throws LoginException {
+      throws LoginException {
     RemoteUserDTO remoteUserDTO = new RemoteUserDTO();
     remoteUserDTO.setUuid(OpenIdConstant.getUuid(client.getClientId(), userInfo.getSubject().getValue()));
     remoteUserDTO.setGivenName(getStringClaim(userInfo, client.getGivenNameClaim()));
     remoteUserDTO.setSurname(getStringClaim(userInfo, client.getFamilyNameClaim()));
     verifyAndSetEmail(remoteUserDTO, userInfo, client, accessToken);
-    
+
     // These are default group claims
     List<String> groups = getListOrStringClaim(userInfo, OpenIdConstant.GROUPS);
     groups.addAll(getListOrStringClaim(userInfo, OpenIdConstant.ROLES));
@@ -512,23 +519,23 @@ public class OIDAuthorizationCodeFlowHelper {
     groups.addAll(getListOrStringClaim(userInfo, OpenIdConstant.COGNITO_USERS_GROUP));
     groups.addAll(getListOrStringClaim(userInfo, OpenIdConstant.COGNITO_ADMINS_GROUP));
     groups.addAll(getListOrStringClaim(userInfo, OpenIdConstant.COGNITO_ORGA_ADMINS_GROUP));
-    
+
     // Additional group claim name other than the above
     if (!Strings.isNullOrEmpty(client.getGroupClaim()) &&
-      !client.getGroupClaim().equals(OpenIdConstant.GROUPS) &&
-      !client.getGroupClaim().equals(OpenIdConstant.ROLES) &&
-      !client.getGroupClaim().equals(OpenIdConstant.COGNITO_USERS_GROUP) &&
-      !client.getGroupClaim().equals(OpenIdConstant.COGNITO_ADMINS_GROUP) &&
-      !client.getGroupClaim().equals(OpenIdConstant.COGNITO_ORGA_ADMINS_GROUP)) {
+        !client.getGroupClaim().equals(OpenIdConstant.GROUPS) &&
+        !client.getGroupClaim().equals(OpenIdConstant.ROLES) &&
+        !client.getGroupClaim().equals(OpenIdConstant.COGNITO_USERS_GROUP) &&
+        !client.getGroupClaim().equals(OpenIdConstant.COGNITO_ADMINS_GROUP) &&
+        !client.getGroupClaim().equals(OpenIdConstant.COGNITO_ORGA_ADMINS_GROUP)) {
       groups.addAll(getListOrStringClaim(userInfo, client.getGroupClaim()));
     }
     remoteUserDTO.setGroups(groups);
     validateRemoteUser(remoteUserDTO);
     return remoteUserDTO;
   }
-  
+
   private void verifyAndSetEmail(RemoteUserDTO remoteUserDTO, UserInfo userInfo, OauthClient client,
-    BearerAccessToken accessToken) throws LoginException {
+                                 BearerAccessToken accessToken) throws LoginException {
     Set<String> emails = new HashSet<>();
     String userInfoEmail = getStringClaim(userInfo, client.getEmailClaim());
     if (userInfoEmail != null) {
@@ -556,13 +563,13 @@ public class OIDAuthorizationCodeFlowHelper {
     }
     remoteUserDTO.setEmail(new ArrayList<>(emails));
   }
-  
+
   private boolean isEmail(DecodedJWT decodedJWT, String claimName) {
     return decodedJWT != null && !decodedJWT.getClaim(claimName).isNull() &&
         decodedJWT.getClaim(claimName).asString().contains("@") &&
         !decodedJWT.getClaim(claimName).asString().startsWith("@");
   }
-  
+
   private void generateEmail(RemoteUserDTO remoteUserDTO, Set<String> emails) throws LoginException {
     String email;
     try {
@@ -578,7 +585,7 @@ public class OIDAuthorizationCodeFlowHelper {
     }
     emails.add(email);
   }
-  
+
   private String getUniqueEmail(String givenName, String surname) {
     if (Strings.isNullOrEmpty(givenName) || Strings.isNullOrEmpty(surname)) {
       throw new IllegalArgumentException("Given name or surname not found in userinfo.");
@@ -591,9 +598,9 @@ public class OIDAuthorizationCodeFlowHelper {
       u = userFacade.findByEmail(email);
       count++;
     }
-    return u != null? null : email.toLowerCase();
+    return u != null ? null : email.toLowerCase();
   }
-  
+
   private void validateRemoteUser(RemoteUserDTO remoteUserDTO) {
     if (Strings.isNullOrEmpty(remoteUserDTO.getUuid())) {
       LOGGER.log(Level.SEVERE, "Error in UserInfo response. UUID not set.");
