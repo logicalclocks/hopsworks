@@ -131,6 +131,8 @@ public class Featuregroup implements Serializable {
   private String topicName;
   @Column(name = "deprecated")
   private boolean deprecated;
+  @OneToOne(cascade = CascadeType.ALL, mappedBy = "featuregroup")
+  private Embedding embedding;
   @NotNull
   @Enumerated(EnumType.ORDINAL)
   @Column(name = "feature_group_type")
@@ -326,7 +328,15 @@ public class Featuregroup implements Serializable {
   public void setDeprecated(boolean deprecated) {
     this.deprecated = deprecated;
   }
-  
+
+  public Embedding getEmbedding() {
+    return embedding;
+  }
+
+  public void setEmbedding(Embedding embedding) {
+    this.embedding = embedding;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -350,6 +360,7 @@ public class Featuregroup implements Serializable {
     if (!Objects.equals(topicName, that.topicName)) return false;
     if (!Objects.equals(deprecated, that.deprecated)) return false;
     if (!Objects.equals(expectationSuite, that.expectationSuite)) return false;
+    if (!Objects.equals(embedding, that.embedding)) return false;
     return Objects.equals(statisticsConfig, that.statisticsConfig);
   }
 
@@ -372,6 +383,7 @@ public class Featuregroup implements Serializable {
     result = 31 * result + (topicName != null ? topicName.hashCode() : 0);
     result = 31 * result + (deprecated ? 1: 0);
     result = 31 * result + (expectationSuite != null ? expectationSuite.hashCode(): 0);
+    result = 31 * result + (embedding != null ? embedding.hashCode(): 0);
     return result;
   }
 }

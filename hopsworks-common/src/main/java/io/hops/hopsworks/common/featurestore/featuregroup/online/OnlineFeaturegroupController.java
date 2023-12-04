@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.featurestore.featuregroup.online;
 import com.google.common.base.Strings;
 import com.logicalclocks.shaded.org.apache.commons.lang3.StringUtils;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
+import io.hops.hopsworks.common.featurestore.embedding.EmbeddingController;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
@@ -98,43 +99,56 @@ public class OnlineFeaturegroupController {
   private FeaturegroupController featuregroupController;
   @EJB
   private MultiRegionController multiRegionController;
-  
+  @EJB
+  private EmbeddingController embeddingController;
+
   private final static List<String> SUPPORTED_MYSQL_TYPES = Arrays.asList("INT", "TINYINT",
-    "SMALLINT", "BIGINT", "FLOAT", "DOUBLE", "DECIMAL", "DATE", "TIMESTAMP");
+      "SMALLINT", "BIGINT", "FLOAT", "DOUBLE", "DECIMAL", "DATE", "TIMESTAMP");
 
   private final static String VARBINARY_DEFAULT = "VARBINARY(100)";
   private final static String VARCHAR_DEFAULT = "VARCHAR(100)";
 
-  public OnlineFeaturegroupController() {}
+  public OnlineFeaturegroupController() {
+  }
 
-  protected OnlineFeaturegroupController(Settings settings) {
+  protected OnlineFeaturegroupController(Settings settings, EmbeddingController embeddingController) {
     this.settings = settings;
+    this.embeddingController = embeddingController;
   }
 
   public void setupOnlineFeatureGroup(Featurestore featureStore, Featuregroup featureGroup,
-                                      List<FeatureGroupFeatureDTO> features, Project project, Users user)
+      List<FeatureGroupFeatureDTO> features, Project project, Users user)
       throws KafkaException, SchemaException, ProjectException, FeaturestoreException, IOException,
       HopsSecurityException, ServiceException {
     // check if onlinefs user is part of project
+    checkOnlineFsUserExist(project);
+
+    createFeatureGroupKafkaTopic(project, featureGroup, features);
+    if (featureGroup.getEmbedding() != null) {
+      embeddingController.createVectorDbIndex(project, featureGroup);
+    } else {
+      createMySQLTable(featureStore, Utils.getFeaturegroupName(featureGroup), features, project, user);
+    }
+  }
+
+
+
+  void checkOnlineFsUserExist(Project project)
+      throws ServiceException, HopsSecurityException, IOException, ProjectException {
     if (project.getProjectTeamCollection().stream().noneMatch(pt ->
-      pt.getUser().getUsername().equals(OnlineFeaturestoreController.ONLINEFS_USERNAME))) {
+        pt.getUser().getUsername().equals(OnlineFeaturestoreController.ONLINEFS_USERNAME))) {
       try {
         // wait for the future
         projectController.addOnlineFsUser(project).get();
       } catch (InterruptedException | ExecutionException e) {
         throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_GENERIC_ERROR,
-          Level.SEVERE, "failed to add onlinefs user to project: " + project.getName(), e.getMessage(), e);
+            Level.SEVERE, "failed to add onlinefs user to project: " + project.getName(), e.getMessage(), e);
       }
     }
-    
-    String featureGroupEntityName = Utils.getFeaturegroupName(featureGroup);
-    createMySQLTable(featureStore, featureGroupEntityName, features, project, user);
-
-    createFeatureGroupKafkaTopic(project, featureGroup, features);
   }
 
-  private void createMySQLTable(Featurestore featurestore, String tableName, List<FeatureGroupFeatureDTO> features,
-                                Project project, Users user)
+  void createMySQLTable(Featurestore featurestore, String tableName, List<FeatureGroupFeatureDTO> features,
+      Project project, Users user)
       throws FeaturestoreException {
     String dbName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject());
     String createStatement = buildCreateStatement(dbName, tableName, features);
@@ -181,7 +195,7 @@ public class OnlineFeaturegroupController {
     alterMySQLTableColumns(featureGroup.getFeaturestore(), tableName, newFeatures, project, user);
     alterFeatureGroupSchema(featureGroup, fullNewSchema, project);
   }
-  
+
   public void alterFeatureGroupSchema(Featuregroup featureGroup, List<FeatureGroupFeatureDTO> fullNewSchema,
                                       Project project)
       throws FeaturestoreException, SchemaException, KafkaException {
@@ -191,10 +205,12 @@ public class OnlineFeaturegroupController {
     String featureGroupEntityName = Utils.getFeaturegroupName(featureGroup);
     subjectsController.registerNewSubject(project, featureGroupEntityName, avroSchema, false);
   }
-  
+
   public void disableOnlineFeatureGroup(Featuregroup featureGroup, Project project, Users user)
       throws FeaturestoreException, SchemaException, KafkaException {
-    dropMySQLTable(featureGroup, project, user);
+    if (featureGroup.getEmbedding() == null) {
+      dropMySQLTable(featureGroup, project, user);
+    }
     String featureGroupEntityName = Utils.getFeaturegroupName(featureGroup);
     if (!subjectsController.getSubjectVersions(project, featureGroupEntityName).isEmpty()) {
       subjectsController.deleteSubject(project, featureGroupEntityName);

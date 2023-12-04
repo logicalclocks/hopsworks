@@ -115,7 +115,7 @@ public class TestStorageConnectorUtil {
     // as well as their corresponding tests:
     // StorageConnectorUtil.getEnabledStorageConnectorTypes() -> testGetEnabledStorageConnectorTypes
     // StorageConnectorUtil.isStorageConnectorTypeEnabled() -> testIsStorageConnectorTypeEnabled
-    Assert.assertEquals(FeaturestoreConnectorType.values().length, 9);
+    Assert.assertEquals(FeaturestoreConnectorType.values().length, 10);
   }
 
   @Test

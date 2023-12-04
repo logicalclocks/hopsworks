@@ -65,6 +65,7 @@
     <module>tags-ee</module>
     <module>hopsworks-service-discovery</module>
     <module>hopsworks-multiregion</module>
+    <module>vector-db</module>
   </modules>
 
   <properties>
@@ -590,6 +591,11 @@
       <dependency>
         <groupId>io.hops.hopsworks</groupId>
         <artifactId>hopsworks-multiregion</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.hops.hopsworks</groupId>
+        <artifactId>vector-db</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

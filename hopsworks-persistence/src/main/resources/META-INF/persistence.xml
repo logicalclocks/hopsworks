@@ -66,6 +66,8 @@
     <class>io.hops.hopsworks.persistence.entity.featurestore.storageconnector.gcs.FeatureStoreGcsConnector</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.storageconnector.bigquery.FeatureStoreBigqueryConnector</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Embedding</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.EmbeddingFeature</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit</class>

@@ -349,7 +349,13 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KIBANA_MULTI_TENANCY_ENABLED = "kibana_multi_tenancy_enabled";
 
   private static final String VARIABLE_CLIENT_PATH = "client_path";
-  
+
+  // OpenSearch Vector DB
+  private static final String VARIABLE_OPENSEARCH_DEFAULT_EMBEDDING_INDEX =
+      "opensearch_default_embedding_index";
+  private static final String VARIABLE_NUM_OPENSEARCH_DEFAULT_EMBEDDING_INDEX =
+      "opensearch_num_default_embedding_index";
+
   //Cloud
   private static final String VARIABLE_CLOUD_EVENTS_ENDPOINT=
       "cloud_events_endpoint";
@@ -679,6 +685,7 @@ public class Settings implements Serializable {
           OpenSearchSettings.OPENSEARCH_JWT_URL_PARAMETER_DEFAULT);
       long openSearchJWTEXPMS = setLongVar(VARIABLE_OPENSEARCH_JWT_EXP_MS,
           OpenSearchSettings.OPENSEARCH_JWT_EXP_MS_DEFAULT);
+
       OPENSEARCH_SETTINGS = new OpenSearchSettings(openSearchSecurityEnabled, openSearchHttpsEnabled,
           openSearchAdminUser, openSearchAdminPassword, openSearchJWTEnabled,
           openSearchJWTUrlParameter, openSearchJWTEXPMS, openSearchServiceLogUser);
@@ -958,6 +965,11 @@ public class Settings implements Serializable {
         COMMAND_SEARCH_FS_RETRY_PER_CLEAN_INTERVAL);
       MOUNT_HOPSFS_IN_PYTHON_JOB_CONTAINER = setBoolVar(VARIABLE_MOUNT_HOPSFS_IN_PYTHON_JOB_CONTAINER,
           MOUNT_HOPSFS_IN_PYTHON_JOB_CONTAINER);
+
+      OPENSEARCH_DEFAULT_EMBEDDING_INDEX_NAME = setStrVar(
+          VARIABLE_OPENSEARCH_DEFAULT_EMBEDDING_INDEX, OPENSEARCH_DEFAULT_EMBEDDING_INDEX_NAME);
+      OPENSEARCH_NUM_DEFAULT_EMBEDDING_INDEX = setIntVar(
+          VARIABLE_NUM_OPENSEARCH_DEFAULT_EMBEDDING_INDEX, OPENSEARCH_NUM_DEFAULT_EMBEDDING_INDEX);
       cached = true;
     }
   }
@@ -1647,6 +1659,19 @@ public class Settings implements Serializable {
   public synchronized String getServiceDiscoveryDomain() {
     checkCache();
     return SERVICE_DISCOVERY_DOMAIN;
+  }
+
+  // Opensearch vector db
+  private String OPENSEARCH_DEFAULT_EMBEDDING_INDEX_NAME = null;
+  public synchronized String getOpensearchDefaultEmbeddingIndexName() {
+    checkCache();
+    return OPENSEARCH_DEFAULT_EMBEDDING_INDEX_NAME;
+  }
+
+  private Integer OPENSEARCH_NUM_DEFAULT_EMBEDDING_INDEX = 1;
+  public synchronized Integer getOpensearchNumDefaultEmbeddingIndex() {
+    checkCache();
+    return OPENSEARCH_NUM_DEFAULT_EMBEDDING_INDEX;
   }
 
   // Kibana

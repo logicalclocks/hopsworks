@@ -362,7 +362,7 @@ public class FeaturestoreController {
    * @param featurestore the featurestore entity
    * @return a DTO representation of the featurestore
    */
-  private FeaturestoreDTO convertFeaturestoreToDTO(Featurestore featurestore) {
+  public FeaturestoreDTO convertFeaturestoreToDTO(Featurestore featurestore) {
     FeaturestoreDTO featurestoreDTO = new FeaturestoreDTO(featurestore);
     String featureStoreName = getOfflineFeaturestoreDbName(featurestore);
     // TODO(Fabio): remove this when we switch to the new UI.
