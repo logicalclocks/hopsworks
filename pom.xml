@@ -60,6 +60,7 @@
     <module>alerting</module>
     <module>hopsworks-alert</module>
     <module>hopsworks-service-discovery</module>
+    <module>vector-db</module>
   </modules>
 
   <properties>
@@ -561,6 +562,17 @@
         <groupId>io.hops.hopsworks</groupId>
         <artifactId>hopsworks-persistence</artifactId>
         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.hops.hopsworks</groupId>
+        <artifactId>vector-db</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.hops.hopsworks</groupId>
+        <artifactId>hopsworks-remote-user</artifactId>
+        <version>${project.version}</version>
+        <type>ejb</type>
       </dependency>
       <dependency>
         <groupId>io.hops.hopsworks</groupId>

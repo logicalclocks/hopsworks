@@ -196,15 +196,18 @@ public class FeatureViewBuilder {
     Map<Integer, String> fsLookupTable = trainingDatasetController.getFsLookupTableFeatures(tdFeatures);
     return tdFeatures
         .stream()
-        .map(f -> new TrainingDatasetFeatureDTO(trainingDatasetController.checkPrefix(f), f.getType(),
+        .map(f -> new TrainingDatasetFeatureDTO(
+            trainingDatasetController.checkPrefix(f),
+            f.getType(),
             f.getFeatureGroup() != null ?
                 new FeaturegroupDTO(f.getFeatureGroup().getFeaturestore().getId(),
                     fsLookupTable.get(f.getFeatureGroup().getFeaturestore().getId()),
-                    f.getFeatureGroup().getId(), f.getFeatureGroup().getName(),
+                    f.getFeatureGroup().getId(),
+                    f.getFeatureGroup().getName(),
                     f.getFeatureGroup().getVersion(),
                     f.getFeatureGroup().isDeprecated())
                 : null,
-            f.getIndex(), f.isLabel(), f.isInferenceHelperColumn(), f.isTrainingHelperColumn()))
+             f.getName(), f.getIndex(), f.isLabel(), f.isInferenceHelperColumn(), f.isTrainingHelperColumn()))
         .collect(Collectors.toList());
   }
 }

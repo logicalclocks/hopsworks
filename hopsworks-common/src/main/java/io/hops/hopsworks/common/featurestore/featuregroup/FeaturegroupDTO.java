@@ -59,6 +59,7 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO<FeaturegroupDTO> {
   @JsonSetter(nulls = Nulls.SKIP)
   private Boolean deprecated = false;
   private String topicName;
+  private EmbeddingDTO embeddingIndex;
   
   public FeaturegroupDTO() {
   }
@@ -76,6 +77,9 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO<FeaturegroupDTO> {
     this.eventTime = featuregroup.getEventTime();
     this.deprecated = featuregroup.isDeprecated();
     this.topicName = featuregroup.getTopicName();
+    if (featuregroup.getEmbedding() != null) {
+      this.embeddingIndex = new EmbeddingDTO(featuregroup.getEmbedding());
+    }
   }
   
   // for testing
@@ -138,7 +142,15 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO<FeaturegroupDTO> {
   public void setDeprecated(Boolean deprecated) {
     this.deprecated = deprecated;
   }
-  
+
+  public EmbeddingDTO getEmbeddingIndex() {
+    return embeddingIndex;
+  }
+
+  public void setEmbeddingIndex(EmbeddingDTO embeddingIndex) {
+    this.embeddingIndex = embeddingIndex;
+  }
+
   @Override
   public String toString() {
     return "FeaturegroupDTO{" +

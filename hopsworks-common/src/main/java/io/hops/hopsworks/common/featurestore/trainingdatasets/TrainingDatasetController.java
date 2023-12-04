@@ -237,7 +237,7 @@ public class TrainingDatasetController {
                       f.getFeatureGroup().getVersion(),
                       f.getFeatureGroup().isDeprecated())
                   : null,
-              f.getIndex(), f.isLabel(), f.isInferenceHelperColumn() , f.isTrainingHelperColumn()))
+              f.getName(), f.getIndex(), f.isLabel(), f.isInferenceHelperColumn() , f.isTrainingHelperColumn()))
           .collect(Collectors.toList()));
     }
 

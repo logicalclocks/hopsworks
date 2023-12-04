@@ -1678,7 +1678,9 @@ public class RESTCodes {
       "of a feature view join.", Response.Status.BAD_REQUEST),
     FEATURE_GROUP_DUPLICATE_FEATURE(224, "Feature list contains duplicate", Response.Status.BAD_REQUEST),
     HELPER_COL_NOT_FOUND(225, "Could not find helper column in feature view schema",
-      Response.Status.NOT_FOUND);
+      Response.Status.NOT_FOUND),
+    OPENSEARCH_DEFAULT_EMBEDDING_INDEX_SUFFIX_NOT_DEFINED(226, "Opensearch default embedding index not defined",
+        Response.Status.INTERNAL_SERVER_ERROR);
 
     private int code;
     private String message;
