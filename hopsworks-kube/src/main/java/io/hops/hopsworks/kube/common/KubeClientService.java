@@ -888,20 +888,6 @@ public class KubeClientService {
     LOGGER.info("Initialize " + settings.getKubeType() + " kube client");
     switch (settings.getKubeType()){
       case Local:
-        Config config = new ConfigBuilder()
-            .withUsername(settings.getKubeHopsworksUser())
-            .withMasterUrl(settings.getKubeMasterUrl())
-            .withCaCertFile(settings.getKubeCaCertfile())
-            .withTrustStoreFile(settings.getKubeTruststorePath())
-            .withTrustStorePassphrase(settings.getKubeTruststoreKey())
-            .withKeyStoreFile(settings.getKubeKeystorePath())
-            .withKeyStorePassphrase(settings.getKubeKeystoreKey())
-            .withClientCertFile(settings.getKubeClientCertfile())
-            .withClientKeyFile(settings.getKubeClientKeyfile())
-            .withClientKeyPassphrase(settings.getKubeClientKeypass())
-            .build();
-        client = new DefaultKubernetesClient(config);
-        break;
       case EKS:
       case GKE:
         client = new DefaultKubernetesClient();
