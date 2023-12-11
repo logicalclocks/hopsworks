@@ -82,11 +82,11 @@ public class CommandsController {
   public void deleteCommand(Project project, Integer commandId) throws PythonException {
     CondaCommands command = condaCommandFacade.getCommandsForProject(project)
         .stream()
-        .filter(cc -> cc.getId() == commandId).findFirst().orElseThrow(() ->
+        .filter(cc -> cc.getId().equals(commandId)).findFirst().orElseThrow(() ->
             new PythonException(RESTCodes.PythonErrorCode.CONDA_COMMAND_NOT_FOUND,
                 Level.FINE, "Conda command with Id " + commandId + " not found"));
     if (command.getStatus().isRunning()) {
-      new PythonException(RESTCodes.PythonErrorCode.CONDA_COMMAND_DELETE_ERROR,
+      throw new PythonException(RESTCodes.PythonErrorCode.CONDA_COMMAND_DELETE_ERROR,
           Level.FINE, "Cannot delete command: command is already in running state.");
     }
     if (CondaOp.isEnvOp(command.getOp())) {
