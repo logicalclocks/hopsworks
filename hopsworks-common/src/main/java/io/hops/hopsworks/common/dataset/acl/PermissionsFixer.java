@@ -91,13 +91,19 @@ public class PermissionsFixer {
   
   public int fixPermissions(int index, Long startTime) {
     List<Project> projectList = projectFacade.findAllOrderByCreated();
-    for (int i = index; i < projectList.size(); i++) {
-      Project project = projectList.get(i);
-      fixPermissions(project);
-      index++;
-      if (startTime > 0 && System.currentTimeMillis() - startTime > 300000) {
-        break;
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfsService.getDfsOps();
+      for (int i = index; i < projectList.size(); i++) {
+        Project project = projectList.get(i);
+        fixPermissions(project, dfso);
+        index++;
+        if (startTime > 0 && System.currentTimeMillis() - startTime > 300000) {
+          break;
+        }
       }
+    } finally {
+      dfsService.closeDfsClient(dfso);
     }
     if (index >= projectList.size()) {
       index = 0;
@@ -105,32 +111,43 @@ public class PermissionsFixer {
     return index;
   }
   
-  public void fixPermissions(Project project) {
+  public void fixPermissions(Project project, DistributedFileSystemOps dfso) {
     if (isUnderRemoval(project)) {
       return;
     }
     try {
-      fixProject(project);
+      fixProject(project, dfso);
     } catch (Exception e) {
       LOGGER.log(Level.WARNING, "Failed to fix dataset permissions for project {0}. Error: {1}",
         new Object[]{project.getName(), e.getMessage()});
     }
   }
   
-  private void fixProject(Project project) throws IOException {
-    List<Dataset> datasetList = datasetFacade.findByProject(project);
-    Inode projectInode = inodeController.getProjectRoot(project.getName());
+  public void fixPermissions(Project project) {
+    if (isUnderRemoval(project)) {
+      return;
+    }
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfsService.getDfsOps();
-      for (Dataset dataset : datasetList) {
-        fixDataset(projectInode, dataset, dfso);
-      }
+      fixProject(project, dfso);
+    } catch (Exception e) {
+      LOGGER.log(Level.WARNING, "Failed to fix dataset permissions for project {0}. Error: {1}",
+        new Object[]{project.getName(), e.getMessage()});
     } finally {
       dfsService.closeDfsClient(dfso);
     }
   }
   
+  private void fixProject(Project project, DistributedFileSystemOps dfso) throws IOException {
+    List<Dataset> datasetList = datasetFacade.findByProject(project);
+    Inode projectInode = inodeController.getProjectRoot(project.getName());
+
+    for (Dataset dataset : datasetList) {
+      fixDataset(projectInode, dataset, dfso);
+    }
+  }
+
   private void fixDataset(Inode projectInode, Dataset dataset, DistributedFileSystemOps dfso) throws IOException {
     String datasetGroup = hdfsUsersController.getHdfsGroupName(dataset.getProject(), dataset);
     String datasetAclGroup = hdfsUsersController.getHdfsAclGroupName(dataset.getProject(), dataset);

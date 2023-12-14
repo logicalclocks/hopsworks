@@ -249,7 +249,8 @@ public class DownloadService {
 
     if (!ds.isPublicDs() && ds.isShared(project) &&
       DatasetPermissions.fromFilePermissions(fsPermission).equals(DatasetPermissions.OWNER_ONLY)) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.FINE);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.FINE,
+        "You do not have the rights to download from this dataset");
     }
 
     FSDataInputStream stream;
@@ -262,11 +263,12 @@ public class DownloadService {
         return new Pair<>(p, buildOutputStream(stream, udfso));
 
       } else {
-        throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.WARNING);
+        throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.WARNING, "Project user not found.");
       }
 
     } catch (IOException ex) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.SEVERE, "path: " + fullPath,
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.SEVERE,
+        "Failed to download path: " + fullPath,
         ex.getMessage(), ex);
     }
   }

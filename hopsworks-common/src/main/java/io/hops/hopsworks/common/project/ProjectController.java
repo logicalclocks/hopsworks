@@ -2400,8 +2400,8 @@ public class ProjectController {
       return getAccessCredentials(project, user);
     } catch (Exception ex) {
       LOGGER.log(Level.SEVERE, null, ex);
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.SEVERE, "projectId: " + projectId,
-        ex.getMessage(), ex);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.SEVERE,
+        "Failed to download credentials for projectId: " + projectId, ex.getMessage(), ex);
     } finally {
       certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
     }
