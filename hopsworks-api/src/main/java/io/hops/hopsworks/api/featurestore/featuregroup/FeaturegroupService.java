@@ -27,6 +27,7 @@ import io.hops.hopsworks.api.featurestore.datavalidationv2.results.ValidationRes
 import io.hops.hopsworks.api.featurestore.datavalidationv2.suites.ExpectationSuiteResource;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.featurestore.tag.FeatureGroupTagResource;
+import io.hops.hopsworks.api.filter.JWTNotRequired;
 import io.hops.hopsworks.api.jobs.JobDTO;
 import io.hops.hopsworks.api.jobs.JobsBuilder;
 import io.hops.hopsworks.api.provenance.FeatureGroupProvenanceResource;
@@ -285,8 +286,8 @@ public class FeaturegroupService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE, ApiScope.KAFKA},
-    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER", "AGENT"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiOperation(value = "Get specific featuregroup from a specific featurestore",
       response = FeaturegroupDTO.class)
   public Response getFeatureGroup(@ApiParam(value = "Id of the featuregroup", required = true)
@@ -296,6 +297,35 @@ public class FeaturegroupService {
     verifyIdProvided(featuregroupId);
     FeaturegroupDTO featuregroupDTO =
         featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId, project, user);
+    GenericEntity<FeaturegroupDTO> featuregroupGeneric =
+        new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
+  }
+
+  /**
+   * Endpoint for retrieving a featuregroup with a specified id in a specified featurestore for onlinefs
+   *
+   * @param featuregroupId id of the featuregroup
+   * @return JSON representation of the featuregroup
+   */
+  @GET
+  @Path("/{featuregroupId: [0-9]+}/onlinefs")
+  @JWTNotRequired
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE, ApiScope.KAFKA},
+      allowedUserRoles = {"HOPS_SERVICE_USER", "AGENT"})
+  @ApiOperation(value = "Get specific featuregroup for onlinefs from a specific featurestore",
+      response = FeaturegroupDTO.class)
+  public Response getFeatureGroupForOnlinefs(
+      @ApiParam(value = "Id of the featuregroup", required = true)
+      @PathParam("featuregroupId") Integer featuregroupId,
+      @Context HttpServletRequest req,
+      @Context SecurityContext sc)
+      throws FeaturestoreException {
+    verifyIdProvided(featuregroupId);
+    Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
+    FeaturegroupDTO featuregroupDTO = new FeaturegroupDTO(featuregroup);
     GenericEntity<FeaturegroupDTO> featuregroupGeneric =
         new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
