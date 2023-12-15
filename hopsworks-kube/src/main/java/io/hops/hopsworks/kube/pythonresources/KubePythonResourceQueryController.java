@@ -41,6 +41,7 @@ public class KubePythonResourceQueryController implements PythonResourcesQueryCo
   private final static String REQUESTED_METRIC = "kube_pod_container_resource_requests";
   private final static String RESOURCE_CPU = "resource='cpu'";
   private final static String RESOURCE_MEMORY = "resource='memory'";
+  private final static String RESOURCE_GPU = "resource='nvidia_com_gpu'";
 
   @Override
   public Map<String, String> getPrometheusQueries() throws ServiceDiscoveryException {
@@ -58,6 +59,10 @@ public class KubePythonResourceQueryController implements PythonResourcesQueryCo
             "sum(" + REQUESTED_METRIC + "{node=~'" + nodes + "', " + RESOURCE_MEMORY +"})");
         put(CLUSTER_TOTAL_MEMORY_CAPACITY,
             "sum(" + ALLOCATABLE_METRIC + "{node=~'" + nodes + "', " + RESOURCE_MEMORY + "})");
+        put(CLUSTER_CURRENT_GPU_USAGE,
+            "sum(" + REQUESTED_METRIC + "{node=~'" + nodes + "', " + RESOURCE_GPU +"})");
+        put(CLUSTER_TOTAL_GPU_CAPACITY,
+            "sum(" + ALLOCATABLE_METRIC + "{node=~'" + nodes + "', " + RESOURCE_GPU+ "})");
       }
     };
   }

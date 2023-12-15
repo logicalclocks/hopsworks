@@ -33,6 +33,9 @@ public interface PythonResourcesQueryController {
   String CLUSTER_TOTAL_CPU_CAPACITY = "cluster_total_cpu";
   String CLUSTER_CURRENT_MEMORY_USAGE = "cluster_current_memory_usage";
 
+  String CLUSTER_TOTAL_GPU_CAPACITY = "cluster_total_gpu";
+  String CLUSTER_CURRENT_GPU_USAGE = "cluster_current_gpu_usage";
+
   Map<String, String> getPrometheusQueries() throws ServiceDiscoveryException;
 
 }
