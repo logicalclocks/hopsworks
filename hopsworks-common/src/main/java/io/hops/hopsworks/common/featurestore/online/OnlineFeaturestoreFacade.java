@@ -319,10 +319,11 @@ public class OnlineFeaturestoreFacade {
     try {
       executeUpdate(
               "CREATE TABLE IF NOT EXISTS `" + db + "`.`kafka_offsets` (\n" +
+                      "`consumer_group` varchar(255) COLLATE latin1_general_cs NOT NULL,\n" +
                       "`topic` varchar(255) COLLATE latin1_general_cs NOT NULL,\n" +
                       "`partition` SMALLINT NOT NULL,\n" +
                       "`offset` BIGINT UNSIGNED NOT NULL,\n" +
-                      "PRIMARY KEY (`topic`,`partition`)\n" +
+                      "PRIMARY KEY (`consumer_group`,`topic`,`partition`)\n" +
                     ") ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs;", connection);
     } catch (SQLException se) {
       throw new FeaturestoreException(
