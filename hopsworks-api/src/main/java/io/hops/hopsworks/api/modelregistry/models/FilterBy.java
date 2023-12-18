@@ -16,35 +16,45 @@
 package io.hops.hopsworks.api.modelregistry.models;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.models.version.ModelVersionFacade;
 
 public class FilterBy implements AbstractFacade.FilterBy {
 
-  private String param = null;
-  private String value = null;
+  private final ModelVersionFacade.Filters filter;
+  private final String param;
 
   public FilterBy(String param) {
-    if(param.contains(":")) {
-      String[] paramSplit = param.split(":");
-      this.param = paramSplit[0];
-      this.value = paramSplit[1];
+    if (param.contains(":")) {
+      this.filter = ModelVersionFacade.Filters.valueOf(param.substring(0, param.indexOf(':')).toUpperCase());
+      this.param = param.substring(param.indexOf(':') + 1);
+    } else {
+      this.filter = ModelVersionFacade.Filters.valueOf(param);
+      this.param = this.filter.getDefaultParam();
     }
   }
 
+  @Override
   public String getParam() {
     return param;
   }
 
   @Override
+  public String getValue() {
+    return this.filter.getValue();
+  }
+
+  @Override
   public String getSql() {
-    return null;
+    return this.filter.getSql();
   }
 
   @Override
   public String getField() {
-    return null;
+    return this.filter.getField();
   }
 
-  public String getValue() {
-    return value;
+  @Override
+  public String toString() {
+    return filter.toString();
   }
 }

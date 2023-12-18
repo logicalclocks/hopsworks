@@ -17,6 +17,7 @@
 package io.hops.hopsworks.api.modelregistry.models;
 
 import io.hops.hopsworks.api.modelregistry.models.provenance.ModelTrainingDatasetResourceRequest;
+import io.hops.hopsworks.api.user.UserResourceRequest;
 import io.hops.hopsworks.common.api.Expansions;
 import io.hops.hopsworks.common.api.ResourceRequest;
 
@@ -34,6 +35,9 @@ public class ModelExpansions implements Expansions {
     switch (name) {
       case TRAININGDATASETS:
         resourceRequest = new ModelTrainingDatasetResourceRequest(name, queryParam);
+        break;
+      case USERS:
+        resourceRequest = new UserResourceRequest(name, queryParam);
         break;
       case MODELSCHEMA:
         resourceRequest = new ModelSchemaResourceRequest(name, queryParam);

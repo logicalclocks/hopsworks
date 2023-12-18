@@ -26,14 +26,11 @@ import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
-import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jupyter.JupyterController;
-import io.hops.hopsworks.common.provenance.core.Provenance;
-import io.hops.hopsworks.common.provenance.state.ProvStateParamBuilder;
-import io.hops.hopsworks.common.provenance.state.ProvStateParser;
-import io.hops.hopsworks.common.provenance.state.ProvStateController;
-import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
+import io.hops.hopsworks.common.models.ModelFacade;
+import io.hops.hopsworks.common.models.version.ModelVersionFacade;
+import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.serving.ServingController;
 import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.hops.hopsworks.common.util.AccessController;
@@ -42,9 +39,8 @@ import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.KafkaException;
-import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ModelRegistryException;
-import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.exceptions.PythonException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
@@ -53,22 +49,24 @@ import io.hops.hopsworks.persistence.entity.jobs.configuration.python.PythonJobC
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
+import io.hops.hopsworks.persistence.entity.models.Model;
+import io.hops.hopsworks.persistence.entity.models.version.Metrics;
+import io.hops.hopsworks.persistence.entity.models.version.ModelVersion;
+import io.hops.hopsworks.persistence.entity.models.version.ModelVersionPK;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.hadoop.fs.Path;
-import org.json.JSONObject;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import static io.hops.hopsworks.api.modelregistry.models.ModelsBuilder.MODEL_SUMMARY_XATTR_NAME;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -77,17 +75,11 @@ public class ModelsController {
   private static final Logger LOGGER = Logger.getLogger(ModelsController.class.getName());
 
   @EJB
-  private ProvStateController provenanceController;
-  @EJB
   private JobController jobController;
   @EJB
   private JupyterController jupyterController;
   @EJB
-  private XAttrsController xattrCtrl;
-  @EJB
   private DatasetController datasetController;
-  @EJB
-  private ModelConverter modelConverter;
   @EJB
   private DatasetHelper datasetHelper;
   @EJB
@@ -95,77 +87,109 @@ public class ModelsController {
   @EJB
   private DatasetController datasetCtrl;
   @EJB
+  private ModelFacade modelFacade;
+  @EJB
+  private ModelVersionFacade modelVersionFacade;
+  @EJB
   private ProjectFacade projectFacade;
   @EJB
   private ModelUtils modelUtils;
   @EJB
   private InodeController inodeController;
   @EJB
+  private EnvironmentController environmentController;
+  @EJB
   private Settings settings;
   @Inject
   private ServingController servingController;
-  
-  public void attachModel(DistributedFileSystemOps udfso, Project modelProject, String userFullName,
-    ModelDTO modelDTO)
-    throws DatasetException, ModelRegistryException, MetadataException {
 
-    modelDTO.setUserFullName(userFullName);
-    
-    String modelPath = Utils.getProjectPath(modelProject.getName()) + Settings.HOPS_MODELS_DATASET + "/" +
-      modelDTO.getName() + "/" + modelDTO.getVersion();
-    
-    byte[] modelSummaryB = modelConverter.marshalDescription(modelDTO);
-    xattrCtrl.upsertProvXAttr(udfso, modelPath, MODEL_SUMMARY_XATTR_NAME, modelSummaryB);
-  }
+  public ModelVersion createModelVersion(ModelsController.Accessor accessor, ModelDTO modelDTO,
+                          String jobName, String kernelId)
+    throws JobException, ServiceException, PythonException {
 
-  public ProvStateDTO getModel(Project project, String mlId) throws ProvenanceException {
-    Inode projectInode = inodeController.getProjectRoot(project.getName());
-    ProvStateParamBuilder provFilesParamBuilder = new ProvStateParamBuilder()
-      .filterByField(ProvStateParser.FieldsP.PROJECT_I_ID, projectInode.getId())
-      .filterByField(ProvStateParser.FieldsP.ML_TYPE, Provenance.MLType.MODEL.name())
-      .filterByField(ProvStateParser.FieldsP.ML_ID, mlId)
-      .paginate(0, 1);
-    ProvStateDTO fileState = provenanceController.provFileStateList(projectInode, provFilesParamBuilder);
-    if (fileState != null) {
-      List<ProvStateDTO> experiments = fileState.getItems();
-      if (experiments != null && !experiments.isEmpty()) {
-        return experiments.iterator().next();
-      }
+    Model model = modelFacade.findByProjectAndName(accessor.modelProject, modelDTO.getName());
+    if(model == null) {
+      model = modelFacade.put(accessor.modelProject, modelDTO.getName());
     }
-    return null;
+
+    ModelVersion modelVersion = new ModelVersion();
+    modelVersion.setCreated(new Date());
+    modelVersion.setDescription(modelDTO.getDescription());
+    modelVersion.setEnvironment(modelDTO.getEnvironment());
+    modelVersion.setFramework(modelDTO.getFramework());
+    modelVersion.setExperimentId(modelVersion.getExperimentId());
+    Metrics metrics = new Metrics();
+    metrics.setAttributes(modelDTO.getMetrics());
+    modelVersion.setMetrics(metrics);
+    modelVersion.setExperimentProjectName(modelDTO.getExperimentProjectName());
+    modelVersion.setCreator(accessor.user);
+
+    ModelVersionPK modelVersionPK = new ModelVersionPK();
+    modelVersionPK.setVersion(modelDTO.getVersion());
+    modelVersionPK.setModelId(model.getId());
+    modelVersion.setModelVersionPK(modelVersionPK);
+
+    //Only attach program and environment if exporting inside Hopsworks
+    if (!Strings.isNullOrEmpty(jobName) || !Strings.isNullOrEmpty(kernelId)) {
+      modelVersion.setProgram(versionProgram(accessor, jobName, kernelId,
+        modelDTO.getName(), modelDTO.getVersion()));
+      //Export environment to correct path here
+      modelVersion.setEnvironment(environmentController.exportEnv(accessor.experimentProject, accessor.user,
+        modelUtils.getModelFullPath(accessor.modelProject, modelDTO.getName(), modelDTO.getVersion()) +
+          "/" + Settings.ENVIRONMENT_FILE
+      )[0]);
+    }
+
+    modelVersionFacade.put(modelVersion);
+
+    return modelVersionFacade.findByProjectAndMlId(model.getId(), modelDTO.getVersion());
   }
 
-  public void delete(Users user, Project userProject, Project parentProject, ProvStateDTO fileState)
+  public ModelVersion getModel(Project project, String mlId) throws ModelRegistryException {
+    int lastUnderscore = mlId.lastIndexOf("_");
+    String[] nameVersionSplit =  {mlId.substring(0, lastUnderscore), mlId.substring(lastUnderscore + 1)};
+    Model model = modelFacade.findByProjectAndName(project, nameVersionSplit[0]);
+    if(model == null) {
+      throw new ModelRegistryException(RESTCodes.ModelRegistryErrorCode.MODEL_NOT_FOUND,
+        Level.FINE);
+    }
+    return modelVersionFacade.findByProjectAndMlId(model.getId(), Integer.valueOf(nameVersionSplit[1]));
+  }
+
+  public void delete(Users user, Project userProject, Project parentProject, ModelVersion modelVersion)
     throws DatasetException, ModelRegistryException, KafkaException, ServingException, CryptoPasswordNotFoundException {
     if(userProject.getId().equals(parentProject.getId())) {
-      delete(user, userProject, fileState);
+      delete(user, userProject, modelVersion);
     } else {
-      verifyNoModelDeployments(userProject, fileState);
-      
-      JSONObject summary = new JSONObject(fileState.getXattrs().get(MODEL_SUMMARY_XATTR_NAME));
-      ModelDTO modelSummary = modelConverter.unmarshalDescription(summary.toString());
+      verifyNoModelDeployments(userProject, modelVersion);
+
       String modelPath = Utils.getProjectPath(userProject.getName())
-        + parentProject.getName() + "::" + Settings.HOPS_MODELS_DATASET + "/" + modelSummary.getName()
-        + "/" + modelSummary.getVersion();
-      deleteInternal(user, userProject, modelPath);
+        + parentProject.getName() + "::" + Settings.HOPS_MODELS_DATASET + "/" + modelVersion.getModel().getName()
+        + "/" + modelVersion.getModelVersionPK().getVersion();
+      deleteInternal(user, userProject, modelPath, modelVersion);
     }
   }
 
-  public void delete(Users user, Project project, ProvStateDTO fileState) throws DatasetException,
+  public void delete(Users user, Project project, ModelVersion modelVersion) throws DatasetException,
     ModelRegistryException, KafkaException, ServingException, CryptoPasswordNotFoundException {
-    verifyNoModelDeployments(project, fileState);
-    
-    JSONObject summary = new JSONObject(fileState.getXattrs().get(MODEL_SUMMARY_XATTR_NAME));
-    ModelDTO modelSummary = modelConverter.unmarshalDescription(summary.toString());
+    verifyNoModelDeployments(project, modelVersion);
+
     String modelPath = Utils.getProjectPath(project.getName())
-      + Settings.HOPS_MODELS_DATASET + "/" + modelSummary.getName() + "/" + modelSummary.getVersion();
-    deleteInternal(user, project, modelPath);
+      + Settings.HOPS_MODELS_DATASET + "/" + modelVersion.getModel().getName() + "/"
+      + modelVersion.getModelVersionPK().getVersion();
+    deleteInternal(user, project, modelPath, modelVersion);
   }
 
-  private void deleteInternal(Users user, Project project, String path) throws DatasetException {
+  private void deleteInternal(Users user, Project project, String path, ModelVersion modelVersion)
+    throws DatasetException {
     DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, DatasetType.DATASET);
     datasetController.delete(project, user, datasetPath.getFullPath(), datasetPath.getDataset(),
       datasetPath.isTopLevelDataset());
+    Model model = modelFacade.findByProjectAndName(project, modelVersion.getModel().getName());
+    modelVersionFacade.remove(modelVersion);
+    if(model.getVersions().isEmpty()) {
+      modelFacade.remove(model);
+    }
   }
   
   public String versionProgram(Accessor accessor, String jobName, String kernelId, String modelName, int modelVersion)
@@ -234,9 +258,9 @@ public class ModelsController {
     }
   }
   
-  public void verifyNoModelDeployments(Project project, ProvStateDTO fileState)
+  public void verifyNoModelDeployments(Project project, ModelVersion modelVersion)
     throws ModelRegistryException, KafkaException, ServingException, CryptoPasswordNotFoundException {
-    String[] nameVersionSplit = modelUtils.getModelNameAndVersion(fileState.getMlId());
+    String[] nameVersionSplit = modelUtils.getModelNameAndVersion(modelVersion.getMlId());
     List<ServingWrapper> deployments = servingController.getAll(project, nameVersionSplit[0],
       Integer.valueOf(nameVersionSplit[1]), null);
     if (deployments != null && deployments.size() > 0) {

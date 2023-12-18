@@ -28,7 +28,6 @@ import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
 import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.GenericException;
@@ -43,6 +42,7 @@ import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.models.version.ModelVersion;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
@@ -69,6 +69,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -164,11 +165,11 @@ public class ModelsResource {
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELS);
     resourceRequest.setExpansions(modelsBeanParam.getExpansions().getResources());
-    ProvStateDTO fileState = modelsController.getModel(modelRegistryProject, id);
+    ModelVersion modelVersion = modelsController.getModel(modelRegistryProject, id);
 
-    if(fileState != null) {
+    if(modelVersion != null) {
       ModelDTO dto = modelsBuilder.build(uriInfo, resourceRequest, user, userProject, modelRegistryProject,
-        fileState, modelUtils.getModelsDatasetPath(userProject, modelRegistryProject));
+        modelVersion, modelUtils.getModelsDatasetPath(userProject, modelRegistryProject));
       if(dto == null) {
         throw new GenericException(RESTCodes.GenericErrorCode.NOT_AUTHORIZED_TO_ACCESS, Level.FINE);
       } else {
@@ -196,9 +197,9 @@ public class ModelsResource {
       throws DatasetException, ProvenanceException, ModelRegistryException, KafkaException, ServingException,
     CryptoPasswordNotFoundException {
     Users user = jwtHelper.getUserPrincipal(sc);
-    ProvStateDTO fileState = modelsController.getModel(userProject, id);
-    if(fileState != null) {
-      modelsController.delete(user, userProject, modelRegistryProject, fileState);
+    ModelVersion modelVersion = modelsController.getModel(userProject, id);
+    if(modelVersion != null) {
+      modelsController.delete(user, userProject, modelRegistryProject, modelVersion);
     }
     return Response.noContent().build();
   }
@@ -221,8 +222,8 @@ public class ModelsResource {
                       @Context HttpServletRequest req,
                       @Context UriInfo uriInfo,
                       @Context SecurityContext sc)
-      throws DatasetException, ModelRegistryException, JobException, ServiceException, PythonException,
-      MetadataException, GenericException, ProjectException {
+    throws DatasetException, ModelRegistryException, JobException, ServiceException, PythonException,
+    MetadataException, GenericException, ProjectException, FeatureStoreMetadataException, ProvenanceException {
     if (modelDTO == null) {
       throw new IllegalArgumentException("Model summary not provided");
     }
@@ -230,12 +231,20 @@ public class ModelsResource {
     Users user = jwtHelper.getUserPrincipal(sc);
     Project modelProject = modelUtils.getModelsProjectAndCheckAccess(modelDTO, userProject);
     Project experimentProject = modelUtils.getExperimentProjectAndCheckAccess(modelDTO, userProject);
-    ModelsController.Accessor accessor = modelUtils.getModelsAccessor(user, userProject, modelProject,
-        experimentProject);
+    ModelsController.Accessor accessor = null;
     try {
-      return modelUtils.createModel(uriInfo, accessor, id, modelDTO, jobName, kernelId);
+      accessor = modelUtils.getModelsAccessor(user, userProject, modelProject,
+        experimentProject);
+      ModelVersion modelVersion = modelsController.createModelVersion(accessor, modelDTO, jobName, kernelId);
+      ModelDTO dto = modelsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.MODELS), user, userProject,
+        modelRegistryProject, modelVersion, modelUtils.getModelFullPath(modelProject, modelVersion.getModel().getName(),
+          modelVersion.getModelVersionPK().getVersion()));
+      UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(id);
+      return Response.created(builder.build()).entity(dto).build();
     } finally {
-      dfs.closeDfsClient(accessor.udfso);
+      if(accessor != null) {
+        dfs.closeDfsClient(accessor.udfso);
+      }
     }
   }
 
@@ -246,9 +255,8 @@ public class ModelsResource {
     throws ModelRegistryException, ProvenanceException {
     this.tagResource.setProject(userProject);
     this.tagResource.setModelRegistry(modelRegistryProject);
-    ProvStateDTO fileState = modelsController.getModel(modelRegistryProject, id);
-    ModelDTO model = modelUtils.convertProvenanceHitToModel(fileState);
-    this.tagResource.setModel(model, fileState);
+    ModelVersion modelVersion = modelsController.getModel(modelRegistryProject, id);
+    this.tagResource.setModel(modelVersion);
     return this.tagResource;
   }
 }

@@ -17,15 +17,14 @@ package io.hops.hopsworks.api.modelregistry.models.tags;
 
 import io.hops.hopsworks.api.modelregistry.ModelRegistryTagResource;
 import io.hops.hopsworks.api.modelregistry.models.ModelUtils;
-import io.hops.hopsworks.api.modelregistry.models.dto.ModelDTO;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
-import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
+import io.hops.hopsworks.persistence.entity.models.version.ModelVersion;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -42,30 +41,27 @@ public class ModelTagResource extends ModelRegistryTagResource {
   @EJB
   private DatasetHelper datasetHelper;
   
-  private ModelDTO model;
-  private ProvStateDTO provState;
+  private ModelVersion modelVersion;
   
   /**
-   * Sets the model and prov state of the tag resource
+   * Sets the model version for the tag resource
    *
-   * @param model
-   * @param provState
+   * @param modelVersion
    */
   @Logged(logLevel = LogLevel.OFF)
-  public void setModel(ModelDTO model, ProvStateDTO provState) {
-    this.model = model;
-    this.provState = provState;
+  public void setModel(ModelVersion modelVersion) {
+    this.modelVersion = modelVersion;
   }
   
   @Override
   protected DatasetPath getDatasetPath() throws DatasetException {
-    return datasetHelper.getDatasetPath(project, modelUtils.getModelFullPath(modelRegistry, model.getName(),
-      model.getVersion()), DatasetType.DATASET);
+    return datasetHelper.getDatasetPath(project, modelUtils.getModelFullPath(modelRegistry,
+      modelVersion.getModel().getName(), modelVersion.getModelVersionPK().getVersion()), DatasetType.DATASET);
   }
   
   @Override
   protected String getItemId() {
-    return provState.getMlId();
+    return modelVersion.getMlId();
   }
   
   @Override

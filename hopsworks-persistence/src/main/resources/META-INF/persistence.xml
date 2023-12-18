@@ -122,6 +122,8 @@
     <class>io.hops.hopsworks.persistence.entity.log.operation.OperationsLog</class>
     <class>io.hops.hopsworks.persistence.entity.maggy.MaggyDriver</class>
     <class>io.hops.hopsworks.persistence.entity.message.Message</class>
+    <class>io.hops.hopsworks.persistence.entity.models.Model</class>
+    <class>io.hops.hopsworks.persistence.entity.models.version.ModelVersion</class>
     <class>io.hops.hopsworks.persistence.entity.project.Project</class>
     <class>io.hops.hopsworks.persistence.entity.project.service.ProjectServices</class>
     <class>io.hops.hopsworks.persistence.entity.project.team.ProjectTeam</class>
@@ -178,6 +180,7 @@
     <class>io.hops.hopsworks.persistence.entity.alertmanager.AlertReceiver</class>
     <class>io.hops.hopsworks.persistence.entity.serving.ComponentResourcesConverter</class>
     <class>io.hops.hopsworks.persistence.entity.serving.BatchingConfigurationConverter</class>
+    <class>io.hops.hopsworks.persistence.entity.models.version.ModelMetricsConverter</class>
     <class>io.hops.hopsworks.persistence.entity.pki.SerialNumber</class>
     <class>io.hops.hopsworks.persistence.entity.pki.PKIKey</class>
     <class>io.hops.hopsworks.persistence.entity.pki.PKICertificate</class>
