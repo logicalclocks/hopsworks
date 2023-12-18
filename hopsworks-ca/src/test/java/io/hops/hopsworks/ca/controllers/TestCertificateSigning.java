@@ -24,12 +24,16 @@ import io.hops.hopsworks.ca.configuration.SubjectAlternativeName;
 import io.hops.hopsworks.ca.configuration.UsernamesConfiguration;
 import io.hops.hopsworks.persistence.entity.pki.CAType;
 import io.hops.hopsworks.persistence.entity.pki.PKICertificate;
+import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.GeneralName;
+import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
@@ -271,6 +275,53 @@ public class TestCertificateSigning extends PKIMocking {
   }
 
   @Test
+  public void testKubernetesStrimziCA() throws Exception {
+    CAsConfiguration casConf = new CAsConfiguration(null, null, null);
+    Gson gson = new Gson();
+    String jsonConf = gson.toJson(casConf);
+
+    CAConf caConf = Mockito.mock(CAConf.class);
+    Mockito.when(caConf.getString(Mockito.any())).thenReturn(jsonConf);
+
+    PKI pki = new PKI();
+    pki.setCaConf(caConf);
+    pki.init();
+
+    KeyPair keyPair = pki.generateKeyPair();
+    X500Name requesterName = new X500Name("CN=strimzi,L=strimzica");
+    JcaPKCS10CertificationRequestBuilder csrBuilder = new JcaPKCS10CertificationRequestBuilder(requesterName,
+        keyPair.getPublic());
+    PKCS10CertificationRequest csr = csrBuilder.build(
+        new JcaContentSignerBuilder("SHA256withRSA").build(keyPair.getPrivate()));
+
+    X509v3CertificateBuilder builder = new X509v3CertificateBuilder(
+        new X500Name("CN=signer"),
+        BigInteger.ONE,
+        Date.from(Instant.now()),
+        Date.from(Instant.now().plus(10, ChronoUnit.DAYS)),
+        csr.getSubject(),
+        csr.getSubjectPublicKeyInfo());
+    builder
+        .addExtension(Extension.basicConstraints, true, new BasicConstraints(false))
+        .addExtension(Extension.keyUsage, true,
+            new KeyUsage(KeyUsage.digitalSignature | KeyUsage.keyEncipherment | KeyUsage.dataEncipherment));
+    pki.KUBE_CERTIFICATE_EXTENSIONS_BUILDER.apply(PKI.ExtensionsBuilderParameter.of(builder, csr,
+        CertificateType.KUBE, ""));
+    ContentSigner signer = new JcaContentSignerBuilder(PKI.SIGNATURE_ALGORITHM)
+        .build(keyPair.getPrivate());
+    X509CertificateHolder holder = builder.build(signer);
+    JcaX509CertificateConverter converter = new JcaX509CertificateConverter();
+    X509Certificate cert = converter.getCertificate(holder);
+    Assert.assertNotNull(cert);
+    byte[] bc = cert.getExtensionValue(Extension.basicConstraints.getId());
+    ASN1Encodable e = JcaX509ExtensionUtils.parseExtensionValue(bc);
+    BasicConstraints basicConstraints = BasicConstraints.getInstance(e);
+    // Certificate issued for StrimziCA should have the CA flag on
+    Assert.assertTrue(basicConstraints.isCA());
+    Assert.assertEquals(BigInteger.valueOf(3), basicConstraints.getPathLenConstraint());
+  }
+
+  @Test
   public void testKubernetesCertificateExtensionsBuilderDNSSAN() throws Exception {
     Gson gson = new Gson();
     SubjectAlternativeName san = new SubjectAlternativeName(Arrays.asList("0.dns.name", "1.dns.name"), null);
@@ -294,7 +345,8 @@ public class TestCertificateSigning extends PKIMocking {
         new X500Name("CN=hello"),
         keyPair.getPublic()
     );
-
+    builder
+        .addExtension(Extension.basicConstraints, true, new BasicConstraints(false));
     pki.KUBE_CERTIFICATE_EXTENSIONS_BUILDER.apply(PKI.ExtensionsBuilderParameter.of(builder));
     ContentSigner signer = new JcaContentSignerBuilder(PKI.SIGNATURE_ALGORITHM)
         .build(keyPair.getPrivate());
@@ -302,6 +354,13 @@ public class TestCertificateSigning extends PKIMocking {
     Assert.assertEquals(1, holder.getNonCriticalExtensionOIDs().size());
     JcaX509CertificateConverter converter = new JcaX509CertificateConverter();
     X509Certificate cert = converter.getCertificate(holder);
+
+    // Certificates other than StrimziCA should not be CA
+    byte[] bc = cert.getExtensionValue(Extension.basicConstraints.getId());
+    ASN1Encodable e = JcaX509ExtensionUtils.parseExtensionValue(bc);
+    BasicConstraints basicConstraints = BasicConstraints.getInstance(e);
+    Assert.assertFalse(basicConstraints.isCA());
+
     Collection<List<?>> sans = cert.getSubjectAlternativeNames();
     Assert.assertEquals(2, sans.size());
     Iterator<List<?>> sansIter = sans.iterator();
