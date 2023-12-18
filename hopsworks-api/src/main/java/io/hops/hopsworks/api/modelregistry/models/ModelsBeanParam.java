@@ -37,6 +37,14 @@ public class ModelsBeanParam {
   @BeanParam
   private ModelExpansionBeanParam expansions;
 
+  public ModelsBeanParam(
+    @QueryParam("sort_by") String sortBy,
+    @QueryParam("filter_by") Set<FilterBy> filter) {
+    this.sortBy = sortBy;
+    this.sortBySet = getSortBy(sortBy);
+    this.filter = filter;
+  }
+
   private Set<SortBy> getSortBy(String param) {
     if (param == null || param.isEmpty()) {
       return new LinkedHashSet<>();
@@ -52,10 +60,12 @@ public class ModelsBeanParam {
     return sortBys;
   }
 
-  public ModelsBeanParam(@QueryParam("filter_by") Set<FilterBy> filter, @QueryParam("sort_by") String sortBy) {
-    this.filter = filter;
+  public String getSortBy() {
+    return sortBy;
+  }
+
+  public void setSortBy(String sortBy) {
     this.sortBy = sortBy;
-    sortBySet = getSortBy(sortBy);
   }
 
   public Set<FilterBy> getFilter() {
@@ -64,15 +74,6 @@ public class ModelsBeanParam {
 
   public void setFilter(Set<FilterBy> filter) {
     this.filter = filter;
-  }
-
-
-  public String getSortBy() {
-    return sortBy;
-  }
-
-  public void setSortBy(String sortBy) {
-    this.sortBy = sortBy;
   }
 
   public Set<SortBy> getSortBySet() {

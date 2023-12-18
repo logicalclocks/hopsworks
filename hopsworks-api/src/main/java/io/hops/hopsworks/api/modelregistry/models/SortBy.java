@@ -17,24 +17,33 @@
 package io.hops.hopsworks.api.modelregistry.models;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.models.version.ModelVersionFacade;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+import java.util.Arrays;
 
 public class SortBy implements AbstractFacade.SortBy {
 
-  private final Sorts sortBy;
+  private final ModelVersionFacade.Sorts sortBy;
   private final AbstractFacade.OrderBy param;
 
   public SortBy(String param) {
-    String[] sortByParams = param.split(":");
+    final String[] sortByParams = param.split(":");
     String sort = "";
     try {
-      sort = sortByParams[0];
-      this.sortBy = new Sorts(sort, "DESC");
+      sort = sortByParams[0].toUpperCase();
+      if (Arrays.stream(ModelVersionFacade.Sorts.values())
+        .noneMatch(x -> x.name().equals(sortByParams[0].toUpperCase()))) {
+        this.sortBy = ModelVersionFacade.Sorts.valueOf("METRIC");
+        this.sortBy.setJsonSortKey(sortByParams[0]);
+      } else {
+        sort = sortByParams[0].toUpperCase();
+        this.sortBy = ModelVersionFacade.Sorts.valueOf(sort);
+      }
     } catch (IllegalArgumentException iae) {
       throw new WebApplicationException("Sort by need to set a valid sort parameter, but found: " + sort,
-          Response.Status.NOT_FOUND);
+        Response.Status.NOT_FOUND);
     }
     String order = "";
     try {
@@ -42,46 +51,23 @@ public class SortBy implements AbstractFacade.SortBy {
       this.param = AbstractFacade.OrderBy.valueOf(order);
     } catch (IllegalArgumentException iae) {
       throw new WebApplicationException("Sort by " + sort + " need to set a valid order(asc|desc), but found: " + order
-          , Response.Status.NOT_FOUND);
+        , Response.Status.NOT_FOUND);
     }
   }
 
+  @Override
   public String getValue() {
     return this.sortBy.getValue();
   }
 
+  @Override
   public AbstractFacade.OrderBy getParam() {
     return this.param;
   }
 
   @Override
   public String getSql() {
-    return null;
+    return this.sortBy.getSql();
   }
 
-  public class Sorts {
-
-    private final String value;
-    private final String defaultParam;
-
-    Sorts(String value, String defaultParam) {
-      this.value = value;
-      this.defaultParam = defaultParam;
-    }
-
-    public String getValue() {
-      return value;
-    }
-
-    public String getDefaultParam() {
-      return defaultParam;
-    }
-
-    @Override
-    public String toString() {
-      return value;
-    }
-
-  }
 }
-
