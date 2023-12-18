@@ -140,7 +140,7 @@ public class HostCertsResource {
 
     final List<X500Name> subjectsToRevoke = new ArrayList<>();
     try {
-      if (exact == null || !exact) {
+      if (!Boolean.TRUE.equals(exact)) {
         X500Name certificateName = pkiUtils.parseCertificateSubjectName(certId, HOST);
         List<String> subjects = pkiUtils.findAllValidSubjectsWithPartialMatch(certificateName.toString());
         subjects.forEach(s -> subjectsToRevoke.add(new X500Name(s)));
