@@ -1716,21 +1716,6 @@ CREATE TABLE `users`
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Temporary table structure for view `users_groups`
---
-
-SET @saved_cs_client = @@character_set_client;
-SET character_set_client = utf8;
-/*!50001 CREATE VIEW `users_groups` AS
-SELECT 1 AS `username`,
-       1 AS `password`,
-       1 AS `secret`,
-       1 AS `email`,
-       1 AS `group_name`
-        */;
-SET character_set_client = @saved_cs_client;
-
---
 -- Table structure for table `variables`
 --
 
@@ -1748,29 +1733,6 @@ CREATE TABLE `variables`
   COLLATE = latin1_general_cs;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Final view structure for view `users_groups`
---
-
-/*!50001 DROP VIEW IF EXISTS `users_groups`*/;
-/*!50001 SET @saved_cs_client = @@character_set_client */;
-/*!50001 SET @saved_cs_results = @@character_set_results */;
-/*!50001 SET @saved_col_connection = @@collation_connection */;
-/*!50001 SET character_set_client = utf8 */;
-/*!50001 SET character_set_results = utf8 */;
-/*!50001 SET collation_connection = utf8_general_ci */;
-/*!50001 CREATE ALGORITHM = UNDEFINED */ /*!50001 VIEW `users_groups` AS
-select `u`.`username`   AS `username`,
-       `u`.`password`   AS `password`,
-       `u`.`secret`     AS `secret`,
-       `u`.`email`      AS `email`,
-       `g`.`group_name` AS `group_name`
-from ((`user_group` `ug` join `users` `u` on ((`u`.`uid` = `ug`.`uid`))) join `bbc_group` `g`
-      on ((`g`.`gid` = `ug`.`gid`)))
-        */;
-/*!50001 SET character_set_client = @saved_cs_client */;
-/*!50001 SET character_set_results = @saved_cs_results */;
-/*!50001 SET collation_connection = @saved_col_connection */;
 /*!40103 SET TIME_ZONE = @OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE = @OLD_SQL_MODE */;
