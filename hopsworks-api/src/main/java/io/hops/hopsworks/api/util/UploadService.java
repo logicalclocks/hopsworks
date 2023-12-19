@@ -191,9 +191,8 @@ public class UploadService {
       request.getParameter("flowTotalChunks"),
       request.getParameter("flowTotalSize"));
     validate(flowInfo);
-    //Check permissions and if destination exists for the first chunk
-    uploadController.checkPermission(flowInfo, this.path, this.username);
-    if (uploadController.isUploaded(flowInfo, this.path)) {
+
+    if (uploadController.uploaded(flowInfo, this.path)) {
       json.setSuccessMessage("Uploaded");
       return Response.status(Response.Status.OK).entity(json).build();
     } else {
