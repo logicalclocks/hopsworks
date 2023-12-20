@@ -37,13 +37,15 @@ public class TrainingDatasetFeatureDTO {
   public TrainingDatasetFeatureDTO() {
   }
 
-  public TrainingDatasetFeatureDTO(String name, String type, FeaturegroupDTO featuregroupDTO, Integer index,
-                                   Boolean label, Boolean inferenceHelperColumn , Boolean trainingHelperColumn) {
+  public TrainingDatasetFeatureDTO(String name, String type, FeaturegroupDTO featuregroupDTO,
+      String featureGroupFeatureName,Integer index, Boolean label, Boolean inferenceHelperColumn ,
+      Boolean trainingHelperColumn) {
     this.name = name;
     this.type = type;
     this.featuregroup = featuregroupDTO;
     this.index = index;
     this.label = label;
+    this.featureGroupFeatureName = featureGroupFeatureName;
     this.inferenceHelperColumn = inferenceHelperColumn;
     this.trainingHelperColumn = trainingHelperColumn;
   }

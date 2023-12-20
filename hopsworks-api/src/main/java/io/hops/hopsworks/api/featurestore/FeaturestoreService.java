@@ -17,6 +17,7 @@
 package io.hops.hopsworks.api.featurestore;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import io.hops.hopsworks.api.featurestore.datavalidationv2.greatexpectations.GreatExpectationResource;
 import io.hops.hopsworks.api.featurestore.featuregroup.FeaturegroupService;
 import io.hops.hopsworks.api.featurestore.featureview.FeatureViewService;
@@ -50,10 +51,12 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
@@ -119,16 +122,32 @@ public class FeaturestoreService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
-    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE, ApiScope.KAFKA},
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER", "AGENT"})
   @ApiOperation(value = "Get the list of feature stores for the project",
     response = FeaturestoreDTO.class,
     responseContainer = "List")
-  public Response getFeaturestores(@Context SecurityContext sc) throws FeaturestoreException {
-    List<FeaturestoreDTO> featurestores = featurestoreController.getFeaturestoresForProject(project);
+  public Response getFeaturestores(
+      @Context
+          SecurityContext sc,
+      @QueryParam("include_shared")
+      @DefaultValue("true")
+      @ApiParam(value = "include_shared=false",
+          allowableValues = "include_shared=false,include_shared=true",
+          defaultValue = "true")
+          Boolean includeShared
+  )
+      throws FeaturestoreException {
+    List<FeaturestoreDTO> featurestores;
+    if (includeShared) {
+      featurestores = featurestoreController.getFeaturestoresForProject(project);
+    } else {
+      featurestores = Lists.newArrayList(featurestoreController.convertFeaturestoreToDTO(
+          featurestoreController.getProjectFeaturestore(project)
+      ));
+    }
     GenericEntity<List<FeaturestoreDTO>> featurestoresGeneric =
-      new GenericEntity<List<FeaturestoreDTO>>(featurestores) {
-      };
+        new GenericEntity<List<FeaturestoreDTO>>(featurestores) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featurestoresGeneric).build();
   }
   
@@ -142,7 +161,8 @@ public class FeaturestoreService {
   @Path("/{featurestoreId: [0-9]+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiOperation(value = "Get featurestore with specific Id",

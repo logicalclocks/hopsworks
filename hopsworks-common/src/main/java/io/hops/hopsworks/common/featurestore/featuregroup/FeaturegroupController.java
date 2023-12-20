@@ -25,6 +25,7 @@ import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.ValidationReportController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteDTO;
+import io.hops.hopsworks.common.featurestore.embedding.EmbeddingController;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
@@ -133,6 +134,8 @@ public class FeaturegroupController {
   private FeatureGroupCommitController featureGroupCommitController;
   @EJB
   private SearchFSCommandLogger searchCommandLogger;
+  @EJB
+  private EmbeddingController embeddingController;
 
   /**
    * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
@@ -203,7 +206,7 @@ public class FeaturegroupController {
     enforceFeaturegroupQuotas(featurestore, featuregroupDTO);
     featureGroupInputValidation.verifySchemaProvided(featuregroupDTO);
     featureGroupInputValidation.verifyNoDuplicatedFeatures(featuregroupDTO);
-    
+
     // if version not provided, get latest and increment
     if (featuregroupDTO.getVersion() == null) {
       // returns ordered list by desc version
@@ -237,10 +240,10 @@ public class FeaturegroupController {
     boolean isSpine = false;
     CachedFeaturegroup cachedFeaturegroup = null;
     StreamFeatureGroup streamFeatureGroup = null;
-  
+
     // make copy of schema without hudi columns
     List<FeatureGroupFeatureDTO> featuresNoHudi = new ArrayList<>(featuregroupDTO.getFeatures());;
-    
+
     if (featuregroupDTO instanceof CachedFeaturegroupDTO) {
       cachedFeaturegroup = cachedFeaturegroupController.createCachedFeaturegroup(featurestore,
           (CachedFeaturegroupDTO) featuregroupDTO, project, user);
@@ -262,7 +265,7 @@ public class FeaturegroupController {
     //Persist basic feature group metadata
     Featuregroup featuregroup = persistFeaturegroupMetadata(featurestore, project, user, featuregroupDTO,
       cachedFeaturegroup, streamFeatureGroup, onDemandFeaturegroup);
-  
+
     // online feature group needs to be set up after persisting metadata in order to get feature group id
     // don't setup online storage for spine group for now
     if (settings.isOnlineFeaturestore() && featuregroup.isOnlineEnabled() && !isSpine) {
@@ -278,7 +281,7 @@ public class FeaturegroupController {
     fsActivityFacade.logMetadataActivity(user, featuregroup, FeaturestoreActivityMeta.FG_CREATED, null);
     if (featuregroup.getExpectationSuite() != null) {
       fsActivityFacade.logExpectationSuiteActivity(
-        user, featuregroup, featuregroup.getExpectationSuite(), 
+        user, featuregroup, featuregroup.getExpectationSuite(),
         FeaturestoreActivityMeta.EXPECTATION_SUITE_ATTACHED_ON_FG_CREATION, "");
     }
 
@@ -429,14 +432,14 @@ public class FeaturegroupController {
     // adding new features
     // feature group description
     // feature descriptions
-    
+
     // Verify general entity related information
     featurestoreInputValidation.verifyDescription(featuregroupDTO);
     featureGroupInputValidation.verifyFeatureGroupFeatureList(featuregroupDTO.getFeatures());
     featureGroupInputValidation.verifyOnlineOfflineTypeMatch(featuregroupDTO);
     featureGroupInputValidation.verifyOnlineSchemaValid(featuregroupDTO);
     featureGroupInputValidation.verifyPrimaryKeySupported(featuregroupDTO);
-    
+
     // Update on-demand feature group metadata
     if (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP) {
       cachedFeaturegroupController
@@ -741,7 +744,12 @@ public class FeaturegroupController {
     featuregroup.setCreator(user);
     featuregroup.setVersion(featuregroupDTO.getVersion());
     featuregroup.setDescription(featuregroupDTO.getDescription());
-    
+    // set embedding
+    if (featuregroupDTO.getEmbeddingIndex() != null) {
+      featuregroup.setEmbedding(
+          embeddingController.getEmbedding(project, featuregroupDTO.getEmbeddingIndex(), featuregroup)
+      );
+    }
     if (featuregroupDTO instanceof CachedFeaturegroupDTO) {
       featuregroup.setFeaturegroupType(FeaturegroupType.CACHED_FEATURE_GROUP);
     } else if (featuregroupDTO instanceof StreamFeatureGroupDTO) {
@@ -776,7 +784,7 @@ public class FeaturegroupController {
       featuregroup.setExpectationSuite(expectationSuiteController.convertExpectationSuiteDTOToPersistent(
         featuregroup, featuregroupDTO.getExpectationSuite()));
     }
-    
+
     featuregroupFacade.persist(featuregroup);
     searchCommandLogger.create(featuregroup);
     if(cachedFeaturegroup != null) {
