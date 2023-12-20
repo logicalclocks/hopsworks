@@ -41,7 +41,7 @@ package io.hops.hopsworks.api.user;
 import io.hops.hopsworks.api.activities.UserActivitiesResource;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.JWTNotRequired;
-import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.user.apiKey.ApiKeyResource;
 import io.hops.hopsworks.api.util.Pagination;

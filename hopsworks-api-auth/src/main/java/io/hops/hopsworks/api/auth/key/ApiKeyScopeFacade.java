@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2019, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2023, Hopsworks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -13,32 +13,26 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.api.filter.util;
+package io.hops.hopsworks.api.auth.key;
 
-import java.util.List;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiKeyScope;
+import io.hops.hopsworks.persistence.entity.util.AbstractFacade;
 
-public class Subject {
-  private String name;
-  private List<String> roles;
-  
-  public Subject(String name, List<String> roles) {
-    this.name = name;
-    this.roles = roles;
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
+@Stateless
+public class ApiKeyScopeFacade extends AbstractFacade<ApiKeyScope> {
+  @PersistenceContext(unitName = "kthfsPU")
+  private EntityManager em;
+
+  public ApiKeyScopeFacade() {
+    super(ApiKeyScope.class);
   }
-  
-  public String getName() {
-    return name;
-  }
-  
-  public void setName(String name) {
-    this.name = name;
-  }
-  
-  public List<String> getRoles() {
-    return roles;
-  }
-  
-  public void setRoles(List<String> roles) {
-    this.roles = roles;
+
+  @Override
+  protected EntityManager getEntityManager() {
+    return em;
   }
 }

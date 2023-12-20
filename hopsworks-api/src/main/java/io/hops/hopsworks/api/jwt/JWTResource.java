@@ -15,22 +15,17 @@
  */
 package io.hops.hopsworks.api.jwt;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.interfaces.DecodedJWT;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.user.ServiceJWTDTO;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.OpenSearchException;
-import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.jwt.exception.InvalidationException;
-import io.hops.hopsworks.jwt.exception.JWTException;
 import io.hops.hopsworks.jwt.exception.NotRenewableException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
-import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -54,7 +49,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Logged
@@ -76,6 +70,7 @@ public class JWTResource {
 
   @POST
   @ApiOperation(value = "Create application token", response = JWTResponseDTO.class)
+  @ApiKeyRequired(acceptedScopes = {ApiScope.AUTH}, allowedUserRoles = {"HOPS_ADMIN", "AGENT"})
   public Response createToken(JWTRequestDTO jWTRequestDTO,
                               @Context HttpServletRequest req,
                               @Context SecurityContext sc) throws NoSuchAlgorithmException,
@@ -86,6 +81,7 @@ public class JWTResource {
 
   @PUT
   @ApiOperation(value = "Renew application token", response = JWTResponseDTO.class)
+  @ApiKeyRequired(acceptedScopes = {ApiScope.AUTH}, allowedUserRoles = {"HOPS_ADMIN", "AGENT"})
   public Response renewToken(JsonWebTokenDTO jsonWebTokenDTO,
                              @Context HttpServletRequest req,
                              @Context SecurityContext sc)
@@ -97,6 +93,7 @@ public class JWTResource {
   @DELETE
   @Path("/{token}")
   @ApiOperation(value = "Invalidate application token")
+  @ApiKeyRequired(acceptedScopes = {ApiScope.AUTH}, allowedUserRoles = {"HOPS_ADMIN", "AGENT"})
   public Response invalidateToken(@ApiParam(value = "Token to invalidate", required = true)
                                   @PathParam("token") String token,
                                   @Context HttpServletRequest req,
@@ -114,55 +111,6 @@ public class JWTResource {
       @Context HttpServletRequest req,
       @Context SecurityContext sc) {
     jWTHelper.deleteSigningKeyByName(keyName);
-    return Response.ok().build();
-  }
-
-  @PUT
-  @Path("/service")
-  @ApiOperation(value = "Renew a service JWT without invalidating the previous token", response = ServiceJWTDTO.class)
-  public Response renewServiceToken(JsonWebTokenDTO jwt, @Context HttpServletRequest request)
-      throws HopsSecurityException {
-    // This token should be the one-time renewal token
-    String token = jWTHelper.getAuthToken(request);
-    Users user = jWTHelper.getUserPrincipal(request);
-    if (user == null) {
-      DecodedJWT decodedJWT = JWT.decode(token);
-      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.NOT_RENEWABLE_TOKEN, Level.FINE,
-          "User not found associated with that JWT", "Could not find user in the database associated with JWT "
-          + decodedJWT.getId());
-    }
-    try {
-      ServiceJWTDTO renewedTokens = jWTHelper.renewServiceToken(jwt, token, user, request.getRemoteHost());
-      return Response.ok().entity(renewedTokens).build();
-    } catch (JWTException | NoSuchAlgorithmException ex) {
-      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.NOT_RENEWABLE_TOKEN, Level.WARNING,
-          "Could not renew service JWT", "Could not renew service JWT for " + request.getRemoteHost());
-    }
-  }
-  
-  @DELETE
-  @Path("/service/{token}")
-  @ApiOperation(value = "Invalidate a service JWT and also delete the signing key encoded in the token")
-  public Response invalidateServiceToken(
-      @ApiParam(value = "Service token to invalidate", required = true)
-      @PathParam("token") String token, @Context HttpServletRequest request)
-    throws HopsSecurityException {
-    DecodedJWT jwt2invalidate = JWT.decode(token);
-    
-    Users user = jWTHelper.getUserPrincipal(request);
-    if (user == null) {
-      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.INVALIDATION_ERROR, Level.FINE,
-          "Could not find registered user", "Could not find registered user associated with JWT "
-            + jwt2invalidate.getId());
-    }
-    if (!user.getUsername().equals(jwt2invalidate.getSubject())) {
-      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.INVALIDATION_ERROR, Level.FINE,
-          "Tried to invalidate token with different subject",
-          "User " + user.getUsername() + " tried to invalidate token with Subject " + jwt2invalidate.getSubject());
-    }
-    
-    jWTHelper.invalidateServiceToken(token);
-    
     return Response.ok().build();
   }
   

@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.common.git;
 
-import io.hops.hopsworks.common.user.UsersController;
+import io.hops.hopsworks.api.auth.UserUtilities;
 import io.hops.hopsworks.common.util.DateUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GitOpException;
@@ -51,7 +51,7 @@ public class GitJWTManager {
   @EJB
   private Settings settings;
   @EJB
-  private UsersController usersController;
+  private UserUtilities userUtilities;
 
   private final String TOKEN_FILE_NAME = "token.jwt";
 
@@ -69,7 +69,7 @@ public class GitJWTManager {
 
   private String createTokenForGitContainer(Users user, LocalDateTime expirationDate)
       throws GitOpException {
-    String[] userRoles = usersController.getUserRoles(user).toArray(new String[1]);
+    String[] userRoles = userUtilities.getUserRoles(user).toArray(new String[1]);
     return createTokenForGitContainer(user.getUsername(), userRoles, expirationDate);
   }
 

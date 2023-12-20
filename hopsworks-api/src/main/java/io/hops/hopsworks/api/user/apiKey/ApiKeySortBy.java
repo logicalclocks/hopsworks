@@ -15,8 +15,8 @@
  */
 package io.hops.hopsworks.api.user.apiKey;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyFacade;
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.user.security.apiKey.ApiKeyFacade;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;

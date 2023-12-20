@@ -4,9 +4,9 @@
 
 package io.hops.hopsworks.jobs;
 
+import io.hops.hopsworks.api.auth.UserUtilities;
 import io.hops.hopsworks.common.jobs.ExecutionJWT;
 import io.hops.hopsworks.common.jwt.JWTTokenWriter;
-import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.DateUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.JobException;
@@ -44,7 +44,7 @@ public class JobsJWTManager {
   @EJB
   private Settings settings;
   @EJB
-  private UsersController usersController;
+  private UserUtilities userUtilities;
   @EJB
   private JWTController jwtController;
   @Inject
@@ -58,7 +58,7 @@ public class JobsJWTManager {
     ExecutionJWT executionJWT = new ExecutionJWT(project, user, execution, expirationDate);
     
     try {
-      String[] roles = usersController.getUserRoles(user).toArray(new String[1]);
+      String[] roles = userUtilities.getUserRoles(user).toArray(new String[1]);
       
       Map<String, Object> claims = new HashMap<>(3);
       claims.put(Constants.RENEWABLE, false);

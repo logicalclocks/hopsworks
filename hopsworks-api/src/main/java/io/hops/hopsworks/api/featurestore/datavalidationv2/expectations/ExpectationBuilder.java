@@ -17,7 +17,6 @@
 package io.hops.hopsworks.api.featurestore.datavalidationv2.expectations;
 
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.AbstractFacade.CollectionInfo;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.expectations.ExpectationController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.expectations.ExpectationDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -25,6 +24,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregro
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.Expectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ExpectationSuite;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.util.AbstractFacade;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -70,7 +70,7 @@ public class ExpectationBuilder {
     ExpectationDTO dtos = new ExpectationDTO();
     uri(dtos, uriInfo, project, featuregroup, expectationSuite);
 
-    CollectionInfo<Expectation> expectations =
+    AbstractFacade.CollectionInfo<Expectation> expectations =
       expectationController.getExpectationsByExpectationSuite(expectationSuite);
     
     ArrayList<ExpectationDTO> listOfExpectationDTO = new ArrayList<>();

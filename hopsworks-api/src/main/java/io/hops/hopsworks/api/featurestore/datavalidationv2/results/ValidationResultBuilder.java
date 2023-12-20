@@ -17,7 +17,6 @@
 package io.hops.hopsworks.api.featurestore.datavalidationv2.results;
 
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.AbstractFacade.CollectionInfo;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.results.ValidationResultController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.results.ValidationResultDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
@@ -33,6 +32,8 @@ import javax.ws.rs.core.UriInfo;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 import java.text.SimpleDateFormat;
+
+import io.hops.hopsworks.persistence.entity.util.AbstractFacade;
 import org.json.JSONObject;
 import org.json.JSONException;
 
@@ -94,7 +95,7 @@ public class ValidationResultBuilder {
     ValidationResultDTO dtos = new ValidationResultDTO();
     uri(dtos, uriInfo, project, featuregroup);
 
-    CollectionInfo<ValidationResult> validationResults =
+    AbstractFacade.CollectionInfo<ValidationResult> validationResults =
       validationResultController.getAllValidationResultByExpectationId(
         resourceRequest.getOffset(), resourceRequest.getLimit(), resourceRequest.getSort(), resourceRequest.getFilter(),
         expectationId);

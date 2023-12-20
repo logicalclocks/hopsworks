@@ -18,6 +18,8 @@ package io.hops.hopsworks.ca.api.filter;
 
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import io.hops.hopsworks.api.auth.key.ApiKeyFilter;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.ca.api.exception.mapper.CAJsonResponse;
 import io.hops.hopsworks.ca.configuration.CAConf;
 import io.hops.hopsworks.restutils.JsonResponse;
@@ -32,22 +34,28 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Priority;
 import javax.ejb.EJB;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.Provider;
 
 import static io.hops.hopsworks.ca.configuration.CAConf.CAConfKeys.JWT_ISSUER;
+import static io.hops.hopsworks.jwt.Constants.WWW_AUTHENTICATE_VALUE;
 
 @Provider
 @JWTRequired
 @Priority(Priorities.AUTHENTICATION)
 public class AuthFilter extends JWTFilter {
+
+  private final static Logger LOGGER = Logger.getLogger(AuthFilter.class.getName());
 
   @EJB
   private JWTController jwtController;
@@ -73,6 +81,17 @@ public class AuthFilter extends JWTFilter {
 
   @Override
   public boolean preJWTFilter(ContainerRequestContext requestContext) throws IOException {
+    String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
+    if (authorizationHeader != null && authorizationHeader.startsWith(ApiKeyFilter.API_KEY)) {
+      LOGGER.log(Level.FINEST, "{0} found, leaving JWT interceptor", ApiKeyFilter.API_KEY);
+      if (getApiKeyAnnotation() == null) {
+        requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).header(HttpHeaders.WWW_AUTHENTICATE,
+                WWW_AUTHENTICATE_VALUE).entity(responseEntity(Response.Status.UNAUTHORIZED,
+                "Authorization method not supported."))
+            .build());
+      }
+      return false;
+    }
     return true;
   }
 
@@ -131,5 +150,13 @@ public class AuthFilter extends JWTFilter {
     }
     jsonResponse.setErrorMsg(msg);
     return jsonResponse;
+  }
+
+  private ApiKeyRequired getApiKeyAnnotation() {
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    Method method = resourceInfo.getResourceMethod();
+    ApiKeyRequired methodRolesAnnotation = method.getAnnotation(ApiKeyRequired.class);
+    ApiKeyRequired classRolesAnnotation = resourceClass.getAnnotation(ApiKeyRequired.class);
+    return methodRolesAnnotation != null ? methodRolesAnnotation : classRolesAnnotation;
   }
 }

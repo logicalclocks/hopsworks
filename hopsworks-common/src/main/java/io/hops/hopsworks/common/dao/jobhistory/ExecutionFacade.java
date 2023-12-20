@@ -40,13 +40,13 @@
 package io.hops.hopsworks.common.dao.jobhistory;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.persistence.InvalidQueryException;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobFinalStatus;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
-import io.hops.hopsworks.exceptions.InvalidQueryException;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import org.javatuples.Pair;
 

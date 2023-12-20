@@ -5,9 +5,9 @@ package io.hops.hopsworks.remote.user.jwt;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.base.Strings;
+import io.hops.hopsworks.api.auth.UserUtilities;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.Constants;
 import io.hops.hopsworks.jwt.JWTController;
@@ -54,7 +54,7 @@ public class JWTHelper {
   @EJB
   private BbcGroupFacade bbcGroupFacade;
   @EJB
-  private UsersController userController;
+  private UserUtilities userUtilities;
   @EJB
   private Settings settings;
 
@@ -201,7 +201,7 @@ public class JWTHelper {
   public String createToken(Users user, String[] audience, String issuer, Date expiresAt, Map<String, Object> claims)
       throws NoSuchAlgorithmException, SigningKeyNotFoundException, DuplicateSigningKeyException {
     SignatureAlgorithm alg = SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg());
-    String[] roles = userController.getUserRoles(user).toArray(new String[0]);
+    String[] roles = userUtilities.getUserRoles(user).toArray(new String[0]);
 
     claims = jwtController.addDefaultClaimsIfMissing(claims, true, settings.getJWTExpLeewaySec(), roles);
     return jwtController.createToken(settings.getJWTSigningKeyName(), false, issuer, audience, expiresAt,
@@ -331,7 +331,7 @@ public class JWTHelper {
     if (!UserAccountStatus.ACTIVATED_ACCOUNT.equals(user.getStatus())) {
       throw new NotRenewableException("User not active");
     }
-    List<String> roles = userController.getUserRoles(user);
+    List<String> roles = userUtilities.getUserRoles(user);
     return jwtController.autoRenewToken(decodedJWT, roles.toArray(new String[0]));
   }
   
@@ -347,7 +347,7 @@ public class JWTHelper {
     throws DuplicateSigningKeyException, SigningKeyNotFoundException, NoSuchAlgorithmException {
     SignatureAlgorithm alg = SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg());
     Date expiresAt = new Date(System.currentTimeMillis() + settings.getJWTLifetimeMs());
-    String[] userRoles = userController.getUserRoles(user).toArray(new String[0]);
+    String[] userRoles = userUtilities.getUserRoles(user).toArray(new String[0]);
     String[] audience = new String[] {Audience.PROXY};
     Map<String, Object> claims = new HashMap<>();
     claims.put(ROLES, userRoles);

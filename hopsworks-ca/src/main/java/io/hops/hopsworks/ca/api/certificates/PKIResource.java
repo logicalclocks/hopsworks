@@ -15,10 +15,12 @@
  */
 package io.hops.hopsworks.ca.api.certificates;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.ca.api.filter.Audience;
 import io.hops.hopsworks.ca.api.filter.NoCacheResponse;
 import io.hops.hopsworks.ca.controllers.PKI;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -44,6 +46,7 @@ public class PKIResource {
 
   @PUT
   @Path("/configuration")
+  @ApiKeyRequired(acceptedScopes = {ApiScope.AUTH}, allowedUserRoles = {"AGENT"})
   public Response reconfigure() {
     LOGGER.log(Level.INFO, "Loading PKI configuration");
     pki.configure();

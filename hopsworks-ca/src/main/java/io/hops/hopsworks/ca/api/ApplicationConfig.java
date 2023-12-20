@@ -40,6 +40,7 @@
 package io.hops.hopsworks.ca.api;
 
 import io.hops.hopsworks.ca.api.exception.mapper.CAThrowableMapper;
+import io.hops.hopsworks.ca.api.filter.CaApiKeyFilter;
 import io.hops.hopsworks.multiregion.MultiRegionFilter;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -62,6 +63,7 @@ public class ApplicationConfig extends ResourceConfig {
 
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
 
+    register(CaApiKeyFilter.class);
     // JWT filters
     register(io.hops.hopsworks.ca.api.filter.AuthFilter.class);
     register(io.hops.hopsworks.ca.api.filter.JWTAutoRenewFilter.class);

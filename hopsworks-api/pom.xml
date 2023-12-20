@@ -124,6 +124,20 @@
       <scope>provided</scope>
     </dependency>
 
+    <dependency>
+      <groupId>io.hops.hopsworks</groupId>
+      <artifactId>hopsworks-api-auth</artifactId>
+      <type>ejb</type>
+      <exclusions>
+        <!-- exclude all transitive dependencies -->
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+      <scope>provided</scope>
+    </dependency>
+
     <!-- jersey dependencies -->
     <dependency>
       <groupId>com.fasterxml.jackson.datatype</groupId>

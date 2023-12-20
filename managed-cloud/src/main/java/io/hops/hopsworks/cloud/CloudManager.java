@@ -122,7 +122,7 @@ public class CloudManager {
   private boolean firstHeartbeat = true;
   private Instant beginningOfHeartbeat;
   private boolean shouldLookForMissingNodes = false;
-  private boolean isJwtSet = false;
+  private boolean isServiceApiSet = false;
   private final Set<String> blacklistHostnamesToRemove = new HashSet<>();
   private Timer timer;
   
@@ -241,10 +241,10 @@ public class CloudManager {
         if (firstHeartbeat) {
           firstHeartbeat = false;
         }
-        if (!isJwtSet) {
+        if (!isServiceApiSet) {
           settings.refreshCache();
-          if (!settings.getServiceMasterJWT().isEmpty()) {
-            isJwtSet = true;
+          if (!settings.getServiceApiKey().isEmpty()) {
+            isServiceApiSet = true;
           }
         }
       } catch (ServiceDiscoveryException ex) {

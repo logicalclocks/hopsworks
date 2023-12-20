@@ -18,12 +18,12 @@ package io.hops.hopsworks.common.jupyter;
 
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import io.hops.hopsworks.api.auth.UserUtilities;
 import io.hops.hopsworks.common.dao.jupyter.MaterializedJWTFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.DateUtils;
 import io.hops.hopsworks.common.util.PayaraClusterManager;
 import io.hops.hopsworks.common.util.Settings;
@@ -91,7 +91,7 @@ public class JupyterJWTManager {
   @EJB
   private JWTController jwtController;
   @EJB
-  private UsersController usersController;
+  private UserUtilities userUtilities;
   @EJB
   private JupyterFacade jupyterFacade;
   @Inject
@@ -190,7 +190,7 @@ public class JupyterJWTManager {
         // We should create a new one
         String[] audience = new String[]{"api"};
         LocalDateTime expirationDate = LocalDateTime.now().plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
-        String[] userRoles = usersController.getUserRoles(user).toArray(new String[1]);
+        String[] userRoles = userUtilities.getUserRoles(user).toArray(new String[1]);
         try {
           Map<String, Object> claims = new HashMap<>(3);
           claims.put(Constants.RENEWABLE, false);
@@ -249,7 +249,7 @@ public class JupyterJWTManager {
       LocalDateTime expirationDate = LocalDateTime.now().plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
       JupyterJWT jupyterJWT = new JupyterJWT(project, user, expirationDate, new CidAndPort(cid, port));
       try {
-        String[] roles = usersController.getUserRoles(user).toArray(new String[1]);
+        String[] roles = userUtilities.getUserRoles(user).toArray(new String[1]);
         MaterializedJWT materializedJWT = new MaterializedJWT(materialID);
         materializedJWTFacade.persist(materializedJWT);
         

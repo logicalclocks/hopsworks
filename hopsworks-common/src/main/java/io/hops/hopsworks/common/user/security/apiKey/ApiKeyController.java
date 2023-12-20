@@ -15,10 +15,10 @@
  */
 package io.hops.hopsworks.common.user.security.apiKey;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyFacade;
+import io.hops.hopsworks.api.auth.key.ApiKeyScopeFacade;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiKey;
-import io.hops.hopsworks.common.dao.user.security.apiKey.ApiKeyFacade;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiKeyScope;
-import io.hops.hopsworks.common.dao.user.security.apiKey.ApiKeyScopeFacade;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
@@ -129,42 +129,6 @@ public class ApiKeyController {
       keyScopes.add(new ApiKeyScope(scope, apiKey));
     }
     return keyScopes;
-  }
-  
-  /**
-   *
-   * @param apiKey
-   * @return
-   */
-  public Set<ApiScope> getScopes(ApiKey apiKey) {
-    Set<ApiScope> scopes = new HashSet<>();
-    for (ApiKeyScope scope : apiKey.getApiKeyScopeCollection()) {
-      scopes.add(scope.getScope());
-    }
-    return scopes;
-  }
-  
-  /**
-   *
-   * @param key
-   * @return
-   * @throws ApiKeyException
-   */
-  public ApiKey getApiKey(String key) throws ApiKeyException {
-    String[] parts = key.split(Secret.KEY_ID_SEPARATOR_REGEX);
-    if (parts.length < 2) {
-      throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_INVALID, Level.FINE);
-    }
-    ApiKey apiKey = apiKeyFacade.findByPrefix(parts[0]);
-    if (apiKey == null) {
-      throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_NOT_FOUND_IN_DATABASE, Level.FINE);
-    }
-    //___MinLength can be set to 0 b/c no validation is needed if the key was in db
-    Secret secret = new Secret(parts[0], parts[1], apiKey.getSalt());
-    if (!secret.getSha256HexDigest().equals(apiKey.getSecret())) {
-      throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_INVALID, Level.FINE);
-    }
-    return apiKey;
   }
   
   /**

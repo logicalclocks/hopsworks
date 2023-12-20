@@ -13,21 +13,20 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.api.filter.util;
+package io.hops.hopsworks.api.auth;
 
 import javax.ws.rs.core.SecurityContext;
 import java.security.Principal;
 
 public class HopsworksSecurityContext implements SecurityContext {
-  
   private final String scheme;
   private final Subject subject;
-  
+
   public HopsworksSecurityContext(Subject subject, String scheme) {
     this.scheme = scheme;
     this.subject = subject;
   }
-  
+
   @Override
   public Principal getUserPrincipal() {
     if (this.subject == null) {
@@ -35,7 +34,7 @@ public class HopsworksSecurityContext implements SecurityContext {
     }
     return () -> this.subject.getName();
   }
-  
+
   @Override
   public boolean isUserInRole(String role) {
     if (this.subject.getRoles() != null && !this.subject.getRoles().isEmpty()) {
@@ -43,12 +42,12 @@ public class HopsworksSecurityContext implements SecurityContext {
     }
     return false;
   }
-  
+
   @Override
   public boolean isSecure() {
     return "https".equals(this.scheme);
   }
-  
+
   @Override
   public String getAuthenticationScheme() {
     return SecurityContext.BASIC_AUTH;

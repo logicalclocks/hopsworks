@@ -65,6 +65,7 @@
     <module>tags-ee</module>
     <module>hopsworks-service-discovery</module>
     <module>hopsworks-multiregion</module>
+    <module>hopsworks-api-auth</module>
     <module>vector-db</module>
   </modules>
 
@@ -637,6 +638,12 @@
         <groupId>io.hops.hopsworks</groupId>
         <artifactId>hopsworks-service-discovery</artifactId>
         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.hops.hopsworks</groupId>
+        <artifactId>hopsworks-api-auth</artifactId>
+        <version>${project.version}</version>
+        <type>ejb</type>
       </dependency>
       <!-- end Hopsworks -->
       <dependency>

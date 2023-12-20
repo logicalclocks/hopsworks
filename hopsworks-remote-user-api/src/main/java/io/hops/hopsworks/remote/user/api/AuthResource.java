@@ -4,6 +4,7 @@
 package io.hops.hopsworks.remote.user.api;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.api.auth.UserStatusValidator;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.audit.logger.annotation.Secret;
 import io.hops.hopsworks.common.dao.user.UserFacade;
@@ -11,7 +12,6 @@ import io.hops.hopsworks.common.project.AccessCredentialsDTO;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.remote.RemoteUserStateDTO;
 import io.hops.hopsworks.common.user.AuthController;
-import io.hops.hopsworks.common.user.UserStatusValidator;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;

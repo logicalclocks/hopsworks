@@ -297,9 +297,9 @@ public class Settings implements Serializable {
   private static final String VARIABLE_JWT_SIGNING_KEY_NAME = "jwt_signing_key_name";
   private static final String VARIABLE_JWT_ISSUER_KEY = "jwt_issuer";
 
-  private static final String VARIABLE_SERVICE_MASTER_JWT = "service_master_jwt";
   private static final String VARIABLE_SERVICE_JWT_LIFETIME_MS = "service_jwt_lifetime_ms";
   private static final String VARIABLE_SERVICE_JWT_EXP_LEEWAY_SEC = "service_jwt_exp_leeway_sec";
+  private static final String VARIABLE_SERVICE_API_KEY = "int_service_api_key";
 
   private static final String VARIABLE_CONNECTION_KEEPALIVE_TIMEOUT = "keepalive_timeout";
 
@@ -718,6 +718,8 @@ public class Settings implements Serializable {
       WHITELIST_USERS_LOGIN = setStrVar(VARIABLE_WHITELIST_USERS_LOGIN,
           WHITELIST_USERS_LOGIN);
       FIRST_TIME_LOGIN = setStrVar(VARIABLE_FIRST_TIME_LOGIN, FIRST_TIME_LOGIN);
+      serviceKeyRotationEnabled = setBoolVar(SERVICE_KEY_ROTATION_ENABLED_KEY, serviceKeyRotationEnabled);
+      serviceKeyRotationInterval = setStrVar(SERVICE_KEY_ROTATION_INTERVAL_KEY, serviceKeyRotationInterval);
       tensorBoardMaxLastAccessed = setIntVar(TENSORBOARD_MAX_LAST_ACCESSED, tensorBoardMaxLastAccessed);
       sparkUILogsOffset = setIntVar(SPARK_UI_LOGS_OFFSET, sparkUILogsOffset);
       jupyterShutdownTimerInterval = setStrVar(JUPYTER_SHUTDOWN_TIMER_INTERVAL, jupyterShutdownTimerInterval);
@@ -815,8 +817,6 @@ public class Settings implements Serializable {
 
       SERVICE_JWT_LIFETIME_MS = setLongVar(VARIABLE_SERVICE_JWT_LIFETIME_MS, SERVICE_JWT_LIFETIME_MS);
       SERVICE_JWT_EXP_LEEWAY_SEC = setIntVar(VARIABLE_SERVICE_JWT_EXP_LEEWAY_SEC, SERVICE_JWT_EXP_LEEWAY_SEC);
-
-      populateServiceJWTCache();
 
       CONNECTION_KEEPALIVE_TIMEOUT = setIntVar(VARIABLE_CONNECTION_KEEPALIVE_TIMEOUT, CONNECTION_KEEPALIVE_TIMEOUT);
 
@@ -963,6 +963,7 @@ public class Settings implements Serializable {
         COMMAND_SEARCH_FS_HISTORY_CLEAN_PERIOD);
       COMMAND_SEARCH_FS_RETRY_PER_CLEAN_INTERVAL = setIntVar(VARIABLE_COMMAND_SEARCH_FS_RETRY_PER_CLEAN_INTERVAL,
         COMMAND_SEARCH_FS_RETRY_PER_CLEAN_INTERVAL);
+      SERVICE_API_KEY = setVar(VARIABLE_SERVICE_API_KEY, SERVICE_API_KEY);
       MOUNT_HOPSFS_IN_PYTHON_JOB_CONTAINER = setBoolVar(VARIABLE_MOUNT_HOPSFS_IN_PYTHON_JOB_CONTAINER,
           MOUNT_HOPSFS_IN_PYTHON_JOB_CONTAINER);
 
@@ -2348,17 +2349,7 @@ public class Settings implements Serializable {
     checkCache();
     return DELA_ENABLED;
   }
-  
-  private void populateServiceJWTCache() {
-    SERVICE_MASTER_JWT = setStrVar(VARIABLE_SERVICE_MASTER_JWT, SERVICE_MASTER_JWT);
-    RENEW_TOKENS = new String[NUM_OF_SERVICE_RENEW_TOKENS];
-    for (int i = 0; i < NUM_OF_SERVICE_RENEW_TOKENS; i++) {
-      String variableKey = String.format(SERVICE_RENEW_TOKEN_VARIABLE_TEMPLATE, i);
-      String token = setStrVar(variableKey, "");
-      RENEW_TOKENS[i] = token;
-    }
-  }
-  
+
   //************************************************ZOOKEEPER********************************************************
   public static final int ZOOKEEPER_SESSION_TIMEOUT_MS = 30 * 1000;//30 seconds
   //Zookeeper END
@@ -2398,7 +2389,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_OAUTH_ACCOUNT_STATUS = "oauth_account_status";
   private static final String VARIABLE_OAUTH_GROUP_MAPPING = "oauth_group_mapping";
   private static final String VARIABLE_OAUTH_GROUP_MAPPING_ENABLED = "oauth_group_mapping_enabled";
-  
+
   private static final String VARIABLE_REMOTE_AUTH_NEED_CONSENT = "remote_auth_need_consent";
   
   private static final String VARIABLE_DISABLE_PASSWORD_LOGIN = "disable_password_login";
@@ -2490,7 +2481,7 @@ public class Settings implements Serializable {
     OAUTH_ACCOUNT_STATUS = setIntVar(VARIABLE_OAUTH_ACCOUNT_STATUS, OAUTH_ACCOUNT_STATUS);
     OAUTH_GROUP_MAPPING = setStrVar(VARIABLE_OAUTH_GROUP_MAPPING, OAUTH_GROUP_MAPPING);
     OAUTH_GROUP_MAPPING_ENABLED = setBoolVar(VARIABLE_OAUTH_GROUP_MAPPING_ENABLED, OAUTH_GROUP_MAPPING_ENABLED);
-  
+
     REMOTE_AUTH_NEED_CONSENT = setBoolVar(VARIABLE_REMOTE_AUTH_NEED_CONSENT, REMOTE_AUTH_NEED_CONSENT);
     
     DISABLE_PASSWORD_LOGIN = setBoolVar(VARIABLE_DISABLE_PASSWORD_LOGIN, DISABLE_PASSWORD_LOGIN);
@@ -2534,7 +2525,7 @@ public class Settings implements Serializable {
     checkCache();
     return LDAP_GROUP_MAPPING;
   }
-  
+
   public synchronized boolean isLdapGroupMappingEnabled() {
     checkCache();
     return LDAP_GROUP_MAPPING_ENABLED;
@@ -2634,7 +2625,7 @@ public class Settings implements Serializable {
     checkCache();
     return OAUTH_GROUP_MAPPING_ENABLED;
   }
-  
+
   public void updateOAuthGroupMapping(String mapping) {
     updateVariableInternal(VARIABLE_OAUTH_GROUP_MAPPING, mapping, VariablesVisibility.ADMIN);
   }
@@ -2803,6 +2794,24 @@ public class Settings implements Serializable {
   
   
   //----------------------------END remote user------------------------------------
+
+  // Service key rotation enabled
+  private static final String SERVICE_KEY_ROTATION_ENABLED_KEY = "service_key_rotation_enabled";
+  private boolean serviceKeyRotationEnabled = false;
+
+  public synchronized boolean isServiceKeyRotationEnabled() {
+    checkCache();
+    return serviceKeyRotationEnabled;
+  }
+
+  // Service key rotation interval
+  private static final String SERVICE_KEY_ROTATION_INTERVAL_KEY = "service_key_rotation_interval";
+  private String serviceKeyRotationInterval = "3d";
+
+  public synchronized String getServiceKeyRotationInterval() {
+    checkCache();
+    return serviceKeyRotationInterval;
+  }
 
  // TensorBoard kill rotation interval in milliseconds (should be lower than the TensorBoardKillTimer)
   private static final String TENSORBOARD_MAX_LAST_ACCESSED = "tensorboard_max_last_accessed";
@@ -3287,32 +3296,10 @@ public class Settings implements Serializable {
     return JWT_ISSUER;
   }
 
-  private String SERVICE_MASTER_JWT = "";
-  public synchronized String getServiceMasterJWT() {
+  private String SERVICE_API_KEY = "";
+  public synchronized String getServiceApiKey() {
     checkCache();
-    return SERVICE_MASTER_JWT;
-  }
-
-  public synchronized void setServiceMasterJWT(String JWT) {
-    updateVariableInternal(VARIABLE_SERVICE_MASTER_JWT, JWT, VariablesVisibility.ADMIN);
-    em.flush();
-    SERVICE_MASTER_JWT = JWT;
-  }
-
-  private final int NUM_OF_SERVICE_RENEW_TOKENS = 5;
-  private final static String SERVICE_RENEW_TOKEN_VARIABLE_TEMPLATE = "service_renew_token_%d";
-  private String[] RENEW_TOKENS = new String[0];
-  public synchronized String[] getServiceRenewJWTs() {
-    checkCache();
-    return RENEW_TOKENS;
-  }
-
-  public synchronized void setServiceRenewJWTs(String[] renewTokens) {
-    for (int i = 0; i < renewTokens.length; i++) {
-      String variableKey = String.format(SERVICE_RENEW_TOKEN_VARIABLE_TEMPLATE, i);
-      updateVariableInternal(variableKey, renewTokens[i], VariablesVisibility.ADMIN);
-    }
-    RENEW_TOKENS = renewTokens;
+    return SERVICE_API_KEY;
   }
 
   private int CONNECTION_KEEPALIVE_TIMEOUT = 30;

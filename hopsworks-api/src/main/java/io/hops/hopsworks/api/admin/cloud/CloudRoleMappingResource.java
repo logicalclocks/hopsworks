@@ -5,7 +5,7 @@ package io.hops.hopsworks.api.admin.cloud;
 
 import io.hops.hopsworks.common.cloud.TemporaryCredentialsHelper;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.audit.logger.annotation.Secret;

@@ -53,7 +53,6 @@ import io.hops.hopsworks.common.commands.featurestore.search.SearchFSReindexer;
 import io.hops.hopsworks.common.dao.kafka.TopicDefaultValueDTO;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
-import io.hops.hopsworks.common.security.ServiceJWTKeepAlive;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.OpenSearchException;
@@ -61,7 +60,6 @@ import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.jwt.exception.JWTException;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.util.Variables;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -110,8 +108,6 @@ public class SystemAdminService {
   private Settings settings;
   @EJB
   private JWTHelper jWTHelper;
-  @EJB
-  private ServiceJWTKeepAlive serviceJWTKeepAlive;
   @EJB
   private KafkaController kafkaController;
   @EJB
@@ -201,14 +197,6 @@ public class SystemAdminService {
     
     RESTApiJsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, "Variables updated");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
-  }
-
-  @PUT
-  @Path("/servicetoken")
-  public Response renewServiceJWT(@Context SecurityContext sc, @Context HttpServletRequest req)
-      throws JWTException {
-    serviceJWTKeepAlive.forceRenewServiceToken();
-    return Response.noContent().build();
   }
 
   @ApiOperation(value = "Get kafka system settings")

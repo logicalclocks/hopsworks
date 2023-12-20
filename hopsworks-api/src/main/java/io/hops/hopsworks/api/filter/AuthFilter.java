@@ -17,10 +17,10 @@ package io.hops.hopsworks.api.filter;
 
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import io.hops.hopsworks.api.filter.apiKey.ApiKeyFilter;
-import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
-import io.hops.hopsworks.api.filter.util.HopsworksSecurityContext;
-import io.hops.hopsworks.api.filter.util.Subject;
+import io.hops.hopsworks.api.auth.HopsworksSecurityContext;
+import io.hops.hopsworks.api.auth.Subject;
+import io.hops.hopsworks.api.auth.key.ApiKeyFilter;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.AlgorithmFactory;

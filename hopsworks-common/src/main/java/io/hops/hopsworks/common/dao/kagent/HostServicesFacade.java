@@ -39,10 +39,10 @@
 
 package io.hops.hopsworks.common.dao.kagent;
 
+import io.hops.hopsworks.persistence.InvalidQueryException;
 import io.hops.hopsworks.persistence.entity.host.ServiceStatus;
 import io.hops.hopsworks.persistence.entity.kagent.HostServices;
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.exceptions.InvalidQueryException;
 
 import java.util.List;
 import javax.ejb.Stateless;

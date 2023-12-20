@@ -7,6 +7,7 @@ package io.hops.hopsworks.kube.security;
 import com.google.common.base.Strings;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.hops.common.Pair;
+import io.hops.hopsworks.api.auth.key.ApiKeyUtilities;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.user.security.apiKey.ApiKeyController;
 import io.hops.hopsworks.exceptions.ApiKeyException;
@@ -52,6 +53,8 @@ public class KubeApiKeyUtils {
   private ProjectTeamFacade projectTeamFacade;
   @EJB
   private KubeServingUtils kubeServingUtils;
+  @EJB
+  private ApiKeyUtilities apiKeyUtilities;
   
   public final static String AUTH_HEADER_API_KEY_PREFIX = "ApiKey ";
   public final static String AUTH_HEADER_BEARER_PREFIX = "Bearer ";
@@ -227,7 +230,7 @@ public class KubeApiKeyUtils {
     logger.log(INFO, "Created new serving API key for user " + user.getUsername());
     
     // create Kubernetes secrets
-    ApiKey apiKey = apiKeyController.getApiKey(secret);
+    ApiKey apiKey = apiKeyUtilities.getApiKey(secret);
     // -- in hops-system
     createServingApiKeySecret(user, apiKey, secret);
     // -- in all project namespaces

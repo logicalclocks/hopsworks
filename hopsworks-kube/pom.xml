@@ -31,6 +31,12 @@
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-rest-utils</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>io.hops.hopsworks</groupId>
+          <artifactId>hopsworks-persistence</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
