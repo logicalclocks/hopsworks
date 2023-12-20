@@ -38,7 +38,6 @@
  */
 package io.hops.hopsworks.api.util;
 
-import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.JWTNotRequired;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
