@@ -120,17 +120,6 @@ public class GrafanaProxyServlet extends ProxyServlet {
   
   private final List<String> openQueries = Collections.singletonList("onlinefs_clusterj_success_write_counter_total");
   
-  protected void initTarget() throws ServletException {
-    try {
-      targetUri = "http://" + serviceDiscoveryController.constructServiceFQDNWithPort(
-        HopsworksService.GRAFANA.getName());
-      targetUriObj = new URI(targetUri);
-    } catch (Exception e) {
-      throw new ServletException("Trying to process targetUri init parameter: " + e, e);
-    }
-    targetHost = URIUtils.extractHost(targetUriObj);
-  }
-  
   @Override
   protected void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
     throws ServletException, IOException {

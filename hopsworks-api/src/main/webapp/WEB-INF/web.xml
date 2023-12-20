@@ -125,7 +125,7 @@
     <init-param>
       <!-- targetUri overwritten in the proxy -->
       <param-name>targetUri</param-name>
-      <param-value>http://localhost:3000/</param-value>
+      <param-value>http://grafana:80</param-value>
     </init-param>
     <init-param>
       <param-name>log</param-name>
