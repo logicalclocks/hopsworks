@@ -15,9 +15,10 @@
  */
 package io.hops.hopsworks.api.user.apiKey;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyUtilities;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
@@ -64,9 +65,9 @@ import java.util.logging.Logger;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ApiKeyResource {
-  
+
   private static final Logger LOGGER = Logger.getLogger(ApiKeyResource.class.getName());
-  
+
   @EJB
   private ApiKeyController apikeyController;
   @EJB
@@ -75,7 +76,9 @@ public class ApiKeyResource {
   private JWTHelper jwtHelper;
   @EJB
   private BbcGroupFacade bbcGroupFacade;
-  
+  @EJB
+  private ApiKeyUtilities apiKeyUtilities;
+
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get all api keys.", response = ApiKeyDTO.class)
@@ -93,7 +96,7 @@ public class ApiKeyResource {
     ApiKeyDTO dto = apikeyBuilder.buildItems(uriInfo, resourceRequest, user);
     return Response.ok().entity(dto).build();
   }
-  
+
   @GET
   @Path("{name}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -108,7 +111,7 @@ public class ApiKeyResource {
     ApiKeyDTO dto = apikeyBuilder.build(uriInfo, resourceRequest, user, name);
     return Response.ok().entity(dto).build();
   }
-  
+
   @GET
   @Path("key")
   @Produces(MediaType.APPLICATION_JSON)
@@ -119,11 +122,11 @@ public class ApiKeyResource {
                            @Context HttpServletRequest req,
                            @Context SecurityContext sc) throws ApiKeyException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.APIKEY);
-    ApiKey apikey = apikeyController.getApiKey(key);
+    ApiKey apikey = apiKeyUtilities.getApiKey(key);
     ApiKeyDTO dto = apikeyBuilder.build(uriInfo, resourceRequest, apikey);
     return Response.ok().entity(dto).build();
   }
-  
+
   @PUT
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Update an api key.", response = ApiKeyDTO.class)
@@ -153,7 +156,7 @@ public class ApiKeyResource {
     ApiKeyDTO dto = apikeyBuilder.build(uriInfo, resourceRequest, apikey);
     return Response.ok().entity(dto).build();
   }
-  
+
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create an api key.", response = ApiKeyDTO.class)
@@ -170,7 +173,7 @@ public class ApiKeyResource {
     dto.setKey(apiKey);
     return Response.created(dto.getHref()).entity(dto).build();
   }
-  
+
   @DELETE
   @Path("{name}")
   @ApiOperation(value = "Delete api key by name.")
@@ -183,7 +186,7 @@ public class ApiKeyResource {
     apikeyController.deleteKey(user, name);
     return Response.noContent().build();
   }
-  
+
   @DELETE
   @ApiOperation(value = "Delete all api keys.")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
@@ -194,7 +197,7 @@ public class ApiKeyResource {
     apikeyController.deleteAll(user);
     return Response.noContent().build();
   }
-  
+
   @GET
   @Path("scopes")
   @Produces(MediaType.APPLICATION_JSON)
@@ -211,7 +214,7 @@ public class ApiKeyResource {
     };
     return Response.ok().entity(scopeEntity).build();
   }
-  
+
   @GET
   @Path("session")
   @Produces(MediaType.APPLICATION_JSON)
@@ -256,6 +259,11 @@ public class ApiKeyResource {
     BbcGroup serviceGroup = bbcGroupFacade.findByGroupName("HOPS_SERVICE_USER");
     if (user.getBbcGroupCollection().size() == 1 && user.getBbcGroupCollection().contains(serviceGroup)) {
       return ApiScope.getServiceUserScopes();
+    }
+
+    BbcGroup agentGroup = bbcGroupFacade.findByGroupName("AGENT");
+    if (user.getBbcGroupCollection().contains(agentGroup)) {
+      return ApiScope.getAgentUserScopes();
     }
     return ApiScope.getUnprivileged();
   }

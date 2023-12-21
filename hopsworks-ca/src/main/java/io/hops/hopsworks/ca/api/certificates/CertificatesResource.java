@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.ca.api.certificates;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.ca.api.filter.Audience;
 import io.hops.hopsworks.ca.api.filter.NoCacheResponse;
 import io.hops.hopsworks.ca.controllers.CAException;
@@ -46,6 +47,7 @@ import io.hops.hopsworks.ca.controllers.PKI;
 import io.hops.hopsworks.ca.controllers.PKIUtils;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.pki.PKICertificate;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -117,6 +119,7 @@ public class CertificatesResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get x509 certificate in pem format", response = CSRView.class)
   @JWTRequired(acceptedTokens={Audience.SERVICES, Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.AUTH}, allowedUserRoles = {"HOPS_ADMIN", "AGENT"})
   public Response getCertificate(
       @ApiParam(value = "X.500 name of the Certificate", required = true)
       @PathParam("name") String name,

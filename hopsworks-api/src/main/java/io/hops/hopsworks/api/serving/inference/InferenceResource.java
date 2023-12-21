@@ -19,8 +19,7 @@ package io.hops.hopsworks.api.serving.inference;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
-import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.featureFlags.FeatureFlagRequired;
 import io.hops.hopsworks.api.filter.featureFlags.FeatureFlags;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -32,7 +31,6 @@ import io.hops.hopsworks.exceptions.InferenceException;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -71,13 +69,11 @@ public class InferenceResource {
   private InferenceController inferenceController;
   @EJB
   private ProjectFacade projectFacade;
-  @EJB
-  private JWTHelper jWTHelper;
-  
+
   private Project project;
 
   private final static Logger logger = Logger.getLogger(InferenceResource.class.getName());
-  
+
   public void setProjectId(Integer projectId) {
     this.project = projectFacade.find(projectId);
   }
@@ -103,7 +99,6 @@ public class InferenceResource {
     if (!Strings.isNullOrEmpty(modelVersion)) {
       version = Integer.valueOf(modelVersion.split("/")[2]);
     }
-    Users user = jWTHelper.getUserPrincipal(sc);
     String authHeader = httpHeaders.getRequestHeader(HttpHeaders.AUTHORIZATION).get(0);
     String inferenceResult = inferenceController.infer(project, sc.getUserPrincipal().getName(), modelName, version,
       verb, inferenceRequestJson, authHeader);

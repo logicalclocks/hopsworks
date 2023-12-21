@@ -40,6 +40,7 @@ package io.hops.hopsworks.common.user;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
+import io.hops.hopsworks.api.auth.UserStatusValidator;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.persistence.entity.certificates.UserCerts;
 import io.hops.hopsworks.persistence.entity.project.Project;

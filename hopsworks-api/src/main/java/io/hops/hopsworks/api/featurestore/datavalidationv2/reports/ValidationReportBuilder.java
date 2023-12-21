@@ -18,7 +18,6 @@ package io.hops.hopsworks.api.featurestore.datavalidationv2.reports;
 
 import io.hops.hopsworks.api.featurestore.datavalidationv2.results.ValidationResultBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.AbstractFacade.CollectionInfo;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.ValidationReportController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.ValidationReportDTO;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.results.ValidationResultDTO;
@@ -27,6 +26,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregro
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationReport;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationResult;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.util.AbstractFacade;
 import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
@@ -97,7 +97,7 @@ public class ValidationReportBuilder {
     ValidationReportDTO dtos = new ValidationReportDTO();
     uri(dtos, uriInfo, project, featuregroup);
 
-    CollectionInfo<ValidationReport> validationReports =
+    AbstractFacade.CollectionInfo<ValidationReport> validationReports =
       validationReportController.getAllValidationReportByFeatureGroup(
       resourceRequest.getOffset(), resourceRequest.getLimit(), resourceRequest.getSort(), resourceRequest.getFilter(),
       featuregroup);

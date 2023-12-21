@@ -50,7 +50,7 @@ describe "On #{ENV['OS']}" do
 
         expect(conf_dto['items'].length > 0).to be true
 
-        hidden = conf_dto['items'].select {|c| c['name'].eql?("service_master_jwt")}
+        hidden = conf_dto['items'].select {|c| c['name'].eql?("int_service_api_key")}
         expect(hidden[0]['hide']).to be true
       end
 

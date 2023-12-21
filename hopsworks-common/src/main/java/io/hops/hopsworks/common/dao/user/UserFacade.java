@@ -39,7 +39,7 @@
 package io.hops.hopsworks.common.dao.user;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.exceptions.InvalidQueryException;
+import io.hops.hopsworks.persistence.InvalidQueryException;
 import io.hops.hopsworks.persistence.entity.user.BbcGroup;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.UserGroup;

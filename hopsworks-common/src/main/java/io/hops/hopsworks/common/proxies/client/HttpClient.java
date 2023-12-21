@@ -53,8 +53,7 @@ import java.security.GeneralSecurityException;
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class HttpClient {
-  
-  private static final String AUTH_HEADER_CONTENT = "Bearer %s";
+  private static final String API_KEY_AUTH_HEADER = "ApiKey %s";
   
   @EJB
   private Settings settings;
@@ -178,7 +177,7 @@ public class HttpClient {
 
   public void setAuthorizationHeader(HttpRequest httpRequest) {
     httpRequest.setHeader(HttpHeaders.AUTHORIZATION,
-        String.format(AUTH_HEADER_CONTENT, settings.getServiceMasterJWT()));
+        String.format(API_KEY_AUTH_HEADER, settings.getServiceApiKey()));
   }
 
   public ObjectMapper getObjectMapper() {

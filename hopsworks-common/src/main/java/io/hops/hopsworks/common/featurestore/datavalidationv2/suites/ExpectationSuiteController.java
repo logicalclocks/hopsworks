@@ -17,7 +17,6 @@
 package io.hops.hopsworks.common.featurestore.datavalidationv2.suites;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.AbstractFacade.CollectionInfo;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.expectations.ExpectationController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.expectations.ExpectationDTO;
@@ -30,6 +29,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalida
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ExpectationSuite;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.GreatExpectation;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.util.AbstractFacade;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -71,7 +71,7 @@ public class ExpectationSuiteController {
   ////// Great Expectations
   //////////////////////////////////////////////////
 
-  public CollectionInfo<GreatExpectation> getAllGreatExpectations() {
+  public AbstractFacade.CollectionInfo<GreatExpectation> getAllGreatExpectations() {
     return greatExpectationFacade.findAllGreatExpectation();
   }
 

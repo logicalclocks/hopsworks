@@ -15,6 +15,8 @@
  */
 package io.hops.hopsworks.persistence.entity.user.security.apiKey;
 
+import com.google.common.collect.Sets;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -35,7 +37,8 @@ public enum ApiScope {
   MODELREGISTRY(false, true),
   USER(false, true),
   GIT(false, false),
-  PYTHON_LIBRARIES(false, false);
+  PYTHON_LIBRARIES(false, false),
+  AUTH(true, false);
 
   private final boolean privileged;
   private final boolean saas;// Hopsworks as a service user scopes
@@ -69,5 +72,12 @@ public enum ApiScope {
     return Arrays.stream(ApiScope.values())
       .filter(as -> as.saas)
       .collect(Collectors.toSet());
+  }
+
+  private static final Set<ApiScope> AGENT_SCOPES = Sets.newHashSet(AUTH);
+  public static Set<ApiScope> getAgentUserScopes() {
+    Set<ApiScope> unprivileged = getUnprivileged();
+    unprivileged.addAll(AGENT_SCOPES);
+    return unprivileged;
   }
 }

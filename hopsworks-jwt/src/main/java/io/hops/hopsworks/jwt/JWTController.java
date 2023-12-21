@@ -26,13 +26,11 @@ import io.hops.hopsworks.jwt.dao.JwtSigningKeyFacade;
 import io.hops.hopsworks.jwt.exception.AccessException;
 import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.jwt.exception.InvalidationException;
-import io.hops.hopsworks.jwt.exception.JWTException;
 import io.hops.hopsworks.jwt.exception.NotRenewableException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.hops.hopsworks.jwt.exception.VerificationException;
 import io.hops.hopsworks.persistence.entity.jwt.InvalidJwt;
 import io.hops.hopsworks.persistence.entity.jwt.JwtSigningKey;
-import org.apache.commons.lang3.tuple.Pair;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -463,69 +461,6 @@ public class JWTController {
       invalidateJWT(jwt.getId(), jwt.getExpiresAt(), _jwt.getExpLeeway());
     }
     return renewedToken;
-  }
-  
-  public Pair<String, String[]> renewServiceToken(String oneTimeRenewalToken, String serviceToken, Date newExpiration,
-      Date newNotBefore, Long serviceJWTLifetimeMS, String username, List<String> userRoles,
-      List<String> audience, String remoteHostname, String issuer, String defaultJWTSigningKeyName, boolean force)
-      throws JWTException, NoSuchAlgorithmException {
-    Map<String, Object> claims = new HashMap<>(4);
-    claims.put(Constants.RENEWABLE, false);
-    claims.put(Constants.EXPIRY_LEEWAY, 3600);
-    claims.put(Constants.ROLES, userRoles.toArray(new String[1]));
-    String renewalKeyName = getServiceOneTimeJWTSigningKeyname(username, remoteHostname);
-    LocalDateTime masterExpiration = newExpiration.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-    LocalDateTime notBefore = computeNotBefore4ServiceRenewalTokens(masterExpiration);
-    LocalDateTime expiresAt = notBefore.plus(serviceJWTLifetimeMS, ChronoUnit.MILLIS);
-    JsonWebToken jwtSpecs = new JsonWebToken();
-    jwtSpecs.setSubject(username);
-    jwtSpecs.setIssuer(issuer);
-    jwtSpecs.setAudience(audience);
-    jwtSpecs.setKeyId(renewalKeyName);
-    jwtSpecs.setNotBefore(localDateTime2Date(notBefore));
-    jwtSpecs.setExpiresAt(localDateTime2Date(expiresAt));
-    try {
-      // Then generate the new one-time tokens
-      String[] renewalTokens = generateOneTimeTokens4ServiceJWTRenewal(jwtSpecs, claims, defaultJWTSigningKeyName);
-      
-      String signingKeyId = getSignKeyID(renewalTokens[0]);
-      DecodedJWT serviceJWT = decodeToken(serviceToken);
-      claims.clear();
-      claims.put(Constants.RENEWABLE, false);
-      claims.put(Constants.SERVICE_JWT_RENEWAL_KEY_ID, signingKeyId);
-      claims.put(Constants.EXPIRY_LEEWAY, getExpLeewayClaim(serviceJWT));
-      
-      // Finally renew the service master token
-      String renewedServiceToken = renewToken(serviceToken, newExpiration, newNotBefore, false, claims, force);
-      invalidate(oneTimeRenewalToken);
-      return Pair.of(renewedServiceToken, renewalTokens);
-    } catch (JWTException | NoSuchAlgorithmException ex) {
-      if (renewalKeyName != null) {
-        deleteSigningKey(renewalKeyName);
-      }
-      throw ex;
-    }
-  }
-  
-  public void invalidateServiceToken(String serviceToken2invalidate, String defaultJWTSigningKeyName) {
-    DecodedJWT serviceJWT2invalidate = decodeToken(serviceToken2invalidate);
-    try {
-      invalidate(serviceToken2invalidate);
-    } catch (InvalidationException ex) {
-      LOGGER.log(Level.WARNING, "Could not invalidate service JWT with ID " + serviceJWT2invalidate.getId()
-          + ". Continuing with deleting signing key");
-    }
-    Claim signingKeyID = serviceJWT2invalidate.getClaim(Constants.SERVICE_JWT_RENEWAL_KEY_ID);
-    if (signingKeyID != null && !signingKeyID.isNull()) {
-      // Do not use Claim.asInt, it returns null
-      JwtSigningKey signingKey = findSigningKeyById(Integer.parseInt(signingKeyID.asString()));
-      if (signingKey != null && defaultJWTSigningKeyName != null) {
-        if (!defaultJWTSigningKeyName.equals(signingKey.getName())
-            && !ONE_TIME_JWT_SIGNING_KEY_NAME.equals(signingKey.getName())) {
-          deleteSigningKey(signingKey.getName());
-        }
-      }
-    }
   }
   
   public String getSignKeyID(String token) {

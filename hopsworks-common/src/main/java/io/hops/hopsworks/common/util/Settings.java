@@ -300,9 +300,9 @@ public class Settings implements Serializable {
   private static final String VARIABLE_JWT_SIGNING_KEY_NAME = "jwt_signing_key_name";
   private static final String VARIABLE_JWT_ISSUER_KEY = "jwt_issuer";
 
-  private static final String VARIABLE_SERVICE_MASTER_JWT = "service_master_jwt";
   private static final String VARIABLE_SERVICE_JWT_LIFETIME_MS = "service_jwt_lifetime_ms";
   private static final String VARIABLE_SERVICE_JWT_EXP_LEEWAY_SEC = "service_jwt_exp_leeway_sec";
+  private static final String VARIABLE_SERVICE_API_KEY = "int_service_api_key";
 
   private static final String VARIABLE_CONNECTION_KEEPALIVE_TIMEOUT = "keepalive_timeout";
 
@@ -322,7 +322,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_FS_JAVA_JOB_UTIL_PATH = "fs_java_job_util";
   private static final String VARIABLE_HDFS_FILE_OP_JOB_UTIL = "hdfs_file_op_job_util";
   private static final String VARIABLE_HDFS_FILE_OP_JOB_DRIVER_MEM = "hdfs_file_op_job_driver_mem";
-  
+
   // Storage connectors
 
   private final static String VARIABLE_ENABLE_REDSHIFT_STORAGE_CONNECTORS = "enable_redshift_storage_connectors";
@@ -447,7 +447,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_DOCKER_NAMESPACE = "docker_namespace";
   private static final String VARIABLE_MANAGED_DOCKER_REGISTRY =
       "managed_docker_registry";
-  
+
   private String setVar(String varName, String defaultValue) {
     return setStrVar(varName, defaultValue);
   }
@@ -795,7 +795,7 @@ public class Settings implements Serializable {
       KUBE_TAINTED_NODES = setStrVar(VARIABLE_KUBE_TAINTED_NODES, KUBE_TAINTED_NODES);
       KUBE_TAINTED_NODES_MONITOR_INTERVAL = setStrVar(VARIABLE_KUBE_TAINTED_NODES_MONITOR_INTERVAL,
           KUBE_TAINTED_NODES_MONITOR_INTERVAL);
-  
+
       HOPSWORKS_ENTERPRISE = setBoolVar(VARIABLE_HOPSWORKS_ENTERPRISE, HOPSWORKS_ENTERPRISE);
 
       JUPYTER_HOST = setStrVar(VARIABLE_JUPYTER_HOST, JUPYTER_HOST);
@@ -808,8 +808,6 @@ public class Settings implements Serializable {
 
       SERVICE_JWT_LIFETIME_MS = setLongVar(VARIABLE_SERVICE_JWT_LIFETIME_MS, SERVICE_JWT_LIFETIME_MS);
       SERVICE_JWT_EXP_LEEWAY_SEC = setIntVar(VARIABLE_SERVICE_JWT_EXP_LEEWAY_SEC, SERVICE_JWT_EXP_LEEWAY_SEC);
-
-      populateServiceJWTCache();
 
       CONNECTION_KEEPALIVE_TIMEOUT = setIntVar(VARIABLE_CONNECTION_KEEPALIVE_TIMEOUT, CONNECTION_KEEPALIVE_TIMEOUT);
 
@@ -914,7 +912,7 @@ public class Settings implements Serializable {
       DOCKER_CGROUP_PARENT = setStrVar(VARIABLE_DOCKER_CGROUP_PARENT, DOCKER_CGROUP_PARENT);
 
       PROMETHEUS_PORT = setIntVar(VARIABLE_PROMETHEUS_PORT, PROMETHEUS_PORT);
-  
+
       SKIP_NAMESPACE_CREATION = setBoolVar(VARIABLE_SKIP_NAMESPACE_CREATION,
           SKIP_NAMESPACE_CREATION);
 
@@ -931,7 +929,7 @@ public class Settings implements Serializable {
           QUOTAS_MAX_PARALLEL_EXECUTIONS);
       QUOTAS_MAX_PARALLEL_EXECUTIONS = setLongVar(VARIABLE_QUOTAS_MAX_PARALLEL_EXECUTIONS,
           QUOTAS_MAX_PARALLEL_EXECUTIONS);
-      
+
       SQL_MAX_SELECT_IN = setIntVar(VARIABLE_SQL_MAX_SELECT_IN, SQL_MAX_SELECT_IN);
 
       ENABLE_JUPYTER_PYTHON_KERNEL_NON_KUBERNETES = setBoolVar(VARIABLE_ENABLE_JUPYTER_PYTHON_KERNEL_NON_KUBERNETES,
@@ -950,6 +948,8 @@ public class Settings implements Serializable {
         COMMAND_SEARCH_FS_HISTORY_CLEAN_PERIOD);
       COMMAND_SEARCH_FS_RETRY_PER_CLEAN_INTERVAL = setIntVar(VARIABLE_COMMAND_SEARCH_FS_RETRY_PER_CLEAN_INTERVAL,
         COMMAND_SEARCH_FS_RETRY_PER_CLEAN_INTERVAL);
+      SERVICE_API_KEY = setVar(VARIABLE_SERVICE_API_KEY, SERVICE_API_KEY);
+
       OPENSEARCH_DEFAULT_EMBEDDING_INDEX_NAME = setStrVar(
           VARIABLE_OPENSEARCH_DEFAULT_EMBEDDING_INDEX, OPENSEARCH_DEFAULT_EMBEDDING_INDEX_NAME);
       OPENSEARCH_NUM_DEFAULT_EMBEDDING_INDEX = setIntVar(
@@ -2332,17 +2332,7 @@ public class Settings implements Serializable {
     checkCache();
     return DELA_ENABLED;
   }
-  
-  private void populateServiceJWTCache() {
-    SERVICE_MASTER_JWT = setStrVar(VARIABLE_SERVICE_MASTER_JWT, SERVICE_MASTER_JWT);
-    RENEW_TOKENS = new String[NUM_OF_SERVICE_RENEW_TOKENS];
-    for (int i = 0; i < NUM_OF_SERVICE_RENEW_TOKENS; i++) {
-      String variableKey = String.format(SERVICE_RENEW_TOKEN_VARIABLE_TEMPLATE, i);
-      String token = setStrVar(variableKey, "");
-      RENEW_TOKENS[i] = token;
-    }
-  }
-  
+
   //************************************************ZOOKEEPER********************************************************
   public static final int ZOOKEEPER_SESSION_TIMEOUT_MS = 30 * 1000;//30 seconds
   //Zookeeper END
@@ -2380,7 +2370,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_OAUTH_LOGOUT_REDIRECT_URI = "oauth_logout_redirect_uri";
   private static final String VARIABLE_OAUTH_ACCOUNT_STATUS = "oauth_account_status";
   private static final String VARIABLE_OAUTH_GROUP_MAPPING = "oauth_group_mapping";
-  
+
   private static final String VARIABLE_REMOTE_AUTH_NEED_CONSENT = "remote_auth_need_consent";
   
   private static final String VARIABLE_DISABLE_PASSWORD_LOGIN = "disable_password_login";
@@ -2464,7 +2454,7 @@ public class Settings implements Serializable {
     OAUTH_LOGOUT_REDIRECT_URI = setStrVar(VARIABLE_OAUTH_LOGOUT_REDIRECT_URI, OAUTH_LOGOUT_REDIRECT_URI);
     OAUTH_ACCOUNT_STATUS = setIntVar(VARIABLE_OAUTH_ACCOUNT_STATUS, OAUTH_ACCOUNT_STATUS);
     OAUTH_GROUP_MAPPING = setStrVar(VARIABLE_OAUTH_GROUP_MAPPING, OAUTH_GROUP_MAPPING);
-  
+
     REMOTE_AUTH_NEED_CONSENT = setBoolVar(VARIABLE_REMOTE_AUTH_NEED_CONSENT, REMOTE_AUTH_NEED_CONSENT);
     
     DISABLE_PASSWORD_LOGIN = setBoolVar(VARIABLE_DISABLE_PASSWORD_LOGIN, DISABLE_PASSWORD_LOGIN);
@@ -2473,7 +2463,7 @@ public class Settings implements Serializable {
   
     LDAP_GROUP_MAPPING_SYNC_INTERVAL = setLongVar(VARIABLE_LDAP_GROUP_MAPPING_SYNC_INTERVAL,
       LDAP_GROUP_MAPPING_SYNC_INTERVAL);
-  
+
     VALIDATE_REMOTE_USER_EMAIL_VERIFIED =
       setBoolVar(VARIABLE_VALIDATE_REMOTE_USER_EMAIL_VERIFIED, VALIDATE_REMOTE_USER_EMAIL_VERIFIED);
     
@@ -2595,7 +2585,7 @@ public class Settings implements Serializable {
     checkCache();
     return OAUTH_GROUP_MAPPING;
   }
-  
+
   public void updateOAuthGroupMapping(String mapping) {
     updateVariableInternal(VARIABLE_OAUTH_GROUP_MAPPING, mapping, VariablesVisibility.ADMIN);
   }
@@ -3267,32 +3257,10 @@ public class Settings implements Serializable {
     return JWT_ISSUER;
   }
 
-  private String SERVICE_MASTER_JWT = "";
-  public synchronized String getServiceMasterJWT() {
+  private String SERVICE_API_KEY = "";
+  public synchronized String getServiceApiKey() {
     checkCache();
-    return SERVICE_MASTER_JWT;
-  }
-
-  public synchronized void setServiceMasterJWT(String JWT) {
-    updateVariableInternal(VARIABLE_SERVICE_MASTER_JWT, JWT, VariablesVisibility.ADMIN);
-    em.flush();
-    SERVICE_MASTER_JWT = JWT;
-  }
-
-  private final int NUM_OF_SERVICE_RENEW_TOKENS = 5;
-  private final static String SERVICE_RENEW_TOKEN_VARIABLE_TEMPLATE = "service_renew_token_%d";
-  private String[] RENEW_TOKENS = new String[0];
-  public synchronized String[] getServiceRenewJWTs() {
-    checkCache();
-    return RENEW_TOKENS;
-  }
-
-  public synchronized void setServiceRenewJWTs(String[] renewTokens) {
-    for (int i = 0; i < renewTokens.length; i++) {
-      String variableKey = String.format(SERVICE_RENEW_TOKEN_VARIABLE_TEMPLATE, i);
-      updateVariableInternal(variableKey, renewTokens[i], VariablesVisibility.ADMIN);
-    }
-    RENEW_TOKENS = renewTokens;
+    return SERVICE_API_KEY;
   }
 
   private int CONNECTION_KEEPALIVE_TIMEOUT = 30;

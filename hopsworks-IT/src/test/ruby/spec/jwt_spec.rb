@@ -21,22 +21,6 @@ describe "On #{ENV['OS']}" do
     before :all do
       reset_session
     end
-    
-    context "#not logged in" do
-      it "should not be able to renew service JWT" do
-        put "#{ENV['HOPSWORKS_API']}/jwt/service", {
-              token: "some_token",
-              expiresAt: "1234",
-              nbf: "1234"
-            }
-        expect_status_details(401)
-      end
-
-      it "should not be able to invalidate JWT" do
-        delete "#{ENV['HOPSWORKS_API']}/jwt/service/some_token"
-        expect_status_details(401)
-      end
-    end
 
     context "#users" do
       before :all do
@@ -81,72 +65,6 @@ describe "On #{ENV['OS']}" do
           setVar "service_jwt_lifetime_ms", @service_jwt_lifetime
           refresh_variables
           reset_session
-        end
-
-        it "should be able to renew master jwt" do
-
-          now = Time.now
-          not_before = now.strftime("%Y-%m-%dT%H:%M:%S.%L%z")
-          exp = now + 300
-          new_expiration = exp.strftime("%Y-%m-%dT%H:%M:%S.%L%z")
-          
-          # Use one-time token
-          Airborne.configure do |config|
-            config.headers = {}
-            config.headers["Authorization"] = "Bearer #{@renew_tokens[0]}"
-          end
-          sleep 1
-          put "#{ENV['HOPSWORKS_API']}/jwt/service",
-              {
-                token: @master_token,
-                expiresAt: new_expiration,
-                nbf: not_before
-              }
-
-          expect_status_details(200)
-          
-          new_master_token = json_body[:jwt][:token]
-          new_one_time_tokens = json_body[:renewTokens]
-          expect(new_master_token).not_to be_nil
-          expect(new_master_token).not_to be_empty
-
-          expect(new_one_time_tokens.length).to eql(5)
-
-          master_jwt = JWT.decode new_master_token, nil, false
-
-          exp_response = Time.at(master_jwt[0]['exp'])
-          nbf_response = Time.at(master_jwt[0]['nbf'])
-          # Do not compare milliseconds, there might be different due to conversion
-          expect(now.strftime("%Y-%m-%dT%H:%M:%S%z")).to eql(nbf_response.strftime("%Y-%m-%dT%H:%M:%S%z"))
-          expect(exp.strftime("%Y-%m-%dT%H:%M:%S%z")).to eql(exp_response.strftime("%Y-%m-%dT%H:%M:%S%z"))
-          
-          # Previous token should still be valid
-          Airborne.configure do |config|
-            config.headers["Authorization"] = "Bearer #{@master_token}"
-          end
-          get "#{ENV['HOPSWORKS_CA']}/token"
-          expect_status_details(200)
-
-          # Invalidate previous master token
-          Airborne.configure do |config|
-            config.headers["Authorization"] = "Bearer #{new_master_token}"
-          end
-          delete "#{ENV['HOPSWORKS_API']}/jwt/service/#{@master_token}"
-          expect_status_details(200)
-
-          # Subsequent calls with the old master key should fail
-          Airborne.configure do |config|
-            config.headers["Authorization"] = "Bearer #{@master_token}"
-          end
-          get "#{ENV['HOPSWORKS_CA']}/token"
-          expect_status_details(401)
-
-          # But new master should be still valid...
-          Airborne.configure do |config|
-            config.headers["Authorization"] = "Bearer #{new_master_token}"
-          end
-          get "#{ENV['HOPSWORKS_CA']}/token"
-          expect_status_details(200)
         end
       end
       

@@ -30,7 +30,7 @@ import io.hops.hopsworks.api.alert.AlertBuilder;
 import io.hops.hopsworks.api.alert.AlertDTO;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.project.alert.ProjectAlertsDTO;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.alert.AlertController;

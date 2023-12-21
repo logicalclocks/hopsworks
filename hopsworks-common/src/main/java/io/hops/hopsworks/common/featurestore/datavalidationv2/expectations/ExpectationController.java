@@ -17,7 +17,6 @@
 package io.hops.hopsworks.common.featurestore.datavalidationv2.expectations;
 
 
-import io.hops.hopsworks.common.dao.AbstractFacade.CollectionInfo;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -25,6 +24,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreAc
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.Expectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ExpectationSuite;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.util.AbstractFacade;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import org.json.JSONArray;
@@ -141,7 +141,8 @@ public class ExpectationController {
     }
   }
 
-  public CollectionInfo<Expectation> getExpectationsByExpectationSuite(ExpectationSuite expectationSuite) {
+  public AbstractFacade.CollectionInfo<Expectation> getExpectationsByExpectationSuite(
+      ExpectationSuite expectationSuite) {
     return expectationFacade.findByExpectationSuite(expectationSuite);
   }
 

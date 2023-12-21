@@ -17,7 +17,7 @@
 package io.hops.hopsworks.api.admin.conf;
 
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.util.VariablesFacade;
 import io.hops.hopsworks.common.util.Settings;
