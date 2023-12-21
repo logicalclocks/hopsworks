@@ -137,7 +137,7 @@
     <org-json.version>20231013</org-json.version>
     <persistence.version>2.5.2</persistence.version>
     <projectlombok.version>1.18.6</projectlombok.version>
-    <protobuf-java.version>3.9.1</protobuf-java.version>
+    <protobuf-java.version>3.16.3</protobuf-java.version>
     <reflections.version>0.9.12</reflections.version>
     <resilience4j-retry.version>0.16.0</resilience4j-retry.version>
     <service-discovery-client.version>0.6-SNAPSHOT</service-discovery-client.version>
