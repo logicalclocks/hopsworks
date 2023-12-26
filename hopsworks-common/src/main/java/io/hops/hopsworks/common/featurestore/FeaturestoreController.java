@@ -43,7 +43,6 @@ import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
-import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -64,6 +63,7 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -136,7 +136,7 @@ public class FeaturestoreController {
    */
   public Dataset getProjectFeaturestoreDataset(Project project) throws FeaturestoreException {
     return  project.getDatasetCollection().stream()
-      .filter(ds -> ds.getDsType() == DatasetType.FEATURESTORE)
+      .filter(ds -> ds.getFeatureStore() != null)
       .findFirst()
       .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND,
         Level.INFO, "Could not find feature store for project: " + project.getName()));
@@ -150,8 +150,8 @@ public class FeaturestoreController {
   public Featurestore getProjectFeaturestore(Project project) throws FeaturestoreException {
     Collection<Dataset> dsInProject = project.getDatasetCollection();
     return  dsInProject.stream()
-        .filter(ds -> ds.getDsType() == DatasetType.FEATURESTORE)
         .map(Dataset::getFeatureStore)
+        .filter(Objects::nonNull)
         .findFirst()
         .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND,
             Level.INFO, "Could not find feature store for project: " + project.getName()));
@@ -163,7 +163,7 @@ public class FeaturestoreController {
    * @param project the project to list featurestores for
    * @return a list of featurestore entities
    */
-  private List<Featurestore> getProjectFeaturestores(Project project) {
+  public List<Featurestore> getProjectFeaturestores(Project project) {
     Collection<Dataset> dsInProject = project.getDatasetCollection();
     // Add all datasets shared with the project
     dsInProject.addAll(project.getDatasetSharedWithCollection().stream()
@@ -171,8 +171,9 @@ public class FeaturestoreController {
         .filter(DatasetSharedWith::getAccepted)
         .map(DatasetSharedWith::getDataset).collect(Collectors.toList()));
     return  dsInProject.stream()
-        .filter(ds -> ds.getDsType() == DatasetType.FEATURESTORE)
-        .map(Dataset::getFeatureStore).collect(Collectors.toList());
+        .map(Dataset::getFeatureStore)
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
   }
 
   /**
