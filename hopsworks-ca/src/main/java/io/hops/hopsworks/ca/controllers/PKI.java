@@ -839,6 +839,20 @@ public class PKI {
         }
       }
     }
+    Optional<String> locality = parseX509Locality(b.certificationRequest);
+    if (locality.isPresent()) {
+      if (locality.get().equals("strimzica")) {
+        try {
+          // This certificate is for Strimzi operator CA, make it able to sign other certificates
+          b.certificateBuilder.replaceExtension(Extension.basicConstraints, true, new BasicConstraints(3));
+          b.certificateBuilder.replaceExtension(Extension.keyUsage, true,
+              new KeyUsage(KeyUsage.digitalSignature | KeyUsage.keyEncipherment | KeyUsage.dataEncipherment
+                  | KeyUsage.keyCertSign));
+        } catch (CertIOException ex) {
+          throw new RuntimeException(ex);
+        }
+      }
+    }
     return null;
   };
 
@@ -958,6 +972,9 @@ public class PKI {
 
   @VisibleForTesting
   Optional<String> parseX509Locality(PKCS10CertificationRequest csr) {
+    if (csr == null) {
+      return Optional.empty();
+    }
     return parseX509Rdn(csr, BCStyle.L);
   }
 
@@ -1311,7 +1328,7 @@ public class PKI {
 
   private static final Function<X509v3CertificateBuilder, Void> INTERMEDIATE_EXTENSIONS = (builder) -> {
     try {
-      builder.addExtension(Extension.basicConstraints, true, new BasicConstraints(0));
+      builder.addExtension(Extension.basicConstraints, true, new BasicConstraints(5));
       builder.addExtension(Extension.keyUsage, true,
           new KeyUsage(KeyUsage.keyCertSign | KeyUsage.cRLSign | KeyUsage.digitalSignature));
       return null;
