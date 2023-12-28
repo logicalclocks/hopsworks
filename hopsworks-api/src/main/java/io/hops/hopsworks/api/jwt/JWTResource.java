@@ -103,6 +103,7 @@ public class JWTResource {
   @DELETE
   @Path("/key/{keyName}")
   @ApiOperation(value = "Delete a JWT signing key")
+  @ApiKeyRequired(acceptedScopes = {ApiScope.AUTH}, allowedUserRoles = {"HOPS_ADMIN", "AGENT"})
   public Response removeSigingKey(
       @ApiParam(value = "Name of the signing key to remove", required = true)
       @PathParam("keyName") String keyName, @Context SecurityContext sc) {
