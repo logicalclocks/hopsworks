@@ -26,7 +26,6 @@ import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
-import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.connectionChecker.ConnectionChecker;
 import io.hops.hopsworks.common.featurestore.storageconnectors.connectionChecker.ConnectionCheckerDTO;
@@ -127,8 +126,7 @@ public class FeaturestoreStorageConnectorService {
   @Logged(logLevel = LogLevel.OFF)
   public void setFeaturestoreId(Integer featurestoreId) throws FeaturestoreException {
     //This call verifies that the project have access to the featurestoreId provided
-    FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId);
-    this.featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
+    this.featurestore = featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId);
   }
   
   /**

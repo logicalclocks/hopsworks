@@ -27,7 +27,6 @@ import io.hops.hopsworks.api.provenance.FeatureViewProvenanceResource;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
-import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -198,9 +197,9 @@ public class FeatureViewService {
   }
 
   @Logged(logLevel = LogLevel.OFF)
-  public void setFeaturestore(Integer id) throws FeaturestoreException {
-    FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithId(project, id);
-    this.featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
+  public void setFeaturestore(Integer featurestoreId) throws FeaturestoreException {
+    //This call verifies that the project have access to the featurestoreId provided
+    this.featurestore = featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId);
   }
   
   @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/provenance")

@@ -56,7 +56,6 @@ import io.hops.hopsworks.common.dao.kafka.schemas.CompatibilityCheck;
 import io.hops.hopsworks.common.dao.kafka.schemas.CompatibilityLevel;
 import io.hops.hopsworks.common.dao.kafka.schemas.SchemaRegistryError;
 import io.hops.hopsworks.common.dao.kafka.schemas.SubjectDTO;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.kafka.FeatureStoreKafkaConnectorDTO;
 import io.hops.hopsworks.common.kafka.KafkaController;
@@ -104,8 +103,6 @@ public class KafkaResource {
   private static final Logger LOGGER = Logger.getLogger(KafkaResource.class.getName());
 
   @EJB
-  private ProjectFacade projectFacade;
-  @EJB
   private KafkaController kafkaController;
   @EJB
   private TopicsBuilder topicsBuilder;
@@ -126,13 +123,8 @@ public class KafkaResource {
   }
 
   @Logged(logLevel = LogLevel.OFF)
-  public void setProjectId(Integer projectId) {
-    this.project = this.projectFacade.find(projectId);
-  }
-
-  @Logged(logLevel = LogLevel.OFF)
-  public Project getProject() {
-    return project;
+  public void setProject(Project project) {
+    this.project = project;
   }
 
   @ApiOperation(value = "Retrieve Kafka broker endpoints.")

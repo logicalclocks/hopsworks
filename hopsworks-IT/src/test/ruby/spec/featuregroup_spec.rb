@@ -3725,6 +3725,44 @@ describe "On #{ENV['OS']}" do
 
         get_featuregroup_checked(@project_read_only[:id], fg[:name], fs_id: fs["featurestoreId"])
       end
+
+      # get subject
+
+      it 'data owner should be able to get fg schema' do
+        create_session(@user1[:email], @user1_params[:password])
+        fs = get_featurestore(@project1[:id])
+        json_result, _ = create_stream_featuregroup(@project1[:id], fs["featurestoreId"])
+        expect_status_details(201)
+        fg = JSON.parse(json_result, :symbolize_names => true)
+
+        create_session(@user_data_owner[:email], @user_data_owner_params[:password])
+        get_featurestore_subject_details(@project_read_only, fs["featurestoreId"], "#{fg[:name]}_#{fg[:version]}", 1)
+        expect_status_details(200)
+      end
+
+      it 'data scientist should be able to get fg schema' do
+        create_session(@user1[:email], @user1_params[:password])
+        fs = get_featurestore(@project1[:id])
+        json_result, _ = create_stream_featuregroup(@project1[:id], fs["featurestoreId"])
+        expect_status_details(201)
+        fg = JSON.parse(json_result, :symbolize_names => true)
+
+        create_session(@user_data_scientist[:email], @user_data_scientist_params[:password])
+        get_featurestore_subject_details(@project_read_only, fs["featurestoreId"], "#{fg[:name]}_#{fg[:version]}", 1)
+        expect_status_details(200)
+      end
+
+      it 'user should not be able to get fg schema from project that is not shared' do
+        create_session(@user2[:email], @user2_params[:password])
+        fs = get_featurestore(@project_read_only[:id])
+        json_result, _ = create_stream_featuregroup(@project_read_only[:id], fs["featurestoreId"])
+        expect_status_details(201)
+        fg = JSON.parse(json_result, :symbolize_names => true)
+
+        create_session(@user1[:email], @user1_params[:password])
+        get_featurestore_subject_details(@project1, fs["featurestoreId"], "#{fg[:name]}_#{fg[:version]}", 1)
+        expect_status_details(404)
+      end
     end
     
     context "shared on demand feature group permission" do

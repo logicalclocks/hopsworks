@@ -708,8 +708,9 @@ public class ProjectService {
 
   @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/kafka")
-  public KafkaResource kafka(@PathParam("projectId") Integer id) {
-    this.kafka.setProjectId(id);
+  public KafkaResource kafka(@PathParam("projectId") Integer id) throws ProjectException {
+    Project project = projectController.findProjectById(id);
+    this.kafka.setProject(project);
     return this.kafka;
   }
 

@@ -84,4 +84,8 @@ module SchemaHelper
   def update_topic_subject_version(project, topic, subject, version)
     put "#{ENV['HOPSWORKS_API']}/project/#{project.id.to_s}/kafka/topics/#{topic}/subjects/#{subject}/versions/#{version}"
   end
+
+  def get_featurestore_subject_details(project, fs_id, subject, version)
+    get "#{ENV['HOPSWORKS_API']}/project/#{project.id.to_s}/featurestores/#{fs_id.to_s}/kafka/subjects/#{subject}/versions/#{version.to_s}"
+  end
 end
