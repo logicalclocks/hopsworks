@@ -385,7 +385,6 @@ public class FeaturestoreService {
    * @return the feature store kafka resource
    * @throws FeaturestoreException
    */
-  @Logged(logLevel = LogLevel.OFF)
   @Path("{featurestoreId}/kafka")
   public KafkaResource kafkaResource(@PathParam("featurestoreId") Integer featurestoreId)
       throws FeaturestoreException {

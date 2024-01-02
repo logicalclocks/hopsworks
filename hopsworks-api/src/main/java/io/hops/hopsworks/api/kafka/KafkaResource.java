@@ -119,7 +119,6 @@ public class KafkaResource {
   public KafkaResource() {
   }
 
-  @Logged(logLevel = LogLevel.OFF)
   public void setProject(Project project) {
     this.project = project;
   }

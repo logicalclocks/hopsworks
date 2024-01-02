@@ -169,7 +169,6 @@ public class FeatureViewService {
     this.project = project;
   }
 
-  @Logged(logLevel = LogLevel.OFF)
   public void setFeaturestore(Integer featurestoreId) throws FeaturestoreException {
     //This call verifies that the project have access to the featurestoreId provided
     this.featurestore = featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId);
