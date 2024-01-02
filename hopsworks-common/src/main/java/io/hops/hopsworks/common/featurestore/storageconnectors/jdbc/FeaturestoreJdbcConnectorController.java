@@ -136,7 +136,7 @@ public class FeaturestoreJdbcConnectorController {
     if(featurestoreJdbcConnectorDTO.getName()
         .equals(onlineFeaturestoreController.onlineDbUsername(project, user)
             + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX)) {
-      setPasswordPlainTextForOnlineJdbcConnector(user, featurestoreJdbcConnectorDTO, project.getName());
+      setPasswordPlainTextForOnlineJdbcConnector(user, featurestoreJdbcConnectorDTO, project);
     }
     replaceOnlineFsConnectorUrl(featurestoreJdbcConnectorDTO);
     replaceOfflineFsConnectorUrl(featurestoreJdbcConnectorDTO);
@@ -147,17 +147,17 @@ public class FeaturestoreJdbcConnectorController {
   /**
    * Gets the plain text password for the connector from the secret
    * @param user
-   * @param projectName
+   * @param project
    * @return
    */
-  private String getConnectorPlainPasswordFromSecret(Users user, String projectName){
-    String secretName = projectName.concat("_").concat(user.getUsername());
+  private String getConnectorPlainPasswordFromSecret(Users user, Project project){
+    String secretName = onlineFeaturestoreController.onlineDbUsername(project, user);
     try {
       SecretPlaintext plaintext = secretsController.get(user, secretName);
       return plaintext.getPlaintext();
     } catch (UserException e) {
       LOGGER.log(Level.SEVERE, "Could not get the online jdbc connector password for project: " +
-        projectName + ", " + "user: " + user.getEmail());
+        project.getName() + ", " + "user: " + user.getEmail());
       return null;
     }
   }
@@ -166,13 +166,13 @@ public class FeaturestoreJdbcConnectorController {
    * Set the password in argument to plain text only if the connector is an online feature store connector
    * @param user
    * @param featurestoreJdbcConnectorDTO
-   * @param projectName
+   * @param project
    * @returnsetPasswordInArgumentToPlainText
    */
   private void setPasswordPlainTextForOnlineJdbcConnector(Users user,
                                                           FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO,
-                                                          String projectName) {
-    String connectorPassword = getConnectorPlainPasswordFromSecret(user, projectName);
+                                                          Project project) {
+    String connectorPassword = getConnectorPlainPasswordFromSecret(user, project);
     if(!Strings.isNullOrEmpty(storageConnectorUtil.fromOptions(featurestoreJdbcConnectorDTO.getArguments()))
       && !Strings.isNullOrEmpty(connectorPassword)) {
       List<OptionDTO> arguments = featurestoreJdbcConnectorDTO.getArguments();
