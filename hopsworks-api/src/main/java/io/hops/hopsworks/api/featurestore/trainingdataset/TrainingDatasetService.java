@@ -38,7 +38,6 @@ import io.hops.hopsworks.common.featurestore.query.ServingPreparedStatementDTO;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
-import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionAttachedDTO;
@@ -149,8 +148,7 @@ public class TrainingDatasetService {
    */
   public void setFeaturestoreId(Integer featurestoreId) throws FeaturestoreException {
     //This call verifies that the project have access to the featurestoreId provided
-    FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId);
-    this.featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
+    this.featurestore = featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId);
   }
 
   /**

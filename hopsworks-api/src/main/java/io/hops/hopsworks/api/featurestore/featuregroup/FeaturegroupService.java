@@ -39,7 +39,6 @@ import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
-import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
 import io.hops.hopsworks.common.featurestore.featuregroup.ImportFgJobConf;
@@ -172,8 +171,7 @@ public class FeaturegroupService {
    */
   public void setFeaturestoreId(Integer featurestoreId) throws FeaturestoreException {
     //This call verifies that the project have access to the featurestoreId provided
-    FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId);
-    this.featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
+    this.featurestore = featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId);
   }
 
   /**

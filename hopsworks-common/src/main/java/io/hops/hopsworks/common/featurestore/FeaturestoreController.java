@@ -211,12 +211,25 @@ public class FeaturestoreController {
    * @return a DTO representation of the featurestore
    * @throws FeaturestoreException
    */
-  public FeaturestoreDTO getFeaturestoreForProjectWithId(Project project, Integer featurestoreId)
+  public FeaturestoreDTO getFeaturestoreDTOForProjectWithId(Project project, Integer featurestoreId)
+      throws FeaturestoreException {
+    Featurestore featurestore = getFeaturestoreForProjectWithId(project, featurestoreId);
+    return convertFeaturestoreToDTO(featurestore);
+  }
+
+  /**
+   * Gets a featurestore with a particular featurestoreId from the list of featurestores for this project
+   *
+   * @param project the project to look for the featurestore in
+   * @param featurestoreId the featurestoreId of the featurestore
+   * @return a featurestore Object
+   * @throws FeaturestoreException
+   */
+  public Featurestore getFeaturestoreForProjectWithId(Project project, Integer featurestoreId)
       throws FeaturestoreException {
     try {
       return getProjectFeaturestores(project).stream()
           .filter(fs -> fs.getId().equals(featurestoreId))
-          .map(this::convertFeaturestoreToDTO)
           .findAny()
           .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND,
               Level.FINE, "featurestoreId: " + featurestoreId + " , project: " + project.getName()));
@@ -228,21 +241,6 @@ public class FeaturestoreController {
       }
       throw ex;
     }
-  }
-
-  /**
-   * Retrieves a featurestore with a particular Id from the database
-   *
-   * @param id the id of the featurestore
-   * @return featurestore entity with the given id
-   */
-  public Featurestore getFeaturestoreWithId(Integer id) throws FeaturestoreException {
-    Featurestore featurestore = featurestoreFacade.findById(id);
-    if (featurestore == null) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND,
-          Level.FINE, "featurestoreId: " + id);
-    }
-    return featurestore;
   }
 
   /**
