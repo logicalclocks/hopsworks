@@ -18,7 +18,6 @@ package io.hops.hopsworks.common.jobs.execution;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
-import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationAttemptStateFacade;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.jobs.description.YarnAppUrlsDTO;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
@@ -33,7 +32,6 @@ import io.hops.hopsworks.common.jobs.JobLogDTO;
 import io.hops.hopsworks.common.jobs.flink.FlinkController;
 import io.hops.hopsworks.common.jobs.spark.SparkController;
 import io.hops.hopsworks.common.jobs.yarn.YarnExecutionFinalizer;
-import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.jobs.yarn.YarnMonitor;
 import io.hops.hopsworks.common.security.QuotaEnforcementException;
 import io.hops.hopsworks.common.security.QuotasEnforcement;
@@ -64,7 +62,6 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.exceptions.YarnException;
-import org.apache.hadoop.yarn.util.ConverterUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -104,9 +101,9 @@ public abstract class AbstractExecutionController implements ExecutionController
   @EJB
   private ExecutionFacade executionFacade;
   @EJB
-  private YarnClientService ycs;
+  private YarnMonitor yarnMonitor;
   @EJB
-  private YarnApplicationAttemptStateFacade appAttemptStateFacade;
+  private YarnClientService yarnClientService;
   @EJB
   private YarnApplicationstateFacade yarnApplicationstateFacade;
   @EJB
@@ -210,10 +207,9 @@ public abstract class AbstractExecutionController implements ExecutionController
   public Execution stopExecution(Execution execution) throws JobException {
     //An execution when it's initializing might not have an appId in hopsworks
     if(execution.getAppId() != null && JobState.getRunningStates().contains(execution.getState())) {
-      YarnClientWrapper yarnClientWrapper = null;
+      YarnClientWrapper yarnClientWrapper = yarnClientService.getYarnClientSuper();
       try {
-        yarnClientWrapper = ycs.getYarnClientSuper(settings.getConfiguration());
-        yarnClientWrapper.getYarnClient().killApplication(ApplicationId.fromString(execution.getAppId()));
+        yarnMonitor.cancelJob(yarnClientWrapper.getYarnClient(), ApplicationId.fromString(execution.getAppId()));
         yarnExecutionFinalizer.removeAllNecessary(execution);
         return executionFacade.findById(execution.getId())
           .orElseThrow(() -> new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND,
@@ -223,7 +219,7 @@ public abstract class AbstractExecutionController implements ExecutionController
           "Could not kill job for job:" + execution.getJob().getName() + "with appId:" + execution.getAppId(), ex);
         throw new JobException(RESTCodes.JobErrorCode.JOB_STOP_FAILED, Level.WARNING, ex.getMessage(), null, ex);
       } finally {
-        ycs.closeYarnClient(yarnClientWrapper);
+        yarnClientService.closeYarnClient(yarnClientWrapper);
       }
     }
     return execution;
@@ -339,6 +335,7 @@ public abstract class AbstractExecutionController implements ExecutionController
     
     DistributedFileSystemOps dfso = null;
     DistributedFileSystemOps udfso = null;
+    YarnClientWrapper yarnClientWrapper = null;
     Users user = execution.getUser();
     String hdfsUser = hdfsUsersController.getHdfsUserName(execution.getJob().getProject(), user);
     String aggregatedLogPath = settings.getAggregatedLogPath(hdfsUser, execution.getAppId());
@@ -352,6 +349,7 @@ public abstract class AbstractExecutionController implements ExecutionController
         throw new JobException(RESTCodes.JobErrorCode.JOB_LOG, Level.WARNING,
           "Logs not available. This could be caused by the retention policy.");
       }
+      yarnClientWrapper = yarnClientService.getYarnClientSuper();
       String hdfsLogPath = null;
       String[] desiredLogTypes = null;
       switch (type){
@@ -368,16 +366,13 @@ public abstract class AbstractExecutionController implements ExecutionController
       }
       
       if (!Strings.isNullOrEmpty(hdfsLogPath)) {
-        YarnClientWrapper yarnClientWrapper = ycs.getYarnClientSuper(settings.getConfiguration());
-        ApplicationId applicationId = ConverterUtils.toApplicationId(execution.getAppId());
-        YarnMonitor monitor = new YarnMonitor(applicationId, yarnClientWrapper, ycs);
+        ApplicationId applicationId = ApplicationId.fromString(execution.getAppId());
         try {
-          YarnLogUtil.copyAggregatedYarnLogs(udfso, aggregatedLogPath, hdfsLogPath, desiredLogTypes, monitor);
+          yarnMonitor.copyAggregatedYarnLogs(applicationId, udfso, yarnClientWrapper.getYarnClient(),
+              aggregatedLogPath, hdfsLogPath, desiredLogTypes);
         } catch (IOException | InterruptedException | YarnException ex) {
           LOGGER.log(Level.SEVERE, null, ex);
           throw new JobException(RESTCodes.JobErrorCode.JOB_LOG, null, ex.getMessage());
-        } finally {
-          monitor.close();
         }
       }
     } catch (IOException ex) {
@@ -389,6 +384,7 @@ public abstract class AbstractExecutionController implements ExecutionController
       if (udfso != null) {
         dfs.closeDfsClient(udfso);
       }
+      yarnClientService.closeYarnClient(yarnClientWrapper);
     }
     
     return getLog(execution, type);

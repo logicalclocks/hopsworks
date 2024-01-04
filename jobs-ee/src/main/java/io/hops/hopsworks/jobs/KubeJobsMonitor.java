@@ -63,6 +63,8 @@ public class KubeJobsMonitor implements JobsMonitor {
   private ExecutionUpdateController executionUpdateController;
   @EJB
   private PayaraClusterManager payaraClusterManager;
+  @EJB
+  private YarnLogUtil yarnLogUtil;
   @Resource
   private TimerService timerService;
   private Timer timer;
@@ -91,8 +93,8 @@ public class KubeJobsMonitor implements JobsMonitor {
     try {
       // Get all non-finished executions of type Python or Docker, if they don't exist in kubernetes, set them to failed
       List<Execution> pendingExecutions = executionFacade.findByTypesAndStates(
-              Stream.of(JobType.DOCKER, JobType.PYTHON).collect(Collectors.toSet()),
-              JobState.getKubeRunningStates());
+        Stream.of(JobType.DOCKER, JobType.PYTHON).collect(Collectors.toSet()),
+        JobState.getKubeRunningStates());
       
       Map<String, String> label = new HashMap<>();
       label.put("deployment-type", "job");
@@ -112,7 +114,7 @@ public class KubeJobsMonitor implements JobsMonitor {
             //Get the app container
             for (ContainerStatus containerStatus : pod.getStatus().getContainerStatuses()) {
               if (containerStatus.getName().equals(JobType.PYTHON.getName().toLowerCase())
-                  || containerStatus.getName().equals(JobType.DOCKER.getName().toLowerCase())) {
+                || containerStatus.getName().equals(JobType.DOCKER.getName().toLowerCase())) {
                 ContainerState containerState = containerStatus.getState();
                 if (containerState.getTerminated() != null) {
                   ContainerStateTerminated containerStateTerminated = containerState.getTerminated();
@@ -124,7 +126,7 @@ public class KubeJobsMonitor implements JobsMonitor {
                   cleanUpExecution(execution, pod);
                   // Exitcode 0 is successful execution and logs comes from the container
                   // Exitcode 1 is application failure and logs comes from container
-                  if(exitCode != 0 &&
+                  if (exitCode != 0 &&
                     exitCode != 1 &&
                     !Strings.isNullOrEmpty(reason)) {
                     LOGGER.log(Level.FINEST, "reason: " + reason + ", pod: " + pod);
@@ -135,13 +137,13 @@ public class KubeJobsMonitor implements JobsMonitor {
                       String logMessage = "Job was terminated with" +
                         " docker exit code: " + exitCode +
                         ", Reason: " + reason;
-                      if(!Strings.isNullOrEmpty(message)) {
+                      if (!Strings.isNullOrEmpty(message)) {
                         logMessage += ", Message: " + message;
                       }
-                      if(exitCode == 137) { //137 is the exit code for when a docker container was killed due to oom
+                      if (exitCode == 137) { //137 is the exit code for when a docker container was killed due to oom
                         logMessage += "\n\nTry increasing the memory for the job.";
                       }
-                      YarnLogUtil.writeLog(udfso, execution.getStderrPath(), logMessage);
+                      yarnLogUtil.writeLog(udfso, execution.getStderrPath(), logMessage);
                     } finally {
                       if (udfso != null) {
                         dfs.closeDfsClient(udfso);
@@ -164,7 +166,7 @@ public class KubeJobsMonitor implements JobsMonitor {
                     DistributedFileSystemOps udfso = null;
                     try {
                       udfso = dfs.getDfsOps(execution.getHdfsUser());
-                      YarnLogUtil.writeLog(udfso, execution.getStderrPath(),
+                      yarnLogUtil.writeLog(udfso, execution.getStderrPath(),
                         "Job failed with: " + reason + " - " + message);
                     } finally {
                       if (udfso != null) {
@@ -203,7 +205,7 @@ public class KubeJobsMonitor implements JobsMonitor {
   }
   
   private void cleanUpExecution(Execution execution, Pod pod) {
-
+    
     LOGGER.log(Level.FINEST, "Execution: " + execution + ", with state:" + execution.getState() + ", pod: " + pod);
     if (execution.getExecutionStop() < 1) {
       execution = updateExecutionStop(System.currentTimeMillis(), execution);
@@ -225,15 +227,15 @@ public class KubeJobsMonitor implements JobsMonitor {
   public Execution updateState(JobState newState, Execution execution) {
     return executionUpdateController.updateState(newState, execution);
   }
-
+  
   public Execution updateExecutionStop(Long executionStop, Execution execution) {
     return executionUpdateController.updateExecutionStop(executionStop, execution);
   }
-
+  
   private Execution updateFinalStatus(JobFinalStatus finalStatus, Execution execution) {
     return executionUpdateController.updateFinalStatusAndSendAlert(finalStatus, execution);
   }
-
+  
   private enum KubeJobType {
     FAILED("Failed"), // taken from kubernetes fabric8 API
     COMPLETED("Completed"); //taken from kubernetes fabric8 API
@@ -255,11 +257,11 @@ public class KubeJobsMonitor implements JobsMonitor {
       }
       return JobState.FAILED;
     }
-
+    
     public static JobFinalStatus getAsJobFinalStatus(JobState jobState) {
-      if(jobState.equals(JobState.FAILED)) {
+      if (jobState.equals(JobState.FAILED)) {
         return JobFinalStatus.FAILED;
-      } else if(jobState.equals(JobState.KILLED)) {
+      } else if (jobState.equals(JobState.KILLED)) {
         return JobFinalStatus.KILLED;
       }
       return JobFinalStatus.SUCCEEDED;

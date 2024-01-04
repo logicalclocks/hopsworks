@@ -139,6 +139,8 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   private KubeProjectConfigMaps kubeProjectConfigMaps;
   @EJB
   private KubeApiKeyUtils kubeApiKeyUtils;
+  @EJB
+  private YarnLogUtil yarnLogUtil;
   @Inject
   private ServingConfig servingConfig;
 
@@ -259,7 +261,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
         DistributedFileSystemOps udfso = null;
         try {
           udfso = dfs.getDfsOps(hdfsUser);
-          YarnLogUtil.writeLog(udfso, execution.getStderrPath(), usrMsg, e);
+          yarnLogUtil.writeLog(udfso, execution.getStderrPath(), usrMsg, e);
         } finally {
           if (udfso != null) {
             dfs.closeDfsClient(udfso);

@@ -71,6 +71,7 @@ import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FolderNameValidator;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreFacade;
+import io.hops.hopsworks.common.jobs.yarn.YarnMonitor;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.opensearch.OpenSearchController;
 import io.hops.hopsworks.common.experiments.tensorboard.TensorBoardController;
@@ -85,7 +86,6 @@ import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
-import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.kafka.SubjectsCompatibilityController;
 import io.hops.hopsworks.common.kafka.SubjectsController;
@@ -306,6 +306,8 @@ public class ProjectController {
   private AlertController alertController;
   @EJB
   private AMClient alertManager;
+  @EJB
+  private YarnMonitor yarnMonitor;
   @Inject
   @Any
   private Instance<ProjectTeamRoleHandler> projectTeamRoleHandlers;
@@ -1523,16 +1525,16 @@ public class ProjectController {
     }
   }
 
-  private void waitForJobLogs(List<ApplicationReport> projectsApps, YarnClient client)
+  private void waitForJobLogs(List<ApplicationReport> projectsApps, YarnClient yarnClient)
     throws YarnException, IOException, InterruptedException {
     for (ApplicationReport appReport : projectsApps) {
       FinalApplicationStatus finalState = appReport.getFinalApplicationStatus();
       while (finalState.equals(FinalApplicationStatus.UNDEFINED)) {
-        client.killApplication(appReport.getApplicationId());
-        appReport = client.getApplicationReport(appReport.getApplicationId());
+        yarnClient.killApplication(appReport.getApplicationId());
+        appReport = yarnClient.getApplicationReport(appReport.getApplicationId());
         finalState = appReport.getFinalApplicationStatus();
       }
-      YarnLogUtil.waitForLogAggregation(client, appReport.getApplicationId());
+      yarnMonitor.waitForLogAggregation(yarnClient, appReport.getApplicationId());
     }
   }
 
@@ -2100,11 +2102,11 @@ public class ProjectController {
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, userToBeRemoved);
     
     YarnClientWrapper yarnClientWrapper = ycs.getYarnClientSuper(settings.getConfiguration());
-    YarnClient client = yarnClientWrapper.getYarnClient();
+    YarnClient yarnClient = yarnClientWrapper.getYarnClient();
     try {
       Set<String> hdfsUsers = new HashSet<>();
       hdfsUsers.add(hdfsUser);
-      List<ApplicationReport> projectsApps = client.getApplications(null, hdfsUsers, null, EnumSet.of(
+      List<ApplicationReport> projectsApps = yarnClient.getApplications(null, hdfsUsers, null, EnumSet.of(
         YarnApplicationState.ACCEPTED, YarnApplicationState.NEW, YarnApplicationState.NEW_SAVING,
         YarnApplicationState.RUNNING, YarnApplicationState.SUBMITTED));
       //kill jupyter for this user
@@ -2132,11 +2134,11 @@ public class ProjectController {
       for (ApplicationReport appReport : projectsApps) {
         FinalApplicationStatus finalState = appReport.getFinalApplicationStatus();
         while (finalState.equals(FinalApplicationStatus.UNDEFINED)) {
-          client.killApplication(appReport.getApplicationId());
-          appReport = client.getApplicationReport(appReport.getApplicationId());
+          yarnClient.killApplication(appReport.getApplicationId());
+          appReport = yarnClient.getApplicationReport(appReport.getApplicationId());
           finalState = appReport.getFinalApplicationStatus();
         }
-        YarnLogUtil.waitForLogAggregation(client, appReport.getApplicationId());
+        yarnMonitor.waitForLogAggregation(yarnClient, appReport.getApplicationId());
       }
     } catch (YarnException | IOException | InterruptedException e) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.KILL_MEMBER_JOBS, Level.SEVERE,
