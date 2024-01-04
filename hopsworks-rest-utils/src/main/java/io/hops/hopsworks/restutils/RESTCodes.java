@@ -1832,7 +1832,9 @@ public class RESTCodes {
     ANACONDA_ENVIRONMENT_REMOVAL_FAILED(15,
       "Deletion of the project's Python environment encountered an issue",
       Response.Status.INTERNAL_SERVER_ERROR),
-    CONDA_COMMAND_DELETE_ERROR(16, "Failed to delete a command", Response.Status.BAD_REQUEST);
+    CONDA_COMMAND_DELETE_ERROR(16, "Failed to delete a command", Response.Status.BAD_REQUEST),
+    CONDA_INSTALL_DISABLED(17, "Conda install option is disabled. Contact Admin user to enable it.",
+      Response.Status.FORBIDDEN);
 
     private int code;
     private String message;

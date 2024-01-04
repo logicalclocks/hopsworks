@@ -222,6 +222,9 @@ public class LibraryResource {
         librarySpecification.setChannelUrl("pypi");
         break;
       case CONDA:
+        if (!settings.getEnableCondaInstall()) { // check if conda install is enabled
+          throw new PythonException(RESTCodes.PythonErrorCode.CONDA_INSTALL_DISABLED, Level.FINE);
+        }
         validateLibrary(librarySpecification, library);
         break;
       case EGG:

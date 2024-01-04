@@ -128,6 +128,29 @@ describe "On #{ENV['OS']}" do
       end
     end
 
+    describe 'enable_conda_install' do
+      context 'disabled' do
+        before do
+          @enable_conda_install = getVar('enable_conda_install')
+          setVar('enable_conda_install', false)
+          with_valid_project
+        end
+        after do
+          setVar('enable_conda_install', @enable_conda_install.value)
+        end
+        it 'should fail to install library via conda' do
+          project = create_env_and_update_project(@project, ENV['PYTHON_VERSION'])
+          data = {
+            "packageSource": 'CONDA',
+            "channelUrl": 'conda-forge'
+          }
+          post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/#{ENV['PYTHON_VERSION']}/libraries/#{'r'}",
+               data
+          expect_status_details(403)
+        end
+      end
+    end
+
     describe 'quotas_model_deployments_total' do
       context "enabled" do
         before :all do
