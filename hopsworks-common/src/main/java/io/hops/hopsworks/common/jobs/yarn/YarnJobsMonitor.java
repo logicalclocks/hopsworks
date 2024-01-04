@@ -52,6 +52,7 @@ import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
+import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
 import javax.annotation.PostConstruct;
@@ -70,7 +71,6 @@ import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -94,9 +94,11 @@ public class YarnJobsMonitor implements JobsMonitor {
   @EJB
   private YarnExecutionFinalizer execFinalizer;
   @EJB
-  private YarnClientService ycs;
+  private YarnMonitor yarnMonitor;
   @EJB
   private PayaraClusterManager payaraClusterManager;
+  @EJB
+  private YarnClientService yarnClientService;
   @Resource
   private TimerService timerService;
   private Timer timer;
@@ -117,8 +119,7 @@ public class YarnJobsMonitor implements JobsMonitor {
   }
 
   private int maxStatusPollRetry;
-
-  Map<String, YarnMonitor> monitors = new HashMap<>();
+  
   Map<String, Integer> failures = new HashMap<>();
   private final Map<ApplicationId, Future<Execution>> copyLogsFutures = new HashMap<>();
   
@@ -127,7 +128,9 @@ public class YarnJobsMonitor implements JobsMonitor {
     if (!payaraClusterManager.amIThePrimary()) {
       return;
     }
+    YarnClientWrapper yarnClientWrapper = null;
     try {
+      yarnClientWrapper = yarnClientService.getYarnClientSuper();
       Map<String, Execution> executions = new HashMap<>();
       List<Execution> execs = executionFacade.findNotFinished();
       if (execs != null && !execs.isEmpty()) {
@@ -136,51 +139,33 @@ public class YarnJobsMonitor implements JobsMonitor {
             executions.put(exec.getAppId(), exec);
           }
         }
-        //Remove (Close) all monitors of deleted jobs
-        Iterator<Map.Entry<String, YarnMonitor>> monitorsIter = monitors.entrySet().iterator();
-        while (monitorsIter.hasNext()) {
-          Map.Entry<String, YarnMonitor> entry = monitorsIter.next();
-          // Check if Value associated with Key is 10
-          if (!executions.containsKey(entry.getKey())) {
-            // Remove the element
-            entry.getValue().close();
-            monitorsIter.remove();
-          }
-        }
         maxStatusPollRetry = settings.getMaxStatusPollRetry();
         List<String> toRemove = new ArrayList<>();
         for (Map.Entry<String, Execution> entry : executions.entrySet()) {
-          YarnMonitor monitor = monitors.get(entry.getKey());
-          if (monitor == null) {
-            ApplicationId appId = ApplicationId.fromString(entry.getKey());
-            YarnClientWrapper newYarnclientWrapper = ycs.getYarnClientSuper(settings
-              .getConfiguration());
-            monitor = new YarnMonitor(appId, newYarnclientWrapper, ycs);
-            monitors.put(entry.getKey(), monitor);
-          }
-          Execution exec = internalMonitor(executions.get(entry.getKey()), monitor);
+          ApplicationId appId = ApplicationId.fromString(entry.getKey());
+          Execution exec = internalMonitor(yarnClientWrapper.getYarnClient(), appId, executions.get(entry.getKey()));
           if (exec == null) {
             toRemove.add(entry.getKey());
-            monitor.close();
           }
         }
         for (String appID : toRemove) {
           failures.remove(appID);
-          monitors.remove(appID);
         }
         // This is here to do bookkeeping. Remove from the map all the executions which have finished copying the logs
         copyLogsFutures.entrySet().removeIf(futureResult -> futureResult.getValue().isDone());
       }
     } catch (Exception ex) {
       LOGGER.log(Level.SEVERE, "Error while monitoring jobs", ex);
+    } finally {
+      yarnClientService.closeYarnClient(yarnClientWrapper);
     }
   }
   
-  private Execution internalMonitor(Execution exec, YarnMonitor monitor) {
+  private Execution internalMonitor(YarnClient yarnClient, ApplicationId appId, Execution exec) {
     try {
-      YarnApplicationState appState = monitor.getApplicationState();
-      FinalApplicationStatus finalAppStatus = monitor.getFinalApplicationStatus();
-      float progress = monitor.getProgress();
+      YarnApplicationState appState = yarnMonitor.getApplicationState(yarnClient, appId);
+      FinalApplicationStatus finalAppStatus = yarnMonitor.getFinalApplicationStatus(yarnClient, appId);
+      float progress = yarnMonitor.getProgress(yarnClient, appId);
       exec = updateProgress(progress, exec);
       exec = updateState(JobState.getJobState(appState), exec);
       exec = updateFinalStatus(JobFinalStatus.getJobFinalStatus(finalAppStatus), exec);
@@ -188,12 +173,12 @@ public class YarnJobsMonitor implements JobsMonitor {
       if ((appState == YarnApplicationState.FAILED
           || appState == YarnApplicationState.FINISHED
           || appState == YarnApplicationState.KILLED)
-          && !copyLogsFutures.containsKey(monitor.getApplicationId())) {
+          && !copyLogsFutures.containsKey(appId)) {
         
         exec = executionFacade.updateState(exec, JobState.AGGREGATING_LOGS);
         // Async call
         Future<Execution> futureResult = execFinalizer.copyLogs(exec);
-        copyLogsFutures.put(monitor.getApplicationId(), futureResult);
+        copyLogsFutures.put(appId, futureResult);
         return null;
       }
     } catch (IOException | YarnException ex) {
@@ -210,7 +195,7 @@ public class YarnJobsMonitor implements JobsMonitor {
     if (failures.get(exec.getAppId()) != null && failures.get(exec.getAppId()) > maxStatusPollRetry) {
       try {
         LOGGER.log(Level.SEVERE, "Killing application, {0}, because unable to poll for status.", exec);
-        monitor.cancelJob(monitor.getApplicationId().toString());
+        yarnMonitor.cancelJob(yarnClient, appId);
         exec = updateFinalStatus(JobFinalStatus.KILLED, exec);
         exec = updateProgress(0, exec);
         execFinalizer.finalizeExecution(exec, JobState.KILLED);

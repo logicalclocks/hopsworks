@@ -39,19 +39,19 @@
 
 package io.hops.hopsworks.common.jobs.yarn;
 
-import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
-import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
-import io.hops.hopsworks.persistence.entity.project.service.ProjectServiceEnum;
-import io.hops.hopsworks.persistence.entity.project.service.ProjectServices;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
-import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
+import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
+import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
+import io.hops.hopsworks.persistence.entity.project.service.ProjectServiceEnum;
+import io.hops.hopsworks.persistence.entity.project.service.ProjectServices;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -86,14 +86,15 @@ public class YarnExecutionFinalizer {
   @EJB
   private DistributedFsService dfs;
   @EJB
-  private YarnClientService ycs;
+  private YarnClientService yarnClientService;
+  @EJB
+  private YarnMonitor yarnMonitor;
 
   @Asynchronous
   public Future<Execution> copyLogs(Execution exec) {
     DistributedFileSystemOps udfso = dfs.getDfsOps(exec.getHdfsUser());
+    YarnClientWrapper yarnClientWrapper = yarnClientService.getYarnClientSuper();
     ApplicationId applicationId = ApplicationId.fromString(exec.getAppId());
-    YarnClientWrapper yarnClientWrapper = ycs.getYarnClientSuper(settings.getConfiguration());
-    YarnMonitor monitor = new YarnMonitor(applicationId, yarnClientWrapper, ycs);
 
     try {
       String stdOutPath = settings.getAggregatedLogPath(exec.getHdfsUser(), exec.getAppId());
@@ -104,20 +105,20 @@ public class YarnExecutionFinalizer {
   
       try {
         String[] desiredOutLogTypes = {"out"};
-        YarnLogUtil.copyAggregatedYarnLogs(udfso, stdOutPath, stdOutFinalDestination,
-            desiredOutLogTypes, monitor);
+        yarnMonitor.copyAggregatedYarnLogs(applicationId, udfso, yarnClientWrapper.getYarnClient(),
+            stdOutPath, stdOutFinalDestination, desiredOutLogTypes);
         String[] desiredErrLogTypes = {"err", ".log"};
-        YarnLogUtil.copyAggregatedYarnLogs(udfso, stdOutPath, stdErrFinalDestination,
-                desiredErrLogTypes, monitor);
+        yarnMonitor.copyAggregatedYarnLogs(applicationId, udfso, yarnClientWrapper.getYarnClient(),
+            stdOutPath, stdErrFinalDestination, desiredErrLogTypes);
       } catch (IOException | InterruptedException | YarnException ex) {
-        LOGGER.log(Level.SEVERE,"error while aggregation logs" + ex.toString());
+        LOGGER.log(Level.SEVERE,"error while aggregation logs" + ex);
       }
       Execution execution = updateExecutionSTDPaths(stdOutFinalDestination, stdErrFinalDestination, exec);
       finalizeExecution(exec, exec.getState());
       return new AsyncResult<>(execution);
     } finally {
       dfs.closeDfsClient(udfso);
-      monitor.close();
+      yarnClientService.closeYarnClient(yarnClientWrapper);
     }
   }
 
