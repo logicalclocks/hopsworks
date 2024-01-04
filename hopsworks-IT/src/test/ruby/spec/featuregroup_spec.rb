@@ -580,6 +580,52 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["features"].select{ |f| f["name"] == "testfeature2"}.first["defaultValue"]).to eql("10.0")
       end
 
+      it "should be able to append 500 features to an offline feature group" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(201)
+        featuregroup_id = parsed_json["id"]
+        featuregroup_version = parsed_json["version"]
+        new_schema = [
+          {
+            type: "INT",
+            name: "testfeature",
+            description: "testfeaturedescription",
+            primary: true,
+            onlineType: "INT",
+            partition: false
+          }
+        ]
+        for i in 0..500
+          new_schema.push(
+            {
+              type: "INT",
+              name: "dkrzieqyoibkltrbyljmtwqunscvnb#{i}", # This string is 30 chars long, making the total activity size longer than 15000
+              description: "testfeaturedescription",
+              primary: false,
+              onlineType: "INT",
+              partition: false
+            }
+          )
+        end
+        json_result = update_cached_featuregroup_metadata(project.id, featurestore_id, featuregroup_id,
+                                                          featuregroup_version, featuregroup_name: featuregroup_name,
+                                                          features: new_schema)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(200)
+
+        # Fetch activity and check that the string was truncated corectly
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/activity?sort_by=TIMESTAMP:desc&limit=1&offset=0"
+        expect_status_details(200)
+        activity = JSON.parse(response.body)
+        expect(activity["items"][0]["type"]).to eql("METADATA")
+        expect(activity["items"][0]["metadata"]).to end_with("...")
+        # "Feature group was altered " is prepended before the msg by the endpoint
+        expect(activity["items"][0]["metadata"].length).to be(15026)
+      end
+
       it "should be able to append two features with default value in two consecutive updates to an offline feature group" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
