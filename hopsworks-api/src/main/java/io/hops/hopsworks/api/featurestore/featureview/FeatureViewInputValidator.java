@@ -17,8 +17,10 @@
 package io.hops.hopsworks.api.featurestore.featureview;
 
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewDTO;
+import io.hops.hopsworks.common.featurestore.query.QueryDTO;
 import io.hops.hopsworks.common.featurestore.query.Query;
 import io.hops.hopsworks.common.featurestore.query.QueryController;
+import io.hops.hopsworks.common.featurestore.query.join.JoinDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetInputValidation;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -58,6 +60,17 @@ public class FeatureViewInputValidator {
     if (featureViewDTO.getQuery() == null) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_VIEW_CREATION_ERROR, Level.FINE,
           "`Query` is missing from input.");
+    }
+    validateCreationInput(featureViewDTO.getQuery());
+  }
+
+  public void validateCreationInput(QueryDTO queryDTO) throws FeaturestoreException {
+    if (queryDTO.getLeftFeatures().isEmpty()) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_VIEW_CREATION_ERROR, Level.FINE,
+          "Feature View queries must have features");
+    }
+    for (JoinDTO joinDTO : queryDTO.getJoins()) {
+      validateCreationInput(joinDTO.getQuery());
     }
   }
 

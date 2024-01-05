@@ -351,8 +351,59 @@ describe "On #{ENV['OS']}" do
           create_feature_view_with_json(@project.id, featurestore_id, json_data)
           expect_status_details(400)
         end
+
+        it "should not be able to create a feature view from a query object without features" do
+          # create feature group
+          featurestore_id = get_featurestore_id(@project.id)
+          features = [
+              {type: "INT", name: "testfeature", primary: true},
+              {type: "INT", name: "testfeature1"},
+          ]
+          fg = create_cached_featuregroup_checked_return_fg(@project.id, featurestore_id, "test_fg_#{short_random_id}",
+                                                            features: features)
+          # create queryDTO object
+          query = {
+              leftFeatureGroup: {
+                id: fg[:id],
+                type: fg[:type],
+              },
+              leftFeatures: []
+          }
+          json_result = create_feature_view(@project.id, featurestore_id, query)
+          expect_status_details(400)
+        end
+
+        it "should not be able to create a feature view from a query object that joins query without features" do
+          # create feature group
+          featurestore_id = get_featurestore_id(@project.id)
+          features = [
+              {type: "INT", name: "testfeature", primary: true},
+              {type: "INT", name: "testfeature1"},
+          ]
+          fg = create_cached_featuregroup_checked_return_fg(@project.id, featurestore_id, "test_fg_#{short_random_id}",
+                                                            features: features)
+          # create queryDTO object
+          query = {
+              leftFeatureGroup: {
+                id: fg[:id],
+                type: fg[:type],
+              },
+              leftFeatures: [{name: 'a_testfeature'}, {name: 'a_testfeature1'}],
+              joins: [
+                {
+                  leftFeatureGroup: {
+                    id: fg[:id],
+                    type: fg[:type],
+                  },
+                  leftFeatures: []
+                }
+              ]
+          }
+          json_result = create_feature_view(@project.id, featurestore_id, query)
+          expect_status_details(400)
+        end
 		
-		it "should be able to create a feature view from a query object - 1" do
+        it "should be able to create a feature view from a query object - 1" do
           # create feature group
           featurestore_id = get_featurestore_id(@project.id)
           features = [
