@@ -276,6 +276,9 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_SERVING_MAX_GPUS_ALLOCATION = "kube_serving_max_gpus_allocation";
   private static final String VARIABLE_KUBE_SERVING_MAX_NUM_INSTANCES = "kube_serving_max_num_instances";
   private static final String VARIABLE_KUBE_SERVING_MIN_NUM_INSTANCES = "kube_serving_min_num_instances";
+  private static final String VARIABLE_KUBE_TAINTED_NODES = "kube_tainted_nodes";
+  private static final String VARIABLE_KUBE_TAINTED_NODES_MONITOR_INTERVAL =
+      "kube_node_taints_monitor_interval";
 
   /*
    * -------------------- Jupyter ---------------
@@ -319,8 +322,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_FS_JAVA_JOB_UTIL_PATH = "fs_java_job_util";
   private static final String VARIABLE_HDFS_FILE_OP_JOB_UTIL = "hdfs_file_op_job_util";
   private static final String VARIABLE_HDFS_FILE_OP_JOB_DRIVER_MEM = "hdfs_file_op_job_driver_mem";
-  
-  private static final String VARIABLE_FS_STORAGE_CONNECTOR_SESSION_DURATION = "fs_storage_connector_session_duration";
 
   // Storage connectors
 
@@ -383,9 +384,6 @@ public class Settings implements Serializable {
   /*----------------------- Python ------------------------*/
   private final static String VARIABLE_MAX_ENV_YML_BYTE_SIZE = "max_env_yml_byte_size";
 
-  /*----------------------- Flyingduck ------------------------*/
-  private final static String VARIABLE_ENABLE_FLYINGDUCK = "enable_flyingduck";
-
   //Git
   private static final String VARIABLE_GIT_IMAGE_VERSION = "git_image_version";
   private static final String VARIABLE_GIT_COMMAND_TIMEOUT_MINUTES_DEFAULT = "git_command_timeout_minutes";
@@ -410,7 +408,7 @@ public class Settings implements Serializable {
           QUOTAS_MODEL_DEPLOYMENTS_PREFIX);
   private static final String VARIABLE_QUOTAS_MAX_PARALLEL_EXECUTIONS = String.format("%s_max_parallel_executions",
           QUOTAS_PREFIX);
-  
+
   //Docker cgroups
   private static final String VARIABLE_DOCKER_CGROUP_ENABLED = "docker_cgroup_enabled";
   private static final String VARIABLE_DOCKER_CGROUP_HARD_LIMIT_MEMORY = "docker_cgroup_memory_limit_gb";
@@ -420,11 +418,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_DOCKER_CGROUP_MONITOR_INTERVAL = "docker_cgroup_monitor_interval";
   private static final String VARIABLE_DOCKER_CGROUP_PARENT = "docker_cgroup_parent";
 
+  private static final String VARIABLE_PROMETHEUS_PORT = "prometheus_port";
 
-
-  // Python job
-  private static final String VARIABLE_MOUNT_HOPSFS_IN_PYTHON_JOB_CONTAINER = "mount_hopsfs_in_python_job";
-  
   // Conda install enable flag
   private static final String VARIABLE_ENABLE_CONDA_INSTALL = "enable_conda_install";
 
@@ -455,14 +450,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_DOCKER_NAMESPACE = "docker_namespace";
   private static final String VARIABLE_MANAGED_DOCKER_REGISTRY =
       "managed_docker_registry";
-  
-  /*
-   * ------------------ SAAS ------------------
-   */
-  private static final String VARIABLE_LOGIN_PAGE_OVERWRITE = "login_page_overwrite";
-  
-  private static final String VARIABLE_ONGOING_BACKUP = "ongoing_backup";
-  
+
   private String setVar(String varName, String defaultValue) {
     return setStrVar(varName, defaultValue);
   }
@@ -807,6 +795,9 @@ public class Settings implements Serializable {
       KUBE_SERVING_MIN_NUM_INSTANCES = setIntVar(VARIABLE_KUBE_SERVING_MIN_NUM_INSTANCES,
         KUBE_SERVING_MIN_NUM_INSTANCES);
       KUBE_KNATIVE_DOMAIN_NAME = setStrVar(VARIABLE_KUBE_KNATIVE_DOMAIN_NAME, KUBE_KNATIVE_DOMAIN_NAME);
+      KUBE_TAINTED_NODES = setStrVar(VARIABLE_KUBE_TAINTED_NODES, KUBE_TAINTED_NODES);
+      KUBE_TAINTED_NODES_MONITOR_INTERVAL = setStrVar(VARIABLE_KUBE_TAINTED_NODES_MONITOR_INTERVAL,
+          KUBE_TAINTED_NODES_MONITOR_INTERVAL);
 
       HOPSWORKS_ENTERPRISE = setBoolVar(VARIABLE_HOPSWORKS_ENTERPRISE, HOPSWORKS_ENTERPRISE);
 
@@ -854,9 +845,6 @@ public class Settings implements Serializable {
       FS_JAVA_JOB_UTIL_PATH  = setStrVar(VARIABLE_FS_JAVA_JOB_UTIL_PATH, FS_JAVA_JOB_UTIL_PATH);
       HDFS_FILE_OP_JOB_UTIL  = setStrVar(VARIABLE_HDFS_FILE_OP_JOB_UTIL, HDFS_FILE_OP_JOB_UTIL);
       HDFS_FILE_OP_JOB_DRIVER_MEM  = setIntVar(VARIABLE_HDFS_FILE_OP_JOB_DRIVER_MEM, HDFS_FILE_OP_JOB_DRIVER_MEM);
-      
-      FS_STORAGE_CONNECTOR_SESSION_DURATION  = setIntVar(VARIABLE_FS_STORAGE_CONNECTOR_SESSION_DURATION,
-        FS_STORAGE_CONNECTOR_SESSION_DURATION);
 
       ENABLE_REDSHIFT_STORAGE_CONNECTORS = setBoolVar(VARIABLE_ENABLE_REDSHIFT_STORAGE_CONNECTORS,
               ENABLE_REDSHIFT_STORAGE_CONNECTORS);
@@ -926,6 +914,8 @@ public class Settings implements Serializable {
           DOCKER_CGROUP_MONITOR_INTERVAL);
       DOCKER_CGROUP_PARENT = setStrVar(VARIABLE_DOCKER_CGROUP_PARENT, DOCKER_CGROUP_PARENT);
 
+      PROMETHEUS_PORT = setIntVar(VARIABLE_PROMETHEUS_PORT, PROMETHEUS_PORT);
+
       SKIP_NAMESPACE_CREATION = setBoolVar(VARIABLE_SKIP_NAMESPACE_CREATION,
           SKIP_NAMESPACE_CREATION);
 
@@ -942,16 +932,11 @@ public class Settings implements Serializable {
           QUOTAS_MAX_PARALLEL_EXECUTIONS);
       QUOTAS_MAX_PARALLEL_EXECUTIONS = setLongVar(VARIABLE_QUOTAS_MAX_PARALLEL_EXECUTIONS,
           QUOTAS_MAX_PARALLEL_EXECUTIONS);
-      
-      LOGIN_PAGE_OVERWRITE = setStrVar(VARIABLE_LOGIN_PAGE_OVERWRITE, LOGIN_PAGE_OVERWRITE);
-      ONGOING_BACKUP = setBoolVar(VARIABLE_ONGOING_BACKUP, ONGOING_BACKUP);
+
       SQL_MAX_SELECT_IN = setIntVar(VARIABLE_SQL_MAX_SELECT_IN, SQL_MAX_SELECT_IN);
 
       ENABLE_JUPYTER_PYTHON_KERNEL_NON_KUBERNETES = setBoolVar(VARIABLE_ENABLE_JUPYTER_PYTHON_KERNEL_NON_KUBERNETES,
         ENABLE_JUPYTER_PYTHON_KERNEL_NON_KUBERNETES);
-
-      ENABLE_FLYINGDUCK = setBoolVar(VARIABLE_ENABLE_FLYINGDUCK,
-              ENABLE_FLYINGDUCK);
 
       MAX_LONG_RUNNING_HTTP_REQUESTS =
         setIntVar(VARIABLE_MAX_LONG_RUNNING_HTTP_REQUESTS, MAX_LONG_RUNNING_HTTP_REQUESTS);
@@ -967,8 +952,6 @@ public class Settings implements Serializable {
       COMMAND_SEARCH_FS_RETRY_PER_CLEAN_INTERVAL = setIntVar(VARIABLE_COMMAND_SEARCH_FS_RETRY_PER_CLEAN_INTERVAL,
         COMMAND_SEARCH_FS_RETRY_PER_CLEAN_INTERVAL);
       SERVICE_API_KEY = setVar(VARIABLE_SERVICE_API_KEY, SERVICE_API_KEY);
-      MOUNT_HOPSFS_IN_PYTHON_JOB_CONTAINER = setBoolVar(VARIABLE_MOUNT_HOPSFS_IN_PYTHON_JOB_CONTAINER,
-          MOUNT_HOPSFS_IN_PYTHON_JOB_CONTAINER);
 
       OPENSEARCH_DEFAULT_EMBEDDING_INDEX_NAME = setStrVar(
           VARIABLE_OPENSEARCH_DEFAULT_EMBEDDING_INDEX, OPENSEARCH_DEFAULT_EMBEDDING_INDEX_NAME);
@@ -1204,16 +1187,16 @@ public class Settings implements Serializable {
   public synchronized String getSparkLog4j2FilePath() {
     return getSparkConfDir() + "/log4j2.properties";
   }
-  
+
   private String STAGING_DIR = "/srv/hops/domains/domain1/staging";
 
   public synchronized String getStagingDir() {
     checkCache();
     return STAGING_DIR;
   }
-  
+
   private String UPLOAD_STAGING_DIR = DIR_ROOT;
-  
+
   public synchronized String getUploadStagingDir() {
     checkCache();
     return UPLOAD_STAGING_DIR;
@@ -1750,10 +1733,10 @@ public class Settings implements Serializable {
     return HOPSFSMOUNT_APPARMOR_PROFILE;
   }
 
-  private boolean MOUNT_HOPSFS_IN_PYTHON_JOB_CONTAINER = true;
-  public synchronized boolean getMountHopsfsInJobContainer() {
+  private Integer PROMETHEUS_PORT = 9089;
+  public synchronized Integer getPrometheusPort() {
     checkCache();
-    return MOUNT_HOPSFS_IN_PYTHON_JOB_CONTAINER;
+    return PROMETHEUS_PORT;
   }
 
   //Git
@@ -2371,7 +2354,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KRB_AUTH = "kerberos_auth";
   private static final String VARIABLE_LDAP_AUTH = "ldap_auth";
   private static final String VARIABLE_LDAP_GROUP_MAPPING = "ldap_group_mapping";
-  private static final String VARIABLE_LDAP_GROUP_MAPPING_ENABLED = "ldap_group_mapping_enabled";
   private static final String VARIABLE_LDAP_USER_ID = "ldap_user_id";
   private static final String VARIABLE_LDAP_USER_GIVEN_NAME = "ldap_user_givenName";
   private static final String VARIABLE_LDAP_USER_SURNAME = "ldap_user_surname";
@@ -2393,14 +2375,12 @@ public class Settings implements Serializable {
   private static final String VARIABLE_OAUTH_LOGOUT_REDIRECT_URI = "oauth_logout_redirect_uri";
   private static final String VARIABLE_OAUTH_ACCOUNT_STATUS = "oauth_account_status";
   private static final String VARIABLE_OAUTH_GROUP_MAPPING = "oauth_group_mapping";
-  private static final String VARIABLE_OAUTH_GROUP_MAPPING_ENABLED = "oauth_group_mapping_enabled";
 
   private static final String VARIABLE_REMOTE_AUTH_NEED_CONSENT = "remote_auth_need_consent";
   
   private static final String VARIABLE_DISABLE_PASSWORD_LOGIN = "disable_password_login";
   private static final String VARIABLE_DISABLE_REGISTRATION = "disable_registration";
   private static final String VARIABLE_DISABLE_REGISTRATION_UI = "disable_registration_ui";
-  private static final String VARIABLE_LDAP_GROUP_MAPPING_SYNC_ENABLED = "ldap_group_mapping_sync_enabled";
   private static final String VARIABLE_LDAP_GROUP_MAPPING_SYNC_INTERVAL = "ldap_group_mapping_sync_interval";
   
   private static final String VARIABLE_VALIDATE_REMOTE_USER_EMAIL_VERIFIED = "validate_email_verified";
@@ -2413,8 +2393,6 @@ public class Settings implements Serializable {
   private boolean IS_KRB_ENABLED = false;
   private boolean IS_LDAP_ENABLED = false;
   private String LDAP_GROUP_MAPPING = "";
-  //LDAP group to Hopsworks group mapping
-  private boolean LDAP_GROUP_MAPPING_ENABLED = true;
   private String LDAP_USER_ID = "uid"; //login name
   private String LDAP_USER_GIVEN_NAME = "givenName";
   private String LDAP_USER_SURNAME = "sn";
@@ -2436,15 +2414,12 @@ public class Settings implements Serializable {
   private String OAUTH_ENABLED = "false";
   private boolean IS_OAUTH_ENABLED = false;
   private String OAUTH_GROUP_MAPPING = "";
-  private boolean OAUTH_GROUP_MAPPING_ENABLED = true;
   private String OAUTH_REDIRECT_URI_PATH = "hopsworks/callback";
   private String OAUTH_LOGOUT_REDIRECT_URI_PATH = "hopsworks/";
   private String OAUTH_REDIRECT_URI = OAUTH_REDIRECT_URI_PATH;
   private String OAUTH_LOGOUT_REDIRECT_URI = OAUTH_LOGOUT_REDIRECT_URI_PATH;
   private int OAUTH_ACCOUNT_STATUS = 1;
-  //LDAP group to project mapping
-  private boolean LDAP_GROUP_MAPPING_SYNC_ENABLED = false;
-  private String LDAP_GROUP_MAPPING_SYNC_INTERVAL = "0";
+  private long LDAP_GROUP_MAPPING_SYNC_INTERVAL = 0;
   
   private boolean REMOTE_AUTH_NEED_CONSENT = true;
   
@@ -2459,7 +2434,6 @@ public class Settings implements Serializable {
     KRB_AUTH = setVar(VARIABLE_KRB_AUTH, KRB_AUTH);
     LDAP_AUTH = setVar(VARIABLE_LDAP_AUTH, LDAP_AUTH);
     LDAP_GROUP_MAPPING = setVar(VARIABLE_LDAP_GROUP_MAPPING, LDAP_GROUP_MAPPING);
-    LDAP_GROUP_MAPPING_ENABLED = setBoolVar(VARIABLE_LDAP_GROUP_MAPPING_ENABLED, LDAP_GROUP_MAPPING_ENABLED);
     LDAP_USER_ID = setVar(VARIABLE_LDAP_USER_ID, LDAP_USER_ID);
     LDAP_USER_GIVEN_NAME = setVar(VARIABLE_LDAP_USER_GIVEN_NAME, LDAP_USER_GIVEN_NAME);
     LDAP_USER_SURNAME = setVar(VARIABLE_LDAP_USER_SURNAME, LDAP_USER_SURNAME);
@@ -2485,7 +2459,6 @@ public class Settings implements Serializable {
     OAUTH_LOGOUT_REDIRECT_URI = setStrVar(VARIABLE_OAUTH_LOGOUT_REDIRECT_URI, OAUTH_LOGOUT_REDIRECT_URI);
     OAUTH_ACCOUNT_STATUS = setIntVar(VARIABLE_OAUTH_ACCOUNT_STATUS, OAUTH_ACCOUNT_STATUS);
     OAUTH_GROUP_MAPPING = setStrVar(VARIABLE_OAUTH_GROUP_MAPPING, OAUTH_GROUP_MAPPING);
-    OAUTH_GROUP_MAPPING_ENABLED = setBoolVar(VARIABLE_OAUTH_GROUP_MAPPING_ENABLED, OAUTH_GROUP_MAPPING_ENABLED);
 
     REMOTE_AUTH_NEED_CONSENT = setBoolVar(VARIABLE_REMOTE_AUTH_NEED_CONSENT, REMOTE_AUTH_NEED_CONSENT);
     
@@ -2493,11 +2466,8 @@ public class Settings implements Serializable {
     DISABLE_REGISTRATION = setBoolVar(VARIABLE_DISABLE_REGISTRATION, DISABLE_REGISTRATION);
     DISABLE_REGISTRATION_UI = setBoolVar(VARIABLE_DISABLE_REGISTRATION_UI, DISABLE_REGISTRATION_UI);
   
-    LDAP_GROUP_MAPPING_SYNC_INTERVAL = setStrVar(VARIABLE_LDAP_GROUP_MAPPING_SYNC_INTERVAL,
+    LDAP_GROUP_MAPPING_SYNC_INTERVAL = setLongVar(VARIABLE_LDAP_GROUP_MAPPING_SYNC_INTERVAL,
       LDAP_GROUP_MAPPING_SYNC_INTERVAL);
-
-    LDAP_GROUP_MAPPING_SYNC_ENABLED= setBoolVar(VARIABLE_LDAP_GROUP_MAPPING_SYNC_ENABLED,
-        LDAP_GROUP_MAPPING_SYNC_ENABLED);
 
     VALIDATE_REMOTE_USER_EMAIL_VERIFIED =
       setBoolVar(VARIABLE_VALIDATE_REMOTE_USER_EMAIL_VERIFIED, VALIDATE_REMOTE_USER_EMAIL_VERIFIED);
@@ -2529,11 +2499,6 @@ public class Settings implements Serializable {
   public synchronized String getLdapGroupMapping() {
     checkCache();
     return LDAP_GROUP_MAPPING;
-  }
-
-  public synchronized boolean isLdapGroupMappingEnabled() {
-    checkCache();
-    return LDAP_GROUP_MAPPING_ENABLED;
   }
 
   public synchronized String getLdapUserId() {
@@ -2624,11 +2589,6 @@ public class Settings implements Serializable {
   public synchronized String getOAuthGroupMapping() {
     checkCache();
     return OAUTH_GROUP_MAPPING;
-  }
-  
-  public synchronized boolean isOAuthGroupMappingEnabled() {
-    checkCache();
-    return OAUTH_GROUP_MAPPING_ENABLED;
   }
 
   public void updateOAuthGroupMapping(String mapping) {
@@ -2787,12 +2747,7 @@ public class Settings implements Serializable {
     return isRegistrationDisabled() || DISABLE_REGISTRATION_UI;
   }
 
-  public synchronized boolean isLdapGroupMappingSyncEnabled() {
-    checkCache();
-    return LDAP_GROUP_MAPPING_SYNC_ENABLED;
-  }
-
-  public synchronized String ldapGroupMappingSyncInterval() {
+  public synchronized long ldapGroupMappingSyncInterval() {
     checkCache();
     return LDAP_GROUP_MAPPING_SYNC_INTERVAL;
   }
@@ -3180,6 +3135,19 @@ public class Settings implements Serializable {
     return KUBE_KNATIVE_DOMAIN_NAME;
   }
 
+  //comma seperated list of tainted nodes
+  private String KUBE_TAINTED_NODES = "";
+  public synchronized String getKubeTaintedNodes() {
+    checkCache();
+    return KUBE_TAINTED_NODES;
+  }
+
+  private String KUBE_TAINTED_NODES_MONITOR_INTERVAL = "30m";
+  public synchronized String getKubeTaintedMonitorInterval() {
+    checkCache();
+    return KUBE_TAINTED_NODES_MONITOR_INTERVAL;
+  }
+
   private Boolean HOPSWORKS_ENTERPRISE = false;
   public synchronized Boolean getHopsworksEnterprise() {
     checkCache();
@@ -3234,13 +3202,6 @@ public class Settings implements Serializable {
     return ENABLE_JUPYTER_PYTHON_KERNEL_NON_KUBERNETES;
   }
 
-  private boolean ENABLE_FLYINGDUCK = false;
-
-  public synchronized boolean isFlyingduckEnabled() {
-    checkCache();
-    return ENABLE_FLYINGDUCK;
-  }
-
   //These dependencies were collected by installing jupyterlab in a new environment
   public  static final List<String> JUPYTER_DEPENDENCIES = Arrays.asList("urllib3", "chardet", "idna", "requests",
       "attrs", "zipp", "importlib-metadata", "pyrsistent", "six", "jsonschema", "prometheus-client", "pycparser",
@@ -3275,7 +3236,7 @@ public class Settings implements Serializable {
     checkCache();
     return JWT_EXP_LEEWAY_SEC;
   }
-  
+
   public synchronized long getJWTLifetimeMsPlusLeeway() {
     checkCache();
     return JWT_LIFETIME_MS + (JWT_EXP_LEEWAY_SEC * 1000L);
@@ -3342,19 +3303,12 @@ public class Settings implements Serializable {
     checkCache();
     return HDFS_FILE_OP_JOB_UTIL;
   }
-  
+
   private int HDFS_FILE_OP_JOB_DRIVER_MEM = 2048;
   public synchronized int getHdfsFileOpJobDriverMemory() {
     checkCache();
     return HDFS_FILE_OP_JOB_DRIVER_MEM;
   }
-  
-  private int FS_STORAGE_CONNECTOR_SESSION_DURATION = 3600;
-  public synchronized int getFSStorageConnectorSessionDuration() {
-    checkCache();
-    return FS_STORAGE_CONNECTOR_SESSION_DURATION;
-  }
-
   private long FEATURESTORE_DB_DEFAULT_QUOTA = HdfsConstants.QUOTA_DONT_SET;
   public synchronized long getFeaturestoreDbDefaultQuota() {
     checkCache();
@@ -3626,7 +3580,7 @@ public class Settings implements Serializable {
 
   public synchronized String getBaseDockerImagePythonName() {
     checkCache();
-    if(isManagedDockerRegistryOnManagedCloud()){
+    if(isManagedDockerRegistry()){
       return DOCKER_BASE_NON_PYTHON_IMAGE + ":" + DOCKER_BASE_IMAGE_PYTHON_NAME +
           "_" + HOPSWORKS_VERSION;
     }else{
@@ -3668,11 +3622,7 @@ public class Settings implements Serializable {
   private Boolean MANAGED_DOCKER_REGISTRY = false;
   public synchronized Boolean isManagedDockerRegistry(){
     checkCache();
-    return MANAGED_DOCKER_REGISTRY;
-  }
-
-  public synchronized Boolean isManagedDockerRegistryOnManagedCloud() {
-    return isManagedDockerRegistry() && isCloud();
+    return MANAGED_DOCKER_REGISTRY && isCloud();
   }
 
   public synchronized String getBaseNonPythonDockerImageWithNoTag(){
@@ -3790,26 +3740,7 @@ public class Settings implements Serializable {
     checkCache();
     return QUOTAS_MAX_PARALLEL_EXECUTIONS;
   }
-  
-  private String LOGIN_PAGE_OVERWRITE = null;
-  public synchronized String getLoginPageOverwrite() {
-    checkCache();
-    return LOGIN_PAGE_OVERWRITE;
-  }
-  
-  private boolean ONGOING_BACKUP = false;
-  public synchronized boolean getOngoingBackup() {
-    checkCache();
-    return ONGOING_BACKUP;
-  }
-  
-  public synchronized void setOngoingBackup(Boolean ongoing) {
-    if(ONGOING_BACKUP !=ongoing) {
-      em.merge(new Variables(VARIABLE_ONGOING_BACKUP, ongoing.toString(), VariablesVisibility.ADMIN, false));
-      ONGOING_BACKUP = ongoing;
-    }
-  }
-  
+
   private static final String VARIABLE_SQL_MAX_SELECT_IN = "sql_max_select_in";
   private Integer SQL_MAX_SELECT_IN = 100;
   /**
@@ -3819,10 +3750,10 @@ public class Settings implements Serializable {
     checkCache();
     return SQL_MAX_SELECT_IN;
   }
-  
+
   // The maximum number of http threads in the thread pool is set to 200 by default
   private int MAX_LONG_RUNNING_HTTP_REQUESTS = 50;
-  
+
   public synchronized int getMaxLongRunningHttpRequests() {
     checkCache();
     return MAX_LONG_RUNNING_HTTP_REQUESTS;

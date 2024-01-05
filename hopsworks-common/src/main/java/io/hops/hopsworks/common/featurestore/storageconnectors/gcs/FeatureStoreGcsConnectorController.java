@@ -17,7 +17,6 @@
 package io.hops.hopsworks.common.featurestore.storageconnectors.gcs;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.user.security.secrets.SecretsFacade;
 import io.hops.hopsworks.common.featurestore.storageconnectors.StorageConnectorUtil;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ProjectException;
@@ -27,7 +26,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.Featur
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.gcs.FeatureStoreGcsConnector;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.persistence.entity.user.security.secrets.Secret;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
@@ -42,11 +40,11 @@ import java.util.logging.Logger;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class FeatureStoreGcsConnectorController {
+  
   private static final Logger LOGGER = Logger.getLogger(FeatureStoreGcsConnectorController.class.getName());
+  
   @EJB
   private StorageConnectorUtil storageConnectorUtil;
-  @EJB
-  private SecretsFacade secretsFacade;
 
   public FeatureStoreGcsConnectorController() {}
 
@@ -73,11 +71,20 @@ public class FeatureStoreGcsConnectorController {
                                                   FeatureStoreGcsConnectorDTO gcsConnectorDTO)
     throws FeaturestoreException, ProjectException, UserException {
     validateInput(project, user, gcsConnectorDTO);
+    
     FeatureStoreGcsConnector gcsConnector = new FeatureStoreGcsConnector();
     gcsConnector.setKeyPath(gcsConnectorDTO.getKeyPath());
     gcsConnector.setAlgorithm(gcsConnectorDTO.getAlgorithm());
     gcsConnector.setBucket(gcsConnectorDTO.getBucket());
-    updateSecret(user, gcsConnectorDTO, featureStore, gcsConnector);
+
+    if (gcsConnectorDTO.getAlgorithm() != null) {
+      String secretName = storageConnectorUtil.createSecretName(featureStore.getId(), gcsConnectorDTO.getName(),
+        gcsConnectorDTO.getStorageConnectorType());
+      EncryptionSecrets secretsClass = new EncryptionSecrets(gcsConnectorDTO.getEncryptionKey(),
+        gcsConnectorDTO.getEncryptionKeyHash());
+      gcsConnector.setEncryptionSecret(storageConnectorUtil.createProjectSecret(user, secretName, featureStore,
+        secretsClass));
+    }
     return gcsConnector;
   }
   
@@ -92,41 +99,25 @@ public class FeatureStoreGcsConnectorController {
     gcsConnector.setKeyPath(gcsConnectorDTO.getKeyPath());
     gcsConnector.setAlgorithm(gcsConnectorDTO.getAlgorithm());
     gcsConnector.setBucket(gcsConnectorDTO.getBucket());
-    updateSecret(user, gcsConnectorDTO, featureStore, gcsConnector);
+
+    if (gcsConnectorDTO.getAlgorithm() != null) {
+      String secretName = storageConnectorUtil.createSecretName(featureStore.getId(), gcsConnectorDTO.getName(),
+        gcsConnectorDTO.getStorageConnectorType());
+      EncryptionSecrets secretsClass = new EncryptionSecrets(gcsConnectorDTO.getEncryptionKey(),
+        gcsConnectorDTO.getEncryptionKeyHash());
+      gcsConnector.setEncryptionSecret(
+        storageConnectorUtil.updateProjectSecret(user, gcsConnector.getEncryptionSecret(),
+          secretName, featureStore, secretsClass));
+    } else {
+      gcsConnector.setEncryptionSecret(null);
+    }
     return gcsConnector;
   }
 
-  private void updateSecret(Users user, FeatureStoreGcsConnectorDTO gcsConnectorDTO,
-                            Featurestore featureStore, FeatureStoreGcsConnector gcsConnector) throws UserException,
-          ProjectException {
-    Secret secret = gcsConnector.getEncryptionSecret();
-    if (gcsConnectorDTO.getAlgorithm() != null) {
-      String secretName;
-      if (secret != null) { // update existing secret
-        secretName = secret.getId().getName();
-      } else { // create new secret
-        secretName = storageConnectorUtil.createSecretName(featureStore.getId(), gcsConnectorDTO.getName(),
-                gcsConnectorDTO.getStorageConnectorType());
-      }
-      EncryptionSecrets secretsClass = new EncryptionSecrets(gcsConnectorDTO.getEncryptionKey(),
-              gcsConnectorDTO.getEncryptionKeyHash());
-      // update secret
-      gcsConnector.setEncryptionSecret(
-              storageConnectorUtil.updateProjectSecret(user, gcsConnector.getEncryptionSecret(),
-                      secretName , featureStore, secretsClass)
-      );
-    } else { // set secrets to null
-      gcsConnector.setEncryptionSecret(null);
-    }
-    if (gcsConnector.getEncryptionSecret()==null && secret!=null) {
-      // delete old secret
-      secretsFacade.deleteSecret(secret.getId());
-    }
-  }
-  
   public void validateInput(Project project, Users user, FeatureStoreGcsConnectorDTO gcsConnectorDTO)
       throws FeaturestoreException {
     storageConnectorUtil.validatePath(project, user, gcsConnectorDTO.getKeyPath(), "Key file path");
+
     if (Strings.isNullOrEmpty(gcsConnectorDTO.getKeyPath())) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.GCS_FIELD_MISSING, Level.FINE,
         "Key File Path cannot be empty");
@@ -135,6 +126,7 @@ public class FeatureStoreGcsConnectorController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.GCS_FIELD_MISSING, Level.FINE,
                                       "Bucket cannot be empty");
     }
+    
     // either none of the three should be set or all
     if (!Strings.isNullOrEmpty(gcsConnectorDTO.getEncryptionKey())
       || !Strings.isNullOrEmpty(gcsConnectorDTO.getEncryptionKeyHash())
