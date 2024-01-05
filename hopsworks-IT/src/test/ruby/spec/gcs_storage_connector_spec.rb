@@ -122,10 +122,9 @@ describe "On #{ENV['OS']}" do
     expect(parsed_result_update['bucket']).to eql(bucket)
   end
 
-  it "should update only encryption secret of gcs connector with same name" do
+  it "should update encryption secret of gcs connector" do
     project = get_project
     featurestore_id = get_featurestore_id(project.id)
-
     key_path = "/Projects/#{@project['projectname']}/Resources/sampleKey.json"
     bucket = 'testbucket'
     encryption_key = "yFXZv3V+KT++v8/L6HcRqjVPAotNO3beIzcetgTBoSM="
@@ -135,7 +134,11 @@ describe "On #{ENV['OS']}" do
                                                        encryption_key: encryption_key,
                                                        encryption_key_hash: encryption_hash)
     expect_status_details(201)
-
+    # check secret created for connector
+    secret_name = "gcs_"+connector_name+"_"+featurestore_id.to_s
+    get_private_secret(secret_name)
+    expect_status_details(200)
+    # updates
     description = "test gcs updated"
     encryption_key = "new key"
     encryption_hash = "new hash"
@@ -154,6 +157,15 @@ describe "On #{ENV['OS']}" do
     update_result = update_gcs_connector_json(project.id, featurestore_id, connector_name, additional_data )
     parsed_result_update = JSON.parse(update_result)
     expect_status_details(200)
+    # check updated secret created for connector
+    result = get_private_secret(secret_name)
+    expect_status_details(200)
+    updated_secret = JSON.parse(result)
+    updated_secret_value = JSON.parse(updated_secret["items"][0]["secret"])
+    # assert secrets data
+    expect(updated_secret_value["encryptionKey"]).to eql(encryption_key)
+    expect(updated_secret_value["encryptionKeyHash"]). to eql(encryption_hash)
+    # assert connectors data
     expect(parsed_result_update.key?("id")).to be true
     expect(parsed_result_update["name"]).to eql(connector_name)
     expect(parsed_result_update["storageConnectorType"]).to eql("GCS")
@@ -223,7 +235,7 @@ describe "On #{ENV['OS']}" do
     expect(parsed_result["name"]).to eql(connector_name)
   end
 
-  it "should update connector with encryption to without encryption" do
+  it "should update connector with encryption to without encryption and delete secret" do
     project = get_project
     featurestore_id = get_featurestore_id(project.id)
     key_path = "/Projects/#{@project['projectname']}/Resources/sampleKey.json"
@@ -234,6 +246,11 @@ describe "On #{ENV['OS']}" do
     _, connector_name = create_gcs_connector(project.id, featurestore_id, key_path, bucket, algorithm:algorithm,
                                              encryption_key:encryption_key, encryption_key_hash:encryption_hash )
     expect_status_details(201)
+    # check secret created for connector
+    secret_name = "gcs_"+connector_name+"_"+featurestore_id.to_s
+    get_private_secret(secret_name)
+    expect_status_details(200)
+    # updates
     description = "test gcs updated"
     key_path = "/Projects/#{@project['projectname']}/Resources/newSampleKey.json"
     additional_data = {
@@ -247,6 +264,9 @@ describe "On #{ENV['OS']}" do
     update_result = update_gcs_connector_json(project.id, featurestore_id, connector_name, additional_data )
     parsed_result_update = JSON.parse(update_result)
     expect_status_details(200)
+    get_private_secret(secret_name)
+    # secret should get deleted after update
+    expect_status_details(404)
     expect(parsed_result_update.key?("id")).to be true
     expect(parsed_result_update["name"]).to eql(connector_name)
     expect(parsed_result_update["storageConnectorType"]).to eql("GCS")
@@ -266,10 +286,8 @@ describe "On #{ENV['OS']}" do
     bucket = 'testbucket'
     _, connector_name = create_gcs_connector(project.id, featurestore_id, key_path, bucket)
     expect_status_details(201)
-
     delete_connector(project.id, featurestore_id, connector_name)
     expect_status_details(200)
     expect(test_file(key_path)).to be false
   end
-
 end
