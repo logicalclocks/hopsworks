@@ -125,4 +125,16 @@ public class DbCluster {
   @Getter @Setter
   @JsonProperty("cluster_cores")
   private Float clusterCores;
+
+  @Getter @Setter
+  @JsonProperty("data_security_mode")
+  private String dataSecurityMode;
+
+  @Getter @Setter
+  @JsonProperty("single_user_name")
+  private String singleUserName;
+
+  @Getter @Setter
+  @JsonProperty("runtime_engine")
+  private String runtimeEngine;
 }
