@@ -17,8 +17,10 @@
 package io.hops.hopsworks.api.featurestore.featureview;
 
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewDTO;
+import io.hops.hopsworks.common.featurestore.query.QueryDTO;
 import io.hops.hopsworks.common.featurestore.query.Query;
 import io.hops.hopsworks.common.featurestore.query.QueryController;
+import io.hops.hopsworks.common.featurestore.query.join.JoinDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetInputValidation;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
