@@ -46,6 +46,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.jobs.execution.HopsJob;
 import io.hops.hopsworks.common.jobs.yarn.YarnExecutionFinalizer;
+import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.Settings;
@@ -86,6 +87,8 @@ public class AsynchronousJobExecutor {
   private CertificateMaterializer certificateMaterializer;
   @EJB
   private BaseHadoopClientsService baseHadoopClientsService;
+  @EJB
+  private YarnLogUtil yarnLogUtil;
   
   @Asynchronous
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -138,5 +141,8 @@ public class AsynchronousJobExecutor {
   public BaseHadoopClientsService getBaseHadoopClientsService() {
     return baseHadoopClientsService;
   }
-
+  
+  public YarnLogUtil getYarnLogUtil() {
+    return yarnLogUtil;
+  }
 }

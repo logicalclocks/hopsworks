@@ -25,6 +25,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.statistics.Featurestore
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -66,6 +67,7 @@ import java.util.Objects;
             "WHERE fsa.trainingDataset = :trainingDataset AND fsa.execution = :execution")})
 public class FeaturestoreActivity implements Serializable {
   private static final long serialVersionUID = 1L;
+  private static final int META_MSG_STR_SIZE = 15000;
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -92,7 +94,7 @@ public class FeaturestoreActivity implements Serializable {
   @Column(name = "meta_type")
   private FeaturestoreActivityMeta activityMeta;
 
-  @Column(name = "meta_msg")
+  @Column(name = "meta_msg", length = META_MSG_STR_SIZE)
   private String activityMetaMsg;
 
   @JoinColumn(name = "execution_id", referencedColumnName = "id")
@@ -169,7 +171,7 @@ public class FeaturestoreActivity implements Serializable {
   }
 
   public void setActivityMetaMsg(String activityMetaMsg) {
-    this.activityMetaMsg = activityMetaMsg;
+    this.activityMetaMsg = StringUtils.abbreviate(activityMetaMsg, META_MSG_STR_SIZE);
   }
 
   public Execution getExecution() {

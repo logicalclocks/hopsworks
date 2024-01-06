@@ -420,6 +420,9 @@ public class Settings implements Serializable {
 
   private static final String VARIABLE_PROMETHEUS_PORT = "prometheus_port";
 
+  // Conda install enable flag
+  private static final String VARIABLE_ENABLE_CONDA_INSTALL = "enable_conda_install";
+
   private static final String VARIABLE_SKIP_NAMESPACE_CREATION =
       "kube_skip_namespace_creation";
   public enum KubeType{
@@ -954,6 +957,8 @@ public class Settings implements Serializable {
           VARIABLE_OPENSEARCH_DEFAULT_EMBEDDING_INDEX, OPENSEARCH_DEFAULT_EMBEDDING_INDEX_NAME);
       OPENSEARCH_NUM_DEFAULT_EMBEDDING_INDEX = setIntVar(
           VARIABLE_NUM_OPENSEARCH_DEFAULT_EMBEDDING_INDEX, OPENSEARCH_NUM_DEFAULT_EMBEDDING_INDEX);
+      
+      ENABLE_CONDA_INSTALL = setBoolVar(VARIABLE_ENABLE_CONDA_INSTALL, ENABLE_CONDA_INSTALL);
       cached = true;
     }
   }
@@ -3805,5 +3810,11 @@ public class Settings implements Serializable {
   public Integer commandRetryPerCleanInterval() {
     checkCache();
     return COMMAND_SEARCH_FS_RETRY_PER_CLEAN_INTERVAL;
+  }
+  
+  private boolean ENABLE_CONDA_INSTALL = true;
+  public synchronized boolean getEnableCondaInstall() {
+    checkCache();
+    return ENABLE_CONDA_INSTALL;
   }
 }

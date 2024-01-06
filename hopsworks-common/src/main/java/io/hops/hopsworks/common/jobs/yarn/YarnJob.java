@@ -185,12 +185,11 @@ public abstract class YarnJob extends HopsJob {
       YarnApplicationState.KILLED);
 
   private void writeLog(String message, Exception exception, DistributedFileSystemOps udfso) {
-
     Date date = new Date();
     String dateString = date.toString();
     dateString = dateString.replace(" ", "_").replace(":", "-");
     stdErrFinalDestination = stdErrFinalDestination + jobs.getName() + dateString + "/stderr.log";
-    YarnLogUtil.writeLog(udfso, stdErrFinalDestination, message, exception);
+    services.getYarnLogUtil().writeLog(udfso, stdErrFinalDestination, message, exception);
     services.getExecutionFacade().updateStdErrPath(execution, stdErrFinalDestination);
   }
 
