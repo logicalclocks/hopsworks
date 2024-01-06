@@ -47,7 +47,7 @@ public class FeatureViewInputValidator {
 
   public void validate(FeatureViewDTO featureViewDTO, Project project, Users user) throws FeaturestoreException {
     featurestoreInputValidation.verifyUserInput(featureViewDTO);
-    validateCreationInput(featureViewDTO);
+    validateCreationInput(featureViewDTO.getQuery());
     Query query = queryController.convertQueryDTO(project, user, featureViewDTO.getQuery(), false);
     validateVersion(featureViewDTO.getVersion());
     trainingDatasetInputValidation.validateFeatures(query, featureViewDTO.getFeatures());
@@ -56,21 +56,19 @@ public class FeatureViewInputValidator {
     }
   }
 
-  public void validateCreationInput(FeatureViewDTO featureViewDTO) throws FeaturestoreException {
-    if (featureViewDTO.getQuery() == null) {
+  public void validateCreationInput(QueryDTO queryDTO) throws FeaturestoreException {
+    if (queryDTO == null) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_VIEW_CREATION_ERROR, Level.FINE,
           "`Query` is missing from input.");
     }
-    validateCreationInput(featureViewDTO.getQuery());
-  }
-
-  public void validateCreationInput(QueryDTO queryDTO) throws FeaturestoreException {
-    if (queryDTO.getLeftFeatures().isEmpty()) {
+    if (queryDTO.getLeftFeatures() == null || queryDTO.getLeftFeatures().isEmpty()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_VIEW_CREATION_ERROR, Level.FINE,
-          "Feature View queries must have features");
+          "Queries must have features");
     }
-    for (JoinDTO joinDTO : queryDTO.getJoins()) {
-      validateCreationInput(joinDTO.getQuery());
+    if (queryDTO.getJoins() != null) {
+      for (JoinDTO joinDTO : queryDTO.getJoins()) {
+        validateCreationInput(joinDTO.getQuery());
+      }
     }
   }
 
