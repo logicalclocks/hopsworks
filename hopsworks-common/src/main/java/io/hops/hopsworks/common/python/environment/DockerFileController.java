@@ -232,7 +232,11 @@ public class DockerFileController {
                   + apiToken + "@" + repoUrl.getHost() + repoUrl.getPath() + "'");
               }
             } else {
-              writer.write(anaconda_project_dir + "/bin/pip install --upgrade 'git+" + cc.getArg() + "'");
+              if(cc.getArg().startsWith("https://")) { //This is for backwards compatibility with previous behaviour
+                writer.write(anaconda_project_dir + "/bin/pip install --upgrade 'git+" + cc.getArg() + "'");
+              } else {
+                writer.write(anaconda_project_dir + "/bin/pip install --upgrade '" + cc.getArg() + "'");
+              }
             }
             dockerBuildOpts.add(DOCKER_NO_CACHE_OPT);
             break;
