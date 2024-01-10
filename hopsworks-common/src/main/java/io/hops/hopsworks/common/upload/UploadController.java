@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.common.upload;
 
+import com.google.common.annotations.VisibleForTesting;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.exceptions.DatasetException;
@@ -22,7 +23,6 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.AccessControlException;
 
@@ -32,8 +32,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -49,25 +47,14 @@ public class UploadController {
   @EJB
   private ResumableInfoStorage storage;
   
-  /**
-   * Check if user has permission to write to path. And destination exists.
-   * Check is done only if chunk number == 1.
-   * @param flowInfo
-   * @param path
-   * @param username
-   * @throws IOException
-   * @throws DatasetException
-   */
-  public void checkPermission(FlowInfo flowInfo, String path, String username) throws IOException, DatasetException {
-    if (username != null) {
-      DistributedFileSystemOps udfso = null;
-      try {
-        udfso = dfs.getDfsOps(username);
-        checkPermission(udfso, flowInfo, path);
-      } finally {
-        dfs.closeDfsClient(udfso);
-      }
-    }
+  public UploadController() {
+  }
+  
+  @VisibleForTesting
+  public UploadController(StagingManager stagingManager, DistributedFsService dfs, ResumableInfoStorage storage) {
+    this.stagingManager = stagingManager;
+    this.dfs = dfs;
+    this.storage = storage;
   }
   
   /**
@@ -89,9 +76,9 @@ public class UploadController {
       throw new AccessControlException("Permission denied: You can not upload to this folder. ");
     } catch (IOException e) {
       //cleanup is not easy b/c we do not know when the client is done sending chunks
-      LOGGER.log(Level.WARNING, "Failed to upload file: {0}", flowInfo.getFilename());
+      LOGGER.log(Level.WARNING, "Failed to upload file: {0} {1}", new Object[]{flowInfo.getFilename(), e.getMessage()});
       throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_ERROR, Level.FINE,
-        "Failed to upload." + e.getMessage(), e.getMessage());
+        "Failed to upload. " + e.getMessage(), e.getMessage());
     }
   }
   
@@ -100,13 +87,13 @@ public class UploadController {
    * @param flowInfo
    * @return
    */
-  public boolean isUploaded(FlowInfo flowInfo, String hdfsPath) {
+  public boolean uploaded(FlowInfo flowInfo, String hdfsPath) {
     flowInfo.setFilePath(getTmpStagingDir(flowInfo.getFilename(), hdfsPath).toString());
-    return storage.isUploaded(flowInfo.hashCode(), flowInfo.getChunkNumber());
+    return storage.uploaded(flowInfo.hashCode(), flowInfo.getChunkNumber());
   }
   
-  private void checkPermission(DistributedFileSystemOps udfso, FlowInfo flowInfo, String path) throws IOException,
-    DatasetException {
+  private void checkPermission(DistributedFileSystemOps udfso, FlowInfo flowInfo, String path, Path stagingDir)
+      throws IOException, DatasetException {
     String fileName = flowInfo.getFilename();
     Path dest = new Path(path, fileName);
     if (flowInfo.getChunkNumber() == 1) {
@@ -115,8 +102,9 @@ public class UploadController {
           throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, Level.FINE,
             "Destination already exists. path: " + dest);
         }
+        //if chunk 1 creates placeholder but not staging dir other chunks will throw destination exist exception
+        createStagingDirIfNotExist(udfso, stagingDir);
         udfso.touchz(dest);
-        udfso.rm(dest, false);//remove it to create staging dir. Dir can not overwrite file.
       } catch (AccessControlException ex) {
         throw new AccessControlException("Permission denied: You can not upload to this folder. ");
       }
@@ -124,9 +112,9 @@ public class UploadController {
   }
   
   //save chunk hdfs
-  private void saveChunk(DistributedFileSystemOps dfsOps, InputStream uploadedInputStream, FlowInfo info,
-    int chunkNumber) throws IOException {
-    Path location = new Path(info.getFilePath(), String.valueOf(chunkNumber));
+  private void saveChunk(DistributedFileSystemOps dfsOps, InputStream uploadedInputStream, FlowInfo info)
+      throws IOException {
+    Path location = new Path(info.getFilePath(), String.valueOf(info.getChunkNumber()));
     FSDataOutputStream out = null;
     try {
       out = dfsOps.create(location);
@@ -139,41 +127,44 @@ public class UploadController {
   }
   
   //hdfs mark chunk as uploaded and check if all chunks are uploaded
-  private boolean markAsUploadedAndCheckFinished(DistributedFileSystemOps dfsOps, FlowInfo info, int chunkNumber,
-    long contentLength) throws IOException {
+  private boolean markAsUploadedAndCheckFinished(DistributedFileSystemOps dfsOps, FlowInfo info)
+      throws IOException, DatasetException {
     //Mark as uploaded and check if finished. Will remove the info if finished.
-    if (storage.addChunkAndCheckIfFinished(info, chunkNumber, contentLength)) {
+    if (storage.addChunkAndCheckIfFinished(info, info.getChunkNumber(), info.getCurrentChunkSize())) {
       //collect
-      Path location = new Path(info.getFilePath());
-      if (dfsOps.exists(location) && dfsOps.getFileStatus(location).isDirectory()) {
-        FileStatus[] fileStatuses = dfsOps.listStatus(location);
-        if (fileStatuses != null && fileStatuses.length > 0) {
-          if (fileStatuses.length > 1) {
-            Arrays.sort(fileStatuses, Comparator.comparingInt(o -> Integer.parseInt(o.getPath().getName())));
-          }
-          //Here we remove ".temp" to collect files in filename
-          Path collected = fromTemp(location);
-          FSDataOutputStream out = null;
-          FSDataInputStream in = null;
-          try {
-            out = dfsOps.create(collected);
-            for (FileStatus fileStatus : fileStatuses) {
-              try {
-                in = dfsOps.open(fileStatus.getPath());
-                IOUtils.copy(in, out);
-              } finally {
-                IOUtils.closeQuietly(in);
-              }
-            }
-            dfsOps.rm(location, true);
-          } finally {
-            IOUtils.closeQuietly(out);
-          }
-        }
-      }
+      mergeChunks(info, dfsOps);
       return true;
     }
     return false;
+  }
+  
+  private void mergeChunks(FlowInfo info, DistributedFileSystemOps dfsOps) throws IOException, DatasetException {
+    Path location = new Path(info.getFilePath());
+    if (dfsOps.exists(location) && dfsOps.getFileStatus(location).isDirectory()) {
+      //Here we remove ".temp" to collect files in filename
+      Path collected = fromTemp(location);
+      FSDataOutputStream out = null;
+      FSDataInputStream in = null;
+      try {
+        out = dfsOps.create(collected);
+        for (int i = 1; i <= info.getTotalChunks(); i++) {
+          try {
+            Path chunk = new Path(info.getFilePath(), String.valueOf(i));
+            if (!dfsOps.exists(chunk) || !dfsOps.getFileStatus(chunk).isFile()) {
+              throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_ERROR, Level.SEVERE,
+                "Could not find chunk: " + i);
+            }
+            in = dfsOps.open(chunk);
+            IOUtils.copy(in, out);
+          } finally {
+            IOUtils.closeQuietly(in);
+          }
+        }
+        dfsOps.rm(location, true);
+      } finally {
+        IOUtils.closeQuietly(out);
+      }
+    }
   }
   
   private void copyToHdfs(DistributedFileSystemOps dfsOps, FlowInfo info, String hdfsPath) throws IOException {
@@ -193,19 +184,18 @@ public class UploadController {
   
   //upload using hdfs as staging
   private boolean hdfsStagingUpload(InputStream uploadedInputStream, FlowInfo flowInfo, String hdfsPath,
-    String username) throws DatasetException, IOException {
+      String username) throws DatasetException, IOException {
     boolean finished;
     DistributedFileSystemOps dfsOps = null;
     try {
       dfsOps = dfs.getDfsOps(username);
+      Path stagingDir = getTmpStagingDir(hdfsPath, flowInfo.getFilename());
       //check permission and if file exists. Only the first chunk to fail early.
-      checkPermission(dfsOps, flowInfo, hdfsPath);
-      String resumableFilePath = getTmpStagingDir(dfsOps, flowInfo.getFilename(), hdfsPath);
-      flowInfo.setFilePath(resumableFilePath);
+      checkPermission(dfsOps, flowInfo, hdfsPath, stagingDir);
+      checkStagingDir(dfsOps, flowInfo, hdfsPath, stagingDir);
+      flowInfo.setFilePath(stagingDir.toString());
       storage.put(flowInfo);
-      saveChunk(dfsOps, uploadedInputStream, flowInfo, flowInfo.getChunkNumber());
-      finished =
-        markAsUploadedAndCheckFinished(dfsOps, flowInfo, flowInfo.getChunkNumber(), flowInfo.getCurrentChunkSize());
+      finished = saveChunkAndCheckFinished(uploadedInputStream, dfsOps, flowInfo, hdfsPath);
       if (finished) {
         copyToHdfs(dfsOps, flowInfo, hdfsPath);
       }
@@ -217,27 +207,56 @@ public class UploadController {
     return finished;
   }
   
-  private String getTmpStagingDir(DistributedFileSystemOps dfsOps, String filename, String hdfsPath)
-    throws DatasetException {
-    Path userTmpDir = getTmpStagingDir(filename, hdfsPath);
+  private boolean saveChunkAndCheckFinished(InputStream uploadedInputStream, DistributedFileSystemOps dfsOps,
+      FlowInfo flowInfo, String hdfsPath) throws IOException, DatasetException {
     try {
-      if (!dfsOps.exists(userTmpDir)) {
-        boolean created = dfsOps.mkdirs(userTmpDir, dfsOps.getParentPermission(userTmpDir));
-        if (!created) {
-          LOGGER.log(Level.WARNING, "Failed to create upload staging dir. Path: {0}", userTmpDir.toString());
-        }
+      saveChunk(dfsOps, uploadedInputStream, flowInfo);
+      return markAsUploadedAndCheckFinished(dfsOps, flowInfo);
+    } catch (Exception e) {
+      // if chunk number 1 we should clean up the placeholder to allow retry
+      if (flowInfo.getChunkNumber() == 1) {
+        LOGGER.log(Level.INFO, "Failed on chunk 1. Cleaning up temporary placeholder.");
+        dfsOps.rm(new Path(hdfsPath, flowInfo.getFilename()), false);
       }
-      // No need to test if chunk exists. Should just overwrite it.
-      // We check if the file exists in permission check.
-      return userTmpDir.toString();
+      throw e;
+    }
+  }
+  
+  private void checkStagingDir(DistributedFileSystemOps dfsOps, FlowInfo flowInfo, String hdfsPath, Path stagingDir)
+      throws DatasetException {
+    Path dest = new Path(hdfsPath, flowInfo.getFilename());
+    try {
+      //Chunk 1 will create dest as a placeholder. So do not let other chunks that might come before chunk 1
+      // create the staging dir if the destination exists.
+      if (!dfsOps.exists(dest)) {
+        createStagingDirIfNotExist(dfsOps, stagingDir);
+      } else if (!dfsOps.exists(stagingDir)) { //stagingDir should have be created before placeholder (dest) by chunk 1
+        throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, Level.FINE,
+          "Destination already exists. path: " + dest);
+      }
+      
+      if (dfsOps.exists(stagingDir) && !dfsOps.getFileStatus(stagingDir).isDirectory()) {
+        throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, Level.FINE,
+          "Failed to create upload staging dir. path: " + stagingDir);
+      }
     } catch (IOException e) {
-      LOGGER.log(Level.WARNING, "Failed to create upload staging dir. Path: {0}", userTmpDir.toString());
+      LOGGER.log(Level.WARNING, "Failed to create upload staging dir. Path: {0}", stagingDir.toString());
       throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_ERROR, Level.SEVERE,
         "Failed to create upload staging dir", e.getMessage(), e);
     }
   }
   
-  private Path getTmpStagingDir(String filename, String hdfsPath) {
+  private void createStagingDirIfNotExist(DistributedFileSystemOps dfsOps, Path stagingDir) throws IOException {
+    if (!dfsOps.exists(stagingDir)) {
+      boolean created = dfsOps.mkdirs(stagingDir, dfsOps.getParentPermission(stagingDir));
+      if (!created) {
+        //another chunk may have created it
+        LOGGER.log(Level.INFO, "Failed to create upload staging dir. Path: {0}", stagingDir.toString());
+      }
+    }
+  }
+  
+  private Path getTmpStagingDir(String hdfsPath, String filename) {
     String baseDir = stagingManager.getStagingPath() + hdfsPath;
     //get hdfs staging dir staging-dir/hdfs-path/filename.temp
     return toTemp(baseDir, filename);
@@ -248,10 +267,11 @@ public class UploadController {
   }
   
   private Path fromTemp(Path path) {
-    return fromTemp(path.toString().replace(".temp", ""));
+    return fromTemp(path.toString());
   }
   
   private Path fromTemp(String path) {
-    return new Path(path.replace(".temp", ""));
+    int start = path.lastIndexOf(".temp");
+    return new Path(path.substring(0, start));
   }
 }
