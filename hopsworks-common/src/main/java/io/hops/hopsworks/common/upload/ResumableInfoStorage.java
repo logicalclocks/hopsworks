@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.common.upload;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hazelcast.config.MapConfig;
 import com.hazelcast.core.HazelcastInstance;
 
@@ -77,6 +78,14 @@ public class ResumableInfoStorage {
   private ResumableInfoProcessor resumableInfoProcessor;
 
   private ConcurrentHashMap<Integer, UploadInfo> flowInfoMap;
+
+  public ResumableInfoStorage() {
+  }
+
+  @VisibleForTesting
+  public void initialize() {
+    flowInfoMap = new ConcurrentHashMap<>();
+  }
 
   @PostConstruct
   protected void init() {
@@ -128,8 +137,6 @@ public class ResumableInfoStorage {
    * Add chunk number and check if finished.
    *
    * @param info
-   * @param rcn
-   * @param contentLength
    * @return
    */
   public boolean addChunkAndCheckIfFinished(FlowInfo info, int rcn, long contentLength) {
@@ -151,15 +158,15 @@ public class ResumableInfoStorage {
   }
 
   /**
-   * Check if chunk identified by rcn is uploaded.
+   * Check if chunk identified by rcn was uploaded.
    *
    * @param identifier
    * @param rcn
    * @return
    */
-  public boolean isUploaded(Integer identifier, Integer rcn) {
+  public boolean uploaded(Integer identifier, Integer rcn) {
     if (hazelcastInstance != null) {
-      return resumableInfoProcessor.isUploaded(identifier, rcn, hazelcastInstance, MAP_NAME);
+      return resumableInfoProcessor.uploaded(identifier, rcn, hazelcastInstance, MAP_NAME);
     } else {
       UploadInfo uploadInfo = flowInfoMap.get(identifier);
       return uploadInfo != null && uploadInfo.getUploadedChunks().contains(rcn);

@@ -49,7 +49,7 @@ public class ResumableInfoProcessor implements Serializable {
     IMap<Integer, UploadInfo> uploadInfoMap = hazelcastInstance.getMap(mapName);
     UploadInfo uploadInfo = uploadInfoMap.get(info.hashCode());
     if (uploadInfo == null) {
-      LOGGER.log(Level.WARNING, "Failed to find upload info with id: {1}, rcn: {2}, {3}",
+      LOGGER.log(Level.WARNING, "Failed to find upload info with id: {0}, rcn: {1}, {2}",
         new Object[]{info.hashCode(), rcn, info});
       return false;
     }
@@ -67,7 +67,7 @@ public class ResumableInfoProcessor implements Serializable {
   }
 
   @Lock(LockType.READ)
-  public boolean isUploaded(Integer identifier, Integer rcn, HazelcastInstance hazelcastInstance, String mapName) {
+  public boolean uploaded(Integer identifier, Integer rcn, HazelcastInstance hazelcastInstance, String mapName) {
     IMap<Integer, UploadInfo> uploadInfo = hazelcastInstance.getMap(mapName);
     UploadInfo uInfo = uploadInfo.get(identifier);
     return uInfo != null && uInfo.getUploadedChunks().contains(rcn);
