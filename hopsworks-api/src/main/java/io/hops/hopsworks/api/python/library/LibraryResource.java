@@ -67,8 +67,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -352,10 +350,9 @@ public class LibraryResource {
   }
 
   private void validateGitURL(String url) {
-    try {
-      new URL((url));
-    } catch (MalformedURLException e) {
-      throw new IllegalArgumentException("The provided Git URL is not a valid URL");
+    //url.startsWith("https://") is kept for backwards compatibility reasons
+    if(!url.toLowerCase().contains("git+") && !url.toLowerCase().startsWith("https://")) {
+      throw new IllegalArgumentException("The provided git installation url is not valid as it does not contain git+");
     }
   }
 }
