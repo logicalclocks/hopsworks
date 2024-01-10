@@ -85,9 +85,14 @@ public class ProjectQuotasController {
       quotas.setYarnQuotaInSecs(yarnQuotaOpt.get().getQuotaRemaining());
       quotas.setYarnUsedQuotaInSecs(yarnQuotaOpt.get().getTotal());
     }
+
     // HDFS project directory quota
-    Optional<HdfsDirectoryWithQuotaFeature> projectInodeAttrsOptional =
-        hdfsDirectoryWithQuotaFeatureFacade.getByInodeId(inodeController.getProjectRoot(project.getName()).getId());
+    Inode projectRootInode = inodeController.getProjectRoot(project.getName());
+    Optional<HdfsDirectoryWithQuotaFeature> projectInodeAttrsOptional = Optional.empty();
+    if (projectRootInode != null) {
+      projectInodeAttrsOptional = hdfsDirectoryWithQuotaFeatureFacade.getByInodeId(projectRootInode.getId());
+    }
+
     if (projectInodeAttrsOptional.isPresent()) {
       // storage quota
       Long storageQuota = projectInodeAttrsOptional.get().getSsquota().longValue();
