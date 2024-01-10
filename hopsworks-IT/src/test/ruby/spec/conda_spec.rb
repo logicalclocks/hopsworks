@@ -178,14 +178,30 @@ describe "On #{ENV['OS']}" do
             delete_env(@project[:id], ENV['PYTHON_VERSION'])
             wait_for_running_command(@project[:id])
           end
-          it 'install from git' do
+          it 'install from git branch using @' do
+            expect(CondaCommands.find_by(project_id: @project[:id])).to be_nil
+            @project = create_env_and_update_project(@project, ENV['PYTHON_VERSION'])
+            uninstall_library(@project[:id], ENV['PYTHON_VERSION'], 'matplotlib')
+
+            wait_for_running_command(@project[:id])
+
+            install_library(@project[:id], ENV['PYTHON_VERSION'], 'matplotlib@v3.7.2', 'GIT', 'git', 'matplotlib @ git+https://github.com/matplotlib/matplotlib@v3.7.2')
+
+            wait_for_running_command(@project[:id])
+
+            list_libraries(@project[:id], ENV['PYTHON_VERSION'])
+
+            matplotlib_library = json_body[:items].detect { |library| library[:library] == "matplotlib" }
+            expect(matplotlib_library[:version]).to eq "3.7.2"
+          end
+          it 'install from git branch using git+' do
             expect(CondaCommands.find_by(project_id: @project[:id])).to be_nil
             @project = create_env_and_update_project(@project, ENV['PYTHON_VERSION'])
             uninstall_library(@project[:id], ENV['PYTHON_VERSION'], 'hops')
 
             wait_for_running_command(@project[:id])
 
-            install_library(@project[:id], ENV['PYTHON_VERSION'], 'hops-util-py.git@branch-2.0', 'GIT', 'git', 'https://github.com/logicalclocks/hops-util-py.git@branch-2.0')
+            install_library(@project[:id], ENV['PYTHON_VERSION'], 'hops-util-py.git@branch-2.0', 'GIT', 'git', 'git+https://github.com/logicalclocks/hops-util-py.git@branch-2.0')
 
             wait_for_running_command(@project[:id])
 
@@ -193,6 +209,22 @@ describe "On #{ENV['OS']}" do
 
             hops_library = json_body[:items].detect { |library| library[:library] == "hops" }
             expect(hops_library[:version]).to eq "2.0.0.2"
+          end
+          it 'install from git branch using https://' do
+            expect(CondaCommands.find_by(project_id: @project[:id])).to be_nil
+            @project = create_env_and_update_project(@project, ENV['PYTHON_VERSION'])
+            uninstall_library(@project[:id], ENV['PYTHON_VERSION'], 'hops')
+
+            wait_for_running_command(@project[:id])
+
+            install_library(@project[:id], ENV['PYTHON_VERSION'], 'hops-util-py.git@branch-2.1', 'GIT', 'git', 'https://github.com/logicalclocks/hops-util-py.git@branch-2.1')
+
+            wait_for_running_command(@project[:id])
+
+            list_libraries(@project[:id], ENV['PYTHON_VERSION'])
+
+            hops_library = json_body[:items].detect { |library| library[:library] == "hops" }
+            expect(hops_library[:version]).to eq "2.1.0.1"
           end
           it 'install from wheel' do
             expect(CondaCommands.find_by(project_id: @project[:id])).to be_nil
