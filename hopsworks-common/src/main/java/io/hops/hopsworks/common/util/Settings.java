@@ -143,7 +143,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_HOPSWORKS_USER = "hopsworks_user";
   private static final String VARIABLE_JUPYTER_GROUP = "jupyter_group";
   private static final String VARIABLE_STAGING_DIR = "staging_dir";
-  private static final String VARIABLE_UPLOAD_STAGING_DIR = "upload_staging_dir";
   private static final String VARIABLE_AIRFLOW_DIR = "airflow_dir";
   private static final String VARIABLE_AIRFLOW_USER = "airflow_user";
   private static final String VARIABLE_JUPYTER_DIR = "jupyter_dir";
@@ -641,7 +640,6 @@ public class Settings implements Serializable {
       SPARK_DIR = setDirVar(VARIABLE_SPARK_DIR, SPARK_DIR);
       FLINK_DIR = setDirVar(VARIABLE_FLINK_DIR, FLINK_DIR);
       STAGING_DIR = setVar(VARIABLE_STAGING_DIR, STAGING_DIR);
-      UPLOAD_STAGING_DIR = setVar(VARIABLE_UPLOAD_STAGING_DIR, UPLOAD_STAGING_DIR);
       HIVE_SUPERUSER = setStrVar(VARIABLE_HIVE_SUPERUSER, HIVE_SUPERUSER);
       HIVE_WAREHOUSE = setStrVar(VARIABLE_HIVE_WAREHOUSE, HIVE_WAREHOUSE);
       HIVE_SCRATCHDIR = setStrVar(VARIABLE_HIVE_SCRATCHDIR, HIVE_SCRATCHDIR);
@@ -1193,13 +1191,6 @@ public class Settings implements Serializable {
   public synchronized String getStagingDir() {
     checkCache();
     return STAGING_DIR;
-  }
-
-  private String UPLOAD_STAGING_DIR = DIR_ROOT;
-
-  public synchronized String getUploadStagingDir() {
-    checkCache();
-    return UPLOAD_STAGING_DIR;
   }
 
   private final String FLINK_CONF_DIR = "conf";

@@ -20,7 +20,6 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.FsPermissions;
 import io.hops.hopsworks.common.upload.FlowInfo;
 import io.hops.hopsworks.common.upload.ResumableInfoStorage;
-import io.hops.hopsworks.common.upload.StagingManager;
 import io.hops.hopsworks.common.upload.UploadController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import org.apache.commons.io.FileUtils;
@@ -72,22 +71,16 @@ public class TestUpload {
   private final Path destExistingFilePath = new Path(testUploadPath, "dest/random.txt");
   private final DistributedFsService dfs = mock(DistributedFsService.class);
   private final DistributedFileSystemOps distributedFileSystemOps = mock(DistributedFileSystemOps.class);
-  private final StagingManager stagingManager = mock(StagingManager.class);
 
   private UploadController uploadController;
 
   @Before
   public void setUp() throws IOException {
-    Mockito.doAnswer((Answer<String>) invocation -> {
-      LOGGER.log(LEVEL, "Get StagingPath: {0}.", "");
-      return "";
-    }).when(stagingManager).getStagingPath();
-
     ResumableInfoStorage storage = new ResumableInfoStorage();
     storage.initialize();
     setUpDistributedFileSystemOps();
     setUpDistributedFsService();
-    uploadController = new UploadController(stagingManager, dfs, storage);
+    uploadController = new UploadController(dfs, storage);
   }
 
   @After
