@@ -41,8 +41,6 @@ public class UploadController {
   private static final Logger LOGGER = Logger.getLogger(UploadController.class.getName());
   
   @EJB
-  private StagingManager stagingManager;
-  @EJB
   private DistributedFsService dfs;
   @EJB
   private ResumableInfoStorage storage;
@@ -51,8 +49,7 @@ public class UploadController {
   }
   
   @VisibleForTesting
-  public UploadController(StagingManager stagingManager, DistributedFsService dfs, ResumableInfoStorage storage) {
-    this.stagingManager = stagingManager;
+  public UploadController(DistributedFsService dfs, ResumableInfoStorage storage) {
     this.dfs = dfs;
     this.storage = storage;
   }
@@ -257,9 +254,7 @@ public class UploadController {
   }
   
   private Path getTmpStagingDir(String hdfsPath, String filename) {
-    String baseDir = stagingManager.getStagingPath() + hdfsPath;
-    //get hdfs staging dir staging-dir/hdfs-path/filename.temp
-    return toTemp(baseDir, filename);
+    return toTemp(hdfsPath, filename);
   }
   
   private Path toTemp(String baseDir, String filename) {
