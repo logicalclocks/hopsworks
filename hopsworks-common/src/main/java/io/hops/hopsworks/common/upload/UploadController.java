@@ -43,12 +43,10 @@ public class UploadController {
   private static final Logger LOGGER = Logger.getLogger(UploadController.class.getName());
 
   @EJB
-  private StagingManager stagingManager;
-  @EJB
   private DistributedFsService dfs;
   @EJB
   private ResumableInfoStorage storage;
-
+  
   /**
    * Check if user has permission to write to path. And destination exists.
    * Check is done only if chunk number == 1.
@@ -237,10 +235,8 @@ public class UploadController {
     }
   }
 
-  private Path getTmpStagingDir(String filename, String hdfsPath) {
-    String baseDir = stagingManager.getStagingPath() + hdfsPath;
-    //get hdfs staging dir staging-dir/hdfs-path/filename.temp
-    return toTemp(baseDir, filename);
+  private Path getTmpStagingDir(String hdfsPath, String filename) {
+    return toTemp(hdfsPath, filename);
   }
 
   private Path toTemp(String baseDir, String filename) {
