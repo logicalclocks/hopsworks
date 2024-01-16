@@ -217,7 +217,7 @@ public class UploadController {
 
   private String getTmpStagingDir(DistributedFileSystemOps dfsOps, String filename, String hdfsPath)
     throws DatasetException {
-    Path userTmpDir = getTmpStagingDir(filename, hdfsPath);
+    Path userTmpDir = getTmpStagingDir(hdfsPath, filename);
     try {
       if (!dfsOps.exists(userTmpDir)) {
         boolean created = dfsOps.mkdirs(userTmpDir, dfsOps.getParentPermission(userTmpDir));
