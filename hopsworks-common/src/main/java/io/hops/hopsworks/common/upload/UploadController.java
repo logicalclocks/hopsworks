@@ -99,7 +99,7 @@ public class UploadController {
    * @return
    */
   public boolean isUploaded(FlowInfo flowInfo, String hdfsPath) {
-    flowInfo.setFilePath(getTmpStagingDir(flowInfo.getFilename(), hdfsPath).toString());
+    flowInfo.setFilePath(getTmpStagingDir(hdfsPath, flowInfo.getFilename()).toString());
     return storage.isUploaded(flowInfo.hashCode(), flowInfo.getChunkNumber());
   }
 
