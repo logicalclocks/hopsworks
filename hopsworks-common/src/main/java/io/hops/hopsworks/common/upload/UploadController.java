@@ -99,7 +99,7 @@ public class UploadController {
    * @return
    */
   public boolean isUploaded(FlowInfo flowInfo, String hdfsPath) {
-    flowInfo.setFilePath(getTmpStagingDir(flowInfo.getFilename(), hdfsPath).toString());
+    flowInfo.setFilePath(getTmpStagingDir(hdfsPath, flowInfo.getFilename()).toString());
     return storage.isUploaded(flowInfo.hashCode(), flowInfo.getChunkNumber());
   }
 
@@ -217,7 +217,7 @@ public class UploadController {
 
   private String getTmpStagingDir(DistributedFileSystemOps dfsOps, String filename, String hdfsPath)
     throws DatasetException {
-    Path userTmpDir = getTmpStagingDir(filename, hdfsPath);
+    Path userTmpDir = getTmpStagingDir(hdfsPath, filename);
     try {
       if (!dfsOps.exists(userTmpDir)) {
         boolean created = dfsOps.mkdirs(userTmpDir, dfsOps.getParentPermission(userTmpDir));
