@@ -331,6 +331,7 @@ public class FeaturegroupService {
     verifyIdProvided(featuregroupId);
     Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
     FeaturegroupDTO featuregroupDTO = new FeaturegroupDTO(featuregroup);
+    featuregroupDTO.setFeatures(featuregroupController.getPrimaryKey(featuregroup));
     GenericEntity<FeaturegroupDTO> featuregroupGeneric =
         new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();

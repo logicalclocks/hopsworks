@@ -366,6 +366,35 @@ public class FeaturegroupController {
     }
   }
 
+  public List<FeatureGroupFeatureDTO> getPrimaryKey(Featuregroup featuregroup) throws FeaturestoreException {
+    switch (featuregroup.getFeaturegroupType()) {
+      case CACHED_FEATURE_GROUP:
+        return cachedFeaturegroupController.getPrimaryKeys(featuregroup)
+            .stream().map(pk -> {
+              FeatureGroupFeatureDTO featureDTO = new FeatureGroupFeatureDTO();
+              featureDTO.setName(pk);
+              featureDTO.setPrimary(true);
+              return featureDTO;
+            }).collect(Collectors.toList());
+      case STREAM_FEATURE_GROUP:
+        return streamFeatureGroupController.getPrimaryKeys(featuregroup)
+            .stream().map(pk -> {
+              FeatureGroupFeatureDTO featureDTO = new FeatureGroupFeatureDTO();
+              featureDTO.setName(pk);
+              featureDTO.setPrimary(true);
+              return featureDTO;
+            }).collect(Collectors.toList());
+      case ON_DEMAND_FEATURE_GROUP:
+        return onDemandFeaturegroupController.getFeaturesDTO(featuregroup)
+            .stream().filter(FeatureGroupFeatureDTO::getPrimary).collect(Collectors.toList());
+      default:
+        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE.getMessage()
+            + ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + "," +
+            FeaturegroupType.STREAM_FEATURE_GROUP + ",  and: " + FeaturegroupType.CACHED_FEATURE_GROUP +
+            ". The provided feature group type was not recognized: " + featuregroup.getFeaturegroupType());
+    }
+  }
+
   /**
    * Retrieves a list of feature groups with a specific name from a specific feature store
    *

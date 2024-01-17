@@ -306,10 +306,7 @@ public class CachedFeaturegroupController {
   
   public List<FeatureGroupFeatureDTO> getFeaturesDTO(Featuregroup featuregroup, Project project, Users user)
           throws FeaturestoreException {
-    Set<String> primaryKeys = featuregroup.getCachedFeaturegroup().getFeaturesExtraConstraints().stream()
-        .filter(CachedFeatureExtraConstraints::getPrimary)
-        .map(CachedFeatureExtraConstraints::getName)
-        .collect(Collectors.toSet());
+    Set<String> primaryKeys = getPrimaryKeys(featuregroup);
 
     Set<String> precombineKeys = featuregroup.getCachedFeaturegroup().getFeaturesExtraConstraints().stream()
         .filter(CachedFeatureExtraConstraints::getHudiPrecombineKey)
@@ -336,6 +333,13 @@ public class CachedFeaturegroupController {
     }
 
     return featureGroupFeatures;
+  }
+
+  public Set<String> getPrimaryKeys(Featuregroup featuregroup) {
+    return featuregroup.getCachedFeaturegroup().getFeaturesExtraConstraints().stream()
+        .filter(CachedFeatureExtraConstraints::getPrimary)
+        .map(CachedFeatureExtraConstraints::getName)
+        .collect(Collectors.toSet());
   }
 
   public List<FeatureGroupFeatureDTO> getFeaturesDTOOnlineChecked(Featuregroup featuregroup,
