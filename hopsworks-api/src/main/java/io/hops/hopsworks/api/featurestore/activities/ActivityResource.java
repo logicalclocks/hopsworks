@@ -25,6 +25,7 @@ import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
+import io.hops.hopsworks.exceptions.ActivitiesException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
@@ -84,11 +85,11 @@ public class ActivityResource {
     this.featuregroup = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
   }
 
-  public void setTrainingDatasetId(Integer trainingDatasetId) throws FeaturestoreException {
+  public void setTrainingDatasetById(Integer trainingDatasetId) throws FeaturestoreException {
     this.trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
   }
 
-  public void setFeatureView(String name, Integer version) throws FeaturestoreException {
+  public void setFeatureViewByNameAndVersion(String name, Integer version) throws FeaturestoreException {
     this.featureView = featureViewController.getByNameVersionAndFeatureStore(name, version, featurestore);
   }
 
@@ -103,7 +104,7 @@ public class ActivityResource {
   public Response get(@BeanParam Pagination pagination,
                       @BeanParam ActivitiesBeanParam activitiesBeanParam,
                       @Context UriInfo uriInfo,
-                      @Context SecurityContext sc) throws FeaturestoreException {
+                      @Context SecurityContext sc) throws FeaturestoreException, ActivitiesException {
     Users user = jwtHelper.getUserPrincipal(sc);
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ACTIVITIES);

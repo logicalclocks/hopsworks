@@ -47,6 +47,8 @@ public abstract class AbstractFacade<T> {
     return getEntityManager().merge(entity);
   }
 
+  public void detach(T entity) { getEntityManager().detach(entity); }
+
   public void remove(T entity) {
     if (entity == null) {
       return;

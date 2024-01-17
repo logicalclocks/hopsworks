@@ -44,6 +44,22 @@ import java.sql.Timestamp;
                 "WHERE fgc.committedOn <= :requestedPointInTime " +
                 "AND fgc.featureGroupCommitPK.featureGroupId = :featureGroupId) " +
           " AND fgc.featureGroupCommitPK.featureGroupId = :featureGroupId"),
+    @NamedQuery(name = "FeatureGroupCommit.findByEarliestCommittedOnInRange",
+      query = "SELECT fgc FROM FeatureGroupCommit fgc " +
+        "WHERE fgc.committedOn IN " +
+        "(SELECT MIN(fgc.committedOn) FROM FeatureGroupCommit fgc " +
+        "WHERE fgc.committedOn >= :startPointInTime " +
+        "AND fgc.committedOn <= :endPointInTime " +
+        "AND fgc.featureGroupCommitPK.featureGroupId = :featureGroupId) " +
+        "AND fgc.featureGroupCommitPK.featureGroupId = :featureGroupId"),
+    @NamedQuery(name = "FeatureGroupCommit.findByLatestCommittedOnInRange",
+      query = "SELECT fgc FROM FeatureGroupCommit fgc " +
+        "WHERE fgc.committedOn IN " +
+        "(SELECT MAX(fgc.committedOn) FROM FeatureGroupCommit fgc " +
+        "WHERE fgc.committedOn >= :startPointInTime " +
+        "AND fgc.committedOn <= :endPointInTime " +
+        "AND fgc.featureGroupCommitPK.featureGroupId = :featureGroupId) " +
+        "AND fgc.featureGroupCommitPK.featureGroupId = :featureGroupId"),
     @NamedQuery(name = "FeatureGroupCommit.findLatestCommit",
         query = "SELECT fgc FROM FeatureGroupCommit fgc WHERE fgc.committedOn IN (SELECT MAX(fgc.committedOn) FROM " +
             "FeatureGroupCommit fgc WHERE fgc.featureGroupCommitPK.featureGroupId = :featureGroupId) " +
@@ -52,6 +68,10 @@ import java.sql.Timestamp;
         query = "UPDATE FeatureGroupCommit fgc SET fgc.archived = true " +
             "WHERE fgc.featureGroupCommitPK.featureGroupId = :featureGroupId AND " +
             "fgc.committedOn < :lastActiveCommitTime"),
+    @NamedQuery(name = "FeatureGroupCommit.findEarliestCommit",
+      query = "SELECT fgc FROM FeatureGroupCommit fgc WHERE fgc.committedOn IN (SELECT MIN(fgc.committedOn) FROM " +
+        "FeatureGroupCommit fgc WHERE fgc.featureGroupCommitPK.featureGroupId = :featureGroupId) " +
+        "AND fgc.featureGroupCommitPK.featureGroupId = :featureGroupId")
     }
 )
 

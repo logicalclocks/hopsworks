@@ -877,7 +877,7 @@ public class TrainingDatasetController {
     featurestoreUtils.verifyTrainingDatasetDataOwnerOrSelf(user, project, trainingDataset,
         FeaturestoreUtils.ActionMessage.DELETE_TRAINING_DATASET);
 
-    statisticsController.deleteStatistics(project, user, trainingDataset);
+    statisticsController.deleteTrainingDatasetStatistics(project, user, trainingDataset);
   
     searchCommandLogger.delete(trainingDataset);
     trainingDatasetFacade.remove(trainingDataset);

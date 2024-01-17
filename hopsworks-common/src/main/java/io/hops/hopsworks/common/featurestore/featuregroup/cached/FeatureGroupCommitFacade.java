@@ -44,16 +44,6 @@ public class FeatureGroupCommitFacade extends AbstractFacade<FeatureGroupCommit>
     super(FeatureGroupCommit.class);
   }
 
-  /**
-   * Persist FeatureGroup Commit
-   * @param featureGroupCommit
-   * @return
-   */
-  public void createFeatureGroupCommit(FeatureGroupCommit featureGroupCommit) {
-    em.persist(featureGroupCommit);
-    em.flush();
-  }
-
   public Optional<FeatureGroupCommit> findClosestDateCommit(Integer featureGroupId, Long commitTimestamp) {
     Date requestedPointInTime = new Timestamp(commitTimestamp);
     Query fgcQuery =  em.createNamedQuery("FeatureGroupCommit.findByLatestCommittedOn", FeatureGroupCommit.class)
@@ -92,6 +82,41 @@ public class FeatureGroupCommitFacade extends AbstractFacade<FeatureGroupCommit>
     return ((Number) fgcQuery.getSingleResult()).intValue();
   }
 
+  public Optional<FeatureGroupCommit> findEarliestCommitInRange(
+    Integer featureGroupId, Long commitStartTimestamp, Long commitEndTimestamp) {
+    Query fgcQuery = em.createNamedQuery("FeatureGroupCommit.findByEarliestCommittedOnInRange",
+        FeatureGroupCommit.class)
+      .setParameter("featureGroupId", featureGroupId)
+      .setParameter("startPointInTime", new Timestamp(commitStartTimestamp))
+      .setParameter("endPointInTime", new Timestamp(commitEndTimestamp));
+    try {
+      return Optional.of((FeatureGroupCommit) fgcQuery.getSingleResult());
+    } catch (NoResultException ignored) { }
+    return Optional.empty();
+  }
+  
+  public Optional<FeatureGroupCommit> findLatestCommitInRange(
+    Integer featureGroupId, Long commitStartTimestamp, Long commitEndTimestamp) {
+    Query fgcQuery = em.createNamedQuery("FeatureGroupCommit.findByLatestCommittedOnInRange", FeatureGroupCommit.class)
+      .setParameter("featureGroupId", featureGroupId)
+      .setParameter("startPointInTime", new Timestamp(commitStartTimestamp))
+      .setParameter("endPointInTime", new Timestamp(commitEndTimestamp));
+    try {
+      return Optional.of((FeatureGroupCommit) fgcQuery.getSingleResult());
+    } catch (NoResultException ignored) { }
+    return Optional.empty();
+  }
+  
+  public Optional<FeatureGroupCommit> findEarliestDateCommit(Integer featureGroupId) {
+    Query fgcQuery = em.createNamedQuery("FeatureGroupCommit.findEarliestCommit", FeatureGroupCommit.class)
+      .setParameter("featureGroupId", featureGroupId);
+    try {
+      return Optional.of((FeatureGroupCommit) fgcQuery.getSingleResult());
+    } catch (NoResultException e) {
+      return Optional.empty();
+    }
+  }
+  
   public Optional<FeatureGroupCommit> findLatestDateCommit(Integer featureGroupId) {
     Query fgcQuery =  em.createNamedQuery("FeatureGroupCommit.findLatestCommit", FeatureGroupCommit.class)
         .setParameter("featureGroupId", featureGroupId);

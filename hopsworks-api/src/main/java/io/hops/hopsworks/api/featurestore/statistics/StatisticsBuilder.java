@@ -13,22 +13,24 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-
 package io.hops.hopsworks.api.featurestore.statistics;
 
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.featurestore.statistics.FeaturestoreStatisticFacade;
+import io.hops.hopsworks.common.featurestore.statistics.SplitStatisticsDTO;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsController;
+import io.hops.hopsworks.common.featurestore.statistics.StatisticsDTO;
+import io.hops.hopsworks.common.featurestore.statistics.StatisticsFilters;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
-import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
-import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureGroupStatistics;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.TrainingDatasetStatistics;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
-import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.TrainingDatasetSplit;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.SplitName;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.exceptions.FeaturestoreException;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -39,187 +41,235 @@ import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class StatisticsBuilder {
 
   @EJB
-  private FeaturestoreStatisticFacade statisticFacade;
-  @EJB
   private StatisticsController statisticsController;
+  @EJB
+  private FeatureDescriptiveStatisticsBuilder featureDescriptiveStatisticsBuilder;
 
+  private UriBuilder uriQueryParams(UriBuilder uriBuilder, ResourceRequest resourceRequest, Set<String> featureNames) {
+    // feature names
+    if (featureNames != null && !featureNames.isEmpty()) {
+      uriBuilder.queryParam("feature_names", String.join(",", featureNames));
+    }
+    // filters
+    if (resourceRequest.getFilter() != null && !resourceRequest.getFilter().isEmpty()) {
+      for (AbstractFacade.FilterBy filterBy : resourceRequest.getFilter()) {
+        uriBuilder.queryParam("filter_by", filterBy.getValue().toLowerCase() + ":" + filterBy.getParam().toLowerCase());
+      }
+    }
+    // field
+    if (resourceRequest.getField() != null && !resourceRequest.getField().isEmpty()) {
+      uriBuilder.queryParam("fields", String.join(",", resourceRequest.getField()));
+    }
+    // offset and limit
+    if (resourceRequest.getOffset() != null) {
+      uriBuilder.queryParam("offset", resourceRequest.getOffset());
+    }
+    if (resourceRequest.getLimit() != null) {
+      uriBuilder.queryParam("limit", resourceRequest.getLimit());
+    }
+    return uriBuilder;
+  }
+  
   private UriBuilder uri(UriInfo uriInfo, Project project, Featurestore featurestore) {
-    return uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
-        .path(Integer.toString(project.getId()))
-        .path(ResourceRequest.Name.FEATURESTORES.toString().toLowerCase())
-        .path(Integer.toString(featurestore.getId()));
+    return uriInfo.getBaseUriBuilder()
+      .path(ResourceRequest.Name.PROJECT.toString().toLowerCase()).path(Integer.toString(project.getId()))
+      .path(ResourceRequest.Name.FEATURESTORES.toString().toLowerCase()).path(Integer.toString(featurestore.getId()));
   }
-
-  private URI uri(UriInfo uriInfo, Project project,
-                  Featurestore featurestore, Featuregroup featuregroup) {
+  
+  private URI uri(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Featurestore featurestore,
+      Featuregroup featuregroup, Set<String> featureNames) {
+    UriBuilder uriBuilder = uri(uriInfo, project, featurestore)
+      .path(ResourceRequest.Name.FEATUREGROUPS.toString().toLowerCase()).path(Integer.toString(featuregroup.getId()))
+      .path(ResourceRequest.Name.STATISTICS.toString().toLowerCase());
+    return uriQueryParams(uriBuilder, resourceRequest, featureNames).build();
+  }
+  
+  private URI uri(UriInfo uriInfo, Project project, Featurestore featurestore, Featuregroup featuregroup,
+      Long computationTime) {
+    String commitTimeEq = StatisticsFilters.Filters.COMPUTATION_TIME_EQ.getValue().toLowerCase();
     return uri(uriInfo, project, featurestore)
-        .path(ResourceRequest.Name.FEATUREGROUPS.toString().toLowerCase())
-        .path(Integer.toString(featuregroup.getId()))
-        .path(ResourceRequest.Name.STATISTICS.toString().toLowerCase())
-        .build();
+      .path(ResourceRequest.Name.FEATUREGROUPS.toString().toLowerCase()).path(Integer.toString(featuregroup.getId()))
+      .path(ResourceRequest.Name.STATISTICS.toString().toLowerCase())
+      .queryParam("filter_by", commitTimeEq + ":" + computationTime)
+      .queryParam("fields", "content")
+      .queryParam("offset", 0L)
+      .queryParam("limit", 1L)
+      .build();
   }
-
-  private URI uri(UriInfo uriInfo, Project project, Featurestore featurestore,
-                  Featuregroup featuregroup, FeaturestoreStatistic statistics) {
+  
+  private URI uri(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Featurestore featurestore,
+      TrainingDataset trainingDataset, Set<String> featureNames) {
+    FeatureView featureView = trainingDataset.getFeatureView();
+    UriBuilder uriBuilder = uri(uriInfo, project, featurestore)
+      .path(ResourceRequest.Name.FEATUREVIEW.toString().toLowerCase())
+      .path(featureView.getName())
+      .path(ResourceRequest.Name.VERSION.toString().toLowerCase())
+      .path(Integer.toString(featureView.getVersion()))
+      .path(ResourceRequest.Name.TRAININGDATASETS.toString().toLowerCase())
+      .path(Integer.toString(trainingDataset.getVersion()))
+      .path(ResourceRequest.Name.STATISTICS.toString().toLowerCase());
+    return uriQueryParams(uriBuilder, resourceRequest, featureNames).build();
+  }
+  
+  private URI uri(UriInfo uriInfo, Project project, Featurestore featurestore, TrainingDataset trainingDataset,
+      Long computationTime) {
+    String commitTimeEq = StatisticsFilters.Filters.COMPUTATION_TIME_EQ.getValue().toLowerCase();
+    FeatureView featureView = trainingDataset.getFeatureView();
     return uri(uriInfo, project, featurestore)
-        .path(ResourceRequest.Name.FEATUREGROUPS.toString().toLowerCase())
-        .path(Integer.toString(featuregroup.getId()))
-        .path(ResourceRequest.Name.STATISTICS.toString().toLowerCase())
-        .queryParam("filter_by", "commit_time_eq:" + statistics.getCommitTime())
-        .queryParam("fields", "content")
-        .build();
+      .path(ResourceRequest.Name.FEATUREVIEW.toString().toLowerCase())
+      .path(featureView.getName())
+      .path(ResourceRequest.Name.VERSION.toString().toLowerCase())
+      .path(Integer.toString(featureView.getVersion()))
+      .path(ResourceRequest.Name.TRAININGDATASETS.toString().toLowerCase())
+      .path(Integer.toString(trainingDataset.getVersion()))
+      .path(ResourceRequest.Name.STATISTICS.toString().toLowerCase())
+      .queryParam("filter_by", commitTimeEq + ":" + computationTime)
+      .queryParam("fields", "content")
+      .queryParam("offset", 0L)
+      .queryParam("limit", 1L)
+      .build();
   }
-
-  private URI uri(UriInfo uriInfo, Project project,
-                  Featurestore featurestore, TrainingDataset trainingDataset) {
-    return uri(uriInfo, project, featurestore)
-        .path(ResourceRequest.Name.TRAININGDATASETS.toString().toLowerCase())
-        .path(Integer.toString(trainingDataset.getId()))
-        .path(ResourceRequest.Name.STATISTICS.toString().toLowerCase())
-        .build();
-  }
-
-  private URI uri(UriInfo uriInfo, Project project, Featurestore featurestore,
-                  TrainingDataset trainingDataset, FeaturestoreStatistic statistics) {
-    return uri(uriInfo, project, featurestore)
-        .path(ResourceRequest.Name.TRAININGDATASETS.toString().toLowerCase())
-        .path(Integer.toString(trainingDataset.getId()))
-        .path(ResourceRequest.Name.STATISTICS.toString().toLowerCase())
-        .queryParam("filter_by", "commit_time_eq:" + statistics.getCommitTime())
-        .queryParam("fields", "content")
-        .build();
-  }
-
-  private URI uri(UriInfo uriInfo, Project project, Featurestore featurestore,
-                  FeatureView featureView, FeaturestoreStatistic statistics) {
-    return uri(uriInfo, project, featurestore)
-        .path(ResourceRequest.Name.FEATUREVIEW.toString().toLowerCase())
-        .path(featureView.getName())
-        .path(ResourceRequest.Name.VERSION.toString().toLowerCase())
-        .path(Integer.toString(featureView.getVersion()))
-        .path(ResourceRequest.Name.TRAININGDATASETS.toString().toLowerCase())
-        .path(Integer.toString(statistics.getTrainingDataset().getId()))
-        .path(ResourceRequest.Name.STATISTICS.toString().toLowerCase())
-        .queryParam("filter_by", "commit_time_eq:" + statistics.getCommitTime())
-        .queryParam("fields", "content")
-        .build();
-  }
-
+  
   private boolean expand(ResourceRequest resourceRequest) {
     return resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.STATISTICS);
   }
-
-  public StatisticsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
-                             Project project, Users user,
-                             Featuregroup featuregroup,
-                             FeaturestoreStatistic featurestoreStatistic) throws FeaturestoreException {
+  
+  // Feature Group
+  
+  public StatisticsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Users user,
+    Featuregroup featuregroup, FeatureGroupStatistics statistics) throws FeaturestoreException {
     StatisticsDTO dto = new StatisticsDTO();
-    dto.setHref(uri(uriInfo, project, featuregroup.getFeaturestore(), featuregroup, featurestoreStatistic));
+    Long computationTime = statistics.getComputationTime().getTime();
+    dto.setHref(uri(uriInfo, project, featuregroup.getFeaturestore(), featuregroup, computationTime));
     dto.setExpand(expand(resourceRequest));
     if (dto.isExpand()) {
-      dto.setCommitTime(featurestoreStatistic.getCommitTime().getTime());
-      if (featurestoreStatistic.getFeatureGroupCommit() != null) {
-        dto.setFeatureGroupCommitId(
-            featurestoreStatistic.getFeatureGroupCommit().getFeatureGroupCommitPK().getCommitId());
+      dto.setComputationTime(computationTime);
+      dto.setRowPercentage(statistics.getRowPercentage());
+      dto.setFeatureGroupId(statistics.getFeatureGroup().getId());
+      if (statistics.getWindowStartCommitTime() != null) {
+        dto.setWindowStartCommitTime(statistics.getWindowStartCommitTime());
+      }
+      if (statistics.getWindowEndCommitTime() != null) {
+        dto.setWindowEndCommitTime(statistics.getWindowEndCommitTime());
       }
       if (resourceRequest.getField() != null && resourceRequest.getField().contains("content")) {
-        dto.setContent(statisticsController.readStatisticsContent(project, user, featurestoreStatistic));
+        statisticsController.appendExtendedStatistics(project, user, statistics.getFeatureDescriptiveStatistics());
+        dto.setFeatureDescriptiveStatistics(
+          featureDescriptiveStatisticsBuilder.buildMany(statistics.getFeatureDescriptiveStatistics()));
       }
     }
 
     return dto;
   }
 
-  public StatisticsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
-                             Project project, Users user,
-                             TrainingDataset trainingDataset,
-                             FeaturestoreStatistic featurestoreStatistic) throws FeaturestoreException {
+  public StatisticsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Users user,
+    Featurestore featurestore, Featuregroup featuregroup, Set<String> featureNames) throws FeaturestoreException {
     StatisticsDTO dto = new StatisticsDTO();
-    List<SplitStatisticsDTO> splitStatistics = new ArrayList<>();
-    dto.setHref(uri(uriInfo, project, trainingDataset.getFeaturestore(), trainingDataset, featurestoreStatistic));
+    dto.setHref(uri(uriInfo, resourceRequest, project, featurestore, featuregroup, featureNames));
     dto.setExpand(expand(resourceRequest));
     if (dto.isExpand()) {
-      dto.setCommitTime(featurestoreStatistic.getCommitTime().getTime());
+      AbstractFacade.CollectionInfo collectionInfo;
+      if (featureNames != null && !featureNames.isEmpty()) {
+        // if a set of feature names is provided, filter statistics by feature name. It returns feature group
+        // statistics with the filtered feature descriptive statistics
+        collectionInfo = statisticsController.getStatisticsByFeatureGroupAndFeatureNames(resourceRequest.getOffset(),
+          resourceRequest.getLimit(), resourceRequest.getSort(), resourceRequest.getFilter(), featureNames,
+          featuregroup);
+      } else {
+        // otherwise, get all feature descriptive statistics by feature group.
+        collectionInfo = statisticsController.getStatisticsByFeatureGroup(resourceRequest.getOffset(),
+          resourceRequest.getLimit(),  resourceRequest.getSort(), resourceRequest.getFilter(), featuregroup);
+      }
+      dto.setCount(collectionInfo.getCount());
+      for (Object s : collectionInfo.getItems()) {
+        dto.addItem(build(uriInfo, resourceRequest, project, user, featuregroup, (FeatureGroupStatistics) s));
+      }
+    }
+    return dto;
+  }
+  
+  // Training Dataset
+  
+  public StatisticsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Users user,
+      TrainingDataset trainingDataset, TrainingDatasetStatistics statistics) throws FeaturestoreException {
+    Long computationTime = statistics.getComputationTime().getTime();
+    StatisticsDTO dto = new StatisticsDTO();
+    dto.setHref(uri(uriInfo, project, trainingDataset.getFeaturestore(), trainingDataset, computationTime));
+    dto.setExpand(expand(resourceRequest));
+    if (dto.isExpand()) {
+      dto.setComputationTime(statistics.getComputationTime().getTime());
+      dto.setRowPercentage(statistics.getRowPercentage());
+      dto.setFeatureViewName(trainingDataset.getFeatureView().getName());
+      dto.setFeatureViewVersion(trainingDataset.getFeatureView().getVersion());
+      dto.setTrainingDatasetVersion(trainingDataset.getVersion());
+      
+      // check whether to include feature descriptive statistics
       if (resourceRequest.getField() != null && resourceRequest.getField().contains("content")) {
-        if (trainingDataset.getSplits() != null && !trainingDataset.getSplits().isEmpty() &&
-            !featurestoreStatistic.getForTransformation()) {
-          for (TrainingDatasetSplit trainingDatasetSplit : trainingDataset.getSplits()) {
-            splitStatistics.add(new SplitStatisticsDTO(trainingDatasetSplit.getName(),
-              statisticsController.readStatisticsContent(project, user, featurestoreStatistic,
-                trainingDatasetSplit.getName())));
+        // check whether to include split feature descriptive statistics
+        if (statistics.getTestFeatureDescriptiveStatistics() == null
+            || statistics.getTestFeatureDescriptiveStatistics().isEmpty()) { // Training dataset without splits
+          statisticsController.appendExtendedStatistics(project, user,
+            statistics.getTrainFeatureDescriptiveStatistics());
+          dto.setFeatureDescriptiveStatistics(
+            featureDescriptiveStatisticsBuilder.buildMany(statistics.getTrainFeatureDescriptiveStatistics()));
+        } else { // Training dataset with splits
+          List<SplitStatisticsDTO> splitStatistics = new ArrayList<>();
+          // add train set statistics
+          statisticsController.appendExtendedStatistics(project, user,
+            statistics.getTrainFeatureDescriptiveStatistics());
+          splitStatistics.add(new SplitStatisticsDTO(SplitName.TRAIN.getName(),
+            featureDescriptiveStatisticsBuilder.buildMany(statistics.getTrainFeatureDescriptiveStatistics())));
+          // add test set statistics
+          statisticsController.appendExtendedStatistics(project, user,
+            statistics.getTestFeatureDescriptiveStatistics());
+          splitStatistics.add(new SplitStatisticsDTO(SplitName.TEST.getName(),
+            featureDescriptiveStatisticsBuilder.buildMany(statistics.getTestFeatureDescriptiveStatistics())));
+          if (statistics.getValFeatureDescriptiveStatistics() != null
+              && !statistics.getValFeatureDescriptiveStatistics().isEmpty()) {
+            // add validation set statistics
+            statisticsController.appendExtendedStatistics(project, user,
+              statistics.getValFeatureDescriptiveStatistics());
+            splitStatistics.add(new SplitStatisticsDTO(SplitName.VALIDATION.getName(),
+              featureDescriptiveStatisticsBuilder.buildMany(statistics.getValFeatureDescriptiveStatistics())));
           }
           dto.setSplitStatistics(splitStatistics);
-        } else {
-          dto.setContent(statisticsController.readStatisticsContent(project, user, featurestoreStatistic));
         }
       }
     }
-
     return dto;
   }
 
-  public StatisticsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
-                             Project project, Users user,
-                             FeatureView featureView,
-                             FeaturestoreStatistic featurestoreStatistic) throws FeaturestoreException {
+  public StatisticsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Users user,
+    Featurestore featurestore, TrainingDataset trainingDataset, Set<String> featureNames) throws FeaturestoreException {
     StatisticsDTO dto = new StatisticsDTO();
-    dto.setHref(uri(uriInfo, project, featureView.getFeaturestore(), featureView, featurestoreStatistic));
+    dto.setHref(uri(uriInfo, resourceRequest, project, featurestore, trainingDataset, featureNames));
     dto.setExpand(expand(resourceRequest));
     if (dto.isExpand()) {
-      dto.setCommitTime(featurestoreStatistic.getCommitTime().getTime());
-      if (resourceRequest.getField() != null && resourceRequest.getField().contains("content")) {
-        dto.setContent(statisticsController.readStatisticsContent(project, user, featurestoreStatistic));
-      }
-    }
-
-    return dto;
-  }
-
-  public StatisticsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
-                             Project project, Users user, Featurestore featurestore, Featuregroup featuregroup)
-      throws FeaturestoreException {
-    StatisticsDTO dto = new StatisticsDTO();
-    dto.setHref(uri(uriInfo, project, featurestore, featuregroup));
-    dto.setExpand(expand(resourceRequest));
-    if (dto.isExpand()) {
-      AbstractFacade.CollectionInfo collectionInfo = statisticFacade.findByFeaturegroup(resourceRequest.getOffset(),
-          resourceRequest.getLimit(),
-          resourceRequest.getSort(),
-          resourceRequest.getFilter(),
-          featuregroup);
-      dto.setCount(collectionInfo.getCount());
-
-      for (Object s : collectionInfo.getItems()) {
-        dto.addItem(build(uriInfo, resourceRequest, project, user, featuregroup, (FeaturestoreStatistic) s));
-      }
-    }
-
-    return dto;
-  }
-
-  public StatisticsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
-                             Project project, Users user, Featurestore featurestore, TrainingDataset trainingDataset,
-                             boolean forTransformation) throws FeaturestoreException {
-    StatisticsDTO dto = new StatisticsDTO();
-    dto.setHref(uri(uriInfo, project, featurestore, trainingDataset));
-    dto.setExpand(expand(resourceRequest));
-    if (dto.isExpand()) {
-      AbstractFacade.CollectionInfo collectionInfo = statisticFacade.findByTrainingDataset(resourceRequest.getOffset(),
-          resourceRequest.getLimit(),
-          resourceRequest.getSort(),
-          resourceRequest.getFilter(),
-          trainingDataset,
-          forTransformation);
-      dto.setCount(collectionInfo.getCount());
-
-      for (Object s : collectionInfo.getItems()) {
-        dto.addItem(build(uriInfo, resourceRequest, project, user, trainingDataset, (FeaturestoreStatistic) s));
+      if (featureNames != null && !featureNames.isEmpty()) {
+        // if a set of feature names is provided, filter statistics by feature name. It returns training dataset
+        // statistics with the filtered feature descriptive statistics
+        AbstractFacade.CollectionInfo collectionInfo =
+          statisticsController.getStatisticsByTrainingDatasetAndFeatureNames(resourceRequest.getFilter(), featureNames,
+            trainingDataset);
+        dto.setCount(collectionInfo.getCount());
+        for (Object s : collectionInfo.getItems()) {
+          dto.addItem(build(uriInfo, resourceRequest, project, user, trainingDataset, (TrainingDatasetStatistics) s));
+        }
+      } else {
+        // otherwise, get all feature descriptive statistics by training dataset
+        AbstractFacade.CollectionInfo collectionInfo =
+          statisticsController.getStatisticsByTrainingDataset(resourceRequest.getFilter(), trainingDataset);
+        dto.setCount(collectionInfo.getCount());
+        for (Object s : collectionInfo.getItems()) {
+          dto.addItem(build(uriInfo, resourceRequest, project, user, trainingDataset, (TrainingDatasetStatistics) s));
+        }
       }
     }
 
