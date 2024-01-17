@@ -154,9 +154,39 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     // If the limit for the number of executions for this job has been reached, return an error
     checkExecutionLimit(job);
 
+    Project project = job.getProject();
+    String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
+
     if (job.getJobType() == JobType.PYTHON || job.getJobType() == JobType.DOCKER) {
-      Project project = job.getProject();
-      String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
+
+      String appPath = null;
+      DockerJobConfiguration jobConfiguration = (DockerJobConfiguration)job.getJobConfig();
+      if (job.getJobType() == JobType.PYTHON) {
+        appPath = ((PythonJobConfiguration) jobConfiguration).getAppPath();
+        DistributedFileSystemOps udfso = null;
+        try {
+          udfso = dfs.getDfsOps(hdfsUser);
+          if (!udfso.exists(appPath)) {
+            throw new ProjectException(RESTCodes.ProjectErrorCode.FILE_NOT_FOUND, Level.FINEST,
+                    "Job application file does not exist: " + appPath);
+          }
+          if (!Strings.isNullOrEmpty(((PythonJobConfiguration)jobConfiguration).getFiles())) {
+            for (String filePath : ((PythonJobConfiguration)jobConfiguration).getFiles().split(",")) {
+              if (!Strings.isNullOrEmpty(filePath) && !udfso.exists(filePath)) {
+                throw new ProjectException(RESTCodes.ProjectErrorCode.FILE_NOT_FOUND, Level.FINEST,
+                        "Attached file does not exist: " + filePath);
+              }
+            }
+          }
+        } catch (IOException ex) {
+          throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.INFO, null, null, ex);
+        } finally {
+          if (udfso != null) {
+            dfs.closeDfsClient(udfso);
+          }
+        }
+      }
+
       Execution execution = executionFacade.create(job, user, null, null, null, 0, hdfsUser, args);
       String logPath = getLogsPath(job, execution);
       execution.setStdoutPath(logPath + "/stdout.log");
@@ -164,7 +194,6 @@ public class KubeExecutionController extends AbstractExecutionController impleme
       execution.setExecutionStart(System.currentTimeMillis());
       execution = executionFacade.update(execution);
 
-      DockerJobConfiguration jobConfiguration = (DockerJobConfiguration)job.getJobConfig();
       String originalParentDir = null;
       try {
         String secretsDir = "/srv/hops/secrets";
@@ -174,32 +203,13 @@ public class KubeExecutionController extends AbstractExecutionController impleme
           ((PythonJobConfiguration) job.getJobConfig()).setImagePath(
                   projectUtils.getFullDockerImageName(project, false));
 
-          DistributedFileSystemOps udfso = null;
-          try {
-            udfso = dfs.getDfsOps(hdfsUser);
-            if (!Strings.isNullOrEmpty(((PythonJobConfiguration) jobConfiguration).getFiles())) {
-              for (String filePath : ((PythonJobConfiguration) jobConfiguration).getFiles().split(",")) {
-                if (!Strings.isNullOrEmpty(filePath) && !udfso.exists(filePath)) {
-                  throw new ProjectException(RESTCodes.ProjectErrorCode.FILE_NOT_FOUND, Level.FINEST,
-                          "Attached file does not exist: " + filePath);
-                }
-              }
-            }
-
-            //If it is a notebook we need to convert it to a .py file every time the job is run
-            String appPath = ((PythonJobConfiguration) job.getJobConfig()).getAppPath();
-            if (appPath.endsWith(".ipynb")) {
-              originalParentDir = (new File(appPath)).getParent();
-              executionFacade.updateState(execution, JobState.CONVERTING_NOTEBOOK);
-              String pyAppPath = HopsUtils.prepJupyterNotebookConversion(execution, hdfsUser, dfs);
-              ((PythonJobConfiguration) job.getJobConfig()).setAppPath(pyAppPath);
-              jupyterController.convertIPythonNotebook(project, user, appPath, pyAppPath,
-                  JupyterController.NotebookConversion.PY_JOB);
-            }
-          } finally {
-            if (udfso != null) {
-              dfs.closeDfsClient(udfso);
-            }
+          if (appPath.endsWith(".ipynb")) {
+            originalParentDir = (new File(appPath)).getParent();
+            executionFacade.updateState(execution, JobState.CONVERTING_NOTEBOOK);
+            String pyAppPath = HopsUtils.prepJupyterNotebookConversion(execution, hdfsUser, dfs);
+            ((PythonJobConfiguration) job.getJobConfig()).setAppPath(pyAppPath);
+            jupyterController.convertIPythonNotebook(project, user, appPath, pyAppPath,
+                    JupyterController.NotebookConversion.PY_JOB);
           }
         }
         String kubeProjectUser = kubeClientService.getKubeDeploymentName(job.getProject(), user);
@@ -685,7 +695,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
                                            withValue(settings.getHopsworksPublicHost()).build());
         String appPath = ((PythonJobConfiguration)dockerJobConfiguration).getAppPath();
         if (settings.getMountHopsfsInJobContainer()) {
-          com.logicalclocks.servicediscoverclient.service.Service hdfsService =
+          Service hdfsService =
               serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
                   HopsworksService.NAMENODE.getNameWithTag(NamenodeTags.rpc));
           appPath = Utils.prepPath(appPath);
@@ -821,7 +831,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   }
 
   private String getLogstashURL() throws ServiceDiscoveryException {
-    com.logicalclocks.servicediscoverclient.service.Service logstash =
+    Service logstash =
             serviceDiscoveryController
                     .getAnyAddressOfServiceWithDNS(
                         HopsworksService.LOGSTASH.getNameWithTag(LogstashTags.pythonjobs));

@@ -189,74 +189,79 @@ describe "On #{ENV['OS']}" do
         before :all do
           with_valid_tour_project("spark")
         end
+        before :each do
+          $job_name = "j_#{short_random_id}"
+        end
         after :each do
           clean_jobs(@project[:id])
         end
-
-        it "should fail to start a spark job with missing spark.yarn.dist.files" do
-          $job_name_2 = "demo_job_2_" + type
-          create_sparktour_job(@project, $job_name_2, type)
-          config = json_body[:config]
-          config[:'spark.yarn.dist.files'] = "hdfs:///Projects/#{@project[:projectname]}/Resources/iamnothere.txt"
-          create_sparktour_job(@project, $job_name_2, type, job_conf: config, expected_status: 200)
-          #start execution
-          start_execution(@project[:id], $job_name_2, expected_status: 400)
-        end
-        it "should fail to start a spark job with missing spark.yarn.dist.pyFiles" do
-          $job_name_2 = "demo_job_2_" + type
-          create_sparktour_job(@project, $job_name_2, type)
-          config = json_body[:config]
-          config[:'spark.yarn.dist.pyFiles'] = "hdfs:///Projects/#{@project[:projectname]}/Resources/iamnothere.py"
-          create_sparktour_job(@project, $job_name_2, type, job_conf: config, expected_status: 200)
-          #start execution
-          start_execution(@project[:id], $job_name_2, expected_status: 400)
-        end
-        it "should fail to start a spark job with missing spark.yarn.dist.jars" do
-          $job_name_2 = "demo_job_2_" + type
-          create_sparktour_job(@project, $job_name_2, type)
-          config = json_body[:config]
-          config[:'spark.yarn.dist.jars'] = "hdfs:///Projects/#{@project[:projectname]}/Resources/iamnothere.jar"
-          create_sparktour_job(@project, $job_name_2, type, job_conf: config, expected_status: 200)
-          #start execution
-          start_execution(@project[:id], $job_name_2, expected_status: 400)
-        end
-        it "should fail to start a spark job with missing spark.yarn.dist.archives" do
-          $job_name_2 = "demo_job_2_" + type
-          create_sparktour_job(@project, $job_name_2, type)
-          config = json_body[:config]
-          config[:'spark.yarn.dist.archives'] = "hdfs:///Projects/#{@project[:projectname]}/Resources/iamnothere.zip"
-          create_sparktour_job(@project, $job_name_2, type, job_conf: config, expected_status: 200)
-
-          #start execution
-          start_execution(@project[:id], $job_name_2, expected_status: 400)
-        end
         it "should start a job and use default args" do
-          $job_name_3 = "demo_job_3_" + type
-          create_sparktour_job(@project, $job_name_3, type)
+          create_sparktour_job(@project, $job_name, type)
           default_args = json_body[:config][:defaultArgs]
-          start_execution(@project[:id], $job_name_3)
+          start_execution(@project[:id], $job_name)
           execution_id = json_body[:id]
           begin
-            get_execution(@project[:id], $job_name_3, execution_id)
+            get_execution(@project[:id], $job_name, execution_id)
             expect(json_body[:args]).not_to be_nil
             expect(default_args).not_to be_nil
             expect(json_body[:args]).to eq default_args
           ensure
-            wait_for_execution_completed(@project[:id], $job_name_3, execution_id, "FINISHED")
+            wait_for_execution_completed(@project[:id], $job_name, execution_id, "FINISHED")
           end
         end
         it "should start a job with args 123" do
-          $job_name_3 = "demo_job_3_" + type
-          create_sparktour_job(@project, $job_name_3, type)
+          create_sparktour_job(@project, $job_name, type)
           args = "123"
-          start_execution(@project[:id], $job_name_3, args: args)
+          start_execution(@project[:id], $job_name, args: args)
           execution_id = json_body[:id]
           begin
-            get_execution(@project[:id], $job_name_3, execution_id)
+            get_execution(@project[:id], $job_name, execution_id)
             expect(json_body[:args]).to eq args
           ensure
-            wait_for_execution_completed(@project[:id], $job_name_3, execution_id, "FINISHED")
+            wait_for_execution_completed(@project[:id], $job_name, execution_id, "FINISHED")
           end
+        end
+        it "should fail to start a spark job with missing appPath" do
+          create_sparktour_job(@project, $job_name, type)
+          config = json_body[:config]
+
+          create_sparktour_job(@project, $job_name, type, job_conf: config, expected_status: 200)
+          delete_dataset(@project, config[:appPath], datasetType: "?type=DATASET")
+          #start execution
+          start_execution(@project[:id], $job_name, expected_status: 400)
+        end
+        it "should fail to start a spark job with missing spark.yarn.dist.files" do
+          create_sparktour_job(@project, $job_name, type)
+          config = json_body[:config]
+          config[:'spark.yarn.dist.files'] = "hdfs:///Projects/#{@project[:projectname]}/Resources/iamnothere.txt"
+          create_sparktour_job(@project, $job_name, type, job_conf: config, expected_status: 200)
+          #start execution
+          start_execution(@project[:id], $job_name, expected_status: 400)
+        end
+        it "should fail to start a spark job with missing spark.yarn.dist.pyFiles" do
+          create_sparktour_job(@project, $job_name, type)
+          config = json_body[:config]
+          config[:'spark.yarn.dist.pyFiles'] = "hdfs:///Projects/#{@project[:projectname]}/Resources/iamnothere.py"
+          create_sparktour_job(@project, $job_name, type, job_conf: config, expected_status: 200)
+          #start execution
+          start_execution(@project[:id], $job_name, expected_status: 400)
+        end
+        it "should fail to start a spark job with missing spark.yarn.dist.jars" do
+          create_sparktour_job(@project, $job_name, type)
+          config = json_body[:config]
+          config[:'spark.yarn.dist.jars'] = "hdfs:///Projects/#{@project[:projectname]}/Resources/iamnothere.jar"
+          create_sparktour_job(@project, $job_name, type, job_conf: config, expected_status: 200)
+          #start execution
+          start_execution(@project[:id], $job_name, expected_status: 400)
+        end
+        it "should fail to start a spark job with missing spark.yarn.dist.archives" do
+          create_sparktour_job(@project, $job_name, type)
+          config = json_body[:config]
+          config[:'spark.yarn.dist.archives'] = "hdfs:///Projects/#{@project[:projectname]}/Resources/iamnothere.zip"
+          create_sparktour_job(@project, $job_name, type, job_conf: config, expected_status: 200)
+
+          #start execution
+          start_execution(@project[:id], $job_name, expected_status: 400)
         end
       end
       end

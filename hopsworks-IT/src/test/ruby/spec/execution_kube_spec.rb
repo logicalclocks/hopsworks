@@ -197,6 +197,14 @@ describe "On #{ENV['OS']}" do
               stop_execution(@project[:id], $job_name, execution_id)
               wait_for_execution_completed(@project[:id], $job_name, execution_id, "KILLED", expected_final_status: "KILLED")
             end
+            it "should fail to start a python job with missing appPath" do
+              create_python_job(@project, $job_name, type)
+              config = json_body[:config]
+              create_python_job(@project, $job_name, type, config)
+              delete_dataset(@project, config[:appPath], datasetType: "?type=DATASET")
+              #start execution
+              start_execution(@project[:id], $job_name, expected_status: 400)
+            end
             it "should fail to start a python job with missing files param" do
               create_python_job(@project, $job_name, type)
               config = json_body[:config]
