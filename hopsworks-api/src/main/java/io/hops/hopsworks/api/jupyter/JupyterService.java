@@ -334,7 +334,7 @@ public class JupyterService {
 
       //Inspect dependencies
       sparkController
-          .inspectDependencies(project, hopsworksUser, (SparkJobConfiguration) jupyterSettings.getJobConfig());
+          .inspectDependencies(project, hopsworksUser, (SparkJobConfiguration) jupyterSettings.getJobConfig(), false);
       dto = jupyterManager.startJupyterServer(project, hopsworksUser, configSecret, jupyterSettings, allowOrigin);
       jupyterJWTManager.materializeJWT(hopsworksUser, project, jupyterSettings, dto.getCid(), dto.getPort(),
           JUPYTER_JWT_AUD);
