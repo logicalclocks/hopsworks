@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2020, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2024, Hopsworks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -14,25 +14,27 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.api.featurestore.statistics;
+package io.hops.hopsworks.common.featurestore.statistics;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.featurestore.statistics.FeaturestoreStatisticFacade;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
-public class SortBy implements AbstractFacade.SortBy {
+public class StatisticsSortBy implements AbstractFacade.SortBy {
 
-  private final FeaturestoreStatisticFacade.Sorts sortBy;
+  private final StatisticsFilters.Sorts sortBy;
   private final AbstractFacade.OrderBy param;
 
-  public SortBy(String param) {
+  public StatisticsSortBy(String param) {
+    if (param.startsWith("COMMIT_TIME")) {  // backwards compatibility
+      param = param.replace("COMMIT_TIME", "COMPUTATION_TIME");
+    }
     String[] sortByParams = param.split(":");
     String sort = "";
     try {
       sort = sortByParams[0].toUpperCase();
-      this.sortBy = FeaturestoreStatisticFacade.Sorts.valueOf(sort);
+      this.sortBy = StatisticsFilters.Sorts.valueOf(sort);
     } catch (IllegalArgumentException iae) {
       throw new WebApplicationException("Sort by need to set a valid sort parameter, but found: " + sort,
           Response.Status.NOT_FOUND);

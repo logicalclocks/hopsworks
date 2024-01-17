@@ -356,9 +356,7 @@ public class TrainingDatasetResource {
   ) throws FeaturestoreException {
     statisticsResource.setProject(project);
     statisticsResource.setFeaturestore(featurestore);
-    TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(
-        featureView, version);
-    statisticsResource.setTrainingDataset(trainingDataset);
+    statisticsResource.setTrainingDatasetByVersion(featureView, version);
     return statisticsResource;
   }
 

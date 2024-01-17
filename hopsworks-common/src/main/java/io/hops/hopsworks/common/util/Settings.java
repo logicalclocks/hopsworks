@@ -320,9 +320,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_HDFS_FILE_OP_JOB_DRIVER_MEM = "hdfs_file_op_job_driver_mem";
   
   private static final String VARIABLE_FS_STORAGE_CONNECTOR_SESSION_DURATION = "fs_storage_connector_session_duration";
-
-  // Storage connectors
-
+  
+  /* -------------------- Storage connectors --------------- */
   private final static String VARIABLE_ENABLE_REDSHIFT_STORAGE_CONNECTORS = "enable_redshift_storage_connectors";
   private final static String VARIABLE_ENABLE_ADLS_STORAGE_CONNECTORS = "enable_adls_storage_connectors";
   private final static String VARIABLE_ENABLE_SNOWFLAKE_STORAGE_CONNECTORS = "enable_snowflake_storage_connectors";
@@ -331,11 +330,17 @@ public class Settings implements Serializable {
   private final static String VARIABLE_ENABLE_BIGQUERY_STORAGE_CONNECTORS = "enable_bigquery_storage_connectors";
   private final static String VARIABLE_CONNECTOR_IMAGE_VERSION = "testconnector_image_version";
 
-  // BYOK
-
+  /* -------------------- BYOK --------------- */
   private final static String VARIABLE_ENABLE_BRING_YOUR_OWN_KAFKA = "enable_bring_your_own_kafka";
 
-  //OpenSearch Security
+  /* -------------------- Statistics --------------- */
+  private final static String VARIABLE_STATISTICS_CLEANER_BATCH_SIZE = "statistics_cleaner_batch_size";
+  private final static String VARIABLE_STATISTICS_CLEANER_INTERVAL_MS = "statistics_cleaner_interval_ms";
+  
+  /* -------------------- Feature monitoring --------------- */
+  private static final String VARIABLE_ENABLE_FEATURE_MONITORING = "enable_feature_monitoring";
+  
+  /* -------------------- OpenSearch security --------------- */
   private static final String VARIABLE_OPENSEARCH_SECURITY_ENABLED = "elastic_opendistro_security_enabled";
   private static final String VARIABLE_OPENSEARCH_HTTPS_ENABLED = "elastic_https_enabled";
   private static final String VARIABLE_OPENSEARCH_ADMIN_USER = "elastic_admin_user";
@@ -349,13 +354,13 @@ public class Settings implements Serializable {
 
   private static final String VARIABLE_CLIENT_PATH = "client_path";
 
-  // OpenSearch Vector DB
+  /* -------------------- OpenSearch Vector DB --------------- */
   private static final String VARIABLE_OPENSEARCH_DEFAULT_EMBEDDING_INDEX =
       "opensearch_default_embedding_index";
   private static final String VARIABLE_NUM_OPENSEARCH_DEFAULT_EMBEDDING_INDEX =
       "opensearch_num_default_embedding_index";
 
-  //Cloud
+  /* -------------------- Cloud --------------- */
   private static final String VARIABLE_CLOUD_EVENTS_ENDPOINT=
       "cloud_events_endpoint";
   private static final String VARIABLE_CLOUD_EVENTS_ENDPOINT_API_KEY=
@@ -869,9 +874,15 @@ public class Settings implements Serializable {
       ENABLE_BIGQUERY_STORAGE_CONNECTORS = setBoolVar(VARIABLE_ENABLE_BIGQUERY_STORAGE_CONNECTORS,
               ENABLE_BIGQUERY_STORAGE_CONNECTORS);
 
+      // BYOK
       ENABLE_BRING_YOUR_OWN_KAFKA = setBoolVar(VARIABLE_ENABLE_BRING_YOUR_OWN_KAFKA,
           ENABLE_BRING_YOUR_OWN_KAFKA);
   
+      // Statistics
+      STATISTICS_CLEANER_BATCH_SIZE =  setIntVar(VARIABLE_STATISTICS_CLEANER_BATCH_SIZE, STATISTICS_CLEANER_BATCH_SIZE);
+      STATISTICS_CLEANER_INTERVAL_MS = setIntVar(VARIABLE_STATISTICS_CLEANER_INTERVAL_MS,
+        STATISTICS_CLEANER_INTERVAL_MS);
+      
       TESTCONNECTOR_IMAGE_VERSION = setStrVar(VARIABLE_CONNECTOR_IMAGE_VERSION, "0.1");
       YARN_RUNTIME = setStrVar(VARIABLE_YARN_RUNTIME, YARN_RUNTIME);
       DOCKER_MOUNTS = setStrVar(VARIABLE_DOCKER_MOUNTS, DOCKER_MOUNTS);
@@ -3705,6 +3716,18 @@ public class Settings implements Serializable {
   public synchronized int getExecutionsCleanerInterval(){
     checkCache();
     return EXECUTIONS_CLEANER_INTERVAL_MS;
+  }
+  
+  private int STATISTICS_CLEANER_BATCH_SIZE = 1000;
+  public synchronized int getStatisticsCleanerBatchSize(){
+    checkCache();
+    return STATISTICS_CLEANER_BATCH_SIZE;
+  }
+  
+  private int STATISTICS_CLEANER_INTERVAL_MS = 900000;
+  public synchronized int getStatisticsCleanerInterval(){
+    checkCache();
+    return STATISTICS_CLEANER_INTERVAL_MS;
   }
 
   private int MAX_ENV_YML_BYTE_SIZE = 20000;

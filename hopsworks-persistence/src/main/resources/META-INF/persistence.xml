@@ -85,7 +85,11 @@
     <class>io.hops.hopsworks.persistence.entity.featurestore.featureview.ServingKey</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticColumn</class>
-    <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureGroupStatistics</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.TrainingDatasetStatistics</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureGroupDescriptiveStatistics</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureDescriptiveStatistics</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.PercentilesConverter</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.code.FeaturestoreCode</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.GreatExpectation</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ExpectationSuite</class>

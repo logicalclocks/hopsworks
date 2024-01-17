@@ -17,6 +17,8 @@
 package io.hops.hopsworks.api.featurestore.statistics;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.common.featurestore.statistics.StatisticsFilterBy;
+import io.hops.hopsworks.common.featurestore.statistics.StatisticsSortBy;
 import io.swagger.annotations.ApiParam;
 
 import javax.ws.rs.QueryParam;
@@ -27,14 +29,15 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class StatisticsBeanParam {
+  
   @QueryParam("sort_by")
   @ApiParam(value = "ex. sort_by=commit_time:desc", allowableValues = "commit_time:asc,commit_time:desc")
   private String sortBy;
-  private final Set<SortBy> sortBySet;
+  private final Set<StatisticsSortBy> sortBySet;
 
   @QueryParam("filter_by")
   @ApiParam(value = "ex. filter_by=commit_time_gt:2018-12-25T17:12:10", allowMultiple = true)
-  private Set<FilterBy> filterSet;
+  private Set<StatisticsFilterBy> filterSet;
 
   // TODO(Fabio): No Expansion but field selection - reflection
   @QueryParam("fields")
@@ -44,7 +47,7 @@ public class StatisticsBeanParam {
 
   public StatisticsBeanParam(
       @QueryParam("sort_by") String sortBy,
-      @QueryParam("filter_by") Set<FilterBy> filter,
+      @QueryParam("filter_by") Set<StatisticsFilterBy> filter,
       @QueryParam("fields") String fields) {
     this.sortBy = sortBy;
     this.sortBySet = getSortBy(sortBy);
@@ -56,31 +59,43 @@ public class StatisticsBeanParam {
     }
   }
 
-  private Set<SortBy> getSortBy(String param) {
+  private Set<StatisticsSortBy> getSortBy(String param) {
     if (param == null || param.isEmpty()) {
       return new LinkedHashSet<>();
     }
     String[] params = param.split(",");
     //Hash table and linked list implementation of the Set interface, with predictable iteration order
-    Set<SortBy> sortBys = new LinkedHashSet<>();//make ordered
-    SortBy sort;
+    Set<StatisticsSortBy> sortBys = new LinkedHashSet<>();//make ordered
+    StatisticsSortBy sort;
     for (String s : params) {
-      sort = new SortBy(s.trim());
+      sort = new StatisticsSortBy(s.trim());
       sortBys.add(sort);
     }
     return sortBys;
   }
 
-  public Set<SortBy> getSortBySet() {
+  public Set<StatisticsSortBy> getSortBySet() {
     return sortBySet;
   }
 
-  public Set<FilterBy> getFilterSet() {
+  public Set<StatisticsFilterBy> getFilterSet() {
     return filterSet;
   }
 
   public Set<String> getFieldSet() {
     return fieldSet;
+  }
+  
+  @Override
+  public String toString() {
+    String filterSet = this.filterSet != null
+      ? "(" + this.filterSet.stream().map(StatisticsFilterBy::toString).collect(Collectors.joining(",")) + ")"
+      : "NULL";
+    return "StatisticsBeanParam{" +
+      "sortBy=" + (this.sortBy != null ? this.sortBy : "NULL") +
+      ",filterSet=" + filterSet +
+      ",fields=" + (this.fields != null ? this.fields : "NULL") +
+      '}';
   }
 }
 

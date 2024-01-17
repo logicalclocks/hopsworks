@@ -1238,7 +1238,8 @@ public class RESTCodes {
   public enum ActivitiesErrorCode implements RESTErrorCode {
 
     FORBIDDEN(0, "You are not allow to perform this action.", Response.Status.FORBIDDEN),
-    ACTIVITY_NOT_FOUND(1, "Activity instance not found", Response.Status.NOT_FOUND);
+    ACTIVITY_NOT_FOUND(1, "Activity instance not found", Response.Status.NOT_FOUND),
+    ACTIVITY_NOT_SUPPORTED(2, "Activity type not supported", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;
@@ -1680,7 +1681,10 @@ public class RESTCodes {
     HELPER_COL_NOT_FOUND(225, "Could not find helper column in feature view schema",
       Response.Status.NOT_FOUND),
     OPENSEARCH_DEFAULT_EMBEDDING_INDEX_SUFFIX_NOT_DEFINED(226, "Opensearch default embedding index not defined",
-        Response.Status.INTERNAL_SERVER_ERROR);
+        Response.Status.INTERNAL_SERVER_ERROR),
+    FEATURE_GROUP_COMMIT_NOT_FOUND(227, "Feature group commit not found", Response.Status.BAD_REQUEST),
+    STATISTICS_NOT_FOUND(228, "Statistics wasn't found.", Response.Status.NOT_FOUND),
+    INVALID_STATISTICS_WINDOW_TIMES(229, "Window times provided are invalid", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

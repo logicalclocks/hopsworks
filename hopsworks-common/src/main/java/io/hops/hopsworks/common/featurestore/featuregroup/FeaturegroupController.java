@@ -679,7 +679,7 @@ public class FeaturegroupController {
 
     // Statistics adn validation files need to be deleted explicitly
     validationReportController.deleteFeaturegroupDataValidationDir(user, featuregroup);
-    statisticsController.deleteStatistics(project, user, featuregroup);
+    statisticsController.deleteFeatureGroupStatistics(project, user, featuregroup);
     // In some cases, fg metadata was not deleted. https://hopsworks.atlassian.net/browse/FSTORE-377
     // Remove the metadata if it still exists.
     deleteFeatureGroupMeta(featuregroup);
@@ -946,5 +946,11 @@ public class FeaturegroupController {
     } else {
       return cachedFeaturegroupController.getOfflineFeaturegroupPreview(featuregroup, project, user, partition, limit);
     }
+  }
+  
+  public static boolean isTimeTravelEnabled(Featuregroup featuregroup) {
+    return (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
+      featuregroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) ||
+      featuregroup.getFeaturegroupType() == FeaturegroupType.STREAM_FEATURE_GROUP;
   }
 }

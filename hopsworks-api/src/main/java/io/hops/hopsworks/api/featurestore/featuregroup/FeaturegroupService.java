@@ -599,7 +599,7 @@ public class FeaturegroupService {
       throws FeaturestoreException {
     this.statisticsResource.setProject(project);
     this.statisticsResource.setFeaturestore(featurestore);
-    this.statisticsResource.setFeatureGroupId(featureGroupId);
+    this.statisticsResource.setFeatureGroupById(featureGroupId);
     return statisticsResource;
   }
 

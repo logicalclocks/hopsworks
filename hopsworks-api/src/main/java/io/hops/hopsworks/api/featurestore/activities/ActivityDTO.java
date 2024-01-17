@@ -17,12 +17,12 @@
 package io.hops.hopsworks.api.featurestore.activities;
 
 import io.hops.hopsworks.api.featurestore.commit.CommitDTO;
-import io.hops.hopsworks.api.featurestore.statistics.StatisticsDTO;
 import io.hops.hopsworks.api.jobs.JobDTO;
 import io.hops.hopsworks.api.user.UserDTO;
 import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.ValidationReportDTO;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteDTO;
+import io.hops.hopsworks.common.featurestore.statistics.StatisticsDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.activity.ActivityType;
 
 public class ActivityDTO extends RestDTO<ActivityDTO> {

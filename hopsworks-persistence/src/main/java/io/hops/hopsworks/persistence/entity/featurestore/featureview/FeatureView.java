@@ -52,6 +52,8 @@ import java.util.Objects;
 @NamedQueries({
     @NamedQuery(name = "FeatureView.findAll", query = "SELECT fv FROM FeatureView fv"),
     @NamedQuery(name = "FeatureView.findById", query = "SELECT fv FROM FeatureView fv WHERE fv.id = :id"),
+    @NamedQuery(name = "FeatureView.findByIdAndFeaturestore", query = "SELECT fv FROM FeatureView fv " +
+        "WHERE fv.featurestore = :featurestore AND fv.id = :id"),
     @NamedQuery(name = "FeatureView.findByFeaturestore", query = "SELECT fv FROM FeatureView fv " +
         "WHERE fv.featurestore = :featurestore"),
     @NamedQuery(name = "FeatureView.findByFeaturestoreAndNameVersion",

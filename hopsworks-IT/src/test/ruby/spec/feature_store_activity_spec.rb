@@ -96,13 +96,13 @@ describe "On #{ENV['OS']}" do
       featurestore_id = get_featurestore_id(@project[:id])
       json_result, _ = create_cached_featuregroup(@project[:id], featurestore_id)
       parsed_json = JSON.parse(json_result)
-      create_statistics_commit(@project[:id], featurestore_id, "featuregroups", parsed_json["id"])
+      create_statistics_commit_fg(@project[:id], featurestore_id, parsed_json["id"])
       expect_status_details(200)
       get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{parsed_json["id"]}/activity?filter_by=type:statistics&expand=statistics"
       expect_status_details(200)
       activity = JSON.parse(response.body)
       expect(activity["items"][0]["type"]).to eql("STATISTICS")
-      expect(activity["items"][0]["statistics"]["commitTime"]).to eql(1597903688000)
+      expect(activity["items"][0]["statistics"]["computationTime"]).to eql(1597903688000)
     end
 
     it "should be able to retrieve activity related to creation of an expectation suite" do
@@ -277,7 +277,7 @@ describe "On #{ENV['OS']}" do
       base_timestamp = 1597903688000
       increment = 100000
       (1..15).each do |i|
-        create_statistics_commit(@project[:id], featurestore_id, "featuregroups", parsed_json["id"], commit_time: base_timestamp + increment * i)
+        create_statistics_commit_fg(@project[:id], featurestore_id, parsed_json["id"], computation_time: base_timestamp + increment * i)
         expect_status_details(200)
       end
       get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{parsed_json["id"]}/activity" +
@@ -287,9 +287,9 @@ describe "On #{ENV['OS']}" do
 
       expect(activity["items"].count).to eql(5)
       # The first element should be the most recent, day 15
-      expect(activity["items"][0]["statistics"]["commitTime"]).to eql(base_timestamp + increment * 15)
+      expect(activity["items"][0]["statistics"]["computationTime"]).to eql(base_timestamp + increment * 15)
       # The last element should be the least recent of the batch, day 11
-      expect(activity["items"][4]["statistics"]["commitTime"]).to eql(base_timestamp + increment * 11)
+      expect(activity["items"][4]["statistics"]["computationTime"]).to eql(base_timestamp + increment * 11)
 
       # Test second batch
       get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{parsed_json["id"]}/activity" +
@@ -299,9 +299,9 @@ describe "On #{ENV['OS']}" do
 
       expect(activity["items"].count).to eql(5)
       # The first element should be the most recent, day 10
-      expect(activity["items"][0]["statistics"]["commitTime"]).to eql(base_timestamp + increment * 10)
+      expect(activity["items"][0]["statistics"]["computationTime"]).to eql(base_timestamp + increment * 10)
       # The last element should be the least recent of the batch, day 6
-      expect(activity["items"][4]["statistics"]["commitTime"]).to eql(base_timestamp + increment * 6)
+      expect(activity["items"][4]["statistics"]["computationTime"]).to eql(base_timestamp + increment * 6)
     end
 
     it "should be able to filter events by timestamp" do
@@ -311,7 +311,7 @@ describe "On #{ENV['OS']}" do
       base_timestamp = 1597903688000
       increment = 100000
       (1..15).each do |i|
-        create_statistics_commit(@project[:id], featurestore_id, "featuregroups", parsed_json["id"], commit_time: base_timestamp + increment * i)
+        create_statistics_commit_fg(@project[:id], featurestore_id, parsed_json["id"], computation_time: base_timestamp + increment * i)
         expect_status_details(200)
       end
       get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{parsed_json["id"]}/activity" +

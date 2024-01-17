@@ -378,7 +378,7 @@ public class TrainingDatasetService {
       throws FeaturestoreException {
     this.statisticsResource.setProject(project);
     this.statisticsResource.setFeaturestore(featurestore);
-    this.statisticsResource.setTrainingDatasetId(trainingDatasetId);
+    this.statisticsResource.setTrainingDatasetById(trainingDatasetId);
     return statisticsResource;
   }
 
@@ -479,7 +479,7 @@ public class TrainingDatasetService {
       throws FeaturestoreException {
     this.activityResource.setProject(project);
     this.activityResource.setFeaturestore(featurestore);
-    this.activityResource.setTrainingDatasetId(trainingDatasetId);
+    this.activityResource.setTrainingDatasetById(trainingDatasetId);
     return this.activityResource;
   }
 

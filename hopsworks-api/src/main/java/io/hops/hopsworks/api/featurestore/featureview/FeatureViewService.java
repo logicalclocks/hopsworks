@@ -155,7 +155,7 @@ public class FeatureViewService {
   ) throws FeaturestoreException {
     this.activityResource.setProject(project);
     this.activityResource.setFeaturestore(featurestore);
-    this.activityResource.setFeatureView(featureViewName, version);
+    this.activityResource.setFeatureViewByNameAndVersion(featureViewName, version);
     return this.activityResource;
   }
 
@@ -163,8 +163,7 @@ public class FeatureViewService {
   @Logged(logLevel = LogLevel.OFF)
   public TransformationResource transformation(
       @ApiParam(value = "Name of the feature view", required = true)
-      @PathParam("name")
-          String featureViewName,
+      @PathParam("name") String featureViewName,
       @ApiParam(value = "Version of the feature view", required = true)
       @PathParam("version")
           Integer version
