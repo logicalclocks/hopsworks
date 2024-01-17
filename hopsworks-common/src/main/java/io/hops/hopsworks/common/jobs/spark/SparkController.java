@@ -174,7 +174,7 @@ public class SparkController {
       throw new IllegalArgumentException("Path does not point to a .jar, .py or .ipynb file.");
     }
   
-    inspectDependencies(job.getProject(), user, (SparkJobConfiguration) job.getJobConfig());
+    inspectDependencies(job.getProject(), user, (SparkJobConfiguration) job.getJobConfig(), true);
     
   }
   
@@ -214,16 +214,23 @@ public class SparkController {
     return sparkConfig;
   }
   
-  public void inspectDependencies(Project project, Users user, SparkJobConfiguration jobConf)
+  public void inspectDependencies(Project project, Users user, SparkJobConfiguration jobConf, boolean isJob)
     throws ProjectException, GenericException {
     DistributedFileSystemOps udfso = null;
     try {
+      if(isJob) {
+        udfso = dfs.getDfsOps(hdfsUsersBean.getHdfsUserName(project, user));
+        if (!udfso.exists(jobConf.getAppPath())) {
+          throw new ProjectException(RESTCodes.ProjectErrorCode.FILE_NOT_FOUND, Level.FINEST,
+                  "Job application file does not exist: " + jobConf.getAppPath());
+        }
+      }
+
       if (!Strings.isNullOrEmpty(jobConf.getArchives())
         || !Strings.isNullOrEmpty(jobConf.getFiles())
         || !Strings.isNullOrEmpty(jobConf.getJars())
         || !Strings.isNullOrEmpty(jobConf.getPyFiles())) {
-        
-        udfso = dfs.getDfsOps(hdfsUsersBean.getHdfsUserName(project, user));
+
         if (!Strings.isNullOrEmpty(jobConf.getArchives())) {
           for (String filePath : jobConf.getArchives().split(",")) {
             if (!Strings.isNullOrEmpty(filePath) && !udfso.exists(filePath)) {
