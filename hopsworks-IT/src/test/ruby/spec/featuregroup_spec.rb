@@ -1186,34 +1186,32 @@ describe "On #{ENV['OS']}" do
         commit_metadata = {commitDateString:20201025182256,commitTime:1603650176000,rowsInserted:3,rowsUpdated:1,rowsDeleted:0}
         _ = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
 
-        statistics_content = {
-            columns:[
-                    { column:"testfeature",
-                      dataType:"Integral",
-                      isDataTypeInferred:false,
-                      completeness:1.0,
-                      distinctness:1.0,
-                      entropy:1.3862943611198906,
-                      uniqueness:1.0,
-                      approximateNumDistinctValues:4,
-                      mean:2.5,
-                      maximum:4.0,
-                      minimum:1.0,
-                      sum:10.0,
-                      stdDev:1.118033988749895,
-                      approxPercentiles:[]
-                    }
-            ]
-        }
+        feature_descriptive_statistics = [
+            { featureName:"testfeature",
+              featureType:"Integral",
+              completeness:1.0,
+              distinctness:1.0,
+              entropy:1.3862943611198906,
+              uniqueness:1.0,
+              approxNumDistinctValues:4,
+              mean:2.5,
+              max:4.0,
+              min:1.0,
+              sum:10.0,
+              stddev:1.118033988749895,
+              percentiles:[]
+            }
+        ]
 
         create_statistic_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/statistics"
 
         system_time_1st_statistic_commit = (Time.now.to_f * 1000).to_i
         json_data = {
             items:[],
-            featureGroupCommitId: nil,
+            windowEndTime: nil,
             commitTime:system_time_1st_statistic_commit,
-            content: statistics_content.to_json
+            featureDescriptiveStatistics: feature_descriptive_statistics,
+            rowPercentage: 1.0
         }
 
         json_data_str = json_data.to_json
@@ -1221,19 +1219,21 @@ describe "On #{ENV['OS']}" do
 
         json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/statistics?fields=content&sort_by=commit_time%3Adesc&offset=0&limit=1"
         parsed_json = JSON.parse(json_result)
-        expect(parsed_json["items"].first["featureGroupCommitId"]).to eql(1603650176000)
-        expect(parsed_json["items"].first["commitTime"]).to eql(1603650176000)
+        expect(parsed_json["items"].first["windowStartTime"]).to eql(1603577485000) # first fg commit
+        expect(parsed_json["items"].first["windowEndTime"]).to eql(1603650176000)
+        expect(parsed_json["items"].first["commitTime"]).to eql(system_time_1st_statistic_commit)
 
         system_time_2nd_statistic_commit = (Time.now.to_f * 1000).to_i
-        json_data[:featureGroupCommitId] = 1603650176000
+        json_data[:windowEndTime] = 1603650176000
         json_data[:commitTime] = system_time_2nd_statistic_commit
         json_data_str = json_data.to_json
         _ = post create_statistic_endpoint, json_data_str
 
         json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/statistics?fields=content&sort_by=commit_time%3Adesc&offset=0&limit=1"
         parsed_json = JSON.parse(json_result)
-        expect(parsed_json["items"].first["featureGroupCommitId"]).to eql(1603650176000)
-        expect(parsed_json["items"].first["commitTime"]).to eql(system_time_2nd_statistic_commit)
+        expect(parsed_json["items"].first["windowStartTime"]).to eql(1603577485000) # first fg commit
+        expect(parsed_json["items"].first["windowEndTime"]).to eql(1603650176000) # same commit, no stats are recomputed
+        expect(parsed_json["items"].first["commitTime"]).to eql(system_time_1st_statistic_commit) # therefore, system_time_1st_statistic_commit
       end
 
       it "should be able to delete a feature group with 500 commits" do

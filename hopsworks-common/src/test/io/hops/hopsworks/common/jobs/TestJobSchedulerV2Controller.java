@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.jobs;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobScheduleV2Facade;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
+import io.hops.hopsworks.common.jobs.scheduler.JobScheduleV2Controller;
 import io.hops.hopsworks.common.jobs.scheduler.JobScheduleV2DTO;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.JobException;
@@ -29,28 +30,26 @@ import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobCon
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.jobs.scheduler.JobScheduleV2;
-import io.hops.hopsworks.common.jobs.scheduler.JobScheduleV2Controller;
-
-import org.apache.avro.generic.GenericData;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.time.Instant;
-import java.time.temporal.ChronoField;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.TimeZone;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.*;
-
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 public class TestJobSchedulerV2Controller {
   @InjectMocks

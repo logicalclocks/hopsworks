@@ -21,7 +21,8 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Fea
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ExpectationSuite;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationReport;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
-import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureGroupStatistics;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.TrainingDatasetStatistics;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -38,8 +39,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -50,21 +49,6 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "feature_store_activity", catalog = "hopsworks")
-@NamedQueries({
-    @NamedQuery(name = "FeaturestoreActivity.lastFgExecution",
-        query = "SELECT fsa FROM FeaturestoreActivity fsa " +
-            "WHERE fsa.featureGroup = :featureGroup AND fsa.type = :type " +
-            "ORDER BY fsa.eventTime DESC"),
-    @NamedQuery(name = "FeaturestoreActivity.lastTdExecution",
-        query = "SELECT fsa FROM FeaturestoreActivity fsa " +
-            "WHERE fsa.trainingDataset = :trainingDataset AND fsa.type = :type " +
-            "ORDER BY fsa.eventTime DESC"),
-    @NamedQuery(name = "FeaturestoreActivity.findByFgExecution",
-        query = "SELECT fsa FROM FeaturestoreActivity fsa " +
-            "WHERE fsa.featureGroup = :featureGroup AND fsa.execution = :execution"),
-    @NamedQuery(name = "FeaturestoreActivity.findByTdExecution",
-        query = "SELECT fsa FROM FeaturestoreActivity fsa " +
-            "WHERE fsa.trainingDataset = :trainingDataset AND fsa.execution = :execution")})
 public class FeaturestoreActivity implements Serializable {
   private static final long serialVersionUID = 1L;
   private static final int META_MSG_STR_SIZE = 15000;
@@ -100,18 +84,21 @@ public class FeaturestoreActivity implements Serializable {
   @JoinColumn(name = "execution_id", referencedColumnName = "id")
   private Execution execution;
 
-  @JoinColumn(name = "statistics_id", referencedColumnName = "id")
-  private FeaturestoreStatistic statistics;
+  @JoinColumn(name = "feature_group_statistics_id", referencedColumnName = "id")
+  private FeatureGroupStatistics featureGroupStatistics;
 
   @JoinColumns({
-      @JoinColumn(name = "commit_id", referencedColumnName = "commit_id"),
-      @JoinColumn(name = "feature_group_id", referencedColumnName = "feature_group_id",
-          insertable = false, updatable = false)
+    @JoinColumn(name = "commit_id", referencedColumnName = "commit_id"),
+    @JoinColumn(name = "feature_group_id", referencedColumnName = "feature_group_id",
+      insertable = false, updatable = false)
     })
   private FeatureGroupCommit commit;
   @JoinColumn(name = "feature_group_id", referencedColumnName = "id")
   private Featuregroup featureGroup;
 
+  @JoinColumn(name = "training_dataset_statistics_id", referencedColumnName = "id")
+  private TrainingDatasetStatistics trainingDatasetStatistics;
+  
   @JoinColumn(name = "training_dataset_id", referencedColumnName = "id")
   private TrainingDataset trainingDataset;
 
@@ -181,13 +168,13 @@ public class FeaturestoreActivity implements Serializable {
   public void setExecution(Execution execution) {
     this.execution = execution;
   }
-
-  public FeaturestoreStatistic getStatistics() {
-    return statistics;
+  
+  public FeatureGroupStatistics getFeatureGroupStatistics() {
+    return featureGroupStatistics;
   }
-
-  public void setStatistics(FeaturestoreStatistic statistics) {
-    this.statistics = statistics;
+  
+  public void setFeatureGroupStatistics(FeatureGroupStatistics featureGroupStatistics) {
+    this.featureGroupStatistics = featureGroupStatistics;
   }
 
   public FeatureGroupCommit getCommit() {
@@ -205,7 +192,15 @@ public class FeaturestoreActivity implements Serializable {
   public void setFeatureGroup(Featuregroup featureGroup) {
     this.featureGroup = featureGroup;
   }
-
+  
+  public TrainingDatasetStatistics getTrainingDatasetStatistics() {
+    return trainingDatasetStatistics;
+  }
+  
+  public void setTrainingDatasetStatistics(TrainingDatasetStatistics trainingDatasetStatistics) {
+    this.trainingDatasetStatistics = trainingDatasetStatistics;
+  }
+  
   public TrainingDataset getTrainingDataset() {
     return trainingDataset;
   }
@@ -213,7 +208,7 @@ public class FeaturestoreActivity implements Serializable {
   public void setTrainingDataset(TrainingDataset trainingDataset) {
     this.trainingDataset = trainingDataset;
   }
-
+  
   public FeatureView getFeatureView() {
     return featureView;
   }
