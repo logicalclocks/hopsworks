@@ -25,7 +25,8 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Fea
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ExpectationSuite;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationReport;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
-import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureGroupStatistics;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.TrainingDatasetStatistics;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -52,9 +53,8 @@ public class FeaturestoreActivityFacade extends AbstractFacade<FeaturestoreActiv
     return em;
   }
 
-  public void logMetadataActivity(Users user, Featuregroup featuregroup,
-                                  FeaturestoreActivityMeta metadataType,
-                                  String additionalMsg) {
+  public void logMetadataActivity(Users user, Featuregroup featuregroup, FeaturestoreActivityMeta metadataType,
+      String additionalMsg) {
     FeaturestoreActivity fsActivity = new FeaturestoreActivity();
     fsActivity.setType(ActivityType.METADATA);
     fsActivity.setFeatureGroup(featuregroup);
@@ -66,7 +66,7 @@ public class FeaturestoreActivityFacade extends AbstractFacade<FeaturestoreActiv
   }
 
   public void logMetadataActivity(Users user, TrainingDataset trainingDataset, FeatureView featureView,
-                                  FeaturestoreActivityMeta metadataType) {
+      FeaturestoreActivityMeta metadataType) {
     FeaturestoreActivity fsActivity = new FeaturestoreActivity();
     fsActivity.setType(ActivityType.METADATA);
     fsActivity.setFeatureView(featureView);
@@ -77,8 +77,7 @@ public class FeaturestoreActivityFacade extends AbstractFacade<FeaturestoreActiv
     em.persist(fsActivity);
   }
 
-  public void logMetadataActivity(Users user, FeatureView featureView,
-                                  FeaturestoreActivityMeta metadataType) {
+  public void logMetadataActivity(Users user, FeatureView featureView, FeaturestoreActivityMeta metadataType) {
     FeaturestoreActivity fsActivity = new FeaturestoreActivity();
     fsActivity.setType(ActivityType.METADATA);
     fsActivity.setFeatureView(featureView);
@@ -89,24 +88,24 @@ public class FeaturestoreActivityFacade extends AbstractFacade<FeaturestoreActiv
   }
 
   public void logStatisticsActivity(Users user, Featuregroup featuregroup, Date eventTime,
-                                    FeaturestoreStatistic statistics) {
+      FeatureGroupStatistics statistics) {
     FeaturestoreActivity fsActivity = new FeaturestoreActivity();
     fsActivity.setType(ActivityType.STATISTICS);
     fsActivity.setFeatureGroup(featuregroup);
     fsActivity.setUser(user);
     fsActivity.setEventTime(eventTime);
-    fsActivity.setStatistics(statistics);
+    fsActivity.setFeatureGroupStatistics(statistics);
     em.persist(fsActivity);
   }
 
   public void logStatisticsActivity(Users user, TrainingDataset trainingDataset, Date eventTime,
-                                    FeaturestoreStatistic statistics) {
+      TrainingDatasetStatistics statistics) {
     FeaturestoreActivity fsActivity = new FeaturestoreActivity();
     fsActivity.setType(ActivityType.STATISTICS);
     fsActivity.setTrainingDataset(trainingDataset);
     fsActivity.setUser(user);
     fsActivity.setEventTime(eventTime);
-    fsActivity.setStatistics(statistics);
+    fsActivity.setTrainingDatasetStatistics(statistics);
     em.persist(fsActivity);
   }
 
