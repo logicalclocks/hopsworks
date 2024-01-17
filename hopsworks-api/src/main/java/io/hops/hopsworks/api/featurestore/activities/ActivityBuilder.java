@@ -25,6 +25,7 @@ import io.hops.hopsworks.api.user.UsersBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
+import io.hops.hopsworks.exceptions.ActivitiesException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.activity.ActivityType;
@@ -34,6 +35,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -42,6 +44,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
+import java.util.logging.Level;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -121,7 +124,7 @@ public class ActivityBuilder {
             featuregroup, featurestoreActivity.getCommit()));
       } else if (featurestoreActivity.getType() == ActivityType.STATISTICS) {
         dto.setStatistics(statisticsBuilder.build(uriInfo, resourceRequest, project, user,
-            featuregroup, featurestoreActivity.getStatistics()));
+            featuregroup, featurestoreActivity.getFeatureGroupStatistics()));
       } else if (featurestoreActivity.getType() == ActivityType.EXPECTATIONS) {
         if (featurestoreActivity.getExpectationSuite() != null) {
           dto.setExpectationSuite(expectationSuiteBuilder.build(
@@ -168,7 +171,7 @@ public class ActivityBuilder {
             featurestoreActivity.getExecution().getJob(), featurestoreActivity.getExecution()));
       } else if (featurestoreActivity.getType() == ActivityType.STATISTICS) {
         dto.setStatistics(statisticsBuilder.build(uriInfo, resourceRequest, project, user,
-            trainingDataset, featurestoreActivity.getStatistics()));
+            trainingDataset, featurestoreActivity.getTrainingDatasetStatistics()));
       } else {
         // Metadata change
         String metadataMsg = featurestoreActivity.getActivityMeta().getValue();
@@ -184,7 +187,7 @@ public class ActivityBuilder {
 
   public ActivityDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Users user,
                            FeatureView featureView, FeaturestoreActivity featurestoreActivity)
-          throws FeaturestoreException {
+    throws FeaturestoreException, ActivitiesException {
     ActivityDTO dto = new ActivityDTO();
     dto.setHref(uri(uriInfo, project, featureView.getFeaturestore(), featureView));
     dto.setExpand(expand(resourceRequest));
@@ -197,8 +200,8 @@ public class ActivityBuilder {
         dto.setJob(jobsBuilder.build(uriInfo, resourceRequest,
                 featurestoreActivity.getExecution().getJob(), featurestoreActivity.getExecution()));
       } else if (featurestoreActivity.getType() == ActivityType.STATISTICS) {
-        dto.setStatistics(statisticsBuilder.build(uriInfo, resourceRequest, project, user,
-                featureView, featurestoreActivity.getStatistics()));
+        throw new ActivitiesException(RESTCodes.ActivitiesErrorCode.ACTIVITY_NOT_SUPPORTED, Level.FINE, "Activities " +
+          "of type statistics are not supported for feature views, used feature groups or training dataset instead");
       } else {
         // Metadata change
         String metadataMsg = featurestoreActivity.getActivityMeta().getValue();
@@ -257,7 +260,8 @@ public class ActivityBuilder {
   }
 
   public ActivityDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
-                           Project project, Users user, FeatureView featureView) throws FeaturestoreException {
+                           Project project, Users user, FeatureView featureView)
+    throws FeaturestoreException, ActivitiesException {
     ActivityDTO dto = new ActivityDTO();
     dto.setHref(uri(uriInfo, project, featureView.getFeaturestore(), featureView));
     dto.setExpand(expand(resourceRequest));

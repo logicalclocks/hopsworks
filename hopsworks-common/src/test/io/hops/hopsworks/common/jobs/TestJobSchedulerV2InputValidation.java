@@ -60,7 +60,7 @@ public class TestJobSchedulerV2InputValidation {
   }
 
   @Test
-  public void testCronValidationNoSeconds() throws JobException {
+  public void testCronValidationNoSeconds() {
     JobScheduleV2DTO dto = new JobScheduleV2DTO();
 
     dto.setCronExpression("1 */10 0 1 * ? *");
@@ -71,7 +71,7 @@ public class TestJobSchedulerV2InputValidation {
   }
 
   @Test
-  public void testCronValidationStandardOptions() throws JobException {
+  public void testCronValidationStandardOptions() {
     JobScheduleV2DTO dto = new JobScheduleV2DTO();
     dto.setStartDateTime(Instant.now());
 

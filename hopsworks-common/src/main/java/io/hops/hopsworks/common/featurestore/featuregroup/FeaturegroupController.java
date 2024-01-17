@@ -682,7 +682,7 @@ public class FeaturegroupController {
 
     // Statistics adn validation files need to be deleted explicitly
     validationReportController.deleteFeaturegroupDataValidationDir(user, featuregroup);
-    statisticsController.deleteStatistics(project, user, featuregroup);
+    statisticsController.deleteFeatureGroupStatistics(project, user, featuregroup);
     // In some cases, fg metadata was not deleted. https://hopsworks.atlassian.net/browse/FSTORE-377
     // Remove the metadata if it still exists.
     deleteFeatureGroupMeta(featuregroup);
