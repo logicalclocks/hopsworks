@@ -52,6 +52,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
@@ -148,7 +149,8 @@ public class QueryController {
 
     if (fg.getStreamFeatureGroup() != null ||
         (fg.getCachedFeaturegroup() != null &&
-        fg.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI)) {
+        Arrays.asList(TimeTravelFormat.HUDI, TimeTravelFormat.DELTA)
+              .contains(fg.getCachedFeaturegroup().getTimeTravelFormat()))) {
 
       // if a user specified a point in time in the request use it, otherwise set null and let the HSFS
       // APIs use SNAPSHOT query. the end time field will trigger an INCREMENTAL query. Incremental queries

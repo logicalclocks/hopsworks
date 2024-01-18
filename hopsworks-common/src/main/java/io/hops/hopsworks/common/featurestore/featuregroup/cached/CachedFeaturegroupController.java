@@ -590,6 +590,8 @@ public class CachedFeaturegroupController {
     switch (timeTravelFormat) {
       case HUDI:
         return OfflineFeatureGroupController.Formats.HUDI;
+      case DELTA:
+        return OfflineFeatureGroupController.Formats.PARQUET;
       default:
         return OfflineFeatureGroupController.Formats.valueOf(settings.getFeaturestoreDbDefaultStorageFormat());
     }

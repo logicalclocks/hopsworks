@@ -364,7 +364,7 @@ public class ConstructorController {
       tableIdentifierStr.add("`" + query.getProject() + "`");
       tableIdentifierStr.add("`" + query.getFeaturegroup().getName() + "_" + query.getFeaturegroup().getVersion()
           + "`");
-    } else if (query.getHiveEngine() || !isHudiTimeTravelFeatureGroup(query)) {
+    } else if (query.getHiveEngine() || !useSparkDataSourceAPIs(query)) {
       tableIdentifierStr.add("`" + query.getFeatureStore() + "`");
       tableIdentifierStr.add("`" + query.getFeaturegroup().getName() + "_" + query.getFeaturegroup().getVersion()
           + "`");
@@ -410,7 +410,7 @@ public class ConstructorController {
     List<HudiFeatureGroupAliasDTO> aliases = new ArrayList<>();
     Featuregroup featuregroup = query.getFeaturegroup();
     if (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
-            isHudiTimeTravelFeatureGroup(query)) {
+            useSparkDataSourceAPIs(query)) {
       CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO(featuregroup);
       String featurestoreName =
               featurestoreController.getOfflineFeaturestoreDbName(featuregroup.getFeaturestore());
@@ -420,7 +420,7 @@ public class ConstructorController {
       aliases.add(new HudiFeatureGroupAliasDTO(query.getAs(), featuregroupDTO,
           query.getLeftFeatureGroupStartTimestamp(), query.getLeftFeatureGroupEndTimestamp()));
     } else if (featuregroup.getFeaturegroupType() == FeaturegroupType.STREAM_FEATURE_GROUP &&
-            isHudiTimeTravelFeatureGroup(query)) {
+            useSparkDataSourceAPIs(query)) {
       StreamFeatureGroupDTO featuregroupDTO = new StreamFeatureGroupDTO(featuregroup);
       String featurestoreName =
               featurestoreController.getOfflineFeaturestoreDbName(featuregroup.getFeaturestore());
@@ -440,7 +440,16 @@ public class ConstructorController {
     return aliases;
   }
 
-  private boolean isHudiTimeTravelFeatureGroup(Query query) {
+  // This method determines if the client will need to use the Spark data source APIs.
+  // When this happens, the client will register a table under a specific alias.
+  // The SQL query will then use the alias to reference the table, instead of relying on
+  // the metadata from the metastore.
+  private boolean useSparkDataSourceAPIs(Query query) {
+    if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
+        query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.DELTA) {
+      return true;
+    }
+
     Boolean isHudiFg = (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.STREAM_FEATURE_GROUP ||
             (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
                     query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI));

@@ -21,5 +21,6 @@ import javax.xml.bind.annotation.XmlEnum;
 @XmlEnum
 public enum TimeTravelFormat {
     NONE,
-    HUDI
+    HUDI,
+    DELTA
 }
