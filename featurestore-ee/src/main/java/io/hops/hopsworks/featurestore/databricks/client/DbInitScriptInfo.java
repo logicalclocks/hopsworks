@@ -15,4 +15,13 @@ public class DbInitScriptInfo {
 
   @Getter @Setter
   private DbfsStorageInfo dbfs;
+
+  @Getter @Setter
+  private DbfsStorageInfo workspace;
+
+  @Getter @Setter
+  private DbfsStorageInfo volumes;
+
+  @Getter @Setter
+  private DbfsStorageInfo file;
 }
