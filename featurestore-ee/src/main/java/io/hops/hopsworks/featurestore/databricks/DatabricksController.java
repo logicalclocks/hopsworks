@@ -21,13 +21,11 @@ import io.hops.hopsworks.featurestore.DatabricksInstanceFacade;
 import io.hops.hopsworks.featurestore.databricks.client.DbCluster;
 import io.hops.hopsworks.featurestore.databricks.client.DatabricksClient;
 import io.hops.hopsworks.featurestore.databricks.client.DbClusterStart;
-import io.hops.hopsworks.featurestore.databricks.client.DbInitScriptInfo;
 import io.hops.hopsworks.featurestore.databricks.client.DbLibrary;
 import io.hops.hopsworks.featurestore.databricks.client.DbLibraryInstall;
 import io.hops.hopsworks.featurestore.databricks.client.DbPyPiLibrary;
 import io.hops.hopsworks.featurestore.databricks.client.DbfsCreate;
 import io.hops.hopsworks.featurestore.databricks.client.DbfsPut;
-import io.hops.hopsworks.featurestore.databricks.client.DbfsStorageInfo;
 import io.hops.hopsworks.persistence.entity.certificates.UserCerts;
 import io.hops.hopsworks.persistence.entity.integrations.DatabricksInstance;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -38,7 +36,6 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.servicediscovery.HopsworksService;
 import io.hops.hopsworks.servicediscovery.tags.GlassfishTags;
 import io.hops.hopsworks.servicediscovery.tags.HiveTags;
-import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.hadoop.net.HopsSSLSocketFactory;
 import org.apache.hadoop.security.ssl.SSLFactory;
 
@@ -54,7 +51,6 @@ import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +67,6 @@ public class DatabricksController {
   public static final String HOPSWORKS_USER_TAG = "hopsworks_user";
 
   private static final String TOKEN_PREFIX = "db_";
-  private static final String METASTORE_JAR_DIR = "/hopsworks_metastore_jar";
   private static final String DBFS_SCHEME = "dbfs://";
   private static final String DBFS_VM = "/dbfs";
   private static final Logger LOGGER = Logger.getLogger(DatabricksController.class.getName());
@@ -79,14 +74,9 @@ public class DatabricksController {
   private static final String SPARK_CONF_PREFIX = "spark.hadoop.";
 
   private static final String HIVE_PACKAGE_NAME = "apache-hive";
-  private static final String CLIENT_DIR = "client";
+  private static final String HUDI_PACKAGE_NAME = "hudi";
 
-  private static final String INIT_SCRIPT =
-      "#!/bin/sh\n" +
-      "sleep 10\n" + //Sleep is needed for DBFS client to initialize properly
-      "tar -xf {0}/apache-hive-*-bin.tar.gz -C /tmp\n" +
-      "mv -f /tmp/apache-hive-*-bin {1}\n" +
-      "chmod -R +xr {0}\n";
+  private static final String CLIENT_DIR = "client";
 
   @EJB
   private SecretsController secretsController;
@@ -183,9 +173,6 @@ public class DatabricksController {
     // Upload client jars
     List<String> dbfsJars = uploadClientJars(dbInstanceUrl, baseClientDbfsPath, token);
 
-    // Upload or refresh init script
-    uploadInitScript(dbInstanceUrl, baseDbfsPath, baseClientDbfsPath, token);
-
     // Upload or refresh the certificates on dbfs
     uploadCertificastes(dbInstanceUrl, targetUser, project, baseDbfsPath, token);
 
@@ -225,20 +212,6 @@ public class DatabricksController {
     }
   }
 
-  private void uploadInitScript(String dbInstanceUrl, Path baseDbfsPath,
-                                Path baseClientDbfsPath, String token) throws FeaturestoreException, IOException {
-    Map<String, String> paths = new HashMap<>();
-    // On the VMs, dbfs is mounted in /dbfs/
-    paths.put("0", DBFS_VM + baseClientDbfsPath.toString());
-    paths.put("1", METASTORE_JAR_DIR);
-    StrSubstitutor sub = new StrSubstitutor(paths, "{", "}");
-    String scriptContent = sub.replace(INIT_SCRIPT);
-
-    String initScriptPath = baseDbfsPath.resolve("initScript.sh").toString();
-    DbfsPut initScriptPut = new DbfsPut(initScriptPath, scriptContent.getBytes(), true);
-    databricksClient.uploadOneShot(dbInstanceUrl, initScriptPut, token);
-  }
-
   private void uploadCertificastes(String dbInstanceUrl, Users user, Project project,
                                    Path baseDbfsPath, String token) throws FeaturestoreException, IOException {
     String projectUser = hdfsUsersController.getHdfsUserName(project, user);
@@ -266,7 +239,9 @@ public class DatabricksController {
     List<String> dbfsJars = new ArrayList<>();
     File clientDir = Paths.get(settings.getClientPath(), CLIENT_DIR).toFile();
     for (File f : clientDir.listFiles()) {
-      dbfsJars.add(uploadClientJar(dbInstanceUrl, baseClientDbfsPath, f.getName(), f.getAbsolutePath(), token));
+      if (!f.getName().contains(HIVE_PACKAGE_NAME) && !f.getName().contains(HUDI_PACKAGE_NAME)) {
+        dbfsJars.add(uploadClientJar(dbInstanceUrl, baseClientDbfsPath, f.getName(), f.getAbsolutePath(), token));
+      }
     }
 
     return dbfsJars;
@@ -295,9 +270,6 @@ public class DatabricksController {
       dbCluster.setSparkConfiguration(new HashMap<>());
     }
     dbCluster.getSparkConfiguration().putAll(getSparkProperties(project, user, baseDbfsPath));
-    dbCluster.setInitScripts(
-        Arrays.asList(new DbInitScriptInfo(
-            new DbfsStorageInfo(DBFS_SCHEME + baseDbfsPath.resolve("initScript.sh").toString()))));
 
     if (dbCluster.getTags() == null) {
       dbCluster.setTags(new HashMap<>());
@@ -310,10 +282,9 @@ public class DatabricksController {
   private Map<String, String> getSparkProperties(Project project, Users user,
                                                  Path baseDbfsPath) throws ServiceDiscoveryException {
     String projectUser = hdfsUsersController.getHdfsUserName(project, user);
-    return getSparkProperties(DBFS_VM + baseDbfsPath.resolve(projectUser + Settings.KEYSTORE_SUFFIX).toString(),
-        DBFS_VM + baseDbfsPath.resolve(projectUser + Settings.TRUSTSTORE_SUFFIX).toString(),
-        DBFS_VM + baseDbfsPath.resolve(projectUser + Settings.CERT_PASS_SUFFIX).toString(),
-        METASTORE_JAR_DIR + "/lib/*");
+    return getSparkProperties(DBFS_VM + baseDbfsPath.resolve(projectUser + Settings.KEYSTORE_SUFFIX),
+        DBFS_VM + baseDbfsPath.resolve(projectUser + Settings.TRUSTSTORE_SUFFIX),
+        DBFS_VM + baseDbfsPath.resolve(projectUser + Settings.CERT_PASS_SUFFIX), null);
   }
 
   public Map<String, String> getSparkProperties(String keyStorePath, String trustStorePath,
@@ -329,15 +300,17 @@ public class DatabricksController {
     sparkConfiguration.put(SPARK_CONF_PREFIX + SSLFactory.LOCALIZED_PASSWD_FILE_PATH_KEY, passwordPath);
     sparkConfiguration.put(SPARK_CONF_PREFIX + SSLFactory.LOCALIZED_KEYSTORE_FILE_PATH_KEY, keyStorePath);
     sparkConfiguration.put(SPARK_CONF_PREFIX + SSLFactory.LOCALIZED_TRUSTSTORE_FILE_PATH_KEY, trustStorePath);
-
-    sparkConfiguration.put("spark.sql.hive.metastore.jars", jarPath);
-
-    Service hiveMetastoreService = serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
-        HopsworksService.HIVE.getNameWithTag(HiveTags.metastore));
-
-    sparkConfiguration.put("spark.hadoop.hive.metastore.uris",
-        "thrift://" + hiveMetastoreService.getAddress() + ":" + hiveMetastoreService.getPort());
     sparkConfiguration.put("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
+
+    if (jarPath != null) {
+      sparkConfiguration.put("spark.sql.hive.metastore.jars", jarPath);
+
+      Service hiveMetastoreService = serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
+          HopsworksService.HIVE.getNameWithTag(HiveTags.metastore));
+
+      sparkConfiguration.put("spark.hadoop.hive.metastore.uris",
+          "thrift://" + hiveMetastoreService.getAddress() + ":" + hiveMetastoreService.getPort());
+    }
 
     return sparkConfiguration;
   }
@@ -359,7 +332,7 @@ public class DatabricksController {
 
     // Add all the libraries that have been uploaded
     libraries.addAll(dbfsJars.stream()
-        .filter(jar -> !(jar.contains(HIVE_PACKAGE_NAME)))
+        .filter(jar -> !jar.contains(HIVE_PACKAGE_NAME) && !jar.contains(HUDI_PACKAGE_NAME))
         .map(jar -> DBFS_SCHEME + jar)
         .map(DbLibrary::new)
         .collect(Collectors.toList()));
