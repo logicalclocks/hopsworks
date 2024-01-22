@@ -56,7 +56,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -271,8 +270,6 @@ public class FeaturestoreController {
     activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR + project.getName(),
         project, project.getOwner(), ActivityFlag.SERVICE);
 
-    createOnlineFeatureStore(project, featurestore);
-
     return featurestore;
   }
 
@@ -299,22 +296,6 @@ public class FeaturestoreController {
       }
     } finally {
       dfs.closeDfsClient(udfso);
-    }
-  }
-
-  private void createOnlineFeatureStore(Project project, Featurestore featurestore)
-      throws FeaturestoreException {
-    if (!settings.isOnlineFeaturestore()) {
-      return;
-    }
-
-    try {
-      // Create online feature store users for existing team members
-      onlineFeaturestoreController.setupOnlineFeatureStore(project, featurestore);
-    } catch(SQLException e) {
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,
-        Level.SEVERE, e.getMessage(), e.getMessage(), e);
     }
   }
 

@@ -22,10 +22,12 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
 import io.hops.hopsworks.common.featurestore.storageconnectors.StorageConnectorUtil;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.multiregion.MultiRegionController;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
@@ -87,9 +89,21 @@ public class OnlineFeaturestoreController {
   private MultiRegionController multiRegionController;
   @EJB
   private ProjectUtils projectUtils;
+  @EJB
+  private ProjectController projectController;
 
   public void setupOnlineFeatureStore(Project project, Featurestore featurestore)
       throws FeaturestoreException, SQLException {
+    try {
+      if (projectController.findProjectById(project.getId()).getOnlineFeatureStoreAvailable()) {
+        return;
+      }
+    } catch (ProjectException e) {
+      // Should not happen but skip setup if project is not found.
+      if (e.getErrorCode() == RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND) {
+        return;
+      }
+    }
     try (Connection connection = onlineFeaturestoreFacade.establishAdminConnection()) {
       setupOnlineFeatureStore(project, featurestore, connection);
     }
@@ -100,12 +114,14 @@ public class OnlineFeaturestoreController {
         setupOnlineFeatureStore(project, featurestore, connection);
       }
     }
+
+    projectController.setOnlineFeatureStoreAvailable(project);
   }
 
   private void setupOnlineFeatureStore(Project project, Featurestore featurestore, Connection connection)
       throws FeaturestoreException {
     String db = getOnlineFeaturestoreDbName(featurestore.getProject());
-    onlineFeaturestoreFacade.createOnlineFeaturestoreDatabase(db, connection);
+    onlineFeaturestoreFacade.createOnlineFeaturestoreDatabaseIfNotExist(db, connection);
     // Create kafka offset table
     onlineFeaturestoreFacade.createOnlineFeaturestoreKafkaOffsetTable(db, connection);
     for (ProjectTeam member : projectUtils.getProjectTeamCollection(project)) {
@@ -161,8 +177,14 @@ public class OnlineFeaturestoreController {
       password = RandomStringUtils.randomAlphabetic(FeaturestoreConstants.ONLINE_FEATURESTORE_PW_LENGTH);
       secretsController.add(user, dbuser, password, VisibilityType.PRIVATE, project.getId());
     } catch (UserException e) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
-              Level.SEVERE, "Error adding online feature store password to secret manager");
+      // Secret may be created concurrently when multiple online feature groups are created concurrently.
+      // If secret already exists due to race condition, get it again.
+      if (e.getErrorCode() == RESTCodes.UserErrorCode.SECRET_EXISTS) {
+        return getOrCreateUserSecret(dbuser, user, project);
+      } else {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
+            Level.SEVERE, "Error adding online feature store password to secret manager");
+      }
     }
 
     return password;

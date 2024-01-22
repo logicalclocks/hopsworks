@@ -196,7 +196,11 @@ public class Project implements Serializable {
 
   @Column(name = "topic_name")
   private String topicName;
-  
+
+  @Basic(optional = false)
+  @Column(name = "online_feature_store_available")
+  private Boolean onlineFeatureStoreAvailable;
+
   @Basic(optional = false)
   @NotNull
   @Enumerated(EnumType.ORDINAL)
@@ -304,7 +308,15 @@ public class Project implements Serializable {
   public void setCreationStatus(CreationStatus creationStatus) {
     this.creationStatus = creationStatus;
   }
-  
+
+  public Boolean getOnlineFeatureStoreAvailable() {
+    return onlineFeatureStoreAvailable;
+  }
+
+  public void setOnlineFeatureStoreAvailable(Boolean onlineFeatureStoreAvailable) {
+    this.onlineFeatureStoreAvailable = onlineFeatureStoreAvailable;
+  }
+
   @Override
   public int hashCode() {
     int hash = 0;

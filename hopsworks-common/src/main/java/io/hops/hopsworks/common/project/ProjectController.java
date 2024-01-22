@@ -627,6 +627,7 @@ public class ProjectController {
     project.setKafkaMaxNumTopics(settings.getKafkaMaxNumTopics());
     project.setDescription(projectDTO.getDescription());
     project.setTopicName(projectDTO.getFeatureStoreTopic());
+    project.setOnlineFeatureStoreAvailable(false);
     project.setCreationStatus(CreationStatus.ONGOING);
 
     //Persist project object
@@ -1060,6 +1061,12 @@ public class ProjectController {
       return true;
     }
     return false;
+  }
+
+  public void setOnlineFeatureStoreAvailable(Project project) {
+    project.setOnlineFeatureStoreAvailable(true);
+    projectFacade.mergeProject(project);
+    projectFacade.flushEm();
   }
 
   //Set the project owner as project master in ProjectTeam table
