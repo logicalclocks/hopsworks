@@ -89,12 +89,12 @@ public class OnlineFeaturestoreFacade {
    *
    * @param db name of the database
    */
-  public void createOnlineFeaturestoreDatabase(String db, Connection connection) throws FeaturestoreException {
+  public void createOnlineFeaturestoreDatabaseIfNotExist(String db, Connection connection)
+      throws FeaturestoreException {
     //Prepared statements with parameters can only be done for
     //WHERE/HAVING Clauses, not names of tables or databases
-    //Don't add 'IF EXISTS', this call should fail if the database already exists
     try {
-      executeUpdate("CREATE DATABASE " + db + ";", connection);
+      executeUpdate("CREATE DATABASE IF NOT EXISTS " + db + ";", connection);
     } catch (SQLException se) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_CREATING_ONLINE_FEATURESTORE_DB,
           Level.SEVERE, "Error running create query", se.getMessage(), se);

@@ -46,7 +46,6 @@ import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -58,8 +57,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -276,8 +273,6 @@ public class FeaturestoreController {
     activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR + project.getName(),
         project, project.getOwner(), ActivityFlag.SERVICE);
 
-    createOnlineFeatureStore(project, user, featurestore);
-
     return featurestore;
   }
 
@@ -304,28 +299,6 @@ public class FeaturestoreController {
       }
     } finally {
       dfs.closeDfsClient(udfso);
-    }
-  }
-
-  private void createOnlineFeatureStore(Project project, Users user, Featurestore featurestore)
-      throws FeaturestoreException {
-    if (!settings.isOnlineFeaturestore()) {
-      return;
-    }
-
-    try (Connection connection = onlineFeaturestoreFacade.establishAdminConnection()) {
-      onlineFeaturestoreController.setupOnlineFeaturestore(user, featurestore, connection);
-      // Create online feature store users for existing team members
-      for (ProjectTeam projectTeam : projectTeamFacade.findMembersByProject(project)) {
-        if (!projectTeam.getUser().equals(user)) {
-          onlineFeaturestoreController.createDatabaseUser(projectTeam.getUser(),
-            featurestore, projectTeam.getTeamRole(), connection);
-        }
-      }
-    } catch(SQLException e) {
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,
-        Level.SEVERE, e.getMessage(), e.getMessage(), e);
     }
   }
 
