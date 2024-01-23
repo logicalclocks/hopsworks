@@ -134,7 +134,7 @@ public class FeatureDescriptiveStatisticsBuilder {
       fds.setCount(statsJson.getLong("count"));
     }
     if (statsJson.has("completeness")) {
-      fds.setCompleteness(statsJson.getDouble("completeness"));
+      fds.setCompleteness(Float.valueOf(statsJson.getString("completeness")));
     }
     if (statsJson.has("approximateNumDistinctValues")) {
       fds.setApproxNumDistinctValues(statsJson.getLong("approximateNumDistinctValues"));
@@ -142,13 +142,13 @@ public class FeatureDescriptiveStatisticsBuilder {
     
     // commmon for all data types if exact_uniqueness is enabled
     if (statsJson.has("uniqueness")) {
-      fds.setUniqueness(statsJson.getDouble("uniqueness"));
+      fds.setUniqueness(Float.valueOf(statsJson.getString("uniqueness")));
     }
     if (statsJson.has("entropy")) {
-      fds.setEntropy(statsJson.getDouble("entropy"));
+      fds.setEntropy(Float.valueOf(statsJson.getString("entropy")));
     }
     if (statsJson.has("distinctness")) {
-      fds.setDistinctness(statsJson.getDouble("distinctness"));
+      fds.setDistinctness(Float.valueOf(statsJson.getString("distinctness")));
     }
     if (statsJson.has("exactNumDistinctValues")) {
       fds.setExactNumDistinctValues(statsJson.getLong("exactNumDistinctValues"));
