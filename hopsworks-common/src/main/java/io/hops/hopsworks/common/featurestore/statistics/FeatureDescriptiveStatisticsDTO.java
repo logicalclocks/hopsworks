@@ -33,7 +33,7 @@ public class FeatureDescriptiveStatisticsDTO extends RestDTO<FeatureDescriptiveS
   
   // for any feature type
   private Long count;
-  private Double completeness;
+  private Float completeness;
   private Long numNonNullValues;
   private Long numNullValues;
   private Long approxNumDistinctValues;
@@ -47,9 +47,9 @@ public class FeatureDescriptiveStatisticsDTO extends RestDTO<FeatureDescriptiveS
   private List<Double> percentiles;
   
   // with exact uniqueness
-  private Double distinctness;
-  private Double entropy;
-  private Double uniqueness;
+  private Float distinctness;
+  private Float entropy;
+  private Float uniqueness;
   private Long exactNumDistinctValues;
   
   // histogram, correlations, kll <- from hdfs file
