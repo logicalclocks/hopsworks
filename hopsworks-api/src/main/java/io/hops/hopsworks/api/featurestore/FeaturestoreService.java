@@ -28,14 +28,15 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.keyword.KeywordDTO;
 import io.hops.hopsworks.common.featurestore.metadata.FeatureStoreKeywordControllerIface;
 import io.hops.hopsworks.common.featurestore.settings.FeaturestoreClientSettingsDTO;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
@@ -76,7 +77,7 @@ public class FeaturestoreService {
   @EJB
   private FeaturestoreController featurestoreController;
   @EJB
-  private ProjectFacade projectFacade;
+  private ProjectController projectController;
   @EJB
   private Settings settings;
   @Inject
@@ -105,8 +106,8 @@ public class FeaturestoreService {
    *
    * @param projectId the id of the project
    */
-  public void setProjectId(Integer projectId) {
-    this.project = projectFacade.find(projectId);
+  public void setProjectId(Integer projectId) throws ProjectException {
+    this.project = projectController.findProjectById(projectId);
   }
   
   /**
