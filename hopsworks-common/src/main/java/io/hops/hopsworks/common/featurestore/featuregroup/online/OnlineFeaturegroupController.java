@@ -134,12 +134,8 @@ public class OnlineFeaturegroupController {
     }
   }
 
-  private void createOnlineFeatureStore(Project project, Featurestore featurestore)
+  void createOnlineFeatureStore(Project project, Featurestore featurestore)
       throws FeaturestoreException {
-    if (!settings.isOnlineFeaturestore()) {
-      return;
-    }
-
     try {
       // Create online feature store users for existing team members
       onlineFeaturestoreController.setupOnlineFeatureStore(project, featurestore);

@@ -212,6 +212,7 @@ public class TestOnlineFeatureGroupController {
     doNothing().when(onlineFeaturegroupController).checkOnlineFsUserExist(eq(project));
     doNothing().when(onlineFeaturegroupController)
         .createFeatureGroupKafkaTopic(eq(project), eq(featureGroup), eq(features));
+    doNothing().when(onlineFeaturegroupController).createOnlineFeatureStore(any(), any());
 
     // Act
     onlineFeaturegroupController.setupOnlineFeatureGroup(featureStore, featureGroup, features, project, user);
@@ -237,6 +238,7 @@ public class TestOnlineFeatureGroupController {
     doNothing().when(onlineFeaturegroupController).checkOnlineFsUserExist(eq(project));
     doNothing().when(onlineFeaturegroupController)
         .createFeatureGroupKafkaTopic(eq(project), eq(featureGroup), eq(features));
+    doNothing().when(onlineFeaturegroupController).createOnlineFeatureStore(any(), any());
 
     // Act
     onlineFeaturegroupController.setupOnlineFeatureGroup(featureStore, featureGroup, features, project, user);

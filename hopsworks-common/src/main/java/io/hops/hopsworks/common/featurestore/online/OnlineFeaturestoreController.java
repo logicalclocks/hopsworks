@@ -104,6 +104,12 @@ public class OnlineFeaturestoreController {
         return;
       }
     }
+
+    if (!settings.isOnlineFeaturestore()) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
+          Level.FINE, "Online feature store service is not enabled for this Hopsworks instance");
+    }
+
     try (Connection connection = onlineFeaturestoreFacade.establishAdminConnection()) {
       setupOnlineFeatureStore(project, featurestore, connection);
     }
