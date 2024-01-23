@@ -66,7 +66,7 @@ public class FeatureDescriptiveStatistics implements Serializable {
   
   @Basic
   @Column(name = "completeness")
-  private Double completeness;
+  private Float completeness;
   
   @Basic
   @Column(name = "num_non_null_values")
@@ -111,15 +111,15 @@ public class FeatureDescriptiveStatistics implements Serializable {
   
   @Basic
   @Column(name = "distinctness")
-  private Double distinctness;
+  private Float distinctness;
   
   @Basic
   @Column(name = "entropy")
-  private Double entropy;
+  private Float entropy;
   
   @Basic
   @Column(name = "uniqueness")
-  private Double uniqueness;
+  private Float uniqueness;
   
   @Basic
   @Column(name = "exact_num_distinct_values")
@@ -213,11 +213,11 @@ public class FeatureDescriptiveStatistics implements Serializable {
     this.percentiles = percentiles;
   }
   
-  public Double getCompleteness() {
+  public Float getCompleteness() {
     return completeness;
   }
   
-  public void setCompleteness(Double completeness) {
+  public void setCompleteness(Float completeness) {
     this.completeness = completeness;
   }
   
@@ -237,27 +237,27 @@ public class FeatureDescriptiveStatistics implements Serializable {
     this.numNullValues = numNullValues;
   }
   
-  public Double getDistinctness() {
+  public Float getDistinctness() {
     return distinctness;
   }
   
-  public void setDistinctness(Double distinctness) {
+  public void setDistinctness(Float distinctness) {
     this.distinctness = distinctness;
   }
   
-  public Double getEntropy() {
+  public Float getEntropy() {
     return entropy;
   }
   
-  public void setEntropy(Double entropy) {
+  public void setEntropy(Float entropy) {
     this.entropy = entropy;
   }
   
-  public Double getUniqueness() {
+  public Float getUniqueness() {
     return uniqueness;
   }
   
-  public void setUniqueness(Double uniqueness) {
+  public void setUniqueness(Float uniqueness) {
     this.uniqueness = uniqueness;
   }
   
