@@ -30,6 +30,11 @@ _create_api_key() {
         echo "Creating Hopsworks API key $api_key_name"
         auth=$(curl --fail -s -k -i -XPOST --data "email=$AGENT_USER&password=$AGENT_PASSWORD" https://${HOPSWORKS_SVC_NAME}.${NAMESPACE}.svc.cluster.local:${HOPSWORKS_PORT}/hopsworks-api/api/auth/service | grep -i ^Authorization | cut -d: -f2-)
         api_key=$(curl --fail -s -k -XPOST -H "Authorization: $auth" -G -d "name=$api_key_name" -d "scope=$api_key_scopes" https://${HOPSWORKS_SVC_NAME}.${NAMESPACE}.svc.cluster.local:${HOPSWORKS_PORT}/hopsworks-api/api/users/apiKey | jq -r ".key")
+        # fail if api_key is empty
+        if [[ -z "$api_key" ]]; then
+            echo "Failed to create API key $api_key_name"
+            exit 1
+        fi
         kubectl --namespace ${NAMESPACE} create secret generic ${secret_name} --from-literal=key=$api_key
         echo "API key $api_key_name has been created in Secret ${secret_name}"
     else
