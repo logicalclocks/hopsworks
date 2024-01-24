@@ -36,11 +36,15 @@ import org.opensearch.client.indices.GetIndexRequest;
 import org.opensearch.client.indices.GetIndexResponse;
 import org.opensearch.client.indices.PutMappingRequest;
 import org.opensearch.common.xcontent.XContentType;
+import org.opensearch.index.query.QueryStringQueryBuilder;
+import org.opensearch.index.reindex.BulkByScrollResponse;
+import org.opensearch.index.reindex.DeleteByQueryRequest;
 import org.opensearch.rest.RestStatus;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -74,6 +78,22 @@ public class OpensearchVectorDatabase implements VectorDatabase {
       }
     } catch (IOException e) {
       throw new VectorDatabaseException("Failed to create opensearch index: " + index.getName() + "Err: " + e);
+    }
+  }
+
+  /**
+   * Get all indices from OpenSearch.
+   *
+   * @return A set of index names.
+   * @throws VectorDatabaseException If there is an error while fetching indices.
+   */
+  public Set<Index> getAllIndices() throws VectorDatabaseException {
+    try {
+      GetIndexRequest getIndexRequest = new GetIndexRequest("*"); // "*" retrieves all indices
+      GetIndexResponse getIndexResponse = client.indices().get(getIndexRequest, RequestOptions.DEFAULT);
+      return getIndexResponse.getMappings().keySet().stream().map(Index::new).collect(Collectors.toSet());
+    } catch (IOException e) {
+      throw new VectorDatabaseException("Failed to fetch opensearch indices. Err: " + e);
     }
   }
 
@@ -233,6 +253,27 @@ public class OpensearchVectorDatabase implements VectorDatabase {
       throw new VectorDatabaseException("Failed to index data because data cannot be written to String.");
     }
     batchWrite(index, batchData);
+  }
+
+  @Override
+  public void deleteByQuery(Index index, String query) throws VectorDatabaseException {
+    DeleteByQueryRequest deleteByQueryRequest = new DeleteByQueryRequest(index.getName());
+    deleteByQueryRequest.setQuery(new QueryStringQueryBuilder(query));
+    try {
+      BulkByScrollResponse response = client.deleteByQuery(deleteByQueryRequest, RequestOptions.DEFAULT);
+      if (response.getBulkFailures().size() != 0) {
+        throw new VectorDatabaseException(
+            "Drop index failed partially. Message: " +
+                response.getBulkFailures()
+                    .stream()
+                    .map(f -> String.format("Index: %s , responseId: %s, status: %d, message: %s",
+                        f.getIndex(), f.getId(), f.getStatus().getStatus(), f.getMessage()))
+                    .collect(Collectors.joining("\t"))
+        );
+      }
+    } catch (IOException e) {
+      throw new VectorDatabaseException("Failed to delete opensearch data.");
+    }
   }
 
   @Override
