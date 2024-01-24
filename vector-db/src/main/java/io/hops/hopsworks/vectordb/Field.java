@@ -19,6 +19,8 @@ package io.hops.hopsworks.vectordb;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.Objects;
+
 @AllArgsConstructor
 public class Field {
 
@@ -26,4 +28,21 @@ public class Field {
   private String name;
   @Getter
   private Object type;
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    Field field = (Field) o;
+    return name.equals(field.name);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(name);
+  }
 }

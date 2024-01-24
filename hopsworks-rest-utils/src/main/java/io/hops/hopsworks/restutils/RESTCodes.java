@@ -1684,7 +1684,9 @@ public class RESTCodes {
         Response.Status.INTERNAL_SERVER_ERROR),
     FEATURE_GROUP_COMMIT_NOT_FOUND(227, "Feature group commit not found", Response.Status.BAD_REQUEST),
     STATISTICS_NOT_FOUND(228, "Statistics wasn't found.", Response.Status.NOT_FOUND),
-    INVALID_STATISTICS_WINDOW_TIMES(229, "Window times provided are invalid", Response.Status.BAD_REQUEST);
+    INVALID_STATISTICS_WINDOW_TIMES(229, "Window times provided are invalid", Response.Status.BAD_REQUEST),
+    COULD_NOT_DELETE_VECTOR_DB_INDEX(230, "Could not delete index from vector db.",
+        Response.Status.INTERNAL_SERVER_ERROR);
 
     private int code;
     private String message;

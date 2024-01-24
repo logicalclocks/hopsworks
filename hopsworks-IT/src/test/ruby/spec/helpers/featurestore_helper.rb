@@ -94,7 +94,7 @@ module FeaturestoreHelper
 
   def create_cached_featuregroup(project_id, featurestore_id, features: nil, featuregroup_name: nil, online:false,
                                  version: 1, featuregroup_description: nil, statistics_config: nil, time_travel_format:
-                                 "NONE", event_time: nil, expectation_suite: nil, parents: nil, topic_name: nil)
+                                 "NONE", event_time: nil, expectation_suite: nil, parents: nil, topic_name: nil, embedding_index_name: nil)
     type = "cachedFeaturegroupDTO"
     features = features == nil ? [{type: "INT", name: "testfeature", description: "testfeaturedescription",
                                    primary: true, onlineType: "INT", partition: false}] : features
@@ -118,6 +118,29 @@ module FeaturestoreHelper
     end
     unless expectation_suite == nil
       json_data[:expectationSuite] = expectation_suite
+    end
+    unless embedding_index_name == nil
+      json_data[:features]= [
+        {type: "INT", name: "id", description: "testfeaturedescription",
+         primary: true, onlineType: "INT", partition: false},
+        {
+          "name": "col1",
+          "type": "array<bigint>",
+          "primary": false,
+          "partition": false,
+          "hudiPrecombineKey": false,
+        }
+      ]
+      json_data[:embeddingIndex] = {
+        indexName: embedding_index_name,
+        features: [
+          {
+            name: "col1",
+            dimension: 3,
+            similarityFunctionType: "l2_norm"
+          }
+        ],
+      }
     end
     json_data = json_data.to_json
 

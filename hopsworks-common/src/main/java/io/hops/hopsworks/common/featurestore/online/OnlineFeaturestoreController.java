@@ -20,6 +20,7 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretsFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
+import io.hops.hopsworks.common.featurestore.embedding.EmbeddingController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
 import io.hops.hopsworks.common.featurestore.storageconnectors.StorageConnectorUtil;
 import io.hops.hopsworks.common.project.ProjectController;
@@ -91,6 +92,7 @@ public class OnlineFeaturestoreController {
   private ProjectUtils projectUtils;
   @EJB
   private ProjectController projectController;
+  private EmbeddingController embeddingController;
 
   public void setupOnlineFeatureStore(Project project, Featurestore featurestore)
       throws FeaturestoreException, SQLException {
@@ -268,6 +270,8 @@ public class OnlineFeaturestoreController {
 
     String db = getOnlineFeaturestoreDbName(project);
     onlineFeaturestoreFacade.removeOnlineFeaturestoreDatabase(db, connection);
+
+    embeddingController.dropEmbeddingForProject(project);
   }
   
   public void removeOnlineFeaturestoreUser(Featurestore featurestore, Users user) throws FeaturestoreException {

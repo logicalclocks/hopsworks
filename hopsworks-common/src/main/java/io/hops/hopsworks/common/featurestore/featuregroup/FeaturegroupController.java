@@ -640,16 +640,15 @@ public class FeaturegroupController {
           // Delete existing commits if it's a hudi feature group
           featureGroupCommitController.deleteFeatureGroupCommits(featuregroup);
         }
-        cachedFeaturegroupController.deleteFeatureGroup(featuregroup, project, user);
         // Delete mysql table and metadata
         if(settings.isOnlineFeaturestore() && featuregroup.isOnlineEnabled()) {
           onlineFeaturegroupController.disableOnlineFeatureGroup(featuregroup, project, user);
         }
+        cachedFeaturegroupController.deleteFeatureGroup(featuregroup, project, user);
         break;
       case STREAM_FEATURE_GROUP:
         // Delete existing commits if it's a hudi feature group
         featureGroupCommitController.deleteFeatureGroupCommits(featuregroup);
-        streamFeatureGroupController.deleteFeatureGroup(featuregroup, project, user);
         // Delete mysql table and metadata
         if (settings.isOnlineFeaturestore() && featuregroup.isOnlineEnabled()) {
           onlineFeaturegroupController.disableOnlineFeatureGroup(featuregroup, project, user);
@@ -657,6 +656,7 @@ public class FeaturegroupController {
           // only topics need to be deleted, but no RonDB table
           onlineFeaturegroupController.deleteFeatureGroupKafkaTopic(project, featuregroup);
         }
+        streamFeatureGroupController.deleteFeatureGroup(featuregroup, project, user);
         break;
       case ON_DEMAND_FEATURE_GROUP:
         // Delete on_demand_feature_group will cascade to feature_group table
@@ -761,12 +761,7 @@ public class FeaturegroupController {
     featuregroup.setCreator(user);
     featuregroup.setVersion(featuregroupDTO.getVersion());
     featuregroup.setDescription(featuregroupDTO.getDescription());
-    // set embedding
-    if (featuregroupDTO.getEmbeddingIndex() != null) {
-      featuregroup.setEmbedding(
-          embeddingController.getEmbedding(project, featuregroupDTO.getEmbeddingIndex(), featuregroup)
-      );
-    }
+
     if (featuregroupDTO instanceof CachedFeaturegroupDTO) {
       featuregroup.setFeaturegroupType(FeaturegroupType.CACHED_FEATURE_GROUP);
     } else if (featuregroupDTO instanceof StreamFeatureGroupDTO) {
@@ -803,6 +798,16 @@ public class FeaturegroupController {
     }
 
     featuregroupFacade.persist(featuregroup);
+
+    // set embedding
+    // embedding requires fg id, so set it after persisting fg
+    if (featuregroupDTO.getEmbeddingIndex() != null) {
+      featuregroup.setEmbedding(
+          embeddingController.getEmbedding(project, featuregroupDTO.getEmbeddingIndex(), featuregroup)
+      );
+    }
+    featuregroupFacade.update(featuregroup);
+
     searchCommandLogger.create(featuregroup);
     if(cachedFeaturegroup != null) {
       featureGroupLinkController.createParentLinks(featurestore, (CachedFeaturegroupDTO)featuregroupDTO, featuregroup);

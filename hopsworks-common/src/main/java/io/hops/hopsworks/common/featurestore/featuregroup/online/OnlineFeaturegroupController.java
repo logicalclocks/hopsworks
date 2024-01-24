@@ -221,7 +221,9 @@ public class OnlineFeaturegroupController {
 
   public void disableOnlineFeatureGroup(Featuregroup featureGroup, Project project, Users user)
       throws FeaturestoreException, SchemaException, KafkaException {
-    if (featureGroup.getEmbedding() == null) {
+    if (featureGroup.getEmbedding() != null) {
+      embeddingController.dropEmbedding(project, featureGroup);
+    } else {
       dropMySQLTable(featureGroup, project, user);
     }
     String featureGroupEntityName = Utils.getFeaturegroupName(featureGroup);
