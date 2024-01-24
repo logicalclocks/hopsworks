@@ -18,8 +18,10 @@ package io.hops.hopsworks.vectordb;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface VectorDatabase {
+  Set<Index> getAllIndices() throws VectorDatabaseException;
   void createIndex(Index index, String mapping, Boolean skipIfExist) throws VectorDatabaseException;
   void deleteIndex(Index index) throws VectorDatabaseException;
   void addFields(Index index, String mapping) throws VectorDatabaseException;
@@ -32,5 +34,6 @@ public interface VectorDatabase {
   void write(Index index, String data, String docId) throws VectorDatabaseException;
   void batchWrite(Index index, List<String> data) throws VectorDatabaseException;
   void batchWrite(Index index, Map<String, String> data) throws VectorDatabaseException;
+  void deleteByQuery(Index index, String query) throws VectorDatabaseException;
   void close();
 }
