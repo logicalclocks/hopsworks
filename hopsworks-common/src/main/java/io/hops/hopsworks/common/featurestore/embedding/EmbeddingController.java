@@ -20,6 +20,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import io.hops.hopsworks.common.featurestore.featuregroup.EmbeddingDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -52,6 +53,8 @@ public class EmbeddingController {
   private Settings settings;
   @EJB
   private VectorDatabaseClient vectorDatabaseClient;
+  @EJB
+  private FeaturegroupController featuregroupController;
 
   public void createVectorDbIndex(Project project, Featuregroup featureGroup)
       throws FeaturestoreException {
@@ -73,7 +76,7 @@ public class EmbeddingController {
       throws FeaturestoreException {
     Embedding embedding = new Embedding();
     embedding.setFeaturegroup(featuregroup);
-    if (embeddingDTO.getIndexName() == null) {
+    if (Strings.isNullOrEmpty(embeddingDTO.getIndexName())) {
       embedding.setVectorDbIndexName(getDefaultVectorDbIndex(project));
       embedding.setColPrefix(getVectorDbColPrefix(featuregroup));
     } else {
@@ -96,6 +99,62 @@ public class EmbeddingController {
             .collect(Collectors.toList())
     );
     return embedding;
+  }
+
+  public void dropEmbeddingForProject(Project project)
+      throws FeaturestoreException {
+    try {
+      for (Index index: vectorDatabaseClient.getClient().getAllIndices().stream()
+          .filter(index -> index.getName().startsWith(getVectorDbIndexPrefix(project))).collect(Collectors.toSet())) {
+        vectorDatabaseClient.getClient().deleteIndex(index);
+      }
+    } catch (VectorDatabaseException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_VECTOR_DB_INDEX,
+          Level.FINE, "Cannot delete index from vectordb for project: " + project.getName());
+    }
+  }
+
+  public void dropEmbedding(Project project, Featuregroup featureGroup)
+      throws FeaturestoreException {
+    Index index = new Index(featureGroup.getEmbedding().getVectorDbIndexName());
+    try {
+      // If it is a project index, remove only the documents and keep the index.
+      if (isDefaultVectorDbIndex(project, featureGroup.getEmbedding().getVectorDbIndexName())) {
+        removeDocuments(featureGroup);
+      } else {
+        // If it is a previous project index, remove only the documents and keep the index.
+        if (isPreviousDefaultVectorDbIndex(featureGroup.getEmbedding())) {
+          removeDocuments(featureGroup);
+        } else {
+          vectorDatabaseClient.getClient().deleteIndex(index);
+        }
+      }
+    } catch (VectorDatabaseException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_FEATUREGROUP,
+          Level.FINE, "Cannot delete documents from vectordb for feature group: " +
+          featureGroup.getName(), e.getMessage(), e);
+    }
+  }
+
+  private boolean isPreviousDefaultVectorDbIndex(Embedding embedding)
+      throws FeaturestoreException, VectorDatabaseException {
+    // if column prefix is null or empty OR if all column starts with the column prefix, then it is an individual index.
+    return !(Strings.isNullOrEmpty(embedding.getColPrefix()) ||
+        vectorDatabaseClient.getClient().getSchema(new Index(embedding.getVectorDbIndexName()))
+            .stream().allMatch(field -> field.getName().startsWith(embedding.getColPrefix())));
+  }
+
+  private void removeDocuments(Featuregroup featureGroup) throws FeaturestoreException, VectorDatabaseException {
+    EmbeddingFeature feature = featureGroup.getEmbedding().getEmbeddingFeatures().stream().findFirst().get();
+    String matchQuery = "%s:*";
+
+    String field = feature.getEmbedding().getColPrefix() == null
+        ? feature.getName()
+        : feature.getEmbedding().getColPrefix() + feature.getName();
+    vectorDatabaseClient.getClient().deleteByQuery(
+        new Index(featureGroup.getEmbedding().getVectorDbIndexName()),
+        String.format(matchQuery, field)
+    );
   }
 
   protected String createMapping(String prefix, Collection<EmbeddingFeature> features) {
