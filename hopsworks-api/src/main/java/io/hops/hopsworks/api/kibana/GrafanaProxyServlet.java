@@ -46,7 +46,6 @@ import io.hops.hopsworks.api.proxy.ProxyServlet;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.user.UsersController;
@@ -87,8 +86,6 @@ public class GrafanaProxyServlet extends ProxyServlet {
   @EJB
   private YarnApplicationstateFacade yarnApplicationstateFacade;
   @EJB
-  private UserFacade userFacade;
-  @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
   private ProjectFacade projectFacade;
@@ -119,6 +116,17 @@ public class GrafanaProxyServlet extends ProxyServlet {
   };
   
   private final List<String> openQueries = Collections.singletonList("onlinefs_clusterj_success_write_counter_total");
+  
+  protected void initTarget() throws ServletException {
+    try {
+      targetUri = "http://" + serviceDiscoveryController.constructServiceFQDNWithPort(
+        HopsworksService.GRAFANA.getName());
+      targetUriObj = new URI(targetUri);
+    } catch (Exception e) {
+      throw new ServletException("Trying to process targetUri init parameter: " + e, e);
+    }
+    targetHost = URIUtils.extractHost(targetUriObj);
+  }
   
   @Override
   protected void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
