@@ -16,7 +16,8 @@
 package io.hops.hopsworks.servicediscovery.tags;
 
 public enum FlyingDuckTags implements ServiceTags {
-  monitoring("monitoring");
+  monitoring("monitoring"),
+  server("server");
 
   private final String value;
   FlyingDuckTags(String value) {

@@ -57,12 +57,12 @@ public class PreviewBuilder {
   }
 
   public PreviewDTO build(UriInfo uriInfo, Users user, Project project, Featuregroup featuregroup,
-                          String partition, boolean online, int limit)
+                          boolean online, int limit)
       throws FeaturestoreException, HopsSecurityException {
 
     FeaturegroupPreview preview;
     try {
-      preview = featuregroupController.getFeaturegroupPreview(featuregroup, project, user, partition, online, limit);
+      preview = featuregroupController.getFeaturegroupPreview(featuregroup, project, user, online, limit);
     } catch (SQLException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_PREVIEW_FEATUREGROUP,
           Level.SEVERE, "Feature Group id: " + featuregroup.getId(), e.getMessage(), e);

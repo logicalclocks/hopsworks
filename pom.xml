@@ -137,7 +137,7 @@
     <org-json.version>20231013</org-json.version>
     <persistence.version>2.5.2</persistence.version>
     <projectlombok.version>1.18.6</projectlombok.version>
-    <protobuf-java.version>3.9.1</protobuf-java.version>
+    <protobuf-java.version>3.23.1</protobuf-java.version>
     <reflections.version>0.9.12</reflections.version>
     <resilience4j-retry.version>0.16.0</resilience4j-retry.version>
     <service-discovery-client.version>0.6-SNAPSHOT</service-discovery-client.version>
@@ -148,6 +148,7 @@
     <swagger.jersey2.jaxrs.version>1.6.2</swagger.jersey2.jaxrs.version>
     <zookeeper.version>3.8.3</zookeeper.version>
     <cron-utils.version>9.2.1</cron-utils.version>
+    <arrow.version>14.0.1</arrow.version>
   </properties>
 
   <dependencyManagement>
@@ -226,7 +227,6 @@
         <groupId>com.google.protobuf</groupId>
         <artifactId>protobuf-java</artifactId>
         <version>${protobuf-java.version}</version>
-        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>com.google.zxing</groupId>
@@ -520,6 +520,10 @@
           <exclusion>
             <groupId>io.netty</groupId>
             <artifactId>netty-common</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.flatbuffers</groupId>
+            <artifactId>flatbuffers-java</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -867,6 +871,11 @@
         <groupId>javax.json.bind</groupId>
         <artifactId>javax.json.bind-api</artifactId>
         <version>1.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.arrow</groupId>
+        <artifactId>flight-core</artifactId>
+        <version>${arrow.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

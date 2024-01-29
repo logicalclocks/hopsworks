@@ -109,7 +109,6 @@ public class FeatureGroupPreviewResource {
     }
 
     PreviewDTO previewDTO = previewBuilder.build(uriInfo, user, project, featuregroup,
-        featureGroupPreviewBeanParam.getPartition(),
         online,
         featureGroupPreviewBeanParam.getLimit() == null ? 20 : featureGroupPreviewBeanParam.getLimit());
 
