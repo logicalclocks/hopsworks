@@ -17,7 +17,6 @@
 package io.hops.hopsworks.common.featurestore.featuregroup;
 
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
-import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -48,5 +47,5 @@ public class TestFeatureGroupController {
     thrown.expect(FeaturestoreException.class);
     featuregroupController.verifyFeaturesNoDefaultValue(features);
   }
-  
+
 }

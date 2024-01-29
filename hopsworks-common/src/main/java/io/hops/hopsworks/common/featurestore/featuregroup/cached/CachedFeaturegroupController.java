@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 
-import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
@@ -27,7 +26,6 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupDTO;
-import io.hops.hopsworks.common.featurestore.query.ConstructorController;
 import io.hops.hopsworks.common.featurestore.query.Feature;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.hdfs.Utils;
@@ -53,15 +51,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.stream.Str
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.apache.calcite.sql.SqlDialect;
-import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlLiteral;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlNodeList;
-import org.apache.calcite.sql.SqlSelect;
-import org.apache.calcite.sql.dialect.HiveSqlDialect;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.calcite.sql.parser.SqlParserPos;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -108,8 +97,6 @@ public class CachedFeaturegroupController {
   private OfflineFeatureGroupController offlineFeatureGroupController;
   @EJB
   private HiveController hiveController;
-  @EJB
-  private ConstructorController constructorController;
   @EJB
   private FeaturestoreUtils featurestoreUtils;
   @EJB
@@ -169,89 +156,6 @@ public class CachedFeaturegroupController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_HIVE_CONNECTION, Level.SEVERE,
           "project: " + project.getName() + ", hive database: " + databaseName, e.getMessage(), e);
     }
-  }
-  
-  /**
-   * Previews the offline data of a given featuregroup by doing a SELECT LIMIT query on the Hive Table
-   *
-   * @param featuregroup    the featuregroup to fetch
-   * @param project         the project the user is operating from, in case of shared feature store
-   * @param user            the user making the request
-   * @param limit           number of sample to fetch
-   * @return list of feature-rows from the Hive table where the featuregroup is stored
-   * @throws SQLException
-   * @throws FeaturestoreException
-   * @throws HopsSecurityException
-   */
-  public FeaturegroupPreview getOfflineFeaturegroupPreview(Featuregroup featuregroup, Project project,
-                                                           Users user, String partition, int limit)
-      throws FeaturestoreException, HopsSecurityException, SQLException {
-    String tbl = featuregroupController.getTblName(featuregroup.getName(), featuregroup.getVersion());
-
-    List<FeatureGroupFeatureDTO> features =  featuregroupController.getFeatures(featuregroup, project, user);
-
-    // This is not great, but at the same time the query runs as the user.
-    SqlNodeList selectList = new SqlNodeList(SqlParserPos.ZERO);
-    for (FeatureGroupFeatureDTO feature : features) {
-      if (feature.getDefaultValue() == null) {
-        selectList.add(new SqlIdentifier(Arrays.asList("`" + tbl + "`", "`" + feature.getName() + "`"),
-          SqlParserPos.ZERO));
-      } else {
-        selectList.add(constructorController.selectWithDefaultAs(new Feature(feature, tbl), false));
-      }
-    }
-
-    SqlNode whereClause = getWhereCondition(partition, features);
-
-    SqlSelect select = new SqlSelect(SqlParserPos.ZERO, null, selectList,
-      new SqlIdentifier("`" + tbl + "`", SqlParserPos.ZERO),
-      whereClause, null, null, null, null, null,
-      SqlLiteral.createExactNumeric(String.valueOf(limit), SqlParserPos.ZERO), null);
-    String db = featurestoreController.getOfflineFeaturestoreDbName(featuregroup.getFeaturestore().getProject());
-    try {
-      return executeReadHiveQuery(
-        select.toSqlString(new HiveSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql(), db, project, user);
-    } catch(Exception e) {
-      return executeReadHiveQuery(
-        select.toSqlString(new HiveSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql(), db, project, user);
-    }
-  }
-
-  public SqlNode getWhereCondition(String partition, List<FeatureGroupFeatureDTO> features)
-      throws FeaturestoreException {
-    if (Strings.isNullOrEmpty(partition)) {
-      // user didn't ask for a specific partition
-      return null;
-    }
-
-    // partition names are separated by /, column=VALUE/column=VALUE
-    SqlNodeList whereClauses = new SqlNodeList(SqlParserPos.ZERO);
-    String[] splits = partition.split("/");
-    for (String split : splits) {
-      int posEqual = split.indexOf("=");
-      String column = split.substring(0, posEqual);
-      FeatureGroupFeatureDTO partitionFeature = features.stream()
-        .filter(FeatureGroupFeatureDTO::getPartition)
-        .filter(feature -> feature.getName().equals(column))
-        .findFirst().orElseThrow(() ->
-          new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME, Level.FINE,
-          "The selected partition column: " + column + " was not found among the partition columns of the feature " +
-            "group."));
-      SqlNode value;
-      if (partitionFeature.getType().equalsIgnoreCase("string")) {
-        value = SqlLiteral.createCharString(split.substring(posEqual + 1), SqlParserPos.ZERO);
-      } else {
-        value = new SqlIdentifier(split.substring(posEqual + 1), SqlParserPos.ZERO);
-      }
-      whereClauses.add(SqlStdOperatorTable.EQUALS.createCall(
-        SqlParserPos.ZERO,
-        new SqlIdentifier("`" + column + "`", SqlParserPos.ZERO),
-        value));
-    }
-    if (whereClauses.size() == 1) {
-      return whereClauses;
-    }
-    return SqlStdOperatorTable.AND.createCall(whereClauses);
   }
 
   /**
@@ -386,7 +290,7 @@ public class CachedFeaturegroupController {
    * @throws HopsSecurityException
    * @throws FeaturestoreException
    */
-  private FeaturegroupPreview executeReadHiveQuery(String query, String databaseName, Project project, Users user)
+  public FeaturegroupPreview executeReadHiveQuery(String query, String databaseName, Project project, Users user)
       throws SQLException, FeaturestoreException, HopsSecurityException {
     Connection conn = null;
     Statement stmt = null;

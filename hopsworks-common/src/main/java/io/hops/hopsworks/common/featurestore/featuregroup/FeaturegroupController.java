@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.featurestore.featuregroup;
 
 import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.hops.hopsworks.common.arrowflight.ArrowFlightController;
 import io.hops.hopsworks.common.commands.featurestore.search.SearchFSCommandLogger;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
@@ -36,7 +37,8 @@ import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeatu
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupDTO;
-import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
+import io.hops.hopsworks.common.featurestore.query.ConstructorController;
+import io.hops.hopsworks.common.featurestore.query.Feature;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsController;
 import io.hops.hopsworks.common.featurestore.statistics.columns.StatisticColumnController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
@@ -69,6 +71,13 @@ import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsCo
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.calcite.sql.SqlDialect;
+import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlLiteral;
+import org.apache.calcite.sql.SqlNodeList;
+import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.dialect.HiveSqlDialect;
+import org.apache.calcite.sql.parser.SqlParserPos;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -79,6 +88,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -109,8 +119,6 @@ public class FeaturegroupController {
   @EJB
   private Settings settings;
   @EJB
-  private OnlineFeaturestoreController onlineFeaturestoreController;
-  @EJB
   private OnlineFeaturegroupController onlineFeaturegroupController;
   @EJB
   private FeaturestoreActivityFacade fsActivityFacade;
@@ -136,6 +144,10 @@ public class FeaturegroupController {
   private SearchFSCommandLogger searchCommandLogger;
   @EJB
   private EmbeddingController embeddingController;
+  @EJB
+  private ConstructorController constructorController;
+  @EJB
+  protected ArrowFlightController arrowFlightController;
 
   /**
    * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
@@ -928,7 +940,6 @@ public class FeaturegroupController {
    * @param featuregroup    of the featuregroup to preview
    * @param project         the project the user is operating from, in case of shared feature store
    * @param user            the user making the request
-   * @param partition       the selected partition if any as represented in the PARTITIONS_METASTORE
    * @param online          whether to show preview from the online feature store
    * @param limit           the number of rows to visualize
    * @return A DTO with the first 20 feature rows of the online and offline tables.
@@ -937,22 +948,75 @@ public class FeaturegroupController {
    * @throws HopsSecurityException
    */
   public FeaturegroupPreview getFeaturegroupPreview(Featuregroup featuregroup, Project project,
-    Users user, String partition, boolean online, int limit)
+    Users user, boolean online, int limit)
     throws SQLException, FeaturestoreException, HopsSecurityException {
     if (online && featuregroup.isOnlineEnabled()) {
       return onlineFeaturegroupController.getFeaturegroupPreview(featuregroup, project, user, limit);
     } else if (online) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_ONLINE, Level.FINE);
-    } else if (featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.PREVIEW_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS,
-        Level.FINE, "Preview for offline storage of external feature groups is not supported",
-        "featuregroupId: " + featuregroup.getId());
+    } else if (settings.isFlyingduckEnabled()) {
+      // use flying duck for offline fs
+      arrowFlightController.checkFeatureGroupSupportedByArrowFlight(featuregroup);
+
+      String tbl = getTblName(featuregroup);
+      if (featuregroup.getFeaturegroupType() != FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
+        String db = featuregroup.getFeaturestore().getProject().getName().toLowerCase();
+        tbl = db + "." + tbl;
+      }
+      String query = arrowFlightController.getArrowFlightQuery(featuregroup, project, user, tbl, limit);
+      return arrowFlightController.executeReadArrowFlightQuery(query, project, user);
     } else {
-      return cachedFeaturegroupController.getOfflineFeaturegroupPreview(featuregroup, project, user, partition, limit);
+      // use hive for offline fs
+      if (featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
+        throw new FeaturestoreException(
+            RESTCodes.FeaturestoreErrorCode.PREVIEW_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS,
+            Level.FINE, "Preview for offline storage of external feature groups is not supported",
+            "featuregroupId: " + featuregroup.getId());
+      } else {
+        String tbl = getTblName(featuregroup);
+        String query = getOfflineFeaturegroupQuery(featuregroup, project, user, tbl, limit);
+        String db = featurestoreController.getOfflineFeaturestoreDbName(featuregroup.getFeaturestore().getProject());
+        return cachedFeaturegroupController.executeReadHiveQuery(query, db, project, user);
+      }
     }
   }
-  
+
+  /**
+   * Previews the offline data of a given featuregroup by doing a SELECT LIMIT query on the Hive Table
+   *
+   * @param featuregroup    the featuregroup to fetch
+   * @param project         the project the user is operating from, in case of shared feature store
+   * @param user            the user making the request
+   * @param tbl             table name
+   * @param limit           number of sample to fetch
+   * @return list of feature-rows from the Hive table where the featuregroup is stored
+   * @throws FeaturestoreException
+   */
+  public String getOfflineFeaturegroupQuery(Featuregroup featuregroup, Project project,
+                                            Users user, String tbl, int limit)
+      throws FeaturestoreException {
+
+    List<FeatureGroupFeatureDTO> features = getFeatures(featuregroup, project, user);
+
+    // This is not great, but at the same time the query runs as the user.
+    SqlNodeList selectList = new SqlNodeList(SqlParserPos.ZERO);
+    for (FeatureGroupFeatureDTO feature : features) {
+      if (feature.getDefaultValue() == null) {
+        selectList.add(new SqlIdentifier(Arrays.asList("`" + tbl + "`", "`" + feature.getName() + "`"),
+            SqlParserPos.ZERO));
+      } else {
+        selectList.add(constructorController.selectWithDefaultAs(new Feature(feature, tbl), false));
+      }
+    }
+
+    SqlSelect select = new SqlSelect(SqlParserPos.ZERO, null, selectList,
+        new SqlIdentifier("`" + tbl + "`", SqlParserPos.ZERO), null,
+        null, null, null, null, null,
+        SqlLiteral.createExactNumeric(String.valueOf(limit), SqlParserPos.ZERO), null);
+
+    return select.toSqlString(new HiveSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+  }
+
   public static boolean isTimeTravelEnabled(Featuregroup featuregroup) {
     return (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
       featuregroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) ||
