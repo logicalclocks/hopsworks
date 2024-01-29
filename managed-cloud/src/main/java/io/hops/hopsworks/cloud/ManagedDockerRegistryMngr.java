@@ -44,6 +44,8 @@ public class ManagedDockerRegistryMngr extends DockerRegistryMngrImpl implements
   @EJB
   private ACRClientService acrClient;
   @EJB
+  private GCRClientService gcrClient;
+  @EJB
   private DockerImageController dockerImageController;
 
   @Override
@@ -69,6 +71,8 @@ public class ManagedDockerRegistryMngr extends DockerRegistryMngrImpl implements
       return acrClient.deleteImagesWithTagPrefix(repoName, projectNameTagPrefix);
     } else if (settings.getCloudType() == Settings.CLOUD_TYPES.AWS) {
       return ecrClient.deleteImagesWithTagPrefix(repoName, projectNameTagPrefix);
+    } else if (settings.getCloudType() == Settings.CLOUD_TYPES.GCP) {
+      return gcrClient.deleteImagesWithTagPrefix(repoName, projectNameTagPrefix);
     } else {
       throw new UnsupportedOperationException("Unsupported operation on " + settings.getCloudType());
     }
@@ -88,6 +92,8 @@ public class ManagedDockerRegistryMngr extends DockerRegistryMngrImpl implements
       return acrClient.getImageTags(repoName, filter);
     } else if (settings.getCloudType() == Settings.CLOUD_TYPES.AWS) {
       return ecrClient.getImageTags(repoName, filter);
+    } else if (settings.getCloudType() == Settings.CLOUD_TYPES.GCP) {
+      return gcrClient.getImageTags(repoName, filter);
     } else {
       throw new UnsupportedOperationException("Unsupported operation on " + settings.getCloudType());
     }

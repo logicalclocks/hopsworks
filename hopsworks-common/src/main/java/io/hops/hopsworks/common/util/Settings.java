@@ -437,7 +437,8 @@ public class Settings implements Serializable {
   public enum KubeType{
     Local("local"),
     EKS("eks"),
-    AKS("aks");
+    AKS("aks"),
+    GKE("gke");
     private String name;
     KubeType(String name){
       this.name = name;
@@ -450,6 +451,8 @@ public class Settings implements Serializable {
         return EKS;
       }else if(str.equals(AKS.name)) {
         return AKS;
+      } else if(str.equals(GKE.name)) {
+        return GKE;
       }
       return Local;
     }

@@ -366,4 +366,58 @@ public class DockerImageController {
         "Could not initiate docker operation", "Error executing OSProcessExecutor-dockerImage.sh", e);
     }
   }
+
+  public List<String> deleteGCR(String repositoryName, String imageTagPrefix)
+      throws ServiceDiscoveryException, ServiceException {
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand("/usr/bin/sudo")
+        .addCommand(settings.getSudoersDir() + "/dockerImage.sh")
+        .addCommand("delete-gcr")
+        .addCommand(projectUtils.getRegistryAddress())
+        .addCommand(repositoryName)
+        .addCommand(imageTagPrefix)
+        .redirectErrorStream(true)
+        .setWaitTimeout(1, TimeUnit.MINUTES)
+        .build();
+
+    try {
+      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
+      if (processResult.getExitCode() != 0) {
+        String errorMsg = "Could not delete docker images in " + repositoryName + " under prefix " + imageTagPrefix +
+            ". Exit code: " + processResult.getExitCode() + " out: " + processResult.getStdout();
+        throw new ServiceException(RESTCodes.ServiceErrorCode.DOCKER_ERROR, Level.INFO, errorMsg);
+      }
+      return Arrays.asList(processResult.getStdout().split("\n"));
+    } catch(IOException e) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.DOCKER_ERROR, Level.WARNING,
+          "Could not initiate docker operation", "Error executing OSProcessExecutor-dockerImage.sh", e);
+    }
+  }
+
+  public List<String> listTagsGCR(String repositoryName, String filter)
+      throws ServiceDiscoveryException, ServiceException {
+    String prog = settings.getSudoersDir() + "/dockerImage.sh";
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand("/usr/bin/sudo")
+        .addCommand(prog)
+        .addCommand("list-tags-gcr")
+        .addCommand(projectUtils.getRegistryAddress())
+        .addCommand(repositoryName)
+        .addCommand(filter)
+        .redirectErrorStream(true)
+        .setWaitTimeout(1, TimeUnit.MINUTES)
+        .build();
+
+    try {
+      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
+      if (processResult.getExitCode() != 0) {
+        String errorMsg = "Failed to get the images tags from the repository";
+        throw new ServiceException(RESTCodes.ServiceErrorCode.DOCKER_ERROR, Level.INFO, errorMsg);
+      }
+      return Arrays.asList(processResult.getStdout().split("\n"));
+    } catch(IOException e) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.DOCKER_ERROR, Level.WARNING,
+          "Could not initiate docker operation", "Error executing OSProcessExecutor-dockerImage.sh", e);
+    }
+  }
 }
