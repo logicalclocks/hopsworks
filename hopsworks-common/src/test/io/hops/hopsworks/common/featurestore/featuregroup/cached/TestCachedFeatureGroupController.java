@@ -21,9 +21,6 @@ import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
-import org.apache.calcite.sql.SqlDialect;
-import org.apache.calcite.sql.dialect.HiveSqlDialect;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,7 +33,6 @@ public class TestCachedFeatureGroupController {
 
   List<FeatureGroupFeatureDTO> features = new ArrayList<>();
   List<FeatureGroupFeatureDTO> features2 = new ArrayList<>();
-  List<FeatureGroupFeatureDTO> partitionFeatures = new ArrayList<>();
   
   private CachedFeaturegroupController cachedFeaturegroupController = new CachedFeaturegroupController();
   
@@ -52,50 +48,6 @@ public class TestCachedFeatureGroupController {
     features2 = new ArrayList<>();
     features2.add(new FeatureGroupFeatureDTO("part_param", "String", "", true, false));
     features2.add(new FeatureGroupFeatureDTO("part_param2", "String", "", false, false));
-
-    partitionFeatures.add(new FeatureGroupFeatureDTO("part_param", "Integer", "", false, true));
-    partitionFeatures.add(new FeatureGroupFeatureDTO("part_param2", "String", "", false, true));
-    partitionFeatures.add(new FeatureGroupFeatureDTO("part_param3", "String", "", false, true));
-  }
-
-  @Test
-  public void testPreviewWhereSingle() throws Exception {
-    String queryPart = "part_param=3";
-    String output = cachedFeaturegroupController.getWhereCondition(queryPart, partitionFeatures)
-      .toSqlString(new HiveSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
-    Assert.assertEquals("`part_param` = 3", output);
-  }
-
-  @Test
-  public void testPreviewWhereDouble() throws Exception {
-    String queryPart = "part_param=3/part_param2=hello";
-    String output = cachedFeaturegroupController.getWhereCondition(queryPart, partitionFeatures)
-      .toSqlString(new HiveSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
-    Assert.assertEquals("`part_param` = 3 AND `part_param2` = 'hello'", output);
-  }
-
-  @Test
-  public void testPreviewWhereDoubleSpace() throws Exception {
-    String queryPart = "part_param2=3 4/part_param3=hello";
-    String output = cachedFeaturegroupController.getWhereCondition(queryPart, partitionFeatures)
-      .toSqlString(new HiveSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
-    Assert.assertEquals("`part_param2` = '3 4' AND `part_param3` = 'hello'", output);
-  }
-
-  @Test
-  public void testPreviewWhereDoubleEquals() throws Exception {
-    String queryPart = "part_param2=3=4/part_param3=hello";
-    String output = cachedFeaturegroupController.getWhereCondition(queryPart, partitionFeatures)
-      .toSqlString(new HiveSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
-    Assert.assertEquals("`part_param2` = '3=4' AND `part_param3` = 'hello'", output);
-  }
-
-  @Test
-  public void testPreviewWhereNoPartitionColumn() throws Exception {
-    String queryPart = "part_param=3";
-    thrown.expect(FeaturestoreException.class);
-    String output = cachedFeaturegroupController.getWhereCondition(queryPart, features)
-      .toSqlString(new HiveSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
   }
   
   @Test

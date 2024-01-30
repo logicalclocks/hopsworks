@@ -2398,12 +2398,16 @@ public class ProjectController {
 
   public AccessCredentialsDTO credentials(Integer projectId, Users user) throws ProjectException, DatasetException {
     Project project = findProjectById(projectId);
+    return credentials(project, user);
+  }
+
+  public AccessCredentialsDTO credentials(Project project, Users user) throws ProjectException, DatasetException {
     try {
       return getAccessCredentials(project, user);
     } catch (Exception ex) {
       LOGGER.log(Level.SEVERE, null, ex);
       throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.SEVERE,
-        "Failed to download credentials for projectId: " + projectId, ex.getMessage(), ex);
+        "Failed to download credentials for projectId: " + project.getId(), ex.getMessage(), ex);
     } finally {
       certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
     }

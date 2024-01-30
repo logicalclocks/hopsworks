@@ -1353,7 +1353,7 @@ public class RESTCodes {
         Response.Status.BAD_REQUEST),
     CERTIFICATES_NOT_FOUND(18, "Could not find user certificates for authenticating with Hive Feature Store",
         Response.Status.INTERNAL_SERVER_ERROR),
-    COULD_NOT_INITIATE_HIVE_CONNECTION(19, "Could not initiate connecton to Hive Server",
+    COULD_NOT_INITIATE_HIVE_CONNECTION(19, "Could not initiate connection to Hive Server",
         Response.Status.INTERNAL_SERVER_ERROR),
     HIVE_UPDATE_STATEMENT_ERROR(20, "Hive Update Statement failed",
         Response.Status.INTERNAL_SERVER_ERROR),
@@ -1415,7 +1415,7 @@ public class RESTCodes {
     FEATURESTORE_ONLINE_NOT_ENABLED(64, "Online featurestore not enabled", Response.Status.BAD_REQUEST),
     SYNC_TABLE_NOT_FOUND(65, "The Hive Table to Sync with the feature store was not " +
         "found in the metastore", Response.Status.BAD_REQUEST),
-    COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE(66, "Could not initiate connecton to " +
+    COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE(66, "Could not initiate connection to " +
         "MySQL Server", Response.Status.INTERNAL_SERVER_ERROR),
     MYSQL_JDBC_UPDATE_STATEMENT_ERROR(67, "MySQL JDBC Update Statement failed",
         Response.Status.INTERNAL_SERVER_ERROR),
@@ -1680,6 +1680,15 @@ public class RESTCodes {
     HELPER_COL_NOT_FOUND(225, "Could not find helper column in feature view schema",
       Response.Status.NOT_FOUND),
     OPENSEARCH_DEFAULT_EMBEDDING_INDEX_SUFFIX_NOT_DEFINED(226, "Opensearch default embedding index not defined",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    FEATURE_GROUP_COMMIT_NOT_FOUND(227, "Feature group commit not found", Response.Status.BAD_REQUEST),
+    STATISTICS_NOT_FOUND(228, "Statistics wasn't found.", Response.Status.NOT_FOUND),
+    INVALID_STATISTICS_WINDOW_TIMES(229, "Window times provided are invalid", Response.Status.BAD_REQUEST),
+    COULD_NOT_DELETE_VECTOR_DB_INDEX(230, "Could not delete index from vector db.",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    COULD_NOT_INITIATE_ARROW_FLIGHT_CONNECTION(231, "Could not initiate connection to Arrow Flight server",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    ARROW_FLIGHT_READ_QUERY_ERROR(232, "Arrow Flight server Read Query failed",
         Response.Status.INTERNAL_SERVER_ERROR);
 
     private int code;

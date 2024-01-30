@@ -21,7 +21,13 @@ describe "On #{ENV['OS']}" do
   describe "cached feature groups" do
     context 'with valid project, featurestore service enabled' do
       before :all do
+        @enable_flyingduck = getVar("enable_flyingduck")
+
         with_valid_project
+      end
+
+      after :all do
+        setVar("enable_flyingduck", @enable_flyingduck[:value])
       end
 
       it "should be able to add a offline cached featuregroup to the featurestore" do
@@ -247,8 +253,25 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["features"].first["description"]).to eql("this description contains ' and ;'")
       end
 
-      it "should be able to preview a offline cached featuregroup in the featurestore" do
+      it "should be able to preview a offline cached featuregroup in the featurestore using hive" do
         project = get_project
+        setVar("enable_flyingduck", "false")
+        create_session(project[:username], "Pass123")
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(201)
+        featuregroup_id = parsed_json["id"]
+        preview_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/preview"
+        get preview_featuregroup_endpoint
+        parsed_json = JSON.parse(response.body)
+        expect_status_details(200)
+      end
+
+      it "should be able to preview a offline cached featuregroup in the featurestore using flying duck" do
+        project = get_project
+        setVar("enable_flyingduck", "true")
+        create_session(project[:username], "Pass123")
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
         parsed_json = JSON.parse(json_result)
