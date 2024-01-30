@@ -37,6 +37,7 @@ import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeatu
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupDTO;
+import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.query.ConstructorController;
 import io.hops.hopsworks.common.featurestore.query.Feature;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsController;
@@ -118,6 +119,8 @@ public class FeaturegroupController {
   private StatisticsController statisticsController;
   @EJB
   private Settings settings;
+  @EJB
+  private OnlineFeaturestoreController onlineFeaturestoreController;
   @EJB
   private OnlineFeaturegroupController onlineFeaturegroupController;
   @EJB

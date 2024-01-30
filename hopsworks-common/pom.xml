@@ -248,6 +248,7 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
     </dependency>
+    <dependency>
       <groupId>org.apache.arrow</groupId>
       <artifactId>flight-core</artifactId>
     </dependency>
