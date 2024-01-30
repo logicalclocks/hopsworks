@@ -90,6 +90,7 @@ public class OnlineFeaturestoreController {
   private ProjectController projectController;
   @EJB
   private ProjectTeamFacade projectTeamFacade;
+  @EJB
   private EmbeddingController embeddingController;
 
   /**
