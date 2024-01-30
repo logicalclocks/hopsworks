@@ -501,6 +501,11 @@ public class FeaturegroupController {
       featuregroup.setDescription(featuregroupDTO.getDescription());
     }
 
+    // update the notification topic name
+    if (featuregroupDTO.getNotificationTopicName() != null) {
+      featuregroup.setNotificationTopicName(featuregroupDTO.getNotificationTopicName());
+    }
+
     featuregroup = featuregroupFacade.updateFeaturegroupMetadata(featuregroup);
     searchCommandLogger.updateMetadata(featuregroup);
     return convertFeaturegrouptoDTO(featuregroup, project, user);
@@ -795,6 +800,7 @@ public class FeaturegroupController {
     featuregroup.setEventTime(featuregroupDTO.getEventTime());
     featuregroup.setOnlineEnabled(settings.isOnlineFeaturestore() && featuregroupDTO.getOnlineEnabled());
     featuregroup.setTopicName(featuregroupDTO.getTopicName());
+    featuregroup.setNotificationTopicName(featuregroupDTO.getNotificationTopicName());
 
     StatisticsConfig statisticsConfig = new StatisticsConfig(featuregroupDTO.getStatisticsConfig().getEnabled(),
       featuregroupDTO.getStatisticsConfig().getCorrelations(), featuregroupDTO.getStatisticsConfig().getHistograms(),

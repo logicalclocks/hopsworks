@@ -164,6 +164,11 @@ public class FeatureViewFacade extends AbstractFacade<FeatureView> {
     }
   }
 
+  public List<FeatureView> findByFeatureGroup(Integer featureGroupId) {
+    return em.createNamedQuery("FeatureView.findByFeatureGroup", FeatureView.class)
+      .setParameter("featureGroupId", featureGroupId).getResultList();
+  }
+
   @Override
   protected EntityManager getEntityManager() {
     return em;

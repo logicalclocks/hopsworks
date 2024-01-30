@@ -129,6 +129,8 @@ public class Featuregroup implements Serializable {
   private boolean onlineEnabled;
   @Column(name = "topic_name")
   private String topicName;
+  @Column(name = "notification_topic_name")
+  private String notificationTopicName;
   @Column(name = "deprecated")
   private boolean deprecated;
   @OneToOne(cascade = CascadeType.ALL, mappedBy = "featuregroup")
@@ -321,6 +323,14 @@ public class Featuregroup implements Serializable {
     this.topicName = topicName;
   }
 
+  public String getNotificationTopicName() {
+    return notificationTopicName;
+  }
+
+  public void setNotificationTopicName(String notificationTopicName) {
+    this.notificationTopicName = notificationTopicName;
+  }
+
   public boolean isDeprecated() {
     return deprecated;
   }
@@ -358,6 +368,7 @@ public class Featuregroup implements Serializable {
     if (!Objects.equals(eventTime, that.eventTime)) return false;
     if (!Objects.equals(onlineEnabled, that.onlineEnabled)) return false;
     if (!Objects.equals(topicName, that.topicName)) return false;
+    if (!Objects.equals(notificationTopicName, that.notificationTopicName)) return false;
     if (!Objects.equals(deprecated, that.deprecated)) return false;
     if (!Objects.equals(expectationSuite, that.expectationSuite)) return false;
     if (!Objects.equals(embedding, that.embedding)) return false;
@@ -381,6 +392,7 @@ public class Featuregroup implements Serializable {
     result = 31 * result + (eventTime != null ? eventTime.hashCode() : 0);
     result = 31 * result + (onlineEnabled ? 1: 0);
     result = 31 * result + (topicName != null ? topicName.hashCode() : 0);
+    result = 31 * result + (notificationTopicName != null ? notificationTopicName.hashCode() : 0);
     result = 31 * result + (deprecated ? 1: 0);
     result = 31 * result + (expectationSuite != null ? expectationSuite.hashCode(): 0);
     result = 31 * result + (embedding != null ? embedding.hashCode(): 0);
