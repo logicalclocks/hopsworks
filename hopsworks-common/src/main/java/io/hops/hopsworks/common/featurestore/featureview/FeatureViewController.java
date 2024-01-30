@@ -409,6 +409,10 @@ public class FeatureViewController {
     }
   }
 
+  public List<FeatureView> getByFeatureGroup(Integer featureGroupId) {
+    return featureViewFacade.findByFeatureGroup(featureGroupId);
+  }
+
   // For testing
   public void setFeaturegroupController(
       FeaturegroupController featuregroupController) {

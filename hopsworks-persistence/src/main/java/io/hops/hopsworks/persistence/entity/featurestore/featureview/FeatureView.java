@@ -60,7 +60,9 @@ import java.util.Objects;
     @NamedQuery(name = "FeatureView.findByFeaturestoreAndNameOrderedByDescVersion", query = "SELECT fv FROM " +
         "FeatureView fv WHERE fv.featurestore = :featurestore AND fv.name = :name ORDER BY fv.version DESC"),
     @NamedQuery(name = "FeatureView.countByFeaturestore", query = "SELECT count(fv.id) FROM FeatureView fv " +
-        "WHERE fv.featurestore = :featurestore")})
+        "WHERE fv.featurestore = :featurestore"),
+    @NamedQuery(name = "FeatureView.findByFeatureGroup", query = "SELECT DISTINCT fv FROM FeatureView fv " +
+        "JOIN fv.features tdf WHERE tdf.featureGroup.id = :featureGroupId")})
 public class FeatureView implements Serializable {
   private static final long serialVersionUID = 1L;
   public static final String TABLE_NAME = "FeatureView";
