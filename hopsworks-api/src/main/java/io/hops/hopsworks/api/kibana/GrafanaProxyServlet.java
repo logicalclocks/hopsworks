@@ -111,7 +111,9 @@ public class GrafanaProxyServlet extends ProxyServlet {
       put(YARN_APP_PATTERN_KEY, Pattern.compile("(application_.*?_.\\d*)"));
       put(FG_KAFKA_TOPIC_KEY, Pattern.compile(
         "(?<projectid>[0-9]+)_(?<fgid>[0-9]+)_(?<fgname>[a-z0-9_]+)_(?<fgversion>[0-9]+)_onlinefs"));
-      put(DEPLOYMENT_METRICS_KEY, Pattern.compile("namespace_name=\\\\\"(?<projectname>[0-9a-z-]+)\\\\\""));
+      put(DEPLOYMENT_METRICS_KEY,
+          Pattern.compile("(namespace_name|exported_namespace|container_label_io_kubernetes_pod_namespace)" +
+              "=\\\\\"(?<projectname>[0-9a-z-]+)\\\\\""));
       put(USER_STATEMENT_SUMMARIES, Pattern.compile("user=\\\\\"(?<dbuser>[0-9a-z_]+)\\\\\""));
     }
   };
