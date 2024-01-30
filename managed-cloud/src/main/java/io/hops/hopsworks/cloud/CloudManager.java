@@ -5,6 +5,8 @@ package io.hops.hopsworks.cloud;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hazelcast.collection.ISet;
+import com.hazelcast.core.HazelcastInstance;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.cloud.dao.heartbeat.CloudNodeType;
@@ -56,6 +58,7 @@ import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -115,6 +118,10 @@ public class CloudManager {
   private BackupService backupService;
   @EJB
   private PayaraClusterManager payaraClusterManager;
+  @Inject
+  private HazelcastInstance hazelcastInstance;
+  
+  private static final String BLACKLIST_SET_NAME = "blacklistHostnamesToRemove";
 
   private DecommissionStatus toSend = new DecommissionStatus();
   final Set<CloudNode> decommissionedNodes = new HashSet<>();
@@ -129,23 +136,42 @@ public class CloudManager {
   @PostConstruct
   public void init() {
     LOG.log(Level.INFO, "Hopsworks@Cloud - Initializing CloudManager");
-    try {
-      InetAddress localhost = InetAddress.getLocalHost();
-      blacklistHostnamesToRemove.add(localhost.getCanonicalHostName());
-      blacklistHostnamesToRemove.add(localhost.getHostName());
-      if (settings.getCloudType().equals(Settings.CLOUD_TYPES.AZURE)) {
-        blacklistHostnamesToRemove.add(getAzureInternalHostname(localhost.getHostName()));
-      }
-    } catch (UnknownHostException ex) {
-      LOG.log(Level.WARNING, "Hopsworks@Cloud - Failed to get localhost hostname");
-    }
+    blacklistHostnamesFromToRemove();
     StringBuilder whitelistLog = new StringBuilder();
     whitelistLog.append("Whitelisted hostnames from automatic removal: ");
-    for (String h : blacklistHostnamesToRemove) {
+    for (String h : getBlacklistHostnames()) {
       whitelistLog.append(h).append(" ");
     }
     LOG.log(Level.INFO, whitelistLog.toString());
     timer = timerService.createIntervalTimer(0, 3000, new TimerConfig("Cloud heartbeat", false));
+  }
+  
+  private void blacklistHostnamesFromToRemove() {
+    try {
+      InetAddress localhost = InetAddress.getLocalHost();
+      Set<String> blacklist = new HashSet<>();
+      blacklist.add(localhost.getCanonicalHostName());
+      blacklist.add(localhost.getHostName());
+      if (settings.getCloudType().equals(Settings.CLOUD_TYPES.AZURE)) {
+        blacklist.add(getAzureInternalHostname(localhost.getHostName()));
+      }
+      if (hazelcastInstance != null) {
+        ISet<String> blacklistHostnamesToRemoveSet = hazelcastInstance.getSet(BLACKLIST_SET_NAME);
+        blacklistHostnamesToRemoveSet.addAll(blacklist);
+      } else {
+        blacklistHostnamesToRemove.addAll(blacklist);
+      }
+    } catch (UnknownHostException ex) {
+      LOG.log(Level.WARNING, "Hopsworks@Cloud - Failed to get localhost hostname");
+    }
+  }
+  
+  private Set<String> getBlacklistHostnames() {
+    if (hazelcastInstance != null) {
+      return hazelcastInstance.getSet(BLACKLIST_SET_NAME);
+    } else {
+      return blacklistHostnamesToRemove;
+    }
   }
   
   @PreDestroy
@@ -198,11 +224,12 @@ public class CloudManager {
           commandsStatus.remove(commandStatus.getKey());
         }
       }
-      
-      Map<String, CloudNode> allNodesButHead = new HashMap<>(response.getWorkers().size());
+      //workers in response contains all nodes
+      Map<String, CloudNode> allNodes = new HashMap<>(response.getWorkers().size());
       for (CloudNode worker : response.getWorkers()) {
-        allNodesButHead.put(worker.getHost(), worker);
+        allNodes.put(worker.getHost(), worker);
       }
+      LOG.log(Level.FINE, "All workers: {0}", allNodes.values());
       
       addNewNodes(response);
       
@@ -236,7 +263,7 @@ public class CloudManager {
         
         backupService.handleBackup(backupCommand, commandsStatus);
         
-        toSend = setAndGetDecommission(removeNodesRequests, allNodesButHead, decomissionNodeRequests);
+        toSend = setAndGetDecommission(removeNodesRequests, allNodes, decomissionNodeRequests);
         
         if (firstHeartbeat) {
           firstHeartbeat = false;
@@ -349,7 +376,7 @@ public class CloudManager {
   }
   
   private DecommissionStatus setAndGetDecommission(List<RemoveNodesCommand> removeNodesCommands,
-      Map<String, CloudNode> allNodesButHead, List<DecommissionNodeCommand> decomissionNodeRequests)
+      Map<String, CloudNode> allNodes, List<DecommissionNodeCommand> decomissionNodeRequests)
       throws InterruptedException {
     Configuration conf = settings.getConfiguration();
     YarnClientWrapper yarnClientWrapper = null;
@@ -358,7 +385,7 @@ public class CloudManager {
       dfsOps = dfsService.getDfsOps();
       yarnClientWrapper = yarnClientService.getYarnClientSuper(conf);
       //we pass yarnClient, dfsOps, caProxy and hostsController as argument to be able to mock them in testing
-      return setAndGetDecommission(removeNodesCommands, allNodesButHead, yarnClientWrapper.getYarnClient(),
+      return setAndGetDecommission(removeNodesCommands, allNodes, yarnClientWrapper.getYarnClient(),
           dfsOps, conf, caProxy, hostsController, decomissionNodeRequests);
     } finally {
       dfsService.closeDfsClient(dfsOps);
@@ -378,7 +405,7 @@ public class CloudManager {
 
   @VisibleForTesting
   DecommissionStatus setAndGetDecommission(List<RemoveNodesCommand> removeNodesCommands,
-      Map<String, CloudNode> allNodesButHead, YarnClient yarnClient, DistributedFileSystemOps dfsOps,
+      Map<String, CloudNode> allNodes, YarnClient yarnClient, DistributedFileSystemOps dfsOps,
       Configuration conf, CAProxy caProxy, HostsController hostsController,
       List<DecommissionNodeCommand> decomissionNodeRequests) throws InterruptedException {
 
@@ -400,7 +427,7 @@ public class CloudManager {
       //nodes that need to be removed from yarn and hdfs
       Set<String> toRemove = new HashSet<>();
 
-      Map<String, CloudNode> workers = filterCloudNodesByType(allNodesButHead, CloudNodeType.Worker);
+      Map<String, CloudNode> workers = filterCloudNodesByType(allNodes, CloudNodeType.Worker);
       
       for (NodeReport report : nodeReports) {
         handleRepport(report, workers, toRemove, oldDecommissioned, decommissioned, decommissioning, activeNodeReports,
@@ -409,7 +436,7 @@ public class CloudManager {
 
       // These are nodes which haven't heartbeated for more than 2 minutes
       // 10 minutes after Hopsworks has started
-      Set<String> missingNodes = getMissingNodes(allNodesButHead);
+      Set<String> missingNodes = getMissingNodes(allNodes);
       toRemove.addAll(missingNodes);
 
       //find workers that have no report. They may not have register to yarn yet or be in an error state
@@ -534,7 +561,7 @@ public class CloudManager {
     }
   }
 
-  private Set<String> getMissingNodes(Map<String, CloudNode> allNodesButHead) {
+  private Set<String> getMissingNodes(Map<String, CloudNode> allNodes) {
     if (!shouldLookForMissingNodes) {
       // If we've just restarted the cluster, give the agents some time to catch up
       if (ChronoUnit.MINUTES.between(getBeginningOfHeartbeat(), Instant.now()) > 10) {
@@ -544,9 +571,10 @@ public class CloudManager {
     }
     List<Hosts> allHosts = hostsFacade.findAll();
     Instant now = Instant.now();
+    Set<String> blacklistedNodes = getBlacklistHostnames();
     return allHosts.stream()
-            .filter(h -> !allNodesButHead.containsKey(h.getHostname()))
-            .filter(h -> !blacklistHostnamesToRemove.contains(h.getHostname()))
+            .filter(h -> !allNodes.containsKey(h.getHostname()))
+            .filter(h -> !blacklistedNodes.contains(h.getHostname()))
             .filter(h -> {
               if(h.getLastHeartbeat() == null){
                 //clean up node that never sent an heartbeat.

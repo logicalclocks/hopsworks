@@ -9,7 +9,7 @@ import io.hops.hopsworks.cloud.dao.heartbeat.commands.CloudCommand;
 import java.util.List;
 
 public class HeartbeatResponse extends BaseMessage {
-  private final List<CloudNode> workers;
+  private final List<CloudNode> workers; //workers contains all nodes not just worker nodes.
   private final List<CloudCommand> commands;
   private final List<String> blockedUsers;
 
