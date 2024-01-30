@@ -92,6 +92,7 @@ public class OnlineFeaturestoreController {
   private ProjectUtils projectUtils;
   @EJB
   private ProjectController projectController;
+  @EJB
   private EmbeddingController embeddingController;
 
   public void setupOnlineFeatureStore(Project project, Featurestore featurestore)
