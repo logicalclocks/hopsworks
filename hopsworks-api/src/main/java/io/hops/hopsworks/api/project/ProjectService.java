@@ -725,9 +725,9 @@ public class ProjectService {
     inference.setProjectId(projectId);
     return inference;
   }
-  
+
   @Path("{projectId}/featurestores")
-  public FeaturestoreService featurestoreService(@PathParam("projectId") Integer projectId) {
+  public FeaturestoreService featurestoreService(@PathParam("projectId") Integer projectId) throws ProjectException {
     featurestoreService.setProjectId(projectId);
     return featurestoreService;
   }
