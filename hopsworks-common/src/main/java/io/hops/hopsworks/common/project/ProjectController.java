@@ -1888,15 +1888,6 @@ public class ProjectController {
         try (Connection connection = onlineFeaturestoreFacade.establishAdminConnection()) {
           onlineFeaturestoreController.createDatabaseUser(projectTeam.getUser(),
             featurestore, projectTeam.getTeamRole(), connection);
-          // give access to the shared online feature stores
-
-          for (DatasetSharedWith sharedDs : project.getDatasetSharedWithCollection()) {
-            if (sharedDs.getAccepted() && sharedDs.getDataset().getDsType() == DatasetType.FEATURESTORE) {
-              onlineFeaturestoreController
-                .shareOnlineFeatureStore(project, newMember, projectTeam.getTeamRole(),
-                  sharedDs.getDataset().getFeatureStore(), sharedDs.getPermission(), connection);
-            }
-          }
         } catch (SQLException e) {
           throw new FeaturestoreException(
             RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,

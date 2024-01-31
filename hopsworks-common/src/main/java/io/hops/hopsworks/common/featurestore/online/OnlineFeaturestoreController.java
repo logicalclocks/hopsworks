@@ -30,6 +30,8 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
@@ -53,6 +55,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreFacade.MYSQL_DRIVER;
 
@@ -125,8 +128,7 @@ public class OnlineFeaturestoreController {
       // Create online feature store users for existing team members
       for (ProjectTeam projectTeam : projectTeamFacade.findMembersByProject(project)) {
         if (!projectTeam.getUser().equals(user)) {
-          createDatabaseUser(projectTeam.getUser(),
-                  featurestore, projectTeam.getTeamRole(), connection);
+          createDatabaseUser(projectTeam.getUser(), featurestore, projectTeam.getTeamRole(), connection);
         }
       }
     } catch(SQLException e) {
@@ -136,6 +138,17 @@ public class OnlineFeaturestoreController {
     }
 
     projectController.setOnlineFeatureStoreAvailable(project);
+  }
+
+  private void shareOnlineFeatureStore(Project project, Users user, String role, Connection connection)
+          throws FeaturestoreException {
+    List<DatasetSharedWith> sharedFeatureStores = project.getDatasetSharedWithCollection().stream()
+            .filter(ds -> ds.getAccepted() && ds.getDataset().getDsType() == DatasetType.FEATURESTORE)
+            .collect(Collectors.toList());
+    for (DatasetSharedWith shared : sharedFeatureStores) {
+      String featureStoreDb = getOnlineFeaturestoreDbName(shared.getDataset().getProject());
+      shareOnlineFeatureStoreUser(project, user, role, featureStoreDb, shared.getPermission(), connection);
+    }
   }
   
   /**
@@ -160,6 +173,8 @@ public class OnlineFeaturestoreController {
     onlineFeaturestoreFacade.createOnlineFeaturestoreUser(dbUser, onlineFsPw, connection);
 
     updateUserOnlineFeatureStoreDB(user, featurestore, projectRole, connection);
+
+    shareOnlineFeatureStore(featurestore.getProject(), user, projectRole, connection);
   }
   
   /**
@@ -270,17 +285,6 @@ public class OnlineFeaturestoreController {
     } catch(Exception e) {
       //If the connector have already been created, skip this step
     }
-  }
-  
-  private void removeOnlineFeatureStore(Project project, Connection connection) throws FeaturestoreException {
-    for (ProjectTeam member : projectTeamFacade.findMembersByProject(project)) {
-      String dbUser = onlineDbUsername(project, member.getUser());
-      onlineFeaturestoreFacade.removeOnlineFeaturestoreUser(dbUser, connection);
-    }
-
-    String db = getOnlineFeaturestoreDbName(project);
-    onlineFeaturestoreFacade.removeOnlineFeaturestoreDatabase(db, connection);
-
   }
 
   /**
