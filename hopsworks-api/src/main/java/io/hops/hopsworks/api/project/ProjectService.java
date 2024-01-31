@@ -781,7 +781,7 @@ public class ProjectService {
 
   @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/featurestores")
-  public FeaturestoreService featurestoreService(@PathParam("projectId") Integer projectId) {
+  public FeaturestoreService featurestoreService(@PathParam("projectId") Integer projectId) throws ProjectException {
     featurestoreService.setProjectId(projectId);
     return featurestoreService;
   }
