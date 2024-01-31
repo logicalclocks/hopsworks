@@ -91,13 +91,25 @@ public class OnlineFeaturestoreFacade {
    */
   public void createOnlineFeaturestoreDatabaseIfNotExist(String db, Connection connection)
       throws FeaturestoreException {
+    int numRetry = 0;
+    int maxRetries = 3;
     //Prepared statements with parameters can only be done for
     //WHERE/HAVING Clauses, not names of tables or databases
-    try {
-      executeUpdate("CREATE DATABASE IF NOT EXISTS " + db + ";", connection);
-    } catch (SQLException se) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_CREATING_ONLINE_FEATURESTORE_DB,
-          Level.SEVERE, "Error running create query", se.getMessage(), se);
+    while (numRetry < maxRetries) {
+      try {
+        executeUpdate("CREATE DATABASE IF NOT EXISTS " + db + ";", connection);
+        break;
+      } catch (SQLException se) {
+        // Retry on deadlock, it is caused by concurrent creation of database
+        if (se.getMessage().contains("Deadlock found when trying to get lock")) {
+          numRetry++;
+          if (numRetry < maxRetries) {
+            continue;
+          }
+        }
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_CREATING_ONLINE_FEATURESTORE_DB,
+            Level.SEVERE, "Error running create query", se.getMessage(), se);
+      }
     }
   }
 
@@ -274,8 +286,10 @@ public class OnlineFeaturestoreFacade {
           resultSet.close();
         }
       }
-    } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "Exception in revoking the privileges", e);
+    } catch (SQLException e) {
+      if (!e.getMessage().contains("There is no such grant defined for user")) {
+        LOGGER.log(Level.SEVERE, "Exception in revoking the privileges", e);
+      }
     }
   }
 

@@ -18,9 +18,89 @@ describe "On #{ENV['OS']}" do
 
   describe "Create, delete and update operations on storage connectors in a specific featurestore" do
 
-    describe 'with valid project, featurestore service enabled' do
+    describe "online feature store storage connector" do
+      context "with valid project, featurestore service enabled, and with storage connector flags enabled" do
+        before :all do
+          with_valid_project
+          # setup online feature store by creating a online feature group (see HWORKS-919)
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+        end
 
-      context "with storage connector flags enabled" do
+        after :each do
+          create_session(@project[:username], "Pass123")
+        end
+
+        it "online storage connector connection string should contain the IP of the mysql" do
+          # Storage connector looks like this: [project name]_[username]_onlinefeaturestore
+          connector_name = "#{@project['projectname']}_#{@user['username']}_onlinefeaturestore"
+          featurestore_id = get_featurestore_id(@project['id'])
+          connector_json = get_storage_connector(@project['id'], featurestore_id, connector_name)
+          connector = JSON.parse(connector_json)
+
+          expect(connector['connectionString']).to match(/jdbc:mysql:\/\/\d{1,3}\.\d{1,3}\.\d{1,3}.\d{1,3}/)
+        end
+
+        it "online storage connector connection string should be stored with consul name in the database" do
+          # Storage connector looks like this: [project name]_[username]_onlinefeaturestore
+          connector_name = "#{@project['projectname']}_#{@user['username']}_onlinefeaturestore"
+          connector_db = FeatureStoreConnector.find_by(name: connector_name)
+          jdbc_connector_db = FeatureStoreJDBCConnector.find_by(id: connector_db.jdbc_id)
+
+          expect(jdbc_connector_db[:connection_string]).to start_with("jdbc:mysql://onlinefs.mysql.service.consul")
+        end
+
+        it "online storage connector should contain the driver class and isolationLevel" do
+          connector_name = "#{@project['projectname']}_#{@user['username']}_onlinefeaturestore"
+          featurestore_id = get_featurestore_id(@project['id'])
+          connector_json = get_storage_connector(@project['id'], featurestore_id, connector_name)
+          connector = JSON.parse(connector_json)
+
+          arguments_hash = connector['arguments']
+          puts arguments_hash
+          expect(arguments_hash.find{ |item| item['name'] == 'driver' }['value']).to eql("com.mysql.cj.jdbc.Driver")
+          expect(arguments_hash.find{ |item| item['name'] == 'isolationLevel' }['value']).to eql("NONE")
+        end
+
+        it "should get online storage connector from base project when accessing a shared feature store" do
+          project = get_project
+          base_featurestore_id = get_featurestore_id(project.id)
+          reset_session
+
+          #create another project
+          projectname = "project_#{short_random_id}"
+          shared_fs_project = create_project_by_name(projectname)
+          shared_fs_id = get_featurestore_id(shared_fs_project.id)
+          # login with user for project and share dataset
+          create_session(shared_fs_project[:username], "Pass123")
+          featurestore = "#{shared_fs_project[:projectname].downcase}_featurestore.db"
+          share_dataset(shared_fs_project, featurestore, project[:projectname], datasetType: "&type=FEATURESTORE")
+          reset_session
+          #login with user for shared_fs_project and accept dataset
+          create_session(project[:username],"Pass123")
+          accept_dataset(project, "#{shared_fs_project[:projectname]}::#{featurestore}", datasetType: "&type=FEATURESTORE")
+
+          base_project_connector = "#{project['projectname']}_#{@user['username']}_onlinefeaturestore"
+          connector_name = "onlinefeaturestore"
+
+          #connector from shared fs should use base project connector
+          connector_json = get_storage_connector(project['id'], shared_fs_id, connector_name)
+          connector = JSON.parse(connector_json)
+          expect(connector["name"]).to eql(base_project_connector)
+
+          #connector from base should use base project connector
+          connector_json = get_storage_connector(project['id'], base_featurestore_id, connector_name)
+          connector = JSON.parse(connector_json)
+          expect(connector["name"]).to eql(base_project_connector)
+        end
+      end
+    end
+
+    describe "other storage connectors" do
+      context "with valid project, featurestore service enabled, and with storage connector flags enabled" do
         before :all do
           with_valid_project
         end
@@ -453,69 +533,6 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json2["name"] == connector_name).to be true
           expect(parsed_json2["storageConnectorType"] == "JDBC").to be true
           expect(parsed_json2["connectionString"] == "jdbc://test3").to be true
-        end
-
-        it "online storage connector connection string should contain the IP of the mysql" do
-          # Storage connector looks like this: [project name]_[username]_onlinefeaturestore
-          connector_name = "#{@project['projectname']}_#{@user['username']}_onlinefeaturestore"
-          featurestore_id = get_featurestore_id(@project['id'])
-          connector_json = get_storage_connector(@project['id'], featurestore_id, connector_name)
-          connector = JSON.parse(connector_json)
-
-          expect(connector['connectionString']).to match(/jdbc:mysql:\/\/\d{1,3}\.\d{1,3}\.\d{1,3}.\d{1,3}/)
-        end
-
-        it "online storage connector connection string should be stored with consul name in the database" do
-          # Storage connector looks like this: [project name]_[username]_onlinefeaturestore
-          connector_name = "#{@project['projectname']}_#{@user['username']}_onlinefeaturestore"
-          connector_db = FeatureStoreConnector.find_by(name: connector_name)
-          jdbc_connector_db = FeatureStoreJDBCConnector.find_by(id: connector_db.jdbc_id)
-
-          expect(jdbc_connector_db[:connection_string]).to start_with("jdbc:mysql://onlinefs.mysql.service.consul")
-        end
-
-        it "online storage connector should contain the driver class and isolationLevel" do
-          connector_name = "#{@project['projectname']}_#{@user['username']}_onlinefeaturestore"
-          featurestore_id = get_featurestore_id(@project['id'])
-          connector_json = get_storage_connector(@project['id'], featurestore_id, connector_name)
-          connector = JSON.parse(connector_json)
-
-          arguments_hash = connector['arguments']
-          puts arguments_hash
-          expect(arguments_hash.find{ |item| item['name'] == 'driver' }['value']).to eql("com.mysql.cj.jdbc.Driver")
-          expect(arguments_hash.find{ |item| item['name'] == 'isolationLevel' }['value']).to eql("NONE")
-        end
-
-        it "should get online storage connector from base project when accessing a shared feature store" do
-          project = get_project
-          base_featurestore_id = get_featurestore_id(project.id)
-          reset_session
-
-          #create another project
-          projectname = "project_#{short_random_id}"
-          shared_fs_project = create_project_by_name(projectname)
-          shared_fs_id = get_featurestore_id(shared_fs_project.id)
-          # login with user for project and share dataset
-          create_session(shared_fs_project[:username], "Pass123")
-          featurestore = "#{shared_fs_project[:projectname].downcase}_featurestore.db"
-          share_dataset(shared_fs_project, featurestore, project[:projectname], datasetType: "&type=FEATURESTORE")
-          reset_session
-          #login with user for shared_fs_project and accept dataset
-          create_session(project[:username],"Pass123")
-          accept_dataset(project, "#{shared_fs_project[:projectname]}::#{featurestore}", datasetType: "&type=FEATURESTORE")
-
-          base_project_connector = "#{project['projectname']}_#{@user['username']}_onlinefeaturestore"
-          connector_name = "onlinefeaturestore"
-
-          #connector from shared fs should use base project connector
-          connector_json = get_storage_connector(project['id'], shared_fs_id, connector_name)
-          connector = JSON.parse(connector_json)
-          expect(connector["name"]).to eql(base_project_connector)
-
-          #connector from base should use base project connector
-          connector_json = get_storage_connector(project['id'], base_featurestore_id, connector_name)
-          connector = JSON.parse(connector_json)
-          expect(connector["name"]).to eql(base_project_connector)
         end
       end
 

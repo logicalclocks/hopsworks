@@ -271,6 +271,17 @@ public class OnlineFeaturestoreController {
       //If the connector have already been created, skip this step
     }
   }
+  
+  private void removeOnlineFeatureStore(Project project, Connection connection) throws FeaturestoreException {
+    for (ProjectTeam member : projectTeamFacade.findMembersByProject(project)) {
+      String dbUser = onlineDbUsername(project, member.getUser());
+      onlineFeaturestoreFacade.removeOnlineFeaturestoreUser(dbUser, connection);
+    }
+
+    String db = getOnlineFeaturestoreDbName(project);
+    onlineFeaturestoreFacade.removeOnlineFeaturestoreDatabase(db, connection);
+
+  }
 
   /**
    * Utility function for create a JDBC connection to the online featurestore for a particular user.
