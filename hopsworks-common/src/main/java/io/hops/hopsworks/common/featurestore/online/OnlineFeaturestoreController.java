@@ -33,6 +33,7 @@ import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.multiregion.MultiRegionController;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
@@ -57,6 +58,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreFacade.MYSQL_DRIVER;
 
@@ -96,7 +98,7 @@ public class OnlineFeaturestoreController {
   private EmbeddingController embeddingController;
 
   public void setupOnlineFeatureStore(Project project, Featurestore featurestore)
-      throws FeaturestoreException, SQLException {
+      throws FeaturestoreException {
     try {
       if (projectController.findProjectById(project.getId()).getOnlineFeatureStoreAvailable()) {
         return;
@@ -115,12 +117,20 @@ public class OnlineFeaturestoreController {
 
     try (Connection connection = onlineFeaturestoreFacade.establishAdminConnection()) {
       setupOnlineFeatureStore(project, featurestore, connection);
+    } catch (SQLException e) {
+      throw new FeaturestoreException(
+          RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,
+          Level.SEVERE, e.getMessage(), e.getMessage(), e);
     }
 
     if (multiRegionController.isEnabled()) {
       try (Connection connection =
                onlineFeaturestoreFacade.establishAdminConnection(multiRegionController.getSecondaryRegionName())) {
         setupOnlineFeatureStore(project, featurestore, connection);
+      } catch(SQLException e) {
+        throw new FeaturestoreException(
+            RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,
+            Level.SEVERE, e.getMessage(), e.getMessage(), e);
       }
     }
 
@@ -133,24 +143,34 @@ public class OnlineFeaturestoreController {
     onlineFeaturestoreFacade.createOnlineFeaturestoreDatabaseIfNotExist(db, connection);
     // Create kafka offset table
     onlineFeaturestoreFacade.createOnlineFeaturestoreKafkaOffsetTable(db, connection);
+
     for (ProjectTeam member : projectUtils.getProjectTeamCollection(project)) {
       createDatabaseUser(member.getUser(), featurestore, member.getTeamRole(), connection);
+      // Since online feature store can be created AFTER sharing of project, need to share it here
+      shareOnlineFeatureStore(featurestore.getProject(), member.getUser(), member.getTeamRole(), connection);
     }
   }
 
-  public void createDatabaseUser(Users user, Featurestore featurestore, String projectRole,
-                                 List<DatasetSharedWith> sharedFeatureStores)
-      throws FeaturestoreException, SQLException {
+  public void createDatabaseUser(Users user, Featurestore featurestore, String projectRole)
+      throws FeaturestoreException {
     try (Connection connection = onlineFeaturestoreFacade.establishAdminConnection()) {
       createDatabaseUser(user, featurestore, projectRole, connection);
-      shareOnlineFeatureStore(featurestore.getProject(), user, projectRole, sharedFeatureStores, connection);
+      shareOnlineFeatureStore(featurestore.getProject(), user, projectRole, connection);
+    } catch (SQLException e) {
+      throw new FeaturestoreException(
+          RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,
+          Level.SEVERE, e.getMessage(), e.getMessage(), e);
     }
 
     if (multiRegionController.isEnabled()) {
       try (Connection connection =
                onlineFeaturestoreFacade.establishAdminConnection(multiRegionController.getSecondaryRegionName())) {
         createDatabaseUser(user, featurestore, projectRole, connection);
-        shareOnlineFeatureStore(featurestore.getProject(), user, projectRole, sharedFeatureStores, connection);
+        shareOnlineFeatureStore(featurestore.getProject(), user, projectRole, connection);
+      } catch (SQLException e) {
+        throw new FeaturestoreException(
+            RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,
+            Level.SEVERE, e.getMessage(), e.getMessage(), e);
       }
     }
   }
@@ -336,10 +356,12 @@ public class OnlineFeaturestoreController {
     }
   }
 
-  private void shareOnlineFeatureStore(Project project, Users user, String role,
-                                      List<DatasetSharedWith> sharedFs, Connection connection)
+  private void shareOnlineFeatureStore(Project project, Users user, String role, Connection connection)
       throws FeaturestoreException {
-    for (DatasetSharedWith shared : sharedFs) {
+    List<DatasetSharedWith> sharedFeatureStores = project.getDatasetSharedWithCollection().stream()
+        .filter(ds -> ds.getAccepted() && ds.getDataset().getDsType() == DatasetType.FEATURESTORE)
+        .collect(Collectors.toList());
+    for (DatasetSharedWith shared : sharedFeatureStores) {
       String featureStoreDb = getOnlineFeaturestoreDbName(shared.getDataset().getProject());
       shareOnlineFeatureStoreUser(project, user, role, featureStoreDb, shared.getPermission(), connection);
     }

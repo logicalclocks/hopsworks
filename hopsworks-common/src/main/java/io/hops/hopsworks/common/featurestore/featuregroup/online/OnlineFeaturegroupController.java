@@ -136,14 +136,8 @@ public class OnlineFeaturegroupController {
 
   void createOnlineFeatureStore(Project project, Featurestore featurestore)
       throws FeaturestoreException {
-    try {
-      // Create online feature store users for existing team members
-      onlineFeaturestoreController.setupOnlineFeatureStore(project, featurestore);
-    } catch(SQLException e) {
-      throw new FeaturestoreException(
-          RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,
-          Level.SEVERE, e.getMessage(), e.getMessage(), e);
-    }
+    // Create online feature store users for existing team members
+    onlineFeaturestoreController.setupOnlineFeatureStore(project, featurestore);
   }
 
   void checkOnlineFsUserExist(Project project)

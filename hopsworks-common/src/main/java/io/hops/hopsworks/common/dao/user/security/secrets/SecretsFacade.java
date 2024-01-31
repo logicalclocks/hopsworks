@@ -42,6 +42,7 @@ public class SecretsFacade {
   
   public void persist(Secret secret) {
     entityManager.persist(secret);
+    entityManager.flush();
   }
   
   public void update(Secret secret) {

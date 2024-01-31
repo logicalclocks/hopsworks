@@ -112,16 +112,22 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
-    
-    describe "ensure currect tables are created in online feature store" do
+
+    describe "ensure correct tables are created in online feature store" do
       context 'with valid project and online feature store enabled' do
         before :all do
           if getVar("featurestore_online_enabled") == false
             skip "Online Feature Store not enabled, skip online featurestore tests"
           end
           with_valid_project
+          # setup online feature store by creating a online feature group (see HWORKS-919)
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
         end
-        
+
         it "should make sure that kafka_offsets table is created in featurestores" do
           project = get_project
           tables = Tables.where(TABLE_SCHEMA:project[:projectname], TABLE_NAME:"kafka_offsets")
@@ -137,6 +143,12 @@ describe "On #{ENV['OS']}" do
             skip "Online Feature Store not enabled, skip online featurestore tests"
           end
           with_valid_project
+          # setup online feature store by creating a online feature group (see HWORKS-919)
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
         end
 
         it "should grant all privileges to the project owner" do
@@ -211,6 +223,11 @@ describe "On #{ENV['OS']}" do
           update_project({projectId: no_fs_project[:id],
                           projectName: no_fs_project[:projectname],
                           services: ["FEATURESTORE"]})
+          # setup online feature store by creating a online feature group (see HWORKS-919)
+          featurestore_id = get_featurestore_id(no_fs_project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(no_fs_project.id, featurestore_id, online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
 
           # Project owner should have the correct permissions on the online feature store
           # online fs username are capped to 30 chars
@@ -234,6 +251,16 @@ describe "On #{ENV['OS']}" do
         it "should not remove users from other projects - see HOPSWORKS-2856" do
           demo_project = create_project(projectName = "demo")
           demo_demo_project = create_project(projectName = "demo_demo")
+          # setup online feature store by creating a online feature group (see HWORKS-919)
+          featurestore_id = get_featurestore_id(demo_project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(demo_project.id, featurestore_id, online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          # setup online feature store by creating a online feature group (see HWORKS-919)
+          featurestore_id = get_featurestore_id(demo_demo_project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(demo_demo_project.id, featurestore_id, online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
 
           delete_project(demo_project)
 
@@ -252,7 +279,18 @@ describe "On #{ENV['OS']}" do
           skip "Online Feature Store not enabled, skip online featurestore tests"
         end
         with_valid_project
+        # setup online feature store by creating a online feature group (see HWORKS-919)
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(201)
         @shared_project = create_project
+        # setup online feature store by creating a online feature group (see HWORKS-919)
+        featurestore_id = get_featurestore_id(@shared_project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(@shared_project.id, featurestore_id, online:true)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(201)
         @shared_user_do = create_user
         @shared_user_ds = create_user
         add_member_to_project(@shared_project, @shared_user_do[:email], 'Data owner')
@@ -318,6 +356,87 @@ describe "On #{ENV['OS']}" do
 
           expect(privileges.length).to eq(0)
         end
+      end
+    end
+
+    describe "check permission when shared online feature store has not been initialised" do
+      before :all do
+        if getVar("featurestore_online_enabled") == false
+          skip "Online Feature Store not enabled, skip online featurestore tests"
+        end
+        @project_a = create_project
+        @user_a_do = create_user
+        @user_a_ds = create_user
+        add_member_to_project(@project_a, @user_a_do[:email], 'Data owner')
+        add_member_to_project(@project_a, @user_a_ds[:email], 'Data scientist')
+        # setup online feature store by creating a online feature group (see HWORKS-919)
+        # before adding member
+        @project_b = create_project
+        featurestore_id = get_featurestore_id(@project_b.id)
+        json_result, featuregroup_name = create_cached_featuregroup(@project_b.id, featurestore_id, online:true)
+        parsed_json = JSON.parse(json_result)
+        @user_b_do = create_user
+        @user_b_ds = create_user
+        add_member_to_project(@project_b, @user_b_do[:email], 'Data owner')
+        add_member_to_project(@project_b, @user_b_ds[:email], 'Data scientist')
+        @project_c = create_project
+        @user_c_do = create_user
+        @user_c_ds = create_user
+        add_member_to_project(@project_c, @user_c_do[:email], 'Data owner')
+        add_member_to_project(@project_c, @user_c_ds[:email], 'Data scientist')
+        # setup online feature store by creating a online feature group (see HWORKS-919)
+        # after adding member
+        featurestore_id = get_featurestore_id(@project_c.id)
+        json_result, featuregroup_name = create_cached_featuregroup(@project_c.id, featurestore_id, online:true)
+        parsed_json = JSON.parse(json_result)
+      end
+
+      it "Project C should be able to share with project A (has not been initialised)" do
+        featurestore = "#{@project_c['projectname'].downcase}_featurestore.db"
+        # Project C should be able to share with project A without error,
+        # but privileges will not be added to information_schema.SCHEMA_PRIVILEGES yet.
+        share_dataset(@project_c, featurestore, @project_a['projectname'], datasetType: "&type=FEATURESTORE")
+        accept_dataset(@project_a, "#{@project_c['projectname']}::#{featurestore}",
+                       datasetType: "&type=FEATURESTORE")
+      end
+
+      it "Project A (has not been initialised) should be able to share with project B (A )" do
+        featurestore = "#{@project_a['projectname'].downcase}_featurestore.db"
+        # Project A should be able to share with project B without error
+        # but privileges will not be added to information_schema.SCHEMA_PRIVILEGES yet.
+        share_dataset(@project_a, featurestore, @project_b['projectname'], datasetType: "&type=FEATURESTORE")
+        accept_dataset(@project_b, "#{@project_a['projectname']}::#{featurestore}",
+                       datasetType: "&type=FEATURESTORE")
+      end
+
+      it "After project A has initialised online feature store, privileges should be set properly" do
+        # Project B should have access to project A, and project A should have access to project C
+        # setup online feature store in project A by creating a online feature group
+        featurestore_id = get_featurestore_id(@project_a.id)
+        json_result, featuregroup_name = create_cached_featuregroup(@project_a.id, featurestore_id, online:true)
+        parsed_json = JSON.parse(json_result)
+
+        # make sure project B get access to project A
+        online_db_name_ds = "#{@project_b[:projectname]}_#{@user_b_ds[:username]}"[0..30]
+        grantee_ds = "'#{online_db_name_ds}'@'%'"
+        online_db_name_do = "#{@project_b[:projectname]}_#{@user_b_do[:username]}"[0..30]
+        grantee_do = "'#{online_db_name_do}'@'%'"
+        privileges_ds = SchemaPrivileges.where(TABLE_SCHEMA:@project_a[:projectname], GRANTEE:grantee_ds)
+        privileges_do = SchemaPrivileges.where(TABLE_SCHEMA:@project_a[:projectname], GRANTEE:grantee_do)
+        expect(privileges_ds.length).to eq(1)
+        expect(privileges_do.length).to eq(1)
+
+        # make sure project A cannot access to project C
+        online_db_name_ds = "#{@project_a[:projectname]}_#{@user_a_ds[:username]}"[0..30]
+        grantee_ds = "'#{online_db_name_ds}'@'%'"
+        online_db_name_do = "#{@project_a[:projectname]}_#{@user_a_do[:username]}"[0..30]
+        grantee_do = "'#{online_db_name_do}'@'%'"
+
+        privileges_ds = SchemaPrivileges.where(TABLE_SCHEMA:@project_c[:projectname], GRANTEE:grantee_ds)
+        privileges_do = SchemaPrivileges.where(TABLE_SCHEMA:@project_c[:projectname], GRANTEE:grantee_do)
+
+        expect(privileges_ds.length).to eq(1)
+        expect(privileges_do.length).to eq(1)
       end
     end
   end

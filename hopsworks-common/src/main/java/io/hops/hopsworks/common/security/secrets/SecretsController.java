@@ -88,13 +88,22 @@ public class SecretsController {
   public Secret add(Users user, String secretName, String secret, VisibilityType visibilityType, Integer projectIdScope)
       throws UserException {
     SecretId secretId = new SecretId(user.getUid(), secretName);
-    if(secretsFacade.findById(secretId) != null) {
-      throw new UserException(RESTCodes.UserErrorCode.SECRET_EXISTS, Level.FINE,
-        "Secret already exists", "Secret with name " + secretName + " already exists for user " + user.getUsername());
-    }
     Secret storedSecret = validateAndCreateSecret(secretId, user, secret, visibilityType, projectIdScope);
-    secretsFacade.persist(storedSecret);
-    return storedSecret;
+    try {
+      secretsFacade.persist(storedSecret);
+      return storedSecret;
+    } catch (EJBException e) {
+      Throwable rootCause = getRootCause(e);
+      if (rootCause instanceof SQLIntegrityConstraintViolationException
+          && rootCause.getMessage().contains("Duplicate entry")) {
+        throw new UserException(RESTCodes.UserErrorCode.SECRET_EXISTS, Level.FINE,
+            "Secret already exists", "Secret with name " + secretName + " already exists for user " +
+            user.getUsername());
+      } else {
+        throw new UserException(RESTCodes.UserErrorCode.SECRET_CREATION_FAILED, Level.FINE,
+            "Failed to create secret for user " + user.getUsername(), e.getMessage(), e);
+      }
+    }
   }
 
   /**

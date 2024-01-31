@@ -1899,18 +1899,8 @@ public class ProjectController {
       if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE) &&
           settings.isOnlineFeaturestore()) {
         Featurestore featurestore = featurestoreController.getProjectFeaturestore(project);
-        List<DatasetSharedWith> sharedFeatureStores = project.getDatasetSharedWithCollection().stream()
-            .filter(ds -> ds.getAccepted() && ds.getDataset().getDsType() == DatasetType.FEATURESTORE)
-            .collect(Collectors.toList());
 
-        try {
-          onlineFeaturestoreController.createDatabaseUser(projectTeam.getUser(),
-              featurestore, projectTeam.getTeamRole(), sharedFeatureStores);
-        } catch (SQLException e) {
-          throw new FeaturestoreException(
-            RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,
-            Level.SEVERE, e.getMessage(), e.getMessage(), e);
-        }
+        onlineFeaturestoreController.createDatabaseUser(projectTeam.getUser(), featurestore, projectTeam.getTeamRole());
       }
   
       // TODO: This should now be a REST call
