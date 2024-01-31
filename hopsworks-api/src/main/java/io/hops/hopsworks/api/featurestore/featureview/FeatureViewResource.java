@@ -374,7 +374,6 @@ public class FeatureViewResource {
     return Response.ok().entity(parentFeatureViewDTO).build();
   }
 
-  @Logged(logLevel = LogLevel.OFF)
   public void setProject(Project project) {
     this.project = project;
   }
