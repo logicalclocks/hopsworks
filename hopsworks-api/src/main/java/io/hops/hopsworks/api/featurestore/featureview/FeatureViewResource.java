@@ -19,6 +19,7 @@ package io.hops.hopsworks.api.featurestore.featureview;
 import com.google.api.client.util.Sets;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.JWTNotRequired;
 import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.api.ResourceRequest;
@@ -340,6 +341,37 @@ public class FeatureViewResource {
     return Response.ok()
         .entity(featureViewBuilder.build(featureView, resourceRequest, project, user, uriInfo))
         .build();
+  }
+
+
+  // This endpoint is necassary for onlinefs notification system
+  // (can't use Provenance since onlinefs doesn’t have a user)
+  @GET
+  @Path("featuregroup/{featureGroupId: [0-9]+}")
+  @JWTNotRequired
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_SERVICE_USER", "AGENT"})
+  @ApiOperation(value = "Get all Feature Views associated to Feature Group.", response = FeatureViewDTO.class)
+  public Response getAllFeatureViewsByFeatureGroup(
+      @ApiParam(value = "Id of the featuregroup", required = true)
+      @PathParam("featureGroupId") Integer featureGroupId,
+      @Context HttpServletRequest req) {
+    List<FeatureView> featureViews = featureViewController.getByFeatureGroup(featureGroupId);
+
+    // basic DTO object
+    FeatureViewDTO parentFeatureViewDTO = new FeatureViewDTO();
+    for (FeatureView featureView : featureViews) {
+      FeatureViewDTO featureViewDTO = new FeatureViewDTO();
+      featureViewDTO.setId(featureView.getId());
+      featureViewDTO.setName(featureView.getName());
+      featureViewDTO.setVersion(featureView.getVersion());
+      featureViewDTO.setFeaturestoreId(featureView.getFeaturestore().getId());
+      parentFeatureViewDTO.addItem(featureViewDTO);
+    }
+
+    return Response.ok().entity(parentFeatureViewDTO).build();
   }
 
   public void setProject(Project project) {
