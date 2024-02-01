@@ -123,13 +123,9 @@ public class OnlineFeaturestoreController {
       // Create kafka offset table
       onlineFeaturestoreFacade.createOnlineFeaturestoreKafkaOffsetTable(db, connection);
 
-      // Create project owner database user
-      createDatabaseUser(user, featurestore, ProjectRoleTypes.DATA_OWNER.getRole(), connection);
       // Create online feature store users for existing team members
       for (ProjectTeam projectTeam : projectTeamFacade.findMembersByProject(project)) {
-        if (!projectTeam.getUser().equals(user)) {
-          createDatabaseUser(projectTeam.getUser(), featurestore, projectTeam.getTeamRole(), connection);
-        }
+        createDatabaseUser(projectTeam.getUser(), featurestore, projectTeam.getTeamRole(), connection);
       }
     } catch(SQLException e) {
       throw new FeaturestoreException(
@@ -393,11 +389,7 @@ public class OnlineFeaturestoreController {
   public void shareOnlineFeatureStore(Project project, Featurestore featurestore,
                                       DatasetAccessPermission permission) throws FeaturestoreException {
     String featureStoreDb = getOnlineFeaturestoreDbName(featurestore.getProject());
-    if (!checkIfDatabaseExists(featureStoreDb)) {
-      // Nothing to share
-      return;
-    }
-
+    // do not skip sharing even if featureStoreDb does not exist, see HWORKS-919
     try (Connection connection = onlineFeaturestoreFacade.establishAdminConnection()) {
       for (ProjectTeam member : projectUtils.getProjectTeamCollection(project)) {
         shareOnlineFeatureStoreUser(project, member.getUser(), member.getTeamRole(), featureStoreDb, permission,
@@ -423,11 +415,7 @@ public class OnlineFeaturestoreController {
                                       DatasetAccessPermission permission, Connection conn)
     throws FeaturestoreException {
     String featureStoreDb = getOnlineFeaturestoreDbName(featurestore.getProject());
-    if (!checkIfDatabaseExists(featureStoreDb)) {
-      // Nothing to share
-      return;
-    }
-
+    // do not skip sharing even if featureStoreDb does not exist, see HWORKS-919
     shareOnlineFeatureStoreUser(project, user, role, featureStoreDb, permission, conn);
   }
 
