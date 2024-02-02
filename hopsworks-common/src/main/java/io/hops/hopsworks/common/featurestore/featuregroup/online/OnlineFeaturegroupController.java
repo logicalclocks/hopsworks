@@ -142,6 +142,9 @@ public class OnlineFeaturegroupController {
       List<FeatureGroupFeatureDTO> features, Project project, Users user)
       throws KafkaException, SchemaException, ProjectException, FeaturestoreException, IOException,
       HopsSecurityException, ServiceException {
+    // online feature store is created only when creating the first feature group.
+    createOnlineFeatureStore(project, featureStore, user);
+
     // check if onlinefs user is part of project
     checkOnlineFsUserExist(project);
 
@@ -151,6 +154,12 @@ public class OnlineFeaturegroupController {
     } else {
       createMySQLTable(featureStore, Utils.getFeaturegroupName(featureGroup), features, project, user);
     }
+  }
+
+  void createOnlineFeatureStore(Project project, Featurestore featurestore, Users user)
+      throws FeaturestoreException {
+    // Create online feature store users for existing team members
+    onlineFeaturestoreController.setupOnlineFeaturestore(project, featurestore, user);
   }
 
   void checkOnlineFsUserExist(Project project)

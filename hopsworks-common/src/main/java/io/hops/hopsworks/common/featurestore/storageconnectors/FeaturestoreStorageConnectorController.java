@@ -438,6 +438,8 @@ public class FeaturestoreStorageConnectorController {
       throws FeaturestoreException {
     Featurestore userFeatureStore = featurestoreController.getProjectFeaturestore(userProject);
     String dbUsername = onlineFeaturestoreController.onlineDbUsername(userProject, user);
+    // Accessing online feature store from a shared project requires online feature store being setup in users' project.
+    onlineFeaturestoreController.setupOnlineFeaturestore(userProject, userFeatureStore, user);
     Optional<FeaturestoreConnector> featurestoreConnector = featurestoreConnectorFacade
         .findByFeaturestoreName(userFeatureStore,
             dbUsername + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX);

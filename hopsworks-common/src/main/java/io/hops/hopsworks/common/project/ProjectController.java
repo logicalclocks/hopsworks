@@ -613,6 +613,7 @@ public class ProjectController {
     project.setKafkaMaxNumTopics(settings.getKafkaMaxNumTopics());
     project.setDescription(projectDTO.getDescription());
     project.setTopicName(projectDTO.getFeatureStoreTopic());
+    project.setOnlineFeatureStoreAvailable(false);
     project.setCreationStatus(CreationStatus.ONGOING);
 
     //Persist project object
@@ -1045,6 +1046,12 @@ public class ProjectController {
       return true;
     }
     return false;
+  }
+
+  public void setOnlineFeatureStoreAvailable(Project project) {
+    project.setOnlineFeatureStoreAvailable(true);
+    projectFacade.mergeProject(project);
+    projectFacade.flushEm();
   }
 
   //Set the project owner as project master in ProjectTeam table
@@ -1881,15 +1888,6 @@ public class ProjectController {
         try (Connection connection = onlineFeaturestoreFacade.establishAdminConnection()) {
           onlineFeaturestoreController.createDatabaseUser(projectTeam.getUser(),
             featurestore, projectTeam.getTeamRole(), connection);
-          // give access to the shared online feature stores
-
-          for (DatasetSharedWith sharedDs : project.getDatasetSharedWithCollection()) {
-            if (sharedDs.getAccepted() && sharedDs.getDataset().getDsType() == DatasetType.FEATURESTORE) {
-              onlineFeaturestoreController
-                .shareOnlineFeatureStore(project, newMember, projectTeam.getTeamRole(),
-                  sharedDs.getDataset().getFeatureStore(), sharedDs.getPermission(), connection);
-            }
-          }
         } catch (SQLException e) {
           throw new FeaturestoreException(
             RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,

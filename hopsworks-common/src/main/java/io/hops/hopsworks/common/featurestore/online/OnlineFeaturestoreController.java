@@ -15,17 +15,23 @@
  */
 package io.hops.hopsworks.common.featurestore.online;
 
+import com.google.common.base.Strings;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretsFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
 import io.hops.hopsworks.common.featurestore.storageconnectors.StorageConnectorUtil;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
@@ -49,6 +55,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreFacade.MYSQL_DRIVER;
 
@@ -78,28 +85,66 @@ public class OnlineFeaturestoreController {
   private StorageConnectorUtil storageConnectorUtil;
   @EJB
   private ProjectUtils projectUtils;
+  @EJB
+  private ProjectController projectController;
+  @EJB
+  private ProjectTeamFacade projectTeamFacade;
 
   /**
    * Sets up the online feature store database for a new project and creating a database-user for the project-owner
    *
-   * @param user the project owner
+   * @param project project
    * @param featurestore the featurestore metadata entity
    * @throws FeaturestoreException
    */
-  public void setupOnlineFeaturestore(Users user, Featurestore featurestore, Connection connection)
+  public void setupOnlineFeaturestore(Project project, Featurestore featurestore, Users user)
     throws FeaturestoreException {
+
+    try {
+      if (projectController.findProjectById(project.getId()).getOnlineFeatureStoreAvailable()) {
+        return;
+      }
+    } catch (ProjectException e) {
+      // Should not happen but skip setup if project is not found.
+      if (e.getErrorCode() == RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND) {
+        return;
+      }
+    }
+
     if (!settings.isOnlineFeaturestore()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
-        Level.FINE, "Online feature store service is not enabled for this Hopsworks instance");
+              Level.FINE, "Online feature store service is not enabled for this Hopsworks instance");
     }
-    String db = getOnlineFeaturestoreDbName(featurestore.getProject());
-      // Create dataset
-    onlineFeaturestoreFacade.createOnlineFeaturestoreDatabase(db, connection);
 
-    // Create kafka offset table
-    onlineFeaturestoreFacade.createOnlineFeaturestoreKafkaOffsetTable(db, connection);
-    // Create project owner database user
-    createDatabaseUser(user, featurestore, ProjectRoleTypes.DATA_OWNER.getRole(), connection);
+    try (Connection connection = onlineFeaturestoreFacade.establishAdminConnection()) {
+      String db = getOnlineFeaturestoreDbName(featurestore.getProject());
+      // Create kafka offset table
+      onlineFeaturestoreFacade.createOnlineFeaturestoreDatabaseIfNotExist(db, connection);
+      // Create kafka offset table
+      onlineFeaturestoreFacade.createOnlineFeaturestoreKafkaOffsetTable(db, connection);
+
+      // Create online feature store users for existing team members
+      for (ProjectTeam projectTeam : projectTeamFacade.findMembersByProject(project)) {
+        createDatabaseUser(projectTeam.getUser(), featurestore, projectTeam.getTeamRole(), connection);
+      }
+    } catch(SQLException e) {
+      throw new FeaturestoreException(
+              RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,
+              Level.SEVERE, e.getMessage(), e.getMessage(), e);
+    }
+
+    projectController.setOnlineFeatureStoreAvailable(project);
+  }
+
+  private void shareOnlineFeatureStore(Project project, Users user, String role, Connection connection)
+          throws FeaturestoreException {
+    List<DatasetSharedWith> sharedFeatureStores = project.getDatasetSharedWithCollection().stream()
+            .filter(ds -> ds.getAccepted() && ds.getDataset().getDsType() == DatasetType.FEATURESTORE)
+            .collect(Collectors.toList());
+    for (DatasetSharedWith shared : sharedFeatureStores) {
+      String featureStoreDb = getOnlineFeaturestoreDbName(shared.getDataset().getProject());
+      shareOnlineFeatureStoreUser(project, user, role, featureStoreDb, shared.getPermission(), connection);
+    }
   }
   
   /**
@@ -119,11 +164,13 @@ public class OnlineFeaturestoreController {
 
     String dbUser = onlineDbUsername(featurestore.getProject(), user);
     //Generate random pw
-    String onlineFsPw = createOnlineFeaturestoreUserSecret(dbUser, user, featurestore.getProject());
+    String onlineFsPw = getOrCreateUserSecret(dbUser, user, featurestore.getProject());
     //database is the same as the project name
     onlineFeaturestoreFacade.createOnlineFeaturestoreUser(dbUser, onlineFsPw, connection);
 
     updateUserOnlineFeatureStoreDB(user, featurestore, projectRole, connection);
+
+    shareOnlineFeatureStore(featurestore.getProject(), user, projectRole, connection);
   }
   
   /**
@@ -135,17 +182,37 @@ public class OnlineFeaturestoreController {
    * @return the password
    * @throws FeaturestoreException
    */
-  private String createOnlineFeaturestoreUserSecret(String dbuser, Users user, Project project)
-    throws FeaturestoreException {
-    String onlineFsPw = RandomStringUtils.randomAlphabetic(FeaturestoreConstants.ONLINE_FEATURESTORE_PW_LENGTH);
+  private String getOrCreateUserSecret(String dbuser, Users user, Project project) throws FeaturestoreException {
+    String password = "";
     try {
-      secretsController.delete(user, dbuser); //Delete if the secret already exsits
-      secretsController.add(user, dbuser, onlineFsPw, VisibilityType.PRIVATE, project.getId());
+      password = secretsController.get(user, dbuser).getPlaintext();
     } catch (UserException e) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
-              Level.SEVERE, "Problem adding online featurestore password to hopsworks secretsmgr");
+      if (e.getErrorCode() != RESTCodes.UserErrorCode.SECRET_EMPTY) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
+                Level.SEVERE, "Error retrieving existing online feature store password from secret manager");
+      }
     }
-    return onlineFsPw;
+
+    if (!Strings.isNullOrEmpty(password)) {
+      // Password was found, return it
+      return password;
+    }
+
+    try {
+      password = RandomStringUtils.randomAlphabetic(FeaturestoreConstants.ONLINE_FEATURESTORE_PW_LENGTH);
+      secretsController.add(user, dbuser, password, VisibilityType.PRIVATE, project.getId());
+    } catch (UserException e) {
+      // Secret may be created concurrently when multiple online feature groups are created concurrently.
+      // If secret already exists due to race condition, get it again.
+      if (e.getErrorCode() == RESTCodes.UserErrorCode.SECRET_EXISTS) {
+        return getOrCreateUserSecret(dbuser, user, project);
+      } else {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
+                Level.SEVERE, "Error adding online feature store password to secret manager");
+      }
+    }
+
+    return password;
   }
   
   /**
@@ -322,11 +389,7 @@ public class OnlineFeaturestoreController {
   public void shareOnlineFeatureStore(Project project, Featurestore featurestore,
                                       DatasetAccessPermission permission) throws FeaturestoreException {
     String featureStoreDb = getOnlineFeaturestoreDbName(featurestore.getProject());
-    if (!checkIfDatabaseExists(featureStoreDb)) {
-      // Nothing to share
-      return;
-    }
-
+    // do not skip sharing even if featureStoreDb does not exist, see HWORKS-919
     try (Connection connection = onlineFeaturestoreFacade.establishAdminConnection()) {
       for (ProjectTeam member : projectUtils.getProjectTeamCollection(project)) {
         shareOnlineFeatureStoreUser(project, member.getUser(), member.getTeamRole(), featureStoreDb, permission,
@@ -352,11 +415,7 @@ public class OnlineFeaturestoreController {
                                       DatasetAccessPermission permission, Connection conn)
     throws FeaturestoreException {
     String featureStoreDb = getOnlineFeaturestoreDbName(featurestore.getProject());
-    if (!checkIfDatabaseExists(featureStoreDb)) {
-      // Nothing to share
-      return;
-    }
-
+    // do not skip sharing even if featureStoreDb does not exist, see HWORKS-919
     shareOnlineFeatureStoreUser(project, user, role, featureStoreDb, permission, conn);
   }
 
