@@ -18,8 +18,10 @@ package io.hops.hopsworks.common.featurestore.statistics;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
+import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.jboss.weld.exceptions.IllegalArgumentException;
@@ -117,6 +119,14 @@ public class StatisticsInputValidation {
       statisticsDTO.getWindowStartCommitTime(), statisticsDTO.getWindowEndCommitTime());
   }
   
+  public void validateRegisterForFeatureView(FeatureView featureView, StatisticsDTO statisticsDTO)
+    throws FeaturestoreException {
+    this.validateRegisterStatistics(statisticsDTO);
+    // validate inputs based on left feature group in the feature view query
+    Featuregroup featuregroup = FeatureViewController.getLeftFeatureGroup(featureView);
+    this.validateRegisterForFeatureGroup(featuregroup, statisticsDTO);
+  }
+  
   public void validateGetForFeatureGroup(Featuregroup featuregroup, StatisticsFilters fgsFilters)
     throws FeaturestoreException {
     if (!FeaturegroupController.isTimeTravelEnabled(featuregroup)) { // time-travel not enabled
@@ -136,6 +146,13 @@ public class StatisticsInputValidation {
       fgsFilters.getWindowEndCommitTime());
   }
   
+  public void validateGetForFeatureView(FeatureView featureView, StatisticsFilters fvsFilters)
+    throws FeaturestoreException {
+    // validate inputs based on left feature group in the feature view query
+    Featuregroup featuregroup = FeatureViewController.getLeftFeatureGroup(featureView);
+    validateGetForFeatureGroup(featuregroup, fvsFilters);
+  }
+  
   public void validateRegisterForTrainingDataset(TrainingDataset trainingDataset, StatisticsDTO statisticsDTO)
     throws FeaturestoreException {
     this.validateRegisterStatistics(statisticsDTO);
@@ -147,6 +164,10 @@ public class StatisticsInputValidation {
   
   public void validateStatisticsFiltersForFeatureGroup(Set<AbstractFacade.FilterBy> filters) {
     validateStatisticsFilters(filters, "Feature Group", true, true, false);
+  }
+  
+  public void validateStatisticsFiltersForFeatureView(Set<AbstractFacade.FilterBy> filters) {
+    validateStatisticsFilters(filters, "Feature View", true, true, false);
   }
   
   public void validateStatisticsFiltersForTrainingDataset(Set<AbstractFacade.FilterBy> filters) {

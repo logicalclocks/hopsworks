@@ -16,11 +16,14 @@
 
 module FeatureGroupAlertHelper
   @@fg_alert_resource = "#{ENV['HOPSWORKS_API']}/project/%{projectId}/featurestores/%{fsId}/featuregroups/%{fgId}/alerts"
-
   @@alert_success = {"status": "SUCCESS", "receiver": "global-receiver__email", "severity": "INFO"}
   @@alert_warning = {"status": "WARNING", "receiver": "global-receiver__slack", "severity": "WARNING"}
   @@alert_failed = {"status": "FAILURE", "receiver": "global-receiver__pagerduty", "severity": "CRITICAL"}
-
+  # feature monitor specific
+  @@featureview_alert_resource = "#{ENV['HOPSWORKS_API']}/project/%{projectId}/featurestores/%{fsId}/featureview/%{name}/version/%{version}/alerts"
+  @@fm_alert_success = {"status": "FEATURE_MONITOR_SHIFT_UNDETECTED", "receiver": "global-receiver__email", "severity":
+    "INFO"}
+  @@fm_alert_failed = {"status": "FEATURE_MONITOR_SHIFT_DETECTED", "receiver": "global-receiver__pagerduty", "severity": "CRITICAL"}
   def get_fg_alert_success(project)
     success = @@alert_success.clone
     success[:receiver] = "#{project[:projectname]}__email"
@@ -80,6 +83,8 @@ module FeatureGroupAlertHelper
     create_fg_alert(project, featuregroup, @@alert_success.clone)
     create_fg_alert(project, featuregroup, @@alert_warning.clone)
     create_fg_alert(project, featuregroup, @@alert_failed.clone)
+    create_fg_alert(project, featuregroup, @@fm_alert_failed.clone)
+    create_fg_alert(project, featuregroup, @@fm_alert_success.clone)
   end
 
   def with_valid_fg(project)
@@ -87,4 +92,44 @@ module FeatureGroupAlertHelper
     json_result, featuregroup_name = create_cached_featuregroup(project[:id], featurestore_id)
     return JSON.parse(json_result)
   end
+
+  def get_fm_alert_failure(project)
+    failed = @@fm_alert_failed.clone
+    failed[:receiver] = "#{project[:projectname]}__pagerduty"
+    return failed
+  end
+
+  def get_fm_alert_success(project)
+    success = @@fm_alert_success.clone
+    success[:receiver] = "#{project[:projectname]}__email"
+    return success
+  end
+
+  def create_fm_alerts(project, featuregroup, featureview)
+    create_fg_alert(project, featuregroup, get_fm_alert_failure(project))
+    create_feature_view_alert(project, featureview, get_fm_alert_failure(project))
+  end
+
+  def create_feature_view_alert(project, featureview, alert)
+    post "#{@@featureview_alert_resource}" % { projectId: project[:id],
+                                               fsId: featureview["featurestoreId"],
+                                               name: featureview["name"],
+                                               version: featureview["version"]}, alert.to_json
+  end
+
+  def update_featureview_alert(project, featureview, id, alert)
+    put "#{@@featureview_alert_resource}/#{id}" % { projectId: project[:id],
+                                                    fsId: featureview["featurestoreId"],
+                                                    name: featureview["name"],
+                                                    version: featureview["version"]}, alert.to_json
+  end
+
+  def get_featureview_alerts(project, featureview)
+    get "#{@@featureview_alert_resource}" % {projectId: project[:id],
+                                            fsId: featureview["featurestoreId"],
+                                            name: featureview["name"],
+                                            version: featureview["version"]}
+  end
+
+
 end

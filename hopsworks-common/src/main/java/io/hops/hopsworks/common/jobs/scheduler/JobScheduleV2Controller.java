@@ -104,13 +104,13 @@ public class JobScheduleV2Controller {
     jobScheduleFacade.removeByJobId(jobId);
   }
 
-  public JobScheduleV2 updateSchedule(JobScheduleV2DTO jobScheduleV2DTO) throws JobException {
-    JobScheduleV2 jobSchedule = jobScheduleFacade.getById(jobScheduleV2DTO.getId())
+  public JobScheduleV2 updateSchedule(JobScheduleV2 jobScheduleV2) throws JobException {
+    JobScheduleV2 jobSchedule = jobScheduleFacade.getById(jobScheduleV2.getId())
             .orElseThrow(() -> new JobException(RESTCodes.JobErrorCode.JOB_SCHEDULE_NOT_FOUND, Level.FINE));
-    jobSchedule.setEnabled(jobScheduleV2DTO.getEnabled());
-    jobSchedule.setCronExpression(jobScheduleV2DTO.getCronExpression());
-    jobSchedule.setStartDateTime(jobScheduleV2DTO.getStartDateTime());
-    jobSchedule.setEndDateTime(jobScheduleV2DTO.getEndDateTime());
+    jobSchedule.setEnabled(jobScheduleV2.getEnabled());
+    jobSchedule.setCronExpression(jobScheduleV2.getCronExpression());
+    jobSchedule.setStartDateTime(jobScheduleV2.getStartDateTime());
+    jobSchedule.setEndDateTime(jobScheduleV2.getEndDateTime());
 
     if (jobSchedule.getStartDateTime() != null &&
             jobSchedule.getNextExecutionDateTime() != null &&
