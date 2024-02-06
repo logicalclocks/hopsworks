@@ -40,7 +40,8 @@ public class JobScheduleV2Builder {
     return convertJobScheduleDTO(job, scheduleDTO);
   }
 
-  public void validateOnUpdate(Jobs job, JobScheduleV2DTO scheduleDTO) throws IllegalArgumentException {
+  public JobScheduleV2 validateAndConvertOnUpdate(Jobs job, JobScheduleV2DTO scheduleDTO)
+      throws IllegalArgumentException {
     if (scheduleDTO.getId() == null) {
       // Need to specify schedule id because there can be multiple schedules linked to a job in the future.
       throw new IllegalArgumentException(String.format(
@@ -48,6 +49,7 @@ public class JobScheduleV2Builder {
               job.getName()));
     }
     inputValidation.validateJobScheduleDTO(scheduleDTO);
+    return convertJobScheduleDTO(job, scheduleDTO);
   }
 
   public JobScheduleV2 convertJobScheduleDTO(Jobs job, JobScheduleV2DTO scheduleDTO) throws IllegalArgumentException {

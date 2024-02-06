@@ -36,6 +36,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.FeatureGroupAlert;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.alert.FeatureViewAlert;
 import io.hops.hopsworks.persistence.entity.jobs.description.JobAlert;
 import io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlert;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -83,6 +84,9 @@ public class AlertReceiver implements Serializable {
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY,
       mappedBy = "receiver")
   private Collection<FeatureGroupAlert> featureGroupAlertCollection;
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY,
+    mappedBy = "receiver")
+  private Collection<FeatureViewAlert> featureViewAlertCollection;
 
   public AlertReceiver() {
   }
@@ -149,7 +153,18 @@ public class AlertReceiver implements Serializable {
   public void setFeatureGroupAlertCollection(Collection<FeatureGroupAlert> featureGroupAlertCollection) {
     this.featureGroupAlertCollection = featureGroupAlertCollection;
   }
-
+  
+  @XmlTransient
+  @JsonIgnore
+  public Collection<FeatureViewAlert> getFeatureViewAlertCollection() {
+    return featureViewAlertCollection;
+  }
+  
+  public void setFeatureViewAlertCollection(
+    Collection<FeatureViewAlert> featureViewAlertCollection) {
+    this.featureViewAlertCollection = featureViewAlertCollection;
+  }
+  
   @Override
   public int hashCode() {
     int hash = 0;

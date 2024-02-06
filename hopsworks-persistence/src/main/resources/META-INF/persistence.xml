@@ -84,8 +84,10 @@
     <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticColumn</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureGroupStatistics</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureViewStatistics</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.TrainingDatasetStatistics</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureGroupDescriptiveStatistics</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureViewDescriptiveStatistics</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureDescriptiveStatistics</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.PercentilesConverter</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.code.FeaturestoreCode</class>
@@ -94,6 +96,10 @@
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.Expectation</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationReport</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationResult</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuremonitoring.config.FeatureMonitoringConfiguration</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuremonitoring.config.MonitoringWindowConfiguration</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuremonitoring.descriptivestatistics.DescriptiveStatisticsComparisonConfig</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuremonitoring.result.FeatureMonitoringResult</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.transformationFunction.TransformationFunction</class>
     <class>io.hops.hopsworks.persistence.entity.hdfs.HdfsDirectoryWithQuotaFeature</class>
     <class>io.hops.hopsworks.persistence.entity.hdfs.HdfsLeDescriptors</class>
@@ -161,6 +167,7 @@
     <class>io.hops.hopsworks.persistence.entity.alertmanager.AlertManagerConfigEntity</class>
     <class>io.hops.hopsworks.persistence.entity.jobs.description.JobAlert</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.FeatureGroupAlert</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featureview.alert.FeatureViewAlert</class>
     <class>io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlert</class>
     <!-- Git -->
     <class>io.hops.hopsworks.persistence.entity.git.GitOpExecution</class>

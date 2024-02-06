@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.app;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
@@ -118,6 +119,7 @@ public class FsJobManagerController {
   private final static String DELTA_STREAMER_OP = "offline_fg_materialization";
   private final static String GE_VALIDATE_OP = "ge_validate";
   private final static String IMPORT_FEATUREGROUP_OP = "import_fg";
+  private final static String FEATURE_MONITORING_OP = "run_feature_monitoring";
   // td
   private final static String TRAINING_DATASET_OP = "create_td";
   // fv
@@ -158,6 +160,40 @@ public class FsJobManagerController {
     } catch (IOException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_JOB_SETUP, Level.SEVERE,
           "Error setting up feature group import job", e.getMessage(), e);
+    } finally {
+      dfs.closeDfsClient(udfso);
+    }
+  }
+  
+  public Jobs setupFeatureMonitoringJob(
+    Users user, Project project, ResourceRequest.Name entityType, String entityName, Integer entityVersion,
+    String configName) throws FeaturestoreException, JobException {
+    DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
+    
+    try {
+      HashMap<String, String> jobConfiguration = new HashMap<>();
+      // Allows job access to the project's featurestore
+      jobConfiguration.put("feature_store",
+        featurestoreController.getOfflineFeaturestoreDbName(project));
+      // Allows job to fetch the feature group or feature view to monitor
+      jobConfiguration.put("entity_type", entityType.toString());
+      jobConfiguration.put("name", entityName);
+      jobConfiguration.put("version", String.valueOf(entityVersion));
+      
+      // Allows job to fetch the config to use for monitoring
+      jobConfiguration.put("config_name", configName);
+      
+      String jobName = getMonitoringJobName(entityName, entityVersion, configName);
+      String jobFolder = createJobFolder(project, user, jobName);
+      String jobConfigurationPath = jobFolder + "/config.json";
+      
+      writeToHDFS(jobConfigurationPath, objectMapper.writeValueAsString(jobConfiguration), udfso);
+      String jobArgs = getJobArgs(FEATURE_MONITORING_OP, jobConfigurationPath);
+      
+      return configureJob(user, project, null, jobName, jobArgs, JobType.PYSPARK);
+    } catch (IOException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_JOB_SETUP, Level.SEVERE,
+        "Error setting up feature monitoring job", e.getMessage(), e);
     } finally {
       dfs.closeDfsClient(udfso);
     }
@@ -460,6 +496,15 @@ public class FsJobManagerController {
     }
     return name;
   }
+  
+  // Added as single source of truth for monitoring jobs
+  public String getMonitoringJobName(String entityName, Integer entityVersion, String configName) {
+    return getJobName(
+      FEATURE_MONITORING_OP,
+      Utils.getFeatureStoreEntityName(entityName, entityVersion) + "_" + configName,
+      false
+    );
+  }
 
   private String getJobArgs(String op, String jobConfigurationPath) {
     return "-op " + op + " -path " + jobConfigurationPath;
@@ -494,8 +539,9 @@ public class FsJobManagerController {
 
   public void deleteJobs(Project project, Users user, Featuregroup featuregroup)
       throws JobException {
-    String jobNameRegex = String.format("%s_(%s|%s|%s|%s|%s).*", Utils.getFeaturegroupName(featuregroup),
-        INSERT_FG_OP, COMPUTE_STATS_OP, DELTA_STREAMER_OP, GE_VALIDATE_OP, IMPORT_FEATUREGROUP_OP);
+    String jobNameRegex = String.format("%s_(%s|%s|%s|%s|%s|%s).*", Utils.getFeaturegroupName(featuregroup),
+        INSERT_FG_OP, COMPUTE_STATS_OP, DELTA_STREAMER_OP, GE_VALIDATE_OP, IMPORT_FEATUREGROUP_OP,
+        FEATURE_MONITORING_OP);
     deleteJobs(project, user, jobNameRegex);
   }
 
@@ -508,8 +554,8 @@ public class FsJobManagerController {
 
   public void deleteJobs(Project project, Users user, FeatureView featureView)
       throws JobException {
-    String jobNameRegex = String.format("%s_(%s).*", Utils.getFeatureViewName(featureView),
-        FEATURE_VIEW_TRAINING_DATASET_OP);
+    String jobNameRegex = String.format("%s_(%s|%s).*", Utils.getFeatureViewName(featureView),
+        FEATURE_VIEW_TRAINING_DATASET_OP, FEATURE_MONITORING_OP);
     deleteJobs(project, user, jobNameRegex);
   }
 
@@ -522,11 +568,11 @@ public class FsJobManagerController {
   }
 
   public Jobs setupImportFgJob(Project project, Users user, Featurestore featurestore, ImportFgJobConf importFgJobConf)
-          throws FeaturestoreException, JobException, GenericException, ProjectException, ServiceException {
-    Map jobConfiguration =new HashMap<>();
+      throws FeaturestoreException, JobException, GenericException, ProjectException, ServiceException {
+    Map jobConfiguration = new HashMap<>();
     FeaturestoreStorageConnectorDTO storageConnector = importFgJobConf.getStorageConnectorDTO();
     FeaturestoreConnectorType connectorType = storageConnector.getStorageConnectorType();
-    HashMap<String, String> options = new HashMap<String, String>();
+    HashMap<String, String> options = new HashMap<>();
     // set spark options as per connector type
     if (importFgJobConf.getTable() != null) {
       switch (connectorType) {
@@ -574,7 +620,7 @@ public class FsJobManagerController {
       "importData", jobConfiguration);
   }
   
-  public int getNewFeatureGroupVersion(Featurestore featurestore, String featureGroupName){
+  public int getNewFeatureGroupVersion(Featurestore featurestore, String featureGroupName) {
     List<Featuregroup> fgPrevious = featuregroupFacade.findByNameAndFeaturestoreOrderedDescVersion(
       featureGroupName, featurestore);
     if (fgPrevious != null && !fgPrevious.isEmpty()) {

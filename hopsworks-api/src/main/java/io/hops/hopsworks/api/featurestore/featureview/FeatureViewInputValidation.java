@@ -36,7 +36,7 @@ import java.util.logging.Level;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class FeatureViewInputValidator {
+public class FeatureViewInputValidation {
 
   @EJB
   private TrainingDatasetInputValidation trainingDatasetInputValidation;

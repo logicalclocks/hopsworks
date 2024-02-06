@@ -15,7 +15,7 @@
 
 module FeatureStoreStatisticsHelper
 
-  def generate_template_feature_descriptive_statistics(monitoring_time, exact_uniqueness: false, shift_delta: 0.0)
+  def generate_template_feature_descriptive_statistics(exact_uniqueness: false, shift_delta: 0.0)
     desc_stats = {
       featureName: "testfeature",
       featureType: "Fractional",
@@ -43,7 +43,7 @@ module FeatureStoreStatisticsHelper
         exactNumDistinctValues: 490,
       })
     end
-    desc_stats
+    [desc_stats]
   end
 
   def generate_template_feature_group_statistics(feature_descriptive_statistics: nil, split_statistics: nil, computation_time: 1597903688000, window_start_commit_time: nil, window_end_commit_time: nil, before_transformation: false)
@@ -59,7 +59,7 @@ module FeatureStoreStatisticsHelper
            json_data[:splitStatistics] = split_statistics
         end
     else
-        json_data[:featureDescriptiveStatistics] = feature_descriptive_statistics # JSON.parse(feature_descriptive_statistics.to_json)
+        json_data[:featureDescriptiveStatistics] = JSON.parse(feature_descriptive_statistics.to_json)
     end
 
     json_data[:windowStartCommitTime] = window_start_commit_time
@@ -69,29 +69,15 @@ module FeatureStoreStatisticsHelper
     return json_data
   end
 
-  def create_feature_descriptive_statistics_fg(project_id, featurestore_id, fg_id, monitoring_time, exact_uniqueness: false, shift_delta: 0.0)
-    desc_stats = generate_template_feature_descriptive_statistics(monitoring_time, exact_uniqueness: exact_uniqueness, shift_delta: shift_delta)
-    create_statistics_commit_fg(project_id, featurestore_id, fg_id, feature_descriptive_statistics: [desc_stats])
-    expect_status_details(200)
-    json_result = get_statistics_commit_fg(project_id, featurestore_id, fg_id)
-    expect_status_details(200)
-    parsed_json = JSON.parse(json_result)
-    return parsed_json["items"][0]["featureDescriptiveStatistics"][0]["id"].to_i
-  end
-
-  def create_feature_descriptive_statistics_td(project_id, featurestore_id, fv_name, fv_version, td_version, monitoring_time, exact_uniqueness: false, shift_delta: 0.0)
-    desc_stats = generate_template_feature_descriptive_statistics(monitoring_time, exact_uniqueness: exact_uniqueness, shift_delta: shift_delta)
-    create_statistics_commit_td(project_id, featurestore_id, fv_name, fv_version, td_version, feature_descriptive_statistics: [desc_stats])
-    expect_status_details(200)
-    json_result = get_statistics_commit_td(project_id, featurestore_id, fv_name, fv_version, td_version)
-    expect_status_details(200)
-    parsed_json = JSON.parse(json_result)
-    return parsed_json["items"][0]["featureDescriptiveStatistics"][0]["id"].to_i
-  end
-
-  def create_statistics_commit_fg(project_id, featurestore_id, fg_id, feature_descriptive_statistics: nil, split_statistics: nil, computation_time: 1597903688000, window_start_commit_time: nil, window_end_commit_time: nil)
+  def create_statistics_commit_fg(project_id, featurestore_id, fg_id, feature_descriptive_statistics: nil, computation_time: 1597903688000, window_start_commit_time: nil, window_end_commit_time: nil)
     post_statistics_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups/#{fg_id}/statistics"
-    post_statistics_commit(post_statistics_endpoint, feature_descriptive_statistics: feature_descriptive_statistics, split_statistics: split_statistics, computation_time: computation_time, window_start_commit_time: window_start_commit_time, window_end_commit_time: window_end_commit_time)
+    post_statistics_commit(post_statistics_endpoint, feature_descriptive_statistics: feature_descriptive_statistics, computation_time: computation_time, window_start_commit_time: window_start_commit_time, window_end_commit_time: window_end_commit_time)
+  end
+
+  # for feature monitoring test only
+  def create_statistics_commit_fv(project_id, featurestore_id, fv_name, fv_version, feature_descriptive_statistics: nil, computation_time: 1597903688000, window_start_commit_time: nil, window_end_commit_time: nil)
+    post_statistics_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featureview/#{fv_name}/version/#{fv_version}/statistics"
+    post_statistics_commit(post_statistics_endpoint, feature_descriptive_statistics: feature_descriptive_statistics, computation_time: computation_time, window_start_commit_time: window_start_commit_time, window_end_commit_time: window_end_commit_time)
   end
 
   def create_statistics_commit_td(project_id, featurestore_id, fv_name, fv_version, td_version, feature_descriptive_statistics: nil, split_statistics: nil, computation_time: 1597903688000, window_start_commit_time: nil, window_end_commit_time: nil, before_transformation: false)

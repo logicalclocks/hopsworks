@@ -29,6 +29,7 @@ import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigUpdateException;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertReceiver;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.FeatureGroupAlert;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.alert.FeatureViewAlert;
 import io.hops.hopsworks.persistence.entity.jobs.description.JobAlert;
 import io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlert;
 
@@ -166,6 +167,7 @@ public class FixReceiversTimer {
     Collection<JobAlert> jobAlerts = alertReceiver.getJobAlertCollection();
     Collection<FeatureGroupAlert> featureGroupAlerts = alertReceiver.getFeatureGroupAlertCollection();
     Collection<ProjectServiceAlert> projectServiceAlerts = alertReceiver.getProjectServiceAlertCollection();
+    Collection<FeatureViewAlert> featureViewAlerts = alertReceiver.getFeatureViewAlertCollection();
     List<Route> routesToAdd = new ArrayList<>();
     for (JobAlert jobAlert : jobAlerts) {
       Route route = jobAlert.getAlertType().isGlobal() ? ConfigUtil.getRoute(jobAlert.getAlertType()) :
@@ -188,6 +190,16 @@ public class FixReceiversTimer {
           ConfigUtil.getRoute(projectServiceAlert);
       if (!routes.contains(route) && !routesToAdd.contains(route)) {
         routesToAdd.add(route);
+      }
+    }
+    if (featureViewAlerts!=null) {
+      for (FeatureViewAlert featureViewAlert : featureViewAlerts) {
+        Route route =
+          featureViewAlert.getAlertType().isGlobal() ? ConfigUtil.getRoute(featureViewAlert.getAlertType()) :
+            ConfigUtil.getRoute(featureViewAlert);
+        if (!routes.contains(route) && !routesToAdd.contains(route)) {
+          routesToAdd.add(route);
+        }
       }
     }
     return routesToAdd;

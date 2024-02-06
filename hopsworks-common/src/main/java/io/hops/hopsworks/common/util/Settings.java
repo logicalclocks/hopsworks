@@ -875,6 +875,10 @@ public class Settings implements Serializable {
       STATISTICS_CLEANER_INTERVAL_MS = setIntVar(VARIABLE_STATISTICS_CLEANER_INTERVAL_MS,
         STATISTICS_CLEANER_INTERVAL_MS);
       
+      // Feature monitoring
+      ENABLE_FEATURE_MONITORING = setBoolVar(VARIABLE_ENABLE_FEATURE_MONITORING,
+        ENABLE_FEATURE_MONITORING);
+      
       TESTCONNECTOR_IMAGE_VERSION = setStrVar(VARIABLE_CONNECTOR_IMAGE_VERSION, "0.1");
       YARN_RUNTIME = setStrVar(VARIABLE_YARN_RUNTIME, YARN_RUNTIME);
       DOCKER_MOUNTS = setStrVar(VARIABLE_DOCKER_MOUNTS, DOCKER_MOUNTS);
@@ -3397,6 +3401,13 @@ public class Settings implements Serializable {
     return TEST_CONNECTOR_LAUNCHER;
   }
   // End - Storage connectors
+  
+  private boolean ENABLE_FEATURE_MONITORING = false;
+  public synchronized boolean isFeatureMonitoringEnabled() {
+    checkCache();
+    return ENABLE_FEATURE_MONITORING;
+  }
+  
   private Boolean LOCALHOST = false;
 
   public synchronized Boolean isLocalHost() {

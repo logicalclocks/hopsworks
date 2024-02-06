@@ -40,7 +40,7 @@ describe "On #{ENV['OS']}" do
       it "should get" do
         get_project_alerts(@project)
         expect_status_details(200)
-        expect(json_body[:count]).to eq(4)
+        expect(json_body[:count]).to eq(6)
       end
       it "should update" do
         get_project_alerts(@project)
@@ -67,7 +67,7 @@ describe "On #{ENV['OS']}" do
         expect_status_details(201)
         check_route_created(@project, alert[:receiver], alert[:status])
         get_project_alerts(@project)
-        expect(json_body[:count]).to eq(5)
+        expect(json_body[:count]).to eq(7)
       end
       it "should fail to create duplicate" do
         create_project_alert(@project, get_project_alert_failed(@project))
@@ -80,7 +80,7 @@ describe "On #{ENV['OS']}" do
         expect_status_details(204)
 
         get_project_alerts(@project)
-        expect(json_body[:count]).to eq(4)
+        expect(json_body[:count]).to eq(6)
       end
       it "should delete route if not used" do
         project = create_project
@@ -104,8 +104,12 @@ describe "On #{ENV['OS']}" do
         fg_alert2 = alerts[:items].detect { |a| a[:status] == "VALIDATION_FAILURE" and a[:service] == "FEATURESTORE" }
         delete_project_alert(project, fg_alert2[:id])
         expect_status_details(204)
-
         check_route_deleted(project, fg_alert2[:receiver], fg_alert2[:status])
+        fm_alert = alerts[:items].detect { |a| a[:status] == "FEATURE_MONITOR_SHIFT_UNDETECTED" and a[:service] ==
+          "FEATURESTORE" }
+        delete_project_alert(project, fm_alert[:id])
+        expect_status_details(204)
+        check_route_deleted_fm(project, fm_alert[:receiver], fm_alert[:status])
       end
       it "should cleanup receivers and routes when deleting project" do
         project = create_project

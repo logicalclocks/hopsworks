@@ -34,11 +34,14 @@ import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigUpdateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerDuplicateEntryException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerNoSuchElementException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerResponseException;
+import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertReceiver;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertSeverity;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertType;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupValidationStatus;
+import io.hops.hopsworks.persistence.entity.featurestore.alert.FeatureStoreAlert;
+import io.hops.hopsworks.persistence.entity.featurestore.alert.FeatureStoreAlertStatus;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.FeatureGroupAlert;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.alert.FeatureViewAlert;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobFinalStatus;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
 import io.hops.hopsworks.persistence.entity.jobs.description.JobAlert;
@@ -109,7 +112,19 @@ public class AlertController {
       throws AlertManagerUnreachableException, AlertManagerAccessControlException, AlertManagerResponseException,
       AlertManagerClientCreateException {
     return sendFgTestAlert(project, alert.getAlertType(), alert.getSeverity(),
-        FeatureGroupValidationStatus.fromString(alert.getStatus().toString()), alert.getFeatureGroup().getName());
+      FeatureStoreAlertStatus.fromString(alert.getStatus().toString()), alert.getFeatureGroup().getName());
+  }
+  
+  /**
+   * Test feature view alert
+   *
+   * @param project
+   * @param alert
+   */
+  public List<Alert> testAlert(Project project, FeatureViewAlert alert)
+    throws AlertManagerUnreachableException, AlertManagerAccessControlException, AlertManagerResponseException,
+    AlertManagerClientCreateException {
+    return sendFvTestAlert(project, alert);
   }
 
   /**
@@ -135,7 +150,7 @@ public class AlertController {
     List<Alert> alerts = null;
     if (ProjectServiceEnum.FEATURESTORE.equals(alert.getService())) {
       alerts = sendFgTestAlert(project, alert.getAlertType(), alert.getSeverity(),
-          FeatureGroupValidationStatus.fromString(alert.getStatus().toString()), null);
+        FeatureStoreAlertStatus.fromString(alert.getStatus().toString()), null);
     } else if (ProjectServiceEnum.JOBS.equals(alert.getService())) {
       alerts = sendJobTestAlert(project, alert.getAlertType(), alert.getSeverity(), alert.getStatus().getName(), null);
     }
@@ -155,7 +170,18 @@ public class AlertController {
       sendAlert(postableAlerts, project);
     } catch (Exception e) {
       LOGGER.log(java.util.logging.Level.WARNING, "Failed to send alert. Featuregroup={0}. Exception: {1}",
-          new Object[] {name, e.getMessage()});
+        new Object[] {name, e.getMessage()});
+    }
+  }
+  
+  public void sendFeatureMonitorAlert(List<PostableAlert> postableAlerts, Project project, String name) {
+    try {
+      if (!postableAlerts.isEmpty()) {
+        sendAlert(postableAlerts, project);
+      }
+    } catch (Exception e) {
+      LOGGER.log(java.util.logging.Level.WARNING, "Failed to send alert. Feature Monitoring Config={0}. Exception: {1}",
+        new Object[]{name, e.getMessage()});
     }
   }
 
@@ -169,7 +195,7 @@ public class AlertController {
   }
 
   private List<Alert> sendFgTestAlert(Project project, AlertType alertType, AlertSeverity severity,
-      FeatureGroupValidationStatus status, String fgName) throws AlertManagerUnreachableException,
+      FeatureStoreAlertStatus status, String fgName) throws AlertManagerUnreachableException,
       AlertManagerAccessControlException, AlertManagerResponseException, AlertManagerClientCreateException {
     String testAlertFgName = Strings.isNullOrEmpty(fgName) ? Constants.TEST_ALERT_FG_NAME : fgName;
     List<PostableAlert> postableAlerts = new ArrayList<>();
@@ -182,7 +208,35 @@ public class AlertController {
         Constants.FILTER_BY_FG_ID_FORMAT.replace(Constants.FG_ID_PLACE_HOLDER, Constants.TEST_ALERT_FG_ID.toString());
     return getAlerts(project, fgFilter);
   }
-
+  
+   /**
+   * create a test postable alert for feature view and send alert. Supports only for feature monitoring status.
+   * @param project
+   * @param alert
+   * @return
+     * @throws AlertManagerUnreachableException
+   * @throws AlertManagerAccessControlException
+   * @throws AlertManagerResponseException
+   * @throws AlertManagerClientCreateException
+   * @throws AlertException
+   */
+  private List<Alert> sendFvTestAlert(Project project, FeatureViewAlert alert) throws AlertManagerUnreachableException,
+    AlertManagerAccessControlException, AlertManagerResponseException, AlertManagerClientCreateException {
+    List<PostableAlert> postableAlerts = new ArrayList<>();
+    PostableAlert postableAlert =
+      getPostableFeatureMonitorAlert(project, alert, ResourceRequest.Name.FEATUREVIEW, Constants.TEST_ALERT_FM_NAME,
+        Constants.TEST_ALERT_FG_VERSION,
+        Constants.TEST_ALERT_FG_SUMMARY, Constants.TEST_ALERT_FG_DESCRIPTION, Constants.TEST_ALERT_FS_NAME);
+    postableAlerts.add(postableAlert);
+    sendAlert(postableAlerts, project);
+    String fgFilter =
+      Constants.FILTER_BY_FM_NAME_FORMAT.replace(Constants.FM_NAME_PLACE_HOLDER, Constants.TEST_ALERT_FM_NAME) +
+        Constants.FILTER_BY_FM_RESULT_FORMAT.replace(Constants.FM_ID_PLACE_HOLDER,
+          Constants.TEST_ALERT_FG_VERSION.toString());
+    return getAlerts(project, fgFilter);
+  }
+  
+  
   private List<Alert> sendJobTestAlert(Project project, AlertType alertType, AlertSeverity severity, String status,
       String jobName) throws AlertManagerUnreachableException, AlertManagerAccessControlException,
       AlertManagerResponseException, AlertManagerClientCreateException {
@@ -207,8 +261,7 @@ public class AlertController {
         project.getName());
     filters.add(projectFilter);
     filters.add(filter);
-    List<Alert> alerts = alertManager.getAlerts(true, null, null, null, filters, null, project);
-    return alerts;
+    return alertManager.getAlerts(true, null, null, null, filters, null, project);
   }
 
   public PostableAlert getPostableFgAlert(String projectName, AlertType alertType, AlertSeverity severity,
@@ -224,7 +277,69 @@ public class AlertController {
       .withDescription(description)
       .build();
   }
-
+  /**
+   * create a PostableAlert for FeatureMonitoring status for given ProjecServiceAlert
+   * @param project
+   * @param projectAlert
+   * @param fmConfigName
+   * @param fmResultId
+   * @param summary
+   * @param description
+   * @param featureStoreName
+   * @return PostableAlert
+   */
+  public PostableAlert getPostableFeatureMonitorAlert(Project project,
+    ProjectServiceAlert projectAlert, String fmConfigName, Integer fmResultId, String summary,
+    String description, String featureStoreName) {
+    
+    PostableAlertBuilder.Builder builder =
+      new PostableAlertBuilder.Builder(project.getName(), projectAlert.getAlertType(),
+        projectAlert.getSeverity()
+        , projectAlert.getStatus().getName())
+        .withFeatureStoreName(featureStoreName)
+        .withFeatureMonitorConfig(fmConfigName, fmResultId)
+        .withSummary(summary)
+        .withDescription(description);
+    return builder.build();
+  }
+  
+  /**
+   * Create PostableAlert for FeatureMonitoring status from FeatureStoreAlert.
+   * @param project
+   * @param featureStoreAlert
+   * @param resourceName
+   * @param fmConfigName
+   * @param fmResultId
+   * @param summary
+   * @param description
+   * @param featureStoreName
+   * @return
+   */
+  public PostableAlert getPostableFeatureMonitorAlert(Project project, FeatureStoreAlert featureStoreAlert,
+    ResourceRequest.Name resourceName, String fmConfigName,
+    Integer fmResultId,
+    String summary,
+    String description,
+    String featureStoreName) {
+    
+    PostableAlertBuilder.Builder builder =
+      new PostableAlertBuilder.Builder(project.getName(), featureStoreAlert.getAlertType(),
+        featureStoreAlert.getSeverity()
+        , featureStoreAlert.getStatus().getName())
+        .withFeatureStoreName(featureStoreName)
+        .withFeatureMonitorConfig(fmConfigName, fmResultId)
+        .withSummary(summary)
+        .withDescription(description);
+    if (resourceName.equals(ResourceRequest.Name.FEATUREGROUPS)) {
+      builder.withFeatureGroupName(((FeatureGroupAlert) featureStoreAlert).getFeatureGroup().getName())
+        .withFeatureGroupVersion(((FeatureGroupAlert) featureStoreAlert).getFeatureGroup().getVersion());
+    } else if (resourceName.equals(ResourceRequest.Name.FEATUREVIEW)) {
+      builder.withFeatureViewVersion(((FeatureViewAlert) featureStoreAlert).getFeatureView().getVersion())
+        .withFeatureViewName(((FeatureViewAlert) featureStoreAlert).getFeatureView().getName());
+    }
+    return builder.build();
+  }
+  
   private PostableAlert getPostableAlert(Project project, AlertType alertType,  AlertSeverity severity, String status,
       String jobName, Integer id) {
     return new PostableAlertBuilder
@@ -309,11 +424,10 @@ public class AlertController {
     Route route = ConfigUtil.getRoute(alert);
     addRouteIfNotExist(alert.getAlertType(), route, project);
   }
-
-  public void createRoute(FeatureGroupAlert alert) throws AlertManagerUnreachableException,
+  
+  public void createRoute(Project project, FeatureGroupAlert alert) throws AlertManagerUnreachableException,
       AlertManagerAccessControlException, AlertManagerNoSuchElementException, AlertManagerConfigUpdateException,
       AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException, AlertManagerClientCreateException {
-    Project project = alert.getFeatureGroup().getFeaturestore().getProject();
     Route route = ConfigUtil.getRoute(alert);
     addRouteIfNotExist(alert.getAlertType(), route, project);
   }
@@ -337,7 +451,14 @@ public class AlertController {
       // route exists
     }
   }
-
+  
+  public void createRoute(Project project, FeatureViewAlert alert) throws AlertManagerUnreachableException,
+    AlertManagerAccessControlException, AlertManagerNoSuchElementException, AlertManagerConfigUpdateException,
+    AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException, AlertManagerClientCreateException {
+    Route route = ConfigUtil.getRoute(alert);
+    addRouteIfNotExist(alert.getAlertType(), route, project);
+  }
+  
   public void deleteRoute(ProjectServiceAlert alert)
       throws AlertManagerUnreachableException, AlertManagerAccessControlException, AlertManagerConfigUpdateException,
       AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException, AlertManagerClientCreateException {
@@ -347,11 +468,10 @@ public class AlertController {
       alertManagerConfiguration.removeRoute(route, project);
     }
   }
-
-  public void deleteRoute(FeatureGroupAlert alert)
+  
+  public void deleteRoute(Project project, FeatureGroupAlert alert)
       throws AlertManagerUnreachableException, AlertManagerAccessControlException, AlertManagerConfigUpdateException,
       AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException, AlertManagerClientCreateException {
-    Project project = alert.getFeatureGroup().getFeaturestore().getProject();
     Route route = ConfigUtil.getRoute(alert);
     if (!isUsedByOtherAlerts(route, alert.getId())) {
       alertManagerConfiguration.removeRoute(route, project);
@@ -367,7 +487,16 @@ public class AlertController {
       alertManagerConfiguration.removeRoute(route, project);
     }
   }
-
+  
+  public void deleteRoute(Project project, FeatureViewAlert alert)
+    throws AlertManagerUnreachableException, AlertManagerAccessControlException, AlertManagerConfigUpdateException,
+    AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException, AlertManagerClientCreateException {
+    Route route = ConfigUtil.getRoute(alert);
+    if (!isUsedByOtherAlerts(route, alert.getId())) {
+      alertManagerConfiguration.removeRoute(route, project);
+    }
+  }
+  
   private boolean isUsedByOtherAlerts(Route route, int id) {
     Optional<AlertReceiver> alertReceiver = alertReceiverFacade.findByName(route.getReceiver());
     if (!alertReceiver.isPresent()) {

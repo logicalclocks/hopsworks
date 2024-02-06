@@ -21,7 +21,8 @@ import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordResource;
 import io.hops.hopsworks.api.featurestore.activities.ActivityResource;
 import io.hops.hopsworks.api.featurestore.code.CodeResource;
 import io.hops.hopsworks.api.featurestore.commit.CommitResource;
-import io.hops.hopsworks.api.featurestore.datavalidation.alert.FeatureGroupAlertResource;
+import io.hops.hopsworks.api.featurestore.datavalidation.alert.FeatureGroupValidationAlertResource;
+import io.hops.hopsworks.api.featurestore.datavalidation.alert.FeatureStoreAlertResource;
 import io.hops.hopsworks.api.featurestore.datavalidationv2.reports.ValidationReportResource;
 import io.hops.hopsworks.api.featurestore.datavalidationv2.results.ValidationResultResource;
 import io.hops.hopsworks.api.featurestore.datavalidationv2.suites.ExpectationSuiteResource;
@@ -45,6 +46,7 @@ import io.hops.hopsworks.common.featurestore.featuregroup.ImportFgJobConf;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.IngestionJob;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
@@ -134,7 +136,7 @@ public class FeaturegroupService {
   @Inject
   private ActivityResource activityResource;
   @Inject
-  private FeatureGroupAlertResource featureGroupAlertResource;
+  private FeatureGroupValidationAlertResource featureGroupDataValidationAlertResource;
   @Inject
   private ExpectationSuiteResource expectationSuiteResource;
   @Inject
@@ -149,6 +151,12 @@ public class FeaturegroupService {
   private FeatureGroupProvenanceResource provenanceResource;
   @EJB
   private FeaturegroupBuilder featuregroupBuilder;
+  @Inject
+  private FeatureGroupFeatureMonitoringConfigurationResource featureMonitoringConfigurationResource;
+  @Inject
+  private FeatureGroupFeatureMonitoringResultResource featureMonitoringResultResource;
+  @EJB
+  private Settings settings;
 
   private Project project;
   private Featurestore featurestore;
@@ -658,11 +666,12 @@ public class FeaturegroupService {
   }
 
   @Path("/{featureGroupId}/alerts")
-  public FeatureGroupAlertResource alerts(@PathParam("featureGroupId") Integer featureGroupId)
+  public FeatureStoreAlertResource alerts(@PathParam("featureGroupId") Integer featureGroupId)
       throws FeaturestoreException {
-    Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
-    featureGroupAlertResource.setFeatureGroup(featuregroup);
-    return featureGroupAlertResource;
+    featureGroupDataValidationAlertResource.setFeatureGroup(
+      featuregroupController.getFeaturegroupById(featurestore, featureGroupId));
+    featureGroupDataValidationAlertResource.setProject(project);
+    return featureGroupDataValidationAlertResource;
   }
   
   @POST
@@ -743,5 +752,37 @@ public class FeaturegroupService {
     this.validationResultResource.setFeatureGroup(featureGroupId);
 
     return validationResultResource;
+  }
+  
+  @Path("/{featureGroupId}/featuremonitoring/config")
+  public FeatureGroupFeatureMonitoringConfigurationResource featureGroupFeatureMonitoringConfigurationResource(
+    @PathParam("featureGroupId") Integer featureGroupId)
+      throws FeaturestoreException {
+    if (!settings.isFeatureMonitoringEnabled()) {
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.FEATURE_MONITORING_NOT_ENABLED,
+        Level.FINE
+      );
+    }
+    this.featureMonitoringConfigurationResource.setProject(project);
+    this.featureMonitoringConfigurationResource.setFeatureStore(featurestore);
+    this.featureMonitoringConfigurationResource.setFeatureGroup(featureGroupId);
+    return featureMonitoringConfigurationResource;
+  }
+  
+  @Path("/{featureGroupId}/featuremonitoring/result")
+  public FeatureGroupFeatureMonitoringResultResource featureMonitoringResultResource(
+    @PathParam("featureGroupId") Integer featureGroupId)
+      throws FeaturestoreException {
+    if (!settings.isFeatureMonitoringEnabled()) {
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.FEATURE_MONITORING_NOT_ENABLED,
+        Level.FINE
+      );
+    }
+    this.featureMonitoringResultResource.setProject(project);
+    this.featureMonitoringResultResource.setFeatureStore(featurestore);
+    this.featureMonitoringResultResource.setFeatureGroup(featureGroupId);
+    return featureMonitoringResultResource;
   }
 }

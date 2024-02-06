@@ -26,6 +26,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalida
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationReport;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureGroupStatistics;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureViewStatistics;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.TrainingDatasetStatistics;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
@@ -95,6 +96,17 @@ public class FeaturestoreActivityFacade extends AbstractFacade<FeaturestoreActiv
     fsActivity.setUser(user);
     fsActivity.setEventTime(eventTime);
     fsActivity.setFeatureGroupStatistics(statistics);
+    em.persist(fsActivity);
+  }
+  
+  public void logStatisticsActivity(Users user, FeatureView featureView, Date eventTime,
+    FeatureViewStatistics statistics) {
+    FeaturestoreActivity fsActivity = new FeaturestoreActivity();
+    fsActivity.setType(ActivityType.STATISTICS);
+    fsActivity.setFeatureView(featureView);
+    fsActivity.setUser(user);
+    fsActivity.setEventTime(eventTime);
+    fsActivity.setFeatureViewStatistics(statistics);
     em.persist(fsActivity);
   }
 

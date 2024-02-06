@@ -85,7 +85,7 @@ public class FeatureViewBuilder {
   @EJB
   private FeatureStoreTagBuilder tagsBuilder;
   @EJB
-  private FeatureViewInputValidator featureViewInputValidator;
+  private FeatureViewInputValidation featureViewInputValidation;
   @Inject
   private PitJoinController pitJoinController;
 
@@ -94,7 +94,7 @@ public class FeatureViewBuilder {
 
   public FeatureView convertFromDTO(Project project, Featurestore featurestore, Users user,
       FeatureViewDTO featureViewDTO) throws FeaturestoreException {
-    featureViewInputValidator.validate(featureViewDTO, project, user);
+    featureViewInputValidation.validate(featureViewDTO, project, user);
     FeatureView featureView = new FeatureView();
     featureView.setName(featureViewDTO.getName());
     featureView.setFeaturestore(featurestore);
