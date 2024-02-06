@@ -22,6 +22,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregro
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetJoin;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,6 +31,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -43,7 +45,9 @@ public class TestStatisticsInputValidation {
   private Featuregroup ondemandFG, streamFG;
   
   @Mock
-  private FeatureView featureView;
+  private TrainingDatasetJoin ondemandFgTrainingDatasetJoin, streamFgTrainingDatasetJoin;
+  @Mock
+  private FeatureView onDemandFgFV, streamFgFV;
   
   @Mock
   private TrainingDataset trainingDataset;
@@ -53,6 +57,11 @@ public class TestStatisticsInputValidation {
     MockitoAnnotations.openMocks(this);
     Mockito.when(ondemandFG.getFeaturegroupType()).thenReturn(FeaturegroupType.ON_DEMAND_FEATURE_GROUP);
     Mockito.when(streamFG.getFeaturegroupType()).thenReturn(FeaturegroupType.STREAM_FEATURE_GROUP);
+    
+    Mockito.when(ondemandFgTrainingDatasetJoin.getFeatureGroup()).thenReturn(ondemandFG);
+    Mockito.when(streamFgTrainingDatasetJoin.getFeatureGroup()).thenReturn(streamFG);
+    Mockito.when(onDemandFgFV.getJoins()).thenReturn(Collections.singleton(ondemandFgTrainingDatasetJoin));
+    Mockito.when(streamFgFV.getJoins()).thenReturn(Collections.singleton(streamFgTrainingDatasetJoin));
   }
   
   @Test
@@ -162,6 +171,63 @@ public class TestStatisticsInputValidation {
     Assert.assertThrows(FeaturestoreException.class, () -> {
       StatisticsFilters filters = buildStatisticsFilters(null, 1L, null);
       target.validateGetForFeatureGroup(streamFG, filters);
+    });
+  }
+  
+  @Test
+  public void testValidateRegisterForFeatureView() {
+    // statistics computation time (commit time) cannot be lower than window times
+    Assert.assertThrows(IllegalArgumentException.class, () -> {
+      StatisticsDTO stats = buildStatisticsDTO(0L, 1L, null);
+      target.validateRegisterForFeatureView(onDemandFgFV, stats);
+    });
+    Assert.assertThrows(IllegalArgumentException.class, () -> {
+      StatisticsDTO stats = buildStatisticsDTO(1L, 0L, 2L);
+      target.validateRegisterForFeatureView(onDemandFgFV, stats);
+    });
+    Assert.assertThrows(IllegalArgumentException.class, () -> {
+      StatisticsDTO stats = buildStatisticsDTO(1L, null, 2L);
+      target.validateRegisterForFeatureView(onDemandFgFV, stats);
+    });
+    // window times not supported in non-time-travel enabled FGs
+    Assert.assertThrows(IllegalArgumentException.class, () -> {
+      StatisticsDTO stats = buildStatisticsDTO(null, 1L, null);
+      target.validateRegisterForFeatureView(onDemandFgFV, stats);
+    });
+    Assert.assertThrows(IllegalArgumentException.class, () -> {
+      StatisticsDTO stats = buildStatisticsDTO(null, null, 1L);
+      target.validateRegisterForFeatureView(onDemandFgFV, stats);
+    });
+    Assert.assertThrows(IllegalArgumentException.class, () -> {
+      StatisticsDTO stats = buildStatisticsDTO(null, 1L, 2L);
+      target.validateRegisterForFeatureView(onDemandFgFV, stats);
+    });
+    // window start commit time can't be provided without end time
+    Assert.assertThrows(IllegalArgumentException.class, () -> {
+      StatisticsDTO stats = buildStatisticsDTO(null, 1L, null);
+      target.validateRegisterForFeatureView(streamFgFV, stats);
+    });
+  }
+  
+  @Test
+  public void testValidateGetForFeatureView() {
+    // window times not supported in non-time-travel enabled left FGs
+    Assert.assertThrows(FeaturestoreException.class, () -> {
+      StatisticsFilters filters = buildStatisticsFilters(null, 1L, null);
+      target.validateGetForFeatureView(onDemandFgFV, filters);
+    });
+    Assert.assertThrows(FeaturestoreException.class, () -> {
+      StatisticsFilters filters = buildStatisticsFilters(null, null, 2L);
+      target.validateGetForFeatureView(onDemandFgFV, filters);
+    });
+    Assert.assertThrows(FeaturestoreException.class, () -> {
+      StatisticsFilters filters = buildStatisticsFilters(null, 1L, 2L);
+      target.validateGetForFeatureView(onDemandFgFV, filters);
+    });
+    // window start commit time can't be provided without end time
+    Assert.assertThrows(FeaturestoreException.class, () -> {
+      StatisticsFilters filters = buildStatisticsFilters(null, 1L, null);
+      target.validateGetForFeatureView(streamFgFV, filters);
     });
   }
   

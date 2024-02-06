@@ -26,6 +26,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureGroupStatistics;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureViewStatistics;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.TrainingDatasetStatistics;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.SplitName;
@@ -52,6 +53,8 @@ public class StatisticsBuilder {
   @EJB
   private FeatureDescriptiveStatisticsBuilder featureDescriptiveStatisticsBuilder;
 
+  // Feature Store URI
+  
   private UriBuilder uriQueryParams(UriBuilder uriBuilder, ResourceRequest resourceRequest, Set<String> featureNames) {
     // feature names
     if (featureNames != null && !featureNames.isEmpty()) {
@@ -83,6 +86,8 @@ public class StatisticsBuilder {
       .path(ResourceRequest.Name.FEATURESTORES.toString().toLowerCase()).path(Integer.toString(featurestore.getId()));
   }
   
+  // Feature Group URI
+  
   private URI uri(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Featurestore featurestore,
       Featuregroup featuregroup, Set<String> featureNames) {
     UriBuilder uriBuilder = uri(uriInfo, project, featurestore)
@@ -103,6 +108,35 @@ public class StatisticsBuilder {
       .queryParam("limit", 1L)
       .build();
   }
+  
+  // Feature View URI
+  
+  private URI uri(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Featurestore featurestore,
+    FeatureView featureView, Set<String> featureNames) {
+    UriBuilder uriBuilder = uri(uriInfo, project, featurestore)
+      .path(ResourceRequest.Name.FEATUREVIEW.toString().toLowerCase())
+      .path(featureView.getName())
+      .path(Integer.toString(featureView.getVersion()))
+      .path(ResourceRequest.Name.STATISTICS.toString().toLowerCase());
+    return uriQueryParams(uriBuilder, resourceRequest, featureNames).build();
+  }
+  
+  private URI uri(UriInfo uriInfo, Project project, Featurestore featurestore, FeatureView featureView,
+    Long computationTime) {
+    String commitTimeEq = StatisticsFilters.Filters.COMPUTATION_TIME_EQ.getValue().toLowerCase();
+    return uri(uriInfo, project, featurestore)
+      .path(ResourceRequest.Name.FEATUREVIEW.toString().toLowerCase())
+      .path(featureView.getName())
+      .path(Integer.toString(featureView.getVersion()))
+      .path(ResourceRequest.Name.STATISTICS.toString().toLowerCase())
+      .queryParam("filter_by", commitTimeEq + ":" + computationTime)
+      .queryParam("fields", "content")
+      .queryParam("offset", 0L)
+      .queryParam("limit", 1L)
+      .build();
+  }
+  
+  // Training Dataset URI
   
   private URI uri(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Featurestore featurestore,
       TrainingDataset trainingDataset, Set<String> featureNames) {
@@ -190,6 +224,60 @@ public class StatisticsBuilder {
       dto.setCount(collectionInfo.getCount());
       for (Object s : collectionInfo.getItems()) {
         dto.addItem(build(uriInfo, resourceRequest, project, user, featuregroup, (FeatureGroupStatistics) s));
+      }
+    }
+    return dto;
+  }
+  
+  // Feature View
+  
+  public StatisticsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Users user,
+    FeatureView featureView, FeatureViewStatistics statistics) throws FeaturestoreException {
+    StatisticsDTO dto = new StatisticsDTO();
+    Long computationTime = statistics.getComputationTime().getTime();
+    dto.setHref(uri(uriInfo, project, featureView.getFeaturestore(), featureView, computationTime));
+    dto.setExpand(expand(resourceRequest));
+    if (dto.isExpand()) {
+      dto.setComputationTime(computationTime);
+      dto.setRowPercentage(statistics.getRowPercentage());
+      dto.setFeatureViewName(statistics.getFeatureView().getName());
+      dto.setFeatureViewVersion(statistics.getFeatureView().getVersion());
+      if (statistics.getWindowStartCommitTime() != null) {
+        dto.setWindowStartCommitTime(statistics.getWindowStartCommitTime());
+      }
+      if (statistics.getWindowEndCommitTime() != null) {
+        dto.setWindowEndCommitTime(statistics.getWindowEndCommitTime());
+      }
+      if (resourceRequest.getField() != null && resourceRequest.getField().contains("content")) {
+        statisticsController.appendExtendedStatistics(project, user, statistics.getFeatureDescriptiveStatistics());
+        dto.setFeatureDescriptiveStatistics(
+          featureDescriptiveStatisticsBuilder.buildMany(statistics.getFeatureDescriptiveStatistics()));
+      }
+    }
+    return dto;
+  }
+  
+  public StatisticsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Users user,
+    Featurestore featurestore, FeatureView featureView, Set<String> featureNames) throws FeaturestoreException {
+    StatisticsDTO dto = new StatisticsDTO();
+    dto.setHref(uri(uriInfo, resourceRequest, project, featurestore, featureView, featureNames));
+    dto.setExpand(expand(resourceRequest));
+    if (dto.isExpand()) {
+      AbstractFacade.CollectionInfo collectionInfo;
+      if (featureNames != null && !featureNames.isEmpty()) {
+        // if a set of feature names is provided, filter statistics by feature name. It returns feature view
+        // statistics with the filtered feature descriptive statistics
+        collectionInfo = statisticsController.getStatisticsByFeatureViewAndFeatureNames(resourceRequest.getOffset(),
+          resourceRequest.getLimit(), resourceRequest.getSort(), resourceRequest.getFilter(), featureNames,
+          featureView);
+      } else {
+        // otherwise, get all feature descriptive statistics by feature view.
+        collectionInfo = statisticsController.getStatisticsByFeatureView(resourceRequest.getOffset(),
+          resourceRequest.getLimit(),  resourceRequest.getSort(), resourceRequest.getFilter(), featureView);
+      }
+      dto.setCount(collectionInfo.getCount());
+      for (Object s : collectionInfo.getItems()) {
+        dto.addItem(build(uriInfo, resourceRequest, project, user, featureView, (FeatureViewStatistics) s));
       }
     }
     return dto;

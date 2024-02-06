@@ -299,6 +299,10 @@ module AlertHelper
                                                       pagerdutyConfigs: [create_pager_duty_config]))
     create_receivers_checked(project, create_receiver(project, name: "#{project[:projectname]}__slack1",
                                                       slackConfigs: [create_slack_config]))
+    create_receivers_checked(project, create_receiver(project, name: "#{project[:projectname]}__pagerduty1",
+                                                      pagerdutyConfigs: [create_pager_duty_config]))
+    create_receivers_checked(project, create_receiver(project, name: "#{project[:projectname]}__slack2",
+                                                      slackConfigs: [create_slack_config]))
   end
 
   def get_alerts(project, query: "")
@@ -582,6 +586,16 @@ module AlertHelper
     return query
   end
 
+  def create_fm_route_match_query(project, receiver, status, fg:nil, fv: nil)
+    query = "?match=status:#{status}"
+    query = receiver.start_with?("global-receiver__") ?
+              "#{query}&match=type:global-alert-#{receiver.partition('__')[2]}" :
+              "#{query}&match=project:#{project[:projectname]}&match=type:project-alert"
+    query = fv ? "#{query}&match=featureViewName:#{fv['name']}" : query
+    query = fg ? "#{query}&match=featureGroup:#{fg['name']}" : query
+    return query
+  end
+
   def check_route_created(project, receiver, status, job: nil, fg: nil)
     query = create_route_match_query(project, receiver, status, job: job, fg: fg)
     get_routes_by_receiver(project, receiver, query: query)
@@ -599,6 +613,21 @@ module AlertHelper
 
   def check_route_deleted(project, receiver, status, job: nil, fg: nil)
     query = create_route_match_query(project, receiver, status, job: job, fg: fg)
+    get_routes_by_receiver(project, receiver, query: query)
+    expect_status_details(400)
+  end
+
+  def check_route_created_fm(project, receiver, status, fg: nil, fv: nil)
+    query = create_fm_route_match_query(project, receiver, status, fg: fg, fv: fv)
+    get_routes_by_receiver(project, receiver, query:query)
+    expect_status_details(200)
+    check_backup_contains_route(json_body)
+    check_alert_receiver_created(receiver)
+    expect(json_body[:receiver]).to eq(receiver)
+  end
+
+  def check_route_deleted_fm(project, receiver, status, fg: nil, fv: nil)
+    query = create_fm_route_match_query(project, receiver, status, fg: fg, fv: fv)
     get_routes_by_receiver(project, receiver, query: query)
     expect_status_details(400)
   end

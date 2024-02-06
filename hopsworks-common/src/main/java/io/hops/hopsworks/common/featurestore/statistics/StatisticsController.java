@@ -20,6 +20,7 @@ import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeatureGroupCommitController;
+import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -32,9 +33,12 @@ import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureDescriptiveStatistics;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureGroupDescriptiveStatistics;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureGroupStatistics;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureViewDescriptiveStatistics;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureViewStatistics;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.TrainingDatasetStatistics;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.SplitName;
@@ -76,7 +80,11 @@ public class StatisticsController {
   @EJB
   private FeatureGroupStatisticsFacade featureGroupStatisticsFacade;
   @EJB
+  private FeatureViewStatisticsFacade featureViewStatisticsFacade;
+  @EJB
   private FeatureGroupDescriptiveStatisticsFacade featureGroupDescriptiveStatisticsFacade;
+  @EJB
+  private FeatureViewDescriptiveStatisticsFacade featureViewDescriptiveStatisticsFacade;
   @EJB
   private TrainingDatasetStatisticsFacade trainingDatasetStatisticsFacade;
   @EJB
@@ -124,11 +132,19 @@ public class StatisticsController {
         new FeatureGroupStatistics(computationTimestamp, rowPercentage, descriptiveStatistics, featuregroup));
     } else {
       // otherwise, time-travel enabled
-      Pair<Long, Long> startEndCommitTimes =
-        featureGroupCommitController.getStartEndCommitTimesByWindowTime(featuregroup, windowStartCommitTime,
-          windowEndCommitTime);
-      windowStartCommitTime = startEndCommitTimes.getValue0();
-      windowEndCommitTime = startEndCommitTimes.getValue1();
+      try {
+        Pair<Long, Long> startEndCommitTimes =
+          featureGroupCommitController.getStartEndCommitTimesByWindowTime(featuregroup, windowStartCommitTime,
+            windowEndCommitTime);
+        
+        windowStartCommitTime = startEndCommitTimes.getValue0();
+        windowEndCommitTime = startEndCommitTimes.getValue1();
+      } catch (FeaturestoreException e) {
+        if ((!e.getErrorCode().equals(RESTCodes.FeaturestoreErrorCode.FEATURE_GROUP_COMMIT_NOT_FOUND))
+          || (descriptiveStatistics.iterator().next().getCount() > 0)) {
+          throw e;
+        }
+      }
       
       registerExtendedStatistics(project, user, featuregroup.getName(), featuregroup.getVersion(), "FeatureGroups",
         windowStartCommitTime, windowEndCommitTime, false, null, descriptiveStatistics);
@@ -137,7 +153,8 @@ public class StatisticsController {
       Set<StatisticsFilterBy> filters =
         buildStatisticsQueryFilters(windowStartCommitTime, windowEndCommitTime, rowPercentage, null);
       AbstractFacade.CollectionInfo<FeatureGroupStatistics> fgs =
-        getStatisticsByFeatureGroup(0, 1, null, filters, featuregroup);
+        featureGroupStatisticsFacade.findByFeaturegroup(0, 1, null, filters, featuregroup);
+
       if (fgs.getCount() > 0) {
         // if feature group statistics exist, append descriptive statistics
         statistics = registerFeatureGroupDescriptiveStatistics(filters, descriptiveStatistics, fgs.getItems().get(0),
@@ -157,6 +174,90 @@ public class StatisticsController {
   public void deleteFeatureGroupStatistics(Project project, Users user, Featuregroup featuregroup)
       throws FeaturestoreException {
     deleteExtendedStatistics(project, user, featuregroup.getName(), featuregroup.getVersion(), "FeatureGroups");
+  }
+  
+  // Feature View Statistics (for feature monitoring)
+  // These are statistics without training dataset version and computed before transformation
+  // e.g., fv.get_batch  or  fv.query.as_of()
+  
+  public AbstractFacade.CollectionInfo<FeatureViewStatistics> getStatisticsByFeatureView(Integer offset,
+    Integer limit, Set<? extends AbstractFacade.SortBy> sorts, Set<? extends AbstractFacade.FilterBy> filters,
+    FeatureView featureView) throws FeaturestoreException {
+    // return one or more Feature Group Statistics with all the Feature Descriptive Statistics.
+    overwriteFiltersIfNeeded(featureView, (Set) filters);
+    return featureViewStatisticsFacade.findByFeatureView(offset, limit, sorts, filters, featureView);
+  }
+  
+  public AbstractFacade.CollectionInfo<FeatureViewStatistics> getStatisticsByFeatureViewAndFeatureNames(
+    Integer offset, Integer limit, Set<? extends AbstractFacade.SortBy> sorts,
+    Set<? extends AbstractFacade.FilterBy> filters, Set<String> featureNames, FeatureView featureView)
+    throws FeaturestoreException {
+    // return one or more Feature Group Statistics with the specified Feature Descriptive Statistics.
+    overwriteFiltersIfNeeded(featureView, (Set) filters);
+    return featureViewStatisticsFacade.findByFeatureViewWithFeatureNames(offset, limit, sorts, filters,
+      featureNames, featureView);
+  }
+  
+  public FeatureViewStatistics registerFeatureViewStatistics(Project project, Users user,
+    Long computationTime, Long windowStartCommitTime, Long windowEndCommitTime, Float rowPercentage,
+    Collection<FeatureDescriptiveStatistics> descriptiveStatistics, FeatureView featureView)
+    throws FeaturestoreException, IOException, DatasetException, HopsSecurityException {
+    // Register statistics computed on a specific commit, commit window or the whole feature group (no time-travel
+    // enabled). In case of a specific commit, the commit window provided has the same start and end commit.
+    Timestamp computationTimestamp = new Timestamp(computationTime);
+    FeatureViewStatistics statistics;
+    // check if the left feature group is time-travel enabled
+    Featuregroup featuregroup = FeatureViewController.getLeftFeatureGroup(featureView);
+    if (!FeaturegroupController.isTimeTravelEnabled(featuregroup)) { // time-travel not enabled
+      // register extended statistics (hdfs files)
+      registerExtendedStatistics(project, user, featureView.getName(), featureView.getVersion(), "FeatureViews",
+        null, computationTime, false, null, descriptiveStatistics);
+      statistics = featureViewStatisticsFacade.update(
+        new FeatureViewStatistics(computationTimestamp, rowPercentage, descriptiveStatistics, featureView));
+    } else {
+      // otherwise, time-travel enabled
+      try {
+        Pair<Long, Long> startEndCommitTimes =
+          featureGroupCommitController.getStartEndCommitTimesByWindowTime(featuregroup, windowStartCommitTime,
+            windowEndCommitTime);
+        
+        windowStartCommitTime = startEndCommitTimes.getValue0();
+        windowEndCommitTime = startEndCommitTimes.getValue1();
+      } catch (FeaturestoreException e) {
+        if ((!e.getErrorCode().equals(RESTCodes.FeaturestoreErrorCode.FEATURE_GROUP_COMMIT_NOT_FOUND))
+          || (descriptiveStatistics.iterator().next().getCount() > 0)) {
+          throw e;
+        }
+      }
+      
+      registerExtendedStatistics(project, user, featureView.getName(), featureView.getVersion(), "FeatureViews",
+        windowStartCommitTime, windowEndCommitTime, false, null, descriptiveStatistics);
+      
+      // check if feature view statistics already exist by querying feature view statistics without the feature names.
+      Set<StatisticsFilterBy> filters =
+        buildStatisticsQueryFilters(windowStartCommitTime, windowEndCommitTime, rowPercentage, null);
+      AbstractFacade.CollectionInfo<FeatureViewStatistics> fvs =
+        featureViewStatisticsFacade.findByFeatureView(0, 1, null, filters, featureView);
+      
+      if (fvs.getCount() > 0) {
+        // if feature view statistics exist, append descriptive statistics
+        statistics = registerFeatureViewDescriptiveStatistics(filters, descriptiveStatistics, fvs.getItems().get(0),
+          featureView);
+      } else {
+        // otherwise, create new feature view statistics
+        statistics = featureViewStatisticsFacade.update(
+          new FeatureViewStatistics(computationTimestamp, windowStartCommitTime, windowEndCommitTime, rowPercentage,
+            descriptiveStatistics, featureView));
+      }
+    }
+    // Log statistics activity
+    fsActivityFacade.logStatisticsActivity(user, featureView, new Date(computationTimestamp.getTime()), statistics);
+    return statistics;
+  }
+  
+  public void deleteFeatureViewStatistics(Project project, Users user, FeatureView featureView)
+    throws FeaturestoreException {
+    deleteExtendedStatistics(project, user, featureView.getName(), featureView.getVersion(), "FeatureViews");
   }
   
   // Training Dataset Statistics
@@ -285,6 +386,44 @@ public class StatisticsController {
       featureGroupDescriptiveStatisticsFacade.update(fgds);
     }
     return fgStatistics;
+  }
+  
+  private FeatureViewStatistics registerFeatureViewDescriptiveStatistics(Set<StatisticsFilterBy> filters,
+    Collection<FeatureDescriptiveStatistics> descriptiveStatistics, FeatureViewStatistics fvStatistics,
+    FeatureView featureView) throws FeaturestoreException {
+    // register descriptive statistics in an existing fg statistics. Descriptive statistics for a specific feature
+    // might or might not be already computed and stored in the DB. If the feature descriptive statistics already
+    // exists, it is updated.
+    Set<String> featureNames =
+      descriptiveStatistics.stream().map(FeatureDescriptiveStatistics::getFeatureName).collect(Collectors.toSet());
+    
+    // TODO: Optimize this query by using the Feature View Statistics ID obtained in the previous step, instead of
+    //  the filters and limit
+    AbstractFacade.CollectionInfo<FeatureViewStatistics> fvsWithFeatures =
+      getStatisticsByFeatureViewAndFeatureNames(0, 1, null, filters, featureNames, featureView);
+    
+    HashMap<String, FeatureDescriptiveStatistics> existingFds = null;
+    if (fvsWithFeatures.getCount() > 0) {
+      // filter existing feature descriptive statistics
+      existingFds = fvsWithFeatures.getItems().get(0).getFeatureDescriptiveStatistics().stream()
+        .filter(ds -> featureNames.contains(ds.getFeatureName()))
+        .collect(Collectors.toMap(FeatureDescriptiveStatistics::getFeatureName,
+          Function.identity(), (prev, next) -> next, HashMap::new));
+    }
+    
+    // append / update feature descriptive statistics using the intermediate table FeatureGroupDescriptiveStatistics
+    for (FeatureDescriptiveStatistics fds : descriptiveStatistics) {
+      if (existingFds != null && existingFds.containsKey(fds.getFeatureName())) {
+        // if feature descriptive statistics exists, set the ID so the statistics get updated
+        fds.setId(existingFds.get(fds.getFeatureName()).getId());
+      }
+      // persist feature descriptive statistics
+      fds = featureDescriptiveStatisticsFacade.update(fds);
+      // persist feature group descriptive statistics to intermediate table
+      FeatureViewDescriptiveStatistics fgds = new FeatureViewDescriptiveStatistics(fvStatistics, fds);
+      featureViewDescriptiveStatisticsFacade.update(fgds);
+    }
+    return fvStatistics;
   }
   
   public Set<StatisticsFilterBy> buildStatisticsQueryFilters(Long windowStartCommitTime,
@@ -455,6 +594,13 @@ public class StatisticsController {
           StatisticsFilters.Filters.WINDOW_END_COMMIT_TIME_EQ);
       }
     }
+  }
+  
+  private void overwriteFiltersIfNeeded(FeatureView featureView, Set<AbstractFacade.FilterBy> filters)
+    throws FeaturestoreException {
+    // check if the left feature group is time-travel enabled
+    Featuregroup featuregroup = FeatureViewController.getLeftFeatureGroup(featureView);
+    overwriteFiltersIfNeeded(featuregroup, filters);
   }
   
   public void overwriteTimeWindowFilters(Set<AbstractFacade.FilterBy> filters, Long windowStartTime,
