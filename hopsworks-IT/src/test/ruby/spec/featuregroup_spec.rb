@@ -2702,6 +2702,23 @@ describe "On #{ENV['OS']}" do
         expect_status_details(200)
       end
 
+      it "should be able to preview a online featuregroup in the featurestore shared with itself" do
+        shared_project = create_project(validate_session: false)
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, _ = create_cached_featuregroup(project.id, featurestore_id, online:true)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(201)
+        featuregroup_id = parsed_json["id"]
+
+        featurestore = "#{@project['projectname'].downcase}_featurestore.db"
+        share_dataset(@project, featurestore, shared_project['projectname'], datasetType: "&type=FEATURESTORE")
+        accept_dataset(shared_project, "#{@project['projectname']}::#{featurestore}",
+                       datasetType: "&type=FEATURESTORE")
+        get "#{ENV['HOPSWORKS_API']}/project/" + shared_project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/preview?storage=online"
+        expect_status_details(200)
+      end
+
       it "should be able to limit the number of rows in a preview and should fetch the online feature data if the fg is online enabled and storage not specified" do
         project = create_project(validate_session: false)
         featurestore_id = get_featurestore_id(project.id)
