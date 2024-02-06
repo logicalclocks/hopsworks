@@ -22,6 +22,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalida
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationReport;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureGroupStatistics;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureViewStatistics;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.TrainingDatasetStatistics;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
@@ -104,7 +105,10 @@ public class FeaturestoreActivity implements Serializable {
 
   @JoinColumn(name = "feature_view_id", referencedColumnName = "id")
   private FeatureView featureView;
-
+  
+  @JoinColumn(name = "feature_view_statistics_id", referencedColumnName = "id")
+  private FeatureViewStatistics featureViewStatistics;
+  
   @JoinColumn(name = "expectation_suite_id", referencedColumnName = "id")
   private ExpectationSuite expectationSuite;
 
@@ -216,7 +220,15 @@ public class FeaturestoreActivity implements Serializable {
   public void setFeatureView(FeatureView featureView) {
     this.featureView = featureView;
   }
-
+  
+  public FeatureViewStatistics getFeatureViewStatistics() {
+    return featureViewStatistics;
+  }
+  
+  public void setFeatureViewStatistics(FeatureViewStatistics featureViewStatistics) {
+    this.featureViewStatistics = featureViewStatistics;
+  }
+  
   public ExpectationSuite getExpectationSuite() { return expectationSuite; }
 
   public void setExpectationSuite(ExpectationSuite expectationSuite) { this.expectationSuite = expectationSuite; }

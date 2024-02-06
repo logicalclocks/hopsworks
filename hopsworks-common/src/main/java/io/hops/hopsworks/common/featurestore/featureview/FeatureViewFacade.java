@@ -23,6 +23,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
@@ -30,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 @Stateless
@@ -88,6 +90,18 @@ public class FeatureViewFacade extends AbstractFacade<FeatureView> {
     return new ArrayList<>(latestVersion.values());
   }
 
+  public Optional<FeatureView> findByIdAndFeatureStore(Integer id, Featurestore featureStore) {
+    try {
+      return Optional.of(
+        em.createNamedQuery("FeatureView.findByIdAndFeaturestore", FeatureView.class)
+          .setParameter("id", id)
+          .setParameter("featurestore", featureStore)
+          .getSingleResult());
+    } catch (NoResultException e) {
+      return Optional.empty();
+    }
+  }
+  
   public List<FeatureView> findByNameAndFeaturestore(String name, Featurestore featurestore) {
     QueryParam queryParam = new QueryParam();
     return findByNameAndFeaturestore(name, featurestore, queryParam);

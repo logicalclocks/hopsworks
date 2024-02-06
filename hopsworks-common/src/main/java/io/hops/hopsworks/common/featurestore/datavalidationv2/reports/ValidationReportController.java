@@ -36,7 +36,7 @@ import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.FeatureGroupAlert;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.ValidationRuleAlertStatus;
+import io.hops.hopsworks.persistence.entity.featurestore.alert.FeatureStoreAlertStatus;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.IngestionResult;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationReport;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationResult;
@@ -145,10 +145,10 @@ public class ValidationReportController {
     if (featureGroup.getFeatureGroupAlerts() != null && !featureGroup.getFeatureGroupAlerts().isEmpty()) {
       String name = featurestoreController.getOfflineFeaturestoreDbName(featureGroup.getFeaturestore());
       for (FeatureGroupAlert alert : featureGroup.getFeatureGroupAlerts()) {
-        if (alert.getStatus() == ValidationRuleAlertStatus.FAILURE
+        if (alert.getStatus() == FeatureStoreAlertStatus.FAILURE
             && validationReport.getIngestionResult() == IngestionResult.REJECTED) {
           postableAlerts.add(getPostableAlert(alert, name, featureGroup, validationReport));
-        } else if (alert.getStatus() == ValidationRuleAlertStatus.SUCCESS
+        } else if (alert.getStatus() == FeatureStoreAlertStatus.SUCCESS
             && validationReport.getIngestionResult() == IngestionResult.INGESTED) {
           postableAlerts.add(getPostableAlert(alert, name, featureGroup, validationReport));
         }

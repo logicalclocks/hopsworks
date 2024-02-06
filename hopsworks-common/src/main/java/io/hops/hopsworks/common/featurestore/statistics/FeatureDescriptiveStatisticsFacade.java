@@ -70,12 +70,16 @@ public class FeatureDescriptiveStatisticsFacade extends AbstractFacade<FeatureDe
     String queryString = "SELECT fds.* FROM hopsworks.feature_descriptive_statistics fds " +
       "WHERE NOT EXISTS (SELECT id FROM hopsworks.feature_group_descriptive_statistics WHERE " +
       "feature_descriptive_statistics_id = fds.id) " +
+      "AND NOT EXISTS (SELECT id FROM hopsworks.feature_view_descriptive_statistics WHERE " +
+      "feature_descriptive_statistics_id = fds.id) " +
       "AND NOT EXISTS (SELECT id FROM hopsworks.training_dataset_descriptive_statistics WHERE " +
       "feature_descriptive_statistics_id = fds.id) " +
       "AND NOT EXISTS (SELECT id FROM hopsworks.test_dataset_descriptive_statistics WHERE " +
       "feature_descriptive_statistics_id = fds.id) " +
       "AND NOT EXISTS (SELECT id FROM hopsworks.val_dataset_descriptive_statistics WHERE " +
-      "feature_descriptive_statistics_id = fds.id)";
+      "feature_descriptive_statistics_id = fds.id)" +
+      "AND NOT EXISTS (SELECT id FROM hopsworks.feature_monitoring_result WHERE " +
+      "(detection_stats_id = fds.id) OR (reference_stats_id = fds.id))";
     Query q = em.createNativeQuery(queryString, FeatureDescriptiveStatistics.class);
     if (range != null) {
       q.setMaxResults(range.getValue1() - range.getValue0());

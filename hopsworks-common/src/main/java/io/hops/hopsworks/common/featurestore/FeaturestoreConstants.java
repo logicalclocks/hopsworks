@@ -158,4 +158,16 @@ public class FeaturestoreConstants {
   public static final String PARTIAL_UNEXPECTED_LIST_KEY = "partial_unexpected_list";
   public static final String UNEXPECTED_PERCENT_NONMISSING_KEY = "unexpected_percent_nonmissing";
   public static final String GREAT_EXPECTATIONS_META = "{\"great_expectations_version\": \"0.15.12\"}";
+  public static final int MAX_CHARACTERS_IN_FEATURE_MONITORING_CONFIG_NAME = 128;
+  public static final int MAX_CHARACTERS_IN_FEATURE_MONITORING_CONFIG_DESCRIPTION = 2000;
+  public static final int MAX_CHARACTERS_IN_FEATURE_MONITORING_CONFIG_FEATURE_NAME = 63;
+  public static final int MAX_CHARACTERS_IN_MONITORING_WINDOW_CONFIG_TIME_OFFSET = 63;
+  public static final int MAX_CHARACTERS_IN_MONITORING_WINDOW_CONFIG_WINDOW_LENGTH = 63;
+  public static final List<String> ALLOWED_METRICS_IN_STATISTICS_COMPARISON_CONFIG = Arrays.asList(
+    "COMPLETENESS", "NUM_RECORDS_NON_NULL", "NUM_RECORDS_NULL", "DISTINCTNESS", "ENTROPY", "UNIQUENESS",
+    "APPROXIMATE_NUM_DISTINCT_VALUES", "EXACT_NUM_DISTINCT_VALUES", "MEAN", "MAX", "MIN", "SUM", "STDDEV",
+    "COUNT");
+  public static final Pattern INVALID_MONITORING_WINDOW_CONFIG_TIME_RANGE_REGEX = Pattern.compile("([^dwh,0-9]+)");
+  public static final Pattern VALID_MONITORING_WINDOW_CONFIG_TIME_RANGE_REGEX = Pattern.compile(
+    "(?:(?<week>\\d+w)()|(?<day>\\d+d)()|(?<hour>\\d+h)()){1,3}");
 }
