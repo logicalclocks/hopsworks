@@ -92,7 +92,7 @@ public class OnlineFeaturestoreFacade {
   public void createOnlineFeaturestoreDatabaseIfNotExist(String db, Connection connection)
       throws FeaturestoreException {
     int numRetry = 0;
-    int maxRetries = 3;
+    int maxRetries = 10;
     //Prepared statements with parameters can only be done for
     //WHERE/HAVING Clauses, not names of tables or databases
     while (numRetry < maxRetries) {
