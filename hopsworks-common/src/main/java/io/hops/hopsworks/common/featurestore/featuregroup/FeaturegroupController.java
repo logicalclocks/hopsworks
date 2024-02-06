@@ -37,6 +37,7 @@ import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeatu
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupDTO;
+import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.query.ConstructorController;
 import io.hops.hopsworks.common.featurestore.query.Feature;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsController;
@@ -102,6 +103,8 @@ import java.util.stream.Collectors;
 public class FeaturegroupController {
   @EJB
   private FeaturegroupFacade featuregroupFacade;
+  @EJB
+  private OnlineFeaturestoreController onlineFeaturestoreController;
   @EJB
   private CachedFeaturegroupController cachedFeaturegroupController;
   @EJB
@@ -957,6 +960,10 @@ public class FeaturegroupController {
     Users user, boolean online, int limit)
     throws SQLException, FeaturestoreException, HopsSecurityException {
     if (online && featuregroup.isOnlineEnabled()) {
+      Featurestore userFeatureStore = featurestoreController.getProjectFeaturestore(project);
+      // Accessing online feature store from a shared project requires online feature store
+      // being setup in users' project.
+      onlineFeaturestoreController.setupOnlineFeatureStore(project, userFeatureStore);
       return onlineFeaturegroupController.getFeaturegroupPreview(featuregroup, project, user, limit);
     } else if (online) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_ONLINE, Level.FINE);
