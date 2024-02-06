@@ -20,6 +20,7 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.alert.dao.AlertReceiverFacade;
 import io.hops.hopsworks.alert.exception.AlertManagerAccessControlException;
 import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
+import io.hops.hopsworks.alert.util.Constants;
 import io.hops.hopsworks.alerting.api.alert.dto.Alert;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerClientCreateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigCtrlCreateException;
@@ -29,8 +30,11 @@ import io.hops.hopsworks.alerting.exceptions.AlertManagerNoSuchElementException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerResponseException;
 import io.hops.hopsworks.api.alert.AlertBuilder;
 import io.hops.hopsworks.api.alert.AlertDTO;
+import io.hops.hopsworks.api.alert.FeatureStoreAlertController;
 import io.hops.hopsworks.api.featurestore.datavalidation.alert.FeatureGroupAlertBuilder;
 import io.hops.hopsworks.api.featurestore.datavalidation.alert.FeatureGroupAlertDTO;
+import io.hops.hopsworks.api.featurestore.featureview.FeatureViewAlertBuilder;
+import io.hops.hopsworks.api.featurestore.featureview.FeatureViewAlertDTO;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
@@ -109,6 +113,10 @@ public class ProjectAlertsResource {
   private FeatureGroupAlertBuilder featureGroupAlertBuilder;
   @EJB
   private AlertReceiverFacade alertReceiverFacade;
+  @EJB
+  private FeatureViewAlertBuilder featureViewAlertBuilder;
+  @EJB
+  private FeatureStoreAlertController featureStoreAlertController;
   
   private Integer projectId;
   private String projectName;
@@ -198,11 +206,14 @@ public class ProjectAlertsResource {
     ProjectAlertsDTO projectAlertsDTO = projectAlertsBuilder.buildItemsAll(uriInfo, resourceRequest, getProject());
     JobAlertsDTO jobAlertsDTO = jobAlertsBuilder.buildItems(uriInfo, resourceRequest, getProject());
     FeatureGroupAlertDTO featureGroupAlertDTO =
-        featureGroupAlertBuilder.buildItems(uriInfo, resourceRequest, getProject());
+      featureGroupAlertBuilder.buildItems(uriInfo, resourceRequest, getProject());
+    FeatureViewAlertDTO featureViewAlertDTO = featureViewAlertBuilder.buildManyProjectAlerts(uriInfo, resourceRequest,
+      featureStoreAlertController.retrieveAllFeatureViewAlerts(getProject()));
     ProjectAllAlertsDTO projectAllAlertsDTO = new ProjectAllAlertsDTO();
     projectAllAlertsDTO.setProjectAlerts(projectAlertsDTO);
     projectAllAlertsDTO.setJobAlerts(jobAlertsDTO);
     projectAllAlertsDTO.setFeatureGroupAlerts(featureGroupAlertDTO);
+    projectAllAlertsDTO.setFeatureViewAlertDTO(featureViewAlertDTO);
     return Response.ok().entity(projectAllAlertsDTO).build();
   }
   
@@ -223,7 +234,7 @@ public class ProjectAlertsResource {
           "Alert not found. Id=" + id.toString());
     }
     if (projectAlertsDTO == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.ALERT_ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
+      throw new ProjectException(RESTCodes.ProjectErrorCode.ALERT_ILLEGAL_ARGUMENT, Level.FINE, Constants.NO_PAYLOAD);
     }
     Project project = getProject();
     if (projectAlertsDTO.getStatus() != null) {
@@ -285,8 +296,8 @@ public class ProjectAlertsResource {
   }
   
   private void validateBulk(PostableProjectAlerts projectAlertsDTO) throws ProjectException {
-    if (projectAlertsDTO.getItems() == null || projectAlertsDTO.getItems().size() < 1) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.ALERT_ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
+    if (projectAlertsDTO.getItems() == null || projectAlertsDTO.getItems().isEmpty()) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.ALERT_ILLEGAL_ARGUMENT, Level.FINE, Constants.NO_PAYLOAD);
     }
     Set<ProjectServiceAlertStatus> statusSet = new HashSet<>();
     for (PostableProjectAlerts dto : projectAlertsDTO.getItems()) {
@@ -339,7 +350,7 @@ public class ProjectAlertsResource {
   
   private void validate(PostableProjectAlerts projectAlertsDTO) throws ProjectException {
     if (projectAlertsDTO == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.ALERT_ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
+      throw new ProjectException(RESTCodes.ProjectErrorCode.ALERT_ILLEGAL_ARGUMENT, Level.FINE, Constants.NO_PAYLOAD);
     }
     if (projectAlertsDTO.getStatus() == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.ALERT_ILLEGAL_ARGUMENT, Level.FINE,

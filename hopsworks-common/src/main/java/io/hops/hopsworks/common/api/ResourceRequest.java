@@ -243,7 +243,8 @@ public class ResourceRequest {
     PROVENANCE_ARTIFACTS,
     PROJECT_LDAP_GROUP_MAPPING,
     SCHEDULE,
-    ENVIRONMENT_HISTORY;
+    ENVIRONMENT_HISTORY,
+    FEATURE_MONITORING;
 
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());

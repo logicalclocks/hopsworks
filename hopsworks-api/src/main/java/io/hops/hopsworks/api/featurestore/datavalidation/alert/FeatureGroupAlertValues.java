@@ -17,7 +17,7 @@ package io.hops.hopsworks.api.featurestore.datavalidation.alert;
 
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertSeverity;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertType;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.ValidationRuleAlertStatus;
+import io.hops.hopsworks.persistence.entity.featurestore.alert.FeatureStoreAlertStatus;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
@@ -26,23 +26,22 @@ import java.util.List;
 
 @XmlRootElement
 public class FeatureGroupAlertValues {
-  private List<ValidationRuleAlertStatus> status;
+  private List<FeatureStoreAlertStatus> status;
   private List<AlertType> alertType;
   private List<AlertSeverity> severity;
   
   public FeatureGroupAlertValues() {
-    status = Arrays.asList(ValidationRuleAlertStatus.values());
+    status = Arrays.asList(FeatureStoreAlertStatus.values());
     severity = Arrays.asList(AlertSeverity.values());
     alertType = new ArrayList<>(Arrays.asList(AlertType.values()));
     alertType.removeIf(a -> a.equals(AlertType.SYSTEM_ALERT));
   }
   
-  public List<ValidationRuleAlertStatus> getStatus() {
+  public List<FeatureStoreAlertStatus> getStatus() {
     return status;
   }
   
-  public void setStatus(
-      List<ValidationRuleAlertStatus> status) {
+  public void setStatus(List<FeatureStoreAlertStatus> status) {
     this.status = status;
   }
   

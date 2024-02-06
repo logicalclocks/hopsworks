@@ -455,7 +455,10 @@ public class RESTCodes {
     EXECUTIONS_LIMIT_REACHED(40, "Job reached the maximum number of executions.",
             Response.Status.BAD_REQUEST),
     JOB_ALREADY_EXISTS(41, "Job with this name already exists.", Response.Status.BAD_REQUEST),
-    JOB_SCHEDULE_NOT_FOUND(42, "Cannot find the job schedule.", Response.Status.NOT_FOUND);
+    JOB_SCHEDULE_NOT_FOUND(42, "Cannot find the job schedule.", Response.Status.NOT_FOUND),
+    UNMATCHED_JOB_NAME(43, "Provided job names do not match.", Response.Status.BAD_REQUEST),
+    UNMATCHED_JOB_SCHEDULE_AND_JOB_NAME(44, "Requested job schedule id does not match the job name.",
+      Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;
@@ -1692,7 +1695,10 @@ public class RESTCodes {
     COULD_NOT_INITIATE_ARROW_FLIGHT_CONNECTION(231, "Could not initiate connection to Arrow Flight server",
         Response.Status.INTERNAL_SERVER_ERROR),
     ARROW_FLIGHT_READ_QUERY_ERROR(232, "Arrow Flight server Read Query failed",
-        Response.Status.INTERNAL_SERVER_ERROR);
+        Response.Status.INTERNAL_SERVER_ERROR),
+    FEATURE_MONITORING_ENTITY_NOT_FOUND(233, "Feature Monitoring entity not found.",
+      Response.Status.NOT_FOUND),
+    FEATURE_MONITORING_NOT_ENABLED(234, "Feature monitoring is not enabled.", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

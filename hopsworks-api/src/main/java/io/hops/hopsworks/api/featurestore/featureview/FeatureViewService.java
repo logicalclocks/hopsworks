@@ -20,6 +20,7 @@ import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordResource;
 import io.hops.hopsworks.api.featurestore.activities.ActivityResource;
 import io.hops.hopsworks.api.featurestore.preparestatement.PreparedStatementResource;
 import io.hops.hopsworks.api.featurestore.query.QueryResource;
+import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.featurestore.tag.FeatureViewTagResource;
 import io.hops.hopsworks.api.featurestore.trainingdataset.TrainingDatasetResource;
 import io.hops.hopsworks.api.featurestore.transformation.TransformationResource;
@@ -27,11 +28,14 @@ import io.hops.hopsworks.api.provenance.FeatureViewProvenanceResource;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
+import java.util.logging.Level;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -67,6 +71,16 @@ public class FeatureViewService {
   private ActivityResource activityResource;
   @Inject
   private FeatureViewProvenanceResource provenanceResource;
+  @Inject
+  private StatisticsResource statisticsResource;
+  @Inject
+  private FeatureViewFeatureMonitoringConfigurationResource featureMonitoringConfigurationResource;
+  @Inject
+  private FeatureViewFeatureMonitoringResultResource featureMonitoringResultResource;
+  @EJB
+  private Settings settings;
+  @Inject
+  private FeatureViewFeatureMonitorAlertResource featureViewFeatureMonitorAlertResource;
 
   private Project project;
   private Featurestore featurestore;
@@ -212,4 +226,87 @@ public class FeatureViewService {
     this.provenanceResource.setFeatureViewVersion(version);
     return provenanceResource;
   }
+  
+  @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/statistics")
+  @Logged(logLevel = LogLevel.OFF)
+  public StatisticsResource statistics(
+    @ApiParam(value = "Name of the feature view", required = true)
+    @PathParam("name")
+    String name,
+    @ApiParam(value = "Version of the feature view", required = true)
+    @PathParam("version")
+    Integer version
+  ) throws FeaturestoreException {
+    this.statisticsResource.setProject(project);
+    this.statisticsResource.setFeaturestore(featurestore);
+    this.statisticsResource.setFeatureViewByNameAndVersion(name, version);
+    return statisticsResource;
+  }
+  
+  @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/featuremonitoring/config")
+  @Logged(logLevel = LogLevel.OFF)
+  public FeatureViewFeatureMonitoringConfigurationResource featureMonitoringConfigurationResource(
+    @ApiParam(value = "Name of the feature view", required = true)
+    @PathParam("name")
+    String name,
+    @ApiParam(value = "Version of the feature view", required = true)
+    @PathParam("version")
+    Integer version
+  ) throws FeaturestoreException {
+    if (!settings.isFeatureMonitoringEnabled()) {
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.FEATURE_MONITORING_NOT_ENABLED,
+        Level.FINE
+      );
+    }
+    this.featureMonitoringConfigurationResource.setProject(project);
+    this.featureMonitoringConfigurationResource.setFeatureStore(featurestore);
+    this.featureMonitoringConfigurationResource.setFeatureView(name, version);
+    return this.featureMonitoringConfigurationResource;
+  }
+  
+  @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/featuremonitoring/result")
+  @Logged(logLevel = LogLevel.OFF)
+  public FeatureViewFeatureMonitoringResultResource featureMonitoringResultResource(
+    @ApiParam(value = "Name of the feature view", required = true)
+    @PathParam("name")
+    String name,
+    @ApiParam(value = "Version of the feature view", required = true)
+    @PathParam("version")
+    Integer version
+  ) throws FeaturestoreException {
+    if (!settings.isFeatureMonitoringEnabled()) {
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.FEATURE_MONITORING_NOT_ENABLED,
+        Level.FINE
+      );
+    }
+    this.featureMonitoringResultResource.setProject(project);
+    this.featureMonitoringResultResource.setFeatureStore(featurestore);
+    this.featureMonitoringResultResource.setFeatureView(name, version);
+    return this.featureMonitoringResultResource;
+  }
+  
+  @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/alerts")
+  @Logged(logLevel = LogLevel.OFF)
+  public FeatureViewFeatureMonitorAlertResource featureViewFeatureMonitorAlertResource(
+    @ApiParam(value = "Name of the feature view", required = true)
+    @PathParam("name")
+    String featureViewName,
+    @ApiParam(value = "Version of the feature view", required = true)
+    @PathParam("version")
+    Integer version
+  ) throws FeaturestoreException {
+    if (!settings.isFeatureMonitoringEnabled()) {
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.FEATURE_MONITORING_NOT_ENABLED,
+        Level.FINE
+      );
+    }
+    featureViewFeatureMonitorAlertResource.setFeatureStore(featurestore);
+    featureViewFeatureMonitorAlertResource.setFeatureView(featureViewName, version, featurestore);
+    featureViewFeatureMonitorAlertResource.setProject(project);
+    return featureViewFeatureMonitorAlertResource;
+  }
+  
 }

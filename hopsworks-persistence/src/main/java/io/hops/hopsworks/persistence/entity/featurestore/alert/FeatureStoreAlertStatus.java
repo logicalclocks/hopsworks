@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2021, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2024, Hopsworks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -13,25 +13,25 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert;
-
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupValidationStatus;
+package io.hops.hopsworks.persistence.entity.featurestore.alert;
 
 import javax.xml.bind.annotation.XmlEnum;
 
 @XmlEnum
-public enum ValidationRuleAlertStatus {
+public enum FeatureStoreAlertStatus {
   SUCCESS("Success"),
   WARNING("Warning"),
-  FAILURE("Failure");
+  FAILURE("Failure"),
+  FEATURE_MONITOR_SHIFT_UNDETECTED("FEATURE_MONITOR_SHIFT_UNDETECTED"),
+  FEATURE_MONITOR_SHIFT_DETECTED("FEATURE_MONITOR_SHIFT_DETECTED");
   
   private final String name;
   
-  ValidationRuleAlertStatus(String name) {
+  FeatureStoreAlertStatus(String name) {
     this.name = name;
   }
   
-  public static ValidationRuleAlertStatus fromString(String name) {
+  public static FeatureStoreAlertStatus fromString(String name) {
     return valueOf(name.toUpperCase());
   }
   
@@ -39,16 +39,20 @@ public enum ValidationRuleAlertStatus {
     return name;
   }
   
-  public static ValidationRuleAlertStatus getStatus(FeatureGroupValidationStatus status) {
+  public static FeatureStoreAlertStatus fromBooleanFeatureMonitorResultStatus(Boolean status) {
+    if (status)
+      return FEATURE_MONITOR_SHIFT_DETECTED;
+    else
+      return FEATURE_MONITOR_SHIFT_UNDETECTED;
+  }
+  
+  public static boolean isFeatureMonitoringStatus(FeatureStoreAlertStatus status) {
     switch (status) {
-      case FAILURE:
-        return ValidationRuleAlertStatus.FAILURE;
-      case SUCCESS:
-        return ValidationRuleAlertStatus.SUCCESS;
-      case WARNING:
-        return ValidationRuleAlertStatus.WARNING;
+      case FEATURE_MONITOR_SHIFT_DETECTED:
+      case FEATURE_MONITOR_SHIFT_UNDETECTED:
+        return Boolean.TRUE;
       default:
-        throw new IllegalArgumentException("Invalid enum constant");//will happen if status is none
+        return Boolean.FALSE;
     }
   }
   

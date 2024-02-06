@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2022, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2024, Hopsworks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -14,36 +14,26 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation;
+package io.hops.hopsworks.api.featurestore.featuremonitoring.result;
 
-public enum FeatureGroupValidationStatus {
-  NONE("None", 0),
-  SUCCESS("Success", 1),
-  WARNING("Warning", 2),
-  FAILURE("Failure", 3);
+import io.hops.hopsworks.common.api.Expansions;
+import io.hops.hopsworks.common.api.ResourceRequest;
+
+public class FeatureMonitoringResultExpansions implements Expansions {
   
-  private final String name;
-  private final int severity;
+  private ResourceRequest resourceRequest;
   
-  FeatureGroupValidationStatus(String name, int severity) {
-    this.name = name;
-    this.severity = severity;
-  }
-  
-  public int getSeverity() {
-    return severity;
-  }
-  
-  public static FeatureGroupValidationStatus fromString(String name) {
-    return valueOf(name.toUpperCase());
-  }
-  
-  public String getName() {
-    return name;
+  public FeatureMonitoringResultExpansions(String queryParam) {
+    resourceRequest = new ResourceRequest(queryParam);
   }
   
   @Override
-  public String toString() {
-    return name;
+  public ResourceRequest getResourceRequest() {
+    return resourceRequest;
+  }
+  
+  @Override
+  public void setResourceRequest(ResourceRequest resourceRequest) {
+    this.resourceRequest = resourceRequest;
   }
 }

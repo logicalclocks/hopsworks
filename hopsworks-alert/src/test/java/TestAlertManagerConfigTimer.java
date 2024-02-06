@@ -47,7 +47,7 @@ import io.hops.hopsworks.persistence.entity.alertmanager.AlertType;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.FeatureGroupAlert;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.ValidationRuleAlertStatus;
+import io.hops.hopsworks.persistence.entity.featurestore.alert.FeatureStoreAlertStatus;
 import io.hops.hopsworks.persistence.entity.jobs.description.JobAlert;
 import io.hops.hopsworks.persistence.entity.jobs.description.JobAlertStatus;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
@@ -161,9 +161,9 @@ public class TestAlertManagerConfigTimer {
         new Date(), job, alertReceiver));
     alertReceiver.setJobAlertCollection(jobAlerts);
     List<FeatureGroupAlert> featureGroupAlerts = new ArrayList<>();
-    featureGroupAlerts.add(new FeatureGroupAlert(random.nextInt(1000), ValidationRuleAlertStatus.FAILURE, alertType,
+    featureGroupAlerts.add(new FeatureGroupAlert(random.nextInt(1000), FeatureStoreAlertStatus.FAILURE, alertType,
         AlertSeverity.CRITICAL, new Date(), featuregroup, alertReceiver));
-    featureGroupAlerts.add(new FeatureGroupAlert(random.nextInt(1000), ValidationRuleAlertStatus.WARNING, alertType,
+    featureGroupAlerts.add(new FeatureGroupAlert(random.nextInt(1000), FeatureStoreAlertStatus.WARNING, alertType,
         AlertSeverity.WARNING, new Date(), featuregroup, alertReceiver));
     alertReceiver.setFeatureGroupAlertCollection(featureGroupAlerts);
     List<ProjectServiceAlert> projectServiceAlerts = new ArrayList<>();

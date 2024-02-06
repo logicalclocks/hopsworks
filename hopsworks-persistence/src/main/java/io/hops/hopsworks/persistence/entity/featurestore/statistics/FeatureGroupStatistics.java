@@ -70,33 +70,24 @@ public class FeatureGroupStatistics extends EntityStatistics {
   
   // statistics of feature groups with time-travel disabled.
   
-  public FeatureGroupStatistics(Date commitTime, Float rowPercentage,
+  public FeatureGroupStatistics(Date computationTime, Float rowPercentage,
     Collection<FeatureDescriptiveStatistics> featureDescriptiveStatistics, Featuregroup featureGroup) {
     // statistics computed on the whole feature group data
-    super(commitTime, rowPercentage);
+    super(computationTime, rowPercentage);
     this.featureGroup = featureGroup;
     this.featureDescriptiveStatistics = featureDescriptiveStatistics;
     this.windowStartCommitTime = 0L;
-    this.windowEndCommitTime = commitTime.getTime();
+    this.windowEndCommitTime = computationTime.getTime();
   }
   
   // statistics of feature group with time-travel enabled
   
-  public FeatureGroupStatistics(Date commitTime, Long windowEndCommitTime, Float rowPercentage,
-    Collection<FeatureDescriptiveStatistics> featureDescriptiveStatistics, Featuregroup featuregroup) {
-    // statistics computed on feature group data for a specific commit
-    super(commitTime, rowPercentage);
-    this.featureGroup = featuregroup;
-    this.featureDescriptiveStatistics = featureDescriptiveStatistics;
-    this.windowStartCommitTime = 0L;
-    this.windowEndCommitTime = windowEndCommitTime;
-  }
-  
-  public FeatureGroupStatistics(Date commitTime, Long windowStartCommitTime, Long windowEndCommitTime,
+  public FeatureGroupStatistics(Date computationTime, Long windowStartCommitTime, Long windowEndCommitTime,
     Float rowPercentage, Collection<FeatureDescriptiveStatistics> featureDescriptiveStatistics,
     Featuregroup featuregroup) {
-    // statistics computed on feature group data for a specific commit window
-    super(commitTime, rowPercentage);
+    // statistics computed on feature group data for a specific commit window or a specific commit (i.e., start time =
+    // null)
+    super(computationTime, rowPercentage);
     this.featureGroup = featuregroup;
     this.featureDescriptiveStatistics = featureDescriptiveStatistics;
     this.windowStartCommitTime = windowStartCommitTime;

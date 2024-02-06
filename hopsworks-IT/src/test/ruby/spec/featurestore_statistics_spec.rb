@@ -46,6 +46,14 @@ describe "On #{ENV['OS']}" do
             commit_metadata = {commitDateString:20201025231125,commitTime:1603667485000,rowsInserted:4,rowsUpdated:0,rowsDeleted:0}
             json_result = commit_cached_featuregroup(@project[:id], @featurestore_id, @stream_feature_group["id"], commit_metadata: commit_metadata)
             expect_status_details(200)
+            # feature view - cached feature group - no time travel
+            json_result = create_feature_view_from_feature_group(@project[:id], @featurestore_id, @cached_feature_group)
+            expect_status_details(201)
+            @cached_feature_view = JSON.parse(json_result)
+            # feature view - stream feature group - time travel
+            json_result = create_feature_view_from_feature_group(@project[:id], @featurestore_id, @stream_feature_group)
+            expect_status_details(201)
+            @stream_feature_view = JSON.parse(json_result)
             # training datasets - with and without splits
             all_metadata = create_featureview_training_dataset_from_project(@project)
             @training_dataset = all_metadata["response"]
@@ -95,6 +103,36 @@ describe "On #{ENV['OS']}" do
             expect_status_details(200)
             # on a single commit
             create_statistics_commit_fg(@project[:id], @featurestore_id, @stream_feature_group["id"], computation_time: 1603667485000, window_start_commit_time: 1603667485000, window_end_commit_time: 1603667485000)
+            expect_status_details(200)
+            # all query parameter combinations (including window times) are covered in the unit tests
+          end
+
+          # feature view - left feature group - no time travel (for feature monitoring)
+
+          it "should be able to add statistics as a commit to a feature view with a left feature group with time travel disabled (feature monitoring)" do
+            create_statistics_commit_fv(@project[:id], @featurestore_id, @cached_feature_view["name"], @cached_feature_view["version"])
+            expect_status_details(200)
+          end
+
+          it "should fail to add statistics as a commit to a feature view with a left feature group with time travel disabled and window times (feature monitoring)" do
+            create_statistics_commit_fv(@project[:id], @featurestore_id, @cached_feature_view["name"], @cached_feature_view["version"], computation_time: 1597903688010, window_start_commit_time: 1597903688000, window_end_commit_time: 1597903688010)
+            expect_status_details(400, error_code: 270229)
+            # all query parameter combinations (including window times) are covered in the unit tests
+          end
+
+          # feature view - left stream feature group - time travel enable (for feature monitoring)
+
+          it "should be able to add statistics as a commit to a feature view with a left stream feature group (feature monitoring)" do
+            create_statistics_commit_fv(@project[:id], @featurestore_id, @stream_feature_view["name"], @stream_feature_view["version"])
+            expect_status_details(200)
+          end
+
+          it "should be able to add statistics as a commit to a feature view with a left stream feature group with window times (feature monitoring)" do
+            # on two commits
+            create_statistics_commit_fv(@project[:id], @featurestore_id, @stream_feature_view["name"], @stream_feature_view["version"], computation_time: 1603667485000, window_start_commit_time: 1603577485000, window_end_commit_time: 1603667485000)
+            expect_status_details(200)
+            # on a single commit
+            create_statistics_commit_fv(@project[:id], @featurestore_id, @stream_feature_view["name"], @stream_feature_view["version"], computation_time: 1603667485000, window_start_commit_time: 1603667485000, window_end_commit_time: 1603667485000)
             expect_status_details(200)
             # all query parameter combinations (including window times) are covered in the unit tests
           end

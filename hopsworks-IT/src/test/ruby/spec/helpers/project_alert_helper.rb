@@ -25,6 +25,11 @@ module ProjectServiceAlertHelper
   @@project_alert_failed = {"service": "JOBS", "status": "JOB_FAILED", "receiver": "global-receiver__slack", "severity": "WARNING"}
   @@project_alert_killed = {"service": "JOBS", "status": "JOB_KILLED", "receiver": "global-receiver__pagerduty", "severity": "CRITICAL"}
 
+  @@project_alert_fm_detected = { "service": "FEATURESTORE", "status": "FEATURE_MONITOR_SHIFT_DETECTED", "receiver":
+    "global-receiver__pagerduty","severity": "CRITICAL" }
+  @@project_alert_fm_undetected = { "service": "FEATURESTORE", "status": "FEATURE_MONITOR_SHIFT_UNDETECTED",
+                                    "receiver":"global-receiver__slack","severity": "INFO" }
+
   def get_project_alert_finished(project)
     finished = @@project_alert_finished.clone
     finished[:receiver] = "#{project[:projectname]}__email"
@@ -91,6 +96,8 @@ module ProjectServiceAlertHelper
     create_project_alert(project, get_project_alert_killed(project))
     create_project_alert(project, get_project_alert_success(project))
     create_project_alert(project, get_project_alert_failure(project))
+    create_project_alert(project, get_project_alert_fm_detected(project))
+    create_project_alert(project, get_project_alert_fm_undetected(project))
   end
 
   def create_project_alerts_global(project)
@@ -98,5 +105,17 @@ module ProjectServiceAlertHelper
     create_project_alert(project, @@project_alert_killed.clone)
     create_project_alert(project, @@project_alert_success.clone)
     create_project_alert(project, @@project_alert_failure.clone)
+  end
+
+  def get_project_alert_fm_detected(project)
+    failure = @@project_alert_fm_detected.clone
+    failure[:receiver] = "#{project[:projectname]}__pagerduty1"
+    return failure
+  end
+
+  def get_project_alert_fm_undetected(project)
+    alert = @@project_alert_fm_undetected.clone
+    alert[:receiver] = "#{project[:projectname]}__slack2"
+    return alert
   end
 end

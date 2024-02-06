@@ -43,6 +43,7 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.featurestore.featuremonitoring.config.FeatureMonitoringConfigurationFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -55,6 +56,7 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SparkConfigurationUtil;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.persistence.entity.featurestore.featuremonitoring.config.FeatureMonitoringConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.ScheduleDTO;
@@ -109,6 +111,9 @@ public class JobController {
   private Settings settings;
   @EJB
   private ProjectUtils projectUtils;
+  @EJB
+  private FeatureMonitoringConfigurationFacade featureMonitoringConfigurationFacade;
+  
 
   private static final Logger LOGGER = Logger.getLogger(JobController.class.getName());
 
@@ -180,6 +185,14 @@ public class JobController {
   
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void deleteJob(Jobs job, Users user) throws JobException {
+    // Check if the job is attached to a Feature monitoring config
+    Optional<FeatureMonitoringConfiguration> optConfig = featureMonitoringConfigurationFacade.findByJobId(job.getId());
+    if (optConfig.isPresent()) {
+      throw new JobException(RESTCodes.JobErrorCode.JOB_DELETION_ERROR, Level.FINE,
+        "Job attached to Feature Monitoring configuration '" + optConfig.get().getName() + "'. Please," +
+          " delete the Feature Monitoring configuration first.");
+    }
+    
     // Delete schedule V1
     if (job.getJobConfig().getSchedule() != null) {
       unscheduleJob(job);

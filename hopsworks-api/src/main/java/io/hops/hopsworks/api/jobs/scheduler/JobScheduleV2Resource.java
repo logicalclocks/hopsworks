@@ -113,15 +113,13 @@ public class JobScheduleV2Resource {
   @ApiKeyRequired(acceptedScopes = {ApiScope.JOB},
           allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response updateSchedule(JobScheduleV2DTO scheduleDTO,
-      @Context
-          SecurityContext sc,
-      @Context
-          HttpServletRequest req,
-      @Context
-          UriInfo uriInfo) throws JobException {
-    jobScheduleBuilder.validateOnUpdate(job, scheduleDTO);
-    JobScheduleV2 jobSchedule = jobScheduleController.updateSchedule(scheduleDTO);
-    scheduleDTO = jobScheduleBuilder.build(uriInfo, jobSchedule);
+                                 @Context SecurityContext sc,
+                                 @Context HttpServletRequest req,
+                                 @Context UriInfo uriInfo)
+      throws JobException {
+    JobScheduleV2 schedule = jobScheduleBuilder.validateAndConvertOnUpdate(job, scheduleDTO);
+    schedule = jobScheduleController.updateSchedule(schedule);
+    scheduleDTO = jobScheduleBuilder.build(uriInfo, schedule);
     return Response.ok().entity(scheduleDTO).build();
   }
 

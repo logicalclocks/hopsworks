@@ -28,6 +28,7 @@ import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
+import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.common.featurestore.statistics.SplitStatisticsDTO;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsController;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsDTO;
@@ -48,6 +49,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregro
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureDescriptiveStatistics;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureGroupStatistics;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureViewStatistics;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.TrainingDatasetStatistics;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
@@ -101,6 +103,8 @@ public class StatisticsResource {
   @EJB
   private FeaturegroupController featuregroupController;
   @EJB
+  private FeatureViewController featureViewController;
+  @EJB
   private TrainingDatasetController trainingDatasetController;
   @EJB
   private FsJobManagerController fsJobManagerController;
@@ -110,6 +114,7 @@ public class StatisticsResource {
   private Project project;
   private Featurestore featurestore;
   private Featuregroup featuregroup;
+  private FeatureView featureView;
   private TrainingDataset trainingDataset;
 
   @Logged(logLevel = LogLevel.OFF)
@@ -125,6 +130,13 @@ public class StatisticsResource {
   @Logged(logLevel = LogLevel.OFF)
   public void setFeatureGroupById(Integer featureGroupId) throws FeaturestoreException {
     this.featuregroup = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
+  }
+  
+  @Logged(logLevel = LogLevel.OFF)
+  public void setFeatureViewByNameAndVersion(String featureViewName, Integer featureViewVersion)
+      throws FeaturestoreException {
+    this.featureView = featureViewController.getByNameVersionAndFeatureStore(
+      featureViewName, featureViewVersion, featurestore);
   }
   
   @Logged(logLevel = LogLevel.OFF)
@@ -181,9 +193,13 @@ public class StatisticsResource {
     
     StatisticsDTO dto;
     if (featuregroup != null) { // feature group statistics
-      statisticsInputValidation.validateStatisticsFiltersForFeatureGroup((Set)statisticsBeanParam.getFilterSet());
+      statisticsInputValidation.validateStatisticsFiltersForFeatureGroup((Set) statisticsBeanParam.getFilterSet());
       statisticsInputValidation.validateGetForFeatureGroup(featuregroup, filters);
       dto = statisticsBuilder.build(uriInfo, resourceRequest, project, user, featurestore, featuregroup, featureNames);
+    } else if (featureView != null) {
+      statisticsInputValidation.validateStatisticsFiltersForFeatureView((Set) statisticsBeanParam.getFilterSet());
+      statisticsInputValidation.validateGetForFeatureView(featureView, filters);
+      dto = statisticsBuilder.build(uriInfo, resourceRequest, project, user, featurestore, featureView, featureNames);
     } else { // training dataset statistics
       statisticsInputValidation.validateStatisticsFiltersForTrainingDataset((Set)statisticsBeanParam.getFilterSet());
       dto = statisticsBuilder.build(uriInfo, resourceRequest, project, user, featurestore, trainingDataset,
@@ -212,6 +228,8 @@ public class StatisticsResource {
     StatisticsDTO dto;
     if (featuregroup != null) {
       dto = registerFeatureGroupStatistics(user, uriInfo, statisticsDTO);
+    } else if (featureView != null) {
+      dto = registerFeatureViewStatistics(user, uriInfo, statisticsDTO);
     } else {
       dto = registerTrainingDatasetStatistics(user, uriInfo, statisticsDTO);
     }
@@ -249,6 +267,19 @@ public class StatisticsResource {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.STATISTICS);
     resourceRequest.setField(Collections.singleton("content"));
     return statisticsBuilder.build(uriInfo, resourceRequest, project, user, featuregroup, featureGroupStatistics);
+  }
+  
+  private StatisticsDTO registerFeatureViewStatistics(Users user, UriInfo uriInfo, StatisticsDTO statisticsDTO)
+    throws FeaturestoreException, IOException, DatasetException, HopsSecurityException {
+    statisticsInputValidation.validateRegisterForFeatureView(featureView, statisticsDTO);
+    Collection<FeatureDescriptiveStatistics> stats = featureDescriptiveStatisticsBuilder.buildManyFromContentOrDTO(
+      statisticsDTO.getFeatureDescriptiveStatistics(), statisticsDTO.getContent());
+    FeatureViewStatistics featureViewStatistics = statisticsController.registerFeatureViewStatistics(project, user,
+      statisticsDTO.getComputationTime(), statisticsDTO.getWindowStartCommitTime(),
+      statisticsDTO.getWindowEndCommitTime(), statisticsDTO.getRowPercentage(), stats, featureView);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.STATISTICS);
+    resourceRequest.setField(Collections.singleton("content"));
+    return statisticsBuilder.build(uriInfo, resourceRequest, project, user, featureView, featureViewStatistics);
   }
   
   private StatisticsDTO registerTrainingDatasetStatistics(Users user, UriInfo uriInfo, StatisticsDTO statisticsDTO)

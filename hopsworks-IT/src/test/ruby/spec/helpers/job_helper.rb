@@ -258,9 +258,9 @@ module JobHelper
     expect_status_details(expected_status, error_code: error_code) unless expected_status.nil?
   end
 
-  def delete_job(project_id, job_name, expected_status: 204)
+  def delete_job(project_id, job_name, expected_status: 204, error_code: nil)
     delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}"
-    expect_status_details(expected_status)
+    expect_status_details(expected_status, error_code: error_code)
   end
 
   def get_job_from_db(job_id)

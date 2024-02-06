@@ -24,6 +24,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalida
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationReport;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.stream.StreamFeatureGroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuremonitoring.config.FeatureMonitoringConfiguration;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
@@ -158,7 +159,9 @@ public class Featuregroup implements Serializable {
   private ExpectationSuite expectationSuite;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "featuregroup")
   private Collection<ValidationReport> validationReports;
-
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "featureGroup")
+  private Collection<FeatureMonitoringConfiguration> featureMonitoringConfigurations;
+  
   public Featuregroup() { }
 
   public Featuregroup(Integer id) {
@@ -347,6 +350,15 @@ public class Featuregroup implements Serializable {
     this.embedding = embedding;
   }
 
+  public Collection<FeatureMonitoringConfiguration> getFeatureMonitoringConfigurations() {
+    return featureMonitoringConfigurations;
+  }
+  
+  public void setFeatureMonitoringConfigurations(
+    Collection<FeatureMonitoringConfiguration> featureMonitoringConfigurations) {
+    this.featureMonitoringConfigurations = featureMonitoringConfigurations;
+  }
+  
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2021, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2024, Hopsworks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -16,27 +16,26 @@
 package io.hops.hopsworks.api.featurestore.datavalidation.alert;
 
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertSeverity;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.ValidationRuleAlertStatus;
+import io.hops.hopsworks.persistence.entity.featurestore.alert.FeatureStoreAlertStatus;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
 @XmlRootElement
-public class PostableFeatureGroupAlerts {
-  private ValidationRuleAlertStatus status;
+public class PostableFeatureStoreAlerts {
+  private FeatureStoreAlertStatus status;
   private AlertSeverity severity;
   private String receiver;
-  private List<PostableFeatureGroupAlerts> items;
+  private List<PostableFeatureStoreAlerts> items;
   
-  public PostableFeatureGroupAlerts() {
+  public PostableFeatureStoreAlerts() {
   }
   
-  public ValidationRuleAlertStatus getStatus() {
+  public FeatureStoreAlertStatus getStatus() {
     return status;
   }
   
-  public void setStatus(
-      ValidationRuleAlertStatus status) {
+  public void setStatus(FeatureStoreAlertStatus status) {
     this.status = status;
   }
   
@@ -56,12 +55,12 @@ public class PostableFeatureGroupAlerts {
     this.receiver = receiver;
   }
   
-  public List<PostableFeatureGroupAlerts> getItems() {
+  public List<PostableFeatureStoreAlerts> getItems() {
     return items;
   }
   
   public void setItems(
-      List<PostableFeatureGroupAlerts> items) {
+      List<PostableFeatureStoreAlerts> items) {
     this.items = items;
   }
 }

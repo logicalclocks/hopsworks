@@ -53,6 +53,12 @@ public class Constants {
   public static final String LABEL_SUMMARY = "summary";
   public static final String LABEL_DESCRIPTION = "description";
   
+  public final static String ALERT_NAME_FEATURE_MONITOR = "FeatureMonitoring";
+  public final static String LABEL_FM_CONFIG = "featureMonitorConfig";
+  public final static String LABEL_FM_RESULT_ID = "featureMonitorResultId";
+  public final static String LABEL_FEATURE_VIEW_NAME = "featureViewName";
+  public final static String LABEL_FEATURE_VIEW_VERSION = "featureViewVersion";
+  
   public static final String FILTER_BY_PROJECT_LABEL = LABEL_PROJECT + "=\"";
   public static final String FILTER_BY_PROJECT_FORMAT = FILTER_BY_PROJECT_LABEL + PROJECT_PLACE_HOLDER + "\"";
   
@@ -73,16 +79,26 @@ public class Constants {
   public static final String TEST_ALERT_FG_NAME = "AlertTestFeatureGroup";
   public static final String TEST_ALERT_FG_DESCRIPTION = "Alert test description.";
   public static final String TEST_ALERT_FG_SUMMARY = "Alert test summary.";
-  
+  public static final String TEST_ALERT_FM_NAME = "AlertTestFeatureMonitor";
   public static final Integer TEST_ALERT_EXECUTION_ID = 1;
   public static final Integer TEST_ALERT_FG_ID = 1;
   public static final Integer TEST_ALERT_FG_VERSION = 1;
+  
+  public static final  String FM_RESULT_ID_LABEL = "featureMonitorResultId";
+  public static final String FM_ID_PLACE_HOLDER = "%%fmResultId%%";
+  public static final String FILTER_BY_FM_RESULT_ID = FM_RESULT_ID_LABEL + "=\"";
+  public static final  String FILTER_BY_FM_RESULT_FORMAT =  FILTER_BY_FM_RESULT_ID + FM_ID_PLACE_HOLDER + "\"";
+  public static final  String FM_CONFIG_NAME_LABEL ="featureMonitorConfig";
+  public static final  String FM_NAME_PLACE_HOLDER ="%%configName%%";
+  public static final String FILTER_BY_FV_LABEL = FM_CONFIG_NAME_LABEL + "=\"";
+  public static final String FILTER_BY_FM_NAME_FORMAT = FILTER_BY_FV_LABEL + FM_NAME_PLACE_HOLDER + "\"";
   
   public static final String DEFAULT_EMAIL_HTML = "{{ template \"hopsworks.email.default.html\" . }}";
   public static final String DEFAULT_SLACK_ICON_URL = "https://uploads-ssl.webflow.com/5f6353590bb01cacbcecfbac/" +
     "633ed0f0ed7662f8621ce701_Hopsworks%20Logo%20Social%20.png";
   public static final String DEFAULT_SLACK_TEXT = "{{ template \"hopsworks.slack.default.text\" . }}";
   public static final String DEFAULT_SLACK_TITLE = "{{ template \"hopsworks.slack.default.title\" . }}";
+  public static final String NO_PAYLOAD = "No payload.";
   
   public static final String AM_CONFIG_UPDATED_TOPIC_NAME = "alertmanager_config_updated";
   

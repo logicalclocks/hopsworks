@@ -196,6 +196,15 @@ public class FeatureViewController {
     return featureViews;
   }
 
+  public FeatureView getByIdAndFeatureStore(Integer id, Featurestore featureStore)
+      throws FeaturestoreException {
+    return featureViewFacade.findByIdAndFeatureStore(id, featureStore)
+      .orElseThrow(() -> new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.FEATURE_VIEW_NOT_FOUND,
+        Level.FINE,
+        String.format("There exists no feature view with the id %d.", id)));
+  }
+
   public FeatureView getByNameVersionAndFeatureStore(String name, Integer version, Featurestore featurestore)
       throws FeaturestoreException {
     List<FeatureView> featureViews = featureViewFacade.findByNameVersionAndFeaturestore(name, version, featurestore);
@@ -416,6 +425,10 @@ public class FeatureViewController {
     } else {
       return prefix;
     }
+  }
+  
+  public static Featuregroup getLeftFeatureGroup(FeatureView featureView) {
+    return featureView.getJoins().stream().findFirst().get().getFeatureGroup();
   }
 
   public List<FeatureView> getByFeatureGroup(Integer featureGroupId) {

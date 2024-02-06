@@ -15,7 +15,6 @@
  */
 package io.hops.hopsworks.persistence.entity.project.alert;
 
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupValidationStatus;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobFinalStatus;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
 
@@ -27,7 +26,10 @@ public enum ProjectServiceAlertStatus {
   //Job
   JOB_FINISHED("Finished"),
   JOB_FAILED("Failed"),
-  JOB_KILLED("Killed");
+  JOB_KILLED("Killed"),
+  // feature monitoring status
+  FEATURE_MONITOR_SHIFT_UNDETECTED("FEATURE_MONITOR_SHIFT_UNDETECTED"),
+  FEATURE_MONITOR_SHIFT_DETECTED("FEATURE_MONITOR_SHIFT_DETECTED");
   
   private final String name;
   
@@ -41,19 +43,6 @@ public enum ProjectServiceAlertStatus {
   
   public String getName() {
     return name;
-  }
-  
-  public static ProjectServiceAlertStatus getStatus(FeatureGroupValidationStatus status) {
-    switch (status) {
-      case FAILURE:
-        return ProjectServiceAlertStatus.VALIDATION_FAILURE;
-      case SUCCESS:
-        return ProjectServiceAlertStatus.VALIDATION_SUCCESS;
-      case WARNING:
-        return ProjectServiceAlertStatus.VALIDATION_WARNING;
-      default:
-        throw new IllegalArgumentException("Invalid enum constant");//will happen if status is none
-    }
   }
   
   public static ProjectServiceAlertStatus getJobAlertStatus(JobState jobState) {
@@ -101,11 +90,21 @@ public enum ProjectServiceAlertStatus {
       case VALIDATION_FAILURE:
       case VALIDATION_SUCCESS:
       case VALIDATION_WARNING:
+      case FEATURE_MONITOR_SHIFT_UNDETECTED:
+      case FEATURE_MONITOR_SHIFT_DETECTED:
         return true;
       default:
         return false;
     }
   }
+  
+  public static ProjectServiceAlertStatus fromBooleanFeatureMonitorResultStatus(Boolean status) {
+    if (status)
+      return FEATURE_MONITOR_SHIFT_DETECTED;
+    else
+      return FEATURE_MONITOR_SHIFT_UNDETECTED;
+  }
+  
   
   @Override
   public String toString() {

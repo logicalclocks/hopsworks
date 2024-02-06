@@ -19,7 +19,7 @@ package io.hops.hopsworks.api.featurestore.datavalidation.alert;
 import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertSeverity;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertType;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.ValidationRuleAlertStatus;
+import io.hops.hopsworks.persistence.entity.featurestore.alert.FeatureStoreAlertStatus;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Date;
@@ -30,7 +30,7 @@ public class FeatureGroupAlertDTO extends RestDTO<FeatureGroupAlertDTO> {
   private Integer featureGroupId;
   private String featureStoreName;
   private String featureGroupName;
-  private ValidationRuleAlertStatus status;
+  private FeatureStoreAlertStatus status;
   private AlertType alertType;
   private AlertSeverity severity;
   private String receiver;
@@ -71,12 +71,11 @@ public class FeatureGroupAlertDTO extends RestDTO<FeatureGroupAlertDTO> {
     this.featureGroupName = featureGroupName;
   }
   
-  public ValidationRuleAlertStatus getStatus() {
+  public FeatureStoreAlertStatus getStatus() {
     return status;
   }
   
-  public void setStatus(
-      ValidationRuleAlertStatus status) {
+  public void setStatus(FeatureStoreAlertStatus status) {
     this.status = status;
   }
   

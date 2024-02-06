@@ -42,6 +42,10 @@ public class PostableAlertBuilder {
     private String summary;
     private String description;
     private URL generatorURL;
+    private String featureMonitorConfigName;
+    private Integer featureMonitorResultId;
+    private String featureViewName;
+    private Integer featureViewVersion;
     
     public Builder(String projectName, AlertType type, AlertSeverity severity, String status) {
       this.projectName = projectName;
@@ -97,7 +101,32 @@ public class PostableAlertBuilder {
       this.featureGroupVersion = featureGroupVersion;
       return this;
     }
-  
+    
+    public Builder withFeatureViewVersion(Integer version) {
+      if (jobName != null || executionId != null || featureGroupId != null) {
+        throw new IllegalArgumentException("Alert can be either job, feature group or feature view.");
+      }
+      this.featureViewVersion = version;
+      return this;
+    }
+    
+    public Builder withFeatureViewName(String name) {
+      if (jobName != null || executionId != null || featureGroupId != null) {
+        throw new IllegalArgumentException("Alert can be either job, feature group or feature view.");
+      }
+      this.featureViewName = name;
+      return this;
+    }
+    
+    public Builder withFeatureMonitorConfig(String configName, Integer resultId) {
+      if (jobName != null || executionId != null) {
+        throw new IllegalArgumentException("Alert can be either job or feature group validation.");
+      }
+      this.featureMonitorConfigName = configName;
+      this.featureMonitorResultId = resultId;
+      return this;
+    }
+    
     public Builder withSummary(String summary) {
       this.summary = summary;
       return this;
@@ -148,6 +177,21 @@ public class PostableAlertBuilder {
       }
       if (Strings.isNullOrEmpty(this.summary) || Strings.isNullOrEmpty(this.description)) {
         throw new IllegalArgumentException("Summary and description can not be empty.");
+      }
+      // if alert if feature monitoring config change title
+      if (!Strings.isNullOrEmpty(this.featureMonitorConfigName)) {
+        labels.put(Constants.ALERT_NAME_LABEL, Constants.ALERT_NAME_FEATURE_MONITOR);
+        labels.put(Constants.LABEL_FM_CONFIG, this.featureMonitorConfigName);
+        annotations.put(Constants.LABEL_TITLE, this.featureMonitorConfigName);
+      }
+      if (this.featureMonitorResultId != null) {
+        labels.put(Constants.LABEL_FM_RESULT_ID, this.featureMonitorResultId.toString());
+      }
+      if (this.featureViewName != null) {
+        labels.put(Constants.LABEL_FEATURE_VIEW_NAME, this.featureViewName);
+      }
+      if (this.featureViewVersion != null) {
+        labels.put(Constants.LABEL_FEATURE_VIEW_VERSION, this.featureViewVersion.toString());
       }
       annotations.put(Constants.LABEL_SUMMARY, this.summary);
       annotations.put(Constants.LABEL_DESCRIPTION, this.description);

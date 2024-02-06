@@ -20,6 +20,7 @@ import io.hops.hopsworks.alerting.config.dto.Receiver;
 import io.hops.hopsworks.alerting.config.dto.Route;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.FeatureGroupAlert;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.alert.FeatureViewAlert;
 import io.hops.hopsworks.persistence.entity.jobs.description.JobAlert;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlert;
@@ -160,5 +161,30 @@ public class ConfigUtil {
         .withContinue(true)
         .withMatch(match)
         .withGroupBy(groupBy);
+  }
+  
+  public static Route getRoute(FeatureViewAlert alert) {
+    if (alert.getAlertType().isGlobal()) {
+      return getRoute(alert.getAlertType());
+    }
+    Map<String, String> match = getMatch(alert);
+    List<String> groupBy = new ArrayList<>();
+    groupBy.add(Constants.LABEL_PROJECT);
+    groupBy.add(Constants.LABEL_FEATURE_VIEW_NAME);
+    groupBy.add(Constants.LABEL_STATUS);
+    return new Route(alert.getReceiver().getName())
+      .withContinue(true)
+      .withMatch(match)
+      .withGroupBy(groupBy);
+  }
+  
+  public static Map<String, String> getMatch(FeatureViewAlert alert) {
+    Project project = alert.getFeatureView().getFeaturestore().getProject();
+    Map<String, String> match = new HashMap<>();
+    match.put(Constants.ALERT_TYPE_LABEL, alert.getAlertType().getValue());
+    match.put(Constants.LABEL_PROJECT, project.getName());
+    match.put(Constants.LABEL_FEATURE_VIEW_NAME, alert.getFeatureView().getName());
+    match.put(Constants.LABEL_STATUS, alert.getStatus().getName());
+    return match;
   }
 }

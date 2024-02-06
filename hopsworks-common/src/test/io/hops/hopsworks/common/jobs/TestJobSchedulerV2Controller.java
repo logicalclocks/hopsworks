@@ -230,10 +230,10 @@ public class TestJobSchedulerV2Controller {
     Mockito.when(jobScheduleV2Facade.update(any(JobScheduleV2.class))).thenReturn(scheduler);
     ArgumentCaptor<JobScheduleV2> argumentCaptor = ArgumentCaptor.forClass(JobScheduleV2.class);
 
-    JobScheduleV2DTO updatedJobScheduleDTO = new JobScheduleV2DTO();
-    updatedJobScheduleDTO.setEnabled(true);
-    updatedJobScheduleDTO.setCronExpression("0 */10 * ? * * *");
-    target.updateSchedule(updatedJobScheduleDTO);
+    JobScheduleV2 updatedJobSchedule = new JobScheduleV2();
+    updatedJobSchedule.setEnabled(true);
+    updatedJobSchedule.setCronExpression("0 */10 * ? * * *");
+    target.updateSchedule(updatedJobSchedule);
     verify(jobScheduleV2Facade, times(1)).update(argumentCaptor.capture());
 
     JobScheduleV2 capturedSchedule = argumentCaptor.getValue();
@@ -263,11 +263,11 @@ public class TestJobSchedulerV2Controller {
     newStartDateTime.setTimeZone(TimeZone.getTimeZone("UTC"));
     newStartDateTime.set(2021, 1, 1, 0, 30, 0);
 
-    JobScheduleV2DTO updatedJobScheduleDTO = new JobScheduleV2DTO();
-    updatedJobScheduleDTO.setEnabled(true);
-    updatedJobScheduleDTO.setStartDateTime(newStartDateTime.toInstant());
-    updatedJobScheduleDTO.setCronExpression("0 */10 * ? * * *");
-    target.updateSchedule(updatedJobScheduleDTO);
+    JobScheduleV2 updatedJobSchedule = new JobScheduleV2();
+    updatedJobSchedule.setEnabled(true);
+    updatedJobSchedule.setStartDateTime(newStartDateTime.toInstant());
+    updatedJobSchedule.setCronExpression("0 */10 * ? * * *");
+    target.updateSchedule(updatedJobSchedule);
 
     verify(jobScheduleV2Facade, times(1)).update(argumentCaptor.capture());
 
@@ -295,11 +295,11 @@ public class TestJobSchedulerV2Controller {
     Mockito.when(jobScheduleV2Facade.update(any(JobScheduleV2.class))).thenReturn(scheduler);
     ArgumentCaptor<JobScheduleV2> argumentCaptor = ArgumentCaptor.forClass(JobScheduleV2.class);
 
-    JobScheduleV2DTO updatedJobScheduleDTO = new JobScheduleV2DTO();
-    updatedJobScheduleDTO.setEnabled(true);
-    updatedJobScheduleDTO.setStartDateTime(startDateTime.toInstant());
-    updatedJobScheduleDTO.setCronExpression("0 */10 * ? * * *");
-    target.updateSchedule(updatedJobScheduleDTO);
+    JobScheduleV2 updatedJobSchedule = new JobScheduleV2();
+    updatedJobSchedule.setEnabled(true);
+    updatedJobSchedule.setStartDateTime(startDateTime.toInstant());
+    updatedJobSchedule.setCronExpression("0 */10 * ? * * *");
+    target.updateSchedule(updatedJobSchedule);
 
     verify(jobScheduleV2Facade, times(1)).update(argumentCaptor.capture());
 
@@ -324,10 +324,10 @@ public class TestJobSchedulerV2Controller {
     Mockito.when(jobScheduleV2Facade.update(any(JobScheduleV2.class))).thenReturn(scheduler);
     ArgumentCaptor<JobScheduleV2> argumentCaptor = ArgumentCaptor.forClass(JobScheduleV2.class);
 
-    JobScheduleV2DTO updatedJobScheduleDTO = new JobScheduleV2DTO();
-    updatedJobScheduleDTO.setEnabled(false);
-    updatedJobScheduleDTO.setCronExpression("0 0 0 ? * 1 *");
-    target.updateSchedule(updatedJobScheduleDTO);
+    JobScheduleV2 updatedJobSchedule = new JobScheduleV2();
+    updatedJobSchedule.setEnabled(false);
+    updatedJobSchedule.setCronExpression("0 0 0 ? * 1 *");
+    target.updateSchedule(updatedJobSchedule);
 
     verify(jobScheduleV2Facade, times(1)).update(argumentCaptor.capture());
 
@@ -350,10 +350,10 @@ public class TestJobSchedulerV2Controller {
     ArgumentCaptor<JobScheduleV2> argumentCaptor = ArgumentCaptor.forClass(JobScheduleV2.class);
 
     String updatedCronExpression = "0 */5 */5 ? * 1 *";
-    JobScheduleV2DTO updatedJobScheduleDTO = new JobScheduleV2DTO();
-    updatedJobScheduleDTO.setCronExpression(updatedCronExpression);
-    updatedJobScheduleDTO.setEnabled(true);
-    target.updateSchedule(updatedJobScheduleDTO);
+    JobScheduleV2 updatedJobSchedule = new JobScheduleV2();
+    updatedJobSchedule.setCronExpression(updatedCronExpression);
+    updatedJobSchedule.setEnabled(true);
+    target.updateSchedule(updatedJobSchedule);
 
     verify(jobScheduleV2Facade, times(1)).update(argumentCaptor.capture());
 

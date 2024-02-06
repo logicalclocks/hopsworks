@@ -20,7 +20,7 @@ import io.hops.hopsworks.persistence.entity.alertmanager.AlertSeverity;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.FeatureGroupAlert;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.ValidationRuleAlertStatus;
+import io.hops.hopsworks.persistence.entity.featurestore.alert.FeatureStoreAlertStatus;
 import io.hops.hopsworks.persistence.entity.user.activity.Activity;
 
 import javax.ejb.Stateless;
@@ -60,11 +60,11 @@ public class FeatureGroupAlertFacade extends AbstractFacade<FeatureGroupAlert> {
   }
   
   public FeatureGroupAlert findByFeatureGroupAndStatus(
-      Featuregroup featureGroup, ValidationRuleAlertStatus validationRuleAlertStatus) {
+    Featuregroup featureGroup, FeatureStoreAlertStatus featureStoreAlertStatus) {
     TypedQuery<FeatureGroupAlert> query =
         em.createNamedQuery("FeatureGroupAlert.findByFeatureGroupAndStatus", FeatureGroupAlert.class);
     query.setParameter("featureGroup", featureGroup)
-        .setParameter("status", validationRuleAlertStatus);
+        .setParameter("status", featureStoreAlertStatus);
     try {
       return query.getSingleResult();
     } catch (NoResultException e) {
@@ -107,7 +107,7 @@ public class FeatureGroupAlertFacade extends AbstractFacade<FeatureGroupAlert> {
         q.setParameter(filterBy.getField(), getEnumValues(filterBy, AlertType.class));
         break;
       case STATUS:
-        q.setParameter(filterBy.getField(), getEnumValues(filterBy, ValidationRuleAlertStatus.class));
+        q.setParameter(filterBy.getField(), getEnumValues(filterBy, FeatureStoreAlertStatus.class));
         break;
       case SEVERITY:
         q.setParameter(filterBy.getField(), getEnumValues(filterBy, AlertSeverity.class));
@@ -161,7 +161,7 @@ public class FeatureGroupAlertFacade extends AbstractFacade<FeatureGroupAlert> {
   
   public enum Filters {
     TYPE("TYPE", "a.alertType IN :alertType ", "alertType", AlertType.PROJECT_ALERT.toString()),
-    STATUS("STATUS", "a.status IN :status ", "status", ValidationRuleAlertStatus.SUCCESS.toString()),
+    STATUS("STATUS", "a.status IN :status ", "status", FeatureStoreAlertStatus.SUCCESS.toString()),
     SEVERITY("SEVERITY", "a.severity IN :severity ", "severity", AlertSeverity.INFO.toString()),
     CREATED("CREATED", "a.created = :created ","created",""),
     CREATED_GT("DATE_CREATED_GT", "a.created > :createdFrom ","createdFrom",""),

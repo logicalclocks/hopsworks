@@ -16,6 +16,7 @@
 package io.hops.hopsworks.api.project.alert;
 
 import io.hops.hopsworks.api.featurestore.datavalidation.alert.FeatureGroupAlertDTO;
+import io.hops.hopsworks.api.featurestore.featureview.FeatureViewAlertDTO;
 import io.hops.hopsworks.api.jobs.alert.JobAlertsDTO;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -25,6 +26,8 @@ public class ProjectAllAlertsDTO {
   private ProjectAlertsDTO projectAlerts;
   private JobAlertsDTO jobAlerts;
   private FeatureGroupAlertDTO featureGroupAlerts;
+  
+  private FeatureViewAlertDTO featureViewAlertDTO;
   
   public ProjectAllAlertsDTO() {
   }
@@ -51,5 +54,13 @@ public class ProjectAllAlertsDTO {
   
   public void setFeatureGroupAlerts(FeatureGroupAlertDTO featureGroupAlerts) {
     this.featureGroupAlerts = featureGroupAlerts;
+  }
+  
+  public FeatureViewAlertDTO getFeatureViewAlertDTO() {
+    return featureViewAlertDTO;
+  }
+  
+  public void setFeatureViewAlertDTO(FeatureViewAlertDTO featureViewAlertDTO) {
+    this.featureViewAlertDTO = featureViewAlertDTO;
   }
 }
