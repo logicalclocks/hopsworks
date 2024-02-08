@@ -1,0 +1,1650 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Official documentation for Hopsworks and its Feature Store - an open source data-intensive AI platform used for the development and operation of machine learning models at scale.">
+      
+      
+        <meta name="author" content="Logical Clocks">
+      
+      
+        <link rel="canonical" href="https://docs.hopsworks.ai/hopsworks/latest/3.8.0-SNAPSHOT/admin/ha-dr/dr/">
+      
+      <link rel="icon" href="../../../assets/images/favicon.ico">
+      <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-8.2.8">
+    
+    
+      
+        <title>Disaster Recovery - Hopsworks Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.644de097.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.e6a45f82.min.css">
+        
+      
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CIBM+Plex+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"IBM Plex Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../css/custom.css">
+    
+      <link rel="stylesheet" href="../../../css/version-select.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="" data-md-color-accent="teal">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#disaster-recovery" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="Hopsworks Documentation" class="md-header__button md-logo" aria-label="Hopsworks Documentation" data-md-component="logo">
+      
+  <img src="../../../assets/images/hops-logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Hopsworks Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Disaster Recovery
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/logicalclocks/hopsworks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    logicalclocks/hopsworks
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-tabs__inner md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="https://docs.hopsworks.ai/feature-store-api/latest/" class="md-tabs__link">
+      Feature Store
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="https://docs.hopsworks.ai/machine-learning-api/latest/" class="md-tabs__link">
+      Model Management
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../compute/" class="md-tabs__link">
+        Compute Management
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+    
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../" class="md-tabs__link md-tabs__link--active">
+        Administration
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="https://docs.hopsworks.ai/hopsworks-cloud/latest/" class="md-tabs__link">
+      Hopsworks.ai
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="https://examples.hopsworks.ai/" class="md-tabs__link">
+      Examples
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="https://community.hopsworks.ai/" class="md-tabs__link">
+      Community
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="https://hopsworks.readthedocs.io/en/stable/index.html" class="md-tabs__link">
+      Old Documentation
+    </a>
+  </li>
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Hopsworks Documentation" class="md-nav__button md-logo" aria-label="Hopsworks Documentation" data-md-component="logo">
+      
+  <img src="../../../assets/images/hops-logo.png" alt="logo">
+
+    </a>
+    Hopsworks Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/logicalclocks/hopsworks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    logicalclocks/hopsworks
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://docs.hopsworks.ai/feature-store-api/latest/" class="md-nav__link">
+        Feature Store
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://docs.hopsworks.ai/machine-learning-api/latest/" class="md-nav__link">
+        Model Management
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3">
+          Compute Management
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Compute Management" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Compute Management
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../compute/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_2" type="checkbox" id="__nav_3_2" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_2">
+          Authentication
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Authentication" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_2">
+          <span class="md-nav__icon md-icon"></span>
+          Authentication
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../compute/auth/registration/" class="md-nav__link">
+        Registration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../compute/auth/login/" class="md-nav__link">
+        Login
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../compute/auth/recoverPassword/" class="md-nav__link">
+        Password Recovery
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../compute/auth/oauth2/" class="md-nav__link">
+        OAuth2 Authentication
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../compute/auth/ldap/" class="md-nav__link">
+        LDAP Authentication
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../compute/auth/krb/" class="md-nav__link">
+        Kerberos Authentication
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../compute/auth/updateProfile/" class="md-nav__link">
+        Update Profile
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_3" type="checkbox" id="__nav_3_3" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_3">
+          Project
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Project" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_3">
+          <span class="md-nav__icon md-icon"></span>
+          Project
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../compute/project/demoProject/" class="md-nav__link">
+        Start with a Demo Project
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../compute/project/createProject/" class="md-nav__link">
+        Create a New Project
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../compute/project/multiTenancy/" class="md-nav__link">
+        Project-based Multi-tenancy
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../compute/project/deleteProject/" class="md-nav__link">
+        Delete a Project
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../compute/project/reservedNames/" class="md-nav__link">
+        Project Name Reserved Words
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../compute/project/iamRoleChaining/" class="md-nav__link">
+        Assuming IAM Roles
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../compute/python/" class="md-nav__link">
+        Python
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../compute/jupyter/" class="md-nav__link">
+        Jupyter
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../compute/jobs/" class="md-nav__link">
+        Jobs
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../compute/git/" class="md-nav__link">
+        Git Integration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../compute/alerts/" class="md-nav__link">
+        Alerts
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" checked>
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4">
+          Administration
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Administration" data-md-level="1">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          Administration
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4_2" type="checkbox" id="__nav_4_2" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4_2">
+          Authentication
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Authentication" data-md-level="2">
+        <label class="md-nav__title" for="__nav_4_2">
+          <span class="md-nav__icon md-icon"></span>
+          Authentication
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../auth/" class="md-nav__link">
+        Configure Authentication
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4_2_2" type="checkbox" id="__nav_4_2_2" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4_2_2">
+          Configure OAuth2
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Configure OAuth2" data-md-level="3">
+        <label class="md-nav__title" for="__nav_4_2_2">
+          <span class="md-nav__icon md-icon"></span>
+          Configure OAuth2
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../oauth2/create-client/" class="md-nav__link">
+        Register an Identity Provider
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../oauth2/create-okta-client/" class="md-nav__link">
+        Create Okta Client
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../oauth2/create-azure-client/" class="md-nav__link">
+        Create Azure Client
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4_2_3" type="checkbox" id="__nav_4_2_3" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4_2_3">
+          Configure LDAP/Kerberos
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Configure LDAP/Kerberos" data-md-level="3">
+        <label class="md-nav__title" for="__nav_4_2_3">
+          <span class="md-nav__icon md-icon"></span>
+          Configure LDAP/Kerberos
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ldap/configure-ldap/" class="md-nav__link">
+        Configure LDAP
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ldap/configure-krb/" class="md-nav__link">
+        Configure Kerberos
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ldap/configure-server/" class="md-nav__link">
+        Configure server for LDAP and Kerberos
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4_3" type="checkbox" id="__nav_4_3" checked>
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4_3">
+          High availability / Disaster Recovery
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="High availability / Disaster Recovery" data-md-level="2">
+        <label class="md-nav__title" for="__nav_4_3">
+          <span class="md-nav__icon md-icon"></span>
+          High availability / Disaster Recovery
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../intro/" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ha/" class="md-nav__link">
+        High Availability
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Disaster Recovery
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Disaster Recovery
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#backup" class="md-nav__link">
+    Backup
+  </a>
+  
+    <nav class="md-nav" aria-label="Backup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#configuration-backup" class="md-nav__link">
+    Configuration Backup
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rondb-backup" class="md-nav__link">
+    RonDB Backup
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hopsfs-backup" class="md-nav__link">
+    HopsFS Backup
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#restore" class="md-nav__link">
+    Restore
+  </a>
+  
+    <nav class="md-nav" aria-label="Restore">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cluster-deployment" class="md-nav__link">
+    Cluster deployment
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rondb-restore" class="md-nav__link">
+    RonDB restore
+  </a>
+  
+    <nav class="md-nav" aria-label="RonDB restore">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#restore-rondb-schemas-and-tables" class="md-nav__link">
+    Restore RonDB schemas and tables
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#restore-rondb-data" class="md-nav__link">
+    Restore RonDB data
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rebuild-the-indices" class="md-nav__link">
+    Rebuild the indices
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#restore-users-and-grants" class="md-nav__link">
+    Restore Users and Grants
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hopsfs-restore" class="md-nav__link">
+    HopsFS restore
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#opensearch-state-rebuild" class="md-nav__link">
+    OpenSearch state rebuild
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kafka-topics-rebuild" class="md-nav__link">
+    Kafka topics rebuild
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/" class="md-nav__link">
+        User Management
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../alert/" class="md-nav__link">
+        Configure Alerts
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/" class="md-nav__link">
+        Manage Services
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../iamRoleChaining/" class="md-nav__link">
+        IAM Role Chaining
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://docs.hopsworks.ai/hopsworks-cloud/latest/" class="md-nav__link">
+        Hopsworks.ai
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://examples.hopsworks.ai/" class="md-nav__link">
+        Examples
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://community.hopsworks.ai/" class="md-nav__link">
+        Community
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://hopsworks.readthedocs.io/en/stable/index.html" class="md-nav__link">
+        Old Documentation
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#backup" class="md-nav__link">
+    Backup
+  </a>
+  
+    <nav class="md-nav" aria-label="Backup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#configuration-backup" class="md-nav__link">
+    Configuration Backup
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rondb-backup" class="md-nav__link">
+    RonDB Backup
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hopsfs-backup" class="md-nav__link">
+    HopsFS Backup
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#restore" class="md-nav__link">
+    Restore
+  </a>
+  
+    <nav class="md-nav" aria-label="Restore">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cluster-deployment" class="md-nav__link">
+    Cluster deployment
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rondb-restore" class="md-nav__link">
+    RonDB restore
+  </a>
+  
+    <nav class="md-nav" aria-label="RonDB restore">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#restore-rondb-schemas-and-tables" class="md-nav__link">
+    Restore RonDB schemas and tables
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#restore-rondb-data" class="md-nav__link">
+    Restore RonDB data
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rebuild-the-indices" class="md-nav__link">
+    Rebuild the indices
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#restore-users-and-grants" class="md-nav__link">
+    Restore Users and Grants
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hopsfs-restore" class="md-nav__link">
+    HopsFS restore
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#opensearch-state-rebuild" class="md-nav__link">
+    OpenSearch state rebuild
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kafka-topics-rebuild" class="md-nav__link">
+    Kafka topics rebuild
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+
+
+<h1 id="disaster-recovery">Disaster Recovery<a class="headerlink" href="#disaster-recovery" title="Permanent link">#</a></h1>
+<h2 id="backup">Backup<a class="headerlink" href="#backup" title="Permanent link">#</a></h2>
+<p>The state of the Hopsworks cluster is divided into data and metadata and distributed across the different node groups. This section of the guide allows you to take a consistent backup between data in the offline and online feature store as well as the metadata.</p>
+<p>The following services contain critical state that should be backed up:</p>
+<ul>
+<li><strong>RonDB</strong>: as mentioned above, the RonDB is used by Hopsworks to store the cluster metadata as well as the data for the online feature store.</li>
+<li><strong>HopsFS</strong>: HopsFS stores the data for the batch feature store as well as checkpoints and logs for feature engineering applications.</li>
+</ul>
+<p>Backing up service/application metrics and services/applications logs are out of the scope of this guide. By default metrics and logs are rotated after 7 days. Application logs are available on HopsFS when the application has finished and, as such, are backed up with the rest of HopsFS’ data.</p>
+<p>Apache Kafka and OpenSearch are additional services maintaining state. The OpenSearch metadata can be reconstructed from the metadata stored on RonDB.</p>
+<p>Apache Kafka is used in Hopsworks to store the in-flight data that is on its way to the online feature store. In the event of a total loss of the cluster, running jobs with inflight data will have to be replayed.</p>
+<h3 id="configuration-backup">Configuration Backup<a class="headerlink" href="#configuration-backup" title="Permanent link">#</a></h3>
+<p>Hopsworks adopts an Infrastructure-as-code philosophy, as such all the configuration files for the different Hopsworks services are generated during the deployment phase. Cluster-specific customizations should be centralized in the cluster definition used to deploy the cluster. As such the cluster definition should be backed up (e.g., by committing it to a git repository) to be able to recreate the same cluster in case it needs to be recreated.</p>
+<h3 id="rondb-backup">RonDB Backup<a class="headerlink" href="#rondb-backup" title="Permanent link">#</a></h3>
+<p>The RonDB backup is divided into two parts: user and privileges backup and data backup.</p>
+<p>To take the backup of users and privileges you can run the following command from any of the nodes in the head node group. This command generates a SQL file containing all the user definitions for both the metadata services (Hopsworks, HopsFS, Metastore) as well as the user and permission grants for the online feature store. This command needs to be run as user ‘mysql’ or with sudo privileges.</p>
+<div class="highlight"><pre><span></span><code>/srv/hops/mysql/bin/mysqlpump<span class="w"> </span>-S<span class="w"> </span>/srv/hops/mysql-cluster/mysql.sock<span class="w"> </span>--exclude-databases<span class="o">=</span>%<span class="w"> </span>--exclude-users<span class="o">=</span>root,mysql.sys,mysql.session,mysql.infoschema<span class="w"> </span>--users<span class="w"> </span>&gt;<span class="w"> </span>users.sql
+</code></pre></div>
+<p>The second step is to trigger the backup of the data. This can be achieved by running the following command as user ‘mysql’ on one of the nodes of the head node group. </p>
+<div class="highlight"><pre><span></span><code>/srv/hops/mysql-cluster/ndb/scripts/mgm-client.sh<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;START BACKUP [replace_backup_id] SNAPSHOTEND WAIT COMPLETED&quot;</span>
+</code></pre></div>
+<p>The backup ID is an integer greater or equal than 1. The script uses the following: <code>$(date +'%y%m%d%H%M')</code> instead of an integer as backup id to make it easier to identify backups over time.</p>
+<p>The command instructs each RonDB datanode to backup the data it is responsible for. The backup will be located locally on each datanode under the following path: </p>
+<div class="highlight"><pre><span></span><code>/srv/hops/mysql-cluster/ndb/backups/BACKUP<span class="w"> </span>-<span class="w"> </span>the<span class="w"> </span>directory<span class="w"> </span>name<span class="w"> </span>will<span class="w"> </span>be<span class="w"> </span>BACKUP-<span class="o">[</span>backup_id<span class="o">]</span><span class="w"> </span>
+</code></pre></div>
+<p>A more comprehensive backup script is available <a href="https://github.com/logicalclocks/ndb-chef/blob/master/templates/default/native_ndb_backup.sh.erb">here</a> - The script includes the steps above as well as collecting all the partial RonDB backups on a single node. The script is a good starting point and can be adapted to ship the database backup outside the cluster.</p>
+<h3 id="hopsfs-backup">HopsFS Backup<a class="headerlink" href="#hopsfs-backup" title="Permanent link">#</a></h3>
+<p>HopsFS is a distributed file system based on Apache HDFS. HopsFS stores its metadata in RonDB, as such metadata backup has already been discussed in the section above. The data is stored in the form of blocks on the different data nodes. 
+For availability reasons, the blocks are replicated across three different data nodes.</p>
+<p>Within a node, the blocks are stored by default under the following directory, under the ownership of the ‘hdfs’ user: </p>
+<div class="highlight"><pre><span></span><code>/srv/hopsworks-data/hops/hopsdata/hdfs/dn/
+</code></pre></div>
+<p>To safely backup all the data, a copy of all the datanodes should be taken. As the data is replicated across the different nodes, excluding a set of nodes might result in data loss.</p>
+<p>Additionally, as HopsFS blocks are files on the file system and the filesystem can be quite large, the backup is not transactional. Consistency is dictated by the metadata. Blocks being added during the copying process will not be visible when restoring as they are not part of the metadata backup taken prior to cloning the HopsFS blocks.</p>
+<p>When the HopsFS data blocks are stored in a cloud block storage, for example, Amazon S3, then it is sufficient to only backup the metadata. The blob cloud storage service will ensure durability of the data blocks.</p>
+<h2 id="restore">Restore<a class="headerlink" href="#restore" title="Permanent link">#</a></h2>
+<p>As with the backup phase, the restore operation is broken down in different steps.</p>
+<h3 id="cluster-deployment">Cluster deployment<a class="headerlink" href="#cluster-deployment" title="Permanent link">#</a></h3>
+<p>The first step to redeploy the cluster is to redeploy the binaries and configuration. You should reuse the same cluster definition used to deploy the first (original) cluster. This will re-create the same cluster with the same configuration.</p>
+<h3 id="rondb-restore">RonDB restore<a class="headerlink" href="#rondb-restore" title="Permanent link">#</a></h3>
+<p>The deployment step above created a functioning empty cluster. To restore the cluster, the first step is to restore the metadata and online feature store data stored on RonDB. 
+To restore the state of RonDB, we first need to restore its schemas and tables, then its data, rebuild the indices, and finally restore the users and grants.</p>
+<h4 id="restore-rondb-schemas-and-tables">Restore RonDB schemas and tables<a class="headerlink" href="#restore-rondb-schemas-and-tables" title="Permanent link">#</a></h4>
+<p>This command should be executed on one of the nodes in the head node group and is going to recreate the schemas, tables, and internal RonDB metadata. In the command below, you should replace the node_id with the id of the node you are running the command on, backup_id with the id of the backup you want to restore. Finally, you should replace the mgm_node_ip with the address of the node where the RonDB management service is running.</p>
+<div class="highlight"><pre><span></span><code>/srv/hops/mysql/bin/ndb_restore<span class="w"> </span>-n<span class="w"> </span><span class="o">[</span>node_id<span class="o">]</span><span class="w"> </span>-b<span class="w"> </span><span class="o">[</span>backup_id<span class="o">]</span><span class="w"> </span>-m<span class="w"> </span>--disable-indexes<span class="w"> </span>--ndb-connectstring<span class="o">=[</span>mgm_node_ip<span class="o">]</span>:1186<span class="w"> </span>--backup_path<span class="o">=</span>/srv/hops/mysql-cluster/ndb/backups/BACKUP/BACKUP-<span class="o">[</span>backup_id<span class="o">]</span>
+</code></pre></div>
+<h4 id="restore-rondb-data">Restore RonDB data<a class="headerlink" href="#restore-rondb-data" title="Permanent link">#</a></h4>
+<p>This command should be executed on all the RonDB datanodes. Each command should be customized with the node id of the node you are trying to restore (i.e., replace the node_id). As for the command above you should replace the backup_id and mgm_node_ip.</p>
+<div class="highlight"><pre><span></span><code>/srv/hops/mysql/bin/ndb_restore<span class="w"> </span>-n<span class="w"> </span><span class="o">[</span>node_id<span class="o">]</span><span class="w"> </span>-b<span class="w"> </span><span class="o">[</span>backup_id<span class="o">]</span><span class="w"> </span>-r<span class="w"> </span>--ndb-connectstring<span class="o">=[</span>mgm_node_ip<span class="o">]</span>:1186<span class="w"> </span>--backup_path<span class="o">=</span>/srv/hops/mysql-cluster/ndb/backups/BACKUP/BACKUP-<span class="o">[</span>backup_id<span class="o">]</span>
+</code></pre></div>
+<h4 id="rebuild-the-indices">Rebuild the indices<a class="headerlink" href="#rebuild-the-indices" title="Permanent link">#</a></h4>
+<p>In the first command we disable the indices for recovery. This last command will take care of enabling them again. This command needs to run only once on one of the nodes of the head node group. As for the commands above, you should replace node_id, backup_id and mgm_node_id.</p>
+<div class="highlight"><pre><span></span><code>/srv/hops/mysql/bin/ndb_restore<span class="w"> </span>-n<span class="w"> </span><span class="o">[</span>node_id<span class="o">]</span><span class="w"> </span>-b<span class="w"> </span><span class="o">[</span>backup_id<span class="o">]</span><span class="w"> </span>--rebuild-indexes<span class="w"> </span>--ndb-connectstring<span class="o">=[</span>mgm_node_ip<span class="o">]</span>:1186<span class="w"> </span>--backup_path<span class="o">=</span>/srv/hops/mysql-cluster/ndb/backups/BACKUP/BACKUP-<span class="o">[</span>backup_ip<span class="o">]</span>
+</code></pre></div>
+<h4 id="restore-users-and-grants">Restore Users and Grants<a class="headerlink" href="#restore-users-and-grants" title="Permanent link">#</a></h4>
+<p>In the backup phase, we took the backup of the user and grants separately. The last step of the RonDB restore process is to re-create all the users and grants both for Hopsworks services as well as for the online feature store users. This can be achieved by running the following command on one node of the head node group:</p>
+<div class="highlight"><pre><span></span><code>/srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh<span class="w"> </span><span class="nb">source</span><span class="w"> </span>users.sql
+</code></pre></div>
+<h3 id="hopsfs-restore">HopsFS restore<a class="headerlink" href="#hopsfs-restore" title="Permanent link">#</a></h3>
+<p>With the metadata restored, you can now proceed to restore the file system blocks on HopsFS and restart the file system. When starting the datanode, it will advertise it’s ID/ClusterID and Storage ID based on the VERSION file that can be found in this directory:</p>
+<div class="highlight"><pre><span></span><code>/srv/hopsworks-data/hops/hopsdata/hdfs/dn/current
+</code></pre></div>
+<p>It’s important that all the datanodes are restored and they report their block to the namenodes processes running on the head nodes. By default the namenodes in HopsFS will exit “SAFE MODE” (i.e., the mode that allows only read operations) only when the datanodes have reported 99.9% of the blocks the namenodes have in the metadata.  As such, the namenodes will not resume operations until all the file blocks have been restored.</p>
+<h3 id="opensearch-state-rebuild">OpenSearch state rebuild<a class="headerlink" href="#opensearch-state-rebuild" title="Permanent link">#</a></h3>
+<p>The OpenSearch state can be rebuilt using the Hopsworks metadata stored on RonDB. The rebuild process is done by using the re-indexing mechanism provided by ePipe.
+The re-indexing can be triggered by running the following command on the head node where ePipe is running:</p>
+<div class="highlight"><pre><span></span><code>/srv/hops/epipe/bin/reindex-epipe.sh
+</code></pre></div>
+<p>The script is deployed and configured during the platform deployment.</p>
+<h3 id="kafka-topics-rebuild">Kafka topics rebuild<a class="headerlink" href="#kafka-topics-rebuild" title="Permanent link">#</a></h3>
+<p>The backup and restore plan doesn’t cover the data in transit in Kafka, for which the jobs producing it will have to be replayed. However, the RonDB backup contains the information necessary to recreate the topics of all the feature groups. 
+You can run the following command, as super user, to recreate all the topics with the correct partitioning and replication factors:</p>
+<div class="highlight"><pre><span></span><code>/srv/hops/kafka/bin/kafka-restore.sh
+</code></pre></div>
+<p>The script is deployed and configured during the platform deployment.</p>
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="../ha/" class="md-footer__link md-footer__link--prev" aria-label="Previous: High Availability" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              High Availability
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../../user/" class="md-footer__link md-footer__link--next" aria-label="Next: User Management" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              User Management
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+      
+      
+    
+    <a href="https://twitter.com/logicalclocks" target="_blank" rel="noopener" title="twitter.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z"/></svg>
+    </a>
+  
+    
+    
+      
+      
+    
+    <a href="https://github.com/logicalclocks/hopsworks" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+    </a>
+  
+    
+    
+      
+      
+    
+    <a href="https://community.hopsworks.ai/" target="_blank" rel="noopener" title="community.hopsworks.ai" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M225.9 32C103.3 32 0 130.5 0 252.1 0 256 .1 480 .1 480l225.8-.2c122.7 0 222.1-102.3 222.1-223.9C448 134.3 348.6 32 225.9 32zM224 384c-19.4 0-37.9-4.3-54.4-12.1L88.5 392l22.9-75c-9.8-18.1-15.4-38.9-15.4-61 0-70.7 57.3-128 128-128s128 57.3 128 128-57.3 128-128 128z"/></svg>
+    </a>
+  
+    
+    
+      
+      
+    
+    <a href="https://www.linkedin.com/company/logicalclocks/" target="_blank" rel="noopener" title="www.linkedin.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3zM135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5zm282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9V416z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky"], "search": "../../../assets/javascripts/workers/search.5e67fbfe.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.c44cc438.min.js"></script>
+      
+        <script src="../../../js/version-select.js"></script>
+      
+    
+  </body>
+</html>
