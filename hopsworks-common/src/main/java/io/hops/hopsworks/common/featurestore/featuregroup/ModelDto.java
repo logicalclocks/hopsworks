@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2023, Hopsworks AB. All rights reserved
+ * Copyright (C) 2024, Hopsworks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -17,7 +17,6 @@
 package io.hops.hopsworks.common.featurestore.featuregroup;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.EmbeddingFeature;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,28 +24,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class EmbeddingFeatureDTO {
+public class ModelDto {
 
   @Getter
-  private String name;
+  private Integer modelRegistryId;
   @Getter
-  private String similarityFunctionType;
+  private String modelName;
   @Getter
-  private Integer dimension;
-  @Getter
-  private ModelDto model;
+  private Integer modelVersion;
 
-
-  public EmbeddingFeatureDTO(EmbeddingFeature feature) {
-    name = feature.getName();
-    similarityFunctionType = feature.getSimilarityFunctionType();
-    dimension = feature.getDimension();
-    if (feature.getModelVersion() != null) {
-      model = new ModelDto(
-          // model registry id is same as project id
-          feature.getModelVersion().getModel().getProject().getId(),
-          feature.getModelVersion().getModel().getName(),
-          feature.getModelVersion().getModelVersionPK().getVersion());
-    }
-  }
 }

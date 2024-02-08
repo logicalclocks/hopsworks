@@ -22,11 +22,15 @@ import com.google.common.collect.Sets;
 import io.hops.hopsworks.common.featurestore.featuregroup.EmbeddingDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.models.ModelFacade;
+import io.hops.hopsworks.common.models.version.ModelVersionFacade;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Embedding;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.EmbeddingFeature;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.models.Model;
+import io.hops.hopsworks.persistence.entity.models.version.ModelVersion;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.vectordb.Index;
@@ -55,6 +59,10 @@ public class EmbeddingController {
   private VectorDatabaseClient vectorDatabaseClient;
   @EJB
   private FeaturegroupController featuregroupController;
+  @EJB
+  private ModelVersionFacade modelVersionFacade;
+  @EJB
+  private ModelFacade modelFacade;
 
   public void createVectorDbIndex(Project project, Featuregroup featureGroup)
       throws FeaturestoreException {
@@ -70,6 +78,11 @@ public class EmbeddingController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP,
           Level.FINE, "Cannot create opensearch vectordb index: " + index.getName());
     }
+  }
+
+  private ModelVersion getModel(Integer projectId, String modelName, Integer modelVersion) {
+    Model model = modelFacade.findByProjectIdAndName(projectId, modelName);
+    return modelVersionFacade.findByProjectAndMlId(model.getId(), modelVersion);
   }
 
   public Embedding getEmbedding(Project project, EmbeddingDTO embeddingDTO, Featuregroup featuregroup)
@@ -94,8 +107,19 @@ public class EmbeddingController {
     embedding.setEmbeddingFeatures(
         embeddingDTO.getFeatures()
             .stream()
-            .map(mapping -> new EmbeddingFeature(embedding, mapping.getName(), mapping.getDimension(),
-                mapping.getSimilarityFunctionType()))
+            .map(mapping -> {
+                  if (mapping.getModel() != null) {
+                    return new EmbeddingFeature(embedding, mapping.getName(), mapping.getDimension(),
+                        mapping.getSimilarityFunctionType(),
+                        getModel(mapping.getModel().getModelRegistryId(),
+                            mapping.getModel().getModelName(),
+                            mapping.getModel().getModelVersion()));
+                  } else {
+                    return new EmbeddingFeature(embedding, mapping.getName(), mapping.getDimension(),
+                        mapping.getSimilarityFunctionType());
+                  }
+                }
+            )
             .collect(Collectors.toList())
     );
     return embedding;
