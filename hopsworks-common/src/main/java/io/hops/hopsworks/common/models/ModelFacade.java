@@ -85,6 +85,16 @@ public class ModelFacade extends AbstractFacade<Model> {
     }
   }
 
+  public Model findByProjectIdAndName(Integer projectId, String name) {
+    TypedQuery<Model> query = em.createNamedQuery("Model.findByProjectIdAndName", Model.class);
+    query.setParameter("name", name).setParameter("projectId", projectId);
+    try {
+      return query.getSingleResult();
+    } catch (NoResultException e) {
+      return null;
+    }
+  }
+
   public CollectionInfo findByProject(Integer offset, Integer limit,
                                       Set<? extends AbstractFacade.FilterBy> filters,
                                       Set<? extends AbstractFacade.SortBy> sorts, Project project) {

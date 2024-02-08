@@ -16,6 +16,8 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup;
 
+import io.hops.hopsworks.persistence.entity.models.version.ModelVersion;
+
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -23,10 +25,14 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinColumns;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.xml.bind.annotation.XmlRootElement;
 
 @Entity
 @Table(name = "embedding_feature", catalog = "hopsworks")
+@XmlRootElement
 public class EmbeddingFeature {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,6 +47,11 @@ public class EmbeddingFeature {
   private Integer dimension;
   @Column(name = "similarity_function_type")
   private String similarityFunctionType;
+  @JoinColumns({
+      @JoinColumn(name = "hsml_model_version", referencedColumnName = "version"),
+      @JoinColumn(name = "hsml_model_id", referencedColumnName = "model_id")})
+  @OneToOne
+  private ModelVersion modelVersion;
 
   public EmbeddingFeature() {
   }
@@ -51,6 +62,15 @@ public class EmbeddingFeature {
     this.name = name;
     this.dimension = dimension;
     this.similarityFunctionType = similarityFunctionType;
+  }
+
+  public EmbeddingFeature(Embedding embedding, String name, Integer dimension,
+      String similarityFunctionType, ModelVersion modelVersion) {
+    this.embedding = embedding;
+    this.name = name;
+    this.dimension = dimension;
+    this.similarityFunctionType = similarityFunctionType;
+    this.modelVersion = modelVersion;
   }
 
   public EmbeddingFeature(Integer id, Embedding embedding, String name, Integer dimension,
@@ -82,4 +102,7 @@ public class EmbeddingFeature {
     return similarityFunctionType;
   }
 
+  public ModelVersion getModelVersion() {
+    return modelVersion;
+  }
 }
