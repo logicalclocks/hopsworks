@@ -29,7 +29,7 @@ import javax.ejb.Timeout;
 import javax.ejb.Timer;
 import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
-import java.util.Date;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -48,9 +48,12 @@ public class OneTimeJWTRotation {
   @PostConstruct
   public void init() {
     //number of milliseconds that must elapse between timer expiration notifications
-    long intervalDuration = 24*3600000L; // 24 hour
-    timer = timerService.createIntervalTimer(0, intervalDuration, new TimerConfig("Mark old JWT signing keys for " +
-      "deletion", false));
+    long intervalDuration = TimeUnit.HOURS.toMillis(24);
+
+    // The Info of the Timer **MUST** start with 'Mark'
+    // Read comment of the @Timeout annotated method below
+    timer = timerService.createIntervalTimer(0, intervalDuration, new TimerConfig("Mark old one-time JWT signing key",
+        false));
   }
   
   @PreDestroy
@@ -59,30 +62,53 @@ public class OneTimeJWTRotation {
       timer.cancel();
     }
   }
-  
+
+  /**
+   * Recurring Timer method which rotates the one-time JWT signing key.
+   * It will rename the current to *_old and generate a new one
+   * During validation of a JWT we lookup the signing key based on the ID,
+   * so even if the name changes we will still be able to validate "older" JWTs
+   *
+   * Once we have generated a new signing key and renamed the old we create
+   * a single action Timer which fires a little bit later. The reason is that we
+   * want sessions which are using the old signing key to still be able to authenticate
+   * for a short-while.
+   *
+   * Since we cannot have two methods in the same EJB with @Timeout annotation we take
+   * different paths in the same method based on the **Info** field of the Timer.
+   * The recurring Timer's Info will/must start with 'Mark' while the single action
+   * will/must start with 'Sweep'
+   */
   @Timeout
-  public void markOldSigningKeys() {
+  public void rotateOneTimeJWTSigningKey(Timer timer) {
     if (!payaraClusterManager.amIThePrimary()) {
+      LOGGER.log(Level.INFO, "I am not the Primary or Active region. Skip rotating one-time JWT signing key");
       return;
     }
-    boolean marked = jWTController.markOldSigningKeys();
-    if (marked) {
-      //(60000 + 60000)*2 = 240000 milliseconds = 4 min
-      long duration = (Constants.DEFAULT_EXPIRY_LEEWAY * 1000 + Constants.ONE_TIME_JWT_LIFETIME_MS) * 2;
-      TimerConfig config = new TimerConfig();
-      config.setInfo("Remove old JWT signing keys");
-      config.setPersistent(false);
-      timerService.createSingleActionTimer(duration, config);
-    }
-  }
 
-  @Timeout
-  public void performTimeout(Timer timer) {
-    try {
-      jWTController.removeMarkedKeys();
-      LOGGER.log(Level.INFO, "{0} timer event: {1}.", new Object[]{timer.getInfo(), new Date()});
-    } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "Got an exception while rotating one-time jwt", e);
+    String timerInfo = (String) timer.getInfo();
+    if (timerInfo.startsWith("Mark")) {
+      LOGGER.log(Level.INFO, "Rotating one-time JWT signing key");
+      boolean marked = jWTController.markOldSigningKeys();
+      if (marked) {
+        LOGGER.log(Level.INFO, "Marked old one-time JWT signing key, scheduling Sweeper");
+        //(60000 + 60000)*2 = 240000 milliseconds = 4 min
+        long duration = (Constants.DEFAULT_EXPIRY_LEEWAY * 1000 + Constants.ONE_TIME_JWT_LIFETIME_MS) * 2;
+        TimerConfig config = new TimerConfig();
+        // The Info of the Timer **MUST** start with 'Sweep'
+        // Read comment of the method above
+        config.setInfo("Sweep old one-time JWT signing key");
+        config.setPersistent(false);
+        timerService.createSingleActionTimer(duration, config);
+      }
+    } else if (timerInfo.startsWith("Sweep")) {
+      LOGGER.log(Level.INFO, "Sweeping old one-time JWT signing key");
+      try {
+        jWTController.removeMarkedKeys();
+        LOGGER.log(Level.INFO, "Deleted old one-time JWT signing key");
+      } catch (Exception e) {
+        LOGGER.log(Level.SEVERE, "Failed to delete old one-time JWT signing key", e);
+      }
     }
   }
 }
