@@ -17,6 +17,7 @@
 package io.hops.hopsworks.api.modelregistry.models.dto;
 
 import io.hops.hopsworks.api.dataset.inode.InodeDTO;
+import io.hops.hopsworks.api.user.UserDTO;
 import io.hops.hopsworks.common.tags.TagsDTO;
 import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
@@ -26,7 +27,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAnyAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.namespace.QName;
-import java.util.Arrays;
 import java.util.HashMap;
 
 /**
@@ -58,12 +58,14 @@ public class ModelDTO extends RestDTO<ModelDTO> {
 
   private Long created;
 
+  private UserDTO creator;
+
   @XmlAnyAttribute
   private HashMap<QName, Double> metrics;
 
   private String description;
 
-  private String[] environment;
+  private String environment;
 
   private String program;
   
@@ -143,11 +145,11 @@ public class ModelDTO extends RestDTO<ModelDTO> {
     this.id = id;
   }
 
-  public String[] getEnvironment() {
+  public String getEnvironment() {
     return environment;
   }
 
-  public void setEnvironment(String[] environment) {
+  public void setEnvironment(String environment) {
     this.environment = environment;
   }
 
@@ -224,6 +226,14 @@ public class ModelDTO extends RestDTO<ModelDTO> {
   }
   
   public String getType() { return type; }
+
+  public UserDTO getCreator() {
+    return creator;
+  }
+
+  public void setCreator(UserDTO creator) {
+    this.creator = creator;
+  }
   
   @Override
   public String toString() {
@@ -239,7 +249,7 @@ public class ModelDTO extends RestDTO<ModelDTO> {
       ", created=" + created +
       ", metrics=" + metrics +
       ", description='" + description + '\'' +
-      ", environment=" + Arrays.toString(environment) +
+      ", environment=" + environment +
       ", program='" + program + '\'' +
       ", experimentId='" + experimentId + '\'' +
       ", experimentProjectName='" + experimentProjectName + '\'' +
