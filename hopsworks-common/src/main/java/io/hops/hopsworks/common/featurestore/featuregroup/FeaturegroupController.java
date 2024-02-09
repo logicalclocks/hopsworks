@@ -122,8 +122,6 @@ public class FeaturegroupController {
   @EJB
   private Settings settings;
   @EJB
-  private OnlineFeaturestoreController onlineFeaturestoreController;
-  @EJB
   private OnlineFeaturegroupController onlineFeaturegroupController;
   @EJB
   private FeaturestoreActivityFacade fsActivityFacade;
@@ -948,7 +946,7 @@ public class FeaturegroupController {
       Featurestore userFeatureStore = featurestoreController.getProjectFeaturestore(project);
       // Accessing online feature store from a shared project requires online feature store
       // being setup in users' project.
-      onlineFeaturestoreController.setupOnlineFeatureStore(project, userFeatureStore);
+      onlineFeaturestoreController.setupOnlineFeaturestore(project, userFeatureStore, user);
       return onlineFeaturegroupController.getFeaturegroupPreview(featuregroup, project, user, limit);
     } else if (online) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_ONLINE, Level.FINE);
