@@ -15,7 +15,6 @@
  */
 package io.hops.hopsworks.api.modelregistry.models;
 
-import com.google.common.base.Strings;
 import io.hops.hopsworks.api.modelregistry.models.dto.ModelDTO;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
@@ -23,31 +22,21 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
-import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.util.AccessController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.GenericException;
-import io.hops.hopsworks.exceptions.JobException;
-import io.hops.hopsworks.exceptions.MetadataException;
-import io.hops.hopsworks.exceptions.ModelRegistryException;
+
 import io.hops.hopsworks.exceptions.ProjectException;
-import io.hops.hopsworks.exceptions.PythonException;
-import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.json.JSONObject;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 import java.util.logging.Level;
 
 @Stateless
@@ -64,12 +53,6 @@ public class ModelUtils {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private DistributedFsService dfs;
-  @EJB
-  private ModelsController modelsController;
-  @EJB
-  private EnvironmentController environmentController;
-  @EJB
-  private ModelConverter modelConverter;
 
   public String getModelsDatasetPath(Project userProject, Project modelRegistryProject) {
     String modelsPath = Utils.getProjectPath(userProject.getName()) + Settings.HOPS_MODELS_DATASET + "/";
@@ -139,38 +122,9 @@ public class ModelUtils {
     }
   }
 
-  public Response createModel(UriInfo uriInfo, ModelsController.Accessor accessor, String mlId, ModelDTO modelDTO,
-                              String jobName, String kernelId)
-    throws DatasetException, MetadataException, JobException, ServiceException, PythonException,
-    ModelRegistryException {
-    String realName = accessor.user.getFname() + " " + accessor.user.getLname();
-    //Only attach program and environment if exporting inside Hopsworks
-    if (!Strings.isNullOrEmpty(jobName) || !Strings.isNullOrEmpty(kernelId)) {
-
-      modelDTO.setProgram(modelsController.versionProgram(accessor, jobName, kernelId,
-            modelDTO.getName(), modelDTO.getVersion()));
-      //Export environment to correct path here
-      modelDTO.setEnvironment(environmentController.exportEnv(accessor.experimentProject, accessor.user,
-          getModelFullPath(accessor.modelProject, modelDTO.getName(), modelDTO.getVersion()) +
-              "/" + Settings.ENVIRONMENT_FILE
-      ));
-    }
-
-    modelDTO.setModelRegistryId(accessor.modelProject.getId());
-
-    modelsController.attachModel(accessor.udfso, accessor.modelProject, realName, modelDTO);
-    UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(mlId);
-    return Response.created(builder.build()).entity(modelDTO).build();
-  }
-
   public String getModelFullPath(Project modelRegistryProject, String modelName, Integer modelVersion) {
     return Utils.getProjectPath(modelRegistryProject.getName()) +
         Settings.HOPS_MODELS_DATASET + "/" + modelName + "/" + modelVersion;
-  }
-
-  public ModelDTO convertProvenanceHitToModel(ProvStateDTO model) throws ModelRegistryException {
-    JSONObject summary = new JSONObject(model.getXattrs().get(ModelsBuilder.MODEL_SUMMARY_XATTR_NAME));
-    return modelConverter.unmarshalDescription(summary.toString());
   }
   
   public String[] getModelNameAndVersion(String mlId) {
