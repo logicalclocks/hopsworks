@@ -17,8 +17,6 @@ package io.hops.hopsworks.api.modelregistry.models.tags;
 
 import io.hops.hopsworks.api.modelregistry.ModelRegistryTagResource;
 import io.hops.hopsworks.api.modelregistry.models.ModelUtils;
-import io.hops.hopsworks.audit.logger.LogLevel;
-import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
@@ -47,7 +45,6 @@ public class ModelTagResource extends ModelRegistryTagResource {
    *
    * @param modelVersion
    */
-  @Logged(logLevel = LogLevel.OFF)
   public void setModel(ModelVersion modelVersion) {
     this.modelVersion = modelVersion;
   }
