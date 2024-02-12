@@ -45,11 +45,14 @@ import java.util.Collection;
 @Table(name = "model", catalog = "hopsworks")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "Model.findAll",
-    query = "SELECT m FROM Model m"),
-  @NamedQuery(name = "Model.findByProjectAndName",
-    query
-      = "SELECT m FROM Model m WHERE m.name = :name AND m.project = :project"),})
+    @NamedQuery(name = "Model.findAll",
+        query = "SELECT m FROM Model m"),
+    @NamedQuery(name = "Model.findByProjectAndName",
+        query
+            = "SELECT m FROM Model m WHERE m.name = :name AND m.project = :project"),
+    @NamedQuery(name = "Model.findByProjectIdAndName",
+        query
+            = "SELECT m FROM Model m WHERE m.name = :name AND m.project.id = :projectId"),})
 public class Model implements Serializable {
   private static final long serialVersionUID = 1L;
 
