@@ -46,7 +46,7 @@ public class EmbeddingFeatureDTO {
           // model registry id is same as project id
           feature.getModelVersion().getModel().getProject().getId(),
           feature.getModelVersion().getModel().getName(),
-          feature.getModelVersion().getModelVersionPK().getVersion());
+          feature.getModelVersion().getVersion());
     }
   }
 }

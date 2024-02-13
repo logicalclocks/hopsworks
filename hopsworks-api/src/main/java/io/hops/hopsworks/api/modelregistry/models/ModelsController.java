@@ -51,7 +51,6 @@ import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.models.Model;
 import io.hops.hopsworks.persistence.entity.models.version.Metrics;
 import io.hops.hopsworks.persistence.entity.models.version.ModelVersion;
-import io.hops.hopsworks.persistence.entity.models.version.ModelVersionPK;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -123,10 +122,8 @@ public class ModelsController {
     modelVersion.setExperimentProjectName(modelDTO.getExperimentProjectName());
     modelVersion.setCreator(accessor.user);
 
-    ModelVersionPK modelVersionPK = new ModelVersionPK();
-    modelVersionPK.setVersion(modelDTO.getVersion());
-    modelVersionPK.setModelId(model.getId());
-    modelVersion.setModelVersionPK(modelVersionPK);
+    modelVersion.setVersion(modelDTO.getVersion());
+    modelVersion.setModel(model);
 
     //Only attach program and environment if exporting inside Hopsworks
     if (!Strings.isNullOrEmpty(jobName) || !Strings.isNullOrEmpty(kernelId)) {
@@ -164,7 +161,7 @@ public class ModelsController {
 
       String modelPath = Utils.getProjectPath(userProject.getName())
         + parentProject.getName() + "::" + Settings.HOPS_MODELS_DATASET + "/" + modelVersion.getModel().getName()
-        + "/" + modelVersion.getModelVersionPK().getVersion();
+        + "/" + modelVersion.getVersion();
       deleteInternal(user, userProject, modelPath, modelVersion);
     }
   }
@@ -174,8 +171,7 @@ public class ModelsController {
     verifyNoModelDeployments(project, modelVersion);
 
     String modelPath = Utils.getProjectPath(project.getName())
-      + Settings.HOPS_MODELS_DATASET + "/" + modelVersion.getModel().getName() + "/"
-      + modelVersion.getModelVersionPK().getVersion();
+      + Settings.HOPS_MODELS_DATASET + "/" + modelVersion.getModel().getName() + "/" + modelVersion.getVersion();
     deleteInternal(user, project, modelPath, modelVersion);
   }
 
