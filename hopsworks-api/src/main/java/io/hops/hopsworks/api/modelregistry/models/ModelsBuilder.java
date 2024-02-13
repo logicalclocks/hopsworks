@@ -85,7 +85,7 @@ public class ModelsBuilder {
       .path(ResourceRequest.Name.MODELREGISTRIES.toString().toLowerCase())
       .path(Integer.toString(modelRegistryProject.getId()))
       .path(ResourceRequest.Name.MODELS.toString().toLowerCase())
-      .path(modelVersion.getModel().getName() + "_" + modelVersion.getModelVersionPK().getVersion())
+      .path(modelVersion.getModel().getName() + "_" + modelVersion.getVersion())
       .build());
     return dto;
   }
@@ -145,9 +145,9 @@ public class ModelsBuilder {
     ModelDTO modelDTO = new ModelDTO();
     uri(modelDTO, uriInfo, userProject, modelRegistryProject, modelVersion);
     if (expand(modelDTO, resourceRequest).isExpand()) {
-      modelDTO.setId(modelVersion.getModel().getName() + "_" + modelVersion.getModelVersionPK().getVersion());
+      modelDTO.setId(modelVersion.getModel().getName() + "_" + modelVersion.getVersion());
       modelDTO.setName(modelVersion.getModel().getName());
-      modelDTO.setVersion(modelVersion.getModelVersionPK().getVersion());
+      modelDTO.setVersion(modelVersion.getVersion());
       modelDTO.setUserFullName(modelVersion.getUserFullName());
       modelDTO.setCreated(modelVersion.getCreated().getTime());
       modelDTO.setMetrics(modelVersion.getMetrics().getAttributes());
@@ -162,8 +162,7 @@ public class ModelsBuilder {
       modelDTO.setCreator(usersBuilder.build(uriInfo, resourceRequest, modelVersion.getCreator()));
 
       DatasetPath modelDsPath = datasetHelper.getDatasetPath(userProject,
-        modelUtils.getModelFullPath(modelRegistryProject, modelVersion.getModel().getName(),
-          modelVersion.getModelVersionPK().getVersion()),
+        modelUtils.getModelFullPath(modelRegistryProject, modelVersion.getModel().getName(), modelVersion.getVersion()),
         DatasetType.DATASET);
       ModelRegistryTagUri tagUri = new ModelRegistryTagUri(uriInfo, modelRegistryProject,
         ResourceRequest.Name.MODELS, modelDTO.getId());

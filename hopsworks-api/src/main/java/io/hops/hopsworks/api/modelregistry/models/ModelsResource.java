@@ -238,7 +238,7 @@ public class ModelsResource {
       ModelVersion modelVersion = modelsController.createModelVersion(accessor, modelDTO, jobName, kernelId);
       ModelDTO dto = modelsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.MODELS), user, userProject,
         modelRegistryProject, modelVersion, modelUtils.getModelFullPath(modelProject, modelVersion.getModel().getName(),
-          modelVersion.getModelVersionPK().getVersion()));
+          modelVersion.getVersion()));
       UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(id);
       return Response.created(builder.build()).entity(dto).build();
     } finally {

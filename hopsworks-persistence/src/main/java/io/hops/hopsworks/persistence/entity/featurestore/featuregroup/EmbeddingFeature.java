@@ -25,7 +25,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -47,9 +46,7 @@ public class EmbeddingFeature {
   private Integer dimension;
   @Column(name = "similarity_function_type")
   private String similarityFunctionType;
-  @JoinColumns({
-      @JoinColumn(name = "hsml_model_version", referencedColumnName = "version"),
-      @JoinColumn(name = "hsml_model_id", referencedColumnName = "model_id")})
+  @JoinColumn(name = "model_version_id", referencedColumnName = "id")
   @OneToOne
   private ModelVersion modelVersion;
 
