@@ -17,7 +17,6 @@
 package io.hops.hopsworks.api.featurestore.featuregroup;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordResource;
 import io.hops.hopsworks.api.featurestore.activities.ActivityResource;
 import io.hops.hopsworks.api.featurestore.code.CodeResource;
 import io.hops.hopsworks.api.featurestore.commit.CommitResource;
@@ -26,6 +25,7 @@ import io.hops.hopsworks.api.featurestore.datavalidation.alert.FeatureStoreAlert
 import io.hops.hopsworks.api.featurestore.datavalidationv2.reports.ValidationReportResource;
 import io.hops.hopsworks.api.featurestore.datavalidationv2.results.ValidationResultResource;
 import io.hops.hopsworks.api.featurestore.datavalidationv2.suites.ExpectationSuiteResource;
+import io.hops.hopsworks.api.featurestore.keyword.FeatureGroupKeywordResource;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.featurestore.tag.FeatureGroupTagResource;
 import io.hops.hopsworks.api.filter.JWTNotRequired;
@@ -135,7 +135,7 @@ public class FeaturegroupService {
   @Inject
   private IngestionJobBuilder ingestionJobBuilder;
   @Inject
-  private FeaturestoreKeywordResource featurestoreKeywordResource;
+  private FeatureGroupKeywordResource featureGroupKeywordResource;
   @Inject
   private ActivityResource activityResource;
   @Inject
@@ -662,13 +662,13 @@ public class FeaturegroupService {
 
   @Path("/{featureGroupId}/keywords")
   @Logged(logLevel = LogLevel.OFF)
-  public FeaturestoreKeywordResource keywords (
+  public FeatureGroupKeywordResource keywords (
       @ApiParam(value = "Id of the featuregroup") @PathParam("featureGroupId") Integer featureGroupId)
       throws FeaturestoreException {
-    this.featurestoreKeywordResource.setProject(project);
-    this.featurestoreKeywordResource.setFeaturestore(featurestore);
-    this.featurestoreKeywordResource.setFeatureGroupId(featureGroupId);
-    return featurestoreKeywordResource;
+    this.featureGroupKeywordResource.setProject(project);
+    this.featureGroupKeywordResource.setFeaturestore(featurestore);
+    this.featureGroupKeywordResource.setFeatureGroupId(featureGroupId);
+    return featureGroupKeywordResource;
   }
 
   @Path("/{featureGroupId}/activity")

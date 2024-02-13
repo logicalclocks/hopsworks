@@ -17,10 +17,10 @@
 package io.hops.hopsworks.api.featurestore.trainingdataset;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordResource;
 import io.hops.hopsworks.api.featurestore.FsQueryBuilder;
 import io.hops.hopsworks.api.featurestore.activities.ActivityResource;
 import io.hops.hopsworks.api.featurestore.code.CodeResource;
+import io.hops.hopsworks.api.featurestore.keyword.TrainingDatasetKeywordResource;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.featurestore.tag.TrainingDatasetTagResource;
 import io.hops.hopsworks.api.featurestore.transformationFunction.TransformationFunctionBuilder;
@@ -118,7 +118,7 @@ public class TrainingDatasetService {
   @EJB
   private FsQueryBuilder fsQueryBuilder;
   @Inject
-  private FeaturestoreKeywordResource featurestoreKeywordResource;
+  private TrainingDatasetKeywordResource trainingDatasetKeywordResource;
   @Inject
   private ActivityResource activityResource;
   @EJB
@@ -462,14 +462,13 @@ public class TrainingDatasetService {
 
   @Path("/{trainingDatasetId}/keywords")
   @Logged(logLevel = LogLevel.OFF)
-  public FeaturestoreKeywordResource keywords(
+  public TrainingDatasetKeywordResource keywords(
       @ApiParam(value = "Id of the training dataset") @PathParam("trainingDatasetId") Integer trainingDatasetId)
       throws FeaturestoreException {
-    this.featurestoreKeywordResource.setProject(project);
-    this.featurestoreKeywordResource.setFeaturestore(featurestore);
+    this.trainingDatasetKeywordResource.setProject(project);
     TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
-    this.featurestoreKeywordResource.setTrainingDataset(trainingDataset);
-    return featurestoreKeywordResource;
+    this.trainingDatasetKeywordResource.setTrainingDataset(trainingDataset);
+    return trainingDatasetKeywordResource;
   }
 
   @Path("/{trainingDatasetId}/activity")
