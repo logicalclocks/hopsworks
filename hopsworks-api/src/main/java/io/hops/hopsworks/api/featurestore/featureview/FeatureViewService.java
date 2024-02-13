@@ -16,8 +16,8 @@
 
 package io.hops.hopsworks.api.featurestore.featureview;
 
-import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordResource;
 import io.hops.hopsworks.api.featurestore.activities.ActivityResource;
+import io.hops.hopsworks.api.featurestore.keyword.FeatureViewKeywordResource;
 import io.hops.hopsworks.api.featurestore.preparestatement.PreparedStatementResource;
 import io.hops.hopsworks.api.featurestore.query.QueryResource;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
@@ -61,7 +61,7 @@ public class FeatureViewService {
   @Inject
   private PreparedStatementResource preparedStatementResource;
   @Inject
-  private FeaturestoreKeywordResource featurestoreKeywordResource;
+  private FeatureViewKeywordResource featureViewKeywordResource;
   @EJB
   private FeaturestoreController featurestoreController;
   @Inject
@@ -120,7 +120,7 @@ public class FeatureViewService {
   }
 
   @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/keywords")
-  public FeaturestoreKeywordResource keywords(
+  public FeatureViewKeywordResource keywords(
       @ApiParam(value = "Name of the feature view", required = true)
       @PathParam("name")
           String featureViewName,
@@ -128,10 +128,10 @@ public class FeatureViewService {
       @PathParam("version")
           Integer version
   ) throws FeaturestoreException {
-    this.featurestoreKeywordResource.setProject(project);
-    this.featurestoreKeywordResource.setFeaturestore(featurestore);
-    this.featurestoreKeywordResource.setFeatureView(featureViewName, version);
-    return this.featurestoreKeywordResource;
+    this.featureViewKeywordResource.setProject(project);
+    this.featureViewKeywordResource.setFeaturestore(featurestore);
+    this.featureViewKeywordResource.setFeatureView(featureViewName, version);
+    return this.featureViewKeywordResource;
   }
 
   @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/activity")

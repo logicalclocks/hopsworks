@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.api.featurestore.trainingdataset;
 
-import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordResource;
+import io.hops.hopsworks.api.featurestore.keyword.TrainingDatasetKeywordResource;
 import io.hops.hopsworks.api.featurestore.tag.TrainingDatasetTagResource;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
@@ -87,7 +87,7 @@ public class TrainingDatasetResource {
   @Inject
   private TrainingDatasetTagResource tagResource;
   @Inject
-  private FeaturestoreKeywordResource featurestoreKeywordResource;
+  private TrainingDatasetKeywordResource trainingDatasetKeywordResource;
   @EJB
   private FeatureViewController featureViewController;
   @EJB
@@ -329,17 +329,16 @@ public class TrainingDatasetResource {
   }
 
   @Path("/version/{version: [0-9]+}/keywords")
-  public FeaturestoreKeywordResource keywords(
+  public TrainingDatasetKeywordResource keywords(
       @ApiParam(value = "Version of the training dataset", required = true)
       @PathParam("version")
           Integer version
   ) throws FeaturestoreException {
-    this.featurestoreKeywordResource.setProject(project);
-    this.featurestoreKeywordResource.setFeaturestore(featurestore);
+    this.trainingDatasetKeywordResource.setProject(project);
     TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(
         featureView, version);
-    this.featurestoreKeywordResource.setTrainingDataset(trainingDataset);
-    return this.featurestoreKeywordResource;
+    this.trainingDatasetKeywordResource.setTrainingDataset(trainingDataset);
+    return this.trainingDatasetKeywordResource;
   }
 
   @Path("/version/{version: [0-9]+}/statistics")
@@ -415,7 +414,6 @@ public class TrainingDatasetResource {
   public TrainingDatasetProvenanceResource provenance(@ApiParam(value = "Id of the training dataset")
                                                       @PathParam("version") Integer trainingDatasetVersion) {
     this.provenanceResource.setProject(project);
-    this.provenanceResource.setFeatureStore(featurestore);
     this.provenanceResource.setFeatureView(featureView);
     this.provenanceResource.setTrainingDatasetVersion(trainingDatasetVersion);
     return this.provenanceResource;
