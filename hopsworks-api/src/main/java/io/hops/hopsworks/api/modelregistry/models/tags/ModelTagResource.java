@@ -52,7 +52,7 @@ public class ModelTagResource extends ModelRegistryTagResource {
   @Override
   protected DatasetPath getDatasetPath() throws DatasetException {
     return datasetHelper.getDatasetPath(project, modelUtils.getModelFullPath(modelRegistry,
-      modelVersion.getModel().getName(), modelVersion.getModelVersionPK().getVersion()), DatasetType.DATASET);
+      modelVersion.getModel().getName(), modelVersion.getVersion()), DatasetType.DATASET);
   }
   
   @Override

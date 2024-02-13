@@ -22,8 +22,10 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Convert;
-import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
@@ -36,6 +38,7 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * A ModelVersion is an instance of a Model.
@@ -48,22 +51,27 @@ import java.util.Date;
     query = "SELECT mv FROM ModelVersion mv"),
   @NamedQuery(name = "ModelVersion.findByProjectAndMlId",
     query
-      = "SELECT mv FROM ModelVersion mv WHERE mv.modelVersionPK.version = :version" +
-      " AND mv.modelVersionPK.modelId = :modelId")
+      = "SELECT mv FROM ModelVersion mv WHERE mv.version = :version" +
+      " AND mv.model.id = :modelId")
   }
 )
 public class ModelVersion implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  @EmbeddedId
-  private ModelVersionPK modelVersionPK;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Basic(optional = false)
+  @Column(name = "id")
+  private Integer id;
+
+  @Basic(optional = false)
+  @Column(name = "version")
+  private Integer version;
 
   @ManyToOne(optional = false)
   @JoinColumn(name = "model_id",
-              referencedColumnName = "id",
-              insertable = false,
-              updatable = false)
+              referencedColumnName = "id")
   private Model model;
 
   @JoinColumn(name = "user_id",
@@ -106,6 +114,14 @@ public class ModelVersion implements Serializable {
   private String experimentProjectName;
 
   public ModelVersion() {
+  }
+
+  public Integer getVersion() {
+    return version;
+  }
+
+  public void setVersion(Integer version) {
+    this.version = version;
   }
 
   public Metrics getMetrics() {
@@ -176,14 +192,6 @@ public class ModelVersion implements Serializable {
     this.experimentProjectName = experimentProjectName;
   }
 
-  public ModelVersionPK getModelVersionPK() {
-    return modelVersionPK;
-  }
-
-  public void setModelVersionPK(ModelVersionPK modelVersionPK) {
-    this.modelVersionPK = modelVersionPK;
-  }
-
   public Model getModel() {
     return model;
   }
@@ -193,7 +201,7 @@ public class ModelVersion implements Serializable {
   }
 
   public String getMlId() {
-    return model.getName() + "_" + modelVersionPK.getVersion();
+    return model.getName() + "_" + version;
   }
 
   public Users getCreator() {
@@ -206,9 +214,7 @@ public class ModelVersion implements Serializable {
 
   @Override
   public int hashCode() {
-    int hash = 0;
-    hash += (getModelVersionPK() != null ? getModelVersionPK().hashCode() : 0);
-    return hash;
+    return Objects.hash(id);
   }
 
   @Override
@@ -218,8 +224,7 @@ public class ModelVersion implements Serializable {
       return false;
     }
     ModelVersion other = (ModelVersion) object;
-    if ((this.getModelVersionPK() == null && other.getModelVersionPK() != null) ||
-      (this.getModelVersionPK() != null && !this.getModelVersionPK().equals(other.getModelVersionPK()))) {
+    if ((this.id == null && other.id != null) || (this.id != null && !Objects.equals(id, other.id))) {
       return false;
     }
     return true;
