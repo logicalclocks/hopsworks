@@ -123,7 +123,7 @@ public class PathValidator {
     while (path.startsWith("/")) {
       path = path.substring(1);
     }
-    String[] pathComponents = path.split(File.separator);
+    String[] pathComponents = path.split("/");
 
     String dsName = pathComponents[0];
     boolean shared = false;

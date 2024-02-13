@@ -437,7 +437,7 @@ public class ProxyServlet extends HttpServlet {
    * I use an HttpClient HeaderGroup class instead of Set<String> because this
    * approach does case insensitive lookup faster.
    */
-  protected static HeaderGroup hopByHopHeaders;
+  protected static final HeaderGroup hopByHopHeaders;
 
   static {
     hopByHopHeaders = new HeaderGroup();

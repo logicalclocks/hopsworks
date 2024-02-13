@@ -529,8 +529,8 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     }
 
     StringBuilder extraJavaOptionsSb = new StringBuilder();
-    for (String key : extraJavaOptions.keySet()) {
-      extraJavaOptionsSb.append(" -D").append(key).append("=").append(extraJavaOptions.get(key));
+    for (Map.Entry<String, String> entrySet : extraJavaOptions.entrySet()) {
+      extraJavaOptionsSb.append(" -D").append(entrySet.getKey()).append("=").append(entrySet.getValue());
     }
 
     sparkProps.put(Settings.SPARK_EXECUTOR_EXTRA_JAVA_OPTS, new ConfigProperty(

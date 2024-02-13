@@ -54,7 +54,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -78,10 +77,7 @@ import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 public class JWTHelper {
   private static final Logger LOGGER = Logger.getLogger(JWTHelper.class.getName());
   
-  public static final List<String> SERVICE_RENEW_JWT_AUDIENCE = new ArrayList<>(1);
-  static {
-    SERVICE_RENEW_JWT_AUDIENCE.add(Audience.SERVICES);
-  }
+  public static final List<String> SERVICE_RENEW_JWT_AUDIENCE = Collections.singletonList(Audience.SERVICES);
   
   @EJB
   private JWTController jwtController;

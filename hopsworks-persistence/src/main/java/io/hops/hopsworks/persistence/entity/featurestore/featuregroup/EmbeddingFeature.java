@@ -28,11 +28,13 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
 
 @Entity
 @Table(name = "embedding_feature", catalog = "hopsworks")
 @XmlRootElement
-public class EmbeddingFeature {
+public class EmbeddingFeature implements Serializable {
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Basic(optional = false)

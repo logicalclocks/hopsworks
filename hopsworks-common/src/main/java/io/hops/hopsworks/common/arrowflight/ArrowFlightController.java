@@ -124,7 +124,7 @@ public class ArrowFlightController {
       // register client certificates
       ArrowFlightCredentialDTO arrowFlightCredentials = new ArrowFlightCredentialDTO(accessCredentialsDTO);
       flightClient.doAction(new Action("register-client-certificates",
-              objectMapper.writeValueAsString(arrowFlightCredentials).getBytes()))
+              objectMapper.writeValueAsString(arrowFlightCredentials).getBytes(StandardCharsets.UTF_8)))
           .hasNext();
 
       return flightClient;

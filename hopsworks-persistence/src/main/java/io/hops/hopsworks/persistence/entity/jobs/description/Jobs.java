@@ -41,6 +41,7 @@ package io.hops.hopsworks.persistence.entity.jobs.description;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Strings;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfigurationConverter;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
@@ -135,6 +136,7 @@ public class Jobs implements Serializable {
 
   @Column(name = "json_config")
   @Convert(converter = JobConfigurationConverter.class)
+  @SuppressFBWarnings(justification="Converter", value="SE_BAD_FIELD")
   private JobConfiguration jobConfig;
 
   @Column(name = "type")

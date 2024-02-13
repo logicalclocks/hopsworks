@@ -37,6 +37,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * Description of the model.
@@ -123,7 +124,7 @@ public class Model implements Serializable {
       return false;
     }
     Model other = (Model) object;
-    if (this.project.getId() != other.getProject().getId()) {
+    if (!Objects.equals(this.project.getId(), other.getProject().getId())) {
       return false;
     }
     if ((this.name == null && other.name != null) ||

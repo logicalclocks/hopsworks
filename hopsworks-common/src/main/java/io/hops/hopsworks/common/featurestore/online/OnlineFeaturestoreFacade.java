@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.online;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
@@ -263,6 +264,7 @@ public class OnlineFeaturestoreFacade {
     return featureGroupFeatureDTOS;
   }
   
+  @SuppressFBWarnings(justification = "Not user supplied values", value = "SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE")
   public void revokeUserPrivileges(String dbName, String dbUser, Connection connection) {
     ResultSet resultSet = null;
     try {

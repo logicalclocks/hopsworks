@@ -31,6 +31,7 @@ import javax.ejb.TimerConfig;
 import javax.ejb.Timer;
 import javax.ejb.TimerService;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,10 +41,10 @@ import java.util.logging.Logger;
 @DependsOn("Settings")
 public class DockerCgroupsMonitor {
   private static final Logger LOGGER = Logger.getLogger(DockerCgroupsMonitor.class.getName());
-  private static Long memoryHardLimit = 9223372036854771712L;
-  private static Long memorySoftLimit = 9223372036854771712L;
-  private static Double cpuQuota = 100.0;
-  private static Integer cpuPeriod = 100000;
+  private Long memoryHardLimit = 9223372036854771712L;
+  private Long memorySoftLimit = 9223372036854771712L;
+  private Double cpuQuota = 100.0;
+  private Integer cpuPeriod = 100000;
 
   @EJB
   private Settings settings;
@@ -71,13 +72,13 @@ public class DockerCgroupsMonitor {
         final Long dbDockerCgroupSoftLimit = getLimitsLong(settings.getDockerCgroupSoftLimit());
         final Double dbDockerCgroupCpuQuota = settings.getDockerCgroupCpuQuota();
         final Integer dbDockerCgroupCpuPeriod = settings.getDockerCgroupCpuPeriod();
-        if (dbDockerMemoryLimit != memoryHardLimit || dbDockerCgroupSoftLimit != memorySoftLimit
-            || dbDockerCgroupCpuQuota != cpuQuota || dbDockerCgroupCpuPeriod != cpuPeriod) {
+        if (!dbDockerMemoryLimit.equals(memoryHardLimit) || !dbDockerCgroupSoftLimit.equals(memorySoftLimit)
+          || !Objects.equals(dbDockerCgroupCpuQuota, cpuQuota) || !Objects.equals(dbDockerCgroupCpuPeriod, cpuPeriod)) {
           memoryHardLimit = dbDockerMemoryLimit;
           memorySoftLimit = dbDockerCgroupSoftLimit;
           cpuQuota = dbDockerCgroupCpuQuota;
           cpuPeriod = dbDockerCgroupCpuPeriod;
-          Long cpuQuotaValue =  Math.round((dbDockerCgroupCpuQuota/100) * cpuPeriod *
+          long cpuQuotaValue =  Math.round((dbDockerCgroupCpuQuota/100) * cpuPeriod *
             Runtime.getRuntime().availableProcessors());
           //update the cgroups
           String prog = settings.getSudoersDir() + "/docker-cgroup-rewrite.sh";
@@ -86,7 +87,7 @@ public class DockerCgroupsMonitor {
               .addCommand(prog)
               .addCommand(dbDockerMemoryLimit.toString())
               .addCommand(dbDockerCgroupSoftLimit.toString())
-              .addCommand(cpuQuotaValue.toString())
+              .addCommand(Long.toString(cpuQuotaValue))
               .addCommand(cpuPeriod.toString())
               .redirectErrorStream(true)
               .setWaitTimeout(60L, TimeUnit.SECONDS)

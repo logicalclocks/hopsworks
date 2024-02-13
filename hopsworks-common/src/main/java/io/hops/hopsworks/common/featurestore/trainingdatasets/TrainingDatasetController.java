@@ -20,6 +20,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.logicalclocks.shaded.com.google.common.collect.Streams;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.hops.hopsworks.common.commands.featurestore.search.SearchFSCommandLogger;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
@@ -412,6 +413,7 @@ public class TrainingDatasetController {
     return featurestoreConnector;
   }
 
+  @SuppressFBWarnings(justification = "Should be fixed", value = "NP_BOOLEAN_RETURN_NULL")
   public Boolean isTrainingDatasetAvailable(TrainingDataset trainingDataset, Users user)
       throws FeaturestoreException, IOException {
     switch (trainingDataset.getTrainingDatasetType()) {
@@ -1424,7 +1426,7 @@ public class TrainingDatasetController {
         feature.getType(), feature.getDefaultValue(), join.getPrefix(),
         join.getFeatureGroup(),
         null);
-  
+
       // check if user already selected feature in the query
       if (features.stream().noneMatch(f -> f.getName().equals(featureName) &&
         (f.getFeatureGroup().getId().equals(featureGroup.getId())))) {

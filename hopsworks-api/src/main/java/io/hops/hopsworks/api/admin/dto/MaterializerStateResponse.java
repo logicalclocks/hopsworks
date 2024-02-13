@@ -98,7 +98,7 @@ public class MaterializerStateResponse implements Serializable {
     this.materialKeyLocks = materialKeyLocks;
   }
   
-  public static class CryptoMaterial {
+  public static class CryptoMaterial implements Serializable {
     private String user;
     private String path;
     private Integer references;

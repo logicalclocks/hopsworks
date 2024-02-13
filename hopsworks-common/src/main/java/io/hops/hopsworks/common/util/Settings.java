@@ -73,12 +73,12 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -97,7 +97,7 @@ import java.util.regex.Pattern;
 @Singleton
 @Startup
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
-public class Settings implements Serializable {
+public class Settings {
 
   private static final Logger LOGGER = Logger.getLogger(Settings.class.
       getName());
@@ -1487,7 +1487,7 @@ public class Settings implements Serializable {
   public static final String PROJECT_COMPATIBILITY_SUBJECT = "projectcompatibility";
   
   public static final Set<String> KAFKA_SUBJECT_BLACKLIST =
-    new HashSet<>(Arrays.asList(INFERENCE_SCHEMANAME, PROJECT_COMPATIBILITY_SUBJECT));
+    Collections.unmodifiableSet(new HashSet<>(Arrays.asList(INFERENCE_SCHEMANAME, PROJECT_COMPATIBILITY_SUBJECT)));
 
   public synchronized String getLocalFlinkJarPath() {
     return getFlinkDir() + "/flink.jar";
@@ -3223,14 +3223,15 @@ public class Settings implements Serializable {
   }
 
   //These dependencies were collected by installing jupyterlab in a new environment
-  public  static final List<String> JUPYTER_DEPENDENCIES = Arrays.asList("urllib3", "chardet", "idna", "requests",
+  public  static final List<String> JUPYTER_DEPENDENCIES = Collections.unmodifiableList(Arrays.asList("urllib3",
+      "chardet", "idna", "requests",
       "attrs", "zipp", "importlib-metadata", "pyrsistent", "six", "jsonschema", "prometheus-client", "pycparser",
       "cffi", "argon2-cffi", "pyzmq", "ipython-genutils", "decorator", "traitlets", "jupyter-core", "Send2Trash",
       "tornado", "pygments", "pickleshare", "wcwidth", "prompt-toolkit", "backcall", "ptyprocess", "pexpect",
       "parso", "jedi", "ipython", "python-dateutil", "jupyter-client", "ipykernel", "terminado", "MarkupSafe",
       "jinja2", "mistune", "defusedxml", "jupyterlab-pygments", "pandocfilters", "entrypoints", "pyparsing",
       "packaging", "webencodings", "bleach", "testpath", "nbformat", "nest-asyncio", "async-generator",
-      "nbclient", "nbconvert", "notebook", "json5", "jupyterlab-server", "jupyterlab", "sparkmagic");
+      "nbclient", "nbconvert", "notebook", "json5", "jupyterlab-server", "jupyterlab", "sparkmagic"));
 
   private String JWT_SIGNATURE_ALGORITHM = "HS512";
   private String JWT_SIGNING_KEY_NAME = "apiKey";
@@ -3596,9 +3597,9 @@ public class Settings implements Serializable {
   
   public synchronized String getDockerMounts() {
     checkCache();
-    String result = "";
+    StringBuilder result = new StringBuilder();
     for(String mountPoint: DOCKER_MOUNTS.split(",")){
-      result += mountPoint + ":" + mountPoint + ":ro,";
+      result.append(mountPoint).append(":").append(mountPoint).append(":ro,");
     }
     return result.substring(0, result.length() - 1);
   }

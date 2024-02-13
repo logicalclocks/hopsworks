@@ -120,7 +120,9 @@ public class AvroSchemaConstructorController {
       result = avroSchema.map().values(toAvro(mapTypes[1], nullable, nameSpace));
     } else if (sanitizedHiveType.startsWith(Type.STRUCT_TYPE.getName().toLowerCase())) {
       // use random name, as user has no possibility to provide it and it doesn't matter for de-/serialization
-      String recordName = "r" + Math.abs(sanitizedHiveType.hashCode());
+      // Bad attempt to compute absolute value of signed 32-bit hashcode, abs can return negative if
+      // argument is equal to the value of Integer.MIN_VALUE
+      String recordName = "r" + Math.abs((long) sanitizedHiveType.hashCode());
       String childNameSpace = !Strings.isNullOrEmpty(nameSpace) ? nameSpace + "." + recordName : recordName;
       SchemaBuilder.FieldAssembler<Schema> record = avroSchema.record(recordName).namespace(nameSpace).fields();
       for (String field : parseStructFields(getInnerType(sanitizedHiveType, 6))) {

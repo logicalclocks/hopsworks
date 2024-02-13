@@ -20,6 +20,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.Featur
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -34,7 +35,7 @@ public class FeaturestoreConstants {
   public static final Pattern FEATURESTORE_REGEX = Pattern.compile("^(?=.{1,63}$)([a-z]{1}[a-z0-9_]*)$");
   public static final Pattern KEYWORDS_REGEX = Pattern.compile("^[a-zA-Z0-9_]{1,63}$");
   public static final Pattern ONLINE_FEATURE_GROUP_KAFKA_TOPIC_REGEX = Pattern.compile(
-      "(?<projectid>[0-9]+)_(?<fgid>[0-9]+)_(?<fgname>[a-z0-9_]+)_(?<fgversion>[0-9]+)_onlinefs$");
+    "(?<projectid>[0-9]+)_(?<fgid>[0-9]+)_(?<fgname>[a-z0-9_]+)_(?<fgversion>[0-9]+)_onlinefs$");
   public static final Pattern FEATURE_GROUP_KAFKA_TOPIC_REGEX = Pattern.compile(
     "(?<projectid>[0-9]+)_(?<fgid>[0-9]+)_(?<fgname>[a-z0-9_]+)_(?<fgversion>[0-9]+)$");
   public static final int FEATURESTORE_ENTITY_NAME_MAX_LENGTH = 63; // limited by NDB due to online fg
@@ -50,8 +51,9 @@ public class FeaturestoreConstants {
   public static final int S3_STORAGE_SERVER_ENCRYPTION_KEY_MAX_LENGTH = 1000;
   public static final int KAFKA_STORAGE_CONNECTOR_BOOTSTRAP_MAX_LENGTH = 1000;
   public static final int ON_DEMAND_FEATUREGROUP_SQL_QUERY_MAX_LENGTH = 11000;
-  public static final List<String> TRAINING_DATASET_DATA_FORMATS = Arrays.asList("csv", "tfrecords",
-    "tfrecord", "parquet", "tsv", "hdf5", "npy", "orc", "avro", "image", "petastorm");
+  public static final List<String> TRAINING_DATASET_DATA_FORMATS = Collections.unmodifiableList(
+    Arrays.asList("csv", "tfrecords", "tfrecord", "parquet", "tsv", "hdf5", "npy", "orc", "avro", "image",
+      "petastorm"));
   public static final String JDBC_CONNECTOR_TYPE = FeaturestoreConnectorType.JDBC.name();
   public static final String HOPSFS_CONNECTOR_TYPE = FeaturestoreConnectorType.HOPSFS.name();
   public static final String S3_CONNECTOR_TYPE = FeaturestoreConnectorType.S3.name();
@@ -67,7 +69,7 @@ public class FeaturestoreConstants {
   public static final String HOPSFS_CONNECTOR_DTO_TYPE = "featurestoreHopsfsConnectorDTO";
   public static final String FEATUREGROUP_TYPE = "FEATURE GROUP";
   public static final String TRAINING_DATASET_TYPE = "TRAINING DATASET";
-  public static final List<String> SUGGESTED_HIVE_FEATURE_TYPES = Arrays.asList("INT",
+  public static final List<String> SUGGESTED_HIVE_FEATURE_TYPES = Collections.unmodifiableList(Arrays.asList("INT",
     "BIGINT", "FLOAT", "DOUBLE", "DECIMAL", "TIMESTAMP", "DATE", "STRING",
     "BOOLEAN", "BINARY",
     "ARRAY <TINYINT>", "ARRAY <SMALLINT>", "ARRAY <INT>", "ARRAY <BIGINT>",
@@ -75,39 +77,41 @@ public class FeaturestoreConstants {
     "ARRAY <DATE>", "ARRAY <STRING>",
     "ARRAY <BOOLEAN>", "ARRAY <BINARY>", "ARRAY <ARRAY <FLOAT> >",
     "ARRAY <ARRAY <INT> >", "ARRAY <ARRAY <STRING> >",
-    "STRUCT < label: STRING, index: INT >");
+    "STRUCT < label: STRING, index: INT >"));
   public static final String S3_BUCKET_TRAINING_DATASETS_FOLDER = "TRAINING_DATASETS";
   public static final List<String> FEATURE_IMPORT_CONNECTORS
-    = Arrays.asList(S3_CONNECTOR_TYPE, JDBC_CONNECTOR_TYPE, REDSHIFT_CONNECTOR_TYPE);
+    = Collections.unmodifiableList(Arrays.asList(S3_CONNECTOR_TYPE, JDBC_CONNECTOR_TYPE, REDSHIFT_CONNECTOR_TYPE));
   public static final String ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE = "<SECRETPASSWORD>";
   public static final String ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX = "_onlinefeaturestore";
   public static final String ONLINE_FEATURE_STORE_JDBC_PASSWORD_ARG = "password";
   public static final String ONLINE_FEATURE_STORE_JDBC_USER_ARG = "user";
   public static final String ONLINE_FEATURE_STORE_JDBC_DRIVER_ARG = "driver";
-  public static final List<String> SUGGESTED_MYSQL_DATA_TYPES = Arrays.asList("INT",
+  public static final List<String> SUGGESTED_MYSQL_DATA_TYPES = Collections.unmodifiableList(Arrays.asList("INT",
     "TINYINT", "SMALLINT", "BIGINT", "FLOAT", "DOUBLE", "DECIMAL",
     "DATE", "TIMESTAMP", "VARCHAR(25)", "VARCHAR(125)", "VARCHAR(225)",
     "VARCHAR(500)", "VARCHAR(1000)", "VARCHAR(2000)", "VARCHAR(5000)", "VARCHAR(10000)",
-    "VARBINARY(100)", "VARBINARY(500)", "VARBINARY(1000)", "BLOB", "TEXT");
+    "VARBINARY(100)", "VARBINARY(500)", "VARBINARY(1000)", "BLOB", "TEXT"));
   public static final Integer MAX_MYSQL_COLUMNS = 500;
   public static final Integer MAX_MYSQL_COLUMN_SIZE = 30000;
   public static final Integer MAX_MYSQL_PRIMARY_KEY_SIZE = 4000;
-  public static final List<String> SUPPORTED_MYSQL_PRIMARY_KEYS = Arrays.asList("INT",
-    "TINYINT", "SMALLINT", "BIGINT", "VARCHAR", "VARBINARY");
-  public static final List<String> SUPPORTED_HUDI_PARTITION_KEYS = Arrays.asList("INT",
-          "BIGINT", "FLOAT", "DOUBLE", "DATE", "STRING");
+  public static final List<String> SUPPORTED_MYSQL_PRIMARY_KEYS = Collections.unmodifiableList(Arrays.asList("INT",
+    "TINYINT", "SMALLINT", "BIGINT", "VARCHAR", "VARBINARY", "DATE"));
+  public static final List<String> SUPPORTED_HUDI_PARTITION_KEYS = Collections.unmodifiableList(Arrays.asList("INT",
+    "BIGINT", "FLOAT", "DOUBLE", "DATE", "STRING"));
   public static final int ONLINE_FEATURESTORE_USERNAME_MAX_LENGTH = 32;
   public static final int ONLINE_FEATURESTORE_PW_LENGTH = 32;
   public static final String FEATURESTORE_HIVE_DB_SUFFIX = "_featurestore";
-  public static final List<String> OFFLINE_JDBC_CONNECTOR_ARGS = Arrays.asList(
-          "sslTrustStore", "trustStorePassword", "sslKeyStore", "keyStorePassword");
+  public static final List<String> OFFLINE_JDBC_CONNECTOR_ARGS = Collections.unmodifiableList(Arrays.asList(
+    "sslTrustStore", "trustStorePassword", "sslKeyStore", "keyStorePassword"));
   public static final String STORAGE_CONNECTOR_SUBDIR = "storage_connector_resources";
-  public static final List<String> TRANSFORMATION_FUNCTION_OUTPUT_TYPES = Arrays.asList("STRING", "BINARY", "BYTE",
-    "SHORT", "INT", "LONG", "FLOAT", "DOUBLE", "TIMESTAMP", "DATE", "BOOLEAN");
-  public static final List<String> EVENT_TIME_FEATURE_TYPES = Arrays.asList("TIMESTAMP", "DATE", "BIGINT");
-  public static final List<String> BUILT_IN_TRANSFORMATION_FUNCTION_NAMES = Arrays.asList(
+  public static final List<String> TRANSFORMATION_FUNCTION_OUTPUT_TYPES =
+    Collections.unmodifiableList(Arrays.asList("STRING", "BINARY", "BYTE",
+      "SHORT", "INT", "LONG", "FLOAT", "DOUBLE", "TIMESTAMP", "DATE", "BOOLEAN"));
+  public static final List<String> EVENT_TIME_FEATURE_TYPES = Collections.unmodifiableList(Arrays.asList("TIMESTAMP",
+    "DATE", "BIGINT"));
+  public static final List<String> BUILT_IN_TRANSFORMATION_FUNCTION_NAMES = Collections.unmodifiableList(Arrays.asList(
     "min_max_scaler", "standard_scaler", "robust_scaler", "label_encoder"
-  );
+  ));
   public static final String BUILT_IN_TRANSFORMATION_FUNCTION_SOURCE_CODE_MIN_MAX_SCALER =
     "{\n" +
       "  \"module_imports\": \"\",\n" +
@@ -163,10 +167,11 @@ public class FeaturestoreConstants {
   public static final int MAX_CHARACTERS_IN_FEATURE_MONITORING_CONFIG_FEATURE_NAME = 63;
   public static final int MAX_CHARACTERS_IN_MONITORING_WINDOW_CONFIG_TIME_OFFSET = 63;
   public static final int MAX_CHARACTERS_IN_MONITORING_WINDOW_CONFIG_WINDOW_LENGTH = 63;
-  public static final List<String> ALLOWED_METRICS_IN_STATISTICS_COMPARISON_CONFIG = Arrays.asList(
-    "COMPLETENESS", "NUM_RECORDS_NON_NULL", "NUM_RECORDS_NULL", "DISTINCTNESS", "ENTROPY", "UNIQUENESS",
-    "APPROXIMATE_NUM_DISTINCT_VALUES", "EXACT_NUM_DISTINCT_VALUES", "MEAN", "MAX", "MIN", "SUM", "STDDEV",
-    "COUNT");
+  public static final List<String> ALLOWED_METRICS_IN_STATISTICS_COMPARISON_CONFIG =
+    Collections.unmodifiableList(Arrays.asList(
+      "COMPLETENESS", "NUM_RECORDS_NON_NULL", "NUM_RECORDS_NULL", "DISTINCTNESS", "ENTROPY", "UNIQUENESS",
+      "APPROXIMATE_NUM_DISTINCT_VALUES", "EXACT_NUM_DISTINCT_VALUES", "MEAN", "MAX", "MIN", "SUM", "STDDEV",
+      "COUNT"));
   public static final Pattern INVALID_MONITORING_WINDOW_CONFIG_TIME_RANGE_REGEX = Pattern.compile("([^dwh,0-9]+)");
   public static final Pattern VALID_MONITORING_WINDOW_CONFIG_TIME_RANGE_REGEX = Pattern.compile(
     "(?:(?<week>\\d+w)()|(?<day>\\d+d)()|(?<hour>\\d+h)()){1,3}");

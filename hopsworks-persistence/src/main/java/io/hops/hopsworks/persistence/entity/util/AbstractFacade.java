@@ -104,7 +104,7 @@ public abstract class AbstractFacade<T> {
     }
   }
 
-  public String OrderBy(SortBy sortBy) {
+  public String orderBy(SortBy sortBy) {
     return sortBy.getSql() + " " +  sortBy.getParam().getSql();
   }
 
@@ -122,9 +122,9 @@ public abstract class AbstractFacade<T> {
     if (!sort.hasNext()) {
       return "";
     }
-    StringBuilder c = new StringBuilder(" ORDER BY " + OrderBy(sort.next()));
+    StringBuilder c = new StringBuilder(" ORDER BY " + orderBy(sort.next()));
     for (;sort.hasNext();) {
-      c.append(", ").append(OrderBy(sort.next()));
+      c.append(", ").append(orderBy(sort.next()));
     }
     return c.toString();
   }

@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.persistence.entity.project.jobs;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.DefaultJobConfigurationPK;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfigurationConverter;
@@ -32,6 +33,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
 @XmlRootElement
@@ -60,6 +62,7 @@ public class DefaultJobConfiguration implements Serializable {
 
   @Column(name = "config")
   @Convert(converter = JobConfigurationConverter.class)
+  @SuppressFBWarnings(justification="Converter", value="SE_BAD_FIELD")
   private JobConfiguration jobConfig;
 
   public DefaultJobConfigurationPK getDefaultJobConfigurationPK() {
@@ -76,6 +79,11 @@ public class DefaultJobConfiguration implements Serializable {
 
   public void setJobConfig(JobConfiguration jobConfig) {
     this.jobConfig = jobConfig;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(defaultJobConfigurationPK);
   }
 
   @Override

@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.persistence.entity.alertmanager;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.json.JSONObject;
 
 import javax.persistence.Basic;
@@ -61,6 +62,7 @@ public class AlertManagerConfigEntity implements Serializable {
   @NotNull
   @Column(name = "content")
   @Convert(converter = ConfigConverter.class)
+  @SuppressFBWarnings(justification="Converter", value="SE_BAD_FIELD")
   private JSONObject content;
   @Basic(optional = false)
   @NotNull

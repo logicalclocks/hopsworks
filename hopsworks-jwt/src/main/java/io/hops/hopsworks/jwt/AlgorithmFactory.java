@@ -131,7 +131,7 @@ public class AlgorithmFactory {
     return Algorithm.RSA512(keyProvider);
   }
 
-  private class RSAKeyProviderImpl implements RSAKeyProvider {
+  private static class RSAKeyProviderImpl implements RSAKeyProvider {
 
     final String privateKeyId;
 
@@ -156,7 +156,7 @@ public class AlgorithmFactory {
 
   }
 
-  private class ECDSAKeyProviderImpl implements ECDSAKeyProvider {
+  private static class ECDSAKeyProviderImpl implements ECDSAKeyProvider {
 
     final String privateKeyId;
 

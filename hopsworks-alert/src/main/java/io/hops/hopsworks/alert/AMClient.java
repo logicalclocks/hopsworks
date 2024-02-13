@@ -128,7 +128,7 @@ public class AMClient {
   }
 
   void createRetryTimer() {
-    long duration = Constants.RETRY_SECONDS * 1000;
+    long duration = Constants.RETRY_SECONDS * 1000L;
     if (count > Constants.NUM_RETRIES) {
       duration *= Constants.NUM_RETRIES;
     } else {

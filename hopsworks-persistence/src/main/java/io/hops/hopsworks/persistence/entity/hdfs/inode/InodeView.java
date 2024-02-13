@@ -172,6 +172,9 @@ public final class InodeView {
           break;
         case FEATURESTORE:
           this.owningProjectName = this.name.substring(0, this.name.lastIndexOf("_"));
+          break;
+        default:
+          //No need to change
       }
       this.name = this.owningProjectName + Settings.SHARED_FILE_SEPARATOR + this.name;
     }

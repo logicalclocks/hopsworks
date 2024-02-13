@@ -16,6 +16,7 @@
 package io.hops.hopsworks.persistence.entity.python.history;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import org.json.JSONArray;
@@ -82,18 +83,22 @@ public class EnvironmentDelta implements Serializable {
 
   @Column(name = "installed")
   @Convert(converter = JSONArrayStringConverter.class)
+  @SuppressFBWarnings(justification="Converter", value="SE_BAD_FIELD")
   private JSONArray installed;
 
   @Column(name = "uninstalled")
   @Convert(converter = JSONArrayStringConverter.class)
+  @SuppressFBWarnings(justification="Converter", value="SE_BAD_FIELD")
   private JSONArray uninstalled;
 
   @Column(name = "upgraded")
   @Convert(converter = JSONArrayStringConverter.class)
+  @SuppressFBWarnings(justification="Converter", value="SE_BAD_FIELD")
   private JSONArray upgraded;
 
   @Column(name = "downgraded")
   @Convert(converter = JSONArrayStringConverter.class)
+  @SuppressFBWarnings(justification="Converter", value="SE_BAD_FIELD")
   private JSONArray downgraded;
 
   @Basic(optional = false)

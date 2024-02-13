@@ -211,9 +211,6 @@ public class CondaCommands implements Serializable {
                        CondaStatus status, CondaInstallType installType, Project project, String lib, String version,
                        String channelUrl, String arg, String environmentFile, Boolean installJupyter,
                        GitBackend gitBackend, String gitApiKeyName) {
-    if (op  == null || project == null) {
-      throw new NullPointerException("Op/project cannot be null");
-    }
     this.userId = userId;
     this.op = op;
     this.projectId = project;
