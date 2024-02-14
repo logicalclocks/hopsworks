@@ -37,9 +37,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.security.NoSuchAlgorithmException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -55,7 +52,6 @@ import java.util.logging.Logger;
 import static io.hops.hopsworks.jwt.Constants.DEFAULT_EXPIRY_LEEWAY;
 import static io.hops.hopsworks.jwt.Constants.DEFAULT_RENEWABLE;
 import static io.hops.hopsworks.jwt.Constants.EXPIRY_LEEWAY;
-import static io.hops.hopsworks.jwt.Constants.ONE_TIME_JWT_SIGNING_KEY_NAME;
 import static io.hops.hopsworks.jwt.Constants.RENEWABLE;
 import static io.hops.hopsworks.jwt.Constants.ROLES;
 
@@ -461,70 +457,6 @@ public class JWTController {
       invalidateJWT(jwt.getId(), jwt.getExpiresAt(), _jwt.getExpLeeway());
     }
     return renewedToken;
-  }
-  
-  public String getSignKeyID(String token) {
-    DecodedJWT jwt = decodeToken(token);
-    return jwt.getKeyId();
-  }
-  
-  public String[] generateOneTimeTokens4ServiceJWTRenewal(JsonWebToken jwtSpecs, Map<String, Object> claims,
-      String defaultJWTSigningKeyName)
-    throws NoSuchAlgorithmException, SigningKeyNotFoundException {
-    String[] renewalTokens = new String[5];
-    SignatureAlgorithm algorithm = SignatureAlgorithm.valueOf(Constants.ONE_TIME_JWT_SIGNATURE_ALGORITHM);
-    String[] audienceArray = jwtSpecs.getAudience().toArray(new String[1]);
-    try {
-      renewalTokens[0] = createToken(jwtSpecs.getKeyId(), true, jwtSpecs.getIssuer(),
-          audienceArray, jwtSpecs.getExpiresAt(), jwtSpecs.getNotBefore(), jwtSpecs.getSubject(), claims,
-          algorithm);
-    } catch (DuplicateSigningKeyException ex) {
-      LOGGER.log(Level.FINE, "Signing key already exist for service JWT key " + jwtSpecs.getKeyId()
-          + ". Removing old one");
-      if (defaultJWTSigningKeyName != null) {
-        if (!defaultJWTSigningKeyName.equals(jwtSpecs.getKeyId())
-            && !ONE_TIME_JWT_SIGNING_KEY_NAME.equals(jwtSpecs.getKeyId())) {
-          deleteSigningKey(jwtSpecs.getKeyId());
-        }
-      }
-      try {
-        renewalTokens[0] = createToken(jwtSpecs.getKeyId(), true, jwtSpecs.getIssuer(),
-            audienceArray, jwtSpecs.getExpiresAt(), jwtSpecs.getNotBefore(), jwtSpecs.getSubject(), claims,
-            algorithm);
-      } catch (DuplicateSigningKeyException dskex) {
-        // This should never happen, we handle it above
-      }
-    }
-    for (int i = 1; i < renewalTokens.length; i++) {
-      try {
-        renewalTokens[i] = createToken(jwtSpecs.getKeyId(), false, jwtSpecs.getIssuer(),
-            audienceArray, jwtSpecs.getExpiresAt(), jwtSpecs.getNotBefore(), jwtSpecs.getSubject(), claims,
-            algorithm);
-      } catch (DuplicateSigningKeyException dskex) {
-        // This should never happen, we do not create new signing key here
-      }
-    }
-    return renewalTokens;
-  }
-  
-  private Date localDateTime2Date(LocalDateTime localDateTime) {
-    return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
-  }
-  
-  public LocalDateTime computeNotBefore4ServiceRenewalTokens(LocalDateTime masterExpiration) {
-    LocalDateTime notBefore = null;
-    if (masterExpiration.minus(3L, ChronoUnit.MINUTES).isBefore(LocalDateTime.now())) {
-      notBefore = masterExpiration.minus(3L, ChronoUnit.MILLIS);
-    } else {
-      notBefore = masterExpiration.minus(3L, ChronoUnit.MINUTES);
-    }
-    return notBefore;
-  }
-  
-  private static final String SERVICE_ONE_TIME_SIGNING_KEYNAME = "%s_%s__%d";
-  public String getServiceOneTimeJWTSigningKeyname(String username, String remoteHost) {
-    long now = System.currentTimeMillis();
-    return String.format(SERVICE_ONE_TIME_SIGNING_KEYNAME, username, remoteHost, now);
   }
   
   public Map<String, Object> addDefaultClaimsIfMissing(Map<String, Object> userClaims, boolean isRenewable, int leeway,

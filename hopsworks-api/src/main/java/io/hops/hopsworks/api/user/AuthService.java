@@ -61,13 +61,11 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.QrCode;
 import io.hops.hopsworks.common.user.UsersController;
-import io.hops.hopsworks.common.util.DateUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.Constants;
 import io.hops.hopsworks.jwt.JWTController;
-import io.hops.hopsworks.jwt.JsonWebToken;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.jwt.exception.InvalidationException;
@@ -102,12 +100,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -245,17 +237,13 @@ public class AuthService {
     if (!needLogin(request, null, user)) {
       return Response.ok().build();
     }
+
     if (!userController.isUserInRole(user, "AGENT")) {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.REST_ACCESS_CONTROL, Level.FINE,
           "Users are not allowed to access this endpoint, use auth/login instead",
           "User " + user.getUsername() + " tried to login but they don't have AGENT role");
     }
     request.getSession();
-    
-    Collection roles = user.getBbcGroupCollection();
-    if (roles == null || roles.isEmpty()) {
-      throw new UserException(RESTCodes.UserErrorCode.NO_ROLE_FOUND, Level.FINE);
-    }
     
     statusValidator.checkStatus(user.getStatus());
     String saltedPassword = authController.preLoginCheck(user, password, null);
@@ -266,47 +254,9 @@ public class AuthService {
       authController.registerAuthenticationFailure(user);
       throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.FINE, null, ex.getMessage(), ex);
     }
-  
-    // First generate the one-time tokens for renewal of master token
-    String renewalKeyName = jwtController.getServiceOneTimeJWTSigningKeyname(user.getUsername(),
-        request.getRemoteHost());
-    LocalDateTime masterExpiration = DateUtils.getNow().plus(settings.getServiceJWTLifetimeMS(), ChronoUnit.MILLIS);
-    LocalDateTime notBefore = jwtController.computeNotBefore4ServiceRenewalTokens(masterExpiration);
-    LocalDateTime expiresAt = notBefore.plus(settings.getServiceJWTLifetimeMS(), ChronoUnit.MILLIS);
-    List<String> userRoles = userUtilities.getUserRoles(user);
-    
-    JsonWebToken renewalJWTSpec = new JsonWebToken();
-    renewalJWTSpec.setSubject(user.getUsername());
-    renewalJWTSpec.setIssuer(settings.getJWTIssuer());
-    renewalJWTSpec.setAudience(JWTHelper.SERVICE_RENEW_JWT_AUDIENCE);
-    renewalJWTSpec.setKeyId(renewalKeyName);
-    renewalJWTSpec.setNotBefore(DateUtils.localDateTime2Date(notBefore));
-    renewalJWTSpec.setExpiresAt(DateUtils.localDateTime2Date(expiresAt));
-    
-    Map<String, Object> claims = new HashMap<>(4);
-    claims.put(Constants.RENEWABLE, false);
-    claims.put(Constants.EXPIRY_LEEWAY, 3600);
-    claims.put(Constants.ROLES, userRoles.toArray(new String[1]));
-    
-    String[] oneTimeRenewalTokens = jwtController.generateOneTimeTokens4ServiceJWTRenewal(renewalJWTSpec, claims,
-        settings.getJWTSigningKeyName());
-  
-    // Then generate the master service token
-    try {
-      String signingKeyID = jwtController.getSignKeyID(oneTimeRenewalTokens[0]);
-      claims.clear();
-      // The rest of JWT claims will be added by JWTHelper
-      claims.put(Constants.RENEWABLE, false);
-      claims.put(Constants.SERVICE_JWT_RENEWAL_KEY_ID, signingKeyID);
-      String token = jWTHelper.createToken(user, settings.getJWTIssuer(), claims);
-      
-      ServiceJWTDTO renewTokensResponse = new ServiceJWTDTO();
-      renewTokensResponse.setRenewTokens(oneTimeRenewalTokens);
-      return Response.ok().header(AUTHORIZATION, Constants.BEARER + token).entity(renewTokensResponse).build();
-    } catch (Exception ex) {
-      jwtController.deleteSigningKey(renewalKeyName);
-      throw ex;
-    }
+
+    String token = jWTHelper.createToken(user, settings.getJWTIssuer(), null);
+    return Response.ok().header(AUTHORIZATION, Constants.BEARER + token).build();
   }
   
   @GET

@@ -22,8 +22,7 @@ public class Constants {
   public static final String EXPIRY_LEEWAY = "expLeeway";
   public static final String ROLES = "roles";
   public static final String WWW_AUTHENTICATE_VALUE="Bearer realm=\"Cauth Realm\"";
-  public static final String SERVICE_JWT_RENEWAL_KEY_ID = "renewal_key_id";
-  
+
   public static final int DEFAULT_EXPIRY_LEEWAY = 60; //60 secs for exp
   public static final boolean DEFAULT_RENEWABLE = false;
   
