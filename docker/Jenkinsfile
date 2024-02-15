@@ -1,0 +1,23 @@
+@Library("jenkins-library@k8s_builder")
+
+import com.logicalclocks.jenkins.k8s.ImageBuilder
+
+
+node("local") {
+    stage('Clone repository') {
+      checkout scm
+    }
+
+    stage('Build and push image(s)') {
+      withCredentials([usernamePassword(credentialsId: 'a0770738-4ef3-4acc-a6ba-097ee6c85b44', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
+        sh "mvn -q -Dexec.executable=echo -Dexec.args='\${project.version}' --non-recursive exec:exec -l version.log"
+        version = readFile "version.log"
+        releasedVersion = version - "-SNAPSHOT"
+        withEnv(["HOPSWORKS_VERSION=${version.trim()}", "RELEASED_VERSION=${releasedVersion.trim()}"]) {
+          def builder = new ImageBuilder(this)
+          m = readFile "${env.WORKSPACE}/docker/build-manifest.json"
+          builder.run(m)
+        }
+      }
+    }
+}

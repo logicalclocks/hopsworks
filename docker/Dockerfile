@@ -1,4 +1,4 @@
-FROM payara:5.2022.5
+FROM docker.hops.works/hopsworks/payara:5.2022.5
 
 ARG version=3.8.0-SNAPSHOT
 ARG download_url=https://repo.hops.works/master/hopsworks

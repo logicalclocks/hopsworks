@@ -1,0 +1,52 @@
+[
+    {
+        "name": "hopsworks/migration",
+        "version": "`cat pom.xml | yq -p xml .project.version`",
+        "excludeRegistries": [
+            "ecr_prod"
+        ],
+        "variables": [
+            "RELEASED_VERSION"
+        ],
+        "extraDockerArgs": "--build-arg version=\"$RELEASED_VERSION\"",
+        "dockerFile": "docker/migration/Dockerfile"
+    },
+    {
+        "name": "hopsworks/payara-node",
+        "version": "5.2022.5",
+        "excludeRegistries": [
+            "ecr_prod"
+        ],
+        "dockerFile": "docker/payara-node/Dockerfile"
+    },
+    {
+        "name": "hopsworks/payara",
+        "version": "5.2022.5",
+        "excludeRegistries": [
+            "ecr_prod"
+        ],
+        "dockerFile": "docker/payara-server/Dockerfile"
+    },
+    {
+        "name": "hopsworks/hopsworks-deploy",
+        "version": "5.2022.5",
+        "excludeRegistries": [
+            "ecr_prod"
+        ],
+        "dockerFile": "docker/deploy/Dockerfile"
+    },
+    {
+        "name": "hopsworks/hopsworks",
+        "version": "`cat pom.xml | yq -p xml .project.version`",
+        "excludeRegistries": [
+            "ecr_prod"
+        ],
+        "variables": [
+            "USERNAME",
+            "PASSWORD",
+            "HOPSWORKS_VERSION"
+        ],
+        "extraDockerArgs": "--build-arg version=\"$HOPSWORKS_VERSION\" --build-arg user=\"$USERNAME\" --build-arg password=\"$PASSWORD\" --build-arg download_url=https://nexus.hops.works/repository/hopsworks",
+        "dockerFile": "docker/Dockerfile"
+    }
+]
