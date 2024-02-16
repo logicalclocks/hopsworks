@@ -24,10 +24,13 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.IngestionResult;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationReport;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import java.util.Date;
 
+import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.PARTIAL_UNEXPECTED_LIST_KEY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
@@ -161,4 +164,25 @@ public class TestValidationResultController {
 
     // Long input is silently caught and result is truncated for result field.
   }
+
+  @Test
+  public void testValidationResultShortenResultField_HandlePartialUnexpectedList(){
+    String result = "{" +
+        "        \"element_count\": 1,\n" +
+        "        \"missing_count\": 0,\n" +
+        "        \"missing_percent\": 0.0,\n" +
+        "        \"unexpected_count\": 1,\n" +
+        "        \"unexpected_percent\": 100.0,\n" +
+        "        \"unexpected_percent_total\": 100.0,\n" +
+        "        \"unexpected_percent_nonmissing\": 100.0,\n" +
+        "        \"partial_unexpected_list\": [\n" +
+        "          \"wrong string\"\n" +
+        "        ]}";
+    String shortenResultField = validationResultController.validationResultShortenResultField(result);
+    JSONObject resultFieldJSON = new JSONObject(shortenResultField);
+
+    JSONArray partialUnexpectedList = resultFieldJSON.getJSONArray(PARTIAL_UNEXPECTED_LIST_KEY);
+    assertEquals("wrong string", partialUnexpectedList.get(0));
+  }
+
 }
