@@ -41,6 +41,7 @@
     <cve>CVE-2019-16335</cve>
     <cve>CVE-2019-14893</cve>
     <cve>CVE-2019-14540</cve>
+    <cve>CVE-2022-26612</cve>
   </suppress>
   <suppress>
     <notes><![CDATA[

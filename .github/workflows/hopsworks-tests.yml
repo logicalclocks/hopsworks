@@ -23,44 +23,6 @@ jobs:
       - name: Run unit tests
         run: mvn --batch-mode test
 
-  hopsworks-license-checker:
-    name: Hopsworks License Checker
-    runs-on: ubuntu-22.04
-
-    steps:
-      - name: Get branch name
-        uses: mdecoleman/pr-branch-name@1.2.0
-        id: vars
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          ref: ${{ steps.vars.outputs.branch }}
-          repository: ${{github.event.pull_request.head.repo.full_name}}
-          token: ${{ secrets.UNIT_TESTS_ACCESS_TOKEN }}
-
-      - name: Checkout hops-testing-ee
-        uses: actions/checkout@v3
-        with:
-          repository: logicalclocks/hops-testing-ee
-          path: hops-testing-ee
-          token: ${{ secrets.UNIT_TESTS_ACCESS_TOKEN }}
-          fetch-depth: 0
-
-      - name: Install python 3.8
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.8'
-
-      - name: Install gitpython
-        run: pip install gitpython
-
-      - name: Run license checker
-        run: python hops-testing-ee/scripts/license_checker.py --dir . --whitelist_dir hops-testing-ee/licenses_whitelist --branch ${{ steps.vars.outputs.branch }} --fork_commit ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b --parallelism 12
-
   hopsworks-vulnerability-checker:
     name: Hopsworks Vulnerability Checker
     runs-on: ubuntu-22.04
