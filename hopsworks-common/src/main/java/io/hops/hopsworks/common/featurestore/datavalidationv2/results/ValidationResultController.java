@@ -198,15 +198,13 @@ public class ValidationResultController {
       }
     }
 
-    
-
     if (resultJson.has(UNEXPECTED_COUNT_KEY) && resultJson.has(PARTIAL_UNEXPECTED_LIST_KEY)
       && resultJson.has(UNEXPECTED_PERCENT_KEY) && resultJson.has(UNEXPECTED_PERCENT_NONMISSING_KEY)) {
 
       shortResultJson.put(UNEXPECTED_COUNT_KEY, resultJson.getInt(UNEXPECTED_COUNT_KEY));
       shortResultJson.put(UNEXPECTED_PERCENT_KEY, resultJson.getFloat(UNEXPECTED_PERCENT_KEY));
       shortResultJson.put(UNEXPECTED_PERCENT_NONMISSING_KEY, resultJson.getFloat(UNEXPECTED_PERCENT_NONMISSING_KEY));
-      shortResultJson.put(PARTIAL_UNEXPECTED_LIST_KEY, resultJson.getString(PARTIAL_UNEXPECTED_LIST_KEY));
+      shortResultJson.put(PARTIAL_UNEXPECTED_LIST_KEY, resultJson.getJSONArray(PARTIAL_UNEXPECTED_LIST_KEY));
 
       if (shortResultJson.toString().length() > MAX_CHARACTERS_IN_VALIDATION_RESULT_RESULT_FIELD) {
         shortResultJson.remove(PARTIAL_UNEXPECTED_LIST_KEY);
