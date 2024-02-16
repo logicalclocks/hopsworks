@@ -22,6 +22,7 @@ import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryExcept
 import com.logicalclocks.servicediscoverclient.resolvers.Type;
 import com.logicalclocks.servicediscoverclient.service.Service;
 import com.logicalclocks.servicediscoverclient.service.ServiceQuery;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import javax.ws.rs.core.UriBuilder;
 import java.net.InetAddress;
@@ -38,6 +39,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+@SuppressFBWarnings(justification="Used in a singleton", value="AT_OPERATION_SEQUENCE_ON_CONCURRENT_ABSTRACTION")
 public class Settings {
   private final static Logger LOGGER = Logger.getLogger(Settings.class.getName());
   public static final String MANAGEMENT_API_HEALTH = "/-/healthy";

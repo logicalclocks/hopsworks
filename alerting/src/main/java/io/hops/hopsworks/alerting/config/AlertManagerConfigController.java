@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.google.common.base.Strings;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.hops.hopsworks.alerting.api.AlertManagerClient;
 import io.hops.hopsworks.alerting.config.dto.AlertManagerConfig;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigFileNotFoundException;
@@ -33,6 +34,7 @@ import io.hops.hopsworks.alerting.exceptions.AlertManagerServerException;
 import java.io.File;
 import java.io.IOException;
 
+@SuppressFBWarnings(justification="Used only as default", value="DMI_HARDCODED_ABSOLUTE_FILENAME")
 public class AlertManagerConfigController {
   private static final String CONFIG_FILE_PATH = "/srv/hops/alertmanager/alertmanager/alertmanager.yml";
   

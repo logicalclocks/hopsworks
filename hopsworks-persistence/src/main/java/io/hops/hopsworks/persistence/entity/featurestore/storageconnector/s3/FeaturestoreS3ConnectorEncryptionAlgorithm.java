@@ -40,22 +40,10 @@ public enum FeaturestoreS3ConnectorEncryptionAlgorithm {
     return algorithm;
   }
   
-  public void setAlgorithm(String algorithm) {
-    this.algorithm = algorithm;
-  }
-  
   public String getDescription() { return description; }
-  
-  public void setDescription(String description) {
-    this.description = description;
-  }
   
   public boolean isRequiresKey() {
     return requiresKey;
-  }
-  
-  public void setRequiresKey(boolean requiresKey) {
-    this.requiresKey = requiresKey;
   }
   
   public static FeaturestoreS3ConnectorEncryptionAlgorithm fromValue(String s)

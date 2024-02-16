@@ -162,7 +162,7 @@ public class FeatureGroupCommit implements Serializable {
 
   @Override
   public boolean equals(Object object) {
-    if (!(object instanceof FeatureGroupCommitPK)) {
+    if (!(object instanceof FeatureGroupCommit)) {
       return false;
     }
     FeatureGroupCommit other = (FeatureGroupCommit) object;

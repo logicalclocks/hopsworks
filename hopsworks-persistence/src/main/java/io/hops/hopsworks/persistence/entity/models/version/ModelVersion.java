@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.persistence.entity.models.version;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.hops.hopsworks.persistence.entity.models.Model;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
@@ -91,6 +92,7 @@ public class ModelVersion implements Serializable {
 
   @Column(name = "metrics")
   @Convert(converter = ModelMetricsConverter.class)
+  @SuppressFBWarnings(justification="Converter", value="SE_BAD_FIELD")
   private Metrics metrics;
 
   @Size(max = 1000)

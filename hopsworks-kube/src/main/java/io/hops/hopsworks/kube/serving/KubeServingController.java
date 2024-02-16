@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 
@@ -405,8 +406,8 @@ public class KubeServingController implements ServingController {
     KubeToolServingController toolServingController = getServingController(oldServing);
   
     // If artifact already exists, check the asset scripts are not modified
-    if (oldServing.getModelName() == serving.getModelName() && oldServing.getArtifactVersion() > 0 &&
-      oldServing.getArtifactVersion() == serving.getArtifactVersion()) {
+    if (Objects.equals(oldServing.getModelName(), serving.getModelName()) && oldServing.getArtifactVersion() > 0 &&
+      Objects.equals(oldServing.getArtifactVersion(), serving.getArtifactVersion())) {
       if (oldServing.getPredictor() != null && !oldServing.getPredictor().equals(serving.getPredictor())) {
         throw new IllegalArgumentException("Predictor script cannot change in an existent artifact");
       }

@@ -16,11 +16,13 @@
 package io.hops.hopsworks.persistence.entity.git;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
 
 // Signature is used to identify who and when created a commit or tag.
 // For now we will use the Users name and email
 @XmlRootElement
-public class CommitterSignature {
+public class CommitterSignature implements Serializable {
+  private static final long serialVersionUID = 1L;
   private String name;
   private String email;
 

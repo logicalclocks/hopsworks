@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class EmbeddingController {
-
+  private static final Random RANDOM = new Random();
   @EJB
   private Settings settings;
   @EJB
@@ -216,7 +216,7 @@ public class EmbeddingController {
   private String getDefaultVectorDbIndex(Project project) throws FeaturestoreException {
     Set<String> indexName = getAllDefaultVectorDbIndex(project);
     // randomly select an index
-    return indexName.stream().sorted(Comparator.comparingInt(i -> new Random().nextInt())).findFirst().get();
+    return indexName.stream().sorted(Comparator.comparingInt(i -> RANDOM.nextInt())).findFirst().get();
   }
 
   private boolean isDefaultVectorDbIndex(Project project, String index) throws FeaturestoreException {
@@ -234,7 +234,7 @@ public class EmbeddingController {
         indices.add(getVectorDbIndexPrefix(project) + "_default_project_embedding_" + i);
       }
     }
-    if (indices.size() == 0) {
+    if (indices.isEmpty()) {
       throw new FeaturestoreException(
           RESTCodes.FeaturestoreErrorCode.OPENSEARCH_DEFAULT_EMBEDDING_INDEX_SUFFIX_NOT_DEFINED, Level.FINE,
           "Default vector db index is not defined.");

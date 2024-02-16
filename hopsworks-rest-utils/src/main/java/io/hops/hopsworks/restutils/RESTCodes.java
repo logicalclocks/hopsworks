@@ -208,7 +208,7 @@ public class RESTCodes {
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
-    private final int range = 150000;
+    private static final int range = 150000;
 
     ProjectErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = range + code;
@@ -322,7 +322,7 @@ public class RESTCodes {
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
-    private final int range = 110000;
+    private static final int range = 110000;
 
 
     DatasetErrorCode(Integer code, String message, Response.StatusType respStatus) {
@@ -371,7 +371,7 @@ public class RESTCodes {
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
-    private final int range = 180000;
+    private static final int range = 180000;
 
     MetadataErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = range + code;
@@ -463,7 +463,7 @@ public class RESTCodes {
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
-    private final int range = 130000;
+    private static final int range = 130000;
 
 
     JobErrorCode(Integer code, String message, Response.StatusType respStatus) {
@@ -506,7 +506,7 @@ public class RESTCodes {
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
-    private final int range = 140000;
+    private static final int range = 140000;
 
     RequestErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = range + code;
@@ -647,7 +647,7 @@ public class RESTCodes {
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
-    private final int range = 100000;
+    private static final int range = 100000;
 
     ServiceErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = range + code;
@@ -769,7 +769,7 @@ public class RESTCodes {
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
-    private final int range = 190000;
+    private static final int range = 190000;
 
 
     KafkaErrorCode(Integer code, String message, Response.StatusType respStatus) {
@@ -822,7 +822,7 @@ public class RESTCodes {
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
-    private final int range = 120000;
+    private static final int range = 120000;
 
     GenericErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = range + code;
@@ -884,7 +884,7 @@ public class RESTCodes {
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
-    private final int range = 200000;
+    private static final int range = 200000;
 
 
     SecurityErrorCode(Integer code, String message, Response.StatusType respStatus) {
@@ -1000,7 +1000,7 @@ public class RESTCodes {
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
-    private final int range = 160000;
+    private static final int range = 160000;
 
 
     UserErrorCode(Integer code, String message, Response.StatusType respStatus) {
@@ -1049,7 +1049,7 @@ public class RESTCodes {
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
-    private final int range = 220000;
+    private static final int range = 220000;
 
     CAErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = range + code;
@@ -1093,7 +1093,7 @@ public class RESTCodes {
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
-    public final int range = 230000;
+    private static final int range = 230000;
 
 
     DelaCSRErrorCode(Integer code, String message, Response.StatusType respStatus) {
@@ -1163,7 +1163,7 @@ public class RESTCodes {
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
-    public final int range = 240000;
+    private static final int range = 240000;
 
 
     ServingErrorCode(Integer code, String message, Response.StatusType respStatus) {
@@ -1212,7 +1212,7 @@ public class RESTCodes {
     private int code;
     private String message;
     private Response.Status respStatus;
-    public final int range = 250000;
+    private static final int range = 250000;
 
     InferenceErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = range + code;
@@ -1249,7 +1249,7 @@ public class RESTCodes {
     private int code;
     private String message;
     private Response.Status respStatus;
-    public final int range = 260000;
+    private static final int range = 260000;
 
     ActivitiesErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = range + code;
@@ -1703,7 +1703,7 @@ public class RESTCodes {
     private int code;
     private String message;
     private Response.Status respStatus;
-    public final int range = 270000;
+    private static final int range = 270000;
 
     FeaturestoreErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = range + code;
@@ -1747,7 +1747,7 @@ public class RESTCodes {
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
-    private final int range = 280000;
+    private static final int range = 280000;
 
     TensorBoardErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = range + code;
@@ -1792,7 +1792,7 @@ public class RESTCodes {
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
-    private final int range = 290000;
+    private static final int range = 290000;
 
     AirflowErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = range + code;
@@ -1857,7 +1857,7 @@ public class RESTCodes {
     private int code;
     private String message;
     private Response.Status respStatus;
-    public final int range = 300000;
+    private static final int range = 300000;
 
     PythonErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = range + code;
@@ -1892,7 +1892,7 @@ public class RESTCodes {
     private int code;
     private String message;
     private Response.Status respStatus;
-    public final int range = 310000;
+    private static final int range = 310000;
 
     ResourceErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = range + code;
@@ -1942,7 +1942,7 @@ public class RESTCodes {
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
-    private final int range = 320000;
+    private static final int range = 320000;
 
     ApiKeyErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = range + code;
@@ -1996,7 +1996,7 @@ public class RESTCodes {
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
-    private final int range = 330000;
+    private static final int range = 330000;
   
     OpenSearchErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = range + code;
@@ -2045,7 +2045,7 @@ public class RESTCodes {
     private int code;
     private String message;
     private Response.Status respStatus;
-    public final int range = 340000;
+    private static final int range = 340000;
 
     ProvenanceErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = range + code;
@@ -2094,7 +2094,7 @@ public class RESTCodes {
     private int code;
     private String message;
     private Response.Status respStatus;
-    public final int range = 350000;
+    private static final int range = 350000;
 
 
     ExperimentsErrorCode(Integer code, String message, Response.Status respStatus) {
@@ -2149,7 +2149,7 @@ public class RESTCodes {
     private int code;
     private String message;
     private Response.Status respStatus;
-    public final int range = 360000;
+    private static final int range = 360000;
 
     ModelRegistryErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = range + code;
@@ -2190,7 +2190,7 @@ public class RESTCodes {
     private int code;
     private String message;
     private Response.Status respStatus;
-    public final int range = 370000;
+    private static final int range = 370000;
     
     SchematizedTagErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = range + code;
@@ -2229,7 +2229,7 @@ public class RESTCodes {
     private int code;
     private String message;
     private Response.Status respStatus;
-    public final int range = 380000;
+    private static final int range = 380000;
   
     CloudErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = range + code;
@@ -2278,7 +2278,7 @@ public class RESTCodes {
     private int code;
     private String message;
     private Response.Status respStatus;
-    public final int range = 390000;
+    private static final int range = 390000;
 
     AlertErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = range + code;
@@ -2317,7 +2317,7 @@ public class RESTCodes {
     private int code;
     private String message;
     private Response.Status respStatus;
-    public final int range = 400000;
+    private static final int range = 400000;
   
     RemoteAuthErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = range + code;
@@ -2365,7 +2365,7 @@ public class RESTCodes {
     private final int code;
     private final String message;
     private final Response.Status respStatus;
-    public final int range = 410000;
+    private static final int range = 410000;
   
     CommandErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = range + code;
@@ -2446,7 +2446,7 @@ public class RESTCodes {
     private Integer code;
     private String message;
     private Response.Status respStatus;
-    public final int range = 500000;
+    private static final int range = 500000;
 
     GitOpErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = range + code;

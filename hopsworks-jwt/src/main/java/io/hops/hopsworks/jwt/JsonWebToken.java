@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.jwt;
 
+import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import java.util.ArrayList;
@@ -72,7 +73,11 @@ public class JsonWebToken {
       DEFAULT_EXPIRY_LEEWAY : expLeewayClaim.
       asInt();
     Claim roleClaim = jwt.getClaim(ROLES);
-    this.role = roleClaim != null && !roleClaim.isNull() ? roleClaim.asList(String.class) : new ArrayList<>();
+    try {
+      this.role = roleClaim != null && !roleClaim.isNull() ? roleClaim.asList(String.class) : new ArrayList<>();
+    } catch (JWTDecodeException e) {
+      this.role = new ArrayList<>();
+    }
   }
 
   public SignatureAlgorithm getAlgorithm() {

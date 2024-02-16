@@ -66,6 +66,11 @@ public class StatisticsFilterBy implements AbstractFacade.FilterBy {
   }
   
   @Override
+  public int hashCode() {
+    return Objects.hash(filter, param);
+  }
+  
+  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;

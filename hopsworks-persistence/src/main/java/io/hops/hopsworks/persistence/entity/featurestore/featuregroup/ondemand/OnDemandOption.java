@@ -25,12 +25,13 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
 import java.util.Objects;
 
 @Entity
 @Table(name = "on_demand_option", catalog = "hopsworks")
 @XmlRootElement
-public class OnDemandOption {
+public class OnDemandOption implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

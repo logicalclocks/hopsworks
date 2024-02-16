@@ -42,6 +42,7 @@ package io.hops.hopsworks.persistence.entity.jobs.configuration;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.yarn.YarnJobConfiguration;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -102,7 +103,8 @@ public abstract class JobConfiguration {
   public void setSchedule(ScheduleDTO schedule) {
     this.schedule = schedule;
   }
-
+  
+  @SuppressFBWarnings(justification="We should not compare JobConfigurations", value="EQ_ALWAYS_FALSE")
   @Override
   public final boolean equals(Object o) {
     return false;

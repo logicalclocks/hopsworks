@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.api.python.library;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.hops.hopsworks.api.python.command.CommandDTO;
 import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.common.python.library.PackageSource;
@@ -103,6 +104,8 @@ public class LibraryDTO extends RestDTO<LibraryDTO> {
   }
   
   @Override
+  @SuppressFBWarnings(justification = "Can be compared to PythonDep",
+    value = "EQ_CHECK_FOR_OPERAND_NOT_COMPATIBLE_WITH_THIS")
   public boolean equals(Object o) {
     if (o instanceof LibraryDTO) {
       LibraryDTO pd = (LibraryDTO) o;
@@ -116,13 +119,11 @@ public class LibraryDTO extends RestDTO<LibraryDTO> {
     }
     if (o instanceof PythonDep) {
       PythonDep pd = (PythonDep) o;
-      if (pd.getRepoUrl().compareToIgnoreCase(this.channel) == 0
-          && pd.getInstallType().name().equalsIgnoreCase(this.getPackageSource().name())
-          && pd.getDependency().compareToIgnoreCase(this.library) == 0
-          && pd.getVersion().compareToIgnoreCase(this.version) == 0
-          && Boolean.toString(pd.isPreinstalled()).compareToIgnoreCase(this.preinstalled) == 0) {
-        return true;
-      }
+      return pd.getRepoUrl().compareToIgnoreCase(this.channel) == 0
+        && pd.getInstallType().name().equalsIgnoreCase(this.getPackageSource().name())
+        && pd.getDependency().compareToIgnoreCase(this.library) == 0
+        && pd.getVersion().compareToIgnoreCase(this.version) == 0
+        && Boolean.toString(pd.isPreinstalled()).compareToIgnoreCase(this.preinstalled) == 0;
     }
     return false;
   }

@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import java.util.Arrays;
 import java.util.Date;
 
 @XmlRootElement
@@ -125,9 +126,9 @@ public class JWTRequestDTO {
 
   @Override
   public String toString() {
-    return "JWTRequestDTO{" + "subject=" + subject + ", audiences=" + audiences + ", keyName=" + keyName
-        + ", expiresAt=" + expiresAt + ", notBefore=" + nbf + ", renewable=" + renewable + ", expLeeway="
-        + expLeeway + '}';
+    return "JWTRequestDTO{" + "subject=" + subject + ", audiences=" + Arrays.toString(audiences) + ", keyName=" +
+      keyName + ", expiresAt=" + expiresAt + ", notBefore=" + nbf + ", renewable=" + renewable + ", expLeeway="
+      + expLeeway + '}';
   }
 
 }

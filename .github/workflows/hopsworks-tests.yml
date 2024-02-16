@@ -24,7 +24,7 @@ jobs:
         run: mkdir -p ~/.m2 && echo "<settings><servers><server><id>HopsEE</id><username>${{ secrets.NEXUS_USER }}</username><password>${{ secrets.NEXUS_PASS }}</password><configuration></configuration></server></servers></settings>" > ~/.m2/settings.xml
 
       - name: Run unit tests
-        run: mvn --batch-mode test -Pmanaged-cloud,cloud,remote-user-auth,noSeleniumTest,kube,swagger-ui
+        run: mvn --batch-mode test -Pmanaged-cloud,cloud,remote-user-auth,kube,swagger-ui
 
   hopsworks-license-checker:
     name: Hopsworks License Checker
@@ -83,4 +83,4 @@ jobs:
         run: mkdir -p ~/.m2 && echo "<settings><servers><server><id>HopsEE</id><username>${{ secrets.NEXUS_USER }}</username><password>${{ secrets.NEXUS_PASS }}</password><configuration></configuration></server></servers></settings>" > ~/.m2/settings.xml
 
       - name: Run vulnerability checker
-        run: mvn clean install -Pmanaged-cloud,cloud,jupyter-git,noSeleniumTest,remote-user-auth,owasp-dependency-check,kube -DskipTests
+        run: mvn clean install -Pmanaged-cloud,cloud,remote-user-auth,owasp-dependency-check,kube,spot-bugs -DskipTests

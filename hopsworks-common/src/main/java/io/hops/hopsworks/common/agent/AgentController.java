@@ -32,6 +32,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -240,7 +241,7 @@ public class AgentController {
     }
   }
 
-  private static class CommandsComparator<T> implements Comparator<T> {
+  private static class CommandsComparator<T> implements Comparator<T>, Serializable {
 
     @Override
     public int compare(T t, T t1) {

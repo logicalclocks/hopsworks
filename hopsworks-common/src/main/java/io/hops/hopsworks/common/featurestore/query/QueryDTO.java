@@ -147,7 +147,12 @@ public class QueryDTO {
   public void setHiveEngine(Boolean hiveEngine) {
     this.hiveEngine = hiveEngine;
   }
-
+  
+  @Override
+  public int hashCode() {
+    return Objects.hash(leftFeatureGroup, leftFeatures, filter, joins);
+  }
+  
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

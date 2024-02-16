@@ -44,6 +44,7 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.persistence.entity.hdfs.HdfsLeDescriptors;
 
@@ -51,7 +52,7 @@ import java.util.Random;
 
 @Stateless
 public class HdfsLeDescriptorsFacade extends AbstractFacade<HdfsLeDescriptors> {
-
+  private static final Random RANDOM = new Random();
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
   
@@ -78,7 +79,7 @@ public class HdfsLeDescriptorsFacade extends AbstractFacade<HdfsLeDescriptors> {
         return null;
       } else {
         // Get a random NN Address
-        int randomNNIndex = new Random().nextInt(hdfsLeDescriptorsList.size());
+        int randomNNIndex = RANDOM.nextInt(hdfsLeDescriptorsList.size());
         HdfsLeDescriptors randomNN = hdfsLeDescriptorsList.get(randomNNIndex);
         String rpcAddresses = randomNN.getRpcAddresses();
         rpcAddresses = rpcAddresses.trim();

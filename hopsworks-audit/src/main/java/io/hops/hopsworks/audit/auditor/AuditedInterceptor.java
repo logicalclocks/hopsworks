@@ -40,9 +40,9 @@ public class AuditedInterceptor implements Serializable {
   private final static Logger LOGGER = Logger.getLogger(AuditedInterceptor.class.getName());
   
   @Inject
-  private AuditHelper auditHelper;
+  private transient AuditHelper auditHelper;
   @Inject
-  private AnnotationHelper annotationHelper;
+  private transient AnnotationHelper annotationHelper;
   
   @AroundInvoke
   public Object collectBasicAuditInformation(InvocationContext context) throws Exception {

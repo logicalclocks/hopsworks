@@ -105,6 +105,7 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -435,7 +436,7 @@ public class DatasetController {
       try (DataInputStream dis = new DataInputStream(dfso.open(path))) {
         dis.readFully(headContent, 0, (int) fileSize);
       }
-      return new FilePreviewDTO("text", "md", new String(headContent));
+      return new FilePreviewDTO("text", "md", new String(headContent, StandardCharsets.UTF_8));
     } catch (AccessControlException ex) {
       throw new AccessControlException("Permission denied: You can not view the file.");
     } finally {
@@ -644,7 +645,7 @@ public class DatasetController {
           dis.readFully(headContent, 0, sizeThreshold);
           //File content
           filePreviewDTO = new FilePreviewDTO(Settings.FILE_PREVIEW_TEXT_TYPE, fileExtension.toLowerCase(),
-            new String(headContent));
+            new String(headContent, StandardCharsets.UTF_8));
         }
       }
     } catch (IOException | ServiceException ex) {

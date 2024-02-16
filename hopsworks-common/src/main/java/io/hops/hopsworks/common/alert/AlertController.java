@@ -330,10 +330,10 @@ public class AlertController {
         .withFeatureMonitorConfig(fmConfigName, fmResultId)
         .withSummary(summary)
         .withDescription(description);
-    if (resourceName.equals(ResourceRequest.Name.FEATUREGROUPS)) {
+    if (resourceName.equals(ResourceRequest.Name.FEATUREGROUPS) && featureStoreAlert instanceof FeatureGroupAlert) {
       builder.withFeatureGroupName(((FeatureGroupAlert) featureStoreAlert).getFeatureGroup().getName())
         .withFeatureGroupVersion(((FeatureGroupAlert) featureStoreAlert).getFeatureGroup().getVersion());
-    } else if (resourceName.equals(ResourceRequest.Name.FEATUREVIEW)) {
+    } else if (resourceName.equals(ResourceRequest.Name.FEATUREVIEW) && featureStoreAlert instanceof FeatureViewAlert) {
       builder.withFeatureViewVersion(((FeatureViewAlert) featureStoreAlert).getFeatureView().getVersion())
         .withFeatureViewName(((FeatureViewAlert) featureStoreAlert).getFeatureView().getName());
     }

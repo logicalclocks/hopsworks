@@ -39,10 +39,13 @@
 
 package io.hops.hopsworks.common.dao;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /*
  * Only for compatibility purposes
  */
 @Deprecated
+@SuppressFBWarnings(justification = "Should be removed", value = "NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
 public abstract class AbstractFacade<T> extends io.hops.hopsworks.persistence.entity.util.AbstractFacade<T> {
 
   public AbstractFacade(Class<T> entityClass) {

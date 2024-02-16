@@ -38,14 +38,13 @@
  */
 package io.hops.hopsworks.api.util;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -77,7 +76,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -88,9 +86,7 @@ import java.util.logging.Logger;
 public class UploadService {
 
   private static final Logger LOGGER = Logger.getLogger(UploadService.class.getName());
-
-  @EJB
-  private DatasetController datasetController;
+  
   @EJB
   private JWTHelper jWTHelper;
   @EJB
@@ -182,8 +178,7 @@ public class UploadService {
       @QueryParam("flowRelativePath") String flowRelativePath,
       @QueryParam("flowTotalChunks") String flowTotalChunks,
       @QueryParam("flowTotalSize") String flowTotalSize,
-      @Context HttpServletRequest request, @Context SecurityContext sc) throws IOException, DatasetException,
-      ProjectException {
+      @Context HttpServletRequest request, @Context SecurityContext sc) throws DatasetException, ProjectException {
     configureUploader(sc);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     FlowInfo flowInfo = new FlowInfo(

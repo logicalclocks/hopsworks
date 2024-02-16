@@ -39,6 +39,7 @@
 package io.hops.hopsworks.persistence.entity.jupyter;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.persistence.entity.jupyter.config.DockerConfigurationConverter;
 import io.hops.hopsworks.persistence.entity.jupyter.config.JupyterConfigurationConverter;
@@ -132,10 +133,12 @@ public class JupyterSettings implements Serializable {
 
   @Column(name = "job_config")
   @Convert(converter = JupyterConfigurationConverter.class)
+  @SuppressFBWarnings(justification="Converter", value="SE_BAD_FIELD")
   private JobConfiguration jobConfig;
 
   @Column(name = "docker_config")
   @Convert(converter = DockerConfigurationConverter.class)
+  @SuppressFBWarnings(justification="Converter", value="SE_BAD_FIELD")
   private JobConfiguration dockerConfig;
   
   @Transient

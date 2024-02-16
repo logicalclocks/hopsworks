@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.filter;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.hops.hopsworks.api.auth.Configuration;
 import io.hops.hopsworks.api.auth.UserStatusValidator;
 import io.hops.hopsworks.api.auth.UserUtilities;
@@ -41,6 +42,7 @@ import java.util.Set;
 @Provider
 @ApiKeyRequired
 @Priority(Priorities.AUTHENTICATION - 1)
+@SuppressFBWarnings(justification = "Should be renamed", value = "NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
 public class ApiKeyFilter extends io.hops.hopsworks.api.auth.key.ApiKeyFilter {
   @EJB
   private UserStatusValidator userStatusValidator;

@@ -7,9 +7,12 @@ package io.hops.hopsworks.persistence.entity.serving;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.io.Serializable;
+import java.util.Objects;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class BatchingConfiguration {
+public class BatchingConfiguration implements Serializable {
 
   private Boolean batchingEnabled;
   private Integer maxBatchSize;
@@ -30,16 +33,22 @@ public class BatchingConfiguration {
 
   public Integer getTimeout() { return timeout; }
   public void setTimeout(Integer timeout) { this.timeout = timeout; }
-
+  
+  @Override
+  public int hashCode() {
+    return Objects.hash(batchingEnabled, maxBatchSize, maxLatency, timeout);
+  }
+  
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
 
     BatchingConfiguration configuration = (BatchingConfiguration) o;
-    return batchingEnabled == configuration.isBatchingEnabled() &&
-        maxBatchSize == configuration.getMaxBatchSize() && maxLatency == configuration.getMaxLatency()
-        && timeout == configuration.getTimeout();
+    return Objects.equals(batchingEnabled, configuration.isBatchingEnabled()) &&
+      Objects.equals(maxBatchSize, configuration.getMaxBatchSize()) &&
+      Objects.equals(maxLatency, configuration.getMaxLatency())
+        && Objects.equals(timeout, configuration.getTimeout());
   }
 
 }

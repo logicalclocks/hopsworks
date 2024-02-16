@@ -9,9 +9,12 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 
+import java.io.Serializable;
+import java.util.Objects;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class DeployableComponentResources {
+public class DeployableComponentResources implements Serializable {
   
   public DeployableComponentResources() { }
   
@@ -44,7 +47,12 @@ public class DeployableComponentResources {
   public static DockerResourcesConfiguration getDefaultLimitsResources() {
     return new DockerResourcesConfiguration(-1, -1, -1);
   }
-
+  
+  @Override
+  public int hashCode() {
+    return Objects.hash(requests, limits);
+  }
+  
   @Override
   public final boolean equals(Object object) {
     if (!(object instanceof DeployableComponentResources)) {

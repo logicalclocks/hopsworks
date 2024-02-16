@@ -24,7 +24,7 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 public class InodeTagUri implements TagUri {
-  private static UriInfo uriInfo;
+  private final UriInfo uriInfo;
   
   public InodeTagUri(UriInfo uriInfo) {
     this.uriInfo = uriInfo;

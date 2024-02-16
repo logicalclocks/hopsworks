@@ -28,10 +28,13 @@ public class Responder {
   public Responder() {
   }
   
-  public Responder(String id, String name, String username) {
+  private Responder(String id, String name, String username) {
     this.id = id;
     this.name = name;
     this.username = username;
+  }
+  
+  public static Responder getInstance(String id, String name, String username) {
     String errorMsg = "Exactly one of id, name or username fields should be defined.";
     if (!Strings.isNullOrEmpty(id) && (!Strings.isNullOrEmpty(name) || !Strings.isNullOrEmpty(username))) {
       throw new IllegalStateException(errorMsg);
@@ -42,6 +45,7 @@ public class Responder {
     if (!Strings.isNullOrEmpty(username) && (!Strings.isNullOrEmpty(name) || !Strings.isNullOrEmpty(id))) {
       throw new IllegalStateException(errorMsg);
     }
+    return new Responder(id, name, username);
   }
   
   public String getId() {

@@ -50,13 +50,13 @@ import java.util.logging.SimpleFormatter;
 public class LogInterceptor implements Serializable {
 
   @Inject
-  private AuditHelper auditHelper;
+  private transient AuditHelper auditHelper;
   @Inject
-  private AnnotationHelper annotationHelper;
+  private transient AnnotationHelper annotationHelper;
   @Inject
-  private LoggerFactory loggerFactory;
+  private transient LoggerFactory loggerFactory;
   @Inject
-  private VariablesHelper variablesHelper;
+  private transient VariablesHelper variablesHelper;
   private final ObjectMapper mapper = new ObjectMapper();
   
   @AroundInvoke
