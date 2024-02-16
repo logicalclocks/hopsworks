@@ -78,8 +78,5 @@ public class AppendConfigReplacementPolicy implements ConfigReplacementPolicy {
       return value;
     }
     
-    public void setValue(String value) {
-      this.value = value;
-    }
   }
 }

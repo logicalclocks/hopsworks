@@ -133,7 +133,7 @@ public class TensorBoardProcessMgr {
 
     String anacondaEnvironmentPath = settings.getAnacondaProjectDir();
     int retries = 3;
-    while(retries > 0) {
+    while(retries >= 0) {
       try {
         if(retries == 0) {
           throw new IOException("Failed to start TensorBoard for project=" + project.getName() + ", user="

@@ -21,9 +21,13 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 
+import java.io.Serializable;
+import java.util.Objects;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class DockerResourcesConfiguration {
+public class DockerResourcesConfiguration implements Serializable
+{
 
   public DockerResourcesConfiguration(){}
 
@@ -67,6 +71,11 @@ public class DockerResourcesConfiguration {
   @JsonSetter(nulls = Nulls.SKIP)
   public void setGpus(int gpus) {
     this.gpus = gpus;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(cores, memory, gpus);
   }
 
   @Override

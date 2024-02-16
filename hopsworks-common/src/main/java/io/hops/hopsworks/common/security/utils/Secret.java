@@ -15,6 +15,9 @@
  */
 package io.hops.hopsworks.common.security.utils;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+@SuppressFBWarnings(justification = "Should be renamed", value = "NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
 public final class Secret extends io.hops.hopsworks.api.auth.Secret {
 
   public Secret(String prefix, String secret, String salt, int prefixMinLength, int secretMinLength,

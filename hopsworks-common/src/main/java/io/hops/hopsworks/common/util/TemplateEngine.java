@@ -98,7 +98,7 @@ public class TemplateEngine {
     }
   }
   
-  private class InstanceOf implements TemplateMethodModelEx {
+  private static class InstanceOf implements TemplateMethodModelEx {
   
     @Override
     public Object exec(List list) throws TemplateModelException {

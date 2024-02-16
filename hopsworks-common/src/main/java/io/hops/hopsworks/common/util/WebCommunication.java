@@ -120,11 +120,11 @@ public class WebCommunication {
 
   private String createUrl(String context, String hostAddress, String... args) {
     String template = "%s://%s:%s/%s";
-    String url = String.format(template, PROTOCOL, hostAddress, PORT, context);
-    for (int i = 0; i < args.length; i++) {
-      url += "/" + args[i];
+    StringBuilder url = new StringBuilder(String.format(template, PROTOCOL, hostAddress, PORT, context));
+    for (String arg : args) {
+      url.append("/").append(arg);
     }
-    return url;
+    return url.toString();
   }
 
   private String fetchContent(String url, String agentPassword) throws GenericException {
@@ -160,8 +160,8 @@ public class WebCommunication {
     webResource = webResource.queryParam("username", Settings.AGENT_EMAIL);
     webResource = webResource.queryParam("password", agentPassword);
     if (args != null) {
-      for (String key : args.keySet()) {
-        webResource = webResource.queryParam(key, args.get(key));
+      for (Map.Entry<String, String> entrySet : args.entrySet()) {
+        webResource = webResource.queryParam(entrySet.getKey(), entrySet.getValue());
       }
     }
     logger.log(Level.FINEST,

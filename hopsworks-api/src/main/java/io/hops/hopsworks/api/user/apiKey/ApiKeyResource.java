@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.api.user.apiKey;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.hops.hopsworks.api.auth.key.ApiKeyUtilities;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
@@ -230,6 +231,9 @@ public class ApiKeyResource {
   // For a strange reason the Set of user supplied ApiScope(s) is marshalled
   // to String even though it's a Set of ApiScope. We need to explicitly convert
   // them to ApiScope
+  @SuppressFBWarnings(justification = "For a strange reason the Set of user supplied ApiScope(s) is marshalled to " +
+    "String even though it's a Set of ApiScope. We need to explicitly convert them to ApiScope",
+    value = "BC_IMPOSSIBLE_CAST")
   private Set<ApiScope> validateScopes(Users user, Set<ApiScope> scopes) throws ApiKeyException {
     Set<ApiScope> validScopes = getScopesForUser(user);
     Set<ApiScope> validatedScopes = new HashSet<>(scopes.size());

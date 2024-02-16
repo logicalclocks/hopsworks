@@ -86,7 +86,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -103,8 +102,8 @@ public class HopsUtils {
   private static final Logger LOG = Logger.getLogger(HopsUtils.class.getName());
   private static final long ROOT_DIR_PARTITION_KEY = 0;
   public static final short ROOT_DIR_DEPTH = 0;
-  private static int RANDOM_PARTITIONING_MAX_LEVEL = 1;
-  public static long ROOT_INODE_ID = 1;
+  private static final int RANDOM_PARTITIONING_MAX_LEVEL = 1;
+  public static final long ROOT_INODE_ID = 1;
   private static final Pattern NEW_LINE_PATTERN = Pattern.compile("\\r?\\n");
   // e.x. spark.files=hdfs://someFile,hdfs://anotherFile
   private static final Pattern JOB_PROPS_PATTERN = Pattern.compile("(.+?)=(.+)");
@@ -116,6 +115,7 @@ public class HopsUtils {
       AppendConfigReplacementPolicy.Delimiter.PATH_SEPARATOR);
   public static final ConfigReplacementPolicy APPEND_COMMA = new AppendConfigReplacementPolicy(
       AppendConfigReplacementPolicy.Delimiter.COMMA);
+  private static final SecureRandom RANDOM = new SecureRandom();
   
   
   /**
@@ -460,11 +460,10 @@ public class HopsUtils {
    */
   public static String randomString(int length) {
     char[] characterSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".toCharArray();
-    Random random = new SecureRandom();
     char[] result = new char[length];
     for (int i = 0; i < result.length; i++) {
       // picks a random index out of character set > random character
-      int randomCharIndex = random.nextInt(characterSet.length);
+      int randomCharIndex = RANDOM.nextInt(characterSet.length);
       result[i] = characterSet[randomCharIndex];
     }
     return new String(result);
@@ -552,15 +551,15 @@ public class HopsUtils {
     String[] quotaSplits = quota.split(":", 4);
     float quotaSeconds = 0f;
     // Days (might have the - sign)
-    quotaSeconds += Math.abs(Float.valueOf(quotaSplits[0])) * 86400;
+    quotaSeconds += Math.abs(Float.parseFloat(quotaSplits[0])) * 86400;
     // Hours
-    quotaSeconds += Float.valueOf(quotaSplits[1]) * 3600;
+    quotaSeconds += Float.parseFloat(quotaSplits[1]) * 3600;
     // Minutes
-    quotaSeconds += Float.valueOf(quotaSplits[2]) * 60;
+    quotaSeconds += Float.parseFloat(quotaSplits[2]) * 60;
     // Seconds
-    quotaSeconds += Float.valueOf(quotaSplits[3]);
+    quotaSeconds += Float.parseFloat(quotaSplits[3]);
 
-    if (Float.valueOf(quotaSplits[0]) < 0) {
+    if (Float.parseFloat(quotaSplits[0]) < 0) {
       quotaSeconds *= -1f;
     }
 

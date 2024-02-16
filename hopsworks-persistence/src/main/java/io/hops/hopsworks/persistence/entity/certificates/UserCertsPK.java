@@ -40,6 +40,7 @@
 package io.hops.hopsworks.persistence.entity.certificates;
 
 import java.io.Serializable;
+import java.util.Objects;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
@@ -106,10 +107,7 @@ public class UserCertsPK implements Serializable {
                     other.projectname))) {
       return false;
     }
-    if (this.username != other.username) {
-      return false;
-    }
-    return true;
+    return Objects.equals(this.username, other.username);
   }
 
   @Override

@@ -16,6 +16,8 @@
 
 package io.hops.hopsworks.common.util;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,6 +43,7 @@ public class StreamGobbler implements Runnable {
   }
   
   @Override
+  @SuppressFBWarnings(justification = "Should be fixed", value = "DM_DEFAULT_ENCODING")
   public void run() {
     int bytesRead = 0;
     try (BufferedInputStream bis = new BufferedInputStream(in)) {

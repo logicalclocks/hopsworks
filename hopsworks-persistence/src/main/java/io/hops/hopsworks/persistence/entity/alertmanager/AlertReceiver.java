@@ -35,6 +35,7 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.FeatureGroupAlert;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.alert.FeatureViewAlert;
 import io.hops.hopsworks.persistence.entity.jobs.description.JobAlert;
@@ -74,6 +75,7 @@ public class AlertReceiver implements Serializable {
   @NotNull
   @Column(name = "config")
   @Convert(converter = ConfigConverter.class)
+  @SuppressFBWarnings(justification="Converter", value="SE_BAD_FIELD")
   private JSONObject config;
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY,
       mappedBy = "receiver")

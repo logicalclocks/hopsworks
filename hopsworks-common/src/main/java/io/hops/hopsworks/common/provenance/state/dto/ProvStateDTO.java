@@ -17,6 +17,7 @@ package io.hops.hopsworks.common.provenance.state.dto;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Logger;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -198,6 +199,6 @@ public class ProvStateDTO extends RestDTO<ProvStateDTO> {
   }
   
   public boolean isProject() {
-    return projectInodeId == inodeId;
+    return Objects.equals(projectInodeId, inodeId);
   }
 }

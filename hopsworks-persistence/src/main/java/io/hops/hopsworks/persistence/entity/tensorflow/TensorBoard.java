@@ -39,7 +39,6 @@
 
 package io.hops.hopsworks.persistence.entity.tensorflow;
 
-import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
@@ -230,7 +229,7 @@ public class TensorBoard implements Serializable {
   @Override
   public boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof JupyterSettings)) {
+    if (!(object instanceof TensorBoard)) {
       return false;
     }
     TensorBoard other = (TensorBoard) object;

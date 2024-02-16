@@ -16,7 +16,9 @@
 
 package io.hops.hopsworks.common.serving;
 
-public class ServingStatusCondition {
+import java.io.Serializable;
+
+public class ServingStatusCondition implements Serializable {
   
   private ServingStatusConditionEnum type;
   private Boolean status; // True (succeeded), False (failed) or Null (in progress)

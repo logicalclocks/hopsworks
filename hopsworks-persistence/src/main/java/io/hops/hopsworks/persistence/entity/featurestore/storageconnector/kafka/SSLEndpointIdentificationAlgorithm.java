@@ -44,10 +44,6 @@ public enum SSLEndpointIdentificationAlgorithm {
     return value;
   }
   
-  public void setValue(String value) {
-    this.value = value;
-  }
-  
   // Overriding toString() method to return "" instead of "EMPTY"
   @Override
   public String toString(){

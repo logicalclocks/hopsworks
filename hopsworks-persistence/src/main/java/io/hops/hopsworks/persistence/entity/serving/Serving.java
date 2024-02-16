@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.persistence.entity.serving;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.hops.hopsworks.persistence.entity.kafka.ProjectTopics;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -155,6 +156,7 @@ public class Serving implements Serializable {
   @Column(name = "batching_configuration")
   @NotNull
   @Convert(converter = BatchingConfigurationConverter.class)
+  @SuppressFBWarnings(justification="Converter", value="SE_BAD_FIELD")
   private BatchingConfiguration batchingConfiguration;
 
   public Serving() { }

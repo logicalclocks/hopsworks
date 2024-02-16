@@ -41,6 +41,7 @@ package io.hops.hopsworks.common.hive;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import com.logicalclocks.servicediscoverclient.service.Service;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
@@ -235,6 +236,7 @@ public class HiveController {
    * @param dbComment description of the database
    * @throws SQLException
    */
+  @SuppressFBWarnings(justification = "Not called with user input", value = "SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE")
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void createDatabase(String dbName, String dbComment)
       throws SQLException, ServiceDiscoveryException {
