@@ -1426,8 +1426,8 @@ public class TrainingDatasetController {
         null);
   
       // check if user already selected feature in the query
-      if (features.stream().noneMatch(f -> f.getName().equals(featureName) &
-        (f.getFeatureGroup().getId().equals(f.getFeatureGroup().getId())))) {
+      if (features.stream().noneMatch(f -> f.getName().equals(featureName) &&
+        (f.getFeatureGroup().getId().equals(featureGroup.getId())))) {
         features.add(
           newFeature
         );
