@@ -145,7 +145,7 @@
     <protobuf-java.version>3.23.1</protobuf-java.version>
     <reflections.version>0.9.12</reflections.version>
     <resilience4j-retry.version>0.16.0</resilience4j-retry.version>
-    <service-discovery-client.version>0.6-SNAPSHOT</service-discovery-client.version>
+    <service-discovery-client.version>0.7-SNAPSHOT</service-discovery-client.version>
     <service-proxy.version>4.6.3</service-proxy.version>
     <slf4j-api.version>1.7.21</slf4j-api.version>
     <spnego.version>7.0</spnego.version>
