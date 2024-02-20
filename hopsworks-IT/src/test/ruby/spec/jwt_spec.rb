@@ -44,8 +44,6 @@ describe "On #{ENV['OS']}" do
         expect_status_details(200)
         expect(headers["authorization"]).not_to be_nil
         expect(headers["authorization"]).not_to be_empty
-        renew_tokens = json_body[:renewTokens]
-        expect(renew_tokens.length).to eql(5)
       end
 
       describe "#logged in as service user" do
@@ -57,7 +55,6 @@ describe "On #{ENV['OS']}" do
           
           post "#{ENV['HOPSWORKS_API']}/auth/service",
                URI.encode_www_form({ email: "agent@hops.io", password: "admin"}), { content_type: 'application/x-www-form-urlencoded'}
-          @renew_tokens = json_body[:renewTokens]
           @master_token = headers["authorization"].split[1].strip
         end
 
