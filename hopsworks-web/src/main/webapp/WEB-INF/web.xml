@@ -54,7 +54,7 @@
   </security-role>
   <login-config>
     <auth-method>BASIC</auth-method>
-    <realm-name>cauthRealm</realm-name>
+    <realm-name>hopsworksrealm</realm-name>
   </login-config>
   
   <session-config>

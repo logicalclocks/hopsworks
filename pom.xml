@@ -62,6 +62,7 @@
     <module>hopsworks-service-discovery</module>
     <module>hopsworks-api-auth</module>
     <module>vector-db</module>
+    <module>hopsworks-realm</module>
   </modules>
 
   <properties>

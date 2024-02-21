@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2023, Hopsworks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>io.hops</groupId>
+    <artifactId>hopsworks</artifactId>
+    <version>3.8.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <groupId>io.hops.hopsworks</groupId>
+  <artifactId>hopsworks-realm</artifactId>
+  <name>Hopsworks - realm</name>
+  <description>Hopsworks custom realm</description>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-assembly-plugin</artifactId>
+      <version>3.6.0</version>
+    </dependency>
+    <dependency>
+      <groupId>fish.payara.extras</groupId>
+      <artifactId>payara-embedded-web</artifactId>
+    </dependency>
+  </dependencies>
+  <build>
+    <finalName>hopsworks-realm</finalName>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>3.6.0</version>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+        </configuration>
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
