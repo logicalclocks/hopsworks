@@ -35,5 +35,6 @@ public interface VectorDatabase {
   void batchWrite(Index index, List<String> data) throws VectorDatabaseException;
   void batchWrite(Index index, Map<String, String> data) throws VectorDatabaseException;
   void deleteByQuery(Index index, String query) throws VectorDatabaseException;
+  List<Map<String, Object>> preview(Index index, Set<Field> fields, int n) throws VectorDatabaseException;
   void close();
 }
