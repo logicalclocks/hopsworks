@@ -20,6 +20,7 @@ import com.google.common.base.Strings;
 import com.logicalclocks.shaded.org.apache.commons.lang3.StringUtils;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.featurestore.embedding.EmbeddingController;
+import io.hops.hopsworks.common.featurestore.embedding.VectorDatabaseClient;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
@@ -47,6 +48,9 @@ import io.hops.hopsworks.persistence.entity.kafka.schemas.SchemaCompatibility;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.vectordb.Field;
+import io.hops.hopsworks.vectordb.Index;
+import io.hops.hopsworks.vectordb.VectorDatabaseException;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlLiteral;
@@ -64,6 +68,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -101,6 +106,8 @@ public class OnlineFeaturegroupController {
   private MultiRegionController multiRegionController;
   @EJB
   private EmbeddingController embeddingController;
+  @EJB
+  private VectorDatabaseClient vectorDatabaseClient;
 
   private final static List<String> SUPPORTED_MYSQL_TYPES = Arrays.asList("INT", "TINYINT",
       "SMALLINT", "BIGINT", "FLOAT", "DOUBLE", "DECIMAL", "DATE", "TIMESTAMP");
@@ -381,6 +388,47 @@ public class OnlineFeaturegroupController {
    */
   public FeaturegroupPreview getFeaturegroupPreview(Featuregroup featuregroup, Project project, Users user, int limit)
       throws FeaturestoreException {
+    if (featuregroup.getEmbedding() == null) {
+      return getFeaturegroupPreviewRonDb(featuregroup, project, user, limit);
+    } else {
+      return getFeaturegroupPreviewVectorDb(featuregroup, project, user, limit);
+    }
+  }
+
+  private FeaturegroupPreview getFeaturegroupPreviewVectorDb(Featuregroup featuregroup, Project project, Users user,
+      int limit) throws FeaturestoreException {
+    try {
+      List<FeatureGroupFeatureDTO> features = featuregroupController.getFeatures(featuregroup, project, user);
+      Index index = new Index(featuregroup.getEmbedding().getVectorDbIndexName());
+      Set<String> primaryKeyFields = featuregroupController.getPrimaryKey(featuregroup)
+          .stream()
+          // fetching documents where pk column of the fg is not null
+          .map(pk -> embeddingController.getFieldName(featuregroup.getEmbedding(), pk.getName()))
+          .collect(Collectors.toSet());
+      Set<Field> targetFields = vectorDatabaseClient.getClient().getSchema(index)
+          .stream()
+          .filter(field -> primaryKeyFields.contains(field.getName()))
+          .collect(Collectors.toSet());
+      FeaturegroupPreview preview = new FeaturegroupPreview();
+      vectorDatabaseClient.getClient().preview(index, targetFields, limit)
+          .forEach(result -> {
+            FeaturegroupPreview.Row row = new FeaturegroupPreview.Row();
+            features.forEach(feature -> row.addValue(
+                feature.getName(),
+                result.getOrDefault(
+                    embeddingController.getFieldName(
+                        featuregroup.getEmbedding(), feature.getName()), "").toString()));
+            preview.addRow(row);
+          });
+      return preview;
+    } catch (VectorDatabaseException e) {
+      throw new FeaturestoreException(
+          RESTCodes.FeaturestoreErrorCode.COULD_NOT_PREVIEW_DATA_IN_VECTOR_DB, Level.SEVERE, "", e.getMessage(), e);
+    }
+  }
+
+  private FeaturegroupPreview getFeaturegroupPreviewRonDb(Featuregroup featuregroup, Project project,
+      Users user, int limit) throws FeaturestoreException {
     String tbl = featuregroupController.getTblName(featuregroup.getName(), featuregroup.getVersion());
 
     List<FeatureGroupFeatureDTO> features =  featuregroupController.getFeatures(featuregroup, project, user);

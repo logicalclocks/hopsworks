@@ -1698,7 +1698,11 @@ public class RESTCodes {
         Response.Status.INTERNAL_SERVER_ERROR),
     FEATURE_MONITORING_ENTITY_NOT_FOUND(233, "Feature Monitoring entity not found.",
       Response.Status.NOT_FOUND),
-    FEATURE_MONITORING_NOT_ENABLED(234, "Feature monitoring is not enabled.", Response.Status.BAD_REQUEST);
+    FEATURE_MONITORING_NOT_ENABLED(234, "Feature monitoring is not enabled.", Response.Status.BAD_REQUEST),
+    FEATURE_NOT_FOUND_IN_VECTOR_DB(235, "Feature not found in vector db.",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    COULD_NOT_PREVIEW_DATA_IN_VECTOR_DB(236, "Could not preview data in vector database.",
+        Response.Status.INTERNAL_SERVER_ERROR);
 
     private int code;
     private String message;

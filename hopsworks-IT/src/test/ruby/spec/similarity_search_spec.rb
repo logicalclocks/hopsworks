@@ -41,6 +41,18 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("embeddingIndex")).to be true
           expect(parsed_json["embeddingIndex"]["indexName"]).to eq("#{project.id}__embedding_default_project_embedding_0")
           expect(parsed_json["embeddingIndex"]["features"].length).to be 1
+          expect(parsed_json["embeddingIndex"]["colPrefix"]).to eq("#{parsed_json["id"].to_s}_")
+        end
+
+        it "should be able to preview data from vector db" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true, embedding_index_name: "")
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          featuregroup_id = parsed_json["id"]
+          get "#{ENV['HOPSWORKS_API']}/project/#{project.id.to_s}/featurestores/#{featurestore_id.to_s}/featuregroups/#{featuregroup_id.to_s}/preview?storage=online"
+          expect_status_details(200)
         end
 
         it "should be able to delete a feature group with embedding and project index" do
@@ -76,6 +88,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("embeddingIndex")).to be true
           expect(parsed_json["embeddingIndex"]["indexName"]).to eq("#{project.id}__embedding_test_index")
           expect(parsed_json["embeddingIndex"]["features"].length).to be 1
+          expect(parsed_json["embeddingIndex"]["colPrefix"]).to eq("")
         end
 
         it "should be able to delete a feature group with embedding and custom index" do
