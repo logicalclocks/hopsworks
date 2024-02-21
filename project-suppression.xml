@@ -238,4 +238,16 @@
     <packageUrl regex="true">^pkg:maven/org\.apache\.flink/flink\-shaded\-zookeeper\-3@.*$</packageUrl>
     <cve>CVE-2023-44981</cve>
   </suppress>
+  <!-- Using the latest maven-assembly-plugin -->
+  <suppress>
+    <notes><![CDATA[file name: plexus-archiver-4.7.1.jar]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.codehaus\.plexus/plexus\-archiver@.*$</packageUrl>
+    <cve>CVE-2023-37460</cve>
+  </suppress>
+  <!-- UNDERGOING ANALYSIS -->
+  <suppress>
+    <notes><![CDATA[file name: commons-compress-1.21.jar]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.commons/commons\-compress@.*$</packageUrl>
+    <vulnerabilityName>CVE-2024-25710</vulnerabilityName>
+  </suppress>
 </suppressions>

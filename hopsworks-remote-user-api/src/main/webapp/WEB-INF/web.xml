@@ -72,7 +72,7 @@
   </servlet>
   <login-config>
     <auth-method>BASIC</auth-method>
-    <realm-name>cauthRealm</realm-name>
+    <realm-name>hopsworksrealm</realm-name>
   </login-config>
   <session-config>
     <session-timeout>1440</session-timeout>
