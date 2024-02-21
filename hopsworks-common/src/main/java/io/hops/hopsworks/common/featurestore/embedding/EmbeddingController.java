@@ -21,7 +21,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import io.hops.hopsworks.common.featurestore.featuregroup.EmbeddingDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
-import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.models.ModelFacade;
 import io.hops.hopsworks.common.models.version.ModelVersionFacade;
 import io.hops.hopsworks.common.util.Settings;
@@ -83,6 +82,12 @@ public class EmbeddingController {
   private ModelVersion getModel(Integer projectId, String modelName, Integer modelVersion) {
     Model model = modelFacade.findByProjectIdAndName(projectId, modelName);
     return modelVersionFacade.findByProjectAndMlId(model.getId(), modelVersion);
+  }
+
+  public String getFieldName(Embedding embedding, String featureName) {
+    return embedding.getColPrefix() == null
+        ? featureName
+        : embedding.getColPrefix() + featureName;
   }
 
   public Embedding getEmbedding(Project project, EmbeddingDTO embeddingDTO, Featuregroup featuregroup)
@@ -247,7 +252,8 @@ public class EmbeddingController {
   }
 
   private String getVectorDbColPrefix(Featuregroup featuregroup) {
-    return Utils.getFeaturegroupName(featuregroup) + "_";
+    // Should use id as prefix instead of name + version since users can recreate fg with the same name and version
+    return featuregroup.getId() + "_";
   }
 
 }

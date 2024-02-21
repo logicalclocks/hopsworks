@@ -17,6 +17,7 @@
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup;
 
 import io.hops.hopsworks.persistence.entity.models.version.ModelVersion;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -104,4 +105,12 @@ public class EmbeddingFeature implements Serializable {
   public ModelVersion getModelVersion() {
     return modelVersion;
   }
+
+  @JsonIgnore
+  public String getFieldName() {
+    return embedding.getColPrefix() == null
+        ? name
+        : embedding.getColPrefix() + name;
+  }
+
 }

@@ -25,6 +25,8 @@ import org.opensearch.action.bulk.BulkRequest;
 import org.opensearch.action.bulk.BulkResponse;
 import org.opensearch.action.index.IndexRequest;
 import org.opensearch.action.index.IndexResponse;
+import org.opensearch.action.search.SearchRequest;
+import org.opensearch.action.search.SearchResponse;
 import org.opensearch.action.support.master.AcknowledgedResponse;
 import org.opensearch.client.Request;
 import org.opensearch.client.RequestOptions;
@@ -36,10 +38,14 @@ import org.opensearch.client.indices.GetIndexRequest;
 import org.opensearch.client.indices.GetIndexResponse;
 import org.opensearch.client.indices.PutMappingRequest;
 import org.opensearch.common.xcontent.XContentType;
+import org.opensearch.index.query.BoolQueryBuilder;
+import org.opensearch.index.query.QueryBuilders;
 import org.opensearch.index.query.QueryStringQueryBuilder;
 import org.opensearch.index.reindex.BulkByScrollResponse;
 import org.opensearch.index.reindex.DeleteByQueryRequest;
 import org.opensearch.rest.RestStatus;
+import org.opensearch.search.SearchHit;
+import org.opensearch.search.builder.SearchSourceBuilder;
 
 import java.io.IOException;
 import java.util.List;
@@ -191,6 +197,42 @@ public class OpensearchVectorDatabase implements VectorDatabase {
       );
     }
     bulkRequest(bulkRequest);
+  }
+
+  @Override
+  public List<Map<String, Object>> preview(Index index, Set<Field> fields, int n) throws VectorDatabaseException {
+    List<Map<String, Object>> results = Lists.newArrayList();
+
+    // Create a bool query
+    BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+
+    // Add exists queries for each field
+    for (Field field : fields) {
+      boolQueryBuilder.must(QueryBuilders.existsQuery(field.getName()));
+    }
+
+    // Create a SearchSourceBuilder to define the search query
+    SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+    sourceBuilder.query(boolQueryBuilder);
+    sourceBuilder.size(n);
+
+    // Create a SearchRequest with the specified index and source builder
+    SearchRequest searchRequest = new SearchRequest(index.getName());
+    searchRequest.source(sourceBuilder);
+
+    try {
+      // Execute the search request
+      SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+      // Process the search hits
+      for (SearchHit hit : searchResponse.getHits().getHits()) {
+        results.add(hit.getSourceAsMap());
+      }
+
+    } catch (IOException e) {
+      throw new VectorDatabaseException("Error occurred while querying OpenSearch index");
+    }
+
+    return results;
   }
 
   private void bulkRequest(BulkRequest bulkRequest) throws VectorDatabaseException {

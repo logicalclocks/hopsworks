@@ -33,6 +33,10 @@ public class FeaturegroupPreview {
       values.add(value);
     }
 
+    public void addValue(String col, String value) {
+      values.add(new Pair<>(col, value));
+    }
+
     public List<Pair<String, String>> getValues() {
       return values;
     }
