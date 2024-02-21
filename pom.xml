@@ -83,7 +83,7 @@
     <maven-clean-plugin.version>3.1.0</maven-clean-plugin.version>
     <maven-dependency.plugin.version>2.8</maven-dependency.plugin.version>
 
-    <apache-commons-compress.version>1.21</apache-commons-compress.version>
+    <apache-commons-compress.version>1.26.0</apache-commons-compress.version>
     <apache-commons-lang3.version>3.8.1</apache-commons-lang3.version>
     <apache-htrace-core4.version>4.2.0-incubating</apache-htrace-core4.version>
     <apache-httpclient.version>4.5.13</apache-httpclient.version>
