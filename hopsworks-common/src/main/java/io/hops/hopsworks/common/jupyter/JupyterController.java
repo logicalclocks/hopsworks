@@ -155,7 +155,7 @@ public class JupyterController {
       String stdOut = processResult.getStdout();
       if(!Strings.isNullOrEmpty(stdOut) && notebookConversion.equals(NotebookConversion.HTML)) {
         StringBuilder renderedNotebookSB = new StringBuilder(stdOut);
-        int startIndex = renderedNotebookSB.indexOf("<html>");
+        int startIndex = renderedNotebookSB.indexOf("<html");
         int stopIndex = renderedNotebookSB.length();
         return renderedNotebookSB.substring(startIndex, stopIndex);
       }
