@@ -717,10 +717,8 @@ public class DatasetController {
     }
   }
 
-  public void share(String targetProjectName, String fullPath,
-                    DatasetAccessPermission permission, Project project, Users user)
-      throws DatasetException, ProjectException {
-
+  public void share(String targetProjectName, String fullPath, DatasetAccessPermission permission, Project project,
+      Users user) throws DatasetException, ProjectException {
     Project targetProject = projectFacade.findByName(targetProjectName);
     Dataset ds = getByProjectAndFullPath(project, fullPath);
     if (targetProject == null) {
@@ -729,15 +727,10 @@ public class DatasetController {
     DatasetSharedWith datasetSharedWith = shareInternal(targetProject, ds, user, permission);
     if (DatasetType.FEATURESTORE.equals(ds.getDsType()) && datasetSharedWith.getAccepted()) {
       Dataset trainingDataset = getTrainingDataset(project);
-      if (trainingDataset != null) {
-        try {
-          shareInternal(targetProject, trainingDataset, user, permission);
-        } catch (DatasetException de) {
-          //Dataset already shared nothing to do
-        }
-      }
+      shareFeatureStoreServiceDataset(user, targetProject, permission, trainingDataset);
       // If we migrate Training Datasets to remove the project prefix, these methods can be reused
       shareFeatureStoreServiceDataset(user, project, targetProject, permission, Settings.ServiceDataset.STATISTICS);
+      shareFeatureStoreServiceDataset(user, project, targetProject, permission, Settings.ServiceDataset.DATAVALIDATION);
     }
   }
 
@@ -751,6 +744,11 @@ public class DatasetController {
   private void shareFeatureStoreServiceDataset(Users user, Project project, Project targetProject,
     DatasetAccessPermission permission, Settings.ServiceDataset serviceDataset) {
     Dataset dataset = getFeatureStoreServiceDataset(project, serviceDataset);
+    shareFeatureStoreServiceDataset(user, targetProject, permission, dataset);
+  }
+  
+  private void shareFeatureStoreServiceDataset(Users user, Project targetProject, DatasetAccessPermission permission,
+      Dataset dataset) {
     if (dataset != null) {
       try {
         shareInternal(targetProject, dataset, user, permission);
@@ -828,19 +826,18 @@ public class DatasetController {
           datasetSharedWith.getDataset().getProject(),
           datasetSharedWith.getPermission(),
           datasetSharedWith.getSharedBy());
-      if (trainingDataset != null && !trainingDataset.getAccepted()) {
-        try {
-          acceptSharedDs(user, trainingDataset);
-        } catch (DatasetException de) {
-          //Dataset not shared or already accepted nothing to do
-        }
-      }
+      acceptSharedFeatureStoreServiceDataset(user, trainingDataset);
       // If we migrate Training Datasets to remove the project prefix, these methods can be reused
       acceptSharedFeatureStoreServiceDataset(project, datasetSharedWith,
           datasetSharedWith.getPermission(),
           datasetSharedWith.getSharedBy(),
           user,
           Settings.ServiceDataset.STATISTICS);
+      acceptSharedFeatureStoreServiceDataset(project, datasetSharedWith,
+          datasetSharedWith.getPermission(),
+          datasetSharedWith.getSharedBy(),
+          user,
+          Settings.ServiceDataset.DATAVALIDATION);
 
       // Share the online feature store
       onlineFeaturestoreController.shareOnlineFeatureStore(project,
@@ -871,6 +868,10 @@ public class DatasetController {
         permission,
         sharedBy,
         serviceDataset);
+    acceptSharedFeatureStoreServiceDataset(acceptedBy, dataset);
+  }
+  
+  private void acceptSharedFeatureStoreServiceDataset(Users acceptedBy, DatasetSharedWith dataset) {
     if (dataset != null && !dataset.getAccepted()) {
       try {
         acceptSharedDs(acceptedBy, dataset);
@@ -1204,6 +1205,8 @@ public class DatasetController {
       }
       unshareFeatureStoreServiceDataset(user, project, targetProject, datasetSharedWith,
           Settings.ServiceDataset.STATISTICS, dfso);
+      unshareFeatureStoreServiceDataset(user, project, targetProject, datasetSharedWith,
+        Settings.ServiceDataset.DATAVALIDATION, dfso);
       // Unshare the online feature store
       try {
         onlineFeaturestoreController.unshareOnlineFeatureStore(targetProject, dataset.getFeatureStore());
@@ -1365,16 +1368,33 @@ public class DatasetController {
         PermissionTransition.valueOf(datasetSharedWith.getPermission(), datasetPermissions);
     updateSharePermission(datasetSharedWith, permissionTransition, project, user);
 
-    if (datasetSharedWith.getDataset().getDsType() == DatasetType.FEATURESTORE) {
+    //This is not needed because feature store can only be shared read only
+    if (DatasetType.FEATURESTORE.equals(datasetSharedWith.getDataset().getDsType())) {
       DatasetSharedWith trainingDataset =
           getSharedTrainingDataset(targetProject, datasetSharedWith.getDataset().getProject());
-      if (trainingDataset != null) {
-        updateSharePermission(trainingDataset, permissionTransition, project, user);
-      }
+      updateSharePermissionFeatureStoreServiceDataset(user, project, permissionTransition, trainingDataset);
+      
+      updateSharePermissionFeatureStoreServiceDataset(user, project, targetProject, permissionTransition,
+        Settings.ServiceDataset.STATISTICS);
+      updateSharePermissionFeatureStoreServiceDataset(user, project, targetProject, permissionTransition,
+        Settings.ServiceDataset.DATAVALIDATION);
       // Share online feature store will revoke existing permissions
       onlineFeaturestoreController.shareOnlineFeatureStore(targetProject,
           datasetSharedWith.getDataset().getFeatureStore(),
           datasetPermissions);
+    }
+  }
+  
+  private void updateSharePermissionFeatureStoreServiceDataset(Users user, Project project, Project targetProject,
+    PermissionTransition permissionTransition, Settings.ServiceDataset serviceDataset) throws DatasetException {
+    DatasetSharedWith datasetSharedWith = getSharedFeatureStoreServiceDataset(targetProject, project, serviceDataset);
+    updateSharePermissionFeatureStoreServiceDataset(user, project, permissionTransition, datasetSharedWith);
+  }
+  
+  private void updateSharePermissionFeatureStoreServiceDataset(Users user, Project targetProject,
+    PermissionTransition permissionTransition, DatasetSharedWith dataset) throws DatasetException {
+    if (dataset != null) {
+      updateSharePermission(dataset, permissionTransition, targetProject, user);
     }
   }
 
