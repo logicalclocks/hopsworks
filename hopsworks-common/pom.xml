@@ -97,6 +97,11 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>io.hops.hopsworks</groupId>
+      <artifactId>hopsworks-kube-client</artifactId>
+      <type>ejb</type>
+    </dependency>
+    <dependency>
       <groupId>org.javatuples</groupId>
       <artifactId>javatuples</artifactId>
     </dependency>

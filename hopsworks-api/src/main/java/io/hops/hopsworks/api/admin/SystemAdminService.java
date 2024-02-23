@@ -42,8 +42,8 @@ package io.hops.hopsworks.api.admin;
 import io.hops.hopsworks.api.admin.dto.VariablesRequest;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.jwt.OpenSearchJWTResponseDTO;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.jwt.OpenSearchJWTResponseDTO;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.audit.logger.annotation.Secret;
@@ -54,11 +54,11 @@ import io.hops.hopsworks.common.dao.kafka.TopicDefaultValueDTO;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.FeaturestoreException;
-import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.KafkaException;
+import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.util.Variables;
@@ -83,7 +83,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
@@ -143,9 +142,6 @@ public class SystemAdminService {
     } catch (EncryptionMasterPasswordException ex) {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ACCESS_DENIED, Level.SEVERE, null,
         ex.getMessage(), ex);
-    } catch (IOException ex) {
-      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.MASTER_ENCRYPTION_PASSWORD_ACCESS_ERROR,
-        Level.SEVERE, null, ex.getMessage(), ex);
     } catch (ExecutionException | InterruptedException ex) {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.MASTER_ENCRYPTION_PASSWORD_RESET_ERROR,
         Level.SEVERE, null, ex.getMessage(), ex);

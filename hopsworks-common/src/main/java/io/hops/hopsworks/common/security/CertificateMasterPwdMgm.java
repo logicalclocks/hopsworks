@@ -18,9 +18,9 @@ package io.hops.hopsworks.common.security;
 import fish.payara.cluster.Clustered;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
+import io.hops.hopsworks.kube.client.KubeSecretManager;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.io.FileUtils;
 
 import javax.ejb.AccessTimeout;
 import javax.ejb.AsyncResult;
@@ -29,10 +29,8 @@ import javax.ejb.Lock;
 import javax.ejb.LockType;
 import javax.ejb.Singleton;
 import javax.enterprise.inject.Instance;
-import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -47,16 +45,16 @@ public class CertificateMasterPwdMgm implements Serializable {
   
   @Lock(LockType.READ)
   @AccessTimeout(value = 5, unit = TimeUnit.SECONDS)
-  public String getMasterEncryptionPassword(File masterPasswordFile) throws IOException {
-    return FileUtils.readFileToString(masterPasswordFile, Charset.defaultCharset()).trim();
+  public String getMasterEncryptionPassword(KubeSecretManager kubeSecretManager) {
+    return kubeSecretManager.getMasterEncryptionPassword();
   }
   
   @Lock(LockType.READ)
   @AccessTimeout(value = 5, unit = TimeUnit.SECONDS)
-  public void checkPassword(String providedPassword, String userRequestedEmail, File masterPasswordFile,
-      UserFacade userFacade) throws IOException, EncryptionMasterPasswordException {
+  public void checkPassword(String providedPassword, String userRequestedEmail, KubeSecretManager kubeSecretManager,
+      UserFacade userFacade) throws EncryptionMasterPasswordException {
     String sha = DigestUtils.sha256Hex(providedPassword);
-    if (!getMasterEncryptionPassword(masterPasswordFile).equals(sha)) {
+    if (!getMasterEncryptionPassword(kubeSecretManager).equals(sha)) {
       Users user = userFacade.findByEmail(userRequestedEmail);
       String logMsg = "*** Attempt to change master encryption password with wrong credentials";
       if (user != null) {
@@ -73,12 +71,12 @@ public class CertificateMasterPwdMgm implements Serializable {
   @Lock(LockType.WRITE)
   @AccessTimeout(value = 500)
   public Future<MasterPasswordResetResult> resetMasterEncryptionPassword(String newMasterPasswd,
-      File masterPasswordFile, Instance<MasterPasswordHandler> handlers,
+      KubeSecretManager kubeSecretManager, Instance<MasterPasswordHandler> handlers,
       Map<Class, MasterPasswordChangeResult> handlersResult) {
     try {
       String newDigest = DigestUtils.sha256Hex(newMasterPasswd);
-      callUpdateHandlers(newDigest, masterPasswordFile, handlers, handlersResult);
-      updateMasterEncryptionPassword(newDigest, masterPasswordFile);
+      callUpdateHandlers(newDigest, kubeSecretManager, handlers, handlersResult);
+      updateMasterEncryptionPassword(newDigest, kubeSecretManager);
       StringBuilder successLog = gatherLogs(handlersResult);
       LOGGER.log(Level.INFO, "Master encryption password changed!");
       return new AsyncResult<>(new MasterPasswordResetResult(CertificatesMgmService.UPDATE_STATUS.OK,
@@ -90,8 +88,7 @@ public class CertificateMasterPwdMgm implements Serializable {
       return new AsyncResult<>(new MasterPasswordResetResult(CertificatesMgmService.UPDATE_STATUS.FAILED, null,
         errorMsg + "\n" + ex.getMessage()));
     } catch (IOException ex) {
-      String errorMsg = "*** Failed to write new encryption password to file: " + masterPasswordFile.getAbsolutePath()
-        + ". Rolling back...";
+      String errorMsg = "*** Failed to write new encryption password to secret. Rolling back...";
       LOGGER.log(Level.SEVERE, errorMsg, ex);
       callRollbackHandlers(handlers, handlersResult);
       return new AsyncResult<>(new MasterPasswordResetResult(CertificatesMgmService.UPDATE_STATUS.FAILED, null,
@@ -101,10 +98,11 @@ public class CertificateMasterPwdMgm implements Serializable {
     }
   }
   
-  private void callUpdateHandlers(String newDigest, File masterPasswordFile, Instance<MasterPasswordHandler> handlers,
-      Map<Class, MasterPasswordChangeResult> handlersResult) throws EncryptionMasterPasswordException, IOException {
+  private void callUpdateHandlers(String newDigest, KubeSecretManager kubeSecretManager,
+      Instance<MasterPasswordHandler> handlers, Map<Class, MasterPasswordChangeResult> handlersResult)
+      throws EncryptionMasterPasswordException, IOException {
     for (MasterPasswordHandler handler : handlers) {
-      MasterPasswordChangeResult result = handler.perform(getMasterEncryptionPassword(masterPasswordFile), newDigest);
+      MasterPasswordChangeResult result = handler.perform(getMasterEncryptionPassword(kubeSecretManager), newDigest);
       handlersResult.put(handler.getClass(), result);
       if (result.getCause() != null) {
         throw result.getCause();
@@ -133,8 +131,9 @@ public class CertificateMasterPwdMgm implements Serializable {
     return successLog;
   }
   
-  //TODO move master password to some other storage than the filesystem
-  private void updateMasterEncryptionPassword(String newPassword, File masterPasswordFile) throws IOException {
-    FileUtils.writeStringToFile(masterPasswordFile, newPassword, Charset.defaultCharset());
+  private void updateMasterEncryptionPassword(String newPassword, KubeSecretManager kubeSecretManager)
+      throws IOException {
+    kubeSecretManager.patchMasterEncryptionPassword(newPassword);
   }
+  
 }

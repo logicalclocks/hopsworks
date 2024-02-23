@@ -43,14 +43,12 @@ import com.google.common.cache.CacheBuilder;
 import com.hazelcast.config.MapConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
-import com.hazelcast.topic.ITopic;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.message.MessageController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
+import io.hops.hopsworks.kube.client.KubeSecretManager;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.io.FileUtils;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Asynchronous;
@@ -63,22 +61,13 @@ import javax.ejb.Singleton;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.attribute.PosixFileAttributeView;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Singleton
@@ -99,6 +88,8 @@ public class CertificatesMgmService {
   private HazelcastInstance hazelcastInstance;
   @EJB
   private CertificateMasterPwdMgm certificateMasterPwdMgm;
+  @EJB
+  private KubeSecretManager kubeSecretManager;
   
   public enum UPDATE_STATUS {
     OK,
@@ -106,20 +97,16 @@ public class CertificatesMgmService {
     FAILED,
     NOT_FOUND
   }
-  
-  private File masterPasswordFile;
   private final Map<Class, MasterPasswordChangeResult> handlersResult = new HashMap<>();
   // should be shared
   private Cache<Integer, UPDATE_STATUS> updateStatus;
   private Random rand;
-  private ITopic<String> masterPasswordUpdatedTopic;
 
   public CertificatesMgmService() {
   
   }
   
   private static final String MAP_NAME = "certificatesMgmUpdateStatus";
-  public static final String PASSWORD_UPDATED_TOPIC_NAME = "masterPasswordUpdated";
   
   private void initHazelcast() {
     if (hazelcastInstance != null) {
@@ -128,7 +115,6 @@ public class CertificatesMgmService {
         mapConfig.setMaxIdleSeconds((int) TimeUnit.HOURS.toSeconds(12L));
         hazelcastInstance.getConfig().addMapConfig(mapConfig);
       }
-      masterPasswordUpdatedTopic = hazelcastInstance.getReliableTopic(PASSWORD_UPDATED_TOPIC_NAME);
     } else {
       updateStatus = CacheBuilder.newBuilder()
         .maximumSize(100)
@@ -157,62 +143,13 @@ public class CertificatesMgmService {
   
   @PostConstruct
   public void init() {
-    masterPasswordFile = new File(settings.getHopsworksMasterEncPasswordFile());
-    if (!masterPasswordFile.exists()) {
-      throw new IllegalStateException("Master encryption file does not exist");
-    }
-    
-    try {
-      PosixFileAttributeView fileView = Files.getFileAttributeView(masterPasswordFile.toPath(),
-          PosixFileAttributeView.class, LinkOption.NOFOLLOW_LINKS);
-      Set<PosixFilePermission> filePermissions = fileView.readAttributes().permissions();
-      boolean ownerRead = filePermissions.contains(PosixFilePermission.OWNER_READ);
-      boolean ownerWrite = filePermissions.contains(PosixFilePermission
-          .OWNER_WRITE);
-      boolean ownerExecute = filePermissions.contains(PosixFilePermission
-          .OWNER_EXECUTE);
-      
-      boolean groupRead = filePermissions.contains(PosixFilePermission.GROUP_READ);
-      boolean groupWrite = filePermissions.contains(PosixFilePermission
-          .GROUP_WRITE);
-      boolean groupExecute = filePermissions.contains(PosixFilePermission
-          .GROUP_EXECUTE);
-      
-      boolean othersRead = filePermissions.contains(PosixFilePermission
-          .OTHERS_READ);
-      boolean othersWrite = filePermissions.contains(PosixFilePermission
-          .OTHERS_WRITE);
-      boolean othersExecute = filePermissions.contains(PosixFilePermission
-          .OTHERS_EXECUTE);
-      
-      // Permissions should be 700
-      if ((ownerRead && ownerWrite && ownerExecute)
-          && (!groupRead && !groupWrite && !groupExecute)
-          && (!othersRead && !othersWrite && !othersExecute)) {
-        String owner = fileView.readAttributes().owner().getName();
-        String group = fileView.readAttributes().group().getName();
-        String permStr = PosixFilePermissions.toString(filePermissions);
-        LOG.log(Level.INFO, "Passed permissions check for file " + masterPasswordFile.getAbsolutePath()
-            + ". Owner: " + owner + " Group: " + group + " Permissions: " + permStr);
-      } else {
-        throw new IllegalStateException("Wrong permissions for file " + masterPasswordFile.getAbsolutePath()
-            + ", it should be 700");
-      }
-      initHazelcast();
-      rand = new Random();
-    } catch (UnsupportedOperationException ex) {
-      LOG.log(Level.WARNING, "Associated filesystem is not POSIX compliant. " +
-          "Continue without checking the permissions of " + masterPasswordFile.getAbsolutePath()
-          + " This might be a security problem.");
-    } catch (IOException ex) {
-      throw new IllegalStateException("Error while getting POSIX permissions of " + masterPasswordFile
-          .getAbsolutePath());
-    }
+    initHazelcast();
+    rand = new Random();
   }
 
   @Lock(LockType.READ)
-  public String getMasterEncryptionPassword() throws IOException {
-    return certificateMasterPwdMgm.getMasterEncryptionPassword(masterPasswordFile);
+  public String getMasterEncryptionPassword() {
+    return certificateMasterPwdMgm.getMasterEncryptionPassword(kubeSecretManager);
   }
   
   /**
@@ -224,8 +161,8 @@ public class CertificatesMgmService {
    */
   @Lock(LockType.READ)
   public void checkPassword(String providedPassword, String userRequestedEmail)
-      throws IOException, EncryptionMasterPasswordException {
-    certificateMasterPwdMgm.checkPassword(providedPassword, userRequestedEmail, masterPasswordFile, userFacade);
+      throws EncryptionMasterPasswordException {
+    certificateMasterPwdMgm.checkPassword(providedPassword, userRequestedEmail, kubeSecretManager, userFacade);
   }
   
   // A put operation with the same operationId can only be initiated from the same node that created the operationId.
@@ -255,7 +192,7 @@ public class CertificatesMgmService {
   public void resetMasterEncryptionPassword(Integer operationId, String newMasterPasswd, String userRequested)
     throws ExecutionException, InterruptedException {
     Future<MasterPasswordResetResult> futureResetResult =
-      certificateMasterPwdMgm.resetMasterEncryptionPassword(newMasterPasswd, masterPasswordFile, handlers,
+      certificateMasterPwdMgm.resetMasterEncryptionPassword(newMasterPasswd, kubeSecretManager, handlers,
         handlersResult);
     MasterPasswordResetResult resetResult;
     try {
@@ -268,25 +205,10 @@ public class CertificatesMgmService {
     if (UPDATE_STATUS.OK.equals(resetResult.getUpdateStatus())) {
       sendSuccessfulMessage(resetResult.getSuccessLog(), userRequested);
       putUpdateStatusCache(operationId, UPDATE_STATUS.OK);
-      if (masterPasswordUpdatedTopic != null) {
-        // if publish fails the cluster will be in an inconsistent state until the password file is updated manually
-        // is it safe to send the password like this. Can external hazelcast subscribe to this message?
-        masterPasswordUpdatedTopic.publish(DigestUtils.sha256Hex(newMasterPasswd));
-      }
     } else {
       sendUnsuccessfulMessage(resetResult.getErrorLog(), userRequested);
       putUpdateStatusCache(operationId, UPDATE_STATUS.FAILED);
     }
-  }
-  
-  /**
-   * Update local Master Encryption Password. Should only be used when a node gets password updated notification.
-   * @param newPassword
-   * @throws IOException
-   */
-  @Lock(LockType.WRITE)
-  public void updateMasterEncryptionPassword(String newPassword) throws IOException {
-    FileUtils.writeStringToFile(masterPasswordFile, newPassword, Charset.defaultCharset());
   }
 
   private void sendSuccessfulMessage(String successLog, String userRequested) {
