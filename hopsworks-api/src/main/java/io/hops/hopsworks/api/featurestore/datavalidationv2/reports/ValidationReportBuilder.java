@@ -64,7 +64,9 @@ public class ValidationReportBuilder {
     Featuregroup featuregroup, ValidationReport validationReport) {
     ValidationReportDTO dto = new ValidationReportDTO();
     uri(dto, uriInfo, project, featuregroup);
-    Optional<Dataset> validationDatasetOptional = validationReportController.getValidationDataset(project);
+    //if featuregroup is shared validation dataset is in the featuregroup's project
+    Optional<Dataset> validationDatasetOptional =
+      validationReportController.getValidationDataset(featuregroup.getFeaturestore().getProject());
     String path = "";
     // the validation dataset will probably always be there if we have the validation reports in db
     if (validationDatasetOptional.isPresent()) {
