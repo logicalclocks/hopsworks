@@ -20,7 +20,6 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.util.PayaraClusterManager;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeatureDescriptiveStatistics;
 import org.javatuples.Pair;
 
@@ -115,7 +114,10 @@ public class StatisticsCleaner {
       
       LOG.log(Level.FINE, "DeleteOrphanStatistics start");
       List<FeatureDescriptiveStatistics> fds =
-        featureDescriptiveStatisticsFacade.findOrphaned(new Pair<>(0, batchSize));
+        featureDescriptiveStatisticsFacade.findOrphaned(new Pair<>(0, batchSize))
+            .stream()
+            .filter(f -> !f.getFeatureName().equals("for-migration") && !f.getFeatureName().equals("to-be-deleted"))
+            .collect(Collectors.toList());
       
       while (!fds.isEmpty()) {
         String fdsIds =
@@ -137,10 +139,10 @@ public class StatisticsCleaner {
   }
   
   private void deleteExtendedStatsFiles(List<FeatureDescriptiveStatistics> fds, DistributedFileSystemOps udfso)
-    throws FeaturestoreException, IOException {
+      throws IOException {
     for (FeatureDescriptiveStatistics stats : fds) {
       if (stats.getExtendedStatisticsPath() != null) {
-        udfso.rm(stats.getExtendedStatisticsPath(), false);
+        udfso.rm(stats.getExtendedStatisticsPath(), true);
       }
     }
   }
