@@ -27,12 +27,16 @@ import io.hops.hopsworks.servicediscovery.HopsworksService;
 import io.hops.hopsworks.servicediscovery.tags.KafkaTags;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.DeleteTopicsResult;
+import org.apache.kafka.clients.admin.DescribeConfigsResult;
 import org.apache.kafka.clients.admin.DescribeTopicsResult;
 import org.apache.kafka.clients.admin.ListTopicsResult;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.Node;
+import org.apache.kafka.common.config.ConfigResource;
 import org.apache.kafka.common.config.SslConfigs;
 
 import javax.ejb.ConcurrencyManagement;
@@ -41,9 +45,16 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -204,6 +215,25 @@ public class HopsKafkaAdminClient {
     try (AdminClient adminClient = AdminClient.create(getProjectKafkaProperties(connector))) {
       return adminClient.describeTopics(topics);
     }
+  }
+
+  public Set<String> getBrokerEndpoints() {
+    Set<String> kafkaBrokers = new HashSet<>();
+    try (AdminClient adminClient = AdminClient.create(getHopsworksKafkaProperties())) {
+      Collection<Node> clusterDetails = adminClient.describeCluster().nodes().get(5, TimeUnit.SECONDS);
+      for (Node node : clusterDetails) {
+        ConfigResource configResource = new ConfigResource(ConfigResource.Type.BROKER, node.idString());
+        DescribeConfigsResult describeConfigsResult = 
+            adminClient.describeConfigs(Collections.singleton(configResource));
+        Map<ConfigResource, Config> configMap = describeConfigsResult.all().get();
+        Config config = configMap.get(configResource);
+        String advertisedListeners = config.get("advertised.listeners").value();
+        kafkaBrokers.addAll(Arrays.asList(advertisedListeners.split(",")));
+      }
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Could not get Kafka broker information", e);
+    }
+    return kafkaBrokers;
   }
   //endregion
 }
