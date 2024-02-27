@@ -16,18 +16,9 @@
 
 package io.hops.hopsworks.common.kafka;
 
-import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
-import com.logicalclocks.servicediscoverclient.resolvers.Type;
-import com.logicalclocks.servicediscoverclient.service.ServiceQuery;
-import io.hops.hopsworks.common.dao.kafka.KafkaConst;
-import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
-import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.servicediscovery.HopsworksService;
-import io.hops.hopsworks.servicediscovery.tags.ZooKeeperTags;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.ZooKeeper;
+import io.hops.hopsworks.common.dao.kafka.HopsKafkaAdminClient;
 
+import org.apache.commons.lang3.StringUtils;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Lock;
@@ -35,23 +26,17 @@ import javax.ejb.LockType;
 import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Singleton
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class KafkaBrokers {
-  private final static Logger LOGGER = Logger.getLogger(KafkaBrokers.class.getName());
 
   @EJB
-  private ServiceDiscoveryController serviceDiscoveryController;
+  protected HopsKafkaAdminClient hopsKafkaAdminClient;
 
   public enum BrokerProtocol {
     INTERNAL,
@@ -63,12 +48,8 @@ public class KafkaBrokers {
   @PostConstruct
   @Lock(LockType.WRITE)
   public void setBrokerEndpoints() {
-    try {
-      this.kafkaBrokers.clear();
-      this.kafkaBrokers.addAll(getBrokerEndpoints());
-    } catch (IOException | KeeperException | InterruptedException ex) {
-      LOGGER.log(Level.SEVERE, null, ex);
-    }
+    this.kafkaBrokers.clear();
+    this.kafkaBrokers.addAll(hopsKafkaAdminClient.getBrokerEndpoints());
   }
 
   @Lock(LockType.READ)
@@ -86,60 +67,5 @@ public class KafkaBrokers {
       return StringUtils.join(kafkaProtocolBrokers, ",");
     }
     return null;
-  }
-
-  private Set<String> getBrokerEndpoints()
-      throws IOException, KeeperException, InterruptedException {
-    try {
-      String zkConnectionString = getZookeeperConnectionString();
-      try (ZooKeeper zk = new ZooKeeper(zkConnectionString, Settings.ZOOKEEPER_SESSION_TIMEOUT_MS, watchedEvent -> {
-      })) {
-        return zk.getChildren("/brokers/ids", false).stream()
-            .map(bi -> getBrokerInfo(zk, bi))
-            .filter(StringUtils::isNoneEmpty)
-            .map(bi -> bi.split(KafkaConst.DLIMITER))
-            .flatMap(Arrays::stream)
-            .filter(this::isValidBrokerInfo)
-            .collect(Collectors.toSet());
-      }
-    } catch (ServiceDiscoveryException ex) {
-      throw new IOException(ex);
-    } catch (RuntimeException ex) {
-      if (ex.getCause() instanceof KeeperException) {
-        throw (KeeperException) ex.getCause();
-      }
-      if (ex.getCause() instanceof InterruptedException) {
-        throw (InterruptedException) ex.getCause();
-      }
-      throw ex;
-    }
-  }
-
-  private String getZookeeperConnectionString() throws ServiceDiscoveryException {
-    return serviceDiscoveryController.getService(
-            Type.DNS, ServiceQuery.of(
-                serviceDiscoveryController.constructServiceFQDN(
-                    HopsworksService.ZOOKEEPER.getNameWithTag(ZooKeeperTags.client)),
-                Collections.emptySet()))
-        .map(zkServer -> zkServer.getAddress() + ":" + zkServer.getPort())
-        .collect(Collectors.joining(","));
-  }
-
-  private String getBrokerInfo(ZooKeeper zk, String brokerId) {
-    try {
-      return new String(zk.getData("/brokers/ids/" + brokerId, false, null));
-    } catch (KeeperException | InterruptedException ex) {
-      LOGGER.log(Level.SEVERE, "Could not get Kafka broker information", ex);
-      throw new RuntimeException(ex);
-    }
-  }
-
-  private boolean isValidBrokerInfo(String brokerInfo) {
-    String[] brokerProtocolNames = Arrays
-        .stream(BrokerProtocol.values())
-        .map(Enum::name)
-        .toArray(String[]::new);
-    return StringUtils.startsWithAny(brokerInfo, brokerProtocolNames)
-        && brokerInfo.contains(KafkaConst.SLASH_SEPARATOR);
   }
 }
