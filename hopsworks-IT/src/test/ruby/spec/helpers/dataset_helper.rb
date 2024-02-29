@@ -218,7 +218,7 @@ module DatasetHelper
   end
 
   def delete_dir_checked(project, path, dataset_type: "DATASET")
-    delete_dir(project, path, dataset_type)
+    delete_dir(project, path, dataset_type: dataset_type)
     expect_status_details(204)
   end
 
@@ -846,5 +846,28 @@ module DatasetHelper
     path = "#{base_path}?#{query}"
     pp "get #{path}" if defined?(@debugOpt) && @debugOpt
     get path
+  end
+
+  def test_feature_store_shared(project1, project2)
+    featurestore = "#{project1[:projectname]}::#{project1[:projectname].downcase}_featurestore.db"
+    trainingDataset =  "#{project1[:projectname]}::#{project1[:projectname]}_Training_Datasets"
+    statisticsDataset =  "#{project1[:projectname]}::Statistics"
+    dataValidationDataset =  "#{project1[:projectname]}::DataValidation"
+
+    get_dataset_stat(project2, featurestore, datasetType: "&type=FEATURESTORE")
+    shared_ds = json_body
+    expect("#{shared_ds[:name]}").to eq(featurestore)
+
+    get_dataset_stat(project2, trainingDataset, datasetType: "&type=DATASET")
+    shared_ds = json_body
+    expect("#{shared_ds[:name]}").to eq(trainingDataset)
+
+    get_dataset_stat(project2, statisticsDataset, datasetType: "&type=DATASET")
+    shared_ds = json_body
+    expect("#{shared_ds[:name]}").to eq(statisticsDataset)
+
+    get_dataset_stat(project2, dataValidationDataset, datasetType: "&type=DATASET")
+    shared_ds = json_body
+    expect("#{shared_ds[:name]}").to eq(dataValidationDataset)
   end
 end
