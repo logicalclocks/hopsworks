@@ -552,7 +552,9 @@ public class ProjectService {
     HopsSecurityException, FeaturestoreException, OpenSearchException, SchemaException, IOException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
-    projectController.createProject(projectDTO, user);
+    Project targetProject = projectController.createProject(projectDTO, user);
+
+    datasetController.shareDefaultFeatureStoreIfItExists(targetProject);
 
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     StringBuilder message = new StringBuilder();

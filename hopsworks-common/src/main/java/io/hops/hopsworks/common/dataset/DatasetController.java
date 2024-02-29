@@ -721,6 +721,11 @@ public class DatasetController {
       Users user) throws DatasetException, ProjectException {
     Project targetProject = projectFacade.findByName(targetProjectName);
     Dataset ds = getByProjectAndFullPath(project, fullPath);
+    share(targetProject, project, ds, user, permission);
+  }
+
+  private DatasetSharedWith share(Project targetProject, Project project, Dataset ds, Users user,
+      DatasetAccessPermission permission) throws ProjectException, DatasetException {
     if (targetProject == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "Target project not found.");
     }
@@ -732,6 +737,39 @@ public class DatasetController {
       shareFeatureStoreServiceDataset(user, project, targetProject, permission, Settings.ServiceDataset.STATISTICS);
       shareFeatureStoreServiceDataset(user, project, targetProject, permission, Settings.ServiceDataset.DATAVALIDATION);
     }
+    return datasetSharedWith;
+  }
+
+  public void shareDefaultFeatureStoreIfItExists(Project targetProject) {
+    Integer srcProjectId = settings.getDefaultFeatureStoreProjectId();
+    if (srcProjectId != null) {
+      Project srcProject = projectFacade.find(srcProjectId);
+      try {
+        DatasetSharedWith datasetSharedWith = shareFeatureStore(targetProject, srcProject);
+        acceptShared(targetProject, targetProject.getOwner(), datasetSharedWith);
+      } catch (Exception e) {
+        //We should not fail if default feature store can not be shared.
+        LOGGER.log(Level.WARNING, "Failed to share default feature store. {0}", e.getMessage());
+      }
+    }
+  }
+
+  public DatasetSharedWith shareFeatureStore(Project targetProject, Project srcProject)
+      throws FeaturestoreException, ProjectException, DatasetException {
+    if (srcProject == null) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "Source project " +
+        "was not provided.");
+    }
+    Dataset fsDataset = getProjectFeaturestoreDataset(srcProject);
+    return share(targetProject, srcProject, fsDataset, srcProject.getOwner(), DatasetAccessPermission.READ_ONLY);
+  }
+
+  private Dataset getProjectFeaturestoreDataset(Project project) throws FeaturestoreException {
+    return  project.getDatasetCollection().stream()
+      .filter(ds -> ds.getFeatureStore() != null)
+      .findFirst()
+      .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND,
+        Level.INFO, "Could not find feature store for project: " + project.getName()));
   }
 
   private Dataset getTrainingDataset(Project project) {

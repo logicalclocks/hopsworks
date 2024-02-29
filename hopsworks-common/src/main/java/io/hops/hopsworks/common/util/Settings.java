@@ -431,6 +431,9 @@ public class Settings {
   // Conda install enable flag
   private static final String VARIABLE_ENABLE_CONDA_INSTALL = "enable_conda_install";
 
+  private static final String VARIABLE_FEATURE_STORE_PROJECT_ID = "default_feature_store_project_id";
+
+
   private static final String VARIABLE_SKIP_NAMESPACE_CREATION =
       "kube_skip_namespace_creation";
   public enum KubeType{
@@ -979,6 +982,7 @@ public class Settings {
           VARIABLE_NUM_OPENSEARCH_DEFAULT_EMBEDDING_INDEX, OPENSEARCH_NUM_DEFAULT_EMBEDDING_INDEX);
       
       ENABLE_CONDA_INSTALL = setBoolVar(VARIABLE_ENABLE_CONDA_INSTALL, ENABLE_CONDA_INSTALL);
+      DEFAULT_FEATURE_STORE_PROJECT_ID = setIntVar(VARIABLE_FEATURE_STORE_PROJECT_ID, null);
       cached = true;
     }
   }
@@ -3856,5 +3860,11 @@ public class Settings {
   public synchronized boolean getEnableCondaInstall() {
     checkCache();
     return ENABLE_CONDA_INSTALL;
+  }
+
+  private Integer DEFAULT_FEATURE_STORE_PROJECT_ID = null;
+  public synchronized Integer getDefaultFeatureStoreProjectId() {
+    checkCache();
+    return DEFAULT_FEATURE_STORE_PROJECT_ID;
   }
 }
