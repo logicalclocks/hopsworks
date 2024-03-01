@@ -8,8 +8,8 @@ RUN apt-get update && apt-get install xz-utils && apt-get install wget -y && apt
 
 USER payara
 
-#TODO change download url to https://repo.hops.works/master/hopsworks-jdbcrealm.jar
-RUN wget -O ${PAYARA_DIR}/glassfish/domains/domain1/lib/hopsworks-realm.jar https://repo.hops.works/dev/ermias/hopsworks/hopsworks-realm.jar
+#This will be replaced by the hopsworks image with the correct version of hopsworks-realm. This is only needed to create the realm.
+RUN wget -O ${PAYARA_DIR}/glassfish/domains/domain1/lib/hopsworks-realm.jar https://repo.hops.works/master/hopsworks-realm.jar
 
 ENV POSTDEPLOY_COMMANDS=/opt/payara/config/post-deploy-commands.asadmin POSTDEPLOY_COMMANDS_FINAL=/opt/payara/config/post-deploy-commands-final.asadmin
 RUN ${PAYARA_DIR}/bin/asadmin start-domain ${DOMAIN_NAME} && \
@@ -19,10 +19,7 @@ RUN ${PAYARA_DIR}/bin/asadmin start-domain ${DOMAIN_NAME} && \
  ${PAYARA_DIR}/bin/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} create-jvm-options --target default-config '-XX\:+UseContainerSupport:-XX\:MaxRAMPercentage=${ENV=MEM_MAX_RAM_PERCENTAGE}:-Xss${ENV=MEM_XSS}' && \
  ${PAYARA_DIR}/bin/asadmin copy-config --passwordfile=${PASSWORD_FILE} default-config $CONFIG && \
  ${PAYARA_DIR}/bin/asadmin create-deployment-group --passwordfile=${PASSWORD_FILE} $DG_NAME && \
- #${PAYARA_DIR}/bin/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set-hazelcast-configuration --clustermode kubernetes --kubernetesServiceName hopsworks --kubernetesNamespace hopsworks && \
  ${PAYARA_DIR}/bin/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set-healthcheck-configuration --enabled=true --dynamic=true && \
-  # ${PAYARA_DIR}/bin/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set-log-attributes --target server-config com.sun.enterprise.server.logging.GFFileHandler.logtoFile=true && \
- # ${PAYARA_DIR}/bin/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set-log-attributes --target ${CONFIG} com.sun.enterprise.server.logging.GFFileHandler.logtoFile=true && \
  ${PAYARA_DIR}/bin/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set-log-attributes --target server-config com.sun.enterprise.server.logging.GFFileHandler.formatter='fish.payara.enterprise.server.logging.JSONLogFormatter' && \
  ${PAYARA_DIR}/bin/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set-log-attributes --target server-config java.util.logging.ConsoleHandler.formatter='fish.payara.enterprise.server.logging.JSONLogFormatter' && \
  ${PAYARA_DIR}/bin/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set-log-attributes  --target ${CONFIG} com.sun.enterprise.server.logging.GFFileHandler.formatter='fish.payara.enterprise.server.logging.JSONLogFormatter' && \
@@ -86,9 +83,6 @@ hopsworksrealm && \
 rm -rf \
  ${PAYARA_DIR}/glassfish/domains/${DOMAIN_NAME}/osgi-cache \
  ${PAYARA_DIR}/glassfish/domains/${DOMAIN_NAME}/logs
-
-#can we do this here? Or add it to helm
-RUN wget -O ${PAYARA_DIR}/glassfish/domains/domain1/lib/mysql-connector-java-8.0.21-bin.jar https://repo.hops.works/master/mysql-connector-java-8.0.21-bin.jar
 
 RUN mkdir /opt/payara/k8s
 

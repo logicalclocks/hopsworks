@@ -12,6 +12,14 @@ if [[ -n "${HOPSWORKS_CA_DOWNLOAD_URL}" ]]; then
   wget --user="$HOPSWORKS_DOWNLOAD_USERNAME" --password="$HOPSWORKS_DOWNLOAD_PASSWORD" -O /opt/payara/k8s/hopsworks/hopsworks-ca.war "$HOPSWORKS_CA_DOWNLOAD_URL"
 fi
 
+if [[ -n "${HOPSWORKS_REALM_DOWNLOAD_URL}" ]]; then
+  wget --user="$HOPSWORKS_DOWNLOAD_USERNAME" --password="$HOPSWORKS_DOWNLOAD_PASSWORD" -O "${PAYARA_DIR}"/glassfish/domains/domain1/lib/hopsworks-realm.jar "$HOPSWORKS_REALM_DOWNLOAD_URL"
+fi
+
+if [[ -n "${MYSQL_CONNECTOR_DOWNLOAD_URL}" ]]; then
+  wget -P "${PAYARA_DIR}"/glassfish/domains/domain1/lib/ "$MYSQL_CONNECTOR_DOWNLOAD_URL"
+fi
+
 if [[ -n "${HOPSWORKS_FRONT_DOWNLOAD_URL}" ]]; then
   wget --user="$HOPSWORKS_DOWNLOAD_USERNAME" --password="$HOPSWORKS_DOWNLOAD_PASSWORD" -O /opt/payara/k8s/hopsworks/frontend.tgz "$HOPSWORKS_FRONT_DOWNLOAD_URL"
   tar -xvzf /opt/payara/k8s/hopsworks/frontend.tgz -C "${PAYARA_DIR}"/glassfish/domains/domain1/docroot/

@@ -31,6 +31,8 @@ fi
 echo "Running flyway migrate"
 flyway -configFiles=config/flyway.conf -validateOnMigrate=false migrate
 
+${MYSQL_CMD} --execute="ALTER TABLE ${HOPSWORKS_DB}.flyway_schema_history engine = 'ndb';"
+
 echo "Running dml"
 for version in dml/*.sql; do
   ${MYSQL_CMD} hopsworks < "$version"
