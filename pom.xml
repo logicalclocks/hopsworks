@@ -148,7 +148,6 @@
     <spnego.version>7.0</spnego.version>
     <swagger-annotations.version>1.6.2</swagger-annotations.version>
     <swagger.jersey2.jaxrs.version>1.6.2</swagger.jersey2.jaxrs.version>
-    <zookeeper.version>3.8.3</zookeeper.version>
     <cron-utils.version>9.2.1</cron-utils.version>
     <arrow.version>14.0.1</arrow.version>
   </properties>
@@ -463,6 +462,10 @@
         <version>${hive.version}</version>
         <exclusions>
           <exclusion>
+            <groupId>org.apache.zookeeper</groupId>
+            <artifactId>zookeeper</artifactId>
+          </exclusion>
+          <exclusion>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>*</artifactId>
           </exclusion>
@@ -733,33 +736,6 @@
         <groupId>org.apache.thrift</groupId>
         <artifactId>libthrift</artifactId>
         <version>${libthrift.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.zookeeper</groupId>
-        <artifactId>zookeeper</artifactId>
-        <version>${zookeeper.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.jboss.netty</groupId>
-            <artifactId>netty</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>io.netty</groupId>
-            <artifactId>netty</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-core</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.bouncycastle</groupId>
