@@ -2351,10 +2351,6 @@ public class Settings {
     return DELA_ENABLED;
   }
 
-  //************************************************ZOOKEEPER********************************************************
-  public static final int ZOOKEEPER_SESSION_TIMEOUT_MS = 30 * 1000;//30 seconds
-  //Zookeeper END
-
   //************************************************KAFKA********************************************************
 
   public static final String KAFKA_ACL_WILDCARD = "*";
