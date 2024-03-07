@@ -49,7 +49,8 @@ module JupyterHelper
     expect_status_details(expected_status)
   end
 
-  def create_notebook(jupyter_port, path="")
+  def create_notebook(jupyter_port, path: "Jupyter")
+    # Permission denied: Untitled.ipynb if no path is provided
     notebook_name = SecureRandom.alphanumeric(10) + ".ipynb"
     payload = {
       'name' => notebook_name,

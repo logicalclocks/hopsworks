@@ -210,16 +210,16 @@
   </suppress>
   <!-- No fix in Payara 5.2022.5 which is the final release of Payara 5 Community. -->
   <suppress>
-    <notes><![CDATA[file name: payara-embedded-web-5.2022.5.jar (shaded: com.hazelcast:hazelcast:4.2.4)]]></notes>
-    <packageUrl regex="true">^pkg:maven/com\.hazelcast/hazelcast@.*$</packageUrl>
-    <cve>CVE-2022-0265</cve>
-    <cve>CVE-2022-36437</cve>
-  </suppress>
-  <suppress>
     <notes><![CDATA[file name: payara-embedded-web-5.2022.5.jar]]></notes>
     <cve>CVE-2023-28462</cve>
     <cve>CVE-2016-4055</cve>
     <cve>CVE-2023-33265</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[file name: payara-embedded-web-5.2022.5.jar (shaded: com.hazelcast:hazelcast:4.2.5)]]></notes>
+    <packageUrl regex="true">^pkg:maven/com\.hazelcast/hazelcast@.*$</packageUrl>
+    <cve>CVE-2023-45859</cve>
+    <cve>CVE-2022-36437</cve>
   </suppress>
   <!-- Not used -->
   <suppress>

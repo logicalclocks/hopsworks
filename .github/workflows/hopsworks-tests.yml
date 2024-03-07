@@ -37,6 +37,8 @@ jobs:
           java-version: '8'
           distribution: 'adopt'
           cache: 'maven'
-
+          cache-dependency-path: 'pom.xml'
+      - name: Set up .m2 settings.xml
+        run: mkdir -p ~/.m2 && echo "<settings><servers><server><id>nvd</id><password>${{ secrets.NVD_API_KEY }}</password></server></servers></settings>" > ~/.m2/settings.xml
       - name: Run vulnerability checker
         run: mvn clean install -Powasp-dependency-check,spot-bugs -DskipTests

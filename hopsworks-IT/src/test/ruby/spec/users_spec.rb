@@ -611,9 +611,11 @@ describe "On #{ENV['OS']}" do
         get_secrets_name
         items = json_body[:items]
         found = false
-        items.each do |item|
-          if item[:name].eql? secret_name
-            found = true
+        unless items.nil? || items.empty?
+          items.each do |item|
+            if item[:name].eql? secret_name
+              found = true
+            end
           end
         end
 
