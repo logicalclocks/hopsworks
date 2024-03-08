@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.storageconnectors;
 
+import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
@@ -27,6 +28,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -115,7 +117,7 @@ public class TestStorageConnectorUtil {
     // as well as their corresponding tests:
     // StorageConnectorUtil.getEnabledStorageConnectorTypes() -> testGetEnabledStorageConnectorTypes
     // StorageConnectorUtil.isStorageConnectorTypeEnabled() -> testIsStorageConnectorTypeEnabled
-    Assert.assertEquals(FeaturestoreConnectorType.values().length, 10);
+    Assert.assertEquals(10, FeaturestoreConnectorType.values().length);
   }
 
   @Test
@@ -160,5 +162,51 @@ public class TestStorageConnectorUtil {
     Assert.assertFalse(storageConnectorUtil.isStorageConnectorTypeEnabled(FeaturestoreConnectorType.KAFKA));
     Assert.assertFalse(storageConnectorUtil.isStorageConnectorTypeEnabled(FeaturestoreConnectorType.GCS));
     Assert.assertFalse(storageConnectorUtil.isStorageConnectorTypeEnabled(FeaturestoreConnectorType.BIGQUERY));
+  }
+  
+  @Test
+  public void test_replaceToPlainText() {
+    // Test the method replaceToPlainText with connectionString
+    final String  PASSWORD_VALUE = "password123";
+    String connectionString = "jdbc:mysql://localhost:3306/hopsworks?user=root&password="
+      + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE;
+    String password = "password123";
+    String expectedConnectionString = "jdbc:mysql://localhost:3306/hopsworks?user=root&password=" + PASSWORD_VALUE;
+    String actualConnectionString = storageConnectorUtil.replaceToPlainText(connectionString, password);
+    Assert.assertEquals(expectedConnectionString, actualConnectionString);
+    
+    // Test the method replaceToPlainText with arguments
+    List<OptionDTO> arguments = Collections.singletonList(new OptionDTO("password",
+      FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE));
+    List<OptionDTO> expectedArguments = Collections.singletonList(new OptionDTO("password", PASSWORD_VALUE));
+    List<OptionDTO> actualArguments = storageConnectorUtil.replaceToPlainText(arguments, password);
+    Assert.assertEquals(expectedArguments.get(0).getValue(), actualArguments.get(0).getValue());
+  }
+  
+  @Test
+  public void test_replaceToPasswordTemplate() {
+    // Test the method replaceToPasswordTemplate with connectionString
+    final String  PASSWORD_VALUE = "password123";
+    String connectionString = "jdbc:mysql://localhost:3306/hopsworks?user=root&password=" + PASSWORD_VALUE;
+    String expectedConnectionString = "jdbc:mysql://localhost:3306/hopsworks?user=root&password="
+      + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE;
+    String actualConnectionString = storageConnectorUtil.replaceToPasswordTemplate(connectionString, PASSWORD_VALUE);
+    Assert.assertEquals(expectedConnectionString, actualConnectionString);
+    
+    // Test the method replaceToPasswordTemplate with arguments
+    List<OptionDTO> arguments = Collections.singletonList(new OptionDTO("password", PASSWORD_VALUE));
+    String actualArguments = storageConnectorUtil.replaceToPasswordTemplate(arguments);
+    String expectedArguments = storageConnectorUtil.fromOptions(Collections.singletonList(
+      new OptionDTO("password", FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE)));
+    Assert.assertEquals(expectedArguments, actualArguments);
+  }
+  
+  @Test
+  public void test_fetchPasswordFromUrl() {
+    // Test the method fetchPassword with connectionString
+    final String PASSWORD_VALUE = "password987";
+    String connectionString = "jdbc:mysql://localhost:3306/hopsworks?user=root&password=" + PASSWORD_VALUE;
+    String actualPassword = storageConnectorUtil.fetchPasswordFromJdbcUrl(connectionString);
+    Assert.assertEquals(PASSWORD_VALUE, actualPassword);
   }
 }

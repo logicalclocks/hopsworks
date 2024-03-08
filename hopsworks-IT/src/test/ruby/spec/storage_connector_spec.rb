@@ -367,7 +367,8 @@ describe "On #{ENV['OS']}" do
         it "should be able to add jdbc connector to the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result, connector_name = create_jdbc_connector(project.id, featurestore_id, connectionString: "jdbc://test2")
+          json_result, connector_name = create_jdbc_connector(project.id, featurestore_id, connectionString:
+            "jdbc:mysql://localhost:3306/test?user=root&password=123pass")
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
           expect(parsed_json.key?("id")).to be true
@@ -379,7 +380,13 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("arguments")).to be true
           expect(parsed_json["name"] == connector_name).to be true
           expect(parsed_json["storageConnectorType"] == "JDBC").to be true
-          expect(parsed_json["connectionString"] == "jdbc://test2").to be true
+          expect(parsed_json["connectionString"] == "jdbc:mysql://localhost:3306/test?user=root&password=123pass").to be true
+          # expect secrets to be created
+          secret_name = "jdbc_"+connector_name+"_"+featurestore_id.to_s
+          result = get_private_secret(secret_name)
+          expect_status_details(200)
+          secrets_json = JSON.parse(result)
+          expect(secrets_json["items"][0]["secret"]).to eql("123pass")
         end
 
         it "should not be able to add jdbc connector without a connection string to the featurestore" do
@@ -392,6 +399,25 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
           expect(parsed_json["errorCode"] == 270032).to be true
+        end
+
+        it "should create secrets for password in arguments for jdbc connector" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, connector_name = create_jdbc_connector(project.id, featurestore_id,
+                                                              connectionString: "jdbc:mysql://localhost:3306/test",
+                                                              arguments: [{name: "password", value: "123pass"},
+                                                                          {name: "user", value: "username"}])
+          # expect secrets created for password
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          expect(parsed_json.key?("arguments")).to be true
+          # expect secrets to be created
+          secret_name = "jdbc_"+connector_name+"_"+featurestore_id.to_s
+          result = get_private_secret(secret_name)
+          expect_status_details(200)
+          secrets_json = JSON.parse(result)
+          expect(secrets_json["items"][0]["secret"]).to eql("123pass")
         end
 
         it "should be able to delete a hopsfs connector from the featurestore" do
@@ -431,6 +457,9 @@ describe "On #{ENV['OS']}" do
           delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/storageconnectors/#{connector_name}"
           delete delete_connector_endpoint
           expect_status_details(200)
+          get_private_secret("jdbc_"+connector_name+"_"+featurestore_id.to_s)
+          # secret should get deleted after update
+          expect_status_details(404)
         end
 
         it "should be able to update hopsfs connector in the featurestore" do
@@ -519,9 +548,13 @@ describe "On #{ENV['OS']}" do
           project = get_project
           create_session(project[:username], "Pass123")
           featurestore_id = get_featurestore_id(project.id)
-          json_result1, connector_name = create_jdbc_connector(project.id, featurestore_id, connectionString: "jdbc://test2")
+          json_result1, connector_name = create_jdbc_connector(project.id, featurestore_id, connectionString:
+            "jdbc://test2",arguments: [{name: "password", value: "123pass"},
+                                       {name: "user", value: "username"}])
           expect_status_details(201)
-          json_result2 = update_jdbc_connector(project.id, featurestore_id, connector_name, connectionString: "jdbc://test3")
+          json_result2 = update_jdbc_connector(project.id, featurestore_id, connector_name,
+                                               connectionString: "jdbc://test3",
+                                               arguments: [{name: "password", value: "123pass_new"}])
           parsed_json2 = JSON.parse(json_result2)
           expect(parsed_json2.key?("id")).to be true
           expect(parsed_json2.key?("name")).to be true
@@ -533,6 +566,12 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json2["name"] == connector_name).to be true
           expect(parsed_json2["storageConnectorType"] == "JDBC").to be true
           expect(parsed_json2["connectionString"] == "jdbc://test3").to be true
+          # expect secrets to be updated
+          secret_name = "jdbc_"+connector_name+"_"+featurestore_id.to_s
+          result = get_private_secret(secret_name)
+          expect_status_details(200)
+          secrets_json = JSON.parse(result)
+          expect(secrets_json["items"][0]["secret"]).to eql("123pass_new")
         end
       end
 
