@@ -17,13 +17,18 @@
 package io.hops.hopsworks.persistence.entity.featurestore.storageconnector.jdbc;
 
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinColumns;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
+import io.hops.hopsworks.persistence.entity.user.security.secrets.Secret;
 import java.io.Serializable;
 
 /**
@@ -45,6 +50,10 @@ public class FeaturestoreJdbcConnector implements Serializable {
   private String connectionString;
   @Column(name = "arguments")
   private String arguments;
+  @JoinColumns({ @JoinColumn(name = "secret_uid", referencedColumnName = "uid"),
+      @JoinColumn(name = "secret_name", referencedColumnName = "secret_name") })
+  @ManyToOne(cascade = CascadeType.ALL)
+  private Secret passwordSecret;
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -72,6 +81,14 @@ public class FeaturestoreJdbcConnector implements Serializable {
   
   public void setArguments(String arguments) {
     this.arguments = arguments;
+  }
+
+  public Secret getPasswordSecret() {
+    return passwordSecret;
+  }
+
+  public void setPasswordSecret(Secret encryptionSecret) {
+    this.passwordSecret = encryptionSecret;
   }
 
   @Override

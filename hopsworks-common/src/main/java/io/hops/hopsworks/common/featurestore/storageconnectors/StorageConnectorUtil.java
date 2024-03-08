@@ -22,6 +22,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretPlaintext;
+import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -44,6 +45,7 @@ import org.json.JSONObject;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.io.IOException;
+import java.net.URI;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -89,7 +91,7 @@ public class StorageConnectorUtil {
    */
   public String createSecretName(Integer featurestoreId, String connectorName,
                                  FeaturestoreConnectorType connectorType) {
-    return connectorType.toString().toLowerCase() + "_" + connectorName.replaceAll(" ", "_").toLowerCase() + "_" +
+    return connectorType.toString().toLowerCase() + "_" + connectorName.replace(" ", "_").toLowerCase() + "_" +
       featurestoreId;
   }
   
@@ -278,5 +280,92 @@ public class StorageConnectorUtil {
       default:
         throw new IllegalArgumentException("Unknown storage connector type: " + storageConnectorType);
     }
+  }
+  
+  /**
+   * Replace the password placeholder with the actual password
+   * @param connectionUrl
+   * @param connectorPassword
+   * @return Sting with the password replaced
+   */
+  public String replaceToPlainText(String connectionUrl, String connectorPassword) {
+    if (!Strings.isNullOrEmpty(connectionUrl) && !Strings.isNullOrEmpty(connectorPassword)) {
+      connectionUrl = connectionUrl.replace(FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE,
+        connectorPassword);
+    }
+    return connectionUrl;
+  }
+  
+  /**
+   * Replace the password placeholder with the actual password
+   * @param arguments
+   * @param connectorPassword
+   * @return List of OptionDTO with the password replaced
+   */
+  public List<OptionDTO> replaceToPlainText(List<OptionDTO> arguments, String connectorPassword) {
+    if (!Strings.isNullOrEmpty(fromOptions(arguments))
+      && !Strings.isNullOrEmpty(connectorPassword)) {
+      arguments.forEach(argument -> {
+        if (argument.getValue().equals(FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE)) {
+          argument.setValue(connectorPassword);
+        }
+      });
+    }
+    return arguments;
+  }
+  
+  /**
+   * Replace the password with the password placeholder
+   * @param connectionString
+   * @param password
+   * @return String with the password replaced
+   */
+  public String replaceToPasswordTemplate(String connectionString, String password) {
+    // if the connection string contains a password, replace it with the password placeholder
+    if (Strings.isNullOrEmpty(password)) {
+      return connectionString;
+    }
+    return connectionString.replace(password,
+      FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE);
+  }
+  
+  /**
+   * Replace the password with the password placeholder
+   * @param arguments
+   * @return List of OptionDTO with the password replaced
+   */
+  public String replaceToPasswordTemplate(List<OptionDTO> arguments) {
+    // check if arguments not null
+    if (arguments == null) {
+      return null;
+    }
+    arguments.forEach(argument -> {
+      if (argument.getName().equals(FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_PASSWORD_ARG)) {
+        argument.setValue(FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE);
+      }
+    });
+    
+    return fromOptions(arguments);
+  }
+  /**
+   * Fetch the password from the jdbc url
+   * @param query
+   * @return String password
+   */
+  public String fetchPasswordFromJdbcUrl(String connectionUrl) {
+    // parse JDBC URL in connectionUrl and get property value for password
+    URI uri = URI.create(connectionUrl.substring(5));
+    String query = uri.getQuery();
+    String password = null;
+    if (!Strings.isNullOrEmpty(query)) {
+      String[] queryArgs = query.split("&");
+      for (String queryArg : queryArgs) {
+        String[] queryArgParts = queryArg.split("=");
+        if (queryArgParts[0].equals(FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_PASSWORD_ARG)) {
+          password = queryArgParts[1];
+        }
+      }
+    }
+    return password;
   }
 }

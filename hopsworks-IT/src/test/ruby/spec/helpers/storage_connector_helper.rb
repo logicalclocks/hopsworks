@@ -82,7 +82,7 @@ module StorageConnectorHelper
     [json_result, connector_name]
   end
 
-  def create_jdbc_connector(project_id, featurestore_id, connectionString: "jdbc://test")
+  def create_jdbc_connector(project_id, featurestore_id, connectionString: "jdbc://test", arguments:[{name: "test1", value: "test2"}])
     type = "featurestoreJdbcConnectorDTO"
     storageConnectorType = "JDBC"
     create_jdbc_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors"
@@ -93,14 +93,14 @@ module StorageConnectorHelper
         type: type,
         storageConnectorType: storageConnectorType,
         connectionString: connectionString,
-        arguments: [{name: "test1", value: "test2"}]
+        arguments: arguments
     }
     json_data = json_data.to_json
     json_result = post create_jdbc_connector_endpoint, json_data
     return json_result, jdbc_connector_name
   end
 
-  def update_jdbc_connector(project_id, featurestore_id, connector_name, connectionString: "jdbc://test")
+  def update_jdbc_connector(project_id, featurestore_id, connector_name, connectionString: "jdbc://test", arguments:[{name: "test1", value: "test2"}])
     type = "featurestoreJdbcConnectorDTO"
     storageConnectorType = "JDBC"
     update_jdbc_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/#{connector_name}"
@@ -110,7 +110,7 @@ module StorageConnectorHelper
         type: type,
         storageConnectorType: storageConnectorType,
         connectionString: connectionString,
-        arguments: [{name: "test1", value: "test2"}]
+        arguments: arguments
     }
     put update_jdbc_connector_endpoint, json_data.to_json
   end

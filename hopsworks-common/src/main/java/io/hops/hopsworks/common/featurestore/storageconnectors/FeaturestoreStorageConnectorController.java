@@ -277,7 +277,7 @@ public class FeaturestoreStorageConnectorController {
       case JDBC:
         featurestoreConnector.setConnectorType(FeaturestoreConnectorType.JDBC);
         featurestoreConnector.setJdbcConnector(jdbcConnectorController.createFeaturestoreJdbcConnector(
-            (FeaturestoreJdbcConnectorDTO) featurestoreStorageConnectorDTO));
+          user, featurestore, (FeaturestoreJdbcConnectorDTO) featurestoreStorageConnectorDTO));
         break;
       case REDSHIFT:
         featurestoreConnector.setConnectorType(FeaturestoreConnectorType.REDSHIFT);
@@ -365,7 +365,8 @@ public class FeaturestoreStorageConnectorController {
         break;
       case JDBC:
         featurestoreConnector.setJdbcConnector(jdbcConnectorController.updateFeaturestoreJdbcConnector(
-            (FeaturestoreJdbcConnectorDTO) featurestoreStorageConnectorDTO, featurestoreConnector.getJdbcConnector()));
+          user, featurestore, (FeaturestoreJdbcConnectorDTO) featurestoreStorageConnectorDTO,
+          featurestoreConnector.getJdbcConnector()));
         break;
       case REDSHIFT:
         featurestoreConnector.setRedshiftConnector(redshiftConnectorController.updateFeaturestoreRedshiftConnector(
