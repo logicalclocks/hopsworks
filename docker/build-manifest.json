@@ -1,7 +1,7 @@
 [
     {
         "name": "hopsworks/migration",
-        "version": "`cat pom.xml | yq -p xml .project.version`",
+        "version": "env:HOPSWORKS_VERSION",
         "excludeRegistries": [
             "ecr_prod"
         ],
@@ -13,7 +13,7 @@
     },
     {
         "name": "hopsworks/payara-node",
-        "version": "5.2022.5",
+        "version": "env:PAYARA_VERSION",
         "excludeRegistries": [
             "ecr_prod"
         ],
@@ -21,7 +21,7 @@
     },
     {
         "name": "hopsworks/payara",
-        "version": "5.2022.5",
+        "version": "env:PAYARA_VERSION",
         "excludeRegistries": [
             "ecr_prod"
         ],
@@ -29,7 +29,7 @@
     },
     {
         "name": "hopsworks/hopsworks-deploy",
-        "version": "5.2022.5",
+        "version": "env:PAYARA_VERSION",
         "excludeRegistries": [
             "ecr_prod"
         ],
@@ -37,7 +37,7 @@
     },
     {
         "name": "hopsworks/hopsworks",
-        "version": "`cat pom.xml | yq -p xml .project.version`",
+        "version": "env:HOPSWORKS_VERSION",
         "excludeRegistries": [
             "ecr_prod"
         ],

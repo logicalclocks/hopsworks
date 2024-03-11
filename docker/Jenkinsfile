@@ -13,7 +13,7 @@ node("local") {
         sh "mvn -q -Dexec.executable=echo -Dexec.args='\${project.version}' --non-recursive exec:exec -l version.log"
         version = readFile "version.log"
         releasedVersion = version - "-SNAPSHOT"
-        withEnv(["HOPSWORKS_VERSION=${version.trim()}", "RELEASED_VERSION=${releasedVersion.trim()}"]) {
+        withEnv(["HOPSWORKS_VERSION=${version.trim()}", "RELEASED_VERSION=${releasedVersion.trim()}", "PAYARA_VERSION=5.2022.5"]) {
           def builder = new ImageBuilder(this)
           m = readFile "${env.WORKSPACE}/docker/build-manifest.json"
           builder.run(m)
