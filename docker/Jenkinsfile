@@ -1,4 +1,4 @@
-@Library("jenkins-library@k8s_builder")
+@Library("jenkins-library@main")
 
 import com.logicalclocks.jenkins.k8s.ImageBuilder
 
