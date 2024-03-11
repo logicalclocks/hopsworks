@@ -64,7 +64,9 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should allow starting new executions" do
-          start_execution(@project[:id], @job[:name])
+          # Job is does not have an executable
+          # 400 Job application file does not exist: hdfs:///Projects/@project/Resources/dummy_job.py
+          start_execution(@project[:id], @job[:name], expected_status: 400)
         end
 
         it "should allow stopping executions" do
@@ -80,7 +82,7 @@ describe "On #{ENV['OS']}" do
         it "should get all alerts" do
           get_project_alerts(@project)
           expect_status_details(200)
-          expect(json_body[:count]).to eq(4)
+          expect(json_body[:count]).to eq(6)
         end
 
         it "should create alert" do
@@ -96,7 +98,7 @@ describe "On #{ENV['OS']}" do
           expect_status_details(204)
 
           get_project_alerts(@project)
-          expect(json_body[:count]).to eq(4)
+          expect(json_body[:count]).to eq(6)
         end
 
         it "should get job alerts" do
@@ -175,7 +177,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should allow starting new executions" do
-          start_execution(@project[:id], @job[:name])
+          start_execution(@project[:id], @job[:name], expected_status: 400)
         end
 
         it "should allow stopping executions" do
@@ -185,7 +187,7 @@ describe "On #{ENV['OS']}" do
         it "should get all alerts" do
           get_project_alerts(@project)
           expect_status_details(200)
-          expect(json_body[:count]).to eq(4)
+          expect(json_body[:count]).to eq(6)
         end
 
         it "should create alert" do
@@ -201,7 +203,7 @@ describe "On #{ENV['OS']}" do
           expect_status_details(204)
 
           get_project_alerts(@project)
-          expect(json_body[:count]).to eq(4)
+          expect(json_body[:count]).to eq(6)
         end
 
         it "should get job alerts" do

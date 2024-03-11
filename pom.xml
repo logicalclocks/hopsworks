@@ -396,6 +396,10 @@
             <groupId>com.predic8</groupId>
             <artifactId>soa-model-core</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>org.bitbucket.b_c</groupId>
+            <artifactId>jose4j</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -1075,9 +1079,10 @@
           <plugin>
             <groupId>org.owasp</groupId>
             <artifactId>dependency-check-maven</artifactId>
-            <version>6.2.2</version>
+            <version>9.0.9</version>
             <inherited>false</inherited>
             <configuration>
+              <nvdApiServerId>nvd</nvdApiServerId>
               <suppressionFiles>
                 <suppressionFile>project-suppression.xml</suppressionFile>
               </suppressionFiles>
