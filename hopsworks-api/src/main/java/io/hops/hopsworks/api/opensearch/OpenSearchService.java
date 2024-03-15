@@ -41,6 +41,10 @@ package io.hops.hopsworks.api.opensearch;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.jwt.OpenSearchJWTResponseDTO;
 import io.hops.hopsworks.api.opensearch.featurestore.OpenSearchFeaturestoreBuilder;
 import io.hops.hopsworks.api.opensearch.featurestore.OpenSearchFeaturestoreDTO;
 import io.hops.hopsworks.api.opensearch.featurestore.OpenSearchFeaturestoreRequest;
@@ -49,8 +53,8 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.OpenSearchJWTResponseDTO;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.opensearch.FeaturestoreDocType;
-import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -216,7 +220,8 @@ public class OpenSearchService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON_LIBRARIES}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER",
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON_LIBRARIES, ApiScope.FEATURESTORE},
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER",
     "HOPS_SERVICE_USER"})
   public Response createJwtToken(@Context SecurityContext sc,
                                  @PathParam("projectId") Integer projectId) throws OpenSearchException {
