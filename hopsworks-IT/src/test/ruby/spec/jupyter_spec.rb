@@ -294,6 +294,15 @@ describe "On #{ENV['OS']}" do
             update_jupyter(@project, settings)
           end
 
+          it "should work to start jupyter server with spark files attached" do
+            get_settings(@project)
+            settings = json_body
+            settings[:jobConfig][:"spark.yarn.dist.files"]="hdfs:///Projects/#{@project[:projectname]}/Resources/README.md"
+            start_jupyter(@project, settings: settings)
+            jupyter_running(@project, expected_status: 200)
+            stop_jupyter(@project)
+          end
+
           it "should not allow starting multiple notebook servers" do
             start_jupyter(@project)
             start_jupyter(@project, expected_status: 400)

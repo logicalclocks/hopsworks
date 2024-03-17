@@ -218,8 +218,8 @@ public class SparkController {
     throws ProjectException, GenericException {
     DistributedFileSystemOps udfso = null;
     try {
+      udfso = dfs.getDfsOps(hdfsUsersBean.getHdfsUserName(project, user));
       if(isJob) {
-        udfso = dfs.getDfsOps(hdfsUsersBean.getHdfsUserName(project, user));
         if (!udfso.exists(jobConf.getAppPath())) {
           throw new ProjectException(RESTCodes.ProjectErrorCode.FILE_NOT_FOUND, Level.FINEST,
                   "Job application file does not exist: " + jobConf.getAppPath());
