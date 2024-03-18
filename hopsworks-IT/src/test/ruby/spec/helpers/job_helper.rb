@@ -198,6 +198,10 @@ module JobHelper
       get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/convertIPythonNotebook/Resources/" + job_name + ".ipynb"
       expect_status_details(200)
       job_conf[:appPath] = "/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb"
+
+      # Set arguments specifically for a notebook
+      job_conf["defaultArgs"] = "-a 5 -b 2"
+
       put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
 
     end
