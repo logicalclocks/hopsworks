@@ -41,11 +41,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class TestFilterController {
 
@@ -621,6 +617,21 @@ public class TestFilterController {
     Assert.assertEquals(expected, result);
   
     result = node.toSqlString(new HiveSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+    Assert.assertEquals(expected, result);
+  }
+
+  @Test
+  public void testConvertToEventTimeFeatureValue() throws Exception {
+    Feature feature = new Feature("fg1_pk", "fg1", "timestamp",true, null,
+            "prefix2_", fg1);
+    Date dateWithHandS = new Date(1710442079000L);
+    String expectedHandS = "2024-03-14 18:47:59";
+    String resultHandS =  filterController.convertToEventTimeFeatureValue(feature, dateWithHandS);
+    Assert.assertEquals(resultHandS, expectedHandS);
+
+    Date date = new Date(1710374400000L);
+    String expected = "2024-03-14 00:00:00";
+    String result =  filterController.convertToEventTimeFeatureValue(feature, date);
     Assert.assertEquals(expected, result);
   }
  }

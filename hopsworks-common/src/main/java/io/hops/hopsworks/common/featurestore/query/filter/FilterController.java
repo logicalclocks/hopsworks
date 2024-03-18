@@ -54,6 +54,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -73,7 +74,7 @@ public class FilterController {
   private FeaturegroupController featuregroupController;
   private ObjectMapper objectMapper = new ObjectMapper();
   private DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-  private DateFormat timestampFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+  private DateFormat timestampFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
   public FilterController() {
   }
@@ -125,6 +126,7 @@ public class FilterController {
 
   public String convertToEventTimeFeatureValue(Feature feature, Date date) throws FeaturestoreException {
     String timeType = feature.getType();
+    timestampFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
     if ("date".equals(timeType)) {
       return dateFormat.format(date);
     } else if ("timestamp".equals(timeType)) {
