@@ -17,6 +17,8 @@ package io.hops.hopsworks.api.provenance.explicit;
 
 import io.hops.hopsworks.api.featurestore.featureview.FeatureViewBuilder;
 import io.hops.hopsworks.api.featurestore.trainingdataset.TrainingDatasetDTOBuilder;
+import io.hops.hopsworks.api.modelregistry.models.ModelsBuilder;
+import io.hops.hopsworks.api.modelregistry.models.dto.ModelDTO;
 import io.hops.hopsworks.api.provenance.explicit.dto.ProvArtifactDTO;
 import io.hops.hopsworks.api.provenance.explicit.dto.featurestore.ProvCachedFeatureGroupDTO;
 import io.hops.hopsworks.api.provenance.explicit.dto.featurestore.ProvOnDemandFeatureGroupDTO;
@@ -36,14 +38,16 @@ import io.hops.hopsworks.common.provenance.explicit.ProvExplicitLink;
 import io.hops.hopsworks.api.provenance.explicit.dto.ProvNodeDTO;
 import io.hops.hopsworks.api.provenance.explicit.dto.ProvExplicitLinkDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
-import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
+import io.hops.hopsworks.exceptions.ModelRegistryException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
+import io.hops.hopsworks.persistence.entity.models.version.ModelVersion;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -72,7 +76,9 @@ public class ProvExplicitLinksBuilder {
   private FeatureViewBuilder featureViewBuilder;
   @EJB
   private TrainingDatasetDTOBuilder trainingDatasetBuilder;
-  
+  @EJB
+  private ModelsBuilder modelsBuilder;
+
   public ProvExplicitLinksBuilder() {}
   
   //test
@@ -103,34 +109,40 @@ public class ProvExplicitLinksBuilder {
       .path(ResourceRequest.Name.PROVENANCE.toString().toLowerCase())
       .path(ResourceRequest.Name.LINKS.toString().toLowerCase());
   }
+
+  public UriBuilder modelURI(UriInfo uriInfo, Project accessProject, ModelVersion model) {
+    return modelsBuilder.modelVersionUri(uriInfo, accessProject, model.getModel().getProject(),  model)
+        .path(ResourceRequest.Name.PROVENANCE.toString().toLowerCase())
+        .path(ResourceRequest.Name.LINKS.toString().toLowerCase());
+  }
   
   public ProvExplicitLinkDTO<FeaturegroupDTO> buildFGLinks(UriInfo uriInfo, ResourceRequest resourceRequest,
                                       Project accessProject, Users user, ProvExplicitLink<Featuregroup> links)
-    throws DatasetException, FeatureStoreMetadataException, MetadataException, ServiceException,
-           GenericException, FeaturestoreException, IOException {
+      throws DatasetException, FeatureStoreMetadataException, MetadataException, ServiceException, CloudException,
+      GenericException, FeaturestoreException, IOException, ModelRegistryException {
     return (ProvExplicitLinkDTO<FeaturegroupDTO>)build(uriInfo, resourceRequest, accessProject, user, links);
   }
   
   public ProvExplicitLinkDTO<FeatureViewDTO> buildFVLinks(UriInfo uriInfo, ResourceRequest resourceRequest,
                                                           Project accessProject, Users user,
                                                           ProvExplicitLink<FeatureView> links)
-    throws DatasetException, FeatureStoreMetadataException, MetadataException, ServiceException,
-           GenericException, FeaturestoreException, IOException {
+      throws DatasetException, FeatureStoreMetadataException, MetadataException, ServiceException, CloudException,
+      GenericException, FeaturestoreException, IOException, ModelRegistryException {
     return (ProvExplicitLinkDTO<FeatureViewDTO>)build(uriInfo, resourceRequest, accessProject, user, links);
   }
   
   public ProvExplicitLinkDTO<TrainingDatasetDTO> buildTDLinks(UriInfo uriInfo, ResourceRequest resourceRequest,
                                                           Project accessProject, Users user,
                                                           ProvExplicitLink<TrainingDataset> links)
-    throws DatasetException, FeatureStoreMetadataException, MetadataException, ServiceException,
-           GenericException, FeaturestoreException, IOException {
+      throws DatasetException, FeatureStoreMetadataException, MetadataException, ServiceException, CloudException,
+      GenericException, FeaturestoreException, IOException, ModelRegistryException {
     return (ProvExplicitLinkDTO<TrainingDatasetDTO>)build(uriInfo, resourceRequest, accessProject, user, links);
   }
   
   public ProvExplicitLinkDTO<?> build(UriInfo uriInfo, ResourceRequest resourceRequest,
                                       Project accessProject, Users user, ProvExplicitLink<?> links)
-    throws GenericException, FeaturestoreException, DatasetException, ServiceException, MetadataException,
-           FeatureStoreMetadataException, IOException {
+      throws GenericException, FeaturestoreException, DatasetException, ServiceException, MetadataException,
+      FeatureStoreMetadataException, IOException, CloudException, ModelRegistryException {
     boolean expandLink = resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.PROVENANCE);
     boolean expandArtifact = resourceRequest != null
       && resourceRequest.contains(ResourceRequest.Name.PROVENANCE_ARTIFACTS);
@@ -161,14 +173,23 @@ public class ProvExplicitLinksBuilder {
         linksDTO.setHref(trainingDatasetURI(uriInfo, accessProject, trainingDataset).build());
         return linksDTO;
       }
+    } else if (links.getNode() instanceof ModelVersion) {
+      if(expandLink) {
+        return modelLink(uriInfo, accessProject, user, expandArtifact, links);
+      } else {
+        ProvExplicitLinkDTO<ModelDTO> linksDTO = new ProvExplicitLinkDTO<>();
+        ModelVersion model = (ModelVersion) links.getNode();
+        linksDTO.setHref(modelURI(uriInfo, accessProject, model).build());
+        return linksDTO;
+      }
     }
     return null;
   }
   
   private ProvExplicitLinkDTO featureGroupLink(UriInfo uriInfo, Project accessProject, Users user,
                                                boolean expandArtifact, ProvExplicitLink links)
-    throws FeaturestoreException, ServiceException, MetadataException, FeatureStoreMetadataException, DatasetException,
-           IOException {
+      throws FeaturestoreException, ServiceException, MetadataException, FeatureStoreMetadataException,
+      DatasetException, IOException, CloudException, GenericException, ModelRegistryException {
     ProvExplicitLinkDTO<FeaturegroupDTO> linksDTO = new ProvExplicitLinkDTO<>();
     RestDTO artifactDTO;
     if(links.isDeleted()) {
@@ -196,8 +217,8 @@ public class ProvExplicitLinksBuilder {
   
   private ProvExplicitLinkDTO featureViewLink(UriInfo uriInfo, Project accessProject, Users user,
                                               boolean expandArtifact, ProvExplicitLink links)
-    throws FeaturestoreException, DatasetException, ServiceException, MetadataException,
-           FeatureStoreMetadataException, IOException {
+      throws FeaturestoreException, DatasetException, ServiceException, MetadataException,
+      FeatureStoreMetadataException, IOException, CloudException, GenericException, ModelRegistryException {
     ProvExplicitLinkDTO<FeatureViewDTO> linksDTO = new ProvExplicitLinkDTO<>();
     RestDTO artifactDTO;
     if(links.isDeleted()) {
@@ -218,7 +239,7 @@ public class ProvExplicitLinksBuilder {
           linksDTO.setNode(buildNodeDTO(links, artifactDTO));
         } catch (FeaturestoreException e) {
           if (e.getErrorCode().equals(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND)) {
-            artifactDTO = new ProvArtifactDTO(featureView.getId().toString(),
+            artifactDTO = new ProvArtifactDTO(featureView.getId(),
               featureView.getFeaturestore().getProject().getName(),
               featureView.getName(), featureView.getVersion());
             linksDTO.setNode(buildNodeDTO(links, artifactDTO, Optional.of(e)));
@@ -241,8 +262,8 @@ public class ProvExplicitLinksBuilder {
   
   private ProvExplicitLinkDTO trainingDatasetLink(UriInfo uriInfo, Project accessProject, Users user,
                                                   boolean expandArtifact, ProvExplicitLink links)
-    throws FeaturestoreException, DatasetException, ServiceException, MetadataException, FeatureStoreMetadataException,
-           IOException {
+      throws FeaturestoreException, DatasetException, ServiceException, MetadataException,
+      FeatureStoreMetadataException, IOException, CloudException, GenericException, ModelRegistryException {
     ProvExplicitLinkDTO<TrainingDatasetDTO> linksDTO = new ProvExplicitLinkDTO<>();
     RestDTO artifactDTO;
     
@@ -269,11 +290,41 @@ public class ProvExplicitLinksBuilder {
     traverseLinks(uriInfo, accessProject, user, linksDTO, expandArtifact, links);
     return linksDTO;
   }
+
+  private ProvExplicitLinkDTO modelLink(UriInfo uriInfo, Project accessProject, Users user,
+                                        boolean expandArtifact, ProvExplicitLink links)
+      throws FeaturestoreException, DatasetException, ServiceException, MetadataException,
+      FeatureStoreMetadataException, IOException, CloudException, GenericException, ModelRegistryException {
+    ProvExplicitLinkDTO<ModelDTO> linksDTO = new ProvExplicitLinkDTO<>();
+    RestDTO artifactDTO;
+
+    if (links.isDeleted()) {
+      ProvArtifact artifact = (ProvArtifact) links.getNode();
+      artifactDTO = new ProvArtifactDTO(artifact.getId(), artifact.getProject(),
+          artifact.getName(), artifact.getVersion());
+    } else {
+      ModelVersion model = (ModelVersion) links.getNode();
+      linksDTO.setHref(modelURI(uriInfo, accessProject, model).build());
+      if (links.isAccessible() && expandArtifact) {
+        ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELS);
+        artifactDTO = modelsBuilder.build(uriInfo, resourceRequest, user, accessProject, model);
+      } else {
+        ProvArtifact artifact = ProvArtifact.fromModel(model);
+        artifactDTO = new ProvArtifactDTO(artifact.getId(), artifact.getProject(),
+            artifact.getName(), artifact.getVersion());
+      }
+      artifactDTO.setHref(
+          modelsBuilder.modelVersionUri(uriInfo, accessProject, model.getModel().getProject(), model).build());
+    }
+    linksDTO.setNode(buildNodeDTO(links, artifactDTO));
+    traverseLinks(uriInfo, accessProject, user, linksDTO, expandArtifact, links);
+    return linksDTO;
+  }
   
   private void traverseLinks(UriInfo uriInfo, Project accessProject, Users user, ProvExplicitLinkDTO<?> linksDTO,
                              boolean expandArtifact, ProvExplicitLink<?> links)
-    throws FeaturestoreException, ServiceException, MetadataException, FeatureStoreMetadataException, DatasetException,
-           IOException {
+      throws FeaturestoreException, ServiceException, MetadataException, FeatureStoreMetadataException,
+      DatasetException, IOException, CloudException, GenericException, ModelRegistryException {
     if(linksDTO.getNode().isAccessible()) {
       for (ProvExplicitLink<?> downstreamLink : links.getDownstream()) {
         ProvExplicitLinkDTO<?> downstreamLinkDTO =
@@ -290,16 +341,17 @@ public class ProvExplicitLinksBuilder {
   
   private ProvExplicitLinkDTO<?> traverseLinksInt(UriInfo uriInfo, Project accessProject, Users user,
                                                   boolean expandArtifact, ProvExplicitLink link)
-    throws FeaturestoreException, ServiceException, DatasetException, MetadataException, FeatureStoreMetadataException,
-           IOException {
+      throws FeaturestoreException, ServiceException, DatasetException, MetadataException,
+      FeatureStoreMetadataException, IOException, CloudException, GenericException, ModelRegistryException {
     switch(link.getArtifactType()) {
       case FEATURE_GROUP:
-      case EXTERNAL_FEATURE_GROUP:
         return featureGroupLink(uriInfo, accessProject, user, expandArtifact, link);
       case FEATURE_VIEW:
         return featureViewLink(uriInfo, accessProject, user, expandArtifact, link);
       case TRAINING_DATASET:
         return trainingDatasetLink(uriInfo, accessProject, user, expandArtifact, link);
+      case MODEL:
+        return modelLink(uriInfo, accessProject, user, expandArtifact, link);
       default:
         return null;
     }

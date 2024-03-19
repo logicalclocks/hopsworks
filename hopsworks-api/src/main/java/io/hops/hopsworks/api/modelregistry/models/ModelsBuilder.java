@@ -43,6 +43,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -68,27 +69,29 @@ public class ModelsBuilder {
   private UsersBuilder usersBuilder;
   
   public ModelDTO uri(ModelDTO dto, UriInfo uriInfo, Project userProject, Project modelRegistryProject) {
-    dto.setHref(uriInfo.getBaseUriBuilder()
-      .path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
-      .path(Integer.toString(userProject.getId()))
-      .path(ResourceRequest.Name.MODELREGISTRIES.toString().toLowerCase())
-      .path(Integer.toString(modelRegistryProject.getId()))
-      .path(ResourceRequest.Name.MODELS.toString().toLowerCase())
-      .build());
+    dto.setHref(modelUri(uriInfo, userProject, modelRegistryProject).build());
     return dto;
   }
   
   public ModelDTO uri(ModelDTO dto, UriInfo uriInfo, Project userProject, Project modelRegistryProject,
                       ModelVersion modelVersion) {
-    dto.setHref(uriInfo.getBaseUriBuilder()
-      .path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
-      .path(Integer.toString(userProject.getId()))
-      .path(ResourceRequest.Name.MODELREGISTRIES.toString().toLowerCase())
-      .path(Integer.toString(modelRegistryProject.getId()))
-      .path(ResourceRequest.Name.MODELS.toString().toLowerCase())
-      .path(modelVersion.getModel().getName() + "_" + modelVersion.getVersion())
-      .build());
+    dto.setHref(modelVersionUri(uriInfo, userProject, modelRegistryProject, modelVersion).build());
     return dto;
+  }
+
+  public UriBuilder modelUri(UriInfo uriInfo, Project userProject, Project modelRegistryProject) {
+    return uriInfo.getBaseUriBuilder()
+        .path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
+        .path(Integer.toString(userProject.getId()))
+        .path(ResourceRequest.Name.MODELREGISTRIES.toString().toLowerCase())
+        .path(Integer.toString(modelRegistryProject.getId()))
+        .path(ResourceRequest.Name.MODELS.toString().toLowerCase());
+  }
+
+  public UriBuilder modelVersionUri(UriInfo uriInfo, Project userProject, Project modelRegistryProject,
+                                    ModelVersion modelVersion) {
+    return modelUri(uriInfo, userProject, modelRegistryProject)
+        .path(modelVersion.getModel().getName() + "_" + modelVersion.getVersion());
   }
 
   public ModelDTO expand(ModelDTO dto, ResourceRequest resourceRequest) {
@@ -194,5 +197,16 @@ public class ModelsBuilder {
       }
     }
     return modelDTO;
+  }
+
+  public ModelDTO build(UriInfo uriInfo,
+                        ResourceRequest resourceRequest,
+                        Users user,
+                        Project userProject,
+                        ModelVersion modelVersion)
+      throws GenericException, ModelRegistryException, MetadataException, FeatureStoreMetadataException,
+      DatasetException {
+    return build(uriInfo, resourceRequest, user, userProject, modelVersion.getModel().getProject(), modelVersion,
+        modelUtils.getModelFullPath(modelVersion));
   }
 }

@@ -18,6 +18,7 @@ package io.hops.hopsworks.api.modelregistry.models.dto;
 
 import io.hops.hopsworks.api.dataset.inode.InodeDTO;
 import io.hops.hopsworks.api.user.UserDTO;
+import io.hops.hopsworks.common.featurestore.featureview.FeatureViewDTO;
 import io.hops.hopsworks.common.tags.TagsDTO;
 import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
@@ -78,6 +79,10 @@ public class ModelDTO extends RestDTO<ModelDTO> {
   private Integer modelRegistryId;
 
   private TagsDTO tags;
+
+  private FeatureViewDTO featureView;
+
+  private int trainingDatasetVersion;
   
   private String type = "modelDTO";
 
@@ -234,7 +239,23 @@ public class ModelDTO extends RestDTO<ModelDTO> {
   public void setCreator(UserDTO creator) {
     this.creator = creator;
   }
-  
+
+  public FeatureViewDTO getFeatureView() {
+    return featureView;
+  }
+
+  public void setFeatureView(FeatureViewDTO featureView) {
+    this.featureView = featureView;
+  }
+
+  public int getTrainingDatasetVersion() {
+    return trainingDatasetVersion;
+  }
+
+  public void setTrainingDatasetVersion(int trainingDatasetVersion) {
+    this.trainingDatasetVersion = trainingDatasetVersion;
+  }
+
   @Override
   public String toString() {
     return "ModelDTO{" +
@@ -256,6 +277,8 @@ public class ModelDTO extends RestDTO<ModelDTO> {
       ", trainingDataset=" + trainingDataset +
       ", modelRegistryId=" + modelRegistryId +
       ", tags=" + tags +
+      ", featureView=" + featureView +
+      ", trainingDatasetVersion=" + trainingDatasetVersion +
       '}';
   }
 }
