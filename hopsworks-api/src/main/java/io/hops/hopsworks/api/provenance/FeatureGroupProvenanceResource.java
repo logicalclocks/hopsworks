@@ -139,7 +139,7 @@ public class FeatureGroupProvenanceResource {
       @Context HttpServletRequest req,
       @Context SecurityContext sc)
       throws GenericException, FeaturestoreException, DatasetException, ServiceException, MetadataException,
-      FeatureStoreMetadataException, IOException, CloudException, ModelRegistryException {
+      FeatureStoreMetadataException, IOException, ModelRegistryException {
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.PROVENANCE);
     resourceRequest.setExpansions(explicitProvenanceExpansionBeanParam.getResources());

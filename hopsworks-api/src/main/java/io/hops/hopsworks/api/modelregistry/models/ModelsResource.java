@@ -257,7 +257,6 @@ public class ModelsResource {
   }
 
   @Path("/{id}/provenance")
-  @Logged(logLevel = LogLevel.OFF)
   public ModelProvenanceResource provenance(@ApiParam(value = "Id of the model", required = true)
                                             @PathParam("id") String id)
       throws ModelRegistryException, ProvenanceException {

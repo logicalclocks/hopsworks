@@ -23,13 +23,10 @@ import io.hops.hopsworks.api.provenance.explicit.ExplicitProvenanceExpansionBean
 import io.hops.hopsworks.api.provenance.explicit.ProvExplicitLinksBuilder;
 import io.hops.hopsworks.api.provenance.explicit.dto.ProvExplicitLinkDTO;
 import io.hops.hopsworks.api.provenance.ops.ProvLinksBeanParams;
-import io.hops.hopsworks.audit.logger.LogLevel;
-import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.provenance.explicit.ProvExplicitControllerIface;
 import io.hops.hopsworks.common.provenance.explicit.ProvExplicitLink;
 import io.hops.hopsworks.common.provenance.ops.dto.ProvLinksDTO;
-import io.hops.hopsworks.exceptions.CloudException;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -62,7 +59,6 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 
-@Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Model Explicit Provenance Resource")
@@ -77,17 +73,14 @@ public class ModelProvenanceResource {
   private Project modelRegistry;
   private ModelVersion modelVersion;
 
-  @Logged(logLevel = LogLevel.OFF)
   public void setAccessProject(Project project) {
     this.accessProject = project;
   }
 
-  @Logged(logLevel = LogLevel.OFF)
   public void setModelRegistry(Project project) {
     this.modelRegistry = project;
   }
 
-  @Logged(logLevel = LogLevel.OFF)
   public void setModelVersion(ModelVersion modelVersion){
     this.modelVersion = modelVersion;
   }
@@ -110,7 +103,7 @@ public class ModelProvenanceResource {
       @Context HttpServletRequest req,
       @Context SecurityContext sc)
       throws GenericException, FeaturestoreException, DatasetException, ServiceException, MetadataException,
-      FeatureStoreMetadataException, IOException, CloudException, ModelRegistryException {
+      FeatureStoreMetadataException, IOException, ModelRegistryException {
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.PROVENANCE);
     resourceRequest.setExpansions(explicitProvenanceExpansionBeanParam.getResources());
