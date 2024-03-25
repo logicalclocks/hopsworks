@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2022, Hopsworks AB. All rights reserved
+ * Copyright (C) 2024, Hopsworks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -23,13 +23,7 @@ import io.hops.hopsworks.api.provenance.explicit.ExplicitProvenanceExpansionBean
 import io.hops.hopsworks.api.provenance.explicit.ProvExplicitLinksBuilder;
 import io.hops.hopsworks.api.provenance.explicit.dto.ProvExplicitLinkDTO;
 import io.hops.hopsworks.api.provenance.ops.ProvLinksBeanParams;
-import io.hops.hopsworks.api.provenance.ops.ProvUsageBeanParams;
-import io.hops.hopsworks.api.provenance.ops.ProvUsageBuilder;
-import io.hops.hopsworks.api.provenance.ops.dto.ProvArtifactUsageParentDTO;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dataset.util.DatasetHelper;
-import io.hops.hopsworks.common.dataset.util.DatasetPath;
-import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.common.provenance.explicit.ProvExplicitControllerIface;
 import io.hops.hopsworks.common.provenance.explicit.ProvExplicitLink;
 import io.hops.hopsworks.common.provenance.ops.dto.ProvLinksDTO;
@@ -39,12 +33,9 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ModelRegistryException;
-import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
-import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
-import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
+import io.hops.hopsworks.persistence.entity.models.version.ModelVersion;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
@@ -70,49 +61,28 @@ import java.io.IOException;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-@Api(value = "Feature View Explicit Provenance Resource")
-public class FeatureViewProvenanceResource {
+@Api(value = "Model Explicit Provenance Resource")
+public class ModelProvenanceResource {
   @EJB
-  private FeatureViewController featureViewController;
-
+  private JWTHelper jwtHelper;
   @Inject
   private ProvExplicitControllerIface provCtrl;
   @EJB
   private ProvExplicitLinksBuilder linksBuilder;
-  @EJB
-  private ProvUsageBuilder usageBuilder;
-  @EJB
-  private JWTHelper jwtHelper;
-  @EJB
-  private DatasetHelper datasetHelper;
+  private Project accessProject;
+  private Project modelRegistry;
+  private ModelVersion modelVersion;
 
-  private Project project;
-  
-  private Featurestore featureStore;
-  private String featureViewName;
-  private Integer featureViewVersion;
-  
-  public void setProject(Project project) {
-    this.project = project;
+  public void setAccessProject(Project project) {
+    this.accessProject = project;
   }
 
-  public void setFeatureStore(Featurestore featureStore) {
-    this.featureStore = featureStore;
+  public void setModelRegistry(Project project) {
+    this.modelRegistry = project;
   }
-  
-  public void setFeatureViewName(String featureViewName) {
-    this.featureViewName = featureViewName;
-  }
-  
-  public void setFeatureViewVersion(Integer featureViewVersion) {
-    this.featureViewVersion = featureViewVersion;
-  }
-  
-  private DatasetPath getFeaturestoreDatasetPath() throws FeaturestoreException, DatasetException {
-    FeatureView featureView
-      = featureViewController.getByNameVersionAndFeatureStore(featureViewName, featureViewVersion, featureStore);
-    return datasetHelper.getDatasetPath(project, featureViewController.getLocation(featureView),
-      DatasetType.DATASET);
+
+  public void setModelVersion(ModelVersion modelVersion){
+    this.modelVersion = modelVersion;
   }
 
   @GET
@@ -121,7 +91,7 @@ public class FeatureViewProvenanceResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
+  @ApiKeyRequired(acceptedScopes = {ApiScope.MODELREGISTRY},
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiOperation(value = "Links Provenance query endpoint",
       response = ProvLinksDTO.class)
@@ -137,30 +107,9 @@ public class FeatureViewProvenanceResource {
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.PROVENANCE);
     resourceRequest.setExpansions(explicitProvenanceExpansionBeanParam.getResources());
-    FeatureView fv
-        = featureViewController.getByNameVersionAndFeatureStore(featureViewName, featureViewVersion, featureStore);
-    ProvExplicitLink<FeatureView> provenance
-        = provCtrl.featureViewLinks(project, fv, pagination.getUpstreamLvls(), pagination.getDownstreamLvls());
-    ProvExplicitLinkDTO<?> result = linksBuilder.build(uriInfo, resourceRequest, project, user, provenance);
+    ProvExplicitLink<ModelVersion> provenance = provCtrl.modelLinks(accessProject, modelVersion,
+        pagination.getUpstreamLvls(), pagination.getDownstreamLvls());
+    ProvExplicitLinkDTO<?> result = linksBuilder.build(uriInfo, resourceRequest, accessProject, user, provenance);
     return Response.ok().entity(result).build();
-  }
-
-  @GET
-  @Path("usage")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Artifact usage", response = ProvArtifactUsageParentDTO.class)
-  public Response status(@BeanParam ProvUsageBeanParams params,
-                         @Context UriInfo uriInfo,
-                         @Context HttpServletRequest req,
-                         @Context SecurityContext sc)
-      throws ProvenanceException, GenericException, DatasetException, MetadataException, FeatureStoreMetadataException,
-      FeaturestoreException {
-    Users user = jwtHelper.getUserPrincipal(sc);
-    String fvProvenanceId = featureViewName + "_" + featureViewVersion;
-    ProvArtifactUsageParentDTO status = usageBuilder.buildAccessible(uriInfo, user, getFeaturestoreDatasetPath(),
-        fvProvenanceId, params.getUsageType());
-    return Response.ok().entity(status).build();
   }
 }

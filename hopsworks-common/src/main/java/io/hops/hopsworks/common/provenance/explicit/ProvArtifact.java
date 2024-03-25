@@ -18,11 +18,12 @@ package io.hops.hopsworks.common.provenance.explicit;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
+import io.hops.hopsworks.persistence.entity.models.version.ModelVersion;
 import io.hops.hopsworks.persistence.entity.provenance.ProvExplicitNode;
 
 public class ProvArtifact {
   
-  private String id;
+  private Integer id;
   private String project;
   private String name;
   private Integer version;
@@ -30,31 +31,36 @@ public class ProvArtifact {
   public ProvArtifact() {
   }
   
-  public ProvArtifact(String artifactId, String projectName, String artifactName, Integer artifactVersion) {
+  public ProvArtifact(Integer id, String projectName, String artifactName, Integer artifactVersion) {
     this.project = projectName;
     this.name = artifactName;
     this.version = artifactVersion;
-    this.id = artifactId;
+    this.id = id;
   }
   
   public static ProvArtifact fromLinkAsParent(ProvExplicitNode link) {
-    return new ProvArtifact(String.valueOf(link.parentId()), link.parentProject(),
+    return new ProvArtifact(link.parentId(), link.parentProject(),
       link.parentName(), link.parentVersion());
   }
   
   public static ProvArtifact fromFeatureGroup(Featuregroup fg) {
-    return new ProvArtifact(String.valueOf(fg.getId()), fg.getFeaturestore().getProject().getName(),
+    return new ProvArtifact(fg.getId(), fg.getFeaturestore().getProject().getName(),
       fg.getName(), fg.getVersion());
   }
   
   public static ProvArtifact fromFeatureView(FeatureView fv) {
-    return new ProvArtifact(String.valueOf(fv.getId()), fv.getFeaturestore().getProject().getName(),
+    return new ProvArtifact(fv.getId(), fv.getFeaturestore().getProject().getName(),
       fv.getName(), fv.getVersion());
   }
   
   public static ProvArtifact fromTrainingDataset(TrainingDataset td) {
-    return new ProvArtifact(String.valueOf(td.getId()), td.getFeaturestore().getProject().getName(),
+    return new ProvArtifact(td.getId(), td.getFeaturestore().getProject().getName(),
       td.getName(), td.getVersion());
+  }
+
+  public static ProvArtifact fromModel(ModelVersion model) {
+    return new ProvArtifact(model.getId(), model.getModel().getProject().getName(),
+        model.getModel().getName(), model.getVersion());
   }
   
   public String getProject() {
@@ -81,11 +87,11 @@ public class ProvArtifact {
     this.version = version;
   }
   
-  public String getId() {
+  public Integer getId() {
     return id;
   }
   
-  public void setId(String id) {
+  public void setId(Integer id) {
     this.id = id;
   }
 }

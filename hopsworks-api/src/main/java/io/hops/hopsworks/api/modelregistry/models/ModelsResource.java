@@ -23,6 +23,7 @@ import io.hops.hopsworks.api.filter.featureFlags.FeatureFlags;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.modelregistry.models.dto.ModelDTO;
 import io.hops.hopsworks.api.modelregistry.models.tags.ModelTagResource;
+import io.hops.hopsworks.api.provenance.ModelProvenanceResource;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -90,6 +91,8 @@ public class ModelsResource {
   private ModelUtils modelUtils;
   @Inject
   private ModelTagResource tagResource;
+  @Inject
+  private ModelProvenanceResource provenanceResource;
 
   private Project userProject;
 
@@ -229,6 +232,7 @@ public class ModelsResource {
       accessor = modelUtils.getModelsAccessor(user, userProject, modelProject,
         experimentProject);
       ModelVersion modelVersion = modelsController.createModelVersion(accessor, modelDTO, jobName, kernelId);
+      modelUtils.createExplicitProvenanceLink(modelVersion, modelDTO);
       ModelDTO dto = modelsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.MODELS), user, userProject,
         modelRegistryProject, modelVersion, modelUtils.getModelFullPath(modelProject, modelVersion.getModel().getName(),
           modelVersion.getVersion()));
@@ -250,5 +254,16 @@ public class ModelsResource {
     ModelVersion modelVersion = modelsController.getModel(modelRegistryProject, id);
     this.tagResource.setModel(modelVersion);
     return this.tagResource;
+  }
+
+  @Path("/{id}/provenance")
+  public ModelProvenanceResource provenance(@ApiParam(value = "Id of the model", required = true)
+                                            @PathParam("id") String id)
+      throws ModelRegistryException, ProvenanceException {
+    this.provenanceResource.setAccessProject(userProject);
+    this.provenanceResource.setModelRegistry(modelRegistryProject);
+    ModelVersion modelVersion = modelsController.getModel(modelRegistryProject, id);
+    this.provenanceResource.setModelVersion(modelVersion);
+    return this.provenanceResource;
   }
 }

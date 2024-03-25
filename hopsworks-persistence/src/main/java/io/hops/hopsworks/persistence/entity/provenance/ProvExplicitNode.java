@@ -18,9 +18,9 @@ package io.hops.hopsworks.persistence.entity.provenance;
 public interface ProvExplicitNode {
   enum Type {
     FEATURE_GROUP,
-    EXTERNAL_FEATURE_GROUP,
     FEATURE_VIEW,
-    TRAINING_DATASET;
+    TRAINING_DATASET,
+    MODEL;
   }
   
   String parentProject();

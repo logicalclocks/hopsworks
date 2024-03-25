@@ -38,6 +38,7 @@ import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
+import io.hops.hopsworks.exceptions.ModelRegistryException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -126,7 +127,7 @@ public class TrainingDatasetProvenanceResource {
       @Context HttpServletRequest req,
       @Context SecurityContext sc)
       throws GenericException, FeaturestoreException, DatasetException, ServiceException, MetadataException,
-      FeatureStoreMetadataException, IOException {
+      FeatureStoreMetadataException, IOException, ModelRegistryException {
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.PROVENANCE);
     resourceRequest.setExpansions(explicitProvenanceExpansionBeanParam.getResources());

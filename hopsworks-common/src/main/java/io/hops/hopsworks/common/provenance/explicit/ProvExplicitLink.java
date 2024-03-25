@@ -30,7 +30,7 @@ public class ProvExplicitLink<T> {
   private boolean shared = false;
   private boolean accessible = false;
   private boolean deleted = false;
-  private Function<T, String> idProvider;
+  private Function<T, Integer> idProvider;
   
   public ProvExplicitLink() {
   }
@@ -39,7 +39,7 @@ public class ProvExplicitLink<T> {
     return node;
   }
   
-  public void setNode(T node, Function<T, String> idProvider) {
+  public void setNode(T node, Function<T, Integer> idProvider) {
     this.node = node;
     this.idProvider = idProvider;
   }
@@ -112,7 +112,7 @@ public class ProvExplicitLink<T> {
     downstream.add(node);
   }
   
-  public String getNodeId() {
+  public Integer getNodeId() {
     return idProvider.apply(node);
   }
 }

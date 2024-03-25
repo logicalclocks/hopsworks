@@ -31,12 +31,12 @@ public class ProvArtifactDTO extends RestDTO<ProvArtifactDTO> {
     super();
   }
   
-  public ProvArtifactDTO(String id, String project, String name, Integer version) {
+  public ProvArtifactDTO(Integer id, String project, String name, Integer version) {
     super();
     this.project = project;
     this.name = name;
     this.version = version;
-    this.id = id;
+    this.id = String.valueOf(id);
   }
   
   public String getId() {
