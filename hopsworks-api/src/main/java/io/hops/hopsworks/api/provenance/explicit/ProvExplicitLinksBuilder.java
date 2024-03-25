@@ -307,6 +307,8 @@ public class ProvExplicitLinksBuilder {
       linksDTO.setHref(modelURI(uriInfo, accessProject, model).build());
       if (links.isAccessible() && expandArtifact) {
         ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELS);
+        resourceRequest.setExpansions(new HashSet<>(Arrays.asList(
+          new ResourceRequest(ResourceRequest.Name.USERS))));
         artifactDTO = modelsBuilder.build(uriInfo, resourceRequest, user, accessProject, model);
       } else {
         ProvArtifact artifact = ProvArtifact.fromModel(model);
@@ -314,7 +316,8 @@ public class ProvExplicitLinksBuilder {
             artifact.getName(), artifact.getVersion());
       }
       artifactDTO.setHref(
-          modelsBuilder.modelVersionUri(uriInfo, accessProject, model.getModel().getProject(), model).build());
+          modelsBuilder.modelVersionUri(uriInfo, accessProject, model.getModel().getProject(), model)
+            .queryParam("expand", "USERS").build());
     }
     linksDTO.setNode(buildNodeDTO(links, artifactDTO));
     traverseLinks(uriInfo, accessProject, user, linksDTO, expandArtifact, links);
