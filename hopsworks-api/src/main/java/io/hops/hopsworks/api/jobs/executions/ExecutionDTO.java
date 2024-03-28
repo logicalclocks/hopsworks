@@ -32,6 +32,7 @@ public class ExecutionDTO extends RestDTO<ExecutionDTO> {
   private JobState state;
   private String stdoutPath;
   private String stderrPath;
+  private String notebookOutPath;
   private String appId;
   private String hdfsUser;
   private String args;
@@ -84,6 +85,13 @@ public class ExecutionDTO extends RestDTO<ExecutionDTO> {
   
   public void setStderrPath(String stderrPath) {
     this.stderrPath = stderrPath;
+  }
+  public String getNotebookOutPath() {
+    return notebookOutPath;
+  }
+  
+  public void setNotebookOutPath(String notebookOutPath) {
+    this.notebookOutPath = notebookOutPath;
   }
   
   public String getAppId() {

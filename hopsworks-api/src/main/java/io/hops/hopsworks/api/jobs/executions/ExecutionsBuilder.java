@@ -101,6 +101,7 @@ public class ExecutionsBuilder {
       dto.setState(execution.getState());
       dto.setStdoutPath(execution.getStdoutPath());
       dto.setStderrPath(execution.getStderrPath());
+      dto.setNotebookOutPath(execution.getNotebookOutPath());
       dto.setAppId(execution.getAppId());
       dto.setHdfsUser(execution.getHdfsUser());
       dto.setArgs(execution.getArgs());

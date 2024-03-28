@@ -108,6 +108,9 @@ import java.util.List;
   @NamedQuery(name = "Execution.findByStderrPath",
           query
           = "SELECT e FROM Execution e WHERE e.stderrPath = :stderrPath"),
+  @NamedQuery(name = "Execution.findByNotebookOutPath",
+          query
+          = "SELECT e FROM Execution e WHERE e.notebookOutPath = :notebookOutPath"),
   @NamedQuery(name = "Execution.findByAppId",
           query
           = "SELECT e FROM Execution e WHERE e.appId = :appId"),
@@ -185,6 +188,10 @@ public class Execution implements Serializable {
   @Column(name = "stderr_path")
   private String stderrPath;
 
+  @Size(max = 255)
+  @Column(name = "notebook_out_path")
+  private String notebookOutPath;
+
   @Size(max = 45)
   @Column(name = "app_id")
   private String appId;
@@ -226,11 +233,12 @@ public class Execution implements Serializable {
   }
 
   public Execution(JobState state, Jobs job, Users user, Date submissionTime, String stdoutPath, String stderrPath,
-    JobFinalStatus finalStatus, float progress, String hdfsUser, String args) {
+    String notebookOutPath, JobFinalStatus finalStatus, float progress, String hdfsUser, String args) {
     this.submissionTime = submissionTime;
     this.state = state;
     this.stdoutPath = stdoutPath;
     this.stderrPath = stderrPath;
+    this.notebookOutPath = notebookOutPath;
     this.job = job;
     this.user = user;
     this.hdfsUser = hdfsUser;
@@ -314,9 +322,15 @@ public class Execution implements Serializable {
   public String getStderrPath() {
     return stderrPath;
   }
+  public String getNotebookOutPath() {
+    return notebookOutPath;
+  }
 
   public void setStderrPath(String stderrPath) {
     this.stderrPath = stderrPath;
+  }
+  public void setNotebookOutPath(String notebookOutPath) {
+    this.notebookOutPath = notebookOutPath;
   }
 
   public String getAppId() {

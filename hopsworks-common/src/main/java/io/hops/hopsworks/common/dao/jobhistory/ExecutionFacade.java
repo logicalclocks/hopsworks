@@ -354,13 +354,14 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
   // Create update remove
   //====================================================================================================================
   
-  public Execution create(Jobs job, Users user, String stdoutPath, String stderrPath, JobFinalStatus finalStatus,
-    float progress, String hdfsUser, String args) {
-    return create(job, user, JobState.INITIALIZING, stdoutPath, stderrPath, finalStatus, progress, hdfsUser, args);
+  public Execution create(Jobs job, Users user, String stdoutPath, String stderrPath, String notebookOutPath,
+    JobFinalStatus finalStatus, float progress, String hdfsUser, String args) {
+    return create(job, user, JobState.INITIALIZING, stdoutPath, stderrPath, notebookOutPath, finalStatus, progress,
+      hdfsUser, args);
   }
 
   public Execution create(Jobs job, Users user, JobState state, String stdoutPath, String stderrPath,
-    JobFinalStatus finalStatus, float progress, String hdfsUser, String args) {
+    String notebookOutPath, JobFinalStatus finalStatus, float progress, String hdfsUser, String args) {
     //Check if state is ok
     if (state == null) {
       state = JobState.INITIALIZING;
@@ -369,8 +370,8 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
       finalStatus = JobFinalStatus.UNDEFINED;
     }
     //Create new object
-    Execution exec = new Execution(state, job, user, new java.util.Date(), stdoutPath, stderrPath, finalStatus,
-      progress, hdfsUser, args);
+    Execution exec = new Execution(state, job, user, new java.util.Date(), stdoutPath, stderrPath, notebookOutPath,
+      finalStatus, progress, hdfsUser, args);
     //And persist it
     em.persist(exec);
     em.flush();
