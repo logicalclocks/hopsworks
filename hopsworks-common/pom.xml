@@ -45,13 +45,13 @@
   <parent>
     <groupId>io.hops</groupId>
     <artifactId>hopsworks</artifactId>
-    <version>3.7.0</version>
+    <version>3.7.1</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-common</artifactId>
-  <version>3.7.0</version>
+  <version>3.7.1</version>
   <packaging>ejb</packaging>
   <description>Hopsworks common</description>
   <name>hopsworks-common</name>
