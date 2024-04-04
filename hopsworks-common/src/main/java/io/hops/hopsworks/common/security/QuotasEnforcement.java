@@ -89,7 +89,7 @@ public class QuotasEnforcement {
   }
 
   private List<Featuregroup> getFeaturegroups(Featurestore featurestore) {
-    return featuregroupFacade.findByFeaturestore(featurestore);
+    return featuregroupFacade.findByFeaturestore(featurestore, null);
   }
 
   public void enforceTrainingDatasetsQuota(Featurestore featurestore) throws QuotaEnforcementException {

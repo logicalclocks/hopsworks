@@ -88,7 +88,7 @@ public class SearchFSReindexer {
   }
   
   private void reindex(Featurestore featureStore) throws FeaturestoreException {
-    for (Featuregroup featuregroup : featureGroupFacade.findByFeaturestore(featureStore)) {
+    for (Featuregroup featuregroup : featureGroupFacade.findByFeaturestore(featureStore, null)) {
       reindex(featuregroup);
     }
     for (FeatureView featureView : featureViewFacade.findByFeaturestore(featureStore, null)) {

@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.storageconnectors;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.dao.QueryParam;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
@@ -27,6 +28,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -97,11 +99,21 @@ public class FeaturestoreConnectorFacade extends AbstractFacade<FeaturestoreConn
     }
   }
 
-  public List<FeaturestoreConnector> findByType(Featurestore featurestore, Set<FeaturestoreConnectorType> types) {
-    return em.createNamedQuery("FeaturestoreConnector.findByType", FeaturestoreConnector.class)
-            .setParameter("featurestore", featurestore)
-            .setParameter("types", types)
-            .getResultList();
+  public List<FeaturestoreConnector> findByType(Featurestore featurestore, Set<FeaturestoreConnectorType> types,
+        QueryParam queryParam) {
+    String queryStr = buildQuery("SELECT fsConn FROM FeaturestoreConnector fsConn ",
+      queryParam != null ? queryParam.getFilters(): null,
+      queryParam != null ? queryParam.getSorts(): null,
+      "fsConn.featurestore = :featurestore AND fsConn.connectorType IN :types");
+
+    Query query = em.createQuery(queryStr, FeaturestoreConnector.class)
+      .setParameter("featurestore", featurestore)
+      .setParameter("types", types);
+    if (queryParam != null) {
+      setFilter(queryParam.getFilters(), query);
+      setOffsetAndLim(queryParam.getOffset(), queryParam.getLimit(), query);
+    }
+    return query.getResultList();
   }
 
   public void deleteByFeaturestoreName(Featurestore featurestore, String name) {
@@ -112,5 +124,92 @@ public class FeaturestoreConnectorFacade extends AbstractFacade<FeaturestoreConn
     return em.createNamedQuery("FeaturestoreConnector.countByFeaturestore", Long.class)
         .setParameter("featurestore", featurestore)
         .getSingleResult();
+  }
+
+  private void setFilter(Set<? extends AbstractFacade.FilterBy> filters, Query q) {
+    if (filters == null || filters.isEmpty()) {
+      return;
+    }
+    for (FilterBy filter : filters) {
+      setFilterQuery(filter, q);
+    }
+  }
+
+  private void setFilterQuery(FilterBy filter, Query q) {
+    switch (Filters.valueOf(filter.getValue())) {
+      case TYPE:
+        q.setParameter(filter.getField(), FeaturestoreConnectorType.valueOf(filter.getParam().toUpperCase()));
+        break;
+      default:
+        break;
+    }
+  }
+
+  public enum Filters {
+    TYPE("TYPE", "fsConn.connectorType = :type", "type", "");
+
+    private final String value;
+    private final String sql;
+    private final String field;
+    private final String defaultParam;
+
+    private Filters(String value, String sql, String field, String defaultParam) {
+      this.value = value;
+      this.sql = sql;
+      this.field = field;
+      this.defaultParam = defaultParam;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    public String getDefaultParam() {
+      return defaultParam;
+    }
+
+    public String getSql() {
+      return sql;
+    }
+
+    public String getField() {
+      return field;
+    }
+
+    @Override
+    public String toString() {
+      return value;
+    }
+  }
+
+  public enum Sorts {
+    ID("ID", "fsConn.id", "ASC"),
+    NAME("NAME", "fsConn.name", "ASC");
+    private final String value;
+    private final String sql;
+    private final String defaultParam;
+
+    Sorts(String value, String sql, String defaultParam) {
+      this.value = value;
+      this.sql = sql;
+      this.defaultParam = defaultParam;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    public String getDefaultParam() {
+      return defaultParam;
+    }
+
+    public String getSql() {
+      return sql;
+    }
+
+    @Override
+    public String toString() {
+      return value;
+    }
   }
 }

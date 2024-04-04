@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.featuregroup;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.dao.QueryParam;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 
@@ -26,12 +27,14 @@ import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.validation.ConstraintViolationException;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.Set;
 
 /**
  * A facade for the feature_group table in the Hopsworks database, use this interface when performing database
@@ -149,12 +152,24 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
    * Retrieves all featuregroups for a particular featurestore
    *
    * @param featurestore the featurestore to query
+   * @param queryParam
    * @return list of featuregroup entities
    */
-  public List<Featuregroup> findByFeaturestore(Featurestore featurestore) {
-    TypedQuery<Featuregroup> q = em.createNamedQuery("Featuregroup.findByFeaturestore", Featuregroup.class)
-      .setParameter("featurestore", featurestore);
-    return q.getResultList();
+  public List<Featuregroup> findByFeaturestore(Featurestore featurestore, QueryParam queryParam) {
+    String queryStr = buildQuery("SELECT fg FROM Featuregroup fg ",
+      queryParam != null ? queryParam.getFilters(): null,
+      queryParam != null ? queryParam.getSorts(): null,
+      "fg.featurestore = :featurestore"
+      + " AND (fg.onDemandFeaturegroup IS NOT null"
+      + " OR fg.cachedFeaturegroup IS NOT null"
+      + " OR fg.streamFeatureGroup IS NOT null)");
+
+    Query query = em.createQuery(queryStr, Featuregroup.class).setParameter("featurestore", featurestore);
+    if (queryParam != null) {
+      setFilter(queryParam.getFilters(), query);
+      setOffsetAndLim(queryParam.getOffset(), queryParam.getLimit(), query);
+    }
+    return query.getResultList();
   }
 
   public Long countByFeaturestore(Featurestore featurestore) {
@@ -200,7 +215,32 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
     return featuregroup;
   }
 
+  private void setFilter(Set<? extends AbstractFacade.FilterBy> filters, Query q) {
+    if (filters == null || filters.isEmpty()) {
+      return;
+    }
+    for (FilterBy filter : filters) {
+      setFilterQuery(filter, q);
+    }
+  }
+
+  private void setFilterQuery(FilterBy filter, Query q) {
+    switch (Filters.valueOf(filter.getValue())) {
+      case NAME:
+      case EXPECTATIONS:
+        q.setParameter(filter.getField(), filter.getParam());
+        break;
+      case VERSION:
+        q.setParameter(filter.getField(), Integer.valueOf(filter.getParam()));
+        break;
+      default:
+        break;
+    }
+  }
+
   public enum Filters {
+    NAME("NAME", "fg.name = :name", "name", ""),
+    VERSION("VERSION", "fg.version = :version", "version", ""),
     EXPECTATIONS("EXPECTATIONS", "", "expectations", "");
 
     private final String value;
@@ -229,6 +269,38 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
 
     public String getField() {
       return field;
+    }
+
+    @Override
+    public String toString() {
+      return value;
+    }
+  }
+
+  public enum Sorts {
+    NAME("NAME", "fg.name", "ASC"),
+    VERSION("VERSION", "fg.version", "ASC"),
+    CREATION("CREATION", "fg.created", "ASC");
+    private final String value;
+    private final String sql;
+    private final String defaultParam;
+
+    Sorts(String value, String sql, String defaultParam) {
+      this.value = value;
+      this.sql = sql;
+      this.defaultParam = defaultParam;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    public String getDefaultParam() {
+      return defaultParam;
+    }
+
+    public String getSql() {
+      return sql;
     }
 
     @Override

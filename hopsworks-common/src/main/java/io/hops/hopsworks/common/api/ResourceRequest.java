@@ -244,7 +244,8 @@ public class ResourceRequest {
     PROJECT_LDAP_GROUP_MAPPING,
     SCHEDULE,
     ENVIRONMENT_HISTORY,
-    FEATURE_MONITORING;
+    FEATURE_MONITORING,
+    STORAGECONNECTOR;
 
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());

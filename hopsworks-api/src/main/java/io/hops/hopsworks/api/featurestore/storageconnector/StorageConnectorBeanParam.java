@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2021, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2024, Hopsworks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.api.featurestore.featuregroup;
+package io.hops.hopsworks.api.featurestore.storageconnector;
 
 import io.hops.hopsworks.api.util.Pagination;
 import io.swagger.annotations.ApiParam;
@@ -25,21 +25,21 @@ import javax.ws.rs.QueryParam;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-public class FeatureGroupBeanParam {
+public class StorageConnectorBeanParam {
 
   @QueryParam("filter_by")
-  @ApiParam(value = "ex. filter_by=expectations:exp1&filter_by=expectations:exp2",
+  @ApiParam(value = "ex. filter_by=type:REDSHIFT&filter_by=type:JDBC",
           allowableValues =
-                  "filter_by=expectations:exp1",
+                  "filter_by=type:JDBC",
           allowMultiple = true)
   private Set<FilterBy> filter;
 
   @QueryParam("sort_by")
-  @ApiParam(value = "sort_by=name,version",
-      allowableValues = "sort_by=name,sort_by=version,sort_by=creation" +
-          ",sort_by=name:asc,sort_by=version:asc,sort_by=creation:asc" +
-          ",sort_by=name:desc,sort_by=version:desc,sort_by=creation:desc\n" +
-          "sort by multiple fields is possible e.g sort_by=version,creation"
+  @ApiParam(value = "sort_by=id,name",
+      allowableValues = "sort_by=id,sort_by=name" +
+          ",sort_by=id:asc,sort_by=name:asc" +
+          ",sort_by=id:desc,sort_by=name:desc\n" +
+          "sort by multiple fields is possible e.g sort_by=id,name"
   )
   private String sortBy;
 
@@ -48,10 +48,7 @@ public class FeatureGroupBeanParam {
   @BeanParam
   private Pagination pagination;
 
-  @BeanParam
-  private FeaturegroupExpansionBeanParam expansion;
-
-  public FeatureGroupBeanParam(
+  public StorageConnectorBeanParam(
           @QueryParam("filter_by") Set<FilterBy> filter,
           @QueryParam("sort_by") String sortBy) {
     this.filter = filter;
@@ -77,14 +74,6 @@ public class FeatureGroupBeanParam {
 
   public Pagination getPagination() {
     return pagination;
-  }
-
-  public FeaturegroupExpansionBeanParam getExpansion() {
-    return expansion;
-  }
-
-  public void setExpansion(FeaturegroupExpansionBeanParam expansion) {
-    this.expansion = expansion;
   }
 
   public void setPagination(Pagination pagination) {
