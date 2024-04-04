@@ -67,7 +67,7 @@ public class TestQuotasEnforcement {
     fg2.setOnlineEnabled(true);
     mockedOnlineEnabledFeaturegroups.add(fg2);
 
-    Mockito.when(featuregroupFacade.findByFeaturestore(Mockito.any())).thenReturn(mockedOnlineEnabledFeaturegroups);
+    Mockito.when(featuregroupFacade.findByFeaturestore(Mockito.any(), Mockito.any())).thenReturn(mockedOnlineEnabledFeaturegroups);
 
     Settings settings = Mockito.mock(Settings.class);
 
@@ -114,7 +114,7 @@ public class TestQuotasEnforcement {
     fg2.setOnlineEnabled(false);
     mockedOnlineDisabledFeaturegroups.add(fg2);
 
-    Mockito.when(featuregroupFacade.findByFeaturestore(Mockito.any())).thenReturn(mockedOnlineDisabledFeaturegroups);
+    Mockito.when(featuregroupFacade.findByFeaturestore(Mockito.any(), Mockito.any())).thenReturn(mockedOnlineDisabledFeaturegroups);
 
     Settings settings = Mockito.mock(Settings.class);
 
@@ -160,7 +160,7 @@ public class TestQuotasEnforcement {
     Mockito.when(settings.getQuotasOnlineDisabledFeaturegroups()).thenReturn(-1L);
     qe.enforceFeaturegroupsQuota(fs, false);
     qe.enforceFeaturegroupsQuota(fs, true);
-    Mockito.verify(featuregroupFacade, Mockito.never()).findByFeaturestore(Mockito.any());
+    Mockito.verify(featuregroupFacade, Mockito.never()).findByFeaturestore(Mockito.any(), Mockito.any());
   }
 
   @Test

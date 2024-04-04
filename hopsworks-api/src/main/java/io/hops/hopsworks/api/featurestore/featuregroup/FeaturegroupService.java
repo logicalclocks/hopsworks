@@ -96,6 +96,7 @@ import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -224,15 +225,12 @@ public class FeaturegroupService {
       @Context
           HttpServletRequest req,
       @Context
-          SecurityContext sc,
-      @BeanParam
-          FeaturegroupExpansionBeanParam expansion)
+          SecurityContext sc)
       throws FeaturestoreException, ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
+    ResourceRequest resourceRequest = makeResourceRequest(featureGroupBeanParam);
     List<Featuregroup> featuregroups = featuregroupController
-        .getFeaturegroupsForFeaturestore(featurestore, project, user);
-    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.FEATUREGROUPS);
-    resourceRequest.setExpansions(expansion.getResources());
+        .getFeaturegroupsForFeaturestore(featurestore, project, user, convertToQueryParam(resourceRequest));
     GenericEntity<List<FeaturegroupDTO>> featuregroupsGeneric =
         new GenericEntity<List<FeaturegroupDTO>>(
             featuregroupBuilder.build(featuregroups, project, user, resourceRequest)) {};
@@ -785,5 +783,24 @@ public class FeaturegroupService {
     this.featureMonitoringResultResource.setFeatureStore(featurestore);
     this.featureMonitoringResultResource.setFeatureGroup(featureGroupId);
     return featureMonitoringResultResource;
+  }
+
+  private ResourceRequest makeResourceRequest(FeatureGroupBeanParam param) {
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.FEATUREGROUPS);
+    resourceRequest.setOffset(param.getPagination().getOffset());
+    resourceRequest.setLimit(param.getPagination().getLimit());
+    resourceRequest.setSort(param.getParsedSortBy());
+    resourceRequest.setFilter(param.getFilters());
+    resourceRequest.setExpansions(param.getExpansion().getResources());
+    return resourceRequest;
+  }
+
+  private io.hops.hopsworks.common.dao.QueryParam convertToQueryParam(ResourceRequest resourceRequest) {
+    return new io.hops.hopsworks.common.dao.QueryParam(
+        resourceRequest.getOffset(),
+        resourceRequest.getLimit(),
+        resourceRequest.getFilter() == null ? new HashSet<>() : new HashSet<>(resourceRequest.getFilter()),
+        resourceRequest.getSort() == null ? new HashSet<>() : new HashSet<>(resourceRequest.getSort())
+    );
   }
 }

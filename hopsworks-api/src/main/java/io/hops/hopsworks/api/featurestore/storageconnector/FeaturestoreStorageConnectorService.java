@@ -23,6 +23,7 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.connectionChecker.ConnectionChecker;
@@ -50,6 +51,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -65,6 +67,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -132,10 +135,14 @@ public class FeaturestoreStorageConnectorService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get all storage connectors of a feature store",
     response = FeaturestoreStorageConnectorDTO.class, responseContainer = "List")
-  public Response getStorageConnectors(@Context SecurityContext sc) throws FeaturestoreException {
+  public Response getStorageConnectors(@BeanParam StorageConnectorBeanParam storageConnectorBeanParam,
+                                       @Context SecurityContext sc,
+                                       @Context HttpServletRequest req)
+      throws FeaturestoreException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    List<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOS =
-            storageConnectorController.getConnectorsForFeaturestore(user, project, featurestore);
+    ResourceRequest resourceRequest = makeResourceRequest(storageConnectorBeanParam);
+    List<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOS = storageConnectorController
+        .getConnectorsForFeaturestore(user, project, featurestore, convertToQueryParam(resourceRequest));
 
     GenericEntity<List<FeaturestoreStorageConnectorDTO>> featurestoreStorageConnectorsGeneric =
       new GenericEntity<List<FeaturestoreStorageConnectorDTO>>(featurestoreStorageConnectorDTOS) {};
@@ -397,5 +404,23 @@ public class FeaturestoreStorageConnectorService {
     
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
       .entity(resultDto).build();
+  }
+
+  private ResourceRequest makeResourceRequest(StorageConnectorBeanParam param) {
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.STORAGECONNECTOR);
+    resourceRequest.setOffset(param.getPagination().getOffset());
+    resourceRequest.setLimit(param.getPagination().getLimit());
+    resourceRequest.setSort(param.getParsedSortBy());
+    resourceRequest.setFilter(param.getFilters());
+    return resourceRequest;
+  }
+
+  private io.hops.hopsworks.common.dao.QueryParam convertToQueryParam(ResourceRequest resourceRequest) {
+    return new io.hops.hopsworks.common.dao.QueryParam(
+        resourceRequest.getOffset(),
+        resourceRequest.getLimit(),
+        resourceRequest.getFilter() == null ? new HashSet<>() : new HashSet<>(resourceRequest.getFilter()),
+        resourceRequest.getSort() == null ? new HashSet<>() : new HashSet<>(resourceRequest.getSort())
+    );
   }
 }

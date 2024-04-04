@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.storageconnectors;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.common.dao.QueryParam;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
@@ -114,14 +115,15 @@ public class FeaturestoreStorageConnectorController {
    * @param user the user making the request
    * @param project the project to query
    * @param featurestore the featurestore to query
-   * @param user the user making the request
+   * @param queryParam the queryParam
    * @return List of JSON/XML DTOs of the storage connectors
    */
   public List<FeaturestoreStorageConnectorDTO> getConnectorsForFeaturestore(Users user, Project project,
-                                                                            Featurestore featurestore)
+        Featurestore featurestore, QueryParam queryParam)
       throws FeaturestoreException {
     Set<FeaturestoreConnectorType> enabledScTypes = storageConnectorUtil.getEnabledStorageConnectorTypes();
-    List<FeaturestoreConnector> connectors = featurestoreConnectorFacade.findByType(featurestore, enabledScTypes);
+    List<FeaturestoreConnector> connectors = featurestoreConnectorFacade.findByType(featurestore,
+        enabledScTypes, queryParam);
     return convertToConnectorDTOs(user, project, connectors);
   }
 

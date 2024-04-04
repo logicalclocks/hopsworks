@@ -27,13 +27,13 @@ public class StatisticsSortBy implements AbstractFacade.SortBy {
   private final AbstractFacade.OrderBy param;
 
   public StatisticsSortBy(String param) {
-    if (param.startsWith("COMMIT_TIME")) {  // backwards compatibility
-      param = param.replace("COMMIT_TIME", "COMPUTATION_TIME");
-    }
     String[] sortByParams = param.split(":");
     String sort = "";
     try {
       sort = sortByParams[0].toUpperCase();
+      if (sort.equals("COMMIT_TIME")) {  // backwards compatibility
+        sort = "COMPUTATION_TIME";
+      }
       this.sortBy = StatisticsFilters.Sorts.valueOf(sort);
     } catch (IllegalArgumentException iae) {
       throw new WebApplicationException("Sort by need to set a valid sort parameter, but found: " + sort,

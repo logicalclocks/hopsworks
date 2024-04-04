@@ -228,7 +228,8 @@ public class FeatureViewFacade extends AbstractFacade<FeatureView> {
   }
 
   public enum Sorts {
-    NAME("ID", FeatureView.TABLE_NAME_ALIAS + ".name ", "ASC"),
+    ID("ID", FeatureView.TABLE_NAME_ALIAS + ".id ", "ASC"),
+    NAME("NAME", FeatureView.TABLE_NAME_ALIAS + ".name ", "ASC"),
     VERSION("VERSION", FeatureView.TABLE_NAME_ALIAS + ".version ", "ASC"),
     CREATION("CREATION", FeatureView.TABLE_NAME_ALIAS + ".created ", "ASC");
     private final String value;

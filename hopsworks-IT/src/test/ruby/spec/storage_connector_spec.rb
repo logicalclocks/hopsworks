@@ -60,7 +60,6 @@ describe "On #{ENV['OS']}" do
           connector = JSON.parse(connector_json)
 
           arguments_hash = connector['arguments']
-          puts arguments_hash
           expect(arguments_hash.find{ |item| item['name'] == 'driver' }['value']).to eql("com.mysql.cj.jdbc.Driver")
           expect(arguments_hash.find{ |item| item['name'] == 'isolationLevel' }['value']).to eql("NONE")
         end
@@ -572,6 +571,106 @@ describe "On #{ENV['OS']}" do
           expect_status_details(200)
           secrets_json = JSON.parse(result)
           expect(secrets_json["items"][0]["secret"]).to eql("123pass_new")
+        end
+      end
+
+      context "list storage connectors" do
+        before :all do
+          with_valid_project
+
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+
+          # create sc
+          json_result, connector_name = create_hopsfs_connector(project.id, featurestore_id, datasetName: "Resources")
+          expect_status_details(201)
+
+          json_result, connector_name = create_hopsfs_connector(project.id, featurestore_id, datasetName: "Resources")
+          expect_status_details(201)
+
+          json_result, connector_name = create_hopsfs_connector(project.id, featurestore_id, datasetName: "Resources")
+          expect_status_details(201)
+        end
+
+        it "should be able to get a list of connectors in the featurestore" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+
+          # Get the list
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors"
+          expect_status_details(200)
+
+          expect(json_body.length).to eq(5)
+        end
+
+        it "should be able to get a list of connectors in the featurestore sorted by id" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+
+          # Get the list
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors?sort_by=ID:asc"
+          expect_status_details(200)
+          ids = json_body.map { |o| o[:id] }
+          sorted_ids = ids.sort
+
+          expect(json_body.length).to eq(5)
+          expect(ids).to eq(sorted_ids)
+        end
+
+        it "should be able to get a list of connectors in the featurestore sorted by name" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+
+          # Get the list
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors?sort_by=NAME:asc"
+          expect_status_details(200)
+          names = json_body.map { |o| "#{o[:name]}" }
+          sorted_names = names.sort_by(&:downcase)
+
+          expect(json_body.length).to eq(5)
+          expect(names).to eq(sorted_names)
+        end
+
+        it "should be able to get a list of connectors in the featurestore filtered by type" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+
+          # Get the list
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors?filter_by=TYPE:HOPSFS"
+          expect_status_details(200)
+
+          expect(json_body.length).to eq(4)
+          expect(json_body.all? { |sc| sc[:storageConnectorType] == "HOPSFS" }).to be true
+        end
+
+        it "should be able to get a list of connectors in the featurestore limit" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+
+          # Get the list
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors?sort_by=ID:asc&limit=2"
+          expect_status_details(200)
+
+          expect(json_body.length == 2).to be true
+        end
+
+        it "should be able to get a list of connectors in the featurestore offset" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+
+          # Get the list
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors?sort_by=ID:asc"
+          expect_status_details(200)
+          ids = json_body.map { |o| o[:id] }
+
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors?sort_by=ID:asc&offset=1"
+          expect_status_details(200)
+          ids_with_offset = json_body.map { |o| o[:id] }
+
+          expect(json_body.length).to eq(4)
+          for i in 0..json_body.length-1 do
+            expect(ids[i+1]).to eq(ids_with_offset[i])
+          end
         end
       end
 

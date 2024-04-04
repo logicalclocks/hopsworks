@@ -20,6 +20,7 @@ import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.arrowflight.ArrowFlightController;
 import io.hops.hopsworks.common.commands.featurestore.search.SearchFSCommandLogger;
+import io.hops.hopsworks.common.dao.QueryParam;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
@@ -157,10 +158,12 @@ public class FeaturegroupController {
    * @param featurestore featurestore to query featuregroups for
    * @param project
    * @param user
+   * @param queryParam
    * @return list of feature groups
    */
-  public List<Featuregroup> getFeaturegroupsForFeaturestore(Featurestore featurestore, Project project, Users user) {
-    return featuregroupFacade.findByFeaturestore(featurestore);
+  public List<Featuregroup> getFeaturegroupsForFeaturestore(Featurestore featurestore, Project project, Users user,
+      QueryParam queryParam) {
+    return featuregroupFacade.findByFeaturestore(featurestore, queryParam);
   }
 
   /**

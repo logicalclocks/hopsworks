@@ -258,53 +258,6 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["name"]).to eql(featureview_name)
         end
 
-        it "should be able to get a list of feature view" do
-          project = create_project()
-          featurestore_id = get_featurestore_id(project.id)
-
-          json_result, fg_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
-          parsed_fg_json = JSON.parse(json_result)
-
-          json_result = create_feature_view_from_feature_group(project.id, featurestore_id, parsed_fg_json, name:"featureview1")
-          parsed_json = JSON.parse(json_result)
-          expect_status_details(201)
-
-          # add second version
-          json_result = create_feature_view_from_feature_group(project.id, featurestore_id, parsed_fg_json, name:"featureview2")
-          parsed_json = JSON.parse(json_result)
-          expect_status_details(201)
-
-          # Get the list
-		  json_result = get_feature_views(project.id, featurestore_id)
-          parsed_json = JSON.parse(json_result)
-          expect_status_details(200)
-
-          expect(parsed_json["items"].size).to eq 2
-        end
-
-        it "should be able to get a list of feature view versions based on the name" do
-          featurestore_id = get_featurestore_id(@project.id)
-
-          json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
-          parsed_fg_json = JSON.parse(json_result)
-
-          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json)
-          parsed_json = JSON.parse(json_result)
-          expect_status_details(201)
-
-          # add second version
-          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json, name:parsed_json["name"], version:nil)
-          parsed_json = JSON.parse(json_result)
-          expect_status_details(201)
-
-          # Get the list
-		      json_result = get_feature_view_by_name(@project.id, featurestore_id, parsed_json["name"])
-          parsed_json = JSON.parse(json_result)
-          expect_status_details(200)
-
-          expect(parsed_json["items"].size).to eq 2
-        end
-
         it "should be able to get a feature view based on name and version" do
           featurestore_id = get_featurestore_id(@project.id)
 
@@ -605,6 +558,156 @@ describe "On #{ENV['OS']}" do
           expect(td_features.select{|feature| feature['index'] == 1}[0]['featuregroup']['id']).to eql(fg[:id])
           expect(td_features.select{|feature| feature['index'] == 2}[0]['name']).to eql("b_testfeature1")
           expect(td_features.select{|feature| feature['index'] == 2}[0]['featuregroup']['id']).to eql(fg_b[:id])
+        end
+      end
+
+      context 'list feature views' do
+        before :all do
+          with_valid_project
+
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+
+          json_result, _ = create_cached_featuregroup(project.id, featurestore_id, online:true)
+          parsed_fg_json = JSON.parse(json_result)
+
+          create_feature_view_from_feature_group(project.id, featurestore_id, parsed_fg_json, name:"featureview1")
+          expect_status_details(201)
+
+          create_feature_view_from_feature_group(project.id, featurestore_id, parsed_fg_json, name:"featureview2", version:1)
+          expect_status_details(201)
+
+          create_feature_view_from_feature_group(project.id, featurestore_id, parsed_fg_json, name:"featureview2", version:2)
+          expect_status_details(201)
+        end
+
+        it "should be able to get a list of feature view" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+
+          # Get the list
+          json_result = get_feature_views(project.id, featurestore_id)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(200)
+
+          expect(parsed_json["items"].size).to eq(3)
+        end
+
+        it "should be able to get a list of feature view sorted by id" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+
+          # Get the list
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featureview?sort_by=ID:asc"
+          expect_status_details(200)
+          ids = json_body[:items].map { |o| o[:id] }
+          sorted_ids = ids.sort
+
+          expect(json_body[:items].length).to eq(3)
+          expect(ids).to eq(ids.sort)
+          expect(ids).not_to eq(ids.sort {|x, y| y <=> x})
+        end
+
+        it "should be able to get a list of feature view sorted by id descending" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+
+          # Get the list
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featureview?sort_by=ID:desc"
+          expect_status_details(200)
+          ids = json_body[:items].map { |o| o[:id] }
+
+          expect(json_body[:items].length).to eq(3)
+          expect(ids).to eq(ids.sort {|x, y| y <=> x})
+          expect(ids).not_to eq(ids.sort)
+        end
+
+        it "should be able to get a list of feature view sorted by name and version" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+
+          # Get the list
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featureview?sort_by=NAME:asc,VERSION:asc"
+          expect_status_details(200)
+          names_versions = json_body[:items].map { |o| "#{o[:name]}_#{o[:version]}" }
+          sorted_names_versions = names_versions.sort_by(&:downcase)
+  
+          expect(json_body[:items].length).to eq(3)
+          expect(names_versions).to eq(sorted_names_versions)
+        end
+
+        it "should be able to get a list of feature view filtered by name" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+
+          # Get the list
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featureview?filter_by=NAME:featureview2"
+          expect_status_details(200)
+  
+          expect(json_body[:items].length).to eq(2)
+          expect(json_body[:items].all? { |fv| fv[:name] == "featureview2" }).to be true
+        end
+
+        it "should be able to get a list of feature view filtered by name and version" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+
+          # Get the list
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featureview?filter_by=NAME:featureview2&filter_by=VERSION:2"
+          expect_status_details(200)
+
+          expect(json_body[:items].length).to eq(1)
+          expect(json_body[:items].all? { |fv| fv[:name] == "featureview2" }).to be true
+          expect(json_body[:items].all? { |fv| fv[:version] == 2 }).to be true
+        end
+
+        it "should be able to get a list of feature view limit" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+
+          # Get the list
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featureview?sort_by=ID:asc&limit=2"
+          expect_status_details(200)
+
+          expect(json_body[:items].length).to eq(2)
+        end
+
+        it "should be able to get a list of feature view offset" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+
+          # Get the list
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featureview?sort_by=ID:asc"
+          expect_status_details(200)
+          ids = json_body[:items].map { |o| o[:id] }
+
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featureview?sort_by=ID:asc&offset=1"
+          expect_status_details(200)
+          ids_with_offset = json_body[:items].map { |o| o[:id] }
+
+          expect(json_body[:items].length).to eq(2)
+          for i in 0..json_body[:items].length-1 do
+            expect(ids[i+1]).to eq(ids_with_offset[i])
+          end
+        end
+
+        it "should be able to get a list of feature view versions based on the name" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+
+          # Get the list fv1
+          json_result = get_feature_view_by_name(project.id, featurestore_id, "featureview1")
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(200)
+
+          expect(parsed_json["items"].size).to eq 1
+
+          # Get the list fv2
+          json_result = get_feature_view_by_name(project.id, featurestore_id, "featureview2")
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(200)
+
+          expect(parsed_json["items"].size).to eq 2
         end
       end
     end
