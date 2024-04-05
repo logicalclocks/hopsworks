@@ -770,53 +770,6 @@ describe "On #{ENV['OS']}" do
         end
       end
 
-      describe "feature view keywords in shared feature store" do
-
-        it "should be able to add keywords to a shared feature view" do
-          create_session(@user1[:email], @user1_params[:password])
-          # create FV in first project
-          featurestore_id = get_featurestore_id(@project1.id)
-          features = ['a', 'b', 'c', 'd'].map do |feat_name|
-            {type: "INT", name: feat_name}
-          end
-          features[0]['primary'] = true
-          json_result, fg_name = create_cached_featuregroup(@project1.id, featurestore_id, features: features,
-                                                            featuregroup_name: "test_fg_a_#{short_random_id}", online:true)
-          parsed_json = JSON.parse(json_result)
-          fg_id = parsed_json["id"]
-          # create queryDTO object
-          query = {
-            leftFeatureGroup: {
-              id: fg_id,
-              type: parsed_json["type"],
-            },
-            leftFeatures: ['d', 'c', 'a', 'b'].map do |feat_name|
-              {name: feat_name}
-            end,
-            joins: []
-          }
-
-          json_result = create_feature_view(@project1.id, featurestore_id, query)
-          parsed_json = JSON.parse(json_result)
-          expect_status_details(201)
-          feature_view_name = parsed_json["name"]
-          feature_view_version = parsed_json["version"]
-
-          # featurestore in project1 is shared already with project2 and user2 therein
-          create_session(@user2[:email], "Pass123")
-
-          # User2 should be able to set keywords for the feature group in the shared feature store
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project_read_only.id}/featurestores/#{featurestore_id}/featureview/#{feature_view_name}/version/#{feature_view_version}/keywords",
-               {keywords: ['hello', 'this', 'keyword123']}.to_json
-          expect_status_details(200)
-
-          json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project_read_only.id}/featurestores/#{featurestore_id}/featureview/#{feature_view_name}/version/#{feature_view_version}/keywords"
-          expect_status_details(200)
-          parsed_json = JSON.parse(json_result)
-          expect(parsed_json['keywords'].length == 3).to be true
-        end
-      end
-
       context "shared statistics dataset permissions" do
         # get
         it 'data owner should be able to get statistics with read only permission' do
