@@ -84,6 +84,19 @@ module VariablesHelper
     variables
   end
 
+  def create_var(id, value)
+    variables = Variables.find_by(id: id)
+    if variables.nil?
+      Variables.create(id: id, value: value)
+      variables = Variables.find_by(id: id)
+    else
+      variables.value = value
+      variables.save
+    end
+    refresh_variables
+    variables
+  end
+
   def kubernetes_installed
     getVar("kubernetes_installed").value.eql? "true"
   end
