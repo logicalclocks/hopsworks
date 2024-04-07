@@ -2,182 +2,182 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/admin/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/admin/alert/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/admin/auth/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/admin/iamRoleChaining/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/admin/installation/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/admin/project/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/admin/services/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/admin/user/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/admin/ha-dr/dr/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/admin/ha-dr/ha/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/admin/ha-dr/intro/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/admin/ldap/configure-krb/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/admin/ldap/configure-ldap/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/admin/ldap/configure-server/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/admin/oauth2/create-azure-client/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/admin/oauth2/create-client/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/admin/oauth2/create-okta-client/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/compute/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/compute/alerts/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/compute/git/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/compute/jobs/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/compute/jupyter/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/compute/python/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/compute/auth/krb/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/compute/auth/ldap/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/compute/auth/login/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/compute/auth/oauth2/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/compute/auth/recoverPassword/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/compute/auth/registration/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/compute/auth/updateProfile/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/compute/project/createProject/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/compute/project/deleteProject/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/compute/project/demoProject/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/compute/project/iamRoleChaining/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/compute/project/multiTenancy/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/3.7.1/compute/project/reservedNames/</loc>
-         <lastmod>2024-03-28</lastmod>
+         <lastmod>2024-04-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
