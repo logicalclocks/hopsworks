@@ -56,7 +56,7 @@ public class KafkaBrokers {
   public List<String> getBrokerEndpoints(BrokerProtocol protocol) {
     return kafkaBrokers.stream()
         .filter(bi -> bi.startsWith(protocol.toString()))
-        .map(bi -> bi.replaceAll(protocol + "://", ""))
+        .map(bi -> bi.replaceAll(protocol + ".*://", ""))
         .collect(Collectors.toList());
   }
 
