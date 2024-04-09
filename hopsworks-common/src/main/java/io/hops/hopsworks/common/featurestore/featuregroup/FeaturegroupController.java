@@ -224,6 +224,9 @@ public class FeaturegroupController {
     enforceFeaturegroupQuotas(featurestore, featuregroupDTO);
     featureGroupInputValidation.verifySchemaProvided(featuregroupDTO);
     featureGroupInputValidation.verifyNoDuplicatedFeatures(featuregroupDTO);
+    featureGroupInputValidation.verifyEmbeddingFeatureExist(featuregroupDTO);
+    featureGroupInputValidation.verifyEmbeddingIndexNotExist(featuregroupDTO);
+    featureGroupInputValidation.verifyEmbeddingIndexName(featuregroupDTO);
 
     // if version not provided, get latest and increment
     if (featuregroupDTO.getVersion() == null) {

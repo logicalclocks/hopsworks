@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.featurestore.featuregroup;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
+import io.hops.hopsworks.common.featurestore.embedding.EmbeddingController;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
@@ -36,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -50,15 +52,19 @@ public class FeatureGroupInputValidation {
   protected FeaturestoreInputValidation featureStoreInputValidation;
   @EJB
   protected OnlineFeaturegroupController onlineFeaturegroupController;
+  @EJB
+  protected EmbeddingController embeddingController;
   
   public FeatureGroupInputValidation() {
   }
   
   // for testing
   public FeatureGroupInputValidation(FeaturestoreInputValidation featureStoreInputValidation,
-                                     OnlineFeaturegroupController onlineFeaturegroupController) {
+      OnlineFeaturegroupController onlineFeaturegroupController,
+      EmbeddingController embeddingController) {
     this.featureStoreInputValidation = featureStoreInputValidation;
     this.onlineFeaturegroupController = onlineFeaturegroupController;
+    this.embeddingController = embeddingController;
   }
   
   /**
@@ -387,5 +393,60 @@ public class FeatureGroupInputValidation {
       }
     }
     return newFeatures;
+  }
+
+  public void verifyEmbeddingFeatureExist(FeaturegroupDTO featureGroupDTO) throws FeaturestoreException {
+    Set<String> features =
+        featureGroupDTO.getFeatures().stream().map(FeatureGroupFeatureDTO::getName).collect(Collectors.toSet());
+    if (featureGroupDTO.getEmbeddingIndex() != null) {
+      for (EmbeddingFeatureDTO embeddingFeatureDTO : featureGroupDTO.getEmbeddingIndex().getFeatures()) {
+        if (!features.contains(embeddingFeatureDTO.getName())) {
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.EMBEDDING_FEATURE_NOT_FOUND, Level.FINE,
+              String.format("Provided embedding index `%s` does not exist in the feature group.",
+                  embeddingFeatureDTO.getName()));
+        }
+      }
+    }
+  }
+
+  public void verifyEmbeddingIndexNotExist(FeaturegroupDTO featureGroupDTO) throws FeaturestoreException {
+    if (featureGroupDTO.getEmbeddingIndex() != null && featureGroupDTO.getEmbeddingIndex().getIndexName() != null) {
+      String indexName = featureGroupDTO.getEmbeddingIndex().getIndexName();
+      if (embeddingController.indexExist(indexName)) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.EMBEDDING_INDEX_EXISTED, Level.FINE,
+            String.format("Provided embedding index `%s` already exists in the vector database.", indexName));
+      }
+    }
+  }
+
+  public void verifyEmbeddingIndexName(FeaturegroupDTO featureGroupDTO) throws FeaturestoreException {
+    if (featureGroupDTO.getEmbeddingIndex() != null && featureGroupDTO.getEmbeddingIndex().getIndexName() != null) {
+      String indexName = featureGroupDTO.getEmbeddingIndex().getIndexName();
+      String errorMessage = String.format("Provided embedding index name `%s` is not valid. It should be "
+          + "1. All letters must be lowercase."
+          + "2. Index names cannot begin with _ or -."
+          + "3. Index names can't contain specified special characters.", indexName);
+      // https://docs.aws.amazon.com/opensearch-service/latest/developerguide/indexing.html
+      // Rule 1: All letters must be lowercase.
+      if (!indexName.equals(indexName.toLowerCase())) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.INVALID_EMBEDDING_INDEX_NAME, Level.FINE,
+            errorMessage);
+      }
+
+      // Rule 2: Index names cannot begin with _ or -.
+      if (indexName.startsWith("_") || indexName.startsWith("-")) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.INVALID_EMBEDDING_INDEX_NAME, Level.FINE,
+            errorMessage);
+      }
+
+      // Rule 3: Index names can't contain specified special characters.
+      String[] forbiddenChars = {" ", ",", ":", "\"", "*", "+", "/", "\\", "|", "?", "#", ">", "<"};
+      for (String forbiddenChar : forbiddenChars) {
+        if (indexName.contains(forbiddenChar)) {
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.INVALID_EMBEDDING_INDEX_NAME, Level.FINE,
+              errorMessage);
+        }
+      }
+    }
   }
 }

@@ -50,6 +50,7 @@ import org.opensearch.search.builder.SearchSourceBuilder;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -84,6 +85,16 @@ public class OpensearchVectorDatabase implements VectorDatabase {
       }
     } catch (IOException e) {
       throw new VectorDatabaseException("Failed to create opensearch index: " + index.getName() + "Err: " + e);
+    }
+  }
+
+  public Optional<Index> getIndex(String name) throws VectorDatabaseException {
+    try {
+      GetIndexRequest getIndexRequest = new GetIndexRequest(name);
+      GetIndexResponse getIndexResponse = client.indices().get(getIndexRequest, RequestOptions.DEFAULT);
+      return getIndexResponse.getMappings().keySet().stream().map(Index::new).findFirst();
+    } catch (IOException e) {
+      throw new VectorDatabaseException("Failed to fetch opensearch indices. Err: " + e);
     }
   }
 

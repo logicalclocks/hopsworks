@@ -67,15 +67,27 @@ public class EmbeddingController {
       throws FeaturestoreException {
     Index index = new Index(featureGroup.getEmbedding().getVectorDbIndexName());
     try {
-      vectorDatabaseClient.getClient().createIndex(index, createIndex(featureGroup.getEmbedding().getColPrefix(),
-          featureGroup.getEmbedding().getEmbeddingFeatures()), true);
       if (isDefaultVectorDbIndex(project, index.getName())) {
+        vectorDatabaseClient.getClient().createIndex(index, createIndex(featureGroup.getEmbedding().getColPrefix(),
+          featureGroup.getEmbedding().getEmbeddingFeatures()), true);
         vectorDatabaseClient.getClient().addFields(index, createMapping(featureGroup.getEmbedding().getColPrefix(),
             featureGroup.getEmbedding().getEmbeddingFeatures()));
+      } else {
+        vectorDatabaseClient.getClient().createIndex(index, createIndex(featureGroup.getEmbedding().getColPrefix(),
+            featureGroup.getEmbedding().getEmbeddingFeatures()), false);
       }
     } catch (VectorDatabaseException e) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP,
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_GET_VECTOR_DB_INDEX,
           Level.FINE, "Cannot create opensearch vectordb index: " + index.getName());
+    }
+  }
+
+  public boolean indexExist(String name) throws FeaturestoreException {
+    try {
+      return vectorDatabaseClient.getClient().getIndex(name).isPresent();
+    } catch (VectorDatabaseException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_GET_VECTOR_DB_INDEX,
+          Level.FINE, "Cannot get opensearch vectordb index: " + name);
     }
   }
 

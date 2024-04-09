@@ -18,9 +18,11 @@ package io.hops.hopsworks.vectordb;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public interface VectorDatabase {
+  Optional<Index> getIndex(String name) throws VectorDatabaseException;
   Set<Index> getAllIndices() throws VectorDatabaseException;
   void createIndex(Index index, String mapping, Boolean skipIfExist) throws VectorDatabaseException;
   void deleteIndex(Index index) throws VectorDatabaseException;

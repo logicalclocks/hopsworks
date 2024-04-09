@@ -36,6 +36,11 @@ public class EmbeddingFeatureDTO {
   @Getter
   private ModelDto model;
 
+  public EmbeddingFeatureDTO(String name, String similarityFunctionType, Integer dimension) {
+    this.name = name;
+    this.similarityFunctionType = similarityFunctionType;
+    this.dimension = dimension;
+  }
 
   public EmbeddingFeatureDTO(EmbeddingFeature feature) {
     name = feature.getName();
