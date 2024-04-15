@@ -19,14 +19,14 @@
     <parent>
         <artifactId>hopsworks</artifactId>
         <groupId>io.hops</groupId>
-        <version>3.7.1</version>
+        <version>3.7.2</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.hops.hopsworks</groupId>
     <artifactId>hopsworks-api-auth</artifactId>
-    <version>3.7.1</version>
+    <version>3.7.2</version>
     <packaging>ejb</packaging>
     <description>Hopsworks API authentication filters</description>
     <name>hopsworks-api-auth</name>
