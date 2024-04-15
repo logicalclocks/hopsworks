@@ -189,6 +189,7 @@ public class OnDemandFeaturegroupController {
     
     List<FeatureGroupFeatureDTO> newFeatures = featureGroupInputValidation.verifyAndGetNewFeatures(previousSchema,
       onDemandFeaturegroupDTO.getFeatures());
+    featureGroupInputValidation.verifyVectorDatabaseIndexMappingLimit(onDemandFeaturegroupDTO, newFeatures.size());
 
     // append new features and update existing ones
     updateOnDemandFeatures(onDemandFeaturegroup, onDemandFeaturegroupDTO.getFeatures());

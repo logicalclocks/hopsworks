@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.opensearch.OpenSearchException;
+import org.opensearch.OpenSearchStatusException;
 import org.opensearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.opensearch.action.bulk.BulkRequest;
 import org.opensearch.action.bulk.BulkResponse;
@@ -95,6 +96,12 @@ public class OpensearchVectorDatabase implements VectorDatabase {
       return getIndexResponse.getMappings().keySet().stream().map(Index::new).findFirst();
     } catch (IOException e) {
       throw new VectorDatabaseException("Failed to fetch opensearch indices. Err: " + e);
+    } catch (OpenSearchStatusException e) {
+      if (e.status() == RestStatus.NOT_FOUND) {
+        return Optional.empty();
+      } else {
+        throw new VectorDatabaseException("Failed to fetch opensearch indices. Err: " + e.getDetailedMessage());
+      }
     }
   }
 

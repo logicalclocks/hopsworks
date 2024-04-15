@@ -361,6 +361,8 @@ public class Settings {
       "opensearch_default_embedding_index";
   private static final String VARIABLE_NUM_OPENSEARCH_DEFAULT_EMBEDDING_INDEX =
       "opensearch_num_default_embedding_index";
+  private static final String VARIABLE_OPENSEARCH_INDEX_MAPPING_LIMIT =
+      "opensearch_index_mapping_limit";
 
   /* -------------------- Cloud --------------- */
   private static final String VARIABLE_CLOUD_EVENTS_ENDPOINT=
@@ -980,7 +982,8 @@ public class Settings {
           VARIABLE_OPENSEARCH_DEFAULT_EMBEDDING_INDEX, OPENSEARCH_DEFAULT_EMBEDDING_INDEX_NAME);
       OPENSEARCH_NUM_DEFAULT_EMBEDDING_INDEX = setIntVar(
           VARIABLE_NUM_OPENSEARCH_DEFAULT_EMBEDDING_INDEX, OPENSEARCH_NUM_DEFAULT_EMBEDDING_INDEX);
-      
+      OPENSEARCH_DEFAULT_INDEX_MAPPING_LIMIT = setIntVar(
+          VARIABLE_OPENSEARCH_INDEX_MAPPING_LIMIT, OPENSEARCH_DEFAULT_INDEX_MAPPING_LIMIT);
       ENABLE_CONDA_INSTALL = setBoolVar(VARIABLE_ENABLE_CONDA_INSTALL, ENABLE_CONDA_INSTALL);
       DEFAULT_FEATURE_STORE_PROJECT_ID = setIntVar(VARIABLE_FEATURE_STORE_PROJECT_ID, null);
       cached = true;
@@ -1678,6 +1681,12 @@ public class Settings {
   public synchronized Integer getOpensearchNumDefaultEmbeddingIndex() {
     checkCache();
     return OPENSEARCH_NUM_DEFAULT_EMBEDDING_INDEX;
+  }
+
+  private Integer OPENSEARCH_DEFAULT_INDEX_MAPPING_LIMIT = 1000;
+  public synchronized Integer getOpensearchDefaultIndexMappingLimit() {
+    checkCache();
+    return OPENSEARCH_DEFAULT_INDEX_MAPPING_LIMIT;
   }
 
   // Kibana

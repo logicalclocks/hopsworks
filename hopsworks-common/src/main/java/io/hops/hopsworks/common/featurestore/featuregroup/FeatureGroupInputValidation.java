@@ -26,7 +26,9 @@ import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGr
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.vectordb.Index;
 import org.apache.commons.lang.StringUtils;
 
 import javax.ejb.EJB;
@@ -229,14 +231,14 @@ public class FeatureGroupInputValidation {
    * @throws FeaturestoreException
    */
   public void verifyOnlineSchemaValid(FeaturegroupDTO featuregroupDTO) throws FeaturestoreException{
-    if (featuregroupDTO.getOnlineEnabled()) {
+    if (featuregroupDTO.getOnlineEnabled() && featuregroupDTO.getEmbeddingIndex() != null) {
       if (featuregroupDTO.getFeatures().size() > FeaturestoreConstants.MAX_MYSQL_COLUMNS) {
         throw new FeaturestoreException(
           COULD_NOT_CREATE_ONLINE_FEATUREGROUP,
           Level.SEVERE,
           "Cannot create an online feature group because it contains > " +
-            FeaturestoreConstants.MAX_MYSQL_COLUMNS + " rows (provided: " +
-            featuregroupDTO.getFeatures().size() + " rows).");
+            FeaturestoreConstants.MAX_MYSQL_COLUMNS + " columns (provided: " +
+            featuregroupDTO.getFeatures().size() + " columns).");
       }
       
       Integer totalBytes = 0;
@@ -409,13 +411,10 @@ public class FeatureGroupInputValidation {
     }
   }
 
-  public void verifyEmbeddingIndexNotExist(FeaturegroupDTO featureGroupDTO) throws FeaturestoreException {
-    if (featureGroupDTO.getEmbeddingIndex() != null && featureGroupDTO.getEmbeddingIndex().getIndexName() != null) {
-      String indexName = featureGroupDTO.getEmbeddingIndex().getIndexName();
-      if (embeddingController.indexExist(indexName)) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.EMBEDDING_INDEX_EXISTED, Level.FINE,
-            String.format("Provided embedding index `%s` already exists in the vector database.", indexName));
-      }
+  public void verifyEmbeddingIndexNotExist(Project project, FeaturegroupDTO featureGroupDTO)
+      throws FeaturestoreException {
+    if (featureGroupDTO.getEmbeddingIndex() != null) {
+      embeddingController.verifyIndexName(project, featureGroupDTO.getEmbeddingIndex().getIndexName());
     }
   }
 
@@ -447,6 +446,15 @@ public class FeatureGroupInputValidation {
               errorMessage);
         }
       }
+    }
+  }
+
+  public void verifyVectorDatabaseIndexMappingLimit(FeaturegroupDTO featureGroupDTO, Integer numFeatures)
+      throws FeaturestoreException {
+    if (featureGroupDTO.getEmbeddingIndex() != null && !Strings.isNullOrEmpty(
+        featureGroupDTO.getEmbeddingIndex().getIndexName())) {
+      embeddingController.validateWithinMappingLimit(new Index(featureGroupDTO.getEmbeddingIndex().getIndexName()),
+          numFeatures);
     }
   }
 }

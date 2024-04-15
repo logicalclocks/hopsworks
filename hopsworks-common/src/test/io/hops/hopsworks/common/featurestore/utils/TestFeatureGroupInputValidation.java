@@ -28,6 +28,7 @@ import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegr
 import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -39,14 +40,21 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 public class TestFeatureGroupInputValidation {
 
   private EmbeddingController embeddingController;
 
   private FeatureGroupInputValidation featureGroupInputValidation;
+  private Project project;
 
   List<FeatureGroupFeatureDTO> features;
 
@@ -55,6 +63,7 @@ public class TestFeatureGroupInputValidation {
 
   @Before
   public void setup() {
+    project = mock(Project.class);
     embeddingController = Mockito.mock(EmbeddingController.class);
     features = new ArrayList<>();
     features.add(new FeatureGroupFeatureDTO("feature", "TIMESTAMP", "", true, false, "10", null));
@@ -754,13 +763,13 @@ public class TestFeatureGroupInputValidation {
     FeaturegroupDTO featureGroupDTO = new FeaturegroupDTO();
     featureGroupDTO.setEmbeddingIndex(embeddingDTO);
 
-    doReturn(false).when(embeddingController).indexExist(anyString());
+    doNothing().when(embeddingController).verifyIndexName(any(), anyString());
 
     featureGroupInputValidation =
         new FeatureGroupInputValidation(new FeaturestoreInputValidation(), new OnlineFeaturegroupController(),
             embeddingController);
 
-    featureGroupInputValidation.verifyEmbeddingIndexNotExist(featureGroupDTO);
+    featureGroupInputValidation.verifyEmbeddingIndexNotExist(project, featureGroupDTO);
   }
 
   @Test
@@ -776,13 +785,13 @@ public class TestFeatureGroupInputValidation {
     FeaturegroupDTO featureGroupDTO = new FeaturegroupDTO();
     featureGroupDTO.setEmbeddingIndex(embeddingDTO);
 
-    doReturn(true).when(embeddingController).indexExist(anyString());
+    doThrow(FeaturestoreException.class).when(embeddingController).verifyIndexName(any(), anyString());
 
     featureGroupInputValidation =
         new FeatureGroupInputValidation(new FeaturestoreInputValidation(), new OnlineFeaturegroupController(),
             embeddingController);
 
-    assertThrows(FeaturestoreException.class, () -> featureGroupInputValidation.verifyEmbeddingIndexNotExist(featureGroupDTO));
+    assertThrows(FeaturestoreException.class, () -> featureGroupInputValidation.verifyEmbeddingIndexNotExist(project, featureGroupDTO));
   }
 
   private FeaturegroupDTO createFeaturegroupDtoWithIndexName(String indexName) {
@@ -832,5 +841,32 @@ public class TestFeatureGroupInputValidation {
   public void testValidNameWithAllowedCharacters() throws Exception {
     featureGroupInputValidation.verifyEmbeddingIndexName(createFeaturegroupDtoWithIndexName("name.with.dots"));
     featureGroupInputValidation.verifyEmbeddingIndexName(createFeaturegroupDtoWithIndexName("name_with_underscores"));
+  }
+
+  @Test
+  public void testVerifyVectorDatabaseIndexMappingLimit() throws FeaturestoreException {
+    // Call the method under test
+    featureGroupInputValidation.verifyVectorDatabaseIndexMappingLimit(createFeaturegroupDtoWithIndexName("myindexname"), 10);
+
+    // Verify that the method called the embeddingController with the correct parameters
+    verify(embeddingController).validateWithinMappingLimit(any(), any());
+  }
+
+  @Test
+  public void testVerifyVectorDatabaseIndexMappingLimit_EmbeddingIndexNull() throws FeaturestoreException {
+    // Call the method under test
+    featureGroupInputValidation.verifyVectorDatabaseIndexMappingLimit(createFeaturegroupDtoWithIndexName(null), 10);
+
+    // Verify that the method did not call the embeddingController
+    verify(embeddingController, never()).validateWithinMappingLimit(any(), any());
+  }
+
+  @Test
+  public void testVerifyVectorDatabaseIndexMappingLimit_EmbeddingIndexWithoutName() throws FeaturestoreException {
+    // Call the method under test
+    featureGroupInputValidation.verifyVectorDatabaseIndexMappingLimit(createFeaturegroupDtoWithIndexName(""), 10);
+
+    // Verify that the method did not call the embeddingController
+    verify(embeddingController, never()).validateWithinMappingLimit(any(), any());
   }
 }

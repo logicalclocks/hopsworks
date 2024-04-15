@@ -115,9 +115,11 @@ public class OnlineFeaturegroupController {
   public OnlineFeaturegroupController() {
   }
 
-  protected OnlineFeaturegroupController(Settings settings, EmbeddingController embeddingController) {
+  protected OnlineFeaturegroupController(Settings settings, EmbeddingController embeddingController,
+      FeaturegroupController featuregroupController) {
     this.settings = settings;
     this.embeddingController = embeddingController;
+    this.featuregroupController = featuregroupController;
   }
 
       /**
@@ -157,7 +159,8 @@ public class OnlineFeaturegroupController {
 
     createFeatureGroupKafkaTopic(project, featureGroup, features);
     if (featureGroup.getEmbedding() != null) {
-      embeddingController.createVectorDbIndex(project, featureGroup);
+      embeddingController.createVectorDbIndex(project, featureGroup,
+          featuregroupController.getFeatures(featureGroup, project, user).size());
     } else {
       createMySQLTable(featureStore, Utils.getFeaturegroupName(featureGroup), features, project, user);
     }

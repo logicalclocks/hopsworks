@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.featurestore.featuregroup.online;
 
 import io.hops.hopsworks.common.featurestore.embedding.EmbeddingController;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Embedding;
@@ -25,6 +26,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregro
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.vectordb.VectorDatabase;
+import org.apache.commons.compress.utils.Lists;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,20 +51,22 @@ public class TestOnlineFeatureGroupController {
 
   private OnlineFeaturegroupController onlineFeaturegroupController;
   private EmbeddingController embeddingController;
-
+  private FeaturegroupController featuregroupController;
   private VectorDatabase vectorDatabase;
   private Project project;
   private Featurestore featureStore;
   private Featuregroup featureGroup;
 
   @Before
-  public void setup() {
+  public void setup() throws Exception {
     settings = mock(Settings.class);
     vectorDatabase = mock(VectorDatabase.class);
+    featuregroupController = mock(FeaturegroupController.class);
     featureStore = mock(Featurestore.class);
     project = mock(Project.class);
     embeddingController = spy(new EmbeddingController());
-    onlineFeaturegroupController = spy(new OnlineFeaturegroupController(settings, embeddingController));
+    Mockito.when(featuregroupController.getFeatures(any(), any(), any())).thenReturn(Lists.newArrayList());
+    onlineFeaturegroupController = spy(new OnlineFeaturegroupController(settings, embeddingController, featuregroupController));
     featureGroup = new Featuregroup();
     featureGroup.setEmbedding(null);
     featureGroup.setName("fg");
@@ -208,7 +212,7 @@ public class TestOnlineFeatureGroupController {
     featureGroup.setEmbedding(embedding);
 
     // Mock the behavior for vectorDatabase initialization
-    doNothing().when(embeddingController).createVectorDbIndex(any(), any());
+    doNothing().when(embeddingController).createVectorDbIndex(any(), any(), any());
     doNothing().when(onlineFeaturegroupController).checkOnlineFsUserExist(eq(project));
     doNothing().when(onlineFeaturegroupController)
         .createFeatureGroupKafkaTopic(eq(project), eq(featureGroup), eq(features));
@@ -219,7 +223,7 @@ public class TestOnlineFeatureGroupController {
 
     // Assert
     // Verify that vectorDatabase.createIndex is called with the correct parameters
-    verify(embeddingController, times(1)).createVectorDbIndex(any(), any());
+    verify(embeddingController, times(1)).createVectorDbIndex(any(), any(), any());
     verify(onlineFeaturegroupController, times(1)).checkOnlineFsUserExist(eq(project));
     verify(onlineFeaturegroupController, times(1)).createFeatureGroupKafkaTopic(eq(project), eq(featureGroup),
         eq(features));

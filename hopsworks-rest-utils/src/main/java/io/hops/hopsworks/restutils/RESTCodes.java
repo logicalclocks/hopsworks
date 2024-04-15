@@ -1708,7 +1708,8 @@ public class RESTCodes {
     COULD_NOT_GET_VECTOR_DB_INDEX(238, "Could not get index from vector db.",
         Response.Status.INTERNAL_SERVER_ERROR),
     EMBEDDING_INDEX_EXISTED(239, "Embedding index already exists.", Response.Status.BAD_REQUEST),
-    INVALID_EMBEDDING_INDEX_NAME(240, "Embedding index name is not valid.", Response.Status.BAD_REQUEST);
+    INVALID_EMBEDDING_INDEX_NAME(240, "Embedding index name is not valid.", Response.Status.BAD_REQUEST),
+    VECTOR_DATABASE_INDEX_MAPPING_LIMIT_EXCEEDED(241, "Index mapping limit exceeded.", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

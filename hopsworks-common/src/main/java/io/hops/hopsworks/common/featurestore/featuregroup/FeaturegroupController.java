@@ -225,7 +225,7 @@ public class FeaturegroupController {
     featureGroupInputValidation.verifySchemaProvided(featuregroupDTO);
     featureGroupInputValidation.verifyNoDuplicatedFeatures(featuregroupDTO);
     featureGroupInputValidation.verifyEmbeddingFeatureExist(featuregroupDTO);
-    featureGroupInputValidation.verifyEmbeddingIndexNotExist(featuregroupDTO);
+    featureGroupInputValidation.verifyEmbeddingIndexNotExist(project, featuregroupDTO);
     featureGroupInputValidation.verifyEmbeddingIndexName(featuregroupDTO);
 
     // if version not provided, get latest and increment

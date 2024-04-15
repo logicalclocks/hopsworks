@@ -16,23 +16,45 @@
 
 package io.hops.hopsworks.common.featurestore.embedding;
 
+import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.EmbeddingFeature;
-import org.junit.Assert;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.vectordb.Index;
+import io.hops.hopsworks.vectordb.VectorDatabase;
+import io.hops.hopsworks.vectordb.VectorDatabaseException;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 public class EmbeddingControllerTest {
 
-  private EmbeddingController embeddingController;
+  private VectorDatabaseClient vectorDatabaseClient;
+  private VectorDatabase vectorDatabase;
+  private Settings settings;
+  private EmbeddingController target;
+  private final int defaultMappingSize = 1000;
+  private Project project;
 
   @Before
-  public void setup() {
-    embeddingController = spy(new EmbeddingController());
+  public void setup() throws Exception {
+    project = mock(Project.class);
+    vectorDatabaseClient = mock(VectorDatabaseClient.class);
+    settings = mock(Settings.class);
+    when(settings.getOpensearchDefaultIndexMappingLimit()).thenReturn(defaultMappingSize);
+    vectorDatabase = mock(VectorDatabase.class);
+    when(vectorDatabaseClient.getClient()).thenReturn(vectorDatabase);
+    target = spy(new EmbeddingController(vectorDatabaseClient, settings));
   }
 
   @Test
@@ -40,7 +62,7 @@ public class EmbeddingControllerTest {
     List<EmbeddingFeature> features = new ArrayList<>();
     features.add(new EmbeddingFeature(null, "vector", 512, "l2"));
     features.add(new EmbeddingFeature(null, "vector2", 128, "l2"));
-    Assert.assertEquals(
+    assertEquals(
         "{\n"
             + "  \"settings\": {\n"
             + "    \"index\": {\n"
@@ -61,6 +83,139 @@ public class EmbeddingControllerTest {
             + "    }\n"
             + "  }\n"
             + "}",
-        embeddingController.createIndex("", features));
+        target.createIndex("", features));
+  }
+
+  @Test
+  public void testValidateWithinMappingLimit_Success() throws Exception {
+    Index index = new Index("testIndex");
+    int numFeatures = 5;
+
+    when(vectorDatabase.getSchema(any())).thenReturn(new ArrayList<>(Collections.nCopies(defaultMappingSize - numFeatures, null)));
+
+    // Call the method
+    target.validateWithinMappingLimit(index, 0);
+
+    // Verify that no exception is thrown
+  }
+
+  @Test(expected = FeaturestoreException.class)
+  public void testValidateWithinMappingLimit_ExceedLimit() throws Exception {
+    Index index = new Index("testIndex");
+    int numFeatures = 5;
+
+    when(vectorDatabase.getSchema(any())).thenReturn(new ArrayList<>(Collections.nCopies(defaultMappingSize, null)));
+    // Call the method
+    target.validateWithinMappingLimit(index, numFeatures);
+
+    // Verify that FeaturestoreException is thrown
+  }
+
+  @Test(expected = FeaturestoreException.class)
+  public void testValidateWithinMappingLimit_VectorDatabaseException() throws Exception {
+    Index index = new Index("testIndex");
+    int numFeatures = 5;
+
+    when(vectorDatabase.getSchema(any())).thenThrow(new VectorDatabaseException(""));
+
+    // Call the method
+    target.validateWithinMappingLimit(index, numFeatures);
+
+    // Verify that FeaturestoreException is thrown
+  }
+
+  @Test(expected = FeaturestoreException.class)
+  public void testVerifyIndexName_IndexExists() throws FeaturestoreException {
+    String name = "testIndex";
+    String projectIndexName = "project_testIndex";
+
+    // Mocking behavior to simulate index existence and non-default index
+    doReturn(projectIndexName).when(target).getProjectIndexName(any(), any());
+    doReturn(true).when(target).indexExist(any());
+    doReturn(false).when(target).isDefaultVectorDbIndex(any(), any());
+
+    // Call the method
+    target.verifyIndexName(project, name);
+  }
+
+  @Test
+  public void testVerifyIndexName_DefaultIndex() throws FeaturestoreException {
+    String name = "testIndex";
+    String projectIndexName = "project_testIndex";
+
+    // Mocking behavior to simulate index existence and non-default index
+    doReturn(projectIndexName).when(target).getProjectIndexName(any(), any());
+    doReturn(true).when(target).indexExist(any());
+    doReturn(true).when(target).isDefaultVectorDbIndex(any(), any());
+
+    // Call the method
+    target.verifyIndexName(project, name);
+  }
+
+  @Test
+  public void testVerifyIndexName_IndexNotExists() throws FeaturestoreException {
+    String name = "testIndex";
+    String projectIndexName = "project_testIndex";
+
+    // Mocking behavior to simulate index existence and non-default index
+    doReturn(projectIndexName).when(target).getProjectIndexName(any(), any());
+    doReturn(false).when(target).indexExist(any());
+    doReturn(false).when(target).isDefaultVectorDbIndex(any(), any());
+
+    // Call the method
+    target.verifyIndexName(project, name);
+  }
+
+  @Test
+  public void testVerifyIndexName_NullName() throws FeaturestoreException {
+    // Mocking behavior to simulate index existence and non-default index
+    doReturn("").when(target).getProjectIndexName(any(), any());
+    doReturn(false).when(target).indexExist(any());
+    doReturn(false).when(target).isDefaultVectorDbIndex(any(), any());
+
+    // Call the method
+    target.verifyIndexName(project, null);
+    target.verifyIndexName(project, "");
+  }
+
+  @Test
+  public void testGetProjectIndexName_NullOrEmptyName() throws FeaturestoreException {
+
+    // Mocking behavior to simulate empty or null name
+    doReturn("defaultIndex").when(target).getDefaultVectorDbIndex(any());
+
+    // Call the method with empty name
+    String emptyNameResult = target.getProjectIndexName(project, "");
+    assertEquals("defaultIndex", emptyNameResult);
+
+    // Call the method with null name
+    String nullNameResult = target.getProjectIndexName(project, null);
+    assertEquals("defaultIndex", nullNameResult);
+  }
+
+  @Test
+  public void testGetProjectIndexName_NonEmptyName_NoPrefix() throws FeaturestoreException {
+    String name = "testIndex";
+
+    // Mocking behavior to simulate absence of prefix
+    doReturn("prefix").when(target).getVectorDbIndexPrefix(any());
+
+    // Call the method with empty name
+    String result = target.getProjectIndexName(project, name);
+    assertEquals("prefix_testIndex", result);
+  }
+
+  @Test
+  public void testGetProjectIndexName_NonEmptyName_WithPrefix() throws FeaturestoreException {
+    String name = "prefix_testIndex";
+
+    // Mocking behavior to simulate presence of prefix
+    doReturn("prefix").when(target).getVectorDbIndexPrefix(any());
+
+    // Call the method
+    String result = target.getProjectIndexName(project, name);
+
+    // Verify the result
+    assertEquals("prefix_testIndex", result);
   }
 }

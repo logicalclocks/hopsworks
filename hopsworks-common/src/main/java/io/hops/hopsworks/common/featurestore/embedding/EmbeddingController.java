@@ -32,6 +32,7 @@ import io.hops.hopsworks.persistence.entity.models.Model;
 import io.hops.hopsworks.persistence.entity.models.version.ModelVersion;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.vectordb.Field;
 import io.hops.hopsworks.vectordb.Index;
 import io.hops.hopsworks.vectordb.VectorDatabaseException;
 
@@ -43,6 +44,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
@@ -63,7 +65,16 @@ public class EmbeddingController {
   @EJB
   private ModelFacade modelFacade;
 
-  public void createVectorDbIndex(Project project, Featuregroup featureGroup)
+  public EmbeddingController() {
+  }
+
+  // For testing
+  EmbeddingController(VectorDatabaseClient vectorDatabaseClient, Settings settings) {
+    this.vectorDatabaseClient = vectorDatabaseClient;
+    this.settings = settings;
+  }
+
+  public void createVectorDbIndex(Project project, Featuregroup featureGroup, Integer numFeatures)
       throws FeaturestoreException {
     Index index = new Index(featureGroup.getEmbedding().getVectorDbIndexName());
     try {
@@ -75,6 +86,25 @@ public class EmbeddingController {
       } else {
         vectorDatabaseClient.getClient().createIndex(index, createIndex(featureGroup.getEmbedding().getColPrefix(),
             featureGroup.getEmbedding().getEmbeddingFeatures()), false);
+      }
+      // Create index first. If validation fails, the index will be cleaned up when deleting the fg.
+      validateWithinMappingLimit(index, numFeatures);
+    } catch (VectorDatabaseException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_GET_VECTOR_DB_INDEX,
+          Level.FINE, "Cannot create opensearch vectordb index: " + index.getName());
+    }
+  }
+
+  public void validateWithinMappingLimit(Index index, Integer numFeatures) throws FeaturestoreException {
+    try {
+      int remainingMappingSize =
+          settings.getOpensearchDefaultIndexMappingLimit() - vectorDatabaseClient.getClient().getSchema(index).size();
+      if (numFeatures > remainingMappingSize) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.VECTOR_DATABASE_INDEX_MAPPING_LIMIT_EXCEEDED,
+            Level.FINE, String.format("Number of features exceeds the limit of the index '%s'."
+            + " Maximum number of features can be added/created is %d."
+            + " Reduce the number of features or use a different embedding index.",
+            index.getName(), remainingMappingSize));
       }
     } catch (VectorDatabaseException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_GET_VECTOR_DB_INDEX,
@@ -88,6 +118,29 @@ public class EmbeddingController {
     } catch (VectorDatabaseException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_GET_VECTOR_DB_INDEX,
           Level.FINE, "Cannot get opensearch vectordb index: " + name);
+    }
+  }
+
+  public void verifyIndexName(Project project, String name) throws FeaturestoreException {
+    if (name != null && !Strings.isNullOrEmpty(name)) {
+      String projectIndexName = getProjectIndexName(project, name);
+      if (indexExist(projectIndexName) && !isDefaultVectorDbIndex(project, projectIndexName)) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.EMBEDDING_INDEX_EXISTED, Level.FINE,
+            String.format("Provided embedding index `%s` already exists in the vector database.", projectIndexName));
+      }
+    }
+  }
+
+  String getProjectIndexName(Project project, String name) throws FeaturestoreException {
+    if (Strings.isNullOrEmpty(name)) {
+      return getDefaultVectorDbIndex(project);
+    } else {
+      String vectorDbIndexPrefix = getVectorDbIndexPrefix(project);
+      // In hopsworks opensearch, users can only access indexes which start with specific prefix
+      if (!name.startsWith(vectorDbIndexPrefix)) {
+        return vectorDbIndexPrefix + "_" + name;
+      }
+      return name;
     }
   }
 
@@ -106,15 +159,13 @@ public class EmbeddingController {
       throws FeaturestoreException {
     Embedding embedding = new Embedding();
     embedding.setFeaturegroup(featuregroup);
+    String projectIndexName = getProjectIndexName(project, embeddingDTO.getIndexName());
+    embedding.setVectorDbIndexName(projectIndexName);
     if (Strings.isNullOrEmpty(embeddingDTO.getIndexName())) {
-      embedding.setVectorDbIndexName(getDefaultVectorDbIndex(project));
       embedding.setColPrefix(getVectorDbColPrefix(featuregroup));
     } else {
       String vectorDbIndexPrefix = getVectorDbIndexPrefix(project);
-      // In hopsworks opensearch, users can only access indexes which start with specific prefix
       if (!embeddingDTO.getIndexName().startsWith(vectorDbIndexPrefix)) {
-        embedding.setVectorDbIndexName(
-            vectorDbIndexPrefix + "_" + embeddingDTO.getIndexName());
         embedding.setColPrefix("");
       }
       if (isDefaultVectorDbIndex(project, embeddingDTO.getIndexName())) {
@@ -186,16 +237,21 @@ public class EmbeddingController {
   }
 
   private void removeDocuments(Featuregroup featureGroup) throws FeaturestoreException, VectorDatabaseException {
-    EmbeddingFeature feature = featureGroup.getEmbedding().getEmbeddingFeatures().stream().findFirst().get();
+    Set<String> fields =
+        vectorDatabaseClient.getClient().getSchema(new Index(featureGroup.getEmbedding().getVectorDbIndexName()))
+            .stream().map(Field::getName).collect(Collectors.toSet());
+    // Get any of the embedding feature which exists in the vector database for removing document if it is not null
+    Optional<String> embeddingFeatureName = featureGroup
+        .getEmbedding().getEmbeddingFeatures().stream().map(feature -> feature.getEmbedding().getColPrefix() == null
+            ? feature.getName()
+            : feature.getEmbedding().getColPrefix() + feature.getName()).filter(fields::contains).findFirst();
     String matchQuery = "%s:*";
-
-    String field = feature.getEmbedding().getColPrefix() == null
-        ? feature.getName()
-        : feature.getEmbedding().getColPrefix() + feature.getName();
-    vectorDatabaseClient.getClient().deleteByQuery(
-        new Index(featureGroup.getEmbedding().getVectorDbIndexName()),
-        String.format(matchQuery, field)
-    );
+    if (embeddingFeatureName.isPresent()) {
+      vectorDatabaseClient.getClient().deleteByQuery(
+          new Index(featureGroup.getEmbedding().getVectorDbIndexName()),
+          String.format(matchQuery, embeddingFeatureName.get())
+      );
+    }
   }
 
   protected String createMapping(String prefix, Collection<EmbeddingFeature> features) {
@@ -230,13 +286,13 @@ public class EmbeddingController {
 
   }
 
-  private String getDefaultVectorDbIndex(Project project) throws FeaturestoreException {
+  String getDefaultVectorDbIndex(Project project) throws FeaturestoreException {
     Set<String> indexName = getAllDefaultVectorDbIndex(project);
     // randomly select an index
     return indexName.stream().sorted(Comparator.comparingInt(i -> RANDOM.nextInt())).findFirst().get();
   }
 
-  private boolean isDefaultVectorDbIndex(Project project, String index) throws FeaturestoreException {
+  boolean isDefaultVectorDbIndex(Project project, String index) throws FeaturestoreException {
     return getAllDefaultVectorDbIndex(project).contains(index);
   }
 
@@ -259,7 +315,7 @@ public class EmbeddingController {
     return indices;
   }
 
-  private String getVectorDbIndexPrefix(Project project) {
+  String getVectorDbIndexPrefix(Project project) {
     return project.getId() + "__embedding";
   }
 
