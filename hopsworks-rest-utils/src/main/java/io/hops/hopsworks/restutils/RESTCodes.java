@@ -1329,7 +1329,7 @@ public class RESTCodes {
    */
   public enum FeaturestoreErrorCode implements RESTErrorCode {
 
-    COULD_NOT_CREATE_FEATUREGROUP(1, "Could not create feature group and corresponding Hive table",
+    COULD_NOT_CREATE_FEATUREGROUP(1, "Could not create feature group and corresponding online/offline store.",
         Response.Status.INTERNAL_SERVER_ERROR),
     FEATURESTORE_ID_NOT_PROVIDED(2, "Featurestore Id was not provided", Response.Status.BAD_REQUEST),
     FEATUREGROUP_ID_NOT_PROVIDED(3, "Featuregroup Id was not provided", Response.Status.BAD_REQUEST),

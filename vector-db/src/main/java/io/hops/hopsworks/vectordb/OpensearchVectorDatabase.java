@@ -19,6 +19,7 @@ package io.hops.hopsworks.vectordb;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.apache.http.client.config.RequestConfig;
 import org.opensearch.OpenSearchException;
 import org.opensearch.OpenSearchStatusException;
 import org.opensearch.action.admin.indices.delete.DeleteIndexRequest;
@@ -38,6 +39,7 @@ import org.opensearch.client.indices.CreateIndexResponse;
 import org.opensearch.client.indices.GetIndexRequest;
 import org.opensearch.client.indices.GetIndexResponse;
 import org.opensearch.client.indices.PutMappingRequest;
+import org.opensearch.common.unit.TimeValue;
 import org.opensearch.common.xcontent.XContentType;
 import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
@@ -53,6 +55,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -63,13 +66,23 @@ public class OpensearchVectorDatabase implements VectorDatabase {
   private ObjectMapper objectMapper = new ObjectMapper();
   private static final Logger LOGGER = Logger.getLogger(
       OpensearchVectorDatabase.class.getName());
+  private Integer requestTimeout = 60000;
+  private Integer socketTimeout = 61000;
+  private final Integer maxRetry = 10;
 
   public OpensearchVectorDatabase(RestHighLevelClient client) {
     this.client = client;
   }
 
+  public OpensearchVectorDatabase(RestHighLevelClient client, Integer requestTimeout) {
+    this.client = client;
+    this.requestTimeout = requestTimeout;
+    this.socketTimeout = requestTimeout + 1000;
+  }
+
   @Override
   public void createIndex(Index index, String mapping, Boolean skipIfExist) throws VectorDatabaseException {
+    long delayMillis = 1000;  // Initial delay between retries (1 second)
     try {
       if (skipIfExist) {
         Request request = new Request("HEAD", "/" + index.getName());
@@ -78,15 +91,45 @@ public class OpensearchVectorDatabase implements VectorDatabase {
           return;
         }
       }
-      CreateIndexRequest createIndexRequest = new CreateIndexRequest(index.getName());
-      createIndexRequest.source(mapping, XContentType.JSON);
-      CreateIndexResponse response = client.indices().create(createIndexRequest, RequestOptions.DEFAULT);
-      if (!response.isAcknowledged()) {
-        throw new VectorDatabaseException("Failed to create opensearch index: " + index.getName());
+
+      for (int i = 0; i < maxRetry; i++) {
+        CreateIndexRequest createIndexRequest = new CreateIndexRequest(index.getName());
+        createIndexRequest.setTimeout(new TimeValue(requestTimeout));
+        createIndexRequest.setMasterTimeout(new TimeValue(requestTimeout));
+        RequestConfig requestConfig = RequestConfig.custom()
+            .setSocketTimeout(socketTimeout)
+            .build();
+        RequestOptions options = RequestOptions.DEFAULT.toBuilder()
+            .setRequestConfig(requestConfig)
+            .build();
+        createIndexRequest.source(mapping, XContentType.JSON);
+        CreateIndexResponse response = client.indices().create(createIndexRequest, options);
+        if (response.isAcknowledged()) {
+          return;
+        }
+        // Acknowledgement failed, log and retry
+        LOGGER.log(Level.INFO, String.format("Create index [%s] not acknowledged, retrying...", index.getName()));
+        Thread.sleep(getDelayMillis(delayMillis));
+        delayMillis *= 2;
       }
     } catch (IOException e) {
-      throw new VectorDatabaseException("Failed to create opensearch index: " + index.getName() + "Err: " + e);
+      throw new VectorDatabaseException(String.format("Failed to create opensearch index: %s. Error: %s",
+          index.getName(), e.getMessage()));
+    } catch (InterruptedException e) {
+      LOGGER.log(Level.INFO, String.format("Retry create index [%s] interrupted.", index.getName()));
+    } catch (OpenSearchStatusException e) {
+      if (e.getDetailedMessage().contains("process_cluster_event_timeout_exception")) {
+        LOGGER.log(Level.INFO, String.format("Create index [%s] timeout, retrying...", index.getName()));
+        try {
+          Thread.sleep(getDelayMillis(delayMillis));
+          delayMillis *= 2;
+        } catch (InterruptedException e1) {
+          LOGGER.log(Level.INFO, String.format("Retry create index [%s] interrupted.", index.getName()));
+        }
+      }
     }
+
+    throw new VectorDatabaseException("Failed to create opensearch index: " + index.getName());
   }
 
   public Optional<Index> getIndex(String name) throws VectorDatabaseException {
@@ -123,15 +166,53 @@ public class OpensearchVectorDatabase implements VectorDatabase {
 
   @Override
   public void deleteIndex(Index index) throws VectorDatabaseException {
-    try {
-      DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest(index.getName());
-      AcknowledgedResponse response = client.indices().delete(deleteIndexRequest, RequestOptions.DEFAULT);
-      if (!response.isAcknowledged()) {
-        throw new VectorDatabaseException("Failed to delete opensearch index: " + index.getName());
+    long delayMillis = 1000;  // Initial delay between retries (1 second)
+
+    for (int i = 0; i < maxRetry; i++) {
+      try {
+        DeleteIndexRequest deleteIndexRequest =
+            new DeleteIndexRequest(index.getName())
+                .timeout(new TimeValue(requestTimeout))
+                .masterNodeTimeout(new TimeValue(requestTimeout));
+        RequestConfig requestConfig = RequestConfig.custom()
+            .setSocketTimeout(socketTimeout)
+            .build();
+        RequestOptions options = RequestOptions.DEFAULT.toBuilder()
+            .setRequestConfig(requestConfig)
+            .build();
+        AcknowledgedResponse response = client.indices().delete(deleteIndexRequest, options);
+        if (response.isAcknowledged()) {
+          return;
+        }
+        // Acknowledgement failed, log and retry
+        LOGGER.log(Level.INFO, String.format("Delete index [%s] not acknowledged, retrying...", index.getName()));
+        Thread.sleep(getDelayMillis(delayMillis));
+        delayMillis *= 2;
+      } catch (IOException e) {
+        throw new VectorDatabaseException("Failed to delete opensearch index: " + index.getName() + "Err: " + e);
+      } catch (InterruptedException e) {
+        LOGGER.log(Level.INFO, String.format("Retry delete index [%s] interrupted.", index.getName()));
+      } catch (OpenSearchStatusException e) {
+        if (e.status() == RestStatus.NOT_FOUND) {
+          // If index has been deleted, exit.
+          return;
+        } else if (e.getDetailedMessage().contains("process_cluster_event_timeout_exception")) {
+          LOGGER.log(Level.INFO,
+              String.format("Delete index [%s] timeout, retrying... \nError message: %s", index.getName(),
+                  e.getDetailedMessage()));
+          try {
+            Thread.sleep(getDelayMillis(delayMillis));
+            delayMillis *= 2;
+          } catch (InterruptedException e1) {
+            LOGGER.log(Level.INFO, String.format("Retry delete index [%s] interrupted.", index.getName()));
+          }
+        } else {
+          throw new VectorDatabaseException("Failed to delete opensearch indices. Err: " + e.getDetailedMessage());
+        }
       }
-    } catch (IOException e) {
-      throw new VectorDatabaseException("Failed to delete opensearch index: " + index.getName() + "Err: " + e);
     }
+    // All retries fail.
+    throw new VectorDatabaseException("Failed to delete opensearch index: " + index.getName());
   }
 
   @Override
@@ -262,18 +343,10 @@ public class OpensearchVectorDatabase implements VectorDatabase {
   private void bulkRequest(BulkRequest bulkRequest) throws VectorDatabaseException {
     try {
       BulkResponse response = client.bulk(bulkRequest, RequestOptions.DEFAULT);
-      if (response.status().getStatus() != 200) {
-        throw new VectorDatabaseException(
-            String.format("Cannot index data. Response status %d; Message: %s",
-                response.status().getStatus(), response.buildFailureMessage())
-        );
-      } else {
-        if (response.hasFailures()) {
-          throw new VectorDatabaseException(
-              String.format("Index data failed partially. Response status %d; Message: %s",
-                  response.status().getStatus(), response.buildFailureMessage())
-          );
-        }
+      if (response.hasFailures()) {
+        // Do not include message from `response.buildFailureMessage()` as this method failed to execute.
+        String msg = String.format("Index data failed partially. Response status %d", response.status().getStatus());
+        throw new VectorDatabaseException(msg);
       }
     } catch (IOException e) {
       throw new VectorDatabaseException("Cannot index data. Err: " + e);
@@ -323,23 +396,48 @@ public class OpensearchVectorDatabase implements VectorDatabase {
 
   @Override
   public void deleteByQuery(Index index, String query) throws VectorDatabaseException {
-    DeleteByQueryRequest deleteByQueryRequest = new DeleteByQueryRequest(index.getName());
-    deleteByQueryRequest.setQuery(new QueryStringQueryBuilder(query));
-    try {
-      BulkByScrollResponse response = client.deleteByQuery(deleteByQueryRequest, RequestOptions.DEFAULT);
-      if (response.getBulkFailures().size() != 0) {
-        throw new VectorDatabaseException(
-            "Drop index failed partially. Message: " +
-                response.getBulkFailures()
-                    .stream()
-                    .map(f -> String.format("Index: %s , responseId: %s, status: %d, message: %s",
-                        f.getIndex(), f.getId(), f.getStatus().getStatus(), f.getMessage()))
-                    .collect(Collectors.joining("\t"))
-        );
+    long delayMillis = 1000;  // Initial delay between retries (1 second)
+    for (int i = 0; i < maxRetry; i++) {
+      DeleteByQueryRequest deleteByQueryRequest = new DeleteByQueryRequest(index.getName());
+      deleteByQueryRequest.setQuery(new QueryStringQueryBuilder(query));
+      deleteByQueryRequest.setTimeout(new TimeValue(requestTimeout));
+
+      try {
+        RequestConfig requestConfig = RequestConfig.custom()
+            .setSocketTimeout(socketTimeout)
+            .build();
+        RequestOptions options = RequestOptions.DEFAULT.toBuilder()
+            .setRequestConfig(requestConfig)
+            .build();
+        BulkByScrollResponse response = client.deleteByQuery(deleteByQueryRequest, options);
+        if (response.getBulkFailures().size() == 0) {
+          return;
+        }
+        // Got failures, log and retry
+        LOGGER.log(Level.INFO, String.format("Drop index [%s] failed partially, retrying...", index.getName()));
+        Thread.sleep(getDelayMillis(delayMillis));
+        delayMillis *= 2;
+      } catch (IOException e) {
+        throw new VectorDatabaseException("Failed to delete opensearch data. Error: " + e.getMessage());
+      } catch (InterruptedException e) {
+        LOGGER.log(Level.INFO, String.format("Retry drop index [%s] interrupted.", index.getName()));
+      } catch (OpenSearchStatusException e) {
+        if (e.getDetailedMessage().contains("process_cluster_event_timeout_exception")) {
+          LOGGER.log(Level.INFO, String.format("Drop index [%s] timeout, retrying...", index.getName()));
+          try {
+            Thread.sleep(getDelayMillis(delayMillis));
+            delayMillis *= 2;
+          } catch (InterruptedException e1) {
+            LOGGER.log(Level.INFO, String.format("Retry create index [%s] interrupted.", index.getName()));
+          }
+        }
       }
-    } catch (IOException e) {
-      throw new VectorDatabaseException("Failed to delete opensearch data.");
     }
+    throw new VectorDatabaseException("Drop index failed: " + index.getName());
+  }
+
+  private long getDelayMillis(long delayMillis) {
+    return Math.min(delayMillis, 5000);
   }
 
   @Override

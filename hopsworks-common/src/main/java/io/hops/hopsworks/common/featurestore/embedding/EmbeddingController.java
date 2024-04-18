@@ -223,7 +223,7 @@ public class EmbeddingController {
       }
     } catch (VectorDatabaseException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_FEATUREGROUP,
-          Level.FINE, "Cannot delete documents from vectordb for feature group: " +
+          Level.FINE, "Cannot delete index from vectordb for feature group: " +
           featureGroup.getName(), e.getMessage(), e);
     }
   }

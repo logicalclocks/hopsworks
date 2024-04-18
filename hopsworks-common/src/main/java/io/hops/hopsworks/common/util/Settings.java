@@ -3500,7 +3500,7 @@ public class Settings {
     return KIBANA_MULTI_TENANCY_ENABELED;
   }
   
-  public static final int OPENSEARCH_KIBANA_NO_CONNECTIONS = 5;
+  public static final int OPENSEARCH_KIBANA_NO_CONNECTIONS = 10;
 
   //-------------------------------- PROVENANCE ----------------------------------------------//
   private static final String VARIABLE_PROVENANCE_TYPE = "provenance_type"; //disabled/meta/min/full

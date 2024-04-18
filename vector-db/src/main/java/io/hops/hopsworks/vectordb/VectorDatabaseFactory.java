@@ -16,63 +16,16 @@
 
 package io.hops.hopsworks.vectordb;
 
-import org.apache.http.HttpHost;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.nio.reactor.IOReactorConfig;
-import org.apache.http.ssl.SSLContexts;
-import org.opensearch.client.RestClient;
 import org.opensearch.client.RestHighLevelClient;
-
-import javax.net.ssl.SSLContext;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.GeneralSecurityException;
 
 public class VectorDatabaseFactory {
 
-  public static VectorDatabase getOpensearchDatabase(String host, String user, String password, String certPath,
-      String trustStorePassword) throws IOException {
-    SSLContext sslCtx = null;
-    Path trustStore = Paths.get(certPath);
-    char[] trustStorePw = null;
-    if (trustStorePassword != null) {
-      trustStorePw =
-          trustStorePassword.toCharArray();
-    }
-    try {
-      sslCtx = SSLContexts.custom()
-          .loadTrustMaterial(trustStore.toFile(), trustStorePw)
-          .build();
-    } catch (GeneralSecurityException | IOException e) {
-      throw new IOException("Failed to load ssl context.");
-    }
-    CredentialsProvider credentialsProvider =
-        new BasicCredentialsProvider();
-    credentialsProvider.setCredentials(AuthScope.ANY,
-        new UsernamePasswordCredentials(user, password));
-    final SSLContext finalSslCtx = sslCtx;
-    final CredentialsProvider finalCredentialsProvider = credentialsProvider;
-
-    RestHighLevelClient client = new RestHighLevelClient(
-        RestClient.builder(HttpHost.create(host))
-            .setHttpClientConfigCallback(httpAsyncClientBuilder -> {
-              httpAsyncClientBuilder.setDefaultIOReactorConfig(
-                  IOReactorConfig.custom().setIoThreadCount(5).build());
-              return httpAsyncClientBuilder
-                  .setSSLContext(finalSslCtx)
-                  .setDefaultCredentialsProvider(finalCredentialsProvider)
-                  .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE);
-            }));
+  public static VectorDatabase getOpensearchDatabase(RestHighLevelClient client) {
     return new OpensearchVectorDatabase(client);
   }
 
-  public static VectorDatabase getOpensearchDatabase(RestHighLevelClient client) {
-    return new OpensearchVectorDatabase(client);
+  public static VectorDatabase getOpensearchDatabase(RestHighLevelClient client, Integer requestTimeout) {
+    return new OpensearchVectorDatabase(client, requestTimeout);
   }
 }
 
