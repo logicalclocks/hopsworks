@@ -148,6 +148,7 @@ public class FeaturestoreJdbcConnectorController {
     }
     replaceOnlineFsConnectorUrl(featurestoreJdbcConnectorDTO);
     replaceOfflineFsConnectorUrl(featurestoreJdbcConnectorDTO);
+    featurestoreJdbcConnectorDTO.setDriverPath(featurestoreConnector.getJdbcConnector().getDriverPath());
 
     return featurestoreJdbcConnectorDTO;
   }
@@ -244,6 +245,10 @@ public class FeaturestoreJdbcConnectorController {
     // create and set secret
     createOrUpdateSecret(user, featurestore, featurestoreJdbcConnectorDTO,
       featurestoreJdbcConnector, password, featurestoreJdbcConnector.getPasswordSecret());
+    
+    if (!Strings.isNullOrEmpty(featurestoreJdbcConnectorDTO.getDriverPath())) {
+      featurestoreJdbcConnector.setDriverPath(featurestoreJdbcConnectorDTO.getDriverPath());
+    }
     return featurestoreJdbcConnector;
   }
   

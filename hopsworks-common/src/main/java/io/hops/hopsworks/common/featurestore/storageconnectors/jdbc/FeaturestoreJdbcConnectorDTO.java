@@ -41,6 +41,8 @@ public class FeaturestoreJdbcConnectorDTO extends FeaturestoreStorageConnectorDT
   private String connectionString;
   private List<OptionDTO> arguments;
 
+  private String driverPath;
+  
   public FeaturestoreJdbcConnectorDTO() {
   }
 
@@ -67,11 +69,19 @@ public class FeaturestoreJdbcConnectorDTO extends FeaturestoreStorageConnectorDT
     this.arguments = arguments;
   }
 
+  @XmlElement
+  public String getDriverPath() {return driverPath; };
+  
+  public void setDriverPath(String driverPath) {
+    this.driverPath = driverPath;
+  }
+  
   @Override
   public String toString() {
     return "FeaturestoreJdbcConnectorDTO{" +
       "connectionString='" + connectionString + '\'' +
       ", arguments=" + arguments +
+      ", driverPath='" + driverPath + '\'' +
       '}';
   }
 }
