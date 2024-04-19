@@ -55,6 +55,10 @@ public class FeaturestoreJdbcConnector implements Serializable {
   @ManyToOne(cascade = CascadeType.ALL)
   private Secret passwordSecret;
 
+  
+  @Column(name = "driver_path")
+  private String driverPath;
+  
   public static long getSerialVersionUID() {
     return serialVersionUID;
   }
@@ -91,6 +95,15 @@ public class FeaturestoreJdbcConnector implements Serializable {
     this.passwordSecret = encryptionSecret;
   }
 
+  
+  public String getDriverPath() {
+    return driverPath;
+  }
+  
+  public void setDriverPath(String driverPath) {
+    this.driverPath = driverPath;
+  }
+  
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
