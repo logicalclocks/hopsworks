@@ -19,7 +19,6 @@ package io.hops.hopsworks.common.featurestore.storageconnectors.connectionChecke
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
-import io.hops.hopsworks.common.cloud.TemporaryCredentialsHelper;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.bigquery.FeaturestoreBigqueryConnectorController;
@@ -91,8 +90,6 @@ public class ConnectionChecker {
   private FeaturestoreBigqueryConnectorController featurestoreBigqueryConnectorController;
   @EJB
   private FeatureStoreGcsConnectorController featureStoreGcsConnectorController;
-  @EJB
-  private TemporaryCredentialsHelper temporaryCredentialsHelper;
   @EJB
   private DistributedFsService dfs;
   @EJB
@@ -171,7 +168,7 @@ public class ConnectionChecker {
     }
   }
   
-  private static String getQueryParamsUrl(List<OptionDTO> optionsList, String connectionString) {
+  private String getQueryParamsUrl(List<OptionDTO> optionsList, String connectionString) {
     StringJoiner sj;
     if (connectionString.contains("?")) {
       sj = new StringJoiner("&", "&", "");
