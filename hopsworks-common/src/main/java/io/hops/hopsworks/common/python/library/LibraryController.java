@@ -16,6 +16,7 @@
 package io.hops.hopsworks.common.python.library;
 
 import com.lambdista.util.Try;
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
 import io.hops.hopsworks.common.provenance.core.opensearch.BasicOpenSearchHit;
 import io.hops.hopsworks.common.provenance.core.opensearch.OpenSearchHelper;
@@ -27,6 +28,7 @@ import io.hops.hopsworks.common.python.search.PyPiLibraryOpenSearchIndexer;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.GenericException;
@@ -54,6 +56,8 @@ import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -85,6 +89,8 @@ public class LibraryController {
   private OpenSearchClientController provOpenSearchController;
   @EJB
   private PyPiLibraryOpenSearchIndexer pypiIndexer;
+  @EJB
+  private ProjectUtils projectUtils;
 
   public PythonDep getPythonDep(String dependency, Project project) throws PythonException {
     return libraryFacade.findByDependencyAndProject(dependency, project)
@@ -115,8 +121,7 @@ public class LibraryController {
 
   public HashMap<String, List<LibraryVersionDTO>> condaSearch(String library, String url) throws ServiceException {
     HashMap<String, List<LibraryVersionDTO>> libVersions = new HashMap<>();
-    String prog = settings.getHopsworksDomainDir() + "/bin/condasearch.sh";
-    String[] lines = condaList(prog, library, url);
+    String[] lines = condaList(library, url);
     String[] libVersion;
     String foundLib = "";
     String foundVersion;
@@ -236,41 +241,53 @@ public class LibraryController {
     return versions;
   }
 
-  private String[] condaList(String program, String library, String url)
-    throws ServiceException {
+  private String[] condaList(String library, String url) throws ServiceException {
+    Path condaSearchScript = Paths.get(settings.getSudoersDir(), "condaSearch.sh");
+    String userHome = System.getProperty("user.home", "/home/glassfish");
+
     ProcessDescriptor.Builder pdBuilder = new ProcessDescriptor.Builder();
-    pdBuilder.addCommand(program);
+    pdBuilder.addEnvironmentVariable("HW_USER_HOME", userHome);
+    pdBuilder.addCommand("/usr/bin/sudo");
+    pdBuilder.addCommand(condaSearchScript.toString());
     if (url != null && !url.isEmpty()) {
       pdBuilder.addCommand(url);
       pdBuilder.addCommand(library);
     } else if(library != null && !library.isEmpty()) {
       pdBuilder.addCommand(library);
     }
-    ProcessResult processResult;
-    ProcessDescriptor processDescriptor = pdBuilder.redirectErrorStream(true)
-      .setWaitTimeout(5L, TimeUnit.MINUTES)
-      .build();
+
+
     try {
-      processResult = osProcessExecutor.execute(processDescriptor);
+      String imageName = projectUtils.getFullDockerImageName(settings.getBaseDockerImagePythonName());
+      pdBuilder.addCommand(imageName);
+
+      ProcessDescriptor processDescriptor = pdBuilder.redirectErrorStream(true)
+          .setWaitTimeout(5L, TimeUnit.MINUTES)
+          .build();
+
+      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
       boolean exited = processResult.processExited();
       int errCode = processResult.getExitCode();
       if (!exited) {
         throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.WARNING,
-          "errCode: " + errCode + ", " + processResult.getStderr());
+            "errCode: " + errCode + ", " + processResult.getStderr());
       }
       if (errCode == 1 || errCode == 23) { // 1 for conda, 23 for pip
         throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_NOT_FOUND, Level.FINE,
-          "errCode: " + errCode + ", " + processResult.getStderr());
+            "errCode: " + errCode + ", " + processResult.getStderr());
       } else if (errCode != 0) {
         throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.WARNING,
-          "errCode: " + errCode + ", " + processResult.getStderr());
+            "errCode: " + errCode + ", " + processResult.getStderr());
       }
+      String result = processResult.getStdout();
+      return (result != null && !result.isEmpty())? result.split("\n") : new String[0];
+    } catch (ServiceDiscoveryException ex) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.SEVERE,
+          "Could not construct Docker registry URL", ex.getMessage(), ex);
     } catch (IOException ex) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.WARNING,
         "lib: " + library, ex.getMessage(), ex);
     }
-    String result = processResult.getStdout();
-    return (result != null && !result.isEmpty())? result.split("\n") : new String[0];
   }
 
   /**
