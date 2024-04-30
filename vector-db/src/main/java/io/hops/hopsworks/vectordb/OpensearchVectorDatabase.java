@@ -203,6 +203,12 @@ public class OpensearchVectorDatabase implements VectorDatabase {
   public List<Map<String, Object>> preview(Index index, Set<Field> fields, int n) throws VectorDatabaseException {
     List<Map<String, Object>> results = Lists.newArrayList();
 
+    // If fields is empty, return no result, otherwise the search query matches any documents which may not
+    // belong to requested feature group.
+    if (fields.size() == 0) {
+      return results;
+    }
+
     // Create a bool query
     BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
