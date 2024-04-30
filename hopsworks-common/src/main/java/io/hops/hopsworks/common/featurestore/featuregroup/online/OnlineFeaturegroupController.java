@@ -159,8 +159,7 @@ public class OnlineFeaturegroupController {
 
     createFeatureGroupKafkaTopic(project, featureGroup, features);
     if (featureGroup.getEmbedding() != null) {
-      embeddingController.createVectorDbIndex(project, featureGroup,
-          featuregroupController.getFeatures(featureGroup, project, user).size());
+      embeddingController.createVectorDbIndex(project, featureGroup, features);
     } else {
       createMySQLTable(featureStore, Utils.getFeaturegroupName(featureGroup), features, project, user);
     }

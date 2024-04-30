@@ -226,6 +226,8 @@ public class StreamFeatureGroupController {
       cachedFeaturegroupController.verifyPreviousSchemaUnchanged(previousSchema, featuregroupDTO.getFeatures());
       newFeatures = featureGroupInputValidation.verifyAndGetNewFeatures(previousSchema, featuregroupDTO.getFeatures());
       featureGroupInputValidation.verifyVectorDatabaseIndexMappingLimit(featuregroupDTO, newFeatures.size());
+      featureGroupInputValidation.verifyVectorDatabaseSupportedDataType(newFeatures);
+
     }
 
     // change feature descriptions

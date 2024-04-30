@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.featurestore.embedding;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.EmbeddingDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.models.ModelFacade;
@@ -34,6 +35,7 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.vectordb.Field;
 import io.hops.hopsworks.vectordb.Index;
+import io.hops.hopsworks.vectordb.OpensearchVectorDatabase;
 import io.hops.hopsworks.vectordb.VectorDatabaseException;
 
 import javax.ejb.EJB;
@@ -74,21 +76,21 @@ public class EmbeddingController {
     this.settings = settings;
   }
 
-  public void createVectorDbIndex(Project project, Featuregroup featureGroup, Integer numFeatures)
+  public void createVectorDbIndex(Project project, Featuregroup featureGroup, List<FeatureGroupFeatureDTO> features)
       throws FeaturestoreException {
     Index index = new Index(featureGroup.getEmbedding().getVectorDbIndexName());
     try {
       if (isDefaultVectorDbIndex(project, index.getName())) {
         vectorDatabaseClient.getClient().createIndex(index, createIndex(featureGroup.getEmbedding().getColPrefix(),
-          featureGroup.getEmbedding().getEmbeddingFeatures()), true);
+            featureGroup.getEmbedding().getEmbeddingFeatures(), features), true);
         vectorDatabaseClient.getClient().addFields(index, createMapping(featureGroup.getEmbedding().getColPrefix(),
-            featureGroup.getEmbedding().getEmbeddingFeatures()));
+            featureGroup.getEmbedding().getEmbeddingFeatures(), features));
       } else {
         vectorDatabaseClient.getClient().createIndex(index, createIndex(featureGroup.getEmbedding().getColPrefix(),
-            featureGroup.getEmbedding().getEmbeddingFeatures()), false);
+            featureGroup.getEmbedding().getEmbeddingFeatures(), features), false);
       }
       // Create index first. If validation fails, the index will be cleaned up when deleting the fg.
-      validateWithinMappingLimit(index, numFeatures);
+      validateWithinMappingLimit(index, features.size());
     } catch (VectorDatabaseException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_GET_VECTOR_DB_INDEX,
           Level.FINE, "Cannot create opensearch vectordb index: " + index.getName());
@@ -102,8 +104,8 @@ public class EmbeddingController {
       if (numFeatures > remainingMappingSize) {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.VECTOR_DATABASE_INDEX_MAPPING_LIMIT_EXCEEDED,
             Level.FINE, String.format("Number of features exceeds the limit of the index '%s'."
-            + " Maximum number of features can be added/created is %d."
-            + " Reduce the number of features or use a different embedding index.",
+                + " Maximum number of features can be added/created is %d."
+                + " Reduce the number of features or use a different embedding index.",
             index.getName(), remainingMappingSize));
       }
     } catch (VectorDatabaseException e) {
@@ -196,7 +198,7 @@ public class EmbeddingController {
   public void dropEmbeddingForProject(Project project)
       throws FeaturestoreException {
     try {
-      for (Index index: vectorDatabaseClient.getClient().getAllIndices().stream()
+      for (Index index : vectorDatabaseClient.getClient().getAllIndices().stream()
           .filter(index -> index.getName().startsWith(getVectorDbIndexPrefix(project))).collect(Collectors.toSet())) {
         vectorDatabaseClient.getClient().deleteIndex(index);
       }
@@ -254,25 +256,42 @@ public class EmbeddingController {
     }
   }
 
-  protected String createMapping(String prefix, Collection<EmbeddingFeature> features) {
+  protected String createMapping(String prefix, Collection<EmbeddingFeature> embeddingFeatures,
+      List<FeatureGroupFeatureDTO> features) {
+    Set<String> embeddingFeatureNames =
+        embeddingFeatures.stream().map(EmbeddingFeature::getName).collect(Collectors.toSet());
     String mappingString = "{\n" +
         "    \"properties\": {\n" +
         "%s\n" +
         "    }\n" +
         "  }";
-    String fieldString = "        \"%s\": {\n" +
+    String embeddingFieldString = "        \"%s\": {\n" +
         "          \"type\": \"knn_vector\",\n" +
         "          \"dimension\": %d\n" +
         "        }";
+    String fieldString = "        \"%s\": {\n" +
+        "          \"type\": \"%s\"\n" +
+        "        }";
     List<String> fieldMapping = Lists.newArrayList();
-    for (EmbeddingFeature feature : features) {
+
+    for (EmbeddingFeature feature : embeddingFeatures) {
       fieldMapping.add(String.format(
-          fieldString, prefix + feature.getName(), feature.getDimension()));
+          embeddingFieldString, prefix + feature.getName(), feature.getDimension()));
+    }
+    for (FeatureGroupFeatureDTO feature : features) {
+      if (!embeddingFeatureNames.contains(feature.getName())) {
+        String type = OpensearchVectorDatabase.getDataType(feature.getType());
+        if (type != null) {  // if type cannot be converted, opensearch will infer the type
+          fieldMapping.add(String.format(
+              fieldString, prefix + feature.getName(), type));
+        }
+      }
     }
     return String.format(mappingString, String.join(",\n", fieldMapping));
   }
 
-  protected String createIndex(String prefix, Collection<EmbeddingFeature> features) {
+  protected String createIndex(String prefix, Collection<EmbeddingFeature> embeddingFeatures,
+      List<FeatureGroupFeatureDTO> features) {
     String jsonString = "{\n" +
         "  \"settings\": {\n" +
         "    \"index\": {\n" +
@@ -282,7 +301,7 @@ public class EmbeddingController {
         "  },\n" +
         "  \"mappings\": %s\n" +
         "}";
-    return String.format(jsonString, createMapping(prefix, features));
+    return String.format(jsonString, createMapping(prefix, embeddingFeatures, features));
 
   }
 

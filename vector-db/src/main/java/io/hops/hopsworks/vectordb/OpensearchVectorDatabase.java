@@ -17,6 +17,7 @@
 package io.hops.hopsworks.vectordb;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.http.client.config.RequestConfig;
@@ -39,6 +40,7 @@ import org.opensearch.client.indices.CreateIndexResponse;
 import org.opensearch.client.indices.GetIndexRequest;
 import org.opensearch.client.indices.GetIndexResponse;
 import org.opensearch.client.indices.PutMappingRequest;
+import org.opensearch.common.Strings;
 import org.opensearch.common.unit.TimeValue;
 import org.opensearch.common.xcontent.XContentType;
 import org.opensearch.index.query.BoolQueryBuilder;
@@ -69,6 +71,32 @@ public class OpensearchVectorDatabase implements VectorDatabase {
   private Integer requestTimeout = 60000;
   private Integer socketTimeout = 61000;
   private final Integer maxRetry = 10;
+
+  private static final Map<String, String> dataTypeMap = ImmutableMap.<String, String>builder()
+      .put("BOOLEAN", "byte")
+      .put("TINYINT", "byte")
+      .put("INT", "integer")
+      .put("SMALLINT", "short")
+      .put("BIGINT", "long")
+      .put("FLOAT", "float")
+      .put("DOUBLE", "double")
+      .put("TIMESTAMP", "date")
+      .put("DATE", "date")
+      .put("STRING", "text")
+      .put("ARRAY", "binary")
+      .put("STRUCT", "binary")
+      .put("BINARY", "binary")
+      .put("MAP", "binary")
+      .build();
+
+  public static String getDataType(String offlineType) {
+    if (!Strings.isNullOrEmpty(offlineType)) {
+      offlineType = offlineType.split("<")[0];
+    } else {
+      return null;
+    }
+    return dataTypeMap.get(offlineType.toUpperCase());
+  }
 
   public OpensearchVectorDatabase(RestHighLevelClient client) {
     this.client = client;

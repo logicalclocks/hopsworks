@@ -16,11 +16,14 @@
 
 package io.hops.hopsworks.common.featurestore.embedding;
 
+import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
+import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.EmbeddingFeature;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.vectordb.Index;
+import io.hops.hopsworks.vectordb.OpensearchVectorDatabase;
 import io.hops.hopsworks.vectordb.VectorDatabase;
 import io.hops.hopsworks.vectordb.VectorDatabaseException;
 import org.junit.Before;
@@ -29,6 +32,8 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -59,31 +64,50 @@ public class EmbeddingControllerTest {
 
   @Test
   public void testCreateIndex() {
-    List<EmbeddingFeature> features = new ArrayList<>();
-    features.add(new EmbeddingFeature(null, "vector", 512, "l2"));
-    features.add(new EmbeddingFeature(null, "vector2", 128, "l2"));
-    assertEquals(
-        "{\n"
-            + "  \"settings\": {\n"
-            + "    \"index\": {\n"
-            + "      \"knn\": \"true\",\n"
-            + "      \"knn.algo_param.ef_search\": 512\n"
-            + "    }\n"
-            + "  },\n"
-            + "  \"mappings\": {\n"
-            + "    \"properties\": {\n"
-            + "        \"vector\": {\n"
-            + "          \"type\": \"knn_vector\",\n"
-            + "          \"dimension\": 512\n"
-            + "        },\n"
-            + "        \"vector2\": {\n"
-            + "          \"type\": \"knn_vector\",\n"
-            + "          \"dimension\": 128\n"
-            + "        }\n"
-            + "    }\n"
-            + "  }\n"
-            + "}",
-        target.createIndex("", features));
+    List<EmbeddingFeature> embeddingFeatures = new ArrayList<>();
+    embeddingFeatures.add(new EmbeddingFeature(null, "vector", 512, "l2"));
+    embeddingFeatures.add(new EmbeddingFeature(null, "vector2", 128, "l2"));
+    List<FeatureGroupFeatureDTO> features = new ArrayList<>();
+    Set<String> offlineTypes =
+        FeaturestoreConstants.SUGGESTED_HIVE_FEATURE_TYPES.stream().map(type -> type.split(" ")[0])
+            .collect(Collectors.toSet());
+    offlineTypes.remove("DECIMAL"); // not supported by opensearch
+    for (String offlineType : offlineTypes) {
+      features.add(new FeatureGroupFeatureDTO("feature_" + offlineType, offlineType));
+    }
+    features.add(new FeatureGroupFeatureDTO("vector", "ARRAY<DOUBLE>"));
+    features.add(new FeatureGroupFeatureDTO("vector2", "ARRAY<DOUBLE>"));
+
+
+    String expectedMapping = "{\n" +
+        "  \"settings\": {\n" +
+        "    \"index\": {\n" +
+        "      \"knn\": \"true\",\n" +
+        "      \"knn.algo_param.ef_search\": 512\n" +
+        "    }\n" +
+        "  },\n" +
+        "  \"mappings\": {\n" +
+        "    \"properties\": {\n" +
+        "        \"vector\": {\n" +
+        "          \"type\": \"knn_vector\",\n" +
+        "          \"dimension\": 512\n" +
+        "        },\n" +
+        "        \"vector2\": {\n" +
+        "          \"type\": \"knn_vector\",\n" +
+        "          \"dimension\": 128\n" +
+        "        }";
+
+    for (String offlineType : offlineTypes) {
+      expectedMapping += ",\n        \"feature_" + offlineType + "\": {\n" +
+          "          \"type\": \"" + OpensearchVectorDatabase.getDataType(offlineType) + "\"\n" +
+          "        }";
+    }
+
+    expectedMapping += "\n    }\n" +
+        "  }\n" +
+        "}";
+
+    assertEquals(expectedMapping, target.createIndex("", embeddingFeatures, features));
   }
 
   @Test

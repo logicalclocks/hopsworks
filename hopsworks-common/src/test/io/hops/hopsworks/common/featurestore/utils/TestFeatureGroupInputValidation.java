@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.utils;
 
+import com.google.common.collect.Lists;
 import io.hops.hopsworks.common.featurestore.embedding.EmbeddingController;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.EmbeddingDTO;
@@ -868,5 +869,47 @@ public class TestFeatureGroupInputValidation {
 
     // Verify that the method did not call the embeddingController
     verify(embeddingController, never()).validateWithinMappingLimit(any(), any());
+  }
+
+  @Test
+  public void testVerifyVectorDatabaseSupportedDataType_Success() throws Exception {
+    // Mocking FeatureGroupFeatureDTO objects
+    FeatureGroupFeatureDTO feature1 = new FeatureGroupFeatureDTO("feature1", "int");
+    FeatureGroupFeatureDTO feature2 = new FeatureGroupFeatureDTO("feature2", "float");
+    FeaturegroupDTO featureGroupDTO = createFeaturegroupDtoWithIndexName("test");
+    featureGroupDTO.setFeatures(Lists.newArrayList(feature1, feature2));
+
+    // Call the method
+    featureGroupInputValidation.verifyVectorDatabaseSupportedDataType(featureGroupDTO);
+  }
+
+  @Test
+  public void testVerifyVectorDatabaseSupportedDataType_Fail() throws Exception {
+    // Mocking FeatureGroupFeatureDTO objects
+    FeatureGroupFeatureDTO feature1 = new FeatureGroupFeatureDTO("feature1", "not_supported_type");
+    FeaturegroupDTO featureGroupDTO = createFeaturegroupDtoWithIndexName("test");
+    featureGroupDTO.setFeatures(Lists.newArrayList(feature1));
+
+    // Call the method
+    assertThrows(FeaturestoreException.class, () -> featureGroupInputValidation.verifyVectorDatabaseSupportedDataType(featureGroupDTO));
+  }
+
+  @Test
+  public void testVerifyVectorDatabaseSupportedDataType_FeatureGroupFeatureDTO_Success() throws Exception {
+    // Mocking FeatureGroupFeatureDTO objects
+    FeatureGroupFeatureDTO feature1 = new FeatureGroupFeatureDTO("feature1", "int");
+    FeatureGroupFeatureDTO feature2 = new FeatureGroupFeatureDTO("feature2", "float");
+
+    // Call the method
+    featureGroupInputValidation.verifyVectorDatabaseSupportedDataType(Lists.newArrayList(feature1, feature2));
+  }
+
+  @Test
+  public void testVerifyVectorDatabaseSupportedDataType_FeatureGroupFeatureDTO_Fail() throws Exception {
+    // Mocking FeatureGroupFeatureDTO objects
+    FeatureGroupFeatureDTO feature1 = new FeatureGroupFeatureDTO("feature1", "not_supported_type");
+
+    // Call the method
+    assertThrows(FeaturestoreException.class, () -> featureGroupInputValidation.verifyVectorDatabaseSupportedDataType(Lists.newArrayList(feature1)));
   }
 }

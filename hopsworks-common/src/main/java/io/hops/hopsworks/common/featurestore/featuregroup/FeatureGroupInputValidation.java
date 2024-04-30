@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.featuregroup;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.embedding.EmbeddingController;
@@ -29,6 +30,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Tim
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.vectordb.Index;
+import io.hops.hopsworks.vectordb.OpensearchVectorDatabase;
 import org.apache.commons.lang.StringUtils;
 
 import javax.ejb.EJB;
@@ -455,6 +457,26 @@ public class FeatureGroupInputValidation {
         featureGroupDTO.getEmbeddingIndex().getIndexName())) {
       embeddingController.validateWithinMappingLimit(new Index(featureGroupDTO.getEmbeddingIndex().getIndexName()),
           numFeatures);
+    }
+  }
+
+  public void verifyVectorDatabaseSupportedDataType(FeaturegroupDTO featureGroupDTO)
+      throws FeaturestoreException {
+    if (featureGroupDTO.getEmbeddingIndex() != null) {
+      verifyVectorDatabaseSupportedDataType(featureGroupDTO.getFeatures());
+    }
+  }
+
+  public void verifyVectorDatabaseSupportedDataType(List<FeatureGroupFeatureDTO> featureDTOS)
+      throws FeaturestoreException {
+    Set<FeatureGroupFeatureDTO> unsupportedFeatures =
+        featureDTOS.stream().filter(f -> OpensearchVectorDatabase.getDataType(f.getType()) == null)
+            .collect(Collectors.toSet());
+    if (unsupportedFeatures.size() > 0) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.VECTOR_DATABASE_DATA_TYPE_NOT_SUPPORTED,
+          Level.FINE, "Vector database does not support data type in the following features: " + Joiner.on(", ")
+          .join(unsupportedFeatures.stream().map(f -> f.getName() + ": " + f.getType()).collect(
+              Collectors.toSet())));
     }
   }
 }
