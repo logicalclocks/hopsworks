@@ -160,6 +160,6 @@ public class FeatureGroupLink implements ProvExplicitNode, Serializable {
   
   @Override
   public Integer parentId() {
-    return parentFeatureGroup != null ?  parentFeatureGroup.getId() : null;
+    return parentFeatureGroup != null ? parentFeatureGroup.getId() : null;
   }
 }

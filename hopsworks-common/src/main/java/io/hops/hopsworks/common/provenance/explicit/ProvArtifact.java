@@ -17,6 +17,7 @@ package io.hops.hopsworks.common.provenance.explicit;
 
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.models.version.ModelVersion;
 import io.hops.hopsworks.persistence.entity.provenance.ProvExplicitNode;
@@ -42,7 +43,12 @@ public class ProvArtifact {
     return new ProvArtifact(link.parentId(), link.parentProject(),
       link.parentName(), link.parentVersion());
   }
-  
+
+  public static ProvArtifact fromFeaturestoreConnector(FeaturestoreConnector sc) {
+    return new ProvArtifact(sc.getId(), sc.getFeaturestore().getProject().getName(),
+      sc.getName(), null);
+  }
+
   public static ProvArtifact fromFeatureGroup(Featuregroup fg) {
     return new ProvArtifact(fg.getId(), fg.getFeaturestore().getProject().getName(),
       fg.getName(), fg.getVersion());

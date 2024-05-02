@@ -62,6 +62,7 @@ public class FeatureGroupLinkController {
       return new ArrayList<>();
     }
   }
+
   public Collection<FeatureGroupLink> createParentLinks(Featurestore featurestore,
                                                         CachedFeaturegroupDTO featureGroupDTO,
                                                         Featuregroup featureGroup) throws GenericException {

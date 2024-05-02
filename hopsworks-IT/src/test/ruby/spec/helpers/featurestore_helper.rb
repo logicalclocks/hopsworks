@@ -1127,6 +1127,14 @@ module FeaturestoreHelper
     query
   end
 
+  def get_storage_connector_links(project_id, name, feature_store_id: nil, feature_store_project_id: nil,
+                                  upstreamLvls: 1, downstreamLvls: 1, expected_status: 200)
+    feature_store_project_id = project_id if feature_store_project_id.nil?
+    feature_store_id = get_featurestore(project_id, fs_project_id: feature_store_project_id)["featurestoreId"] if feature_store_id.nil?
+    artifactPath = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{feature_store_id}/storageconnectors/#{name}"
+    get_featurestore_provenance_explicit_links(artifactPath, upstreamLvls: upstreamLvls, downstreamLvls: downstreamLvls, expected_status: expected_status)
+  end
+
   def get_feature_group_links(project_id, id, feature_store_id: nil, feature_store_project_id: nil,
                               upstreamLvls: 1, downstreamLvls: 1, expected_status: 200)
     feature_store_project_id = project_id if feature_store_project_id.nil?

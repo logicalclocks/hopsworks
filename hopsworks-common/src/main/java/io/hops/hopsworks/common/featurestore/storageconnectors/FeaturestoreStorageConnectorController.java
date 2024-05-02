@@ -127,9 +127,9 @@ public class FeaturestoreStorageConnectorController {
     return convertToConnectorDTOs(user, project, connectors);
   }
 
-  public FeaturestoreStorageConnectorDTO getConnectorWithName(Users user, Project project,
-                                                              Featurestore featurestore,
-                                                              String connectorName)
+  public FeaturestoreConnector getConnectorWithName(Users user, Project project,
+                                                    Featurestore featurestore,
+                                                    String connectorName)
       throws FeaturestoreException {
     FeaturestoreConnector featurestoreConnector =
         featurestoreConnectorFacade.findByFeaturestoreName(featurestore, connectorName)
@@ -142,6 +142,14 @@ public class FeaturestoreStorageConnectorController {
               "Storage connector type '" + featurestoreConnector.getConnectorType() + "' is not enabled");
     }
 
+    return featurestoreConnector;
+  }
+
+  public FeaturestoreStorageConnectorDTO getConnectorDTOWithName(Users user, Project project,
+                                                                 Featurestore featurestore,
+                                                                 String connectorName)
+      throws FeaturestoreException {
+    FeaturestoreConnector featurestoreConnector = getConnectorWithName(user, project, featurestore, connectorName);
     return convertToConnectorDTO(user, project, featurestoreConnector);
   }
 

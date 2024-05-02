@@ -31,6 +31,8 @@ import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegr
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupDTO;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewDTO;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.provenance.explicit.ProvArtifact;
@@ -46,6 +48,7 @@ import io.hops.hopsworks.exceptions.ModelRegistryException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.models.version.ModelVersion;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -71,6 +74,8 @@ public class ProvExplicitLinksBuilder {
   @EJB
   private FeaturestoreUtils featurestoreUtils;
   @EJB
+  private FeaturestoreStorageConnectorController featurestoreStorageConnectorController;
+  @EJB
   private FeaturegroupController featuregroupController;
   @EJB
   private FeatureViewBuilder featureViewBuilder;
@@ -83,13 +88,21 @@ public class ProvExplicitLinksBuilder {
   
   //test
   public ProvExplicitLinksBuilder(FeaturestoreUtils featurestoreUtils,
+                                  FeaturestoreStorageConnectorController featurestoreStorageConnectorController,
                                   FeaturegroupController featuregroupController,
                                   FeatureViewBuilder featureViewBuilder,
                                   TrainingDatasetDTOBuilder trainingDatasetBuilder) {
     this.featurestoreUtils = featurestoreUtils;
+    this.featurestoreStorageConnectorController = featurestoreStorageConnectorController;
     this.featuregroupController = featuregroupController;
     this.featureViewBuilder = featureViewBuilder;
     this.trainingDatasetBuilder = trainingDatasetBuilder;
+  }
+
+  public UriBuilder storageConnectorURI(UriInfo uriInfo, Project accessProject, FeaturestoreConnector connector) {
+    return featurestoreUtils.storageConnectorByNameURI(uriInfo.getBaseUriBuilder(), accessProject, connector)
+      .path(ResourceRequest.Name.PROVENANCE.toString().toLowerCase())
+      .path(ResourceRequest.Name.LINKS.toString().toLowerCase());
   }
   
   public UriBuilder featureGroupURI(UriInfo uriInfo, Project accessProject, Featuregroup featureGroup) {
@@ -146,7 +159,16 @@ public class ProvExplicitLinksBuilder {
     boolean expandLink = resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.PROVENANCE);
     boolean expandArtifact = resourceRequest != null
       && resourceRequest.contains(ResourceRequest.Name.PROVENANCE_ARTIFACTS);
-    if (links.getNode() instanceof Featuregroup) {
+    if (links.getNode() instanceof FeaturestoreConnector) {
+      if (expandLink) {
+        return storageConnectorLink(uriInfo, accessProject, user, expandArtifact, links);
+      } else {
+        ProvExplicitLinkDTO<?> linksDTO = new ProvExplicitLinkDTO<>();
+        FeaturestoreConnector connector = (FeaturestoreConnector) links.getNode();
+        linksDTO.setHref(storageConnectorURI(uriInfo, accessProject, connector).build());
+        return linksDTO;
+      }
+    } else if (links.getNode() instanceof Featuregroup) {
       if (expandLink) {
         return featureGroupLink(uriInfo, accessProject, user, expandArtifact, links);
       } else {
@@ -184,6 +206,35 @@ public class ProvExplicitLinksBuilder {
       }
     }
     return null;
+  }
+
+  private ProvExplicitLinkDTO storageConnectorLink(UriInfo uriInfo, Project accessProject, Users user,
+                                                   boolean expandArtifact, ProvExplicitLink links)
+      throws FeaturestoreException, ServiceException, MetadataException, FeatureStoreMetadataException,
+      DatasetException, IOException, GenericException, ModelRegistryException {
+    ProvExplicitLinkDTO<FeaturestoreStorageConnectorDTO> linksDTO = new ProvExplicitLinkDTO<>();
+    RestDTO artifactDTO;
+    if(links.isDeleted()) {
+      ProvArtifact artifact = (ProvArtifact) links.getNode();
+      artifactDTO = new ProvArtifactDTO(artifact.getId(), artifact.getProject(),
+        artifact.getName(), artifact.getVersion());
+    } else {
+      FeaturestoreConnector connector = (FeaturestoreConnector) links.getNode();
+      linksDTO.setHref(storageConnectorURI(uriInfo, accessProject, connector).build());
+      if (links.isAccessible() && expandArtifact) {
+        artifactDTO = featurestoreStorageConnectorController.convertToConnectorDTO(user, accessProject, connector);
+      } else {
+        ProvArtifact artifact = ProvArtifact.fromFeaturestoreConnector(connector);
+        artifactDTO = new ProvArtifactDTO(artifact.getId(), artifact.getProject(),
+          artifact.getName(), artifact.getVersion());
+      }
+      URI href =
+        featurestoreUtils.storageConnectorByNameURI(uriInfo.getBaseUriBuilder(), accessProject, connector).build();
+      artifactDTO.setHref(href);
+    }
+    linksDTO.setNode(buildNodeDTO(links, artifactDTO));
+    traverseLinks(uriInfo, accessProject, user, linksDTO, expandArtifact, links);
+    return linksDTO;
   }
   
   private ProvExplicitLinkDTO featureGroupLink(UriInfo uriInfo, Project accessProject, Users user,
@@ -347,6 +398,8 @@ public class ProvExplicitLinksBuilder {
       throws FeaturestoreException, ServiceException, DatasetException, MetadataException,
       FeatureStoreMetadataException, IOException, GenericException, ModelRegistryException {
     switch(link.getArtifactType()) {
+      case STORAGE_CONNECTOR:
+        return storageConnectorLink(uriInfo, accessProject, user, expandArtifact, link);
       case FEATURE_GROUP:
         return featureGroupLink(uriInfo, accessProject, user, expandArtifact, link);
       case FEATURE_VIEW:

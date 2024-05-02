@@ -41,7 +41,7 @@ public abstract class LinkFacade<T, C, P, L extends ProvExplicitNode> extends Ab
   private EntityManager em;
   
   @EJB
-  private Settings settings;
+  protected Settings settings;
   
   public LinkFacade(Class<T> entityClass, Class<L> linkType) {
     super(entityClass);

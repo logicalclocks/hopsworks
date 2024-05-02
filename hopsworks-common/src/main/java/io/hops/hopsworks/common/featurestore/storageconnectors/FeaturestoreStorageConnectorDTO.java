@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.featurestore.storageconnectors;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.adls.FeaturestoreADLSConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.bigquery.FeaturestoreBigqueryConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.gcs.FeatureStoreGcsConnectorDTO;
@@ -65,7 +66,7 @@ import javax.xml.bind.annotation.XmlSeeAlso;
     @JsonSubTypes.Type(value = FeatureStoreGcsConnectorDTO.class, name="featureStoreGcsConnectorDTO"),
     @JsonSubTypes.Type(value = FeaturestoreBigqueryConnectorDTO.class, name = "featurestoreBigqueryConnectorDTO")}
 )
-public class FeaturestoreStorageConnectorDTO {
+public class FeaturestoreStorageConnectorDTO extends RestDTO<FeaturestoreStorageConnectorDTO> {
   private Integer id;
   private String description;
   private String name;

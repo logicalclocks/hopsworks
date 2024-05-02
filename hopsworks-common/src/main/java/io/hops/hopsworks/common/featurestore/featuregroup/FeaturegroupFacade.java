@@ -16,11 +16,15 @@
 
 package io.hops.hopsworks.common.featurestore.featuregroup;
 
+import com.google.common.collect.Lists;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.QueryParam;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -30,6 +34,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.validation.ConstraintViolationException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -45,6 +50,9 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
   private static final Logger LOGGER = Logger.getLogger(FeaturegroupFacade.class.getName());
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
+
+  @EJB
+  private Settings settings;
   
   /**
    * Class constructor, invoke parent class and initialize Hive Queries
@@ -177,7 +185,25 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
         .setParameter("featurestore", featurestore)
         .getSingleResult();
   }
-  
+
+  public List<Featuregroup> findByStorageConnectors(List<FeaturestoreConnector> storageConnectors) {
+    if (storageConnectors.size() > settings.getSQLMaxSelectIn()) {
+      List<Featuregroup> result = new ArrayList<>();
+      for(List<FeaturestoreConnector> partition : Lists.partition(storageConnectors, settings.getSQLMaxSelectIn())) {
+        TypedQuery<Featuregroup> query =
+          em.createNamedQuery("Featuregroup.findByStorageConnectors", Featuregroup.class);
+        query.setParameter("storageConnectors", partition);
+        result.addAll(query.getResultList());
+      }
+      return result;
+    } else {
+      TypedQuery<Featuregroup> query =
+        em.createNamedQuery("Featuregroup.findByStorageConnectors", Featuregroup.class);
+      query.setParameter("storageConnectors", storageConnectors);
+      return query.getResultList();
+    }
+  }
+
   /**
    * Transaction to create a new featuregroup in the database
    *
