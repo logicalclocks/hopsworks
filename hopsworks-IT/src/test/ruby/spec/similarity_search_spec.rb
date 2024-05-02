@@ -89,6 +89,26 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["embeddingIndex"]["indexName"]).to eq("#{project.id}__embedding_test_index")
           expect(parsed_json["embeddingIndex"]["features"].length).to be 1
           expect(parsed_json["embeddingIndex"]["colPrefix"]).to eq("")
+          # check features type
+          expect(parsed_json.first["features"][0].key?("name")).to be true
+          expect(parsed_json.first["features"][0]["name"]).to eql("id")
+          expect(parsed_json.first["features"][0].key?("type")).to be true
+          expect(parsed_json.first["features"][0]["type"].downcase).to eql("int")
+          expect(parsed_json.first["features"][0].key?("onlineType")).to be true
+          expect(parsed_json.first["features"][0]["onlineType"].downcase).to eql("int")
+          expect(parsed_json.first["features"][0].key?("description")).to be true
+          expect(parsed_json.first["features"][0].key?("primary")).to be true
+          expect(parsed_json.first["features"][0]["primary"]).to eql(true)
+
+          expect(parsed_json.first["features"][1].key?("name")).to be true
+          expect(parsed_json.first["features"][1]["name"]).to eql("col1")
+          expect(parsed_json.first["features"][1].key?("type")).to be true
+          expect(parsed_json.first["features"][1]["type"].downcase).to eql("array<bigint>")
+          expect(parsed_json.first["features"][1].key?("onlineType")).to be true
+          expect(parsed_json.first["features"][0]["onlineType"].downcase).to eql("knn_vector")
+          expect(parsed_json.first["features"][1].key?("description")).to be true
+          expect(parsed_json.first["features"][1].key?("primary")).to be true
+          expect(parsed_json.first["features"][1]["primary"]).to eql(false)
         end
 
         it "should be able to delete a feature group with embedding and custom index" do

@@ -126,6 +126,7 @@ module FeaturestoreHelper
         {
           "name": "col1",
           "type": "array<bigint>",
+          "description": "testfeaturedescription",
           "primary": false,
           "partition": false,
           "hudiPrecombineKey": false,

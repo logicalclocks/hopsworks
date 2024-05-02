@@ -215,6 +215,8 @@ public class TestOnlineFeatureGroupController {
     doNothing().when(embeddingController).createVectorDbIndex(any(), any(), any());
     doNothing().when(onlineFeaturegroupController).checkOnlineFsUserExist(eq(project));
     doNothing().when(onlineFeaturegroupController)
+        .createMySQLTable(eq(featureStore), anyString(), anyList(), eq(project), eq(user));
+    doNothing().when(onlineFeaturegroupController)
         .createFeatureGroupKafkaTopic(eq(project), eq(featureGroup), eq(features));
     doNothing().when(onlineFeaturegroupController).createOnlineFeatureStore(any(), any(), any());
 
