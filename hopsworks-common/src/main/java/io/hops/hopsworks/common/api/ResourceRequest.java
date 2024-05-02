@@ -245,7 +245,7 @@ public class ResourceRequest {
     SCHEDULE,
     ENVIRONMENT_HISTORY,
     FEATURE_MONITORING,
-    STORAGECONNECTOR;
+    STORAGECONNECTORS;
 
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());

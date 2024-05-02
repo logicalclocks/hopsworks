@@ -96,7 +96,10 @@ import java.util.Objects;
         + " AND (fg.onDemandFeaturegroup IS NOT null "
         + "OR fg.cachedFeaturegroup IS NOT null "
         + "OR fg.streamFeatureGroup IS NOT null)"
-        + " ORDER BY fg.version DESC")})
+        + " ORDER BY fg.version DESC"),
+    @NamedQuery(name = "Featuregroup.findByStorageConnectors",
+        query = "SELECT fg FROM Featuregroup fg LEFT JOIN FETCH fg.onDemandFeaturegroup "
+          + "WHERE fg.onDemandFeaturegroup.featurestoreConnector IN :storageConnectors")})
 public class Featuregroup implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id

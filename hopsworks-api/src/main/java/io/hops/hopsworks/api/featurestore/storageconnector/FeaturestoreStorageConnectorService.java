@@ -23,6 +23,7 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.provenance.StorageConnectorProvenanceResource;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
@@ -51,6 +52,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -97,6 +99,8 @@ public class FeaturestoreStorageConnectorService {
   private StorageConnectorUtil storageConnectorUtil;
   @EJB
   private ConnectionChecker connectionChecker;
+  @Inject
+  private StorageConnectorProvenanceResource provenanceResource;
 
   private Project project;
   private Featurestore featurestore;
@@ -166,7 +170,7 @@ public class FeaturestoreStorageConnectorService {
     Users user = jWTHelper.getUserPrincipal(sc);
     verifyStorageConnectorName(connectorName);
     FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO =
-        storageConnectorController.getConnectorWithName(user, project, featurestore, connectorName);
+      storageConnectorController.getConnectorDTOWithName(user, project, featurestore, connectorName);
     GenericEntity<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOGenericEntity =
       new GenericEntity<FeaturestoreStorageConnectorDTO>(featurestoreStorageConnectorDTO) {
       };
@@ -259,7 +263,7 @@ public class FeaturestoreStorageConnectorService {
     storageConnectorController.updateStorageConnector(user, project, featurestore,
         featurestoreStorageConnectorInputDTO, connectorName);
     FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO =
-        storageConnectorController.getConnectorWithName(user, project, featurestore, connectorName);
+        storageConnectorController.getConnectorDTOWithName(user, project, featurestore, connectorName);
     GenericEntity<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOGenericEntity =
       new GenericEntity<FeaturestoreStorageConnectorDTO>(featurestoreStorageConnectorDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
@@ -406,8 +410,18 @@ public class FeaturestoreStorageConnectorService {
       .entity(resultDto).build();
   }
 
+  @Path("/{connectorName}/provenance")
+  public StorageConnectorProvenanceResource provenance(
+        @ApiParam(value = "Name of the storage connector", required = true)
+        @PathParam("connectorName") String connectorName) {
+    this.provenanceResource.setProject(project);
+    this.provenanceResource.setFeatureStore(featurestore);
+    this.provenanceResource.setConnectorName(connectorName);
+    return this.provenanceResource;
+  }
+
   private ResourceRequest makeResourceRequest(StorageConnectorBeanParam param) {
-    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.STORAGECONNECTOR);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.STORAGECONNECTORS);
     resourceRequest.setOffset(param.getPagination().getOffset());
     resourceRequest.setLimit(param.getPagination().getLimit());
     resourceRequest.setSort(param.getParsedSortBy());

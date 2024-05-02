@@ -233,6 +233,17 @@ public class FeaturestoreUtils {
             .getAnyAddressOfServiceWithDNS(HopsworksService.NAMENODE.getNameWithTag(NamenodeTags.rpc));
     return DistributedFsService.HOPSFS_SCHEME + namenode.getName() + ":" + namenode.getPort() + hdfsPath;
   }
+
+  public UriBuilder storageConnectorByNameURI(UriBuilder uriBuilder, Project accessProject,
+      FeaturestoreConnector connector) {
+    return uriBuilder
+      .path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
+      .path(Integer.toString(accessProject.getId()))
+      .path(ResourceRequest.Name.FEATURESTORES.toString().toLowerCase())
+      .path(Integer.toString(connector.getFeaturestore().getId()))
+      .path(ResourceRequest.Name.STORAGECONNECTORS.toString().toLowerCase())
+      .path(connector.getName());
+  }
   
   public UriBuilder featureGroupByIdURI(UriBuilder uriBuilder, Project accessProject, Featuregroup featureGroup) {
     return uriBuilder

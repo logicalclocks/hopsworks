@@ -20,7 +20,8 @@ public interface ProvExplicitNode {
     FEATURE_GROUP,
     FEATURE_VIEW,
     TRAINING_DATASET,
-    MODEL;
+    MODEL,
+    STORAGE_CONNECTOR;
   }
   
   String parentProject();

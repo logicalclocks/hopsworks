@@ -20,6 +20,7 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.models.version.ModelVersion;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -28,6 +29,20 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import java.util.logging.Level;
 
 public interface ProvExplicitControllerIface {
+  default ProvExplicitLink<FeaturestoreConnector> storageConnectorLinks(Project accessProject,
+                                                                        FeaturestoreConnector root)
+    throws GenericException, FeaturestoreException, DatasetException {
+    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.FINE);
+  }
+  
+  default ProvExplicitLink<FeaturestoreConnector> storageConnectorLinks(Project accessProject,
+                                                                        FeaturestoreConnector root,
+                                                                        Integer upstreamLevels,
+                                                                        Integer downstreamLevels)
+    throws GenericException, FeaturestoreException, DatasetException {
+    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.FINE);
+  }
+
   default ProvExplicitLink<Featuregroup> featureGroupLinks(Project accessProject, Featuregroup root)
     throws GenericException, FeaturestoreException, DatasetException {
     throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.FINE);
