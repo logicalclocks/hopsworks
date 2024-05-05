@@ -258,7 +258,7 @@ public class FeaturestoreJdbcConnectorController {
    * @return List<OptionDTO>
    * @throws FeaturestoreException
    */
-  private List<OptionDTO> validationDTO(FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO)
+  public List<OptionDTO> validationDTO(FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO)
     throws FeaturestoreException {
     verifyJdbcConnectorConnectionString(featurestoreJdbcConnectorDTO.getConnectionString());
     List<OptionDTO> arguments = featurestoreJdbcConnectorDTO.getArguments();

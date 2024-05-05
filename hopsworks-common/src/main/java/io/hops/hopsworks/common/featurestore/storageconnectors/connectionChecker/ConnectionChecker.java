@@ -19,22 +19,16 @@ package io.hops.hopsworks.common.featurestore.storageconnectors.connectionChecke
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
-import io.hops.hopsworks.common.cloud.TemporaryCredentialsHelper;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
-import io.hops.hopsworks.common.featurestore.storageconnectors.bigquery.FeaturestoreBigqueryConnectorController;
-import io.hops.hopsworks.common.featurestore.storageconnectors.gcs.FeatureStoreGcsConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
-import io.hops.hopsworks.common.featurestore.storageconnectors.redshift.FeaturestoreRedshiftConnectorController;
-import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3ConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.snowflake.FeaturestoreSnowflakeConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.snowflake.FeaturestoreSnowflakeConnectorDTO;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.proxies.client.HttpClient;
-
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
@@ -42,13 +36,11 @@ import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
-
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.file.PathUtils;
-
 import org.opensearch.common.Strings;
 
 import javax.annotation.PostConstruct;
@@ -56,10 +48,8 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-
 import java.io.File;
 import java.io.IOException;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -83,16 +73,6 @@ public class ConnectionChecker {
   private ProjectUtils projectUtils;
   @EJB
   private HttpClient httpClient;
-  @EJB
-  private FeaturestoreRedshiftConnectorController featurestoreRedshiftConnectorController;
-  @EJB
-  private FeaturestoreS3ConnectorController featurestoreS3ConnectorController;
-  @EJB
-  private FeaturestoreBigqueryConnectorController featurestoreBigqueryConnectorController;
-  @EJB
-  private FeatureStoreGcsConnectorController featureStoreGcsConnectorController;
-  @EJB
-  private TemporaryCredentialsHelper temporaryCredentialsHelper;
   @EJB
   private DistributedFsService dfs;
   @EJB
@@ -130,6 +110,7 @@ public class ConnectionChecker {
         break;
       case JDBC:
         FeaturestoreJdbcConnectorDTO dto = (FeaturestoreJdbcConnectorDTO) storageConnectorDto;
+        featurestoreJdbcConnectorController.validationDTO(dto);
         List<OptionDTO> optionsList = dto.getArguments();
         if (!optionsList.isEmpty()) {
           // append arguments as query parameters to connection string
@@ -171,7 +152,7 @@ public class ConnectionChecker {
     }
   }
   
-  private static String getQueryParamsUrl(List<OptionDTO> optionsList, String connectionString) {
+  private String getQueryParamsUrl(List<OptionDTO> optionsList, String connectionString) {
     StringJoiner sj;
     if (connectionString.contains("?")) {
       sj = new StringJoiner("&", "&", "");
