@@ -227,7 +227,7 @@ public class FeaturegroupController {
     featureGroupInputValidation.verifyEmbeddingFeatureExist(featuregroupDTO);
     featureGroupInputValidation.verifyEmbeddingIndexNotExist(project, featuregroupDTO);
     featureGroupInputValidation.verifyEmbeddingIndexName(featuregroupDTO);
-    featureGroupInputValidation.verifyVectorDatabaseIndexMappingLimit(featuregroupDTO,
+    featureGroupInputValidation.verifyVectorDatabaseIndexMappingLimit(project, featuregroupDTO,
         featuregroupDTO.getFeatures().size());
     featureGroupInputValidation.verifyVectorDatabaseSupportedDataType(featuregroupDTO);
 

@@ -847,28 +847,28 @@ public class TestFeatureGroupInputValidation {
   @Test
   public void testVerifyVectorDatabaseIndexMappingLimit() throws FeaturestoreException {
     // Call the method under test
-    featureGroupInputValidation.verifyVectorDatabaseIndexMappingLimit(createFeaturegroupDtoWithIndexName("myindexname"), 10);
+    featureGroupInputValidation.verifyVectorDatabaseIndexMappingLimit(project, createFeaturegroupDtoWithIndexName("myindexname"), 10);
 
     // Verify that the method called the embeddingController with the correct parameters
-    verify(embeddingController).validateWithinMappingLimit(any(), any());
+    verify(embeddingController).validateWithinMappingLimit(any(), any(), any());
   }
 
   @Test
   public void testVerifyVectorDatabaseIndexMappingLimit_EmbeddingIndexNull() throws FeaturestoreException {
     // Call the method under test
-    featureGroupInputValidation.verifyVectorDatabaseIndexMappingLimit(createFeaturegroupDtoWithIndexName(null), 10);
+    featureGroupInputValidation.verifyVectorDatabaseIndexMappingLimit(project, createFeaturegroupDtoWithIndexName(null), 10);
 
     // Verify that the method did not call the embeddingController
-    verify(embeddingController, never()).validateWithinMappingLimit(any(), any());
+    verify(embeddingController).validateWithinMappingLimit(any(), any(), any());
   }
 
   @Test
   public void testVerifyVectorDatabaseIndexMappingLimit_EmbeddingIndexWithoutName() throws FeaturestoreException {
     // Call the method under test
-    featureGroupInputValidation.verifyVectorDatabaseIndexMappingLimit(createFeaturegroupDtoWithIndexName(""), 10);
+    featureGroupInputValidation.verifyVectorDatabaseIndexMappingLimit(project, createFeaturegroupDtoWithIndexName(""), 10);
 
     // Verify that the method did not call the embeddingController
-    verify(embeddingController, never()).validateWithinMappingLimit(any(), any());
+    verify(embeddingController).validateWithinMappingLimit(any(), any(), any());
   }
 
   @Test

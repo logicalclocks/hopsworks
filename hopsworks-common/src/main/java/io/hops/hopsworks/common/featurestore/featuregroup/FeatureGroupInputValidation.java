@@ -176,6 +176,10 @@ public class FeatureGroupInputValidation {
    */
   public void verifyOnlineOfflineTypeMatch(FeaturegroupDTO featuregroupDTO) throws FeaturestoreException{
     if (featuregroupDTO.getOnlineEnabled()) {
+      // Users cannot specify the online type for embedding fg
+      if (featuregroupDTO.getEmbeddingIndex() != null) {
+        return;
+      }
       for (FeatureGroupFeatureDTO feature : featuregroupDTO.getFeatures()) {
         String offlineType = feature.getType().toLowerCase().replace(" ", "");
         String onlineType =
@@ -233,7 +237,7 @@ public class FeatureGroupInputValidation {
    * @throws FeaturestoreException
    */
   public void verifyOnlineSchemaValid(FeaturegroupDTO featuregroupDTO) throws FeaturestoreException{
-    if (featuregroupDTO.getOnlineEnabled() && featuregroupDTO.getEmbeddingIndex() != null) {
+    if (featuregroupDTO.getOnlineEnabled() && featuregroupDTO.getEmbeddingIndex() == null) {
       if (featuregroupDTO.getFeatures().size() > FeaturestoreConstants.MAX_MYSQL_COLUMNS) {
         throw new FeaturestoreException(
           COULD_NOT_CREATE_ONLINE_FEATUREGROUP,
@@ -268,7 +272,7 @@ public class FeatureGroupInputValidation {
    * @throws FeaturestoreException
    */
   public void verifyPrimaryKeySupported(FeaturegroupDTO featuregroupDTO) throws FeaturestoreException{
-    if (featuregroupDTO.getOnlineEnabled()) {
+    if (featuregroupDTO.getOnlineEnabled() && featuregroupDTO.getEmbeddingIndex() == null) {
       Integer totalBytes = 0;
       for (FeatureGroupFeatureDTO feature : featuregroupDTO.getFeatures()) {
         if (feature.getPrimary()) {
@@ -451,11 +455,12 @@ public class FeatureGroupInputValidation {
     }
   }
 
-  public void verifyVectorDatabaseIndexMappingLimit(FeaturegroupDTO featureGroupDTO, Integer numFeatures)
+  public void verifyVectorDatabaseIndexMappingLimit(Project project, FeaturegroupDTO featureGroupDTO,
+      Integer numFeatures)
       throws FeaturestoreException {
-    if (featureGroupDTO.getEmbeddingIndex() != null && !Strings.isNullOrEmpty(
-        featureGroupDTO.getEmbeddingIndex().getIndexName())) {
-      embeddingController.validateWithinMappingLimit(new Index(featureGroupDTO.getEmbeddingIndex().getIndexName()),
+    if (featureGroupDTO.getEmbeddingIndex() != null) {
+      embeddingController.validateWithinMappingLimit(project,
+          new Index(featureGroupDTO.getEmbeddingIndex().getIndexName()),
           numFeatures);
     }
   }

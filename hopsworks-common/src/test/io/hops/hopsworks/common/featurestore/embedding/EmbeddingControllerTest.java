@@ -16,12 +16,15 @@
 
 package io.hops.hopsworks.common.featurestore.embedding;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.EmbeddingFeature;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.vectordb.Field;
 import io.hops.hopsworks.vectordb.Index;
 import io.hops.hopsworks.vectordb.OpensearchVectorDatabase;
 import io.hops.hopsworks.vectordb.VectorDatabase;
@@ -29,14 +32,17 @@ import io.hops.hopsworks.vectordb.VectorDatabaseException;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -118,32 +124,56 @@ public class EmbeddingControllerTest {
     when(vectorDatabase.getSchema(any())).thenReturn(new ArrayList<>(Collections.nCopies(defaultMappingSize - numFeatures, null)));
 
     // Call the method
-    target.validateWithinMappingLimit(index, 0);
+    target.validateWithinMappingLimit(project, index, 0);
 
     // Verify that no exception is thrown
   }
 
   @Test(expected = FeaturestoreException.class)
-  public void testValidateWithinMappingLimit_ExceedLimit() throws Exception {
+  public void testValidateWithinMappingLimit_ExceedLimit_IndexExists() throws Exception {
     Index index = new Index("testIndex");
     int numFeatures = 5;
 
-    when(vectorDatabase.getSchema(any())).thenReturn(new ArrayList<>(Collections.nCopies(defaultMappingSize, null)));
+    doReturn(true).when(target).indexExist(eq(index.getName()));
+    when(vectorDatabase.getSchema(any())).thenReturn(new ArrayList<>(Collections.nCopies(defaultMappingSize, new Field("f1", "int"))));
+    doReturn(index.getName()).when(target).getProjectIndexName(any(), any());
     // Call the method
-    target.validateWithinMappingLimit(index, numFeatures);
+    target.validateWithinMappingLimit(project, index, numFeatures);
 
     // Verify that FeaturestoreException is thrown
   }
 
   @Test(expected = FeaturestoreException.class)
-  public void testValidateWithinMappingLimit_VectorDatabaseException() throws Exception {
+  public void testValidateWithinMappingLimit_ExceedLimit_IndexExists_SubField() throws Exception {
     Index index = new Index("testIndex");
     int numFeatures = 5;
 
-    when(vectorDatabase.getSchema(any())).thenThrow(new VectorDatabaseException(""));
+    String jsonString = "{\"type\":\"text\",\"fields\":{\"keyword\":{\"type\":\"keyword\",\"ignore_above\":256}}}";
+    Gson gson = new Gson();
+    // Define the type of the map using TypeToken
+    Type type = new TypeToken<Map<String, Object>>(){}.getType();
+
+    // Convert JSON string to Map
+    Map<String, Object> opensearchType = gson.fromJson(jsonString, type);
+    doReturn(true).when(target).indexExist(eq(index.getName()));
+    when(vectorDatabase.getSchema(any())).thenReturn(new ArrayList<>(Collections.nCopies(defaultMappingSize/2, new Field("f1", opensearchType))));
+    doReturn(index.getName()).when(target).getProjectIndexName(any(), any());
+    // Call the method
+    target.validateWithinMappingLimit(project, index, numFeatures);
+
+    // Verify that FeaturestoreException is thrown
+  }
+
+  @Test(expected = FeaturestoreException.class)
+  public void testValidateWithinMappingLimit_ExceedLimit_IndexNotExists() throws Exception {
+    Index index = new Index("testIndex");
+    int numFeatures = defaultMappingSize + 1;
+
+    doReturn(false).when(target).indexExist(eq(index.getName()));
+    doReturn(index.getName()).when(target).getProjectIndexName(any(), any());
 
     // Call the method
-    target.validateWithinMappingLimit(index, numFeatures);
+    target.validateWithinMappingLimit(project, index, numFeatures);
 
     // Verify that FeaturestoreException is thrown
   }

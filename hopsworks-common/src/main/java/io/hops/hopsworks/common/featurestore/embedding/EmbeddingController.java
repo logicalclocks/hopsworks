@@ -46,6 +46,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
@@ -89,18 +90,25 @@ public class EmbeddingController {
         vectorDatabaseClient.getClient().createIndex(index, createIndex(featureGroup.getEmbedding().getColPrefix(),
             featureGroup.getEmbedding().getEmbeddingFeatures(), features), false);
       }
-      // Create index first. If validation fails, the index will be cleaned up when deleting the fg.
-      validateWithinMappingLimit(index, features.size());
+
     } catch (VectorDatabaseException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_GET_VECTOR_DB_INDEX,
           Level.FINE, "Cannot create opensearch vectordb index: " + index.getName());
     }
   }
 
-  public void validateWithinMappingLimit(Index index, Integer numFeatures) throws FeaturestoreException {
+  public void validateWithinMappingLimit(Project project, Index index, Integer numFeatures)
+      throws FeaturestoreException {
+    String indexName = getProjectIndexName(project, index.getName());
     try {
-      int remainingMappingSize =
-          settings.getOpensearchDefaultIndexMappingLimit() - vectorDatabaseClient.getClient().getSchema(index).size();
+      int remainingMappingSize;
+      if (indexExist(indexName)) {
+        remainingMappingSize = settings.getOpensearchDefaultIndexMappingLimit()
+            - vectorDatabaseClient.getClient().getSchema(new Index(indexName)).stream()
+            .mapToInt(field -> countMappingSizeIncludingSubFields(field.getType())).sum();
+      } else {
+        remainingMappingSize = settings.getOpensearchDefaultIndexMappingLimit();
+      }
       if (numFeatures > remainingMappingSize) {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.VECTOR_DATABASE_INDEX_MAPPING_LIMIT_EXCEEDED,
             Level.FINE, String.format("Number of features exceeds the limit of the index '%s'."
@@ -110,8 +118,21 @@ public class EmbeddingController {
       }
     } catch (VectorDatabaseException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_GET_VECTOR_DB_INDEX,
-          Level.FINE, "Cannot create opensearch vectordb index: " + index.getName());
+          Level.FINE, "Cannot create opensearch vectordb index: " + indexName, e.getMessage());
     }
+  }
+
+  // In opensearch, if the type has sub-fields, it is considered as 2 mappings
+  // `"4160_col_98":{"type":"long"}` --> 1 mapping
+  // `"5438_binary":{"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}}` --> 2 mappings
+  private int countMappingSizeIncludingSubFields(Object value) {
+    int count = 1;
+    if (value instanceof Map) {
+      if (((Map<?, ?>) value).containsKey("fields")) {
+        count += 1;
+      }
+    }
+    return count;
   }
 
   public boolean indexExist(String name) throws FeaturestoreException {

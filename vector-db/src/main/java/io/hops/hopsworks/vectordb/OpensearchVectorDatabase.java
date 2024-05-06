@@ -180,7 +180,8 @@ public class OpensearchVectorDatabase implements VectorDatabase {
    * Get all indices from OpenSearch.
    *
    * @return A set of index names.
-   * @throws VectorDatabaseException If there is an error while fetching indices.
+   * @throws VectorDatabaseException
+   *     If there is an error while fetching indices.
    */
   public Set<Index> getAllIndices() throws VectorDatabaseException {
     try {

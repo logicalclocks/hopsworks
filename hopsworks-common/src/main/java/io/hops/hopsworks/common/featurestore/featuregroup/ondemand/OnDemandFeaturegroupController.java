@@ -53,8 +53,8 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Collection;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -189,7 +189,8 @@ public class OnDemandFeaturegroupController {
     
     List<FeatureGroupFeatureDTO> newFeatures = featureGroupInputValidation.verifyAndGetNewFeatures(previousSchema,
       onDemandFeaturegroupDTO.getFeatures());
-    featureGroupInputValidation.verifyVectorDatabaseIndexMappingLimit(onDemandFeaturegroupDTO, newFeatures.size());
+    featureGroupInputValidation.verifyVectorDatabaseIndexMappingLimit(project, onDemandFeaturegroupDTO,
+        newFeatures.size());
     featureGroupInputValidation.verifyVectorDatabaseSupportedDataType(newFeatures);
 
     // append new features and update existing ones
