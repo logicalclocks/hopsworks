@@ -148,6 +148,7 @@ public class FeaturestoreJdbcConnectorController {
     }
     replaceOnlineFsConnectorUrl(featurestoreJdbcConnectorDTO);
     replaceOfflineFsConnectorUrl(featurestoreJdbcConnectorDTO);
+    featurestoreJdbcConnectorDTO.setDriverPath(featurestoreConnector.getJdbcConnector().getDriverPath());
 
     return featurestoreJdbcConnectorDTO;
   }
@@ -244,6 +245,10 @@ public class FeaturestoreJdbcConnectorController {
     // create and set secret
     createOrUpdateSecret(user, featurestore, featurestoreJdbcConnectorDTO,
       featurestoreJdbcConnector, password, featurestoreJdbcConnector.getPasswordSecret());
+    
+    if (!Strings.isNullOrEmpty(featurestoreJdbcConnectorDTO.getDriverPath())) {
+      featurestoreJdbcConnector.setDriverPath(featurestoreJdbcConnectorDTO.getDriverPath());
+    }
     return featurestoreJdbcConnector;
   }
   
@@ -253,7 +258,7 @@ public class FeaturestoreJdbcConnectorController {
    * @return List<OptionDTO>
    * @throws FeaturestoreException
    */
-  private List<OptionDTO> validationDTO(FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO)
+  public List<OptionDTO> validationDTO(FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO)
     throws FeaturestoreException {
     verifyJdbcConnectorConnectionString(featurestoreJdbcConnectorDTO.getConnectionString());
     List<OptionDTO> arguments = featurestoreJdbcConnectorDTO.getArguments();
