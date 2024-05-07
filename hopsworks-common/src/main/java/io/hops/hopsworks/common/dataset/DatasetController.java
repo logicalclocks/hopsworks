@@ -60,8 +60,10 @@ import io.hops.hopsworks.common.hdfs.command.ArchiveFormat;
 import io.hops.hopsworks.common.hdfs.command.HdfsCommandExecutionController;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.jupyter.JupyterController;
+import io.hops.hopsworks.common.jupyter.NotebookConversion;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
+import io.hops.hopsworks.common.system.job.SystemJobStatus;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
@@ -625,10 +627,10 @@ public class DatasetController {
           throw new DatasetException(RESTCodes.DatasetErrorCode.IMAGE_SIZE_INVALID, Level.FINE);
         }
       } else if(fileExtension.equalsIgnoreCase("ipynb")) {
-        String html = jupyterController.convertIPythonNotebook(project, user, fullPath.toString(), "''",
-            JupyterController.NotebookConversion.HTML);
+        SystemJobStatus status = jupyterController.convertIPythonNotebook(project, user, fullPath.toString(), "''",
+          NotebookConversion.HTML);
         filePreviewDTO = new FilePreviewDTO(Settings.FILE_PREVIEW_HTML_TYPE, fileExtension.toLowerCase(),
-            html);
+          status.getLog());
       } else {
         try (DataInputStream dis = new DataInputStream(is)) {
           int sizeThreshold = Settings.FILE_PREVIEW_TXT_SIZE_BYTES; //in bytes

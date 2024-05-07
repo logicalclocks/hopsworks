@@ -25,6 +25,8 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.jupyter.JupyterController;
+import io.hops.hopsworks.common.jupyter.NotebookConversion;
+import io.hops.hopsworks.common.system.job.SystemJobStatus;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -91,7 +93,7 @@ public class CodeController {
   }
 
   public String readContent(Project project, Users user, String path, CodeContentFormat contentFormat,
-                            JupyterController.NotebookConversion format)
+                            NotebookConversion format)
       throws FeaturestoreException, ServiceException {
     //returns empty contents in the case of jar file
     switch (contentFormat) {
@@ -114,9 +116,10 @@ public class CodeController {
   }
 
   private String readNotebookContent(Project project, Users user, String path,
-                                     JupyterController.NotebookConversion format) throws ServiceException {
-    if (format == JupyterController.NotebookConversion.HTML) {
-      return jupyterController.convertIPythonNotebook(project, user, path,  "", format);
+                                     NotebookConversion format) throws ServiceException {
+    if (format == NotebookConversion.HTML) {
+      SystemJobStatus status = jupyterController.convertIPythonNotebook(project, user, path,  "", format);
+      return status.getLog();
     }
     //returns empty contents in the case of not supported notebookConversion
     return null;

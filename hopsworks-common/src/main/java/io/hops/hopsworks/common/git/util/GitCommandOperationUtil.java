@@ -15,17 +15,11 @@
  */
 package io.hops.hopsworks.common.git.util;
 
-import io.hops.hopsworks.common.dao.git.GitOpExecutionFacade;
 import io.hops.hopsworks.common.dao.git.GitPaths;
-import io.hops.hopsworks.common.dao.git.GitRepositoryFacade;
 import io.hops.hopsworks.common.git.BasicAuthSecrets;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.common.util.HopsUtils;
-import io.hops.hopsworks.common.util.OSProcessExecutor;
-import io.hops.hopsworks.common.util.ProcessDescriptor;
-import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GitOpException;
 import io.hops.hopsworks.exceptions.UserException;
@@ -41,7 +35,6 @@ import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.opensearch.common.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -56,7 +49,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -73,19 +65,12 @@ public class GitCommandOperationUtil {
   private static final String LOG_ATTRIBUTES_SEPERATOR = "--s--";
 
   @EJB
-  private GitRepositoryFacade gitRepositoryFacade;
-  @EJB
-  private GitOpExecutionFacade executionFacade;
-  @EJB
   private CertificateMaterializer certificateMaterializer;
   @EJB
   private Settings settings;
   @EJB
-  private OSProcessExecutor osProcessExecutor;
-  @EJB
   private SecretsController secretsController;
-  @EJB
-  private HdfsUsersController hdfsUsersController;
+
 
   public void cleanUp(Project project, Users user, String configSecret) {
     String gitHomePath = getGitHome(configSecret);
@@ -236,51 +221,7 @@ public class GitCommandOperationUtil {
     return remotes;
   }
 
-  public void shutdownCommandService(GitRepository repository, GitOpExecution execution) {
-    String cid = repository.getCid();
-    try {
-      gitRepositoryFacade.updateRepositoryCid(repository, null);
-    } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "Failed to update repository pid", e);
-    }
-    killGitContainer(execution, cid);
-    cleanUp(repository.getProject(), execution.getUser(), getGitHome(execution.getConfigSecret()));
-  }
-
-  public void killGitContainer(GitOpExecution execution, String containerId) {
-    if (Strings.isNullOrEmpty(containerId)) {
-      return;
-    }
-    String gitHomePath = getGitHome(execution.getConfigSecret());
-    String hdfsUsername = hdfsUsersController.getHdfsUserName(execution.getRepository().getProject(),
-        execution.getUser());
-    String prog = settings.getSudoersDir() + "/git.sh";
-    int exitValue = 0;
-    ProcessDescriptor.Builder pdBuilder = new ProcessDescriptor.Builder()
-        .addCommand("/usr/bin/sudo")
-        .addCommand(prog)
-        .addCommand("kill")
-        .addCommand(gitHomePath)
-        .addCommand(containerId)
-        .addCommand(hdfsUsername)
-        .redirectErrorStream(true)
-        .setWaitTimeout(10L, TimeUnit.SECONDS);
-    try {
-      ProcessResult processResult = osProcessExecutor.execute(pdBuilder.build());
-      LOGGER.log(Level.FINE, processResult.getStdout());
-      exitValue = processResult.getExitCode();
-    } catch (IOException ex) {
-      LOGGER.log(Level.SEVERE,
-          "Failed to shutdown git container executing command for user " + hdfsUsername, ex);
-    }
-    if (exitValue != 0) {
-      LOGGER.log(Level.SEVERE,
-          "Exited with " + exitValue + "Failed to shutdown git container executing command for user "
-              + hdfsUsername);
-    }
-  }
-
   public String getGitHome(String secret) {
-    return settings.getStagingDir() + settings.PRIVATE_DIRS + secret;
+    return settings.getStagingDir() + Settings.PRIVATE_DIRS + secret;
   }
 }

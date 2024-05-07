@@ -67,6 +67,12 @@ public class GitJWTManager {
     }
   }
 
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  public String createGitContainerJWT(Users user) throws GitOpException {
+    LocalDateTime expirationDate = LocalDateTime.now().plus(settings.getGitJwtExpMs(), ChronoUnit.MILLIS);
+    return createTokenForGitContainer(user, expirationDate);
+  }
+
   private String createTokenForGitContainer(Users user, LocalDateTime expirationDate)
       throws GitOpException {
     String[] userRoles = userUtilities.getUserRoles(user).toArray(new String[1]);

@@ -19,7 +19,6 @@ package io.hops.hopsworks.common.jupyter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 import com.google.common.base.Strings;
-import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -29,11 +28,8 @@ import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.common.livy.LivyMsg;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
+import io.hops.hopsworks.common.system.job.SystemJobStatus;
 import io.hops.hopsworks.common.util.HopsUtils;
-import io.hops.hopsworks.common.util.OSProcessExecutor;
-import io.hops.hopsworks.common.util.ProcessDescriptor;
-import io.hops.hopsworks.common.util.ProcessResult;
-import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
@@ -41,7 +37,6 @@ import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
@@ -64,9 +59,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.Arrays;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -78,8 +70,6 @@ public class JupyterController {
 
   @EJB
   private DistributedFsService dfs;
-  @EJB
-  private OSProcessExecutor osProcessExecutor;
   @EJB
   private Settings settings;
   @EJB
@@ -99,9 +89,9 @@ public class JupyterController {
   @EJB
   private JupyterJWTManager jupyterJWTManager;
   @EJB
-  private ProjectUtils projectUtils;
-  @EJB
   private XAttrsController xAttrsController;
+  @Inject
+  private NoteBookConverter noteBookConverter;
 
   private ObjectMapper objectMapper;
 
@@ -112,61 +102,9 @@ public class JupyterController {
   }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public String convertIPythonNotebook(Project project, Users user, String notebookPath, String pyPath,
-                                     NotebookConversion notebookConversion)  throws ServiceException {
-
-    File baseDir = new File(settings.getStagingDir() + settings.CONVERSION_DIR);
-    if(!baseDir.exists()){
-      baseDir.mkdir();
-    }
-    File conversionDir = new File(baseDir, DigestUtils.
-        sha256Hex(Integer.toString(ThreadLocalRandom.current().nextInt())));
-    conversionDir.mkdir();
-
-    String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
-    try{
-      String prog = settings.getSudoersDir() + "/convert-ipython-notebook.sh";
-      ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-          .addCommand("/usr/bin/sudo")
-          .addCommand(prog)
-          .addCommand(notebookPath)
-          .addCommand(hdfsUser)
-          .addCommand(settings.getAnacondaProjectDir())
-          .addCommand(pyPath)
-          .addCommand(conversionDir.getAbsolutePath())
-          .addCommand(notebookConversion.name())
-          .addCommand(projectUtils.getFullDockerImageName(project, true))
-          .setWaitTimeout(120L, TimeUnit.SECONDS) //on a TLS VM the timeout needs to be greater than 20s
-          .redirectErrorStream(true)
-          .build();
-
-      LOGGER.log(Level.FINE, processDescriptor.toString());
-      certificateMaterializer.
-          materializeCertificatesLocalCustomDir(user.getUsername(), project.getName(), conversionDir.getAbsolutePath());
-      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
-      if (!processResult.processExited() || processResult.getExitCode() != 0) {
-        LOGGER.log(Level.WARNING, "error code: " + processResult.getExitCode(), "Failed to convert "
-            + notebookPath + "\nstderr: " + processResult.getStderr() + "\nstdout: " + processResult.getStdout());
-        throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR, Level.SEVERE,
-            "Failed to convert ipython notebook to " + notebookConversion + " file", "Failed to convert " + notebookPath
-            + "\nstderr: " + processResult.getStderr()
-            + "\nstdout: " + processResult.getStdout());
-      }
-      String stdOut = processResult.getStdout();
-      if(!Strings.isNullOrEmpty(stdOut) && notebookConversion.equals(NotebookConversion.HTML)) {
-        StringBuilder renderedNotebookSB = new StringBuilder(stdOut);
-        int startIndex = renderedNotebookSB.indexOf("<html");
-        int stopIndex = renderedNotebookSB.length();
-        return renderedNotebookSB.substring(startIndex, stopIndex);
-      }
-      return null;
-    } catch (IOException | ServiceDiscoveryException ex) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR, Level.SEVERE, null, ex.getMessage(),
-          ex);
-    } finally {
-      certificateMaterializer.removeCertificatesLocalCustomDir(user.getUsername(), project.getName(), conversionDir.
-          getAbsolutePath());
-    }
+  public SystemJobStatus convertIPythonNotebook(Project project, Users user, String notebookPath, String pyPath,
+      NotebookConversion notebookConversion)  throws ServiceException {
+    return noteBookConverter.convertIPythonNotebook(project, user, notebookPath, pyPath, notebookConversion);
   }
 
   public void shutdown(Project project, Users user, String secret, String cid, int port) throws ServiceException {
@@ -369,9 +307,11 @@ public class JupyterController {
           .getJSONObject("metadata")
           .getJSONObject("kernelspec")
           .get("display_name");
-      Optional<NotebookConversion> kernel = NotebookConversion.fromKernel(notebookKernel);
+      // display_name can be Python 3 or just Python.
+      String[] parts = notebookKernel.trim().split(" ");
+      Optional<NotebookConversion> kernel = NotebookConversion.fromKernel(parts[0]);
       if(kernel.isPresent()) {
-        if(kernel.get() == NotebookConversion.PY_JOB || kernel.get() == NotebookConversion.PY) {
+        if(NotebookConversion.PY_JOB.equals(kernel.get()) || NotebookConversion.PY.equals(kernel.get())) {
           return kernel.get();
         } else {
           throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR, Level.FINE,
@@ -388,26 +328,6 @@ public class JupyterController {
           "kernel for notebook.",  e.getMessage(), e);
     } finally {
       dfs.closeDfsClient(udfso);
-    }
-  }
-
-  public enum NotebookConversion {
-    PY("PySpark"),
-    HTML("Html"),
-    PY_JOB("Python");
-
-    private String kernel;
-    NotebookConversion(String kernel) {
-      this.kernel = kernel;
-    }
-
-    public static Optional<NotebookConversion> fromKernel(String kernel) {
-      return Arrays.stream(NotebookConversion.values()).filter(k ->
-          k.getKernel().equalsIgnoreCase(kernel)).findFirst();
-    }
-
-    public String getKernel() {
-      return kernel;
     }
   }
 }

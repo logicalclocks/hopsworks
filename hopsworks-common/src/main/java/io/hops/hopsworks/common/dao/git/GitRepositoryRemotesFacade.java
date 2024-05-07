@@ -72,4 +72,11 @@ public class GitRepositoryRemotesFacade extends AbstractFacade<GitRepositoryRemo
       save(remote);
     }
   }
+
+  public GitRepositoryRemote create(GitRepository repository, String name, String url) {
+    GitRepositoryRemote gitRepositoryRemote = new GitRepositoryRemote(repository, name, url);
+    em.persist(gitRepositoryRemote);
+    em.flush();
+    return gitRepositoryRemote;
+  }
 }

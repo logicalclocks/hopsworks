@@ -145,7 +145,7 @@ end
 
 Airborne.configure do |config|
   config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
-  config.timeout = 120
+  config.timeout = 240
 end
 
 def try_start_all_services

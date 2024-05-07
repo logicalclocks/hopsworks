@@ -48,6 +48,7 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jupyter.JupyterController;
+import io.hops.hopsworks.common.jupyter.NotebookConversion;
 import io.hops.hopsworks.common.kafka.KafkaBrokers;
 import io.hops.hopsworks.common.serving.ServingConfig;
 import io.hops.hopsworks.common.util.HopsUtils;
@@ -145,7 +146,7 @@ public class SparkController {
       String pyAppPath = HopsUtils.prepJupyterNotebookConversion(exec, username, dfs);
       sparkConfig.setAppPath(pyAppPath);
       jupyterController.convertIPythonNotebook(job.getProject(), user, appPath, pyAppPath,
-          JupyterController.NotebookConversion.PY);
+          NotebookConversion.PY);
     }
 
     submitter.startExecution(sparkjob, args);

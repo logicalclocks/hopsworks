@@ -47,25 +47,27 @@ import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterDTO;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
-import io.hops.hopsworks.common.jupyter.NotebookDTO;
-import io.hops.hopsworks.common.jupyter.JupyterManager;
-import io.hops.hopsworks.common.jupyter.RemoteFSDriverType;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.jobs.spark.SparkController;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.jupyter.JupyterJWTManager;
+import io.hops.hopsworks.common.jupyter.JupyterManager;
+import io.hops.hopsworks.common.jupyter.NotebookConversion;
+import io.hops.hopsworks.common.jupyter.NotebookDTO;
+import io.hops.hopsworks.common.jupyter.RemoteFSDriverType;
 import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.common.livy.LivyMsg;
+import io.hops.hopsworks.common.system.job.SystemJobStatus;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
-import io.hops.hopsworks.exceptions.ProjectException;
-import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.OpenSearchException;
+import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterMode;
@@ -88,6 +90,7 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -95,7 +98,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
@@ -397,15 +399,18 @@ public class JupyterService {
   public Response convertIPythonNotebook(@PathParam("path") String path,
                                          @Context HttpServletRequest req,
                                          @Context SecurityContext sc) throws ServiceException {
-    String ipynbPath = Utils.getProjectPath(this.project.getName()) + "/" + path;
+    if (path.startsWith("/")) {
+      path = path.replaceFirst("/", "");
+    }
+    String ipynbPath = Utils.getProjectPath(this.project.getName()) + path;
     int extensionIndex = ipynbPath.lastIndexOf(".ipynb");
     StringBuilder pathBuilder = new StringBuilder(ipynbPath.substring(0, extensionIndex)).append(".py");
     String pyAppPath = pathBuilder.toString();
     Users user = jWTHelper.getUserPrincipal(sc);
-    JupyterController.NotebookConversion conversionType = jupyterController
-        .getNotebookConversionType(ipynbPath, user, this.project);
-    jupyterController.convertIPythonNotebook(project, user, ipynbPath, pyAppPath, conversionType);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+    NotebookConversion conversionType = jupyterController.getNotebookConversionType(ipynbPath, user, this.project);
+    SystemJobStatus status =
+      jupyterController.convertIPythonNotebook(project, user, ipynbPath, pyAppPath, conversionType);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(status).build();
   }
 
   @POST
