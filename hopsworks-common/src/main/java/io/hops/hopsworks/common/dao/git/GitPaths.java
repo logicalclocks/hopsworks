@@ -15,8 +15,6 @@
  */
 package io.hops.hopsworks.common.dao.git;
 
-import java.io.File;
-
 public class GitPaths {
   private String secret;
   private String gitPath;
@@ -28,11 +26,12 @@ public class GitPaths {
 
   public GitPaths(String privateDir, String secretConfig) {
     this.gitPath = privateDir + secretConfig;
-    this.logDirPath = gitPath + File.separator + "git_logs";
-    this.confDirPath = gitPath + File.separator + "conf";
-    this.certificatesDirPath = gitPath + File.separator + "certificates";
-    this.runDirPath = gitPath + File.separator + "run";
-    this.tokenPath = gitPath + File.separator + "token";
+    String gitPathWithSlash = this.gitPath.endsWith("/") ? this.gitPath  : this.gitPath + "/";
+    this.logDirPath = gitPathWithSlash + "git_logs";
+    this.confDirPath = gitPathWithSlash + "conf";
+    this.certificatesDirPath = gitPathWithSlash + "certificates";
+    this.runDirPath = gitPathWithSlash + "run";
+    this.tokenPath = gitPathWithSlash + "token";
     this.secret = secretConfig;
   }
 

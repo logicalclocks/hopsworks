@@ -369,6 +369,7 @@ describe "On #{ENV['OS']}" do
         create_branch(@project[:id], repository_id, "test_branch")
         checkout_branch(@project[:id], repository_id, "test_branch")
         make_commit_in_repo(@project, repository_id)
+        #TODO fix this test it is trying to pull a branch that does not exist
         git_pull(@project[:id], repository_id, remote_name="origin", branch_name="test_branch")
         wait_for_git_operation_completed(@project[:id], repository_id, json_body[:id], "Success")
       end

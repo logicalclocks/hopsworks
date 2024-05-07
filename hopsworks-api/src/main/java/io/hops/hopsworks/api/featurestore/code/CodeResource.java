@@ -16,9 +16,9 @@
 
 package io.hops.hopsworks.api.featurestore.code;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
@@ -26,7 +26,7 @@ import io.hops.hopsworks.common.featurestore.code.CodeActions;
 import io.hops.hopsworks.common.featurestore.code.CodeController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
-import io.hops.hopsworks.common.jupyter.JupyterController;
+import io.hops.hopsworks.common.jupyter.NotebookConversion;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -49,15 +49,15 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
-import javax.ws.rs.POST;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
@@ -196,12 +196,12 @@ public class CodeResource {
           codeDTO.getFeatureGroupCommitId(), codeDTO.getApplicationId(), featuregroup,
           entityId, databricksNotebook, databricksArchive, type);
       dto = codeBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.CODE),
-              project, user, featuregroup, featurestoreCode, JupyterController.NotebookConversion.HTML);
+              project, user, featuregroup, featurestoreCode, NotebookConversion.HTML);
     } else {
       FeaturestoreCode featurestoreCode = codeController.registerCode(project, user, codeDTO.getCommitTime(),
               codeDTO.getApplicationId(), trainingDataset, entityId, databricksNotebook, databricksArchive, type);
       dto = codeBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.CODE),
-              project, user, trainingDataset, featurestoreCode, JupyterController.NotebookConversion.HTML);
+              project, user, trainingDataset, featurestoreCode, NotebookConversion.HTML);
     }
 
     return Response.ok().entity(dto).build();

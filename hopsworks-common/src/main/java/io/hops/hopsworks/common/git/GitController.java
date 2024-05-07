@@ -16,10 +16,9 @@
 package io.hops.hopsworks.common.git;
 
 import com.google.common.base.Strings;
-
-import io.hops.hopsworks.common.dao.git.GitRepositoryRemotesFacade;
-import io.hops.hopsworks.common.dao.git.GitRepositoryFacade;
 import io.hops.hopsworks.common.dao.git.GitCommitsFacade;
+import io.hops.hopsworks.common.dao.git.GitRepositoryFacade;
+import io.hops.hopsworks.common.dao.git.GitRepositoryRemotesFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.git.util.Constants;
 import io.hops.hopsworks.common.git.util.GitCommandConfigurationValidator;
@@ -29,12 +28,10 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.GitOpException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
-
 import io.hops.hopsworks.persistence.entity.git.CommitterSignature;
+import io.hops.hopsworks.persistence.entity.git.GitCommit;
 import io.hops.hopsworks.persistence.entity.git.GitOpExecution;
 import io.hops.hopsworks.persistence.entity.git.GitRepository;
-import io.hops.hopsworks.persistence.entity.git.GitCommit;
-import io.hops.hopsworks.persistence.entity.git.GitRepositoryRemote;
 import io.hops.hopsworks.persistence.entity.git.config.GitCommandConfiguration;
 import io.hops.hopsworks.persistence.entity.git.config.GitCommandType;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -56,7 +53,6 @@ import java.util.logging.Logger;
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class GitController {
   private static final Logger LOGGER = Logger.getLogger(GitController.class.getName());
-  private static final String REPO_NAME_DELIMETER = "_";
 
   @EJB
   private DistributedFsService dfsService;
@@ -100,15 +96,15 @@ public class GitController {
     GitRepository repository = gitRepositoryFacade.create(project, cloneConfigurationDTO.getProvider(),
         hopsworksUser, repositoryName, fullRepoDirPath);
     //Create the default remote
-    gitRepositoryRemotesFacade.save(new GitRepositoryRemote(repository, Constants.REPOSITORY_DEFAULT_REMOTE_NAME,
-        cloneConfigurationDTO.getUrl()));
+    gitRepositoryRemotesFacade.create(repository, Constants.REPOSITORY_DEFAULT_REMOTE_NAME,
+      cloneConfigurationDTO.getUrl());
     GitCommandConfiguration configuration = new GitCommandConfigurationBuilder().setCommandType(GitCommandType.CLONE)
         .setUrl(cloneConfigurationDTO.getUrl())
         .setProvider(cloneConfigurationDTO.getProvider())
         .setPath(fullRepoDirPath)
         .setBranchName(cloneConfigurationDTO.getBranch())
         .build();
-    return executionController.createExecution(configuration, project, hopsworksUser, repository);
+    return executionController.createExecution(configuration, hopsworksUser, repository);
   }
 
   public GitOpExecution executeRepositoryAction(RepositoryActionCommandConfiguration configurationDTO,
@@ -143,7 +139,7 @@ public class GitController {
             .setCommitter(new CommitterSignature(userFullName, hopsworksUser.getEmail()))
             .setPath(repository.getRepositoryPath())
             .build();
-    return executionController.createExecution(commandConfiguration, project, hopsworksUser, repository);
+    return executionController.createExecution(commandConfiguration, hopsworksUser, repository);
   }
 
   public GitOpExecution executeBranchAction(GitBranchAction action, Project project, Users hopsworksUser,
@@ -162,7 +158,7 @@ public class GitController {
         }
         builder.setCommandType(GitCommandType.CREATE_BRANCH);
         builder.setCheckout(action == GitBranchAction.CREATE_CHECKOUT);
-        return executionController.createExecution(builder.build(), project, hopsworksUser, repository);
+        return executionController.createExecution(builder.build(), hopsworksUser, repository);
       case DELETE:
         if (Strings.isNullOrEmpty(branchName)) {
           throw new GitOpException(RESTCodes.GitOpErrorCode.INVALID_BRANCH_NAME, Level.WARNING, "Branch name is empty" +
@@ -170,7 +166,7 @@ public class GitController {
         }
         builder.setCommandType(GitCommandType.DELETE_BRANCH);
         builder.setDeleteOnRemote(false);
-        return executionController.createExecution(builder.build(), project, hopsworksUser, repository);
+        return executionController.createExecution(builder.build(), hopsworksUser, repository);
       case CHECKOUT:
       case CHECKOUT_FORCE:
         if (Strings.isNullOrEmpty(branchName) && Strings.isNullOrEmpty(commit)) {
@@ -183,7 +179,7 @@ public class GitController {
         builder.setCommandType(GitCommandType.CHECKOUT);
         builder.setCommit(commit);
         builder.setForce(action == GitBranchAction.CHECKOUT_FORCE);
-        return executionController.createExecution(builder.build(), project, hopsworksUser, repository);
+        return executionController.createExecution(builder.build(), hopsworksUser, repository);
       default:
         throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.INVALID_BRANCH_ACTION.getMessage());
     }
@@ -206,10 +202,10 @@ public class GitController {
         }
         builder.setCommandType(GitCommandType.ADD_REMOTE);
         builder.setRemoteUrl(remoteUrl);
-        return executionController.createExecution(builder.build(), project, hopsworksUser, repository);
+        return executionController.createExecution(builder.build(), hopsworksUser, repository);
       case DELETE:
         builder.setCommandType(GitCommandType.DELETE_REMOTE);
-        return executionController.createExecution(builder.build(), project, hopsworksUser, repository);
+        return executionController.createExecution(builder.build(), hopsworksUser, repository);
       default:
         throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.INVALID_REMOTES_ACTION.getMessage());
     }
@@ -228,7 +224,7 @@ public class GitController {
         .setForce(configurationDTO.isForce())
         .setPath(repository.getRepositoryPath())
         .build();
-    return executionController.createExecution(pushCommandConfiguration, project, hopsworksUser, repository);
+    return executionController.createExecution(pushCommandConfiguration, hopsworksUser, repository);
   }
 
   public GitOpExecution pull(PullCommandConfiguration configDTO, Project project, Users hopsworksUser,
@@ -245,7 +241,7 @@ public class GitController {
             .setPath(repository.getRepositoryPath())
             .setCommitter(new CommitterSignature(userFullName, hopsworksUser.getEmail()))
             .build();
-    return executionController.createExecution(pullCommandConfiguration, project, hopsworksUser, repository);
+    return executionController.createExecution(pullCommandConfiguration, hopsworksUser, repository);
   }
 
   public GitOpExecution status(Project project, Users hopsworksUser, Integer repositoryId)
@@ -256,7 +252,7 @@ public class GitController {
             .setCommandType(GitCommandType.STATUS)
             .setPath(repository.getRepositoryPath())
             .build();
-    return executionController.createExecution(statusCommandConfig, project, hopsworksUser, repository);
+    return executionController.createExecution(statusCommandConfig, hopsworksUser, repository);
   }
 
   public GitOpExecution fileCheckout(Project project, Users hopsworksUser, Integer repositoryId,
@@ -271,7 +267,7 @@ public class GitController {
             .setPath(repository.getRepositoryPath())
             .setFiles(filePaths)
             .build();
-    return executionController.createExecution(fileCheckoutConfiguration, project, hopsworksUser, repository);
+    return executionController.createExecution(fileCheckoutConfiguration, hopsworksUser, repository);
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)

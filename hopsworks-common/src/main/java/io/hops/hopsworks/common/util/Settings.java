@@ -1079,7 +1079,7 @@ public class Settings {
 
   private String SPARK_DIR = "/srv/hops/spark";
 
-  public static final String CONVERSION_DIR = "/ipython_conversions/";
+  public static final String CONVERSION_DIR = "ipython_conversions/";
 
   public static final String SPARK_NUMBER_EXECUTORS_ENV
       = "spark.executor.instances";

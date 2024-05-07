@@ -16,9 +16,9 @@
 package io.hops.hopsworks.api.git;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.git.branch.BranchBuilder;
 import io.hops.hopsworks.api.git.branch.BranchDTO;
 import io.hops.hopsworks.api.git.execution.ExecutionBeanParam;
@@ -33,22 +33,21 @@ import io.hops.hopsworks.api.git.repository.RepositoryBeanParam;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.git.BranchCommits;
 import io.hops.hopsworks.common.git.CloneCommandConfiguration;
+import io.hops.hopsworks.common.git.GitBranchAction;
+import io.hops.hopsworks.common.git.GitCommitDTO;
 import io.hops.hopsworks.common.git.GitController;
 import io.hops.hopsworks.common.git.GitRemotesAction;
-import io.hops.hopsworks.common.git.GitBranchAction;
 import io.hops.hopsworks.common.git.GitRepositoryAction;
-import io.hops.hopsworks.common.git.GitCommitDTO;
-import io.hops.hopsworks.common.git.util.GitCommandConfigurationValidator;
 import io.hops.hopsworks.common.git.RepositoryActionCommandConfiguration;
+import io.hops.hopsworks.common.git.util.GitCommandConfigurationValidator;
 import io.hops.hopsworks.exceptions.DatasetException;
-import io.hops.hopsworks.exceptions.UserException;
-import io.hops.hopsworks.persistence.entity.git.GitOpExecution;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.exceptions.GitOpException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.git.GitOpExecution;
 import io.hops.hopsworks.persistence.entity.git.GitRepository;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -165,9 +164,10 @@ public class GitResource {
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response clone(CloneCommandConfiguration commandDTO,
                         @Context SecurityContext sc,
+                        @Context HttpServletRequest req,
                         @Context UriInfo uriInfo,
-                        @BeanParam ExecutionBeanParam executionBeanParam)
-      throws GitOpException, HopsSecurityException, IllegalArgumentException, UserException, DatasetException {
+                        @BeanParam ExecutionBeanParam executionBeanParam) throws GitOpException, HopsSecurityException,
+      IllegalArgumentException, DatasetException {
     Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
     GitOpExecution execution = gitController.clone(commandDTO, project, hopsworksUser);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTION);

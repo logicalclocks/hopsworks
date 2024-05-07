@@ -17,7 +17,7 @@
 package io.hops.hopsworks.api.featurestore.code;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.jupyter.JupyterController;
+import io.hops.hopsworks.common.jupyter.NotebookConversion;
 import io.swagger.annotations.ApiParam;
 
 import javax.ws.rs.QueryParam;
@@ -45,13 +45,13 @@ public class CodeBeanParam {
 
   @QueryParam("format")
   @ApiParam(value = "ex. format=html", allowableValues = "format=html")
-  private JupyterController.NotebookConversion format;
+  private NotebookConversion format;
 
   public CodeBeanParam(
           @QueryParam("sort_by") String sortBy,
           @QueryParam("filter_by") Set<FilterBy> filter,
           @QueryParam("fields") String fields,
-          @QueryParam("format") JupyterController.NotebookConversion format) {
+          @QueryParam("format") NotebookConversion format) {
     this.sortBy = sortBy;
     this.sortBySet = getSortBy(sortBy);
     this.filterSet = filter;
@@ -89,7 +89,7 @@ public class CodeBeanParam {
     return fieldSet;
   }
 
-  public JupyterController.NotebookConversion getFormat() {
-    return format == null ? JupyterController.NotebookConversion.HTML : format;
+  public NotebookConversion getFormat() {
+    return format == null ? NotebookConversion.HTML : format;
   }
 }

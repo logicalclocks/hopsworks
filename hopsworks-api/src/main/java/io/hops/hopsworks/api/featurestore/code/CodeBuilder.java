@@ -20,7 +20,7 @@ import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.featurestore.code.CodeController;
 import io.hops.hopsworks.common.featurestore.code.FeaturestoreCodeFacade;
-import io.hops.hopsworks.common.jupyter.JupyterController;
+import io.hops.hopsworks.common.jupyter.NotebookConversion;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
@@ -104,7 +104,7 @@ public class CodeBuilder {
                        Project project, Users user,
                        Featuregroup featuregroup,
                        FeaturestoreCode featurestoreCode,
-                       JupyterController.NotebookConversion format) throws FeaturestoreException, ServiceException {
+                       NotebookConversion format) throws FeaturestoreException, ServiceException {
     Path fullCodePath = new Path(codeController.getCodeDirFullPath(project, featuregroup),
         featurestoreCode.getFileName());
     CodeDTO dto = new CodeDTO();
@@ -133,7 +133,7 @@ public class CodeBuilder {
                        Project project, Users user,
                        TrainingDataset trainingDataset,
                        FeaturestoreCode featurestoreCode,
-                       JupyterController.NotebookConversion format) throws FeaturestoreException, ServiceException {
+                       NotebookConversion format) throws FeaturestoreException, ServiceException {
     Path fullCodePath = new Path(codeController.getCodeDirFullPath(project, trainingDataset),
         featurestoreCode.getFileName());
     CodeDTO dto = new CodeDTO();
@@ -156,7 +156,7 @@ public class CodeBuilder {
 
   public CodeDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
                        Project project, Users user, Featurestore featurestore, Featuregroup featuregroup,
-                       JupyterController.NotebookConversion format)
+                       NotebookConversion format)
       throws ServiceException, FeaturestoreException {
     CodeDTO dto = new CodeDTO();
     dto.setHref(uri(uriInfo, project, featurestore, featuregroup));
@@ -180,7 +180,7 @@ public class CodeBuilder {
 
   public CodeDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
                        Project project, Users user, Featurestore featurestore, TrainingDataset trainingDataset,
-                       JupyterController.NotebookConversion format)
+                       NotebookConversion format)
       throws ServiceException, FeaturestoreException {
     CodeDTO dto = new CodeDTO();
     dto.setHref(uri(uriInfo, project, featurestore, trainingDataset));
@@ -205,7 +205,7 @@ public class CodeBuilder {
   public CodeDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
                        Project project, Users user, Featuregroup featuregroup,
                        Integer codeId,
-                       JupyterController.NotebookConversion format)
+                       NotebookConversion format)
       throws FeaturestoreException, ServiceException {
     FeaturestoreCode featurestoreCode = codeFacade.findFeaturestoreCodeById(featuregroup, codeId)
         .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CODE_NOT_FOUND, Level.FINE));
@@ -216,7 +216,7 @@ public class CodeBuilder {
   public CodeDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
                        Project project, Users user, TrainingDataset trainingDataset,
                        Integer codeId,
-                       JupyterController.NotebookConversion format)
+                       NotebookConversion format)
       throws FeaturestoreException, ServiceException {
     FeaturestoreCode featurestoreCode = codeFacade.findFeaturestoreCodeById(trainingDataset, codeId)
         .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CODE_NOT_FOUND, Level.FINE));

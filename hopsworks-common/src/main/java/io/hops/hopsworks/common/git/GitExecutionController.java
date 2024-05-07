@@ -16,19 +16,12 @@
 package io.hops.hopsworks.common.git;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.git.GitRepositoryRemotesFacade;
+import io.hops.hopsworks.common.dao.git.GitCommitsFacade;
 import io.hops.hopsworks.common.dao.git.GitOpExecutionFacade;
 import io.hops.hopsworks.common.dao.git.GitRepositoryFacade;
-import io.hops.hopsworks.common.dao.git.GitCommitsFacade;
-import io.hops.hopsworks.common.dao.git.GitPaths;
+import io.hops.hopsworks.common.dao.git.GitRepositoryRemotesFacade;
 import io.hops.hopsworks.common.git.util.GitCommandConfigurationValidator;
 import io.hops.hopsworks.common.git.util.GitCommandOperationUtil;
-import io.hops.hopsworks.common.git.util.GitContainerArgumentsWriter;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.security.CertificateMaterializer;
-import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.PayaraClusterManager;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GitOpException;
@@ -47,7 +40,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
@@ -60,12 +52,6 @@ public class GitExecutionController {
   @EJB
   private Settings settings;
   @EJB
-  private CertificateMaterializer certificateMaterializer;
-  @EJB
-  private GitJWTManager gitJWTManager;
-  @EJB
-  private DistributedFsService dfsService;
-  @EJB
   private GitOpExecutionFacade gitOpExecutionFacade;
   @EJB
   private AsynchronousGitCommandExecutor gitCommandExecutor;
@@ -76,13 +62,9 @@ public class GitExecutionController {
   @EJB
   private GitCommitsFacade gitCommitsFacade;
   @EJB
-  private HdfsUsersController hdfsUsersController;
-  @EJB
   private GitRepositoryRemotesFacade gitRepositoryRemotesFacade;
   @EJB
   private GitCommandConfigurationValidator commandConfigurationValidator;
-  @EJB
-  private GitContainerArgumentsWriter argumentsWriter;
   @EJB
   private PayaraClusterManager payaraClusterManager;
 
@@ -90,19 +72,16 @@ public class GitExecutionController {
    * initializes the execution of all git commands
    *
    * @param gitCommandConfiguration
-   * @param project
    * @param hopsworksUser
    * @param repository
    * @return
    * @throws HopsSecurityException
    * @throws GitOpException
    */
-  public GitOpExecution createExecution(GitCommandConfiguration gitCommandConfiguration, Project project,
-                                        Users hopsworksUser, GitRepository repository)
-      throws HopsSecurityException, GitOpException {
+  public GitOpExecution createExecution(GitCommandConfiguration gitCommandConfiguration, Users hopsworksUser,
+      GitRepository repository) throws HopsSecurityException, GitOpException {
     commandConfigurationValidator.verifyReadOnly(gitCommandConfiguration.getCommandType(), repository);
     gitCommandConfiguration.setReadOnly(settings.getEnableGitReadOnlyRepositories());
-    String hdfsUsername = hdfsUsersController.getHdfsUserName(project, hopsworksUser);
     //set the provider to validate secrets for some commands
     gitCommandConfiguration.setProvider(repository.getGitProvider());
     BasicAuthSecrets authSecrets = gitCommandOperationUtil.getAuthenticationSecrets(hopsworksUser,
@@ -111,48 +90,11 @@ public class GitExecutionController {
     String configSecret = DigestUtils.sha256Hex(Integer.toString(ThreadLocalRandom.current().nextInt()));
     lockRepository(repository.getId());
     GitOpExecution gitOpExecution = null;
-    DistributedFileSystemOps  udfso = null;
     String localMemberIp = payaraClusterManager.getLocalIp();
-    try {
-      udfso = dfsService.getDfsOps(hdfsUsername);
-      GitPaths gitPaths = prepareCommandExecution(project, hopsworksUser, udfso, configSecret);
-      gitOpExecution = gitOpExecutionFacade.create(gitCommandConfiguration, hopsworksUser, repository, configSecret,
-        localMemberIp);
-      argumentsWriter.createArgumentFile(gitOpExecution, gitPaths, authSecrets);
-      gitCommandExecutor.execute(gitOpExecution, gitPaths);
-      return gitOpExecution;
-    } catch (Exception ex) {
-      gitRepositoryFacade.updateRepositoryCid(repository, null);
-      gitCommandOperationUtil.cleanUp(project, hopsworksUser, configSecret);
-      if (ex instanceof IOException) {
-        throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_MATERIALIZATION_ERROR, Level.SEVERE,
-            ex.getMessage(), null, ex);
-      }
-      throw new GitOpException(RESTCodes.GitOpErrorCode.GIT_OPERATION_ERROR, Level.SEVERE, ex.getMessage());
-    } finally {
-      if (udfso != null) {
-        dfsService.closeDfsClient(udfso);
-      }
-    }
-  }
-
-  /**
-   * Generate the git paths, materialize user certificates, and jwt
-   *
-   * @param project
-   * @param hopsworksUser
-   * @param dfso
-   * @throws GitOpException
-   * @throws IOException
-   */
-  public GitPaths prepareCommandExecution(Project project, Users hopsworksUser, DistributedFileSystemOps dfso,
-                                          String configSecret) throws GitOpException, IOException {
-    GitPaths gitPaths = new GitPaths(settings.getStagingDir() + settings.PRIVATE_DIRS, configSecret);
-    gitCommandOperationUtil.generatePaths(gitPaths);
-    HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), hopsworksUser.getUsername(),
-        settings.getHdfsTmpCertDir(), dfso, certificateMaterializer, settings, gitPaths.getCertificatesDirPath());
-    gitJWTManager.materializeJWT(hopsworksUser, gitPaths.getTokenPath());
-    return gitPaths;
+    gitOpExecution = gitOpExecutionFacade.create(gitCommandConfiguration, hopsworksUser, repository, configSecret,
+      localMemberIp);
+    gitCommandExecutor.execute(gitOpExecution, authSecrets); // this is async so we cant do cleanup here
+    return gitOpExecution;
   }
 
   private synchronized void lockRepository(Integer repositoryId) throws GitOpException {
