@@ -67,6 +67,7 @@ public class EmbeddingController {
   private ModelVersionFacade modelVersionFacade;
   @EJB
   private ModelFacade modelFacade;
+  private static final String embeddingIndexIdentifier = "__embedding";
 
   public EmbeddingController() {
   }
@@ -93,7 +94,8 @@ public class EmbeddingController {
 
     } catch (VectorDatabaseException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_GET_VECTOR_DB_INDEX,
-          Level.FINE, "Cannot create opensearch vectordb index: " + index.getName());
+          Level.FINE, String.format(
+              "Cannot create opensearch vectordb index: %s. Reason: %s", index.getName(), e.getMessage()));
     }
   }
 
@@ -229,6 +231,14 @@ public class EmbeddingController {
     }
   }
 
+  public Boolean isEmbeddingIndex(String indexName) {
+    return indexName.matches("^\\d+" + embeddingIndexIdentifier + ".*");
+  }
+
+  public Integer getProjectId(String indexName) {
+    return Integer.valueOf(indexName.split(embeddingIndexIdentifier)[0]);
+  }
+
   public void dropEmbedding(Project project, Featuregroup featureGroup)
       throws FeaturestoreException {
     Index index = new Index(featureGroup.getEmbedding().getVectorDbIndexName());
@@ -356,7 +366,7 @@ public class EmbeddingController {
   }
 
   String getVectorDbIndexPrefix(Project project) {
-    return project.getId() + "__embedding";
+    return project.getId() + embeddingIndexIdentifier;
   }
 
   private String getVectorDbColPrefix(Featuregroup featuregroup) {

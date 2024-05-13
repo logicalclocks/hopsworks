@@ -22,11 +22,12 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.vectordb.VectorDatabase;
-import io.hops.hopsworks.vectordb.VectorDatabaseFactory;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
+import javax.ejb.DependsOn;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
@@ -37,29 +38,40 @@ import java.util.logging.Logger;
 @Singleton
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
+@DependsOn("OpenSearchClient")
 public class VectorDatabaseClient {
 
   @EJB
   private OpenSearchClient openSearchClient;
-  private VectorDatabase vectorDatabase;
+  @EJB
+  private OpensearchVectorDatabaseConstrainedRetry vectorDatabase;
   private static final Logger LOG = Logger.getLogger(EmbeddingController.class.getName());
 
-  public synchronized VectorDatabase getClient() throws FeaturestoreException {
-    if (vectorDatabase == null) {
-      try {
-        vectorDatabase = VectorDatabaseFactory.getOpensearchDatabase(openSearchClient.getClient());
-      } catch (OpenSearchException | ServiceDiscoveryException e) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP,
-            Level.FINE, "Cannot create opensearch vectordb");
-      }
+  @PostConstruct
+  public void init() {
+    try {
+      vectorDatabase.init(openSearchClient.getClient());
+    } catch (OpenSearchException | ServiceDiscoveryException e) {
+      vectorDatabase = null;
+      LOG.log(Level.SEVERE, "Cannot create opensearch vectordb client");
     }
-    return vectorDatabase;
+  }
+
+  public synchronized VectorDatabase getClient() throws FeaturestoreException {
+    if (vectorDatabase != null) {
+      return vectorDatabase;
+    } else {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP,
+          Level.FINE, "Cannot create opensearch vectordb client.");
+    }
   }
 
   @PreDestroy
   private void close() {
     try {
-      vectorDatabase.close();
+      if (vectorDatabase != null) {
+        vectorDatabase.close();
+      }
     } catch (Exception ex) {
       LOG.log(Level.SEVERE, null, ex);
     }
