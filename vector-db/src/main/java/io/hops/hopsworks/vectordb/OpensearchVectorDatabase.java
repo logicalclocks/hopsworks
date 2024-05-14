@@ -33,9 +33,7 @@ import org.opensearch.action.index.IndexResponse;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.action.search.SearchResponse;
 import org.opensearch.action.support.master.AcknowledgedResponse;
-import org.opensearch.client.Request;
 import org.opensearch.client.RequestOptions;
-import org.opensearch.client.Response;
 import org.opensearch.client.RestHighLevelClient;
 import org.opensearch.client.indices.CreateIndexRequest;
 import org.opensearch.client.indices.CreateIndexResponse;
@@ -125,17 +123,10 @@ public class OpensearchVectorDatabase implements VectorDatabase {
 
   @Override
   public void createIndex(Index index, String mapping, Boolean skipIfExist) throws VectorDatabaseException {
+    if (skipIfExist && getIndex(index.getName()).isPresent()) {
+      return;
+    }
     retry(() -> {
-      if (skipIfExist) {
-        Request request = new Request("HEAD", "/" + index.getName());
-        Response response = getClient().getLowLevelClient().performRequest(request);
-        if (response.getStatusLine().getStatusCode() == 200) {
-          return new OperationResult<Object>(true, null);
-        } else {
-          return new OperationResult<Object>(false, null);
-        }
-      }
-
       CreateIndexRequest createIndexRequest = new CreateIndexRequest(index.getName());
       createIndexRequest.setTimeout(new TimeValue(requestTimeout));
       createIndexRequest.setMasterTimeout(new TimeValue(requestTimeout));
