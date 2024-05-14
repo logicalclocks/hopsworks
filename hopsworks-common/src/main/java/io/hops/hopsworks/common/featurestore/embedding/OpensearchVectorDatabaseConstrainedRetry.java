@@ -16,12 +16,18 @@
 
 package io.hops.hopsworks.common.featurestore.embedding;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.hops.hopsworks.common.opensearch.OpenSearchClient;
 import io.hops.hopsworks.common.util.LongRunningHttpRequests;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.vectordb.OpensearchVectorDatabase;
+import io.hops.hopsworks.vectordb.VectorDatabaseException;
+import org.opensearch.client.RestHighLevelClient;
 
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
+import javax.ejb.DependsOn;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -30,12 +36,15 @@ import javax.ejb.TransactionAttributeType;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
+@DependsOn("OpenSearchClient")
 public class OpensearchVectorDatabaseConstrainedRetry extends OpensearchVectorDatabase {
 
   @EJB
   private LongRunningHttpRequests longRunningHttpRequests;
   @EJB
   private Settings settings;
+  @EJB
+  private OpenSearchClient openSearchClient;
 
   @Override
   protected Boolean shouldRetry() {
@@ -50,6 +59,15 @@ public class OpensearchVectorDatabaseConstrainedRetry extends OpensearchVectorDa
   @Override
   protected void doneRetry() {
     longRunningHttpRequests.decrement();
+  }
+
+  @Override
+  protected RestHighLevelClient getClient() throws VectorDatabaseException {
+    try {
+      return openSearchClient.getClient();
+    } catch (OpenSearchException | ServiceDiscoveryException e) {
+      throw  new VectorDatabaseException("Cannot create opensearch client. " + e.getMessage());
+    }
   }
 
 }

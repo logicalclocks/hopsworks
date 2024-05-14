@@ -119,12 +119,16 @@ public class OpensearchVectorDatabase implements VectorDatabase {
     this.client = client;
   }
 
+  protected RestHighLevelClient getClient() throws VectorDatabaseException {
+    return client;
+  }
+
   @Override
   public void createIndex(Index index, String mapping, Boolean skipIfExist) throws VectorDatabaseException {
     retry(() -> {
       if (skipIfExist) {
         Request request = new Request("HEAD", "/" + index.getName());
-        Response response = client.getLowLevelClient().performRequest(request);
+        Response response = getClient().getLowLevelClient().performRequest(request);
         if (response.getStatusLine().getStatusCode() == 200) {
           return new OperationResult<Object>(true, null);
         } else {
@@ -136,7 +140,7 @@ public class OpensearchVectorDatabase implements VectorDatabase {
       createIndexRequest.setTimeout(new TimeValue(requestTimeout));
       createIndexRequest.setMasterTimeout(new TimeValue(requestTimeout));
       createIndexRequest.source(mapping, XContentType.JSON);
-      CreateIndexResponse response = client.indices().create(createIndexRequest, getRequestOptions());
+      CreateIndexResponse response = getClient().indices().create(createIndexRequest, getRequestOptions());
       if (response.isAcknowledged()) {
         return new OperationResult<Object>(true, null);
       }
@@ -147,7 +151,7 @@ public class OpensearchVectorDatabase implements VectorDatabase {
   public Optional<Index> getIndex(String name) throws VectorDatabaseException {
     return retry(() -> {
       GetIndexRequest getIndexRequest = new GetIndexRequest(name);
-      GetIndexResponse getIndexResponse = client.indices().get(getIndexRequest, RequestOptions.DEFAULT);
+      GetIndexResponse getIndexResponse = getClient().indices().get(getIndexRequest, RequestOptions.DEFAULT);
       Optional<Index> result = getIndexResponse.getMappings().keySet().stream().map(Index::new).findFirst();
       return result.map(index -> new OperationResult<>(
           true, index
@@ -166,7 +170,7 @@ public class OpensearchVectorDatabase implements VectorDatabase {
   public Set<Index> getAllIndices() throws VectorDatabaseException {
     Optional<Set<Index>> result = retry(() -> {
       GetIndexRequest getIndexRequest = new GetIndexRequest("*"); // "*" retrieves all indices
-      GetIndexResponse getIndexResponse = client.indices().get(getIndexRequest, RequestOptions.DEFAULT);
+      GetIndexResponse getIndexResponse = getClient().indices().get(getIndexRequest, RequestOptions.DEFAULT);
       return new OperationResult<Set<Index>>(true,
           getIndexResponse.getMappings().keySet().stream().map(Index::new).collect(Collectors.toSet()));
     }, "get all indices", Sets.newHashSet(RestStatus.OK));
@@ -186,7 +190,7 @@ public class OpensearchVectorDatabase implements VectorDatabase {
       RequestOptions options = RequestOptions.DEFAULT.toBuilder()
           .setRequestConfig(requestConfig)
           .build();
-      AcknowledgedResponse response = client.indices().delete(deleteIndexRequest, options);
+      AcknowledgedResponse response = getClient().indices().delete(deleteIndexRequest, options);
       if (response.isAcknowledged()) {
         return new OperationResult<Object>(true, null);
       }
@@ -199,7 +203,7 @@ public class OpensearchVectorDatabase implements VectorDatabase {
     PutMappingRequest request = new PutMappingRequest(index.getName());
     request.source(mapping, XContentType.JSON);
     try {
-      AcknowledgedResponse response = client.indices().putMapping(request, RequestOptions.DEFAULT);
+      AcknowledgedResponse response = getClient().indices().putMapping(request, RequestOptions.DEFAULT);
       if (!response.isAcknowledged()) {
         throw new VectorDatabaseException("Failed to add fields to opensearch index: " + index.getName());
       }
@@ -214,7 +218,7 @@ public class OpensearchVectorDatabase implements VectorDatabase {
     GetIndexRequest request = new GetIndexRequest(index.getName());
     // Get the index mapping
     try {
-      GetIndexResponse response = client.indices().get(request, RequestOptions.DEFAULT);
+      GetIndexResponse response = getClient().indices().get(request, RequestOptions.DEFAULT);
       Object mapping = response.getMappings().get(index.getName()).getSourceAsMap().getOrDefault("properties", null);
       if (mapping != null) {
         return ((Map<String, Object>) mapping).entrySet().stream()
@@ -232,7 +236,7 @@ public class OpensearchVectorDatabase implements VectorDatabase {
   public void write(Index index, String data, String docId) throws VectorDatabaseException {
     try {
       IndexRequest indexRequest = makeIndexRequest(index.getName(), data, docId);
-      IndexResponse response = client.index(indexRequest, RequestOptions.DEFAULT);
+      IndexResponse response = getClient().index(indexRequest, RequestOptions.DEFAULT);
       if (!(response.status().equals(RestStatus.CREATED) || response.status().equals(RestStatus.OK))) {
         throw new VectorDatabaseException("Cannot index data. Status: " + response.status());
       }
@@ -305,7 +309,7 @@ public class OpensearchVectorDatabase implements VectorDatabase {
       searchRequest.source(sourceBuilder);
 
       // Execute the search request
-      SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+      SearchResponse searchResponse = getClient().search(searchRequest, RequestOptions.DEFAULT);
       // Process the search hits
       for (SearchHit hit : searchResponse.getHits().getHits()) {
         results.add(hit.getSourceAsMap());
@@ -317,7 +321,7 @@ public class OpensearchVectorDatabase implements VectorDatabase {
 
   private void bulkRequest(BulkRequest bulkRequest) throws VectorDatabaseException {
     try {
-      BulkResponse response = client.bulk(bulkRequest, RequestOptions.DEFAULT);
+      BulkResponse response = getClient().bulk(bulkRequest, RequestOptions.DEFAULT);
       if (response.hasFailures()) {
         // Do not include message from `response.buildFailureMessage()` as this method failed to execute.
         String msg = String.format("Index data failed partially. Response status %d", response.status().getStatus());
@@ -376,7 +380,7 @@ public class OpensearchVectorDatabase implements VectorDatabase {
       deleteByQueryRequest.setQuery(new QueryStringQueryBuilder(query));
       deleteByQueryRequest.setTimeout(new TimeValue(requestTimeout));
 
-      BulkByScrollResponse response = client.deleteByQuery(deleteByQueryRequest, getRequestOptions());
+      BulkByScrollResponse response = getClient().deleteByQuery(deleteByQueryRequest, getRequestOptions());
       if (response.getBulkFailures().isEmpty()) {
         return new OperationResult<Object>(true, null);
       }
@@ -464,7 +468,7 @@ public class OpensearchVectorDatabase implements VectorDatabase {
 
   @FunctionalInterface
   protected interface OperationSupplier {
-    OperationResult perform() throws IOException, OpenSearchStatusException;
+    OperationResult perform() throws IOException, OpenSearchStatusException, VectorDatabaseException;
   }
 
   private RequestOptions getRequestOptions() {
