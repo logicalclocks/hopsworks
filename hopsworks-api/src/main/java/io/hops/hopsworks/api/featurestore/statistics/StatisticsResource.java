@@ -16,14 +16,16 @@
 
 package io.hops.hopsworks.api.featurestore.statistics;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.featurestore.FeaturestoreCommonSubResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jobs.JobDTO;
 import io.hops.hopsworks.api.jobs.JobsBuilder;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
@@ -34,6 +36,7 @@ import io.hops.hopsworks.common.featurestore.statistics.StatisticsFilterBy;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsFilters;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsInputValidation;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
@@ -85,7 +88,7 @@ import java.util.stream.Collectors;
 @Api(value = "Feature store statistics Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class StatisticsResource {
+public class StatisticsResource extends FeaturestoreCommonSubResource {
   
   @EJB
   private StatisticsBuilder statisticsBuilder;
@@ -108,42 +111,34 @@ public class StatisticsResource {
   @EJB
   private JobsBuilder jobsBuilder;
 
-  private Project project;
-  private Featurestore featurestore;
-  private Featuregroup featuregroup;
-  private FeatureView featureView;
-  private TrainingDataset trainingDataset;
+  @EJB
+  private FeaturestoreController featurestoreController;
+  @EJB
+  private ProjectController projectController;
 
-  public void setProject(Project project) {
-    this.project = project;
-  }
-
-  public void setFeaturestore(Featurestore featurestore) {
-    this.featurestore = featurestore;
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
   }
 
-  public void setFeatureGroupById(Integer featureGroupId) throws FeaturestoreException {
-    this.featuregroup = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
-  }
-  
-  public void setFeatureViewByNameAndVersion(String featureViewName, Integer featureViewVersion)
-      throws FeaturestoreException {
-    this.featureView = featureViewController.getByNameVersionAndFeatureStore(
-      featureViewName, featureViewVersion, featurestore);
-  }
-  
-  public void setTrainingDatasetByVersion(FeatureView featureView, Integer trainingDatasetVersion)
-      throws FeaturestoreException {
-    this.trainingDataset = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(featureView,
-      trainingDatasetVersion);
-  }
-  
-  public void setTrainingDatasetById(Integer trainingDatasetId) throws FeaturestoreException {
-    this.trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
-  public void setTrainingDataset(TrainingDataset trainingDataset) {
-    this.trainingDataset = trainingDataset;
+  @Override
+  protected FeatureViewController getFeatureViewController() {
+    return featureViewController;
+  }
+
+  @Override
+  protected TrainingDatasetController getTrainingDatasetController() {
+    return trainingDatasetController;
+  }
+
+  @Override
+  protected FeaturegroupController getFeaturegroupController() {
+    return featuregroupController;
   }
 
   @GET
@@ -163,7 +158,7 @@ public class StatisticsResource {
     // backwards compatibility
     @ApiParam(value = "for_transformation", example = "false")
     @QueryParam("for_transformation") Boolean forTransformation)
-      throws FeaturestoreException {
+      throws FeaturestoreException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
     
     // backwards compatibility
@@ -180,20 +175,24 @@ public class StatisticsResource {
     resourceRequest.setField(statisticsBeanParam.getFieldSet());
     
     StatisticsFilters filters = new StatisticsFilters((Set)statisticsBeanParam.getFilterSet());
-    
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    Featuregroup featuregroup = getFeaturegroup(featurestore);
+    FeatureView featureView = getFeatureView(featurestore);
+    TrainingDataset trainingDataset = getTrainingDataset(featurestore);
     StatisticsDTO dto;
     if (featuregroup != null) { // feature group statistics
       statisticsInputValidation.validateStatisticsFiltersForFeatureGroup((Set) statisticsBeanParam.getFilterSet());
       statisticsInputValidation.validateGetForFeatureGroup(featuregroup, filters);
       dto = statisticsBuilder.build(uriInfo, resourceRequest, project, user, featurestore, featuregroup, featureNames);
-    } else if (featureView != null) {
-      statisticsInputValidation.validateStatisticsFiltersForFeatureView((Set) statisticsBeanParam.getFilterSet());
-      statisticsInputValidation.validateGetForFeatureView(featureView, filters);
-      dto = statisticsBuilder.build(uriInfo, resourceRequest, project, user, featurestore, featureView, featureNames);
-    } else { // training dataset statistics
+    } else if (trainingDataset != null) {
       statisticsInputValidation.validateStatisticsFiltersForTrainingDataset((Set)statisticsBeanParam.getFilterSet());
       dto = statisticsBuilder.build(uriInfo, resourceRequest, project, user, featurestore, trainingDataset,
         featureNames);
+    } else {
+      statisticsInputValidation.validateStatisticsFiltersForFeatureView((Set) statisticsBeanParam.getFilterSet());
+      statisticsInputValidation.validateGetForFeatureView(featureView, filters);
+      dto = statisticsBuilder.build(uriInfo, resourceRequest, project, user, featurestore, featureView, featureNames);
     }
     return Response.ok().entity(dto).build();
   }
@@ -211,17 +210,21 @@ public class StatisticsResource {
     @Context HttpServletRequest req,
     @Context SecurityContext sc,
     StatisticsDTO statisticsDTO)
-    throws FeaturestoreException, DatasetException, HopsSecurityException, IOException {
+      throws FeaturestoreException, DatasetException, HopsSecurityException, IOException, ProjectException {
     
     Users user = jWTHelper.getUserPrincipal(sc);
-    
-    StatisticsDTO dto;
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    Featuregroup featuregroup = getFeaturegroup(featurestore);
+    FeatureView featureView = getFeatureView(featurestore);
+    TrainingDataset trainingDataset = getTrainingDataset(featurestore, featureView);
+    StatisticsDTO dto = null;
     if (featuregroup != null) {
-      dto = registerFeatureGroupStatistics(user, uriInfo, statisticsDTO);
+      dto = registerFeatureGroupStatistics(project, featuregroup, user, uriInfo, statisticsDTO);
+    } else if (trainingDataset != null) {
+      dto = registerTrainingDatasetStatistics(project, trainingDataset, user, uriInfo, statisticsDTO);
     } else if (featureView != null) {
-      dto = registerFeatureViewStatistics(user, uriInfo, statisticsDTO);
-    } else {
-      dto = registerTrainingDatasetStatistics(user, uriInfo, statisticsDTO);
+      dto = registerFeatureViewStatistics(project, featureView, user, uriInfo, statisticsDTO);
     }
     return Response.ok().entity(dto).build();
   }
@@ -241,13 +244,18 @@ public class StatisticsResource {
     @Context SecurityContext sc)
     throws FeaturestoreException, ServiceException, JobException, ProjectException, GenericException {
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    Featuregroup featuregroup = getFeaturegroup(featurestore);
+    TrainingDataset trainingDataset = getTrainingDataset(featurestore);
     Jobs job = fsJobManagerController.setupStatisticsJob(project, user, featurestore, featuregroup, trainingDataset);
     JobDTO jobDTO = jobsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.JOBS), job);
     return Response.created(jobDTO.getHref()).entity(jobDTO).build();
   }
   
-  private StatisticsDTO registerFeatureGroupStatistics(Users user, UriInfo uriInfo, StatisticsDTO statisticsDTO)
-      throws FeaturestoreException, IOException, DatasetException, HopsSecurityException {
+  private StatisticsDTO registerFeatureGroupStatistics(Project project, Featuregroup featuregroup, Users user,
+      UriInfo uriInfo, StatisticsDTO statisticsDTO) throws FeaturestoreException, IOException, DatasetException,
+      HopsSecurityException {
     statisticsInputValidation.validateRegisterForFeatureGroup(featuregroup, statisticsDTO);
     Collection<FeatureDescriptiveStatistics> stats = featureDescriptiveStatisticsBuilder.buildManyFromContentOrDTO(
         statisticsDTO.getFeatureDescriptiveStatistics(), statisticsDTO.getContent());
@@ -259,8 +267,9 @@ public class StatisticsResource {
     return statisticsBuilder.build(uriInfo, resourceRequest, project, user, featuregroup, featureGroupStatistics);
   }
   
-  private StatisticsDTO registerFeatureViewStatistics(Users user, UriInfo uriInfo, StatisticsDTO statisticsDTO)
-    throws FeaturestoreException, IOException, DatasetException, HopsSecurityException {
+  private StatisticsDTO registerFeatureViewStatistics(Project project, FeatureView featureView, Users user,
+      UriInfo uriInfo, StatisticsDTO statisticsDTO) throws FeaturestoreException, IOException, DatasetException,
+      HopsSecurityException {
     statisticsInputValidation.validateRegisterForFeatureView(featureView, statisticsDTO);
     Collection<FeatureDescriptiveStatistics> stats = featureDescriptiveStatisticsBuilder.buildManyFromContentOrDTO(
       statisticsDTO.getFeatureDescriptiveStatistics(), statisticsDTO.getContent());
@@ -272,8 +281,9 @@ public class StatisticsResource {
     return statisticsBuilder.build(uriInfo, resourceRequest, project, user, featureView, featureViewStatistics);
   }
   
-  private StatisticsDTO registerTrainingDatasetStatistics(Users user, UriInfo uriInfo, StatisticsDTO statisticsDTO)
-      throws FeaturestoreException, IOException, DatasetException, HopsSecurityException {
+  private StatisticsDTO registerTrainingDatasetStatistics(Project project, TrainingDataset trainingDataset, Users user,
+      UriInfo uriInfo, StatisticsDTO statisticsDTO) throws FeaturestoreException, IOException, DatasetException,
+      HopsSecurityException {
     statisticsInputValidation.validateRegisterForTrainingDataset(trainingDataset, statisticsDTO);
     // register training dataset statistics as a file in hopsfs
     TrainingDatasetStatistics statistics;

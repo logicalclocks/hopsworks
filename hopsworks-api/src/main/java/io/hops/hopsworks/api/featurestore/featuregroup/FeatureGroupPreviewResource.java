@@ -17,17 +17,19 @@
 package io.hops.hopsworks.api.featurestore.featuregroup;
 
 
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeatureGroupStorage;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -50,7 +52,7 @@ import javax.ws.rs.core.UriInfo;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class FeatureGroupPreviewResource {
+public class FeatureGroupPreviewResource extends FeatureGroupSubResource {
 
   @EJB
   private PreviewBuilder previewBuilder;
@@ -60,22 +62,24 @@ public class FeatureGroupPreviewResource {
   private JWTHelper jwtHelper;
   @EJB
   private Settings settings;
+  @EJB
+  private FeaturestoreController featurestoreController;
+  @EJB
+  private ProjectController projectController;
 
-  private Project project;
-  private Featurestore featurestore;
-  private Featuregroup featuregroup;
-
-  public FeatureGroupPreviewResource setProject(Project project) {
-    this.project = project;
-    return this;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
-  public void setFeaturestore(Featurestore featurestore) {
-    this.featurestore = featurestore;
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
   }
 
-  public void setFeatureGroupId(int featureGroupId) throws FeaturestoreException {
-    featuregroup = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
+  @Override
+  protected FeaturegroupController getFeaturegroupController() {
+    return featuregroupController;
   }
 
   @ApiOperation(value = "Get feature group preview", response = PreviewDTO.class)
@@ -88,9 +92,10 @@ public class FeatureGroupPreviewResource {
   public Response getPreview(@BeanParam FeatureGroupPreviewBeanParam featureGroupPreviewBeanParam,
                              @Context HttpServletRequest req,
                              @Context UriInfo uriInfo, @Context SecurityContext sc)
-      throws FeaturestoreException, HopsSecurityException {
+      throws FeaturestoreException, HopsSecurityException, ProjectException {
     Users user = jwtHelper.getUserPrincipal(sc);
-
+    Project project = getProject();
+    Featuregroup featuregroup = getFeaturegroup(project);
     // validate user input
     if (featureGroupPreviewBeanParam.getLimit() != null && (
         featureGroupPreviewBeanParam.getLimit() < 0  ||

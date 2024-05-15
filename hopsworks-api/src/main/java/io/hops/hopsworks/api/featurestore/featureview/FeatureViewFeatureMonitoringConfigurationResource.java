@@ -19,6 +19,7 @@ import io.hops.hopsworks.api.featurestore.featuremonitoring.config.FeatureMonito
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 
 import javax.ejb.EJB;
@@ -30,7 +31,8 @@ import javax.enterprise.context.RequestScoped;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class FeatureViewFeatureMonitoringConfigurationResource extends FeatureMonitoringConfigurationResource {
   
-  private FeatureView featureView;
+  private String featureViewName;
+  private Integer featureViewVersion;
   @EJB
   private FeatureViewController featureViewController;
   
@@ -41,12 +43,18 @@ public class FeatureViewFeatureMonitoringConfigurationResource extends FeatureMo
    * @param version
    */
   public void setFeatureView(String name, Integer version) throws FeaturestoreException {
-    this.featureView = featureViewController.getByNameVersionAndFeatureStore(name, version, featureStore);
+    this.featureViewName = name;
+    this.featureViewVersion = version;
+  }
+
+  protected FeatureView getFeatureView() throws ProjectException, FeaturestoreException {
+    return featureViewController.getByNameVersionAndFeatureStore(this.featureViewName, this.featureViewVersion,
+      getFeaturestore());
   }
   
   @Override
-  protected Integer getItemId() {
-    return featureView.getId();
+  protected Integer getItemId() throws ProjectException, FeaturestoreException {
+    return getFeatureView().getId();
   }
   
   @Override
@@ -55,12 +63,14 @@ public class FeatureViewFeatureMonitoringConfigurationResource extends FeatureMo
   }
   
   @Override
-  protected String getItemName() {
-    return featureView.getName();
+  protected String getItemName() throws ProjectException, FeaturestoreException {
+    return getFeatureView().getName();
   }
   
   @Override
-  protected Integer getItemVersion() {
-    return featureView.getVersion();
+  protected Integer getItemVersion() throws ProjectException, FeaturestoreException {
+    return getFeatureView().getVersion();
   }
+
+
 }

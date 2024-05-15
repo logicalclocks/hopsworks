@@ -18,6 +18,7 @@ package io.hops.hopsworks.api.featurestore;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.featurestore.datavalidationv2.greatexpectations.GreatExpectationResource;
 import io.hops.hopsworks.api.featurestore.featuregroup.FeaturegroupService;
 import io.hops.hopsworks.api.featurestore.featureview.FeatureViewService;
@@ -28,7 +29,7 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.kafka.KafkaResource;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.project.ProjectSubResource;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
@@ -40,7 +41,6 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -75,7 +75,7 @@ import java.util.List;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Featurestore service", description = "A service that manages project's feature stores")
-public class FeaturestoreService {
+public class FeaturestoreService extends ProjectSubResource {
 
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -106,15 +106,9 @@ public class FeaturestoreService {
   @Inject
   private KafkaResource kafkaResource;
 
-  private Project project;
-
-  /**
-   * Set the project of the featurestore (provided by parent resource)
-   *
-   * @param projectId the id of the project
-   */
-  public void setProjectId(Integer projectId) throws ProjectException {
-    this.project = projectController.findProjectById(projectId);
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
   /**
@@ -141,9 +135,9 @@ public class FeaturestoreService {
           allowableValues = "include_shared=false,include_shared=true",
           defaultValue = "true")
           Boolean includeShared
-  )
-      throws FeaturestoreException {
+  ) throws FeaturestoreException, ProjectException {
     List<FeaturestoreDTO> featurestores;
+    Project project = getProject();
     if (includeShared) {
       featurestores = featurestoreController.getFeaturestoresForProject(project);
     } else {
@@ -175,12 +169,12 @@ public class FeaturestoreService {
   public Response getFeaturestore(@ApiParam(value = "Id of the featurestore", required = true)
                                   @PathParam("featurestoreId") Integer featurestoreId,
                                   @Context HttpServletRequest req,
-                                  @Context SecurityContext sc) throws FeaturestoreException {
+                                  @Context SecurityContext sc) throws FeaturestoreException, ProjectException {
     if (featurestoreId == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ID_NOT_PROVIDED.getMessage());
     }
     FeaturestoreDTO featurestoreDTO = 
-      featurestoreController.getFeaturestoreDTOForProjectWithId(project, featurestoreId);
+      featurestoreController.getFeaturestoreDTOForProjectWithId(getProject(), featurestoreId);
     GenericEntity<FeaturestoreDTO> featurestoreDTOGeneric =
       new GenericEntity<FeaturestoreDTO>(featurestoreDTO) {
       };
@@ -232,10 +226,10 @@ public class FeaturestoreService {
   public Response getFeaturestoreByName(@ApiParam(value = "Id of the featurestore", required = true)
                                         @PathParam("name") String name,
                                         @Context HttpServletRequest req,
-                                        @Context SecurityContext sc) throws FeaturestoreException {
+                                        @Context SecurityContext sc) throws FeaturestoreException, ProjectException {
     verifyNameProvided(name);
     FeaturestoreDTO featurestoreDTO =
-      featurestoreController.getFeaturestoreForProjectWithName(project, name);
+      featurestoreController.getFeaturestoreForProjectWithName(getProject(), name);
     GenericEntity<FeaturestoreDTO> featurestoreDTOGeneric =
       new GenericEntity<FeaturestoreDTO>(featurestoreDTO) {
       };
@@ -251,11 +245,8 @@ public class FeaturestoreService {
    */
   @Path("/{featurestoreId}/featuregroups")
   public FeaturegroupService featuregroupService(@PathParam("featurestoreId") Integer featurestoreId,
-    @Context SecurityContext sc) throws FeaturestoreException {
-    featuregroupService.setProject(project);
-    if (featurestoreId == null) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ID_NOT_PROVIDED.getMessage());
-    }
+    @Context SecurityContext sc) {
+    featuregroupService.setProjectId(getProjectId());
     featuregroupService.setFeaturestoreId(featurestoreId);
     return featuregroupService;
   }
@@ -268,24 +259,22 @@ public class FeaturestoreService {
    * @throws FeaturestoreException
    */
   @Path("/{featurestoreId}/trainingdatasets")
-  public TrainingDatasetService trainingDatasetService(@PathParam("featurestoreId") Integer featurestoreId)
-      throws FeaturestoreException {
-    trainingDatasetService.setProject(project);
+  public TrainingDatasetService trainingDatasetService(@PathParam("featurestoreId") Integer featurestoreId) {
     if (featurestoreId == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ID_NOT_PROVIDED.getMessage());
     }
+    trainingDatasetService.setProjectId(getProjectId());
     trainingDatasetService.setFeaturestoreId(featurestoreId);
     return trainingDatasetService;
   }
 
   @Path("/{featurestoreId}/featureview")
-  public FeatureViewService featureViewService(@PathParam("featurestoreId") Integer featurestoreId)
-      throws FeaturestoreException {
-    featureViewService.setProject(project);
+  public FeatureViewService featureViewService(@PathParam("featurestoreId") Integer featurestoreId) {
     if (featurestoreId == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ID_NOT_PROVIDED.getMessage());
     }
-    featureViewService.setFeaturestore(featurestoreId);
+    featureViewService.setProjectId(getProjectId());
+    featureViewService.setFeaturestoreId(featurestoreId);
     return featureViewService;
   }
 
@@ -298,18 +287,19 @@ public class FeaturestoreService {
    */
   @Path("/{featurestoreId}/storageconnectors")
   public FeaturestoreStorageConnectorService storageConnectorService(
-      @PathParam("featurestoreId") Integer featurestoreId) throws FeaturestoreException {
-    featurestoreStorageConnectorService.setProject(project);
+      @PathParam("featurestoreId") Integer featurestoreId) {
     if (featurestoreId == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ID_NOT_PROVIDED.getMessage());
     }
+    featurestoreStorageConnectorService.setProjectId(getProjectId());
     featurestoreStorageConnectorService.setFeaturestoreId(featurestoreId);
     return featurestoreStorageConnectorService;
   }
-
+  
   @Path("/query")
   public FsQueryConstructorResource constructQuery() {
-    return fsQueryConstructorResource.setProject(project);
+    fsQueryConstructorResource.setProjectId(getProjectId());
+    return fsQueryConstructorResource;
   }
 
   @Path("keywords")
@@ -323,10 +313,10 @@ public class FeaturestoreService {
   @ApiOperation(value = "Get available keywords for the featurestore", response = KeywordDTO.class)
   public Response getUsedKeywords(@Context SecurityContext sc,
                                   @Context HttpServletRequest req,
-                                  @Context UriInfo uriInfo) {
+                                  @Context UriInfo uriInfo) throws ProjectException {
     List<String> keywords = keywordCtrl.getAllKeywords();
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
-    KeywordDTO dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project, keywords);
+    KeywordDTO dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, getProject(), keywords);
     return Response.ok().entity(dto).build();
   }
 
@@ -349,14 +339,12 @@ public class FeaturestoreService {
    * @throws FeaturestoreException
    */
   @Path("/{featurestoreId}/transformationfunctions")
-  public TransformationFunctionResource transformationResource(
-      @PathParam("featurestoreId") Integer featurestoreId) throws FeaturestoreException {
-    this.transformationFunctionResource.setProject(project);
+  public TransformationFunctionResource transformationResource(@PathParam("featurestoreId") Integer featurestoreId) {
     if (featurestoreId == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ID_NOT_PROVIDED.getMessage());
     }
-    this.transformationFunctionResource.setFeaturestore(
-        featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId));
+    this.transformationFunctionResource.setProjectId(getProjectId());
+    this.transformationFunctionResource.setFeaturestoreId(featurestoreId);
     return transformationFunctionResource;
   }
 
@@ -368,14 +356,12 @@ public class FeaturestoreService {
    * @throws FeaturestoreException
    */
   @Path("/{featurestoreId}/greatexpectations")
-  public GreatExpectationResource greatExpectationResource(
-      @PathParam("featurestoreId") Integer featurestoreId) throws FeaturestoreException {
-    this.greatExpectationResource.setProject(project);
+  public GreatExpectationResource greatExpectationResource(@PathParam("featurestoreId") Integer featurestoreId) {
     if (featurestoreId == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ID_NOT_PROVIDED.getMessage());
     }
-    this.greatExpectationResource.setFeaturestore(
-        featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId));
+    this.greatExpectationResource.setProjectId(getProjectId());
+    this.greatExpectationResource.setFeaturestoreId(featurestoreId);
     return greatExpectationResource;
   }
 
@@ -387,14 +373,13 @@ public class FeaturestoreService {
    * @throws FeaturestoreException
    */
   @Path("{featurestoreId}/kafka")
-  public KafkaResource kafkaResource(@PathParam("featurestoreId") Integer featurestoreId)
-      throws FeaturestoreException {
+  public KafkaResource kafkaResource(@PathParam("featurestoreId") Integer featurestoreId) {
     if (featurestoreId == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ID_NOT_PROVIDED.getMessage());
     }
-    //This call verifies that the project have access to the featurestoreId provided
-    Featurestore featurestore = featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId);
-    this.kafkaResource.setProject(featurestore.getProject());
+    //FeaturestoreId is set to verifies that the project have access to the featurestoreId provided
+    this.kafkaResource.setFeaturestoreId(featurestoreId);
+    this.kafkaResource.setProjectId(getProjectId());
     return this.kafkaResource;
   }
 }

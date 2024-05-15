@@ -17,14 +17,14 @@ package io.hops.hopsworks.api.activities;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.project.ProjectSubResource;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.ActivitiesException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -42,53 +42,25 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Api(value = "Project Activities Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class ProjectActivitiesResource {
+public class ProjectActivitiesResource extends ProjectSubResource {
 
   private static final Logger LOGGER = Logger.getLogger(ProjectActivitiesResource.class.getName());
   @EJB
   private ActivitiesBuilder activitiesBuilder;
   @EJB
-  private ProjectFacade projectFacade;
-
-  private Integer projectId;
-  private String projectName;
+  private ProjectController projectController;
 
   public ProjectActivitiesResource() {
   }
   
-  public void setProjectId(Integer projectId) {
-    this.projectId = projectId;
-  }
-
-  public void setProjectName(String projectName) {
-    this.projectName = projectName;
-  }
-
-  private Project getProjectById() throws ProjectException {
-    Project project = projectFacade.find(this.projectId);
-    if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
-    }
-    return project;
-  }
-
-  private Project getProjectByName() throws ProjectException {
-    Project project = projectFacade.findByName(this.projectName);
-    if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectName: " + 
-          projectName);
-    }
-    return project;
-  }
-
-  private Project getProject() throws ProjectException {
-    return this.projectId != null ? getProjectById() : getProjectByName();
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
   @GET

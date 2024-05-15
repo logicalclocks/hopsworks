@@ -56,7 +56,6 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.JobException;
-import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.TensorBoardException;
@@ -95,7 +94,7 @@ import java.util.logging.Logger;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class ProjectMembersService {
+public class ProjectMembersService extends ProjectSubResource {
 
   @EJB
   private ProjectController projectController;
@@ -110,20 +109,15 @@ public class ProjectMembersService {
   @EJB
   private DatasetHelper datasetHelper;
 
-  private Integer projectId;
-
   public ProjectMembersService() {
   }
-  public void setProjectId(Integer projectId) {
-    this.projectId = projectId;
-  }
-  public Integer getProjectId() {
-    return projectId;
+
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
-  private final static Logger logger = Logger.getLogger(
-      ProjectMembersService.class.
-          getName());
+  private final static Logger logger = Logger.getLogger(ProjectMembersService.class.getName());
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
@@ -131,7 +125,7 @@ public class ProjectMembersService {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response findMembersByProjectID(@Context HttpServletRequest req, @Context SecurityContext sc) {
-    List<ProjectTeam> list = projectController.findProjectTeamById(this.projectId);
+    List<ProjectTeam> list = projectController.findProjectTeamById(getProjectId());
     GenericEntity<List<ProjectTeam>> projects = new GenericEntity<List<ProjectTeam>>(list) {
     };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(projects).build();
@@ -143,9 +137,9 @@ public class ProjectMembersService {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response addMembers(MembersDTO members, @Context HttpServletRequest req, @Context SecurityContext sc)
-    throws KafkaException, ProjectException, UserException, FeaturestoreException {
+    throws ProjectException, FeaturestoreException {
 
-    Project project = projectController.findProjectById(this.projectId);
+    Project project = getProject();
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     List<String> failedMembers = null;
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -191,8 +185,8 @@ public class ProjectMembersService {
   public Response updateRoleByEmail(@PathParam("email") String email, @FormParam("role") String role,
                                     @Context HttpServletRequest req,
                                     @Context SecurityContext sc)
-      throws ProjectException, UserException, FeaturestoreException, IOException, KafkaException {
-    Project project = projectController.findProjectById(this.projectId);
+      throws ProjectException, UserException, FeaturestoreException, IOException {
+    Project project = getProject();
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = jWTHelper.getUserPrincipal(sc);
     if (email == null) {
@@ -220,7 +214,7 @@ public class ProjectMembersService {
                                     @Context SecurityContext sc)
       throws ProjectException, ServiceException, HopsSecurityException, UserException, GenericException, IOException,
     JobException, TensorBoardException, FeaturestoreException {
-    Project project = projectController.findProjectById(this.projectId);
+    Project project = getProject();
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users reqUser = jWTHelper.getUserPrincipal(sc);
     if (email == null) {
@@ -254,8 +248,8 @@ public class ProjectMembersService {
                                     @QueryParam("type") DatasetType datasetType,
                                     @Context HttpServletRequest req,
                                     @Context SecurityContext sc)
-    throws ProjectException, DatasetException {
-    Project project = projectController.findProjectById(this.projectId);
+      throws ProjectException, DatasetException {
+    Project project = getProject();
     String path = Utils.getProjectPath(project.getName()) + dsName;
     DatasetPath dp = datasetHelper.getDatasetPath(project, path, datasetType);
     Collection<ProjectTeam> membersCol = accessCtrl.getExtendedMembers(dp.getDataset());

@@ -27,13 +27,13 @@ import io.hops.hopsworks.api.alert.route.RouteResource;
 import io.hops.hopsworks.api.alert.silence.SilenceResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.project.ProjectSubResource;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.AlertException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -64,7 +64,7 @@ import java.util.logging.Logger;
 @RequestScoped
 @Api(value = "Alert Resource")
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class AlertResource {
+public class AlertResource extends ProjectSubResource {
 
   private static final Logger LOGGER = Logger.getLogger(AlertResource.class.getName());
 
@@ -81,24 +81,9 @@ public class AlertResource {
   @Inject
   private ReceiverResource receiverResource;
 
-  private Integer projectId;
-  private String projectName;
-  
-  public void setProjectId(Integer projectId) {
-    this.projectId = projectId;
-  }
-  
-  public void setProjectName(String projectName) {
-    this.projectName = projectName;
-  }
-
-  private Project getProject() throws ProjectException {
-    if (this.projectId != null) {
-      return projectController.findProjectById(this.projectId);
-    } else if (this.projectName != null) {
-      return projectController.findProjectByName(this.projectName);
-    }
-    throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE);
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
   @GET
@@ -169,19 +154,19 @@ public class AlertResource {
   
   @Path("silences")
   public SilenceResource silence() {
-    this.silenceResource.setProjectId(this.projectId);
+    this.silenceResource.setProjectId(getProjectId());
     return silenceResource;
   }
   
   @Path("receivers")
   public ReceiverResource receiver() {
-    this.receiverResource.setProjectId(this.projectId);
+    this.receiverResource.setProjectId(getProjectId());
     return receiverResource;
   }
   
   @Path("routes")
   public RouteResource route() {
-    this.routeResource.setProjectId(this.projectId);
+    this.routeResource.setProjectId(getProjectId());
     return routeResource;
   }
 }

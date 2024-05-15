@@ -31,15 +31,16 @@ import io.hops.hopsworks.alerting.exceptions.AlertManagerResponseException;
 import io.hops.hopsworks.api.alert.AlertBuilder;
 import io.hops.hopsworks.api.alert.AlertDTO;
 import io.hops.hopsworks.api.alert.FeatureStoreAlertController;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.featurestore.datavalidation.alert.FeatureGroupAlertBuilder;
 import io.hops.hopsworks.api.featurestore.datavalidation.alert.FeatureGroupAlertDTO;
 import io.hops.hopsworks.api.featurestore.featureview.FeatureViewAlertBuilder;
 import io.hops.hopsworks.api.featurestore.featureview.FeatureViewAlertDTO;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jobs.alert.JobAlertsBuilder;
 import io.hops.hopsworks.api.jobs.alert.JobAlertsDTO;
+import io.hops.hopsworks.api.project.ProjectSubResource;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.alert.AlertController;
 import io.hops.hopsworks.common.api.ResourceRequest;
@@ -90,7 +91,7 @@ import java.util.logging.Logger;
 @Api(value = "Project Alerts Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class ProjectAlertsResource {
+public class ProjectAlertsResource extends ProjectSubResource {
 
   private static final Logger LOGGER = Logger.getLogger(ProjectAlertsResource.class.getName());
 
@@ -114,27 +115,12 @@ public class ProjectAlertsResource {
   private FeatureViewAlertBuilder featureViewAlertBuilder;
   @EJB
   private FeatureStoreAlertController featureStoreAlertController;
-  
-  private Integer projectId;
-  private String projectName;
-  
-  public void setProjectId(Integer projectId) {
-    this.projectId = projectId;
-  }
-  
-  public void setProjectName(String projectName) {
-    this.projectName = projectName;
+
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
-  private Project getProject() throws ProjectException {
-    if (this.projectId != null) {
-      return projectController.findProjectById(this.projectId);
-    } else if (this.projectName != null) {
-      return projectController.findProjectByName(this.projectName);
-    }
-    throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE);
-  }
-  
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get all alerts.", response = ProjectAlertsDTO.class)

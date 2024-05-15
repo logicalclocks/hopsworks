@@ -15,9 +15,9 @@
  */
 package io.hops.hopsworks.api.modelregistry.models;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.featureFlags.FeatureFlagRequired;
 import io.hops.hopsworks.api.filter.featureFlags.FeatureFlags;
 import io.hops.hopsworks.api.jwt.JWTHelper;
@@ -27,8 +27,10 @@ import io.hops.hopsworks.api.provenance.ModelProvenanceResource;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.KafkaException;
@@ -37,7 +39,6 @@ import io.hops.hopsworks.exceptions.ModelRegistryException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.PythonException;
-import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -75,7 +76,7 @@ import java.util.logging.Logger;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class ModelsResource {
+public class ModelsResource extends ModelRegistrySubResource {
 
   private static final Logger LOGGER = Logger.getLogger(ModelsResource.class.getName());
 
@@ -91,28 +92,21 @@ public class ModelsResource {
   private ModelUtils modelUtils;
   @Inject
   private ModelTagResource tagResource;
+
   @Inject
   private ModelProvenanceResource provenanceResource;
 
-  private Project userProject;
+  @EJB
+  private ProjectController projectController;
 
-  private Project modelRegistryProject;
-
-  public ModelsResource setProject(Project project) {
-    this.userProject = project;
-    return this;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
-  /**
-   * Sets the model registry of the models
-   *
-   * @param modelRegistryId id of the model registry
-   * @throws ModelRegistryException
-   */
-  public void setModelRegistryId(Integer modelRegistryId) throws ModelRegistryException {
-    //This call verifies that the project have access to the modelRegistryId provided
-    this.modelRegistryProject = modelsController.verifyModelRegistryAccess(userProject,
-        modelRegistryId).getParentProject();
+  @Override
+  protected ModelsController getModelsController() {
+    return modelsController;
   }
 
   @ApiOperation(value = "Get a list of all models for this project", response = ModelDTO.class)
@@ -128,16 +122,20 @@ public class ModelsResource {
     @BeanParam Pagination pagination,
     @BeanParam ModelsBeanParam modelsBeanParam,
     @Context UriInfo uriInfo,
+    @Context HttpServletRequest req,
     @Context SecurityContext sc)
-          throws ModelRegistryException, GenericException, FeatureStoreMetadataException, MetadataException {
+    throws ModelRegistryException, GenericException, FeatureStoreMetadataException, MetadataException,
+    ProjectException {
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
     resourceRequest.setFilter(modelsBeanParam.getFilter());
-    resourceRequest.setSort(modelsBeanParam.getSortBySet());
     resourceRequest.setExpansions(modelsBeanParam.getExpansions().getResources());
-    ModelDTO dto = modelsBuilder.build(uriInfo, resourceRequest, user, userProject, modelRegistryProject);
+    resourceRequest.setSort(modelsBeanParam.getSortBySet());
+    Project userProject = getProject();
+    ModelDTO dto =
+      modelsBuilder.build(uriInfo, resourceRequest, user, userProject, getModelRegistryProject(userProject));
     return Response.ok().entity(dto).build();
   }
 
@@ -155,12 +153,15 @@ public class ModelsResource {
     @PathParam("id") String id,
     @BeanParam ModelsBeanParam modelsBeanParam,
     @Context UriInfo uriInfo,
+    @Context HttpServletRequest req,
     @Context SecurityContext sc)
-          throws ProvenanceException, ModelRegistryException, DatasetException, GenericException,
-                 FeatureStoreMetadataException, MetadataException {
+    throws ProvenanceException, ModelRegistryException, DatasetException, GenericException,
+    FeatureStoreMetadataException, MetadataException, ProjectException {
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELS);
     resourceRequest.setExpansions(modelsBeanParam.getExpansions().getResources());
+    Project userProject = getProject();
+    Project modelRegistryProject = getModelRegistryProject(userProject);
     ModelVersion modelVersion = modelsController.getModel(modelRegistryProject, id);
 
     if(modelVersion != null) {
@@ -190,12 +191,14 @@ public class ModelsResource {
     @Context HttpServletRequest req,
     @Context UriInfo uriInfo,
     @Context SecurityContext sc)
-      throws DatasetException, ProvenanceException, ModelRegistryException, KafkaException, ServingException,
-    CryptoPasswordNotFoundException {
+    throws DatasetException, ProvenanceException, ModelRegistryException, KafkaException, ServingException,
+    CryptoPasswordNotFoundException, ProjectException {
     Users user = jwtHelper.getUserPrincipal(sc);
+    Project userProject = getProject();
+
     ModelVersion modelVersion = modelsController.getModel(userProject, id);
     if(modelVersion != null) {
-      modelsController.delete(user, userProject, modelRegistryProject, modelVersion);
+      modelsController.delete(user, userProject, getModelRegistryProject(userProject), modelVersion);
     }
     return Response.noContent().build();
   }
@@ -225,6 +228,8 @@ public class ModelsResource {
     }
     modelUtils.validateModelName(modelDTO);
     Users user = jwtHelper.getUserPrincipal(sc);
+    Project userProject = getProject();
+    Project modelRegistryProject = getModelRegistryProject(userProject);
     Project modelProject = modelUtils.getModelsProjectAndCheckAccess(modelDTO, userProject);
     Project experimentProject = modelUtils.getExperimentProjectAndCheckAccess(modelDTO, userProject);
     ModelsController.Accessor accessor = null;
@@ -249,10 +254,9 @@ public class ModelsResource {
   public ModelTagResource tags(@ApiParam(value = "Id of the model", required = true)
                                @PathParam("id") String id)
     throws ModelRegistryException, ProvenanceException {
-    this.tagResource.setProject(userProject);
-    this.tagResource.setModelRegistry(modelRegistryProject);
-    ModelVersion modelVersion = modelsController.getModel(modelRegistryProject, id);
-    this.tagResource.setModel(modelVersion);
+    this.tagResource.setProjectId(getProjectId());
+    this.tagResource.setModelRegistryId(getModelRegistryId());
+    this.tagResource.setModelId(id);
     return this.tagResource;
   }
 
@@ -260,10 +264,9 @@ public class ModelsResource {
   public ModelProvenanceResource provenance(@ApiParam(value = "Id of the model", required = true)
                                             @PathParam("id") String id)
       throws ModelRegistryException, ProvenanceException {
-    this.provenanceResource.setAccessProject(userProject);
-    this.provenanceResource.setModelRegistry(modelRegistryProject);
-    ModelVersion modelVersion = modelsController.getModel(modelRegistryProject, id);
-    this.provenanceResource.setModelVersion(modelVersion);
+    this.provenanceResource.setProjectId(getProjectId());
+    this.provenanceResource.setModelRegistryId(getModelRegistryId());
+    this.provenanceResource.setModelId(id);
     return this.provenanceResource;
   }
 }

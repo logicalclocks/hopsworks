@@ -26,13 +26,13 @@ import io.hops.hopsworks.alerting.exceptions.AlertManagerDuplicateEntryException
 import io.hops.hopsworks.alerting.exceptions.AlertManagerNoSuchElementException;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.project.ProjectSubResource;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.AlertException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -63,7 +63,7 @@ import java.util.logging.Level;
 @Api(value = "Route Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class RouteResource {
+public class RouteResource extends ProjectSubResource {
 
   @EJB
   private RouteBuilder routeBuilder;
@@ -72,24 +72,9 @@ public class RouteResource {
   @EJB
   private AlertManagerConfiguration alertManagerConfiguration;
 
-  private Integer projectId;
-  private String projectName;
-  
-  public void setProjectId(Integer projectId) {
-    this.projectId = projectId;
-  }
-  
-  public void setProjectName(String projectName) {
-    this.projectName = projectName;
-  }
-
-  private Project getProject() throws ProjectException {
-    if (this.projectId != null) {
-      return projectController.findProjectById(this.projectId);
-    } else if (this.projectName != null) {
-      return projectController.findProjectByName(this.projectName);
-    }
-    throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE);
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
   @GET

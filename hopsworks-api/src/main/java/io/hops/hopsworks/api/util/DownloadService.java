@@ -40,16 +40,17 @@
 package io.hops.hopsworks.api.util;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
-import io.hops.hopsworks.api.filter.JWTNotRequired;
 import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
-import io.hops.hopsworks.common.dataset.util.DatasetHelper;
-import io.hops.hopsworks.common.dataset.util.DatasetPath;
+import io.hops.hopsworks.api.dataset.DatasetSubResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.JWTNotRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.dataset.util.DatasetHelper;
+import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -72,6 +73,8 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.ApiOperation;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
+import org.javatuples.Pair;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -91,12 +94,9 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.hadoop.fs.permission.FsPermission;
-import org.javatuples.Pair;
-
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class DownloadService {
+public class DownloadService extends DatasetSubResource {
 
   private static final Logger LOGGER = Logger.getLogger(DownloadService.class.getName());
 
@@ -122,23 +122,9 @@ public class DownloadService {
   public DownloadService() {
   }
   
-  private Integer projectId;
-  private String projectName;
-  
-  public void setProjectId(Integer projectId) {
-    this.projectId = projectId;
-  }
-  public void setProjectName(String projectName) {
-    this.projectName = projectName;
-  }
-  
-  private Project getProject() throws ProjectException {
-    if (this.projectId != null) {
-      return projectController.findProjectById(this.projectId);
-    } else if (this.projectName != null) {
-      return projectController.findProjectByName(this.projectName);
-    }
-    throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE);
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
   
   @GET

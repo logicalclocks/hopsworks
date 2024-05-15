@@ -16,20 +16,24 @@
 package io.hops.hopsworks.api.opensearch;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.opensearch.featurestore.OpenSearchFeaturestoreBuilder;
 import io.hops.hopsworks.api.opensearch.featurestore.OpenSearchFeaturestoreDTO;
 import io.hops.hopsworks.api.opensearch.featurestore.OpenSearchFeaturestoreRequest;
-import io.hops.hopsworks.api.filter.AllowedProjectRoles;
-import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.project.ProjectSubResource;
 import io.hops.hopsworks.common.opensearch.FeaturestoreDocType;
-import io.hops.hopsworks.exceptions.OpenSearchException;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+
+import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
@@ -49,22 +53,18 @@ import java.util.logging.Level;
 @Api(value = "OpenSearch Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class OpenSearchResource {
-  
+public class OpenSearchResource extends ProjectSubResource {
+
   @Inject
   private OpenSearchFeaturestoreBuilder openSearchFeaturestoreBuilder;
+  @EJB
+  private ProjectController projectController;
 
-  private Integer projectId;
-  private String projectName;
-  
-  public void setProjectId(Integer projectId) {
-    this.projectId = projectId;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
-  
-  public void setProjectName(String projectName) {
-    this.projectName = projectName;
-  }
-  
+
   /**
    * Searches for content inside all project accesible featurestores. Hits 'featurestore' index
    * <p/>
@@ -101,7 +101,7 @@ public class OpenSearchResource {
     }
 
     OpenSearchFeaturestoreDTO dto = openSearchFeaturestoreBuilder.build(
-        new OpenSearchFeaturestoreRequest(searchTerm, docType, from, size), projectId);
+        new OpenSearchFeaturestoreRequest(searchTerm, docType, from, size), getProjectId());
     return Response.ok().entity(dto).build();
   }
 }

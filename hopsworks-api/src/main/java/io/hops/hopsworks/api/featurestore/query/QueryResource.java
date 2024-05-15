@@ -16,22 +16,24 @@
 
 package io.hops.hopsworks.api.featurestore.query;
 
-import io.hops.hopsworks.api.featurestore.FsQueryBuilder;
-import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.featurestore.featureview.FeatureViewSubResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
+import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.common.featurestore.query.FsQueryDTO;
 import io.hops.hopsworks.common.featurestore.query.Query;
 import io.hops.hopsworks.common.featurestore.query.QueryBuilder;
 import io.hops.hopsworks.common.featurestore.query.QueryController;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
-import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
@@ -56,7 +58,7 @@ import javax.ws.rs.core.UriInfo;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class QueryResource {
+public class QueryResource extends FeatureViewSubResource {
 
   @EJB
   private FeatureViewController featureViewController;
@@ -65,13 +67,24 @@ public class QueryResource {
   @EJB
   private JWTHelper jWTHelper;
   @EJB
-  private FsQueryBuilder fsQueryBuilder;
-  @EJB
   private QueryBuilder queryBuilder;
+  @EJB
+  private ProjectController projectController;
+  @EJB
+  private FeaturestoreController featurestoreController;
 
-  private Featurestore featurestore;
-  private FeatureView featureView;
-  private Project project;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
+  }
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
+  }
+  @Override
+  protected FeatureViewController getFeatureViewController() {
+    return featureViewController;
+  }
 
   @ApiOperation(value = "Return batch query with given event time.",
       response = FsQueryDTO.class)
@@ -123,10 +136,12 @@ public class QueryResource {
       @ApiParam(value = "Training data version")
       @QueryParam("td_version")
           Integer trainingDataVersion
-  ) throws FeaturestoreException, ServiceException {
+  ) throws FeaturestoreException, ServiceException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     Query query = queryController.constructBatchQuery(
-        featureView, project, user, startTime, endTime, withLabel, withPrimaryKeys, withEventTime,
+        getFeatureView(featurestore), project, user, startTime, endTime, withLabel, withPrimaryKeys, withEventTime,
         inferenceHelperColumns, trainingHelperColumns, isHiveEngine, trainingDataVersion);
     return Response.ok().entity(queryBuilder.build(query, featurestore, project, user)).build();
   }
@@ -145,22 +160,13 @@ public class QueryResource {
           SecurityContext sc,
       @Context
           HttpServletRequest req
-  ) throws FeaturestoreException, ServiceException {
+  ) throws FeaturestoreException, ServiceException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    Query query = queryController.makeQuery(featureView, project, user, true, false, false, true, true, false);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    Query query =
+      queryController.makeQuery(getFeatureView(featurestore), project, user, true, false, false, true, true, false);
     QueryDTO queryDTO = queryBuilder.build(query, featurestore, project, user);
     return Response.ok().entity(queryDTO).build();
-  }
-
-  public void setFeatureView(String name, Integer version) throws FeaturestoreException {
-    featureView = featureViewController.getByNameVersionAndFeatureStore(name, version, featurestore);
-  }
-
-  public void setProject(Project project) {
-    this.project = project;
-  }
-
-  public void setFeaturestore(Featurestore featurestore) {
-    this.featurestore = featurestore;
   }
 }

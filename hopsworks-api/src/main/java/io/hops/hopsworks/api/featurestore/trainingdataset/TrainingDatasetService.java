@@ -17,6 +17,8 @@
 package io.hops.hopsworks.api.featurestore.trainingdataset;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.featurestore.FeaturestoreSubResource;
 import io.hops.hopsworks.api.featurestore.FsQueryBuilder;
 import io.hops.hopsworks.api.featurestore.activities.ActivityResource;
 import io.hops.hopsworks.api.featurestore.code.CodeResource;
@@ -27,20 +29,20 @@ import io.hops.hopsworks.api.featurestore.transformationFunction.TransformationF
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jobs.JobDTO;
 import io.hops.hopsworks.api.jobs.JobsBuilder;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
 import io.hops.hopsworks.common.featurestore.query.FsQueryDTO;
 import io.hops.hopsworks.common.featurestore.query.ServingPreparedStatementDTO;
-import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionAttachedDTO;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
@@ -95,7 +97,7 @@ import java.util.stream.Collectors;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "TrainingDataset service", description = "A service that manages a feature store's training datasets")
-public class TrainingDatasetService {
+public class TrainingDatasetService extends FeaturestoreSubResource {
 
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -127,28 +129,17 @@ public class TrainingDatasetService {
   private TransformationFunctionBuilder transformationFunctionBuilder;
   @Inject
   private TrainingDatasetTagResource tagResource;
+  @EJB
+  private ProjectController projectController;
 
-  private Project project;
-  private Featurestore featurestore;
-
-  /**
-   * Set the project of the featurestore (provided by parent resource)
-   *
-   * @param project the project where the featurestore resides
-   */
-  public void setProject(Project project) {
-    this.project = project;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
-  /**
-   * Sets the featurestore of the training datasets (provided by parent resource)
-   *
-   * @param featurestoreId id of the featurestore
-   * @throws FeaturestoreException
-   */
-  public void setFeaturestoreId(Integer featurestoreId) throws FeaturestoreException {
-    //This call verifies that the project have access to the featurestoreId provided
-    this.featurestore = featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId);
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
   }
 
   /**
@@ -165,8 +156,11 @@ public class TrainingDatasetService {
   @ApiOperation(value = "Get the list of training datasets for a featurestore",
       response = TrainingDatasetDTO.class, responseContainer = "List")
   public Response getAll(@Context SecurityContext sc,
-                         @Context HttpServletRequest req) throws ServiceException, FeaturestoreException {
+                         @Context HttpServletRequest req)
+      throws ServiceException, FeaturestoreException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     List<TrainingDatasetDTO> trainingDatasetDTOs =
         trainingDatasetController.getTrainingDatasetsForFeaturestore(user, project, featurestore);
     GenericEntity<List<TrainingDatasetDTO>> trainingDatasetsGeneric =
@@ -174,6 +168,7 @@ public class TrainingDatasetService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(trainingDatasetsGeneric).build();
   }
 
+  
   /**
    * Endpoint for creating a new trainingDataset
    *
@@ -193,15 +188,17 @@ public class TrainingDatasetService {
   public Response create(@Context SecurityContext sc,
                          @Context HttpServletRequest req,
                          TrainingDatasetDTO trainingDatasetDTO)
-      throws FeaturestoreException, IOException, ServiceException {
-    if(trainingDatasetDTO == null){
+      throws FeaturestoreException, IOException, ServiceException, ProjectException {
+    if (trainingDatasetDTO == null) {
       throw new IllegalArgumentException("Input JSON for creating a new Training Dataset cannot be null");
     }
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     TrainingDatasetDTO createdTrainingDatasetDTO =
         trainingDatasetController.createTrainingDataset(user, project, featurestore, trainingDatasetDTO);
     GenericEntity<TrainingDatasetDTO> createdTrainingDatasetDTOGeneric =
-        new GenericEntity<TrainingDatasetDTO>(createdTrainingDatasetDTO) {};
+      new GenericEntity<TrainingDatasetDTO>(createdTrainingDatasetDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(createdTrainingDatasetDTOGeneric)
       .build();
   }
@@ -229,10 +226,12 @@ public class TrainingDatasetService {
   public Response getById(@Context HttpServletRequest req,
                           @ApiParam(value = "Id of the training dataset", required = true)
                           @PathParam("trainingdatasetid") Integer trainingdatasetid, @Context SecurityContext sc)
-      throws FeaturestoreException, ServiceException {
+      throws FeaturestoreException, ServiceException, ProjectException {
     verifyIdProvided(trainingdatasetid);
 
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     TrainingDatasetDTO trainingDatasetDTO = trainingDatasetController
         .getTrainingDatasetWithIdAndFeaturestore(user, project, featurestore, trainingdatasetid);
     GenericEntity<TrainingDatasetDTO> trainingDatasetGeneric =
@@ -262,10 +261,12 @@ public class TrainingDatasetService {
                             @PathParam("name") String name,
                             @ApiParam(value = "Filter by a specific version")
                             @QueryParam("version") Integer version, @Context SecurityContext sc)
-      throws FeaturestoreException, ServiceException {
+      throws FeaturestoreException, ServiceException, ProjectException {
     verifyNameProvided(name);
 
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     List<TrainingDatasetDTO> trainingDatasetDTO;
     if (version == null) {
       trainingDatasetDTO =
@@ -302,9 +303,11 @@ public class TrainingDatasetService {
   public Response delete(@Context HttpServletRequest req,
                          @Context SecurityContext sc, @ApiParam(value = "Id of the training dataset", required = true)
                          @PathParam("trainingdatasetid") Integer trainingdatasetid)
-      throws FeaturestoreException, JobException {
+      throws FeaturestoreException, JobException, ProjectException {
     verifyIdProvided(trainingdatasetid);
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     String trainingDsName = trainingDatasetController.delete(user, project, featurestore, trainingdatasetid);
     activityFacade.persistActivity(ActivityFacade.DELETED_TRAINING_DATASET + trainingDsName,
         project, user, ActivityFlag.SERVICE);
@@ -339,15 +342,17 @@ public class TrainingDatasetService {
                                         @QueryParam("updateMetadata") @DefaultValue("false") Boolean updateMetadata,
                                         @ApiParam(value = "updateStatsConfig", example = "true")
                                         @QueryParam("updateStatsConfig") @DefaultValue("false")
-                                          Boolean updateStatsConfig,
+                                            Boolean updateStatsConfig,
                                         TrainingDatasetDTO trainingDatasetDTO)
-      throws FeaturestoreException, ServiceException {
-    if(trainingDatasetDTO == null){
+      throws FeaturestoreException, ServiceException, ProjectException {
+    if (trainingDatasetDTO == null) {
       throw new IllegalArgumentException("Input JSON for updating a Training Dataset cannot be null");
     }
     verifyIdProvided(trainingdatasetid);
     trainingDatasetDTO.setId(trainingdatasetid);
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     TrainingDatasetDTO oldTrainingDatasetDTO = trainingDatasetController
         .getTrainingDatasetWithIdAndFeaturestore(user, project, featurestore, trainingdatasetid);
 
@@ -366,19 +371,17 @@ public class TrainingDatasetService {
   }
 
   @Path("/{trainingDatasetId}/statistics")
-  public StatisticsResource statistics(@PathParam("trainingDatasetId") Integer trainingDatasetId)
-      throws FeaturestoreException {
-    this.statisticsResource.setProject(project);
-    this.statisticsResource.setFeaturestore(featurestore);
-    this.statisticsResource.setTrainingDatasetById(trainingDatasetId);
+  public StatisticsResource statistics(@PathParam("trainingDatasetId") Integer trainingDatasetId) {
+    this.statisticsResource.setProjectId(getProjectId());
+    this.statisticsResource.setFeaturestoreId(getFeaturestoreId());
+    this.statisticsResource.setTrainingDatasetId(trainingDatasetId);
     return statisticsResource;
   }
 
   @Path("/{trainingDatasetId}/code")
-  public CodeResource code(@PathParam("trainingDatasetId") Integer trainingDatasetId)
-          throws FeaturestoreException {
-    this.codeResource.setProject(project);
-    this.codeResource.setFeatureStore(featurestore);
+  public CodeResource code(@PathParam("trainingDatasetId") Integer trainingDatasetId) {
+    this.codeResource.setProjectId(getProjectId());
+    this.codeResource.setFeaturestoreId(getFeaturestoreId());
     this.codeResource.setTrainingDatasetId(trainingDatasetId);
     return codeResource;
   }
@@ -406,10 +409,11 @@ public class TrainingDatasetService {
       @ApiParam(value = "get query in hive format", example = "true")
       @QueryParam("hiveQuery")
       @DefaultValue("false")
-        boolean isHiveQuery) throws FeaturestoreException, ServiceException {
+          boolean isHiveQuery) throws FeaturestoreException, ServiceException, ProjectException {
     verifyIdProvided(trainingdatasetid);
     Users user = jWTHelper.getUserPrincipal(sc);
-  
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     FsQueryDTO fsQueryDTO = fsQueryBuilder.build(
         uriInfo, project, user, featurestore, trainingdatasetid, withLabel, isHiveQuery);
     return Response.ok().entity(fsQueryDTO).build();
@@ -433,6 +437,8 @@ public class TrainingDatasetService {
       throws FeaturestoreException, ServiceException, JobException, ProjectException, GenericException {
     verifyIdProvided(trainingDatasetId);
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
 
     Map<String, String> writeOptions = null;
@@ -453,11 +459,10 @@ public class TrainingDatasetService {
 
   @Path("/{trainingDatasetId}/keywords")
   public TrainingDatasetKeywordResource keywords(
-      @ApiParam(value = "Id of the training dataset") @PathParam("trainingDatasetId") Integer trainingDatasetId)
-      throws FeaturestoreException {
-    this.trainingDatasetKeywordResource.setProject(project);
-    TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
-    this.trainingDatasetKeywordResource.setTrainingDataset(trainingDataset);
+      @ApiParam(value = "Id of the training dataset") @PathParam("trainingDatasetId") Integer trainingDatasetId) {
+    this.trainingDatasetKeywordResource.setProjectId(getProjectId());
+    this.trainingDatasetKeywordResource.setFeaturestoreId(getFeaturestoreId());
+    this.trainingDatasetKeywordResource.setTrainingDatasetId(trainingDatasetId);
     return trainingDatasetKeywordResource;
   }
 
@@ -465,9 +470,9 @@ public class TrainingDatasetService {
   public ActivityResource activity(@ApiParam(value = "Id of the training dataset")
                                    @PathParam("trainingDatasetId") Integer trainingDatasetId)
       throws FeaturestoreException {
-    this.activityResource.setProject(project);
-    this.activityResource.setFeaturestore(featurestore);
-    this.activityResource.setTrainingDatasetById(trainingDatasetId);
+    this.activityResource.setProjectId(getProjectId());
+    this.activityResource.setFeaturestoreId(getFeaturestoreId());
+    this.activityResource.setTrainingDatasetId(trainingDatasetId);
     return this.activityResource;
   }
 
@@ -511,10 +516,11 @@ public class TrainingDatasetService {
                                           @PathParam("trainingdatasetid") Integer trainingDatsetId,
                                         @ApiParam(value = "get batch serving vectors", example = "false")
                                           @QueryParam("batch") @DefaultValue("false") boolean batch)
-      throws FeaturestoreException {
+      throws FeaturestoreException, ProjectException {
     verifyIdProvided(trainingDatsetId);
     Users user = jWTHelper.getUserPrincipal(sc);
-
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     ServingPreparedStatementDTO servingPreparedStatementDTO = preparedStatementBuilder.build(uriInfo,
         new ResourceRequest(ResourceRequest.Name.PREPAREDSTATEMENTS), project, user, featurestore, trainingDatsetId,
           batch);
@@ -535,11 +541,12 @@ public class TrainingDatasetService {
                                             @Context UriInfo uriInfo,
                                             @ApiParam(value = "Id of the trainingdatasetid", required = true)
                                             @PathParam("trainingdatasetid") Integer trainingDatasetId)
-      throws FeaturestoreException {
+      throws FeaturestoreException, ProjectException {
     if (trainingDatasetId == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_ID_NOT_PROVIDED.getMessage());
     }
-
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
     Users user = jWTHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TRANSFORMATIONFUNCTIONS);
@@ -550,13 +557,11 @@ public class TrainingDatasetService {
   
   @Path("/{trainingDatasetId}/tags")
   public TrainingDatasetTagResource tags(@ApiParam(value = "Id of the training dataset")
-                                         @PathParam("trainingDatasetId") Integer trainingDatasetId)
-    throws FeaturestoreException {
+                                         @PathParam("trainingDatasetId") Integer trainingDatasetId) {
     verifyIdProvided(trainingDatasetId);
-    this.tagResource.setProject(project);
-    this.tagResource.setFeatureStore(featurestore);
-    TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
-    this.tagResource.setTrainingDataset(trainingDataset);
+    this.tagResource.setProjectId(getProjectId());
+    this.tagResource.setFeaturestoreId(getFeaturestoreId());
+    this.tagResource.setTrainingDatasetId(trainingDatasetId);
     return this.tagResource;
   }
 }

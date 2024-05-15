@@ -24,12 +24,14 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.featureFlags.FeatureFlagRequired;
 import io.hops.hopsworks.api.filter.featureFlags.FeatureFlags;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.api.util.Pagination;
+import io.hops.hopsworks.api.project.ProjectSubResource;
+import io.hops.hopsworks.api.util.Pagination;;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.util.AccessController;
@@ -77,12 +79,14 @@ import java.util.logging.Logger;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class ExperimentsResource {
+public class ExperimentsResource extends ProjectSubResource {
 
   private static final Logger LOGGER = Logger.getLogger(ExperimentsResource.class.getName());
 
   @EJB
   private ProjectFacade projectFacade;
+  @EJB
+  private ProjectController projectController;
   @EJB
   private ExperimentsBuilder experimentsBuilder;
   @EJB
@@ -104,10 +108,9 @@ public class ExperimentsResource {
   @EJB
   private Settings settings;
 
-  private Project project;
-  public ExperimentsResource setProjectId(Integer projectId) {
-    this.project = projectFacade.find(projectId);
-    return this;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
   @ApiOperation(value = "Get a list of all experiments for this project", response = ExperimentDTO.class)
@@ -119,7 +122,8 @@ public class ExperimentsResource {
   public Response getAll(
       @BeanParam Pagination pagination,
       @BeanParam ExperimentsBeanParam experimentsBeanParam,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) throws ExperimentsException {
+      @Context HttpServletRequest req,
+      @Context UriInfo uriInfo, @Context SecurityContext sc) throws ExperimentsException, ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXPERIMENTS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -127,7 +131,7 @@ public class ExperimentsResource {
     resourceRequest.setSort(experimentsBeanParam.getSortBySet());
     resourceRequest.setExpansions(experimentsBeanParam.getExpansions().getResources());
     Users user = jwtHelper.getUserPrincipal(sc);
-    ExperimentDTO dto = experimentsBuilder.build(uriInfo, resourceRequest, project, user);
+    ExperimentDTO dto = experimentsBuilder.build(uriInfo, resourceRequest, getProject(), user);
     return Response.ok().entity(dto).build();
   }
 
@@ -142,10 +146,13 @@ public class ExperimentsResource {
     @PathParam("id") String id,
     @BeanParam ExpansionBeanParam expansions,
     @Context UriInfo uriInfo,
+    @Context HttpServletRequest req,
     @Context SecurityContext sc)
-    throws ExperimentsException, DatasetException, ProvenanceException, MetadataException, GenericException {
+      throws ExperimentsException, DatasetException, ProvenanceException, MetadataException, GenericException,
+      ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXPERIMENTS);
     resourceRequest.setExpansions(expansions.getResources());
+    Project project = getProject();
     ProvStateDTO fileState = experimentsController.getExperiment(project, id);
     Users user = jwtHelper.getUserPrincipal(sc);
     if(fileState != null) {
@@ -190,10 +197,10 @@ public class ExperimentsResource {
     }
     Users user = jwtHelper.getUserPrincipal(sc);
     
-    Project experimentProject = project;
+    Project experimentProject = getProject();
     switch(type) {
       case INIT: {
-        String experimentPath = Utils.getProjectPath(project.getName()) + Settings.HOPS_EXPERIMENTS_DATASET +
+        String experimentPath = Utils.getProjectPath(experimentProject.getName()) + Settings.HOPS_EXPERIMENTS_DATASET +
                 "/" + id + "/" + Settings.ENVIRONMENT_FILE;
         experimentDTO.setEnvironment(environmentController.exportEnv(experimentProject, user, experimentPath));
         try {
@@ -234,6 +241,7 @@ public class ExperimentsResource {
   
   private Project getModelsProjectAndCheckAccess(ExperimentDTO experimentDTO)
     throws ProjectException, DatasetException, GenericException {
+    Project project = getProject();
     Project modelProject;
     if (experimentDTO.getModelProjectName() == null) {
       modelProject = project;
@@ -268,8 +276,9 @@ public class ExperimentsResource {
       @QueryParam("endpointId") Integer parentProjId,
       @Context HttpServletRequest req,
       @Context UriInfo uriInfo,
-      @Context SecurityContext sc) throws DatasetException {
+      @Context SecurityContext sc) throws DatasetException, ProjectException {
     Users hopsworksUser = jwtHelper.getUserPrincipal(sc);
+    Project project = getProject();
     if(parentProjId != null) {
       Project parentProject = projectFacade.find(parentProjId);
       experimentsController.delete(hopsworksUser, project, parentProject, id);
@@ -278,18 +287,22 @@ public class ExperimentsResource {
     }
     return Response.noContent().build();
   }
-
+  
   @ApiOperation(value = "TensorBoard sub-resource", tags = {"TensorBoardResource"})
   @Path("{id}/tensorboard")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public TensorBoardResource tensorboard(@PathParam("id") String id) {
-    return this.tensorBoardResource.setProject(project, id);
+  public TensorBoardResource tensorboard(@PathParam("id") String id) throws ProjectException {
+    this.tensorBoardResource.setProjectId(getProjectId());
+    this.tensorBoardResource.setExperimentId(id);
+    return this.tensorBoardResource;
   }
 
   @ApiOperation(value = "Results sub-resource", tags = {"ExperimentResultsResource"})
   @Path("{id}/results")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public ExperimentResultsResource results(@PathParam("id") String id) {
-    return this.resultsResource.setProject(project, id);
+  public ExperimentResultsResource results(@PathParam("id") String id) throws ProjectException {
+    this.resultsResource.setProjectId(getProjectId());
+    this.resultsResource.setExperimentId(id);
+    return this.resultsResource;
   }
 }

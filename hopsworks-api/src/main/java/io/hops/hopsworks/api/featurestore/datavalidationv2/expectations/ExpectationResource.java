@@ -16,17 +16,20 @@
 
 package io.hops.hopsworks.api.featurestore.datavalidationv2.expectations;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.featurestore.datavalidationv2.suites.ExpectationSuiteSubResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.expectations.ExpectationController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.expectations.ExpectationDTO;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.Expectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ExpectationSuite;
@@ -44,8 +47,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -58,7 +61,7 @@ import javax.ws.rs.core.UriInfo;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Expectation resource")
-public class ExpectationResource {
+public class ExpectationResource extends ExpectationSuiteSubResource {
 
   @EJB
   private FeaturegroupController featuregroupController;
@@ -70,26 +73,29 @@ public class ExpectationResource {
   private ExpectationController expectationController;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private FeaturestoreController featurestoreController;
+  @EJB
+  private ProjectController projectController;
 
-  private Project project;
-  private Featurestore featurestore;
-  private Featuregroup featuregroup;
-  private ExpectationSuite expectationSuite;
-
-  public void setProject(Project project) {
-    this.project = project;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
-  public void setFeaturestore(Featurestore featurestore) {
-    this.featurestore = featurestore;
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
   }
 
-  public void setFeatureGroup(Integer featureGroupId) throws FeaturestoreException {
-    this.featuregroup = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
+  @Override
+  protected FeaturegroupController getFeaturegroupController() {
+    return featuregroupController;
   }
 
-  public void setExpectationSuite(Integer expectationSuiteId) {
-    this.expectationSuite = expectationSuiteController.getExpectationSuiteById(expectationSuiteId);
+  @Override
+  protected ExpectationSuiteController getExpectationSuiteController() {
+    return expectationSuiteController;
   }
 
   /**
@@ -114,11 +120,12 @@ public class ExpectationResource {
     @Context
       UriInfo uriInfo,
     @PathParam("expectationId")
-      Integer expectationId) throws FeaturestoreException {
+      Integer expectationId) throws FeaturestoreException, ProjectException {
     Expectation expectation = expectationController.getExpectationById(expectationId);
-
+    Project project = getProject();
+    Featuregroup featuregroup = getFeaturegroup(project);
     return Response.ok()
-      .entity(expectationBuilder.build(uriInfo, project, featuregroup, expectationSuite, expectation))
+      .entity(expectationBuilder.build(uriInfo, project, featuregroup, getExpectationSuite(), expectation))
       .build();
   }
 
@@ -145,10 +152,12 @@ public class ExpectationResource {
       HttpServletRequest req,
     @Context
       UriInfo uriInfo,
-    ExpectationDTO expectationDTO) throws FeaturestoreException {
+    ExpectationDTO expectationDTO) throws FeaturestoreException, ProjectException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
-
+    Project project = getProject();
+    Featuregroup featuregroup = getFeaturegroup(project);
+    ExpectationSuite expectationSuite = getExpectationSuite();
     boolean logActivity = true;
     boolean verifyInput = true;
     Expectation expectation = expectationController.createOrUpdateExpectation(
@@ -186,10 +195,12 @@ public class ExpectationResource {
       UriInfo uriInfo,
     @PathParam("expectationId")
       Integer expectationId,
-    ExpectationDTO expectationDTO) throws FeaturestoreException {
+    ExpectationDTO expectationDTO) throws FeaturestoreException, ProjectException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
-
+    Project project = getProject();
+    Featuregroup featuregroup = getFeaturegroup(project);
+    ExpectationSuite expectationSuite = getExpectationSuite();
     boolean logActivity = true;
     boolean verifyInput = true;
     Expectation expectation = expectationController.createOrUpdateExpectation(
@@ -251,9 +262,9 @@ public class ExpectationResource {
     @Context
       HttpServletRequest req,
     @Context
-      UriInfo uriInfo) throws FeaturestoreException {
-
-    ExpectationDTO dtos = expectationBuilder.build(uriInfo, project, featuregroup, expectationSuite);
+      UriInfo uriInfo) throws FeaturestoreException, ProjectException {
+    Project project = getProject();
+    ExpectationDTO dtos = expectationBuilder.build(uriInfo, project, getFeaturegroup(project), getExpectationSuite());
 
     return Response.ok().entity(dtos).build();
   }

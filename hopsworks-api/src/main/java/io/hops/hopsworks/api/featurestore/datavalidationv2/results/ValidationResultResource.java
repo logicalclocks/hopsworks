@@ -16,18 +16,19 @@
 
 package io.hops.hopsworks.api.featurestore.datavalidationv2.results;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.featurestore.featuregroup.FeatureGroupSubResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.results.ValidationResultDTO;
-import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
@@ -52,28 +53,29 @@ import javax.ws.rs.core.UriInfo;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Expectation resource")
-public class ValidationResultResource {
+public class ValidationResultResource extends FeatureGroupSubResource {
   @EJB
   private FeaturegroupController featuregroupController;
   @EJB
-  private ExpectationSuiteController expectationSuiteController;
-  @EJB
   private ValidationResultBuilder validationResultBuilder;
+  @EJB
+  private FeaturestoreController featurestoreController;
+  @EJB
+  private ProjectController projectController;
 
-  private Project project;
-  private Featurestore featurestore;
-  private Featuregroup featuregroup;
-
-  public void setProject(Project project) {
-    this.project = project;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
-  public void setFeaturestore(Featurestore featurestore) {
-    this.featurestore = featurestore;
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
   }
 
-  public void setFeatureGroup(Integer featureGroupId) throws FeaturestoreException {
-    this.featuregroup = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
+  @Override
+  protected FeaturegroupController getFeaturegroupController() {
+    return featuregroupController;
   }
 
   /**
@@ -105,16 +107,17 @@ public class ValidationResultResource {
     @Context
       UriInfo uriInfo,
     @PathParam("expectationId")
-      Integer expectationId) throws FeaturestoreException {
+      Integer expectationId) throws FeaturestoreException, ProjectException {
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.VALIDATIONRESULT);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
     resourceRequest.setSort(validationResultBeanParam.getSortBySet());
     resourceRequest.setFilter(validationResultBeanParam.getFilter());
+    Project project = getProject();
 
     ValidationResultDTO dtos =
-      validationResultBuilder.buildHistory(uriInfo, resourceRequest, project, featuregroup, expectationId);
+      validationResultBuilder.buildHistory(uriInfo, resourceRequest, project, getFeaturegroup(project), expectationId);
 
     return Response.ok().entity(dtos).build();
   }

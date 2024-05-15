@@ -15,33 +15,35 @@
  */
 package io.hops.hopsworks.api.featurestore.trainingdataset;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.featurestore.featureview.FeatureViewSubResource;
 import io.hops.hopsworks.api.featurestore.keyword.TrainingDatasetKeywordResource;
-import io.hops.hopsworks.api.featurestore.tag.TrainingDatasetTagResource;
-import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
+import io.hops.hopsworks.api.featurestore.tag.TrainingDatasetTagResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jobs.JobDTO;
 import io.hops.hopsworks.api.jobs.JobsBuilder;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.provenance.TrainingDatasetProvenanceResource;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
+import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProjectException;
-import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
-import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -80,7 +82,7 @@ import java.util.stream.Collectors;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class TrainingDatasetResource {
+public class TrainingDatasetResource extends FeatureViewSubResource {
 
   @Inject
   private StatisticsResource statisticsResource;
@@ -103,9 +105,23 @@ public class TrainingDatasetResource {
   @Inject
   private TrainingDatasetProvenanceResource provenanceResource;
 
-  private Featurestore featurestore;
-  private FeatureView featureView;
-  private Project project;
+  @EJB
+  private ProjectController projectController;
+  @EJB
+  private FeaturestoreController featurestoreController;
+
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
+  }
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
+  }
+  @Override
+  protected FeatureViewController getFeatureViewController() {
+    return featureViewController;
+  }
 
   @POST
   @Produces(MediaType.APPLICATION_JSON)
@@ -124,10 +140,13 @@ public class TrainingDatasetResource {
       @Context
           UriInfo uriInfo,
       TrainingDatasetDTO trainingDatasetDTO)
-      throws FeaturestoreException, IOException, ServiceException {
+      throws FeaturestoreException, IOException, ServiceException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     TrainingDatasetDTO createdTrainingDatasetDTO =
-        trainingDatasetController.createTrainingDataset(user, project, featurestore, featureView, trainingDatasetDTO);
+      trainingDatasetController.createTrainingDataset(user, project, featurestore, getFeatureView(featurestore),
+        trainingDatasetDTO);
     return Response.created(uriInfo.getRequestUri()).entity(createdTrainingDatasetDTO).build();
   }
 
@@ -149,10 +168,12 @@ public class TrainingDatasetResource {
       @BeanParam
           TrainingDatasetExpansionBeanParam param
   ) throws FeaturestoreException, ServiceException, MetadataException, DatasetException, FeatureStoreMetadataException,
-           IOException {
+      IOException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     List<TrainingDataset> trainingDatasets =
-        trainingDatasetController.getTrainingDatasetByFeatureView(featureView);
+        trainingDatasetController.getTrainingDatasetByFeatureView(getFeatureView(featurestore));
     ResourceRequest resourceRequest = makeResourceRequest(param);
     TrainingDatasetDTO trainingDatasetDTO = trainingDatasetDTOBuilder.build(user, project, trainingDatasets,
         uriInfo, resourceRequest);
@@ -181,9 +202,12 @@ public class TrainingDatasetResource {
       @PathParam("version")
           Integer version
   ) throws FeaturestoreException, ServiceException, MetadataException, DatasetException, FeatureStoreMetadataException,
-           IOException {
+      IOException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(featureView,
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    TrainingDataset trainingDataset =
+      trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(getFeatureView(featurestore),
         version);
     ResourceRequest resourceRequest = makeResourceRequest(param);
     TrainingDatasetDTO trainingDatasetDTO = trainingDatasetDTOBuilder.build(user, project, trainingDataset, uriInfo,
@@ -210,9 +234,11 @@ public class TrainingDatasetResource {
           SecurityContext sc,
       @Context
           HttpServletRequest req
-  ) throws FeaturestoreException, JobException {
+  ) throws FeaturestoreException, JobException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    trainingDatasetController.delete(user, project, featurestore, featureView);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    trainingDatasetController.delete(user, project, featurestore, getFeatureView(featurestore));
     return Response.ok().build();
   }
 
@@ -233,9 +259,11 @@ public class TrainingDatasetResource {
       @ApiParam(value = "training dataset version")
       @PathParam("version")
           Integer version
-  ) throws FeaturestoreException, JobException {
+  ) throws FeaturestoreException, JobException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    trainingDatasetController.delete(user, project, featurestore, featureView, version);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    trainingDatasetController.delete(user, project, featurestore, getFeatureView(featurestore), version);
     return Response.ok().build();
   }
 
@@ -253,9 +281,11 @@ public class TrainingDatasetResource {
           SecurityContext sc,
       @Context
           HttpServletRequest req
-  ) throws FeaturestoreException {
+  ) throws FeaturestoreException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    trainingDatasetController.deleteDataOnly(user, project, featurestore, featureView);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    trainingDatasetController.deleteDataOnly(user, project, featurestore, getFeatureView(featurestore));
     return Response.ok().build();
   }
 
@@ -275,9 +305,11 @@ public class TrainingDatasetResource {
       @ApiParam(value = "training dataset version")
       @PathParam("version")
           Integer version
-  ) throws FeaturestoreException {
+  ) throws FeaturestoreException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    trainingDatasetController.deleteDataOnly(user, project, featurestore, featureView, version);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    trainingDatasetController.deleteDataOnly(user, project, featurestore, getFeatureView(featurestore), version);
     return Response.ok().build();
   }
 
@@ -302,14 +334,17 @@ public class TrainingDatasetResource {
                                         @PathParam("version")
                                             Integer version,
                                         TrainingDatasetDTO trainingDatasetDTO)
-      throws FeaturestoreException, ServiceException {
+      throws FeaturestoreException, ServiceException, ProjectException {
     if (trainingDatasetDTO == null) {
       throw new IllegalArgumentException("Input JSON for updating a Training Dataset cannot be null");
     }
 
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     trainingDatasetDTO.setVersion(version);
-    TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(featureView,
+    TrainingDataset trainingDataset =
+      trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(getFeatureView(featurestore),
         version);
     trainingDatasetDTO.setId(trainingDataset.getId());
     TrainingDatasetDTO oldTrainingDatasetDTO = trainingDatasetController.convertTrainingDatasetToDTO(user, project,
@@ -331,13 +366,11 @@ public class TrainingDatasetResource {
   @Path("/version/{version: [0-9]+}/keywords")
   public TrainingDatasetKeywordResource keywords(
       @ApiParam(value = "Version of the training dataset", required = true)
-      @PathParam("version")
-          Integer version
-  ) throws FeaturestoreException {
-    this.trainingDatasetKeywordResource.setProject(project);
-    TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(
-        featureView, version);
-    this.trainingDatasetKeywordResource.setTrainingDataset(trainingDataset);
+      @PathParam("version") Integer version) {
+    this.trainingDatasetKeywordResource.setProjectId(getProjectId());
+    this.trainingDatasetKeywordResource.setFeaturestoreId(getFeaturestoreId());
+    this.trainingDatasetKeywordResource.setFeatureView(getName(), getVersion());
+    this.trainingDatasetKeywordResource.setTrainingDatasetVersion(version);
     return this.trainingDatasetKeywordResource;
   }
 
@@ -346,11 +379,12 @@ public class TrainingDatasetResource {
       @ApiParam(value = "Version of the training dataset", required = true)
       @PathParam("version")
           Integer version
-  ) throws FeaturestoreException {
-    statisticsResource.setProject(project);
-    statisticsResource.setFeaturestore(featurestore);
-    statisticsResource.setTrainingDatasetByVersion(featureView, version);
-    return statisticsResource;
+  ) {
+    this.statisticsResource.setProjectId(getProjectId());
+    this.statisticsResource.setFeaturestoreId(getFeaturestoreId());
+    this.statisticsResource.setFeatureView(getName(), getVersion());
+    this.statisticsResource.setTrainingDatasetVersion(version);
+    return this.statisticsResource;
   }
 
   @Path("/version/{version: [0-9]+}/tags")
@@ -358,12 +392,11 @@ public class TrainingDatasetResource {
       @ApiParam(value = "Version of the training dataset", required = true)
       @PathParam("version")
           Integer version
-  ) throws FeaturestoreException {
-    tagResource.setProject(project);
-    tagResource.setFeatureStore(featurestore);
-    TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(
-        featureView, version);
-    tagResource.setTrainingDataset(trainingDataset);
+  ) {
+    tagResource.setProjectId(getProjectId());
+    tagResource.setFeaturestoreId(getFeaturestoreId());
+    tagResource.setFeatureView(getName(), getVersion());
+    tagResource.setTrainingDatasetVersion(version);
     return tagResource;
   }
 
@@ -390,31 +423,21 @@ public class TrainingDatasetResource {
       writeOptions = trainingDatasetJobConf.getWriteOptions()
           .stream().collect(Collectors.toMap(OptionDTO::getName, OptionDTO::getValue));
     }
-
-    Jobs job = fsJobManagerController.setupTrainingDatasetJob(project, user, featureView, trainingDatasetVersion,
+    Project project = getProject();
+    Jobs job =
+      fsJobManagerController.setupTrainingDatasetJob(project, user, getFeatureView(project), trainingDatasetVersion,
         trainingDatasetJobConf.getOverwrite(), writeOptions, trainingDatasetJobConf.getSparkJobConfiguration());
     JobDTO jobDTO = jobsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.JOBS), job);
 
     return Response.created(jobDTO.getHref()).entity(jobDTO).build();
   }
 
-  public void setFeatureView(String name, Integer version) throws FeaturestoreException {
-    featureView = featureViewController.getByNameVersionAndFeatureStore(name, version, featurestore);
-  }
-
-  public void setProject(Project project) {
-    this.project = project;
-  }
-
-  public void setFeaturestore(Featurestore featurestore) {
-    this.featurestore = featurestore;
-  }
-  
   @Path("/version/{version: [0-9]+}/provenance")
   public TrainingDatasetProvenanceResource provenance(@ApiParam(value = "Id of the training dataset")
                                                       @PathParam("version") Integer trainingDatasetVersion) {
-    this.provenanceResource.setProject(project);
-    this.provenanceResource.setFeatureView(featureView);
+    this.provenanceResource.setProjectId(getProjectId());
+    this.provenanceResource.setFeaturestoreId(getFeaturestoreId());
+    this.provenanceResource.setFeatureView(getName(), getVersion());
     this.provenanceResource.setTrainingDatasetVersion(trainingDatasetVersion);
     return this.provenanceResource;
   }

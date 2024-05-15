@@ -59,6 +59,11 @@
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
+      <artifactId>featurestore-ee</artifactId>
+      <type>ejb</type>
+    </dependency>
+    <dependency>
+      <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-alert</artifactId>
       <type>ejb</type>
     </dependency>

@@ -16,16 +16,18 @@
 
 package io.hops.hopsworks.api.featurestore;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.project.ProjectSubResource;
 import io.hops.hopsworks.common.featurestore.query.FsQueryDTO;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
@@ -35,6 +37,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Produces;
@@ -47,18 +50,18 @@ import javax.ws.rs.core.UriInfo;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Query constructor service")
-public class FsQueryConstructorResource {
+public class FsQueryConstructorResource extends ProjectSubResource {
 
   @EJB
   private FsQueryBuilder fsQueryBuilder;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private ProjectController projectController;
 
-  private Project project;
-
-  public FsQueryConstructorResource setProject(Project project) {
-    this.project = project;
-    return this;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
  /**
@@ -80,13 +83,15 @@ public class FsQueryConstructorResource {
   @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiOperation(value = "Construct the SQL query to join the requested features", response = FsQueryDTO.class)
-  public Response constructQuery(@Context SecurityContext sc, @Context UriInfo uriInfo,
-                                 QueryDTO queryDto) throws FeaturestoreException, ServiceException {
+  public Response constructQuery(@Context SecurityContext sc,
+                                 @Context UriInfo uriInfo,
+                                 @Context HttpServletRequest req,
+                                 QueryDTO queryDto) throws FeaturestoreException, ServiceException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if (queryDto == null) {
       throw new IllegalArgumentException("Please submit a query to construct");
     }
-    FsQueryDTO fsQueryDTO = fsQueryBuilder.build(uriInfo, project, user, queryDto);
+    FsQueryDTO fsQueryDTO = fsQueryBuilder.build(uriInfo, getProject(), user, queryDto);
     return Response.ok().entity(fsQueryDTO).build();
   }
 }

@@ -18,25 +18,24 @@ package io.hops.hopsworks.api.provenance;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.api.provenance.ops.ProvUsageBuilder;
 import io.hops.hopsworks.api.provenance.ops.ProvUsageBeanParams;
+import io.hops.hopsworks.api.provenance.ops.ProvUsageBuilder;
 import io.hops.hopsworks.api.provenance.ops.dto.ProvArtifactUsageParentDTO;
-import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
-import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.user.Users;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -56,13 +55,11 @@ public class ProvArtifactResource {
   @EJB
   private JWTHelper jWTHelper;
   
-  private Project userProject;
-  private DatasetPath targetEndpoint;
+  private String path;
   private String artifactId;
   
-  public void setContext(Project userProject, DatasetPath targetEndpoint) {
-    this.userProject = userProject;
-    this.targetEndpoint = targetEndpoint;
+  public void setPath(String path) {
+    this.path = path;
   }
   
   public void setArtifactId(String name, Integer version) {
@@ -75,14 +72,15 @@ public class ProvArtifactResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiOperation(value = "Artifact usage", response = ProvArtifactUsageParentDTO.class)
-  public Response status(
-    @BeanParam ProvUsageBeanParams params,
-    @Context UriInfo uriInfo,
-    @Context SecurityContext sc)
-    throws ProvenanceException, GenericException, DatasetException, MetadataException, FeatureStoreMetadataException {
-    Users user = jWTHelper.getUserPrincipal(sc);
-    ProvArtifactUsageParentDTO status = usageBuilder.buildAccessible(uriInfo, user, targetEndpoint, artifactId,
-      params.getUsageType());
-    return Response.ok().entity(status).build();
+  public Response status(@BeanParam ProvUsageBeanParams params,
+                         @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc)
+      throws ProvenanceException, GenericException, DatasetException, MetadataException, FeatureStoreMetadataException {
+//   Users user = jWTHelper.getUserPrincipal(sc);
+//    DatasetPath targetEndpoint =
+//    ProvArtifactUsageParentDTO status = usageBuilder.buildAccessible(uriInfo, user, targetEndpoint, artifactId,
+//      params.getUsageType());
+    return Response.ok().build();
   }
 }

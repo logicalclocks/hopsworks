@@ -21,8 +21,11 @@ import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.ModelRegistryException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.models.version.ModelVersion;
+import io.hops.hopsworks.persistence.entity.project.Project;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -37,26 +40,22 @@ public class ModelTagResource extends ModelRegistryTagResource {
   private ModelUtils modelUtils;
   @EJB
   private DatasetHelper datasetHelper;
-  
-  private ModelVersion modelVersion;
-  
-  /**
-   * Sets the model version for the tag resource
-   *
-   * @param modelVersion
-   */
-  public void setModel(ModelVersion modelVersion) {
-    this.modelVersion = modelVersion;
-  }
+
   
   @Override
-  protected DatasetPath getDatasetPath() throws DatasetException {
+  protected DatasetPath getDatasetPath() throws DatasetException, ProjectException, ModelRegistryException {
+    Project project = getProject();
+    Project modelRegistry = getModelRegistryProject(project);
+    ModelVersion modelVersion = getModelVersion(modelRegistry);
     return datasetHelper.getDatasetPath(project, modelUtils.getModelFullPath(modelRegistry,
       modelVersion.getModel().getName(), modelVersion.getVersion()), DatasetType.DATASET);
   }
   
   @Override
-  protected String getItemId() {
+  protected String getItemId() throws ModelRegistryException, ProjectException {
+    Project project = getProject();
+    Project modelRegistry = getModelRegistryProject(project);
+    ModelVersion modelVersion = getModelVersion(modelRegistry);
     return modelVersion.getMlId();
   }
   

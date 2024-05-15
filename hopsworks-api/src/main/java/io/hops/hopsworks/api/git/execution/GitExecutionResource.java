@@ -15,16 +15,20 @@
  */
 package io.hops.hopsworks.api.git.execution;
 
+import io.hops.hadoop.shaded.javax.servlet.http.HttpServletRequest;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.git.GitSubResource;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.git.GitCommandExecutionStateUpdateDTO;
 import io.hops.hopsworks.common.git.GitExecutionController;
 import io.hops.hopsworks.common.git.util.GitCommandConfigurationValidator;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.GitOpException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.git.GitOpExecution;
 import io.hops.hopsworks.persistence.entity.git.GitRepository;
@@ -54,7 +58,7 @@ import javax.ws.rs.core.UriInfo;
 @Api(value = "Git Execution Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class GitExecutionResource {
+public class GitExecutionResource extends GitSubResource {
   @EJB
   private GitExecutionController executionController;
   @EJB
@@ -63,14 +67,12 @@ public class GitExecutionResource {
   private JWTHelper jwtHelper;
   @EJB
   private GitCommandConfigurationValidator gitCommandConfigurationValidator;
+  @EJB
+  private ProjectController projectController;
 
-  private GitRepository gitRepository;
-  private Project project;
-
-  public GitExecutionResource setRepository(GitRepository gitRepository) {
-    this.gitRepository = gitRepository;
-    this.project = gitRepository.getProject();
-    return this;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
   @ApiOperation(value = "Get all executions in a repository", response = GitOpExecutionDTO.class)
@@ -80,10 +82,13 @@ public class GitExecutionResource {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getRepositoryExecutions(@Context UriInfo uriInfo,
+                                          @Context HttpServletRequest req,
                                           @Context SecurityContext sc,
                                           @BeanParam ExecutionBeanParam executionBeanParam,
-                                          @BeanParam Pagination pagination) throws GitOpException {
+                                          @BeanParam Pagination pagination) throws GitOpException, ProjectException {
     Users hopsworksUser = jwtHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    GitRepository gitRepository = gitCommandConfigurationValidator.verifyRepository(project, getRepositoryId());
     gitCommandConfigurationValidator.verifyRepository(project, hopsworksUser, gitRepository.getId());
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTION);
     resourceRequest.setExpansions(executionBeanParam.getExpansions().getResources());
@@ -100,10 +105,15 @@ public class GitExecutionResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getExecution(@PathParam("executionId") Integer executionId, @Context SecurityContext sc,
+  public Response getExecution(@PathParam("executionId") Integer executionId,
+                               @Context HttpServletRequest req,
+                               @Context SecurityContext sc,
                                @Context UriInfo uriInfo,
-                               @BeanParam ExecutionBeanParam executionBeanParam) throws GitOpException {
+                               @BeanParam ExecutionBeanParam executionBeanParam) throws GitOpException,
+      ProjectException {
     Users hopsworksUser = jwtHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    GitRepository gitRepository = gitCommandConfigurationValidator.verifyRepository(project, getRepositoryId());
     gitCommandConfigurationValidator.verifyRepository(project, hopsworksUser, gitRepository.getId());
     GitOpExecution executionObj = executionController.getExecutionInRepository(gitRepository, executionId);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTION);
@@ -124,11 +134,12 @@ public class GitExecutionResource {
                                                  @PathParam("repositoryId") Integer repositoryId,
                                                  GitCommandExecutionStateUpdateDTO stateUpdateDTO,
                                                  @Context SecurityContext sc,
+                                                 @Context HttpServletRequest req,
                                                  @Context UriInfo uriInfo,
                                                  @BeanParam ExecutionBeanParam executionBeanParam)
-      throws GitOpException, IllegalArgumentException {
+      throws GitOpException, IllegalArgumentException, ProjectException {
     Users hopsworksUser = jwtHelper.getUserPrincipal(sc);
-    GitOpExecution newExec = executionController.updateGitExecutionState(project,hopsworksUser, stateUpdateDTO,
+    GitOpExecution newExec = executionController.updateGitExecutionState(getProject(), hopsworksUser, stateUpdateDTO,
         repositoryId, executionId);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTION);
     resourceRequest.setExpansions(executionBeanParam.getExpansions().getResources());

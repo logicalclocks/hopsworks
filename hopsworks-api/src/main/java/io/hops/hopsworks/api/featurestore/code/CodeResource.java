@@ -17,19 +17,23 @@
 package io.hops.hopsworks.api.featurestore.code;
 
 import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.featurestore.featuregroup.FeatureGroupSubResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.code.CodeActions;
 import io.hops.hopsworks.common.featurestore.code.CodeController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.jupyter.NotebookConversion;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -64,7 +68,7 @@ import javax.ws.rs.core.UriInfo;
 @Api(value = "Feature store code Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class CodeResource {
+public class CodeResource extends FeatureGroupSubResource {
 
   @EJB
   private CodeBuilder codeBuilder;
@@ -76,26 +80,35 @@ public class CodeResource {
   private FeaturegroupController featuregroupController;
   @EJB
   private TrainingDatasetController trainingDatasetController;
+  @EJB
+  private ProjectController projectController;
+  @EJB
+  private FeaturestoreController featurestoreController;
 
-  private Project project;
-  private Featurestore featurestore;
-  private Featuregroup featuregroup;
-  private TrainingDataset trainingDataset;
-
-  public void setProject(Project project) {
-    this.project = project;
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
   }
 
-  public void setFeatureStore(Featurestore featurestore) {
-    this.featurestore = featurestore;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
-  public void setFeatureGroupId(Integer featureGroupId) throws FeaturestoreException {
-    this.featuregroup = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
+  @Override
+  protected FeaturegroupController getFeaturegroupController() {
+    return featuregroupController;
   }
+  private Integer trainingDatasetId;
 
-  public void setTrainingDatasetId(Integer trainingDatasetId) throws FeaturestoreException {
-    this.trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
+  public void setTrainingDatasetId(Integer trainingDatasetId) {
+    this.trainingDatasetId = trainingDatasetId;
+  }
+  private TrainingDataset getTrainingDataset(Featurestore featurestore) throws FeaturestoreException {
+    if (trainingDatasetId != null) {
+      return trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
+    }
+    return null;
   }
 
   @GET
@@ -109,7 +122,8 @@ public class CodeResource {
   public Response get(@BeanParam Pagination pagination,
                       @BeanParam CodeBeanParam codeBeanParam,
                       @Context UriInfo uriInfo,
-                      @Context SecurityContext sc) throws FeaturestoreException, ServiceException {
+                      @Context HttpServletRequest req,
+                      @Context SecurityContext sc) throws FeaturestoreException, ServiceException, ProjectException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
 
@@ -119,7 +133,10 @@ public class CodeResource {
     resourceRequest.setSort(codeBeanParam.getSortBySet());
     resourceRequest.setFilter(codeBeanParam.getFilterSet());
     resourceRequest.setField(codeBeanParam.getFieldSet());
-
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    TrainingDataset trainingDataset = getTrainingDataset(featurestore);
+    Featuregroup featuregroup = getFeaturegroup(featurestore);
     CodeDTO dto;
     if (featuregroup != null) {
       dto = codeBuilder.build(uriInfo, resourceRequest, project, user, featurestore, featuregroup,
@@ -145,7 +162,8 @@ public class CodeResource {
                       @BeanParam CodeBeanParam codeBeanParam,
                       @PathParam("codeId") Integer codeId,
                       @Context UriInfo uriInfo,
-                      @Context SecurityContext sc) throws FeaturestoreException, ServiceException {
+                      @Context HttpServletRequest req,
+                      @Context SecurityContext sc) throws FeaturestoreException, ServiceException, ProjectException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
 
@@ -155,7 +173,10 @@ public class CodeResource {
     resourceRequest.setSort(codeBeanParam.getSortBySet());
     resourceRequest.setFilter(codeBeanParam.getFilterSet());
     resourceRequest.setField(codeBeanParam.getFieldSet());
-
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    TrainingDataset trainingDataset = getTrainingDataset(featurestore);
+    Featuregroup featuregroup = getFeaturegroup(featurestore);
     CodeDTO dto;
     if (featuregroup != null) {
       dto = codeBuilder.build(uriInfo, resourceRequest, project, user, featuregroup, codeId,
@@ -183,13 +204,18 @@ public class CodeResource {
                        @QueryParam("type") CodeActions.RunType type,
                        @QueryParam("databricksClusterId") String databricksClusterId,
                        CodeDTO codeDTO)
-      throws FeaturestoreException, DatasetException, HopsSecurityException, ServiceException, UserException {
+    throws FeaturestoreException, DatasetException, HopsSecurityException, ServiceException, UserException,
+    ProjectException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
 
     String databricksNotebook = null;
     byte[] databricksArchive = null;
 
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    TrainingDataset trainingDataset = getTrainingDataset(featurestore);
+    Featuregroup featuregroup = getFeaturegroup(featurestore);
     CodeDTO dto;
     if (featuregroup != null) {
       FeaturestoreCode featurestoreCode = codeController.registerCode(project, user, codeDTO.getCommitTime(),

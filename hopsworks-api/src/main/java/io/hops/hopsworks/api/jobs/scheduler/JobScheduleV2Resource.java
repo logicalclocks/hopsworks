@@ -16,14 +16,17 @@
 
 package io.hops.hopsworks.api.jobs.scheduler;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.jobs.JobSubResource;
+import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jobs.scheduler.JobScheduleV2Controller;
 import io.hops.hopsworks.common.jobs.scheduler.JobScheduleV2DTO;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.jobs.scheduler.JobScheduleV2;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
@@ -49,13 +52,26 @@ import javax.ws.rs.core.UriInfo;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Job Schedule resource")
-public class JobScheduleV2Resource {
+public class JobScheduleV2Resource extends JobSubResource {
 
-  private Jobs job;
   @EJB
   private JobScheduleV2Controller jobScheduleController;
   @EJB
   private JobScheduleV2Builder jobScheduleBuilder;
+  @EJB
+  private JobController jobController;
+  @EJB
+  private ProjectController projectController;
+
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
+  }
+
+  @Override
+  protected JobController getJobController() {
+    return jobController;
+  }
 
   @ApiOperation(value = "Get job's schedule.", response = JobScheduleV2DTO.class)
   @GET
@@ -71,8 +87,8 @@ public class JobScheduleV2Resource {
       @Context
           HttpServletRequest req,
       @Context
-          UriInfo uriInfo) throws JobException {
-    JobScheduleV2 jobSchedule = jobScheduleController.getScheduleByJobId(job.getId());
+          UriInfo uriInfo) throws JobException, ProjectException {
+    JobScheduleV2 jobSchedule = jobScheduleController.getScheduleByJobId(getJob().getId());
     JobScheduleV2DTO scheduleDTO = jobScheduleBuilder.build(uriInfo, jobSchedule);
     return Response.ok().entity(scheduleDTO).build();
   }
@@ -92,9 +108,9 @@ public class JobScheduleV2Resource {
       @Context
           HttpServletRequest req,
       @Context
-          UriInfo uriInfo) {
+          UriInfo uriInfo) throws ProjectException, JobException {
     JobScheduleV2 jobSchedule = jobScheduleController.createSchedule(
-        jobScheduleBuilder.validateAndConvertOnCreate(job, scheduleDTO)
+        jobScheduleBuilder.validateAndConvertOnCreate(getJob(), scheduleDTO)
     );
     scheduleDTO = jobScheduleBuilder.build(uriInfo, jobSchedule);
     return Response.created(scheduleDTO.getHref()).entity(scheduleDTO).build();
@@ -110,11 +126,13 @@ public class JobScheduleV2Resource {
   @ApiKeyRequired(acceptedScopes = {ApiScope.JOB},
           allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response updateSchedule(JobScheduleV2DTO scheduleDTO,
-                                 @Context SecurityContext sc,
-                                 @Context HttpServletRequest req,
-                                 @Context UriInfo uriInfo)
-      throws JobException {
-    JobScheduleV2 schedule = jobScheduleBuilder.validateAndConvertOnUpdate(job, scheduleDTO);
+      @Context
+          SecurityContext sc,
+      @Context
+          HttpServletRequest req,
+      @Context
+          UriInfo uriInfo) throws JobException, ProjectException {
+    JobScheduleV2 schedule = jobScheduleBuilder.validateAndConvertOnUpdate(getJob(), scheduleDTO);
     schedule = jobScheduleController.updateSchedule(schedule);
     scheduleDTO = jobScheduleBuilder.build(uriInfo, schedule);
     return Response.ok().entity(scheduleDTO).build();
@@ -133,14 +151,9 @@ public class JobScheduleV2Resource {
           allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response deleteSchedule(
       @Context HttpServletRequest req,
-      @Context SecurityContext sc) {
-    jobScheduleController.deleteSchedule(job.getId());
+      @Context SecurityContext sc) throws ProjectException, JobException {
+    jobScheduleController.deleteSchedule(getJob().getId());
     return Response.noContent().build();
-  }
-
-  public JobScheduleV2Resource setJob(Jobs job) {
-    this.job = job;
-    return this;
   }
 
 }

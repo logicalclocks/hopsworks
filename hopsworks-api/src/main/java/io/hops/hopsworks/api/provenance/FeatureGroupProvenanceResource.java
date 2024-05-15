@@ -16,6 +16,7 @@
 package io.hops.hopsworks.api.provenance;
 
 import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.featurestore.featuregroup.FeatureGroupSubResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
@@ -33,6 +34,7 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.provenance.explicit.ProvExplicitControllerIface;
 import io.hops.hopsworks.common.provenance.explicit.ProvExplicitLink;
 import io.hops.hopsworks.common.provenance.ops.dto.ProvLinksDTO;
@@ -43,11 +45,11 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ModelRegistryException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
-import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -76,7 +78,7 @@ import java.io.IOException;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Feature Group Explicit Provenance Resource")
-public class FeatureGroupProvenanceResource {
+public class FeatureGroupProvenanceResource extends FeatureGroupSubResource {
   @EJB
   private FeaturestoreController featurestoreController;
   @EJB
@@ -96,26 +98,28 @@ public class FeatureGroupProvenanceResource {
   private JWTHelper jwtHelper;
   @EJB
   private DatasetHelper datasetHelper;
+  @EJB
+  private ProjectController projectController;
 
-  private Project project;
-  
-  private Featurestore featureStore;
-  private Integer featureGroupId;
-  
-  public void setProject(Project project) {
-    this.project = project;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
-  public void setFeatureStore(Featurestore featureStore) {
-    this.featureStore = featureStore;
-  }
-  
-  public void setFeatureGroupId(Integer featureGroupId) {
-    this.featureGroupId = featureGroupId;
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
   }
 
-  private DatasetPath getFeaturestoreDatasetPath() throws FeaturestoreException, DatasetException {
-    Dataset featurestore = featurestoreController.getProjectFeaturestoreDataset(featureStore.getProject());
+  @Override
+  protected FeaturegroupController getFeaturegroupController() {
+    return featureGroupController;
+  }
+
+
+  private DatasetPath getFeaturestoreDatasetPath() throws FeaturestoreException, DatasetException, ProjectException {
+    Project project = getProject();
+    Dataset featurestore = featurestoreController.getProjectFeaturestoreDataset(project);
     Path featurestorePath = Utils.getDatasetPath(featurestore, settings);
     Inode featurestoreInode = inodeController.getInodeAtPath(featurestorePath.toString());
     return datasetHelper.getTopLevelDatasetPath(project, featurestore, featurestoreInode);
@@ -139,11 +143,12 @@ public class FeatureGroupProvenanceResource {
       @Context HttpServletRequest req,
       @Context SecurityContext sc)
       throws GenericException, FeaturestoreException, DatasetException, ServiceException, MetadataException,
-      FeatureStoreMetadataException, IOException, ModelRegistryException {
+      FeatureStoreMetadataException, IOException, ModelRegistryException, ProjectException {
     Users user = jwtHelper.getUserPrincipal(sc);
+    Project project = getProject();
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.PROVENANCE);
     resourceRequest.setExpansions(explicitProvenanceExpansionBeanParam.getResources());
-    Featuregroup fg = featureGroupController.getFeaturegroupById(featureStore, featureGroupId);
+    Featuregroup fg = featureGroupController.getFeaturegroupById(getFeaturestore(project), getFeatureGroupId());
     ProvExplicitLink<Featuregroup> provenance
         = provCtrl.featureGroupLinks(project, fg, pagination.getUpstreamLvls(), pagination.getDownstreamLvls());
     ProvExplicitLinkDTO<?> result = linksBuilder.build(uriInfo, resourceRequest, project, user, provenance);
@@ -161,9 +166,9 @@ public class FeatureGroupProvenanceResource {
                          @Context HttpServletRequest req,
                          @Context SecurityContext sc)
       throws ProvenanceException, GenericException, DatasetException, MetadataException, FeatureStoreMetadataException,
-      FeaturestoreException {
+      FeaturestoreException, ProjectException {
     Users user = jwtHelper.getUserPrincipal(sc);
-    Featuregroup featureGroup = featureGroupController.getFeaturegroupById(featureStore, featureGroupId);
+    Featuregroup featureGroup = featureGroupController.getFeaturegroupById(getFeaturestore(), getFeatureGroupId());
     String fgProvenanceId = featureGroup.getName() + "_" + featureGroup.getVersion();
     ProvArtifactUsageParentDTO status = usageBuilder.buildAccessible(uriInfo, user, getFeaturestoreDatasetPath(),
         fgProvenanceId, params.getUsageType());

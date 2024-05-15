@@ -15,17 +15,20 @@
  */
 package io.hops.hopsworks.api.python.environment.command;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.python.command.CommandBeanParam;
 import io.hops.hopsworks.api.python.command.CommandBuilder;
 import io.hops.hopsworks.api.python.command.CommandDTO;
+import io.hops.hopsworks.api.python.environment.EnvironmentSubResource;
 import io.hops.hopsworks.api.python.environment.command.custom.EnvironmentCustomCommandsResource;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.python.commands.CommandsController;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.PythonException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -55,7 +58,7 @@ import javax.ws.rs.core.UriInfo;
 @Api(value = "Python Environment Commands Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class EnvironmentCommandsResource {
+public class EnvironmentCommandsResource extends EnvironmentSubResource {
 
   @EJB
   private CommandsController commandsController;
@@ -65,16 +68,12 @@ public class EnvironmentCommandsResource {
   private EnvironmentController environmentController;
   @Inject
   private EnvironmentCustomCommandsResource environmentCustomCommandsResource;
+  @EJB
+  private ProjectController projectController;
   
-  private Project project;
-  private String pythonVersion;
-  public EnvironmentCommandsResource setProject(Project project, String pythonVersion) {
-    this.project = project;
-    this.pythonVersion = pythonVersion;
-    return this;
-  }
-  public Project getProject() {
-    return project;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
   @ApiOperation(value = "Get commands for this environment")
@@ -87,9 +86,11 @@ public class EnvironmentCommandsResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response get(@BeanParam Pagination pagination,
                       @BeanParam CommandBeanParam environmentsCommandBeanParam,
+                      @Context HttpServletRequest req,
                       @Context UriInfo uriInfo,
-                      @Context SecurityContext sc) throws PythonException {
-    environmentController.checkCondaEnabled(project, pythonVersion, false);
+                      @Context SecurityContext sc) throws PythonException, ProjectException {
+    Project project = getProject();
+    environmentController.checkCondaEnabled(project, getPythonVersion(), false);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.COMMANDS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -110,8 +111,10 @@ public class EnvironmentCommandsResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getByName(@PathParam("commandId") Integer commandId,
                             @Context UriInfo uriInfo,
-                            @Context SecurityContext sc) throws PythonException {
-    environmentController.checkCondaEnabled(project, pythonVersion, false);
+                            @Context HttpServletRequest req,
+                            @Context SecurityContext sc) throws PythonException, ProjectException {
+    Project project = getProject();
+    environmentController.checkCondaEnabled(project, getPythonVersion(), false);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.COMMANDS);
     CommandDTO dto = commandBuilder.build(uriInfo, resourceRequest, project, commandId);
     return Response.ok().entity(dto).build();
@@ -125,8 +128,9 @@ public class EnvironmentCommandsResource {
   @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON_LIBRARIES},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response deleteAll(@Context SecurityContext sc,
-                            @Context HttpServletRequest req) throws PythonException {
-    environmentController.checkCondaEnabled(project, pythonVersion, false);
+                            @Context HttpServletRequest req) throws PythonException, ProjectException {
+    Project project = getProject();
+    environmentController.checkCondaEnabled(project, getPythonVersion(), false);
     commandsController.deleteCommands(project);
     return Response.noContent().build();
   }
@@ -140,8 +144,9 @@ public class EnvironmentCommandsResource {
   @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON_LIBRARIES},
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response deleteCommand(@Context SecurityContext sc, @PathParam("commandId") Integer commandId,
-                            @Context HttpServletRequest req) throws PythonException {
-    environmentController.checkCondaEnabled(project, pythonVersion, false);
+                            @Context HttpServletRequest req) throws PythonException, ProjectException {
+    Project project = getProject();
+    environmentController.checkCondaEnabled(project, getPythonVersion(), false);
     commandsController.deleteCommand(project,commandId);
     return Response.noContent().build();
   }
@@ -154,8 +159,10 @@ public class EnvironmentCommandsResource {
   @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON_LIBRARIES},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response update(@Context UriInfo uriInfo,
-                         @Context SecurityContext sc) throws PythonException {
-    environmentController.checkCondaEnabled(project, pythonVersion, false);
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc) throws PythonException, ProjectException {
+    Project project = getProject();
+    environmentController.checkCondaEnabled(project, getPythonVersion(), false);
     commandsController.retryFailedCondaEnvOps(project);
     return Response.noContent().build();
   }
@@ -164,6 +171,8 @@ public class EnvironmentCommandsResource {
   @Path("custom")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public EnvironmentCustomCommandsResource commands() {
-    return this.environmentCustomCommandsResource.setProject(project, pythonVersion);
+    this.environmentCustomCommandsResource.setProjectId(getProjectId());
+    this.environmentCustomCommandsResource.setPythonVersion(getPythonVersion());
+    return this.environmentCustomCommandsResource;
   }
 }

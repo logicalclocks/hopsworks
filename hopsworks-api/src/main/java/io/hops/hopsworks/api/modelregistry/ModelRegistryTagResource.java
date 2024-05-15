@@ -15,25 +15,29 @@
  */
 package io.hops.hopsworks.api.modelregistry;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.featureFlags.FeatureFlagRequired;
 import io.hops.hopsworks.api.filter.featureFlags.FeatureFlags;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.modelregistry.models.ModelRegistrySubResource;
+import io.hops.hopsworks.api.modelregistry.models.ModelsController;
 import io.hops.hopsworks.api.modelregistry.models.tags.ModelRegistryTagUri;
 import io.hops.hopsworks.api.tags.TagBuilder;
 import io.hops.hopsworks.api.tags.TagsExpansionBeanParam;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.featurestore.metadata.AttachMetadataResult;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.tags.TagControllerIface;
 import io.hops.hopsworks.common.tags.TagsDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
-import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
+import io.hops.hopsworks.exceptions.MetadataException;
+import io.hops.hopsworks.exceptions.ModelRegistryException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
@@ -64,7 +68,7 @@ import java.util.Map;
 
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Tags resource")
-public abstract class ModelRegistryTagResource {
+public abstract class ModelRegistryTagResource extends ModelRegistrySubResource {
   
   @Inject
   private TagControllerIface tagController;
@@ -73,29 +77,23 @@ public abstract class ModelRegistryTagResource {
   @EJB
   private JWTHelper jwtHelper;
   
-  protected Project project;
-  protected Project modelRegistry;
+  @EJB
+  private ProjectController projectController;
+  @EJB
+  private ModelsController modelsController;
   
-  /**
-   * Set the project of the tag resource (provided by parent resource)
-   *
-   * @param project the project where the tag operations will be performed
-   */
-  public void setProject(Project project) {
-    this.project = project;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
   
-  /**
-   * Sets the model registry of the tag resource
-   *
-   * @param modelRegistry
-   */
-  public void setModelRegistry(Project modelRegistry) {
-    this.modelRegistry = modelRegistry;
+  @Override
+  protected ModelsController getModelsController() {
+    return modelsController;
   }
   
-  protected abstract DatasetPath getDatasetPath() throws DatasetException;
-  protected abstract String getItemId();
+  protected abstract DatasetPath getDatasetPath() throws DatasetException, ProjectException, ModelRegistryException;
+  protected abstract String getItemId() throws ProjectException, ModelRegistryException;
   protected abstract ResourceRequest.Name getItemType();
   
   @ApiOperation(value = "Create or update one tag", response = TagsDTO.class)
@@ -114,11 +112,13 @@ public abstract class ModelRegistryTagResource {
                          @Context UriInfo uriInfo,
                          @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name,
                          @ApiParam(value = "Value to set for the tag") String value)
-    throws MetadataException, FeatureStoreMetadataException, DatasetException {
+      throws MetadataException, FeatureStoreMetadataException, DatasetException, ProjectException,
+      ModelRegistryException {
     
     Users user = jwtHelper.getUserPrincipal(sc);
     AttachMetadataResult result = tagController.upsert(user, getDatasetPath(), name, value);
-    ModelRegistryTagUri tagUri = new ModelRegistryTagUri(uriInfo, modelRegistry, getItemType(), getItemId());
+    ModelRegistryTagUri tagUri =
+      new ModelRegistryTagUri(uriInfo, getModelRegistryProject(), getItemType(), getItemId());
     TagsDTO dto = tagBuilder.build(tagUri, getDatasetPath(), result.getItems());
     
     UriBuilder builder = uriInfo.getAbsolutePathBuilder();
@@ -142,7 +142,8 @@ public abstract class ModelRegistryTagResource {
   public Response bulkPutTags(@Context SecurityContext sc, @Context UriInfo uriInfo,
                               @Context HttpServletRequest req,
                               TagsDTO tags)
-    throws MetadataException, FeatureStoreMetadataException, DatasetException {
+      throws MetadataException, FeatureStoreMetadataException, DatasetException, ProjectException,
+      ModelRegistryException {
     
     Users user = jwtHelper.getUserPrincipal(sc);
     AttachMetadataResult result;
@@ -156,7 +157,8 @@ public abstract class ModelRegistryTagResource {
       }
       result = tagController.upsertAll(user, getDatasetPath(), newTags);
     }
-    ModelRegistryTagUri tagUri = new ModelRegistryTagUri(uriInfo, modelRegistry, getItemType(), getItemId());
+    ModelRegistryTagUri tagUri =
+      new ModelRegistryTagUri(uriInfo, getModelRegistryProject(), getItemType(), getItemId());
     TagsDTO dto = tagBuilder.build(tagUri, getDatasetPath(), result.getItems());
     
     UriBuilder builder = uriInfo.getAbsolutePathBuilder();
@@ -179,12 +181,14 @@ public abstract class ModelRegistryTagResource {
   public Response getTags(@Context SecurityContext sc, @Context UriInfo uriInfo,
                           @Context HttpServletRequest req,
                           @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
-    throws DatasetException, MetadataException, FeatureStoreMetadataException {
+      throws DatasetException, MetadataException, FeatureStoreMetadataException, ProjectException,
+      ModelRegistryException {
     
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
     resourceRequest.setExpansions(tagsExpansionBeanParam.getResources());
-    ModelRegistryTagUri tagUri = new ModelRegistryTagUri(uriInfo, modelRegistry, getItemType(), getItemId());
+    ModelRegistryTagUri tagUri =
+      new ModelRegistryTagUri(uriInfo, getModelRegistryProject(), getItemType(), getItemId());
     TagsDTO dto = tagBuilder.build(tagUri, resourceRequest, user, getDatasetPath());
     return Response.status(Response.Status.OK).entity(dto).build();
   }
@@ -203,12 +207,14 @@ public abstract class ModelRegistryTagResource {
                          @Context HttpServletRequest req,
                          @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name,
                          @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
-    throws DatasetException, MetadataException, FeatureStoreMetadataException {
+    throws DatasetException, MetadataException, FeatureStoreMetadataException, ProjectException,
+    ModelRegistryException {
     
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
     resourceRequest.setExpansions(tagsExpansionBeanParam.getResources());
-    ModelRegistryTagUri tagUri = new ModelRegistryTagUri(uriInfo, modelRegistry, getItemType(), getItemId());
+    ModelRegistryTagUri tagUri =
+      new ModelRegistryTagUri(uriInfo, getModelRegistryProject(), getItemType(), getItemId());
     TagsDTO dto = tagBuilder.buildAsMap(tagUri, resourceRequest, user, getDatasetPath(), name);
     return Response.status(Response.Status.OK).entity(dto).build();
   }
@@ -224,7 +230,7 @@ public abstract class ModelRegistryTagResource {
   @FeatureFlagRequired(requiredFeatureFlags = {FeatureFlags.DATA_SCIENCE_PROFILE})
   public Response deleteTags(@Context SecurityContext sc,
                              @Context HttpServletRequest req)
-    throws DatasetException, MetadataException {
+    throws DatasetException, MetadataException, ProjectException, ModelRegistryException {
     
     Users user = jwtHelper.getUserPrincipal(sc);
     tagController.deleteAll(user, getDatasetPath());
@@ -244,7 +250,7 @@ public abstract class ModelRegistryTagResource {
   public Response deleteTag(@Context SecurityContext sc,
                             @Context HttpServletRequest req,
                             @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name)
-    throws DatasetException, MetadataException {
+    throws DatasetException, MetadataException, ProjectException, ModelRegistryException {
     
     Users user = jwtHelper.getUserPrincipal(sc);
     tagController.delete(user, getDatasetPath(), name);

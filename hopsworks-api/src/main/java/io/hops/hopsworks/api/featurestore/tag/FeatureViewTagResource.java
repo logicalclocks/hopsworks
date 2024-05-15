@@ -16,16 +16,20 @@
 package io.hops.hopsworks.api.featurestore.tag;
 
 import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.featurestore.featureview.FeatureViewSubResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.tags.TagsExpansionBeanParam;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.common.featurestore.metadata.AttachMetadataResult;
 import io.hops.hopsworks.common.featurestore.metadata.FeatureStoreTagControllerIface;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.tags.TagsDTO;
-import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
@@ -64,45 +68,31 @@ import java.util.stream.Collectors;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Feature View Tags resource")
-public class FeatureViewTagResource {
+public class FeatureViewTagResource extends FeatureViewSubResource {
 
   @Inject
   private FeatureStoreTagControllerIface tagController;
   @EJB
   private FeatureStoreTagBuilder tagBuilder;
-
-  private Project project;
-  private Featurestore featureStore;
-  private FeatureView featureView;
   @EJB
   private FeatureViewController featureViewController;
 
-  /**
-   * Set the project of the tag resource (provided by parent resource)
-   *
-   * @param project the project where the tag operations will be performed
-   */
-  public void setProject(Project project) {
-    this.project = project;
-  }
+  @EJB
+  private ProjectController projectController;
+  @EJB
+  private FeaturestoreController featurestoreController;
 
-  /**
-   * Sets the feature store of the tag resource
-   *
-   * @param featureStore
-   */
-  public void setFeatureStore(Featurestore featureStore) {
-    this.featureStore = featureStore;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
-
-  /**
-   * Sets the feature view of the tag resource
-   *
-   * @param name
-   * @param version
-   */
-  public void setFeatureView(String name, Integer version) throws FeaturestoreException {
-    this.featureView = featureViewController.getByNameVersionAndFeatureStore(name, version, featureStore);
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
+  }
+  @Override
+  protected FeatureViewController getFeatureViewController() {
+    return featureViewController;
   }
 
   @ApiOperation(value = "Create or update one tag", response = TagsDTO.class)
@@ -120,7 +110,10 @@ public class FeatureViewTagResource {
                          @Context UriInfo uriInfo,
                          @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name,
                          @ApiParam(value = "Value to set for the tag") String value)
-      throws FeatureStoreMetadataException, FeaturestoreException {
+      throws FeatureStoreMetadataException, FeaturestoreException, ProjectException {
+    Project project = getProject();
+    Featurestore featureStore = getFeaturestore(project);
+    FeatureView featureView = getFeatureView(featureStore);
     AttachMetadataResult<FeatureStoreTag> result = tagController.upsertTag(featureView, name, value);
     TagsDTO dto = tagBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.TAGS), project.getId(),
         featureStore.getId(), ResourceRequest.Name.FEATUREVIEW, featureView.getId(), result.getItems());
@@ -144,8 +137,10 @@ public class FeatureViewTagResource {
   public Response putTags(@Context SecurityContext sc, @Context UriInfo uriInfo,
                           @Context HttpServletRequest req,
                           TagsDTO tagsDTO)
-      throws FeatureStoreMetadataException, FeaturestoreException {
-
+      throws FeatureStoreMetadataException, FeaturestoreException, ProjectException {
+    Project project = getProject();
+    Featurestore featureStore = getFeaturestore(project);
+    FeatureView featureView = getFeatureView(featureStore);
     Map<String, String> tags;
     if(tagsDTO.getItems() == null || tagsDTO.getItems().isEmpty()) {
       tags = new HashMap<>();
@@ -175,7 +170,10 @@ public class FeatureViewTagResource {
   public Response getTags(@Context SecurityContext sc, @Context UriInfo uriInfo,
                           @Context HttpServletRequest req,
                           @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
-      throws FeatureStoreMetadataException {
+      throws FeatureStoreMetadataException, ProjectException, FeaturestoreException {
+    Project project = getProject();
+    Featurestore featureStore = getFeaturestore(project);
+    FeatureView featureView = getFeatureView(featureStore);
     Map<String, FeatureStoreTag> result = tagController.getTags(featureView);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
     resourceRequest.setExpansions(tagsExpansionBeanParam.getResources());
@@ -197,7 +195,10 @@ public class FeatureViewTagResource {
                          @Context HttpServletRequest req,
                          @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name,
                          @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
-      throws FeatureStoreMetadataException {
+      throws FeatureStoreMetadataException, ProjectException, FeaturestoreException {
+    Project project = getProject();
+    Featurestore featureStore = getFeaturestore(project);
+    FeatureView featureView = getFeatureView(featureStore);
     Optional<FeatureStoreTag> result = tagController.getTag(featureView, name);
     if(result.isPresent()) {
       ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
@@ -223,8 +224,8 @@ public class FeatureViewTagResource {
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response deleteTags(@Context SecurityContext sc,
                              @Context HttpServletRequest req)
-      throws FeaturestoreException {
-    tagController.deleteTags(featureView);
+      throws FeaturestoreException, ProjectException {
+    tagController.deleteTags(getFeatureView());
     return Response.noContent().build();
   }
 
@@ -240,8 +241,8 @@ public class FeatureViewTagResource {
   public Response deleteTag(@Context SecurityContext sc,
                             @Context HttpServletRequest req,
                             @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name)
-      throws FeaturestoreException, FeatureStoreMetadataException {
-    tagController.deleteTag(featureView, name);
+      throws FeaturestoreException, FeatureStoreMetadataException, ProjectException {
+    tagController.deleteTag(getFeatureView(), name);
     return Response.noContent().build();
   }
 }

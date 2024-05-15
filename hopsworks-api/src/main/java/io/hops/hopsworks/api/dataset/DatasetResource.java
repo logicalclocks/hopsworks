@@ -23,6 +23,7 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.project.ProjectSubResource;
 import io.hops.hopsworks.api.util.DownloadService;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.api.util.UploadService;
@@ -87,10 +88,10 @@ import java.util.logging.Logger;
 @Api(value = "Dataset Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class DatasetResource {
-  
+public class DatasetResource extends ProjectSubResource {
+
   private static final Logger LOGGER = Logger.getLogger(DatasetResource.class.getName());
-  
+
   @EJB
   private DatasetController datasetController;
   @EJB
@@ -120,26 +121,11 @@ public class DatasetResource {
   @EJB
   private Settings settings;
 
-  private Integer projectId;
-  private String projectName;
-
-  public void setProjectId(Integer projectId) {
-    this.projectId = projectId;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
-  public void setProjectName(String projectName) {
-    this.projectName = projectName;
-  }
-  
-  private Project getProject() throws ProjectException {
-    if (this.projectId != null) {
-      return projectController.findProjectById(this.projectId);
-    } else if (this.projectName != null) {
-      return projectController.findProjectByName(this.projectName);
-    }
-    throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE);
-  }
-  
   private void checkIfDataOwner(Project project, Users user) throws DatasetException {
     if (!projectTeamFacade.findCurrentRole(project, user).equals(AllowedRoles.DATA_OWNER)) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_ACCESS_PERMISSION_DENIED, Level.FINE);
@@ -493,20 +479,22 @@ public class DatasetResource {
   
   @Path("/download")
   public DownloadService download() {
-    this.downloadService.setProjectId(this.projectId);
+    this.downloadService.setProjectId(this.getProjectId());
     return this.downloadService;
   }
-  
+
   @Path("upload/{path: .+}")
   public UploadService upload(@PathParam("path") String path,
                               @QueryParam("type") DatasetType datasetType) {
-    this.uploader.setParams(this.projectId, path, datasetType);
+    this.uploader.setProjectId(getProjectId());
+    this.uploader.setDatasetType(datasetType);
+    this.uploader.setPath(path);
     return this.uploader;
   }
-  
+
   @Path("tags")
   public DatasetTagsResource tags() throws ProjectException {
-    this.tagsResource.setParams(getProject());
+    this.tagsResource.setProjectId(getProjectId());
     return this.tagsResource;
   }
 }

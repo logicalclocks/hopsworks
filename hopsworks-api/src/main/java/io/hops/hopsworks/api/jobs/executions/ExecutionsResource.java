@@ -17,14 +17,17 @@
 package io.hops.hopsworks.api.jobs.executions;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.jobs.JobSubResource;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jobs.JobLogDTO;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.JobException;
@@ -62,7 +65,7 @@ import javax.ws.rs.core.UriInfo;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class ExecutionsResource {
+public class ExecutionsResource extends JobSubResource {
   
   @Inject
   private ExecutionController executionController;
@@ -70,16 +73,21 @@ public class ExecutionsResource {
   private ExecutionsBuilder executionsBuilder;
   @EJB
   private Settings settings;
-  
-  
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private JobController jobController;
+  @EJB
+  private ProjectController projectController;
   
-  private Jobs job;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
+  }
   
-  public ExecutionsResource setJob(Jobs job) {
-    this.job = job;
-    return this;
+  @Override
+  protected JobController getJobController() {
+    return jobController;
   }
   
   @ApiOperation(value = "Get a list of executions for the job.", response = ExecutionDTO.class)
@@ -93,8 +101,10 @@ public class ExecutionsResource {
   public Response getExecutions(
     @BeanParam Pagination pagination,
     @BeanParam ExecutionsBeanParam executionsBeanParam,
-    @Context UriInfo uriInfo, @Context SecurityContext sc) {
-    
+    @Context UriInfo uriInfo,
+    @Context HttpServletRequest req,
+    @Context SecurityContext sc) throws ProjectException, JobException {
+
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTIONS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -102,7 +112,7 @@ public class ExecutionsResource {
     resourceRequest.setFilter(executionsBeanParam.getFilter());
     resourceRequest.setExpansions(executionsBeanParam.getExpansions().getResources());
     
-    ExecutionDTO dto = executionsBuilder.build(uriInfo, resourceRequest, job);
+    ExecutionDTO dto = executionsBuilder.build(uriInfo, resourceRequest, getJob());
     return Response.ok().entity(dto).build();
   }
   
@@ -119,9 +129,9 @@ public class ExecutionsResource {
                                @BeanParam ExecutionsBeanParam executionsBeanParam,
                                @Context UriInfo uriInfo,
                                @Context HttpServletRequest req,
-                               @Context SecurityContext sc) throws JobException {
+                               @Context SecurityContext sc) throws JobException, ProjectException {
     //If requested execution does not belong to job
-    Execution execution = executionController.authorize(job, id);
+    Execution execution = executionController.authorize(getJob(), id);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTIONS);
     resourceRequest.setExpansions(executionsBeanParam.getExpansions().getResources());
     ExecutionDTO dto = executionsBuilder.build(uriInfo, resourceRequest, execution);
@@ -163,9 +173,9 @@ public class ExecutionsResource {
     @ApiParam(value = "Arguments for executing the job") String args,
     @Context SecurityContext sc,
     @Context UriInfo uriInfo) throws JobException, GenericException, ServiceException, ProjectException {
-    
-    Users user = jWTHelper.getUserPrincipal(sc);
 
+    Users user = jWTHelper.getUserPrincipal(sc);
+    Jobs job = getJob();
     // run job as job owner if user is airflow
     if (user.getUsername().equals(settings.getAirflowUser())) {
       user = job.getCreator();
@@ -192,10 +202,12 @@ public class ExecutionsResource {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response delete(@ApiParam(value = "execution id", required = true) @PathParam("id") Integer id,
-    @Context UriInfo uriInfo, @Context SecurityContext sc) throws JobException {
+                         @Context HttpServletRequest req,
+                         @Context UriInfo uriInfo,
+                         @Context SecurityContext sc) throws JobException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
     //If requested execution does not belong to job
-    Execution execution = executionController.authorize(job, id);
+    Execution execution = executionController.authorize(getJob(), id);
     executionController.delete(execution, user);
     return Response.noContent().build();
   }
@@ -211,8 +223,8 @@ public class ExecutionsResource {
     @PathParam("id") Integer id,
     @PathParam("type") JobLogDTO.LogType type,
     @Context HttpServletRequest req,
-    @Context SecurityContext sc) throws JobException {
-    Execution execution = executionController.authorize(job, id);
+    @Context SecurityContext sc) throws JobException, ProjectException {
+    Execution execution = executionController.authorize(getJob(), id);
     JobLogDTO dto = executionController.getLog(execution, type);
     return Response.ok().entity(dto).build();
   }
@@ -229,8 +241,8 @@ public class ExecutionsResource {
     @PathParam("id") Integer id,
     @PathParam("type") JobLogDTO.LogType type,
     @Context HttpServletRequest req,
-    @Context SecurityContext sc) throws JobException {
-    Execution execution = executionController.authorize(job, id);
+    @Context SecurityContext sc) throws JobException, ProjectException {
+    Execution execution = executionController.authorize(getJob(), id);
     JobLogDTO dto = executionController.retryLogAggregation(execution, type);
     return Response.ok().entity(dto).build();
   }

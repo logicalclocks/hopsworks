@@ -16,16 +16,20 @@
 
 package io.hops.hopsworks.api.featurestore.transformationFunction;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.featurestore.FeaturestoreSubResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
-import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionDTO;
 import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionController;
+import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionDTO;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.transformationFunction.TransformationFunction;
@@ -46,7 +50,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -61,7 +64,7 @@ import java.io.IOException;
 @Api(value = "Feature Store Transformation Function Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class TransformationFunctionResource {
+public class TransformationFunctionResource extends FeaturestoreSubResource {
 
   @EJB
   private TransformationFunctionBuilder transformationFunctionBuilder;
@@ -69,16 +72,19 @@ public class TransformationFunctionResource {
   private TransformationFunctionController transformationFunctionController;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private FeaturestoreController featurestoreController;
+  @EJB
+  private ProjectController projectController;
 
-  private Project project;
-  private Featurestore featurestore;
-
-  public void setProject(Project project) {
-    this.project = project;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
-  public void setFeaturestore(Featurestore featurestore) {
-    this.featurestore = featurestore;
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
   }
 
   @GET
@@ -95,10 +101,12 @@ public class TransformationFunctionResource {
       @BeanParam TransformationFunctionsBeanParam transformationFunctionsBeanParam,
       @Context SecurityContext sc,
       @Context UriInfo uriInfo,
+      @Context HttpServletRequest req,
       @QueryParam("name") String name,
-      @QueryParam("version") Integer version) throws FeaturestoreException {
+      @QueryParam("version") Integer version) throws FeaturestoreException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
-
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TRANSFORMATIONFUNCTIONS);
     resourceRequest.setSort(transformationFunctionsBeanParam.getSortBySet());
     resourceRequest.setFilter(transformationFunctionsBeanParam.getFilter());
@@ -121,11 +129,13 @@ public class TransformationFunctionResource {
   @ApiOperation(value = "Register transformation function in to a featurestore",
       response = TransformationFunctionDTO.class)
   public Response attach(@Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
                          @Context SecurityContext sc,
                          TransformationFunctionDTO transformationFunctionDTO)
-      throws IOException, FeaturestoreException {
+      throws IOException, FeaturestoreException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
-
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     TransformationFunction transformationFunction =
         transformationFunctionController.register(user, project, featurestore,
             transformationFunctionDTO);
@@ -156,8 +166,10 @@ public class TransformationFunctionResource {
                          @Context HttpServletRequest req,
                          @ApiParam(value = "Id of the transformation function dataset", required = true)
                          @PathParam("transformationFunctionId") Integer transformationFunctionId)
-      throws FeaturestoreException {
+      throws FeaturestoreException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     transformationFunctionController.delete(project, featurestore, user, transformationFunctionId);
     return Response.ok().build();
   }

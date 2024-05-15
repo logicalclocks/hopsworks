@@ -17,13 +17,20 @@ package io.hops.hopsworks.api.featurestore.keyword;
 
 import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordBuilder;
+import io.hops.hopsworks.api.featurestore.trainingdataset.TrainingDatasetSubResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
+import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.common.featurestore.keyword.KeywordDTO;
 import io.hops.hopsworks.common.featurestore.metadata.FeatureStoreKeywordControllerIface;
+import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
@@ -53,21 +60,37 @@ import java.util.List;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Training Dataset Keyword Resource")
-public class TrainingDatasetKeywordResource {
+public class TrainingDatasetKeywordResource extends TrainingDatasetSubResource {
   @EJB
   private FeaturestoreKeywordBuilder featurestoreKeywordBuilder;
   @Inject
   private FeatureStoreKeywordControllerIface keywordCtrl;
+  @EJB
+  private ProjectController projectController;
+  @EJB
+  private FeaturestoreController featurestoreController;
+  @EJB
+  private FeatureViewController featureViewController;
+  @EJB
+  private TrainingDatasetController trainingDatasetController;
 
-  private Project project;
-  private TrainingDataset trainingDataset;
-
-  public void setProject(Project project) {
-    this.project = project;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
-  public void setTrainingDataset(TrainingDataset trainingDataset) {
-    this.trainingDataset = trainingDataset;
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
+  }
+  @Override
+  protected FeatureViewController getFeatureViewController() {
+    return featureViewController;
+  }
+
+  @Override
+  protected TrainingDatasetController getTrainingDatasetController() {
+    return trainingDatasetController;
   }
 
   @GET
@@ -80,9 +103,12 @@ public class TrainingDatasetKeywordResource {
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getKeywords(@Context SecurityContext sc,
                               @Context HttpServletRequest req,
-                              @Context UriInfo uriInfo) {
+                              @Context UriInfo uriInfo) throws ProjectException, FeaturestoreException {
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    TrainingDataset trainingDataset = getTrainingDataset(featurestore);
     List<String> keywords = keywordCtrl.getKeywords(trainingDataset);
     KeywordDTO dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project, trainingDataset, keywords);
     return Response.ok().entity(dto).build();
@@ -100,7 +126,10 @@ public class TrainingDatasetKeywordResource {
   public Response replaceKeywords(@Context SecurityContext sc,
                                   @Context HttpServletRequest req,
                                   @Context UriInfo uriInfo, KeywordDTO keywordDTO)
-      throws FeaturestoreException {
+      throws FeaturestoreException, ProjectException {
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    TrainingDataset trainingDataset = getTrainingDataset(featurestore);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
     List<String> updatedKeywords
         = keywordCtrl.replaceKeywords(trainingDataset, new HashSet<>(keywordDTO.getKeywords()));
@@ -120,7 +149,10 @@ public class TrainingDatasetKeywordResource {
                                  @Context UriInfo uriInfo,
                                  @Context HttpServletRequest req,
                                  @QueryParam("keyword") String keyword)
-      throws FeaturestoreException {
+      throws FeaturestoreException, ProjectException {
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    TrainingDataset trainingDataset = getTrainingDataset(featurestore);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
     keywordCtrl.deleteKeyword(trainingDataset, keyword);
     List<String> updatedKeywords = keywordCtrl.getKeywords(trainingDataset);

@@ -19,15 +19,17 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.project.ProjectSubResource;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.MetadataException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -40,6 +42,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -62,10 +65,10 @@ import java.util.logging.Level;
 @Api(value = "Extended Attributes Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class XAttrsResource {
-  
+public class XAttrsResource extends ProjectSubResource {
+
   @EJB
-  private ProjectFacade projectFacade;
+  private ProjectController projectController;
   @EJB
   private JWTHelper jWTHelper;
   @EJB
@@ -78,33 +81,31 @@ public class XAttrsResource {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private DatasetHelper datasetHelper;
-  
-  private Project project;
-  
-  public void setProject(Integer projectId) {
-    this.project = projectFacade.find(projectId);
+
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
-  
-  
-  @ApiOperation( value = "Create or Update an extended attribute for a path.", response = XAttrDTO.class)
+
+  @ApiOperation(value = "Create or Update an extended attribute for a path.", response = XAttrDTO.class)
   @PUT
   @Path("{path: .+}")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response put(
-    @Context SecurityContext sc, @Context UriInfo uriInfo,
-    @PathParam("path") String path,
-    @QueryParam("pathType") @DefaultValue("DATASET") DatasetType pathType,
-    @QueryParam("name") String xattrName,
-    String metaObj)
-    throws DatasetException, MetadataException {
+  public Response put(@Context SecurityContext sc, @Context UriInfo uriInfo,
+                      @Context HttpServletRequest req,
+                      @PathParam("path") String path,
+                      @QueryParam("pathType") @DefaultValue("DATASET") DatasetType pathType,
+                      @QueryParam("name") String xattrName,
+                      String metaObj)
+      throws DatasetException, MetadataException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    
+    Project project = getProject();
     Response.Status status = Response.Status.OK;
     String inodePath = datasetHelper.getDatasetPathIfFileExist(project, path, pathType).getFullPath().toString();
-    if(xattrsController.addXAttr(project, user, inodePath, xattrName, metaObj)){
+    if (xattrsController.addXAttr(project, user, inodePath, xattrName, metaObj)) {
       status = Response.Status.CREATED;
     }
     
@@ -127,11 +128,12 @@ public class XAttrsResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response get(@Context SecurityContext sc, @Context UriInfo uriInfo,
-    @PathParam("path") String path,
-    @QueryParam("pathType") @DefaultValue("DATASET") DatasetType pathType,
-    @QueryParam("name") String xattrName)
-    throws DatasetException, MetadataException {
+                      @PathParam("path") String path,
+                      @QueryParam("pathType") @DefaultValue("DATASET") DatasetType pathType,
+                      @QueryParam("name") String xattrName)
+      throws DatasetException, MetadataException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
     Map<String, String> result = new HashMap<>();
 
     DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
@@ -162,11 +164,12 @@ public class XAttrsResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response delete(@Context SecurityContext sc,
-    @PathParam("path") String path,
-    @QueryParam("pathType") @DefaultValue("DATASET") DatasetType pathType,
-    @QueryParam("name") String xattrName)
-    throws DatasetException, MetadataException {
+                         @PathParam("path") String path,
+                         @QueryParam("pathType") @DefaultValue("DATASET") DatasetType pathType,
+                         @QueryParam("name") String xattrName)
+      throws DatasetException, MetadataException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
     String inodePath = datasetHelper.getDatasetPathIfFileExist(project, path, pathType).getFullPath().toString();
     xattrsController.removeXAttr(project, user, inodePath, xattrName);
     return Response.status(Response.Status.NO_CONTENT).build();

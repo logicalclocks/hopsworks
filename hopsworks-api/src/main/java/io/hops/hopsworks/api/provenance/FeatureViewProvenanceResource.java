@@ -16,6 +16,7 @@
 package io.hops.hopsworks.api.provenance;
 
 import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.featurestore.featureview.FeatureViewSubResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
@@ -29,7 +30,9 @@ import io.hops.hopsworks.api.provenance.ops.dto.ProvArtifactUsageParentDTO;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.provenance.explicit.ProvExplicitControllerIface;
 import io.hops.hopsworks.common.provenance.explicit.ProvExplicitLink;
 import io.hops.hopsworks.common.provenance.ops.dto.ProvLinksDTO;
@@ -39,11 +42,11 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ModelRegistryException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
-import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -71,7 +74,7 @@ import java.io.IOException;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Feature View Explicit Provenance Resource")
-public class FeatureViewProvenanceResource {
+public class FeatureViewProvenanceResource extends FeatureViewSubResource {
   @EJB
   private FeatureViewController featureViewController;
 
@@ -85,32 +88,29 @@ public class FeatureViewProvenanceResource {
   private JWTHelper jwtHelper;
   @EJB
   private DatasetHelper datasetHelper;
+  @EJB
+  private ProjectController projectController;
+  @EJB
+  private FeaturestoreController featurestoreController;
 
-  private Project project;
-  
-  private Featurestore featureStore;
-  private String featureViewName;
-  private Integer featureViewVersion;
-  
-  public void setProject(Project project) {
-    this.project = project;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
-  public void setFeatureStore(Featurestore featureStore) {
-    this.featureStore = featureStore;
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
   }
-  
-  public void setFeatureViewName(String featureViewName) {
-    this.featureViewName = featureViewName;
+  @Override
+  protected FeatureViewController getFeatureViewController() {
+    return featureViewController;
   }
-  
-  public void setFeatureViewVersion(Integer featureViewVersion) {
-    this.featureViewVersion = featureViewVersion;
-  }
-  
-  private DatasetPath getFeaturestoreDatasetPath() throws FeaturestoreException, DatasetException {
+
+  private DatasetPath getFeaturestoreDatasetPath() throws FeaturestoreException, DatasetException, ProjectException {
+    Project project = getProject();
     FeatureView featureView
-      = featureViewController.getByNameVersionAndFeatureStore(featureViewName, featureViewVersion, featureStore);
+      = featureViewController.getByNameVersionAndFeatureStore(getName(), getVersion(), getFeaturestore(project));
     return datasetHelper.getDatasetPath(project, featureViewController.getLocation(featureView),
       DatasetType.DATASET);
   }
@@ -133,12 +133,13 @@ public class FeatureViewProvenanceResource {
       @Context HttpServletRequest req,
       @Context SecurityContext sc)
       throws GenericException, FeaturestoreException, DatasetException, ServiceException, MetadataException,
-      FeatureStoreMetadataException, IOException, ModelRegistryException {
+      FeatureStoreMetadataException, IOException, ModelRegistryException, ProjectException {
     Users user = jwtHelper.getUserPrincipal(sc);
+    Project project = getProject();
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.PROVENANCE);
     resourceRequest.setExpansions(explicitProvenanceExpansionBeanParam.getResources());
     FeatureView fv
-        = featureViewController.getByNameVersionAndFeatureStore(featureViewName, featureViewVersion, featureStore);
+        = featureViewController.getByNameVersionAndFeatureStore(getName(), getVersion(), getFeaturestore(project));
     ProvExplicitLink<FeatureView> provenance
         = provCtrl.featureViewLinks(project, fv, pagination.getUpstreamLvls(), pagination.getDownstreamLvls());
     ProvExplicitLinkDTO<?> result = linksBuilder.build(uriInfo, resourceRequest, project, user, provenance);
@@ -156,9 +157,9 @@ public class FeatureViewProvenanceResource {
                          @Context HttpServletRequest req,
                          @Context SecurityContext sc)
       throws ProvenanceException, GenericException, DatasetException, MetadataException, FeatureStoreMetadataException,
-      FeaturestoreException {
+      FeaturestoreException, ProjectException {
     Users user = jwtHelper.getUserPrincipal(sc);
-    String fvProvenanceId = featureViewName + "_" + featureViewVersion;
+    String fvProvenanceId = getName() + "_" + getVersion();
     ProvArtifactUsageParentDTO status = usageBuilder.buildAccessible(uriInfo, user, getFeaturestoreDatasetPath(),
         fvProvenanceId, params.getUsageType());
     return Response.ok().entity(status).build();

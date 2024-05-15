@@ -17,24 +17,26 @@
 package io.hops.hopsworks.api.jobs;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jobs.alert.JobAlertsResource;
 import io.hops.hopsworks.api.jobs.executions.ExecutionsResource;
 import io.hops.hopsworks.api.jobs.scheduler.JobScheduleV2Resource;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.project.ProjectSubResource;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationAttemptStateFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.YarnAppUrlsDTO;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
@@ -77,10 +79,10 @@ import java.util.logging.Logger;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class JobsResource {
-  
+public class JobsResource extends ProjectSubResource {
+
   private static final Logger LOGGER = Logger.getLogger(JobsResource.class.getName());
-  
+
   @EJB
   private JobFacade jobFacade;
   @Inject
@@ -92,7 +94,7 @@ public class JobsResource {
   @EJB
   private YarnApplicationAttemptStateFacade yarnApplicationAttemptStateFacade;
   @EJB
-  private ProjectFacade projectFacade;
+  private ProjectController projectController;
   @EJB
   private JWTHelper jWTHelper;
   @EJB
@@ -101,12 +103,12 @@ public class JobsResource {
   private JobAlertsResource jobAlertsResource;
   @Inject
   private JobScheduleV2Resource scheduleResourceV2;
-  private Project project;
-  public JobsResource setProject(Integer projectId) {
-    this.project = projectFacade.find(projectId);
-    return this;
+
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
-  
+
   @ApiOperation(value = "Get a list of all jobs for this project", response = JobDTO.class)
   @GET
   @Produces(MediaType.APPLICATION_JSON)
@@ -118,18 +120,18 @@ public class JobsResource {
       @BeanParam Pagination pagination,
       @BeanParam JobsBeanParam jobsBeanParam,
       @Context HttpServletRequest req,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) {
+      @Context UriInfo uriInfo, @Context SecurityContext sc) throws ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.JOBS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
     resourceRequest.setSort(jobsBeanParam.getSortBySet());
     resourceRequest.setFilter(jobsBeanParam.getFilter());
     resourceRequest.setExpansions(jobsBeanParam.getExpansions().getResources());
-    
-    JobDTO dto = jobsBuilder.build(uriInfo, resourceRequest, project);
+
+    JobDTO dto = jobsBuilder.build(uriInfo, resourceRequest, getProject());
     return Response.ok().entity(dto).build();
   }
-  
+
   @ApiOperation(value = "Get the job with requested ID", response = JobDTO.class)
   @GET
   @Path("{name}")
@@ -142,8 +144,8 @@ public class JobsResource {
                          @BeanParam JobsBeanParam jobsBeanParam,
                          @Context UriInfo uriInfo,
                          @Context HttpServletRequest req,
-                         @Context SecurityContext sc) throws JobException {
-    Jobs job = jobController.getJob(project, name);
+                         @Context SecurityContext sc) throws JobException, ProjectException {
+    Jobs job = jobController.getJob(getProject(), name);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.JOBS);
     resourceRequest.setExpansions(jobsBeanParam.getExpansions().getResources());
     JobDTO dto = jobsBuilder.build(uriInfo, resourceRequest, job);
@@ -158,11 +160,12 @@ public class JobsResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response put (
-    @ApiParam(value = "Job configuration parameters", required = true) JobConfiguration config,
-    @ApiParam(value = "name", required = true) @PathParam("name") String name,
-    @Context SecurityContext sc,
-    @Context UriInfo uriInfo) throws JobException {
+  public Response put(
+      @ApiParam(value = "Job configuration parameters", required = true) JobConfiguration config,
+      @ApiParam(value = "name", required = true) @PathParam("name") String name,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req,
+      @Context UriInfo uriInfo) throws JobException, ProjectException {
     if (config == null) {
       throw new IllegalArgumentException("Job configuration was not provided.");
     }
@@ -174,6 +177,7 @@ public class JobsResource {
     if (!HopsUtils.jobNameValidator(config.getAppName(), Settings.FILENAME_DISALLOWED_CHARS)) {
       throw new JobException(RESTCodes.JobErrorCode.JOB_NAME_INVALID, Level.FINE, "job name: " + config.getAppName());
     }
+    Project project = getProject();
     //Check if job with same name exists so we update it instead of creating it
     Response.Status status = Response.Status.CREATED;
     Jobs job = jobFacade.findByProjectAndName(project, config.getAppName());
@@ -198,11 +202,12 @@ public class JobsResource {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response delete(
-    @ApiParam(value = "id", required = true) @PathParam("name") String name,
-    @Context SecurityContext sc,
-    @Context UriInfo uriInfo) throws JobException {
+      @ApiParam(value = "id", required = true) @PathParam("name") String name,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req,
+      @Context UriInfo uriInfo) throws JobException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    Jobs job = jobController.getJob(project, name);
+    Jobs job = jobController.getJob(getProject(), name);
 
     switch (job.getJobType()) {
       case SPARK:
@@ -222,18 +227,20 @@ public class JobsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response updateSchedule(ScheduleDTO schedule,
-    @PathParam("name") String name,
-    @Context SecurityContext sc,
-    @Context UriInfo uriInfo) throws JobException {
-    
-    if(schedule == null){
+                                 @PathParam("name") String name,
+                                 @Context SecurityContext sc,
+                                 @Context HttpServletRequest req,
+                                 @Context UriInfo uriInfo) throws JobException, ProjectException {
+
+    if (schedule == null) {
       throw new IllegalArgumentException("Schedule parameter was not provided.");
     }
+    Project project = getProject();
     Jobs job = jobController.getJob(project, name);
-    
+
     Users user = jWTHelper.getUserPrincipal(sc);
     jobController.updateSchedule(project, job, schedule, user);
     return Response.noContent().build();
@@ -253,26 +260,27 @@ public class JobsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response unscheduleJob(@PathParam("name") String name, @Context SecurityContext sc) throws JobException {
-    if(Strings.isNullOrEmpty(name)) {
+  @ApiKeyRequired(acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response unscheduleJob(@PathParam("name") String name,
+                                @Context HttpServletRequest req,
+                                @Context SecurityContext sc) throws JobException, ProjectException {
+    if (Strings.isNullOrEmpty(name)) {
       throw new IllegalArgumentException("job name was not provided or it was not set.");
     }
-    Jobs job = jobFacade.findByProjectAndName(project, name);
-    if(job == null){
+    Jobs job = jobFacade.findByProjectAndName(getProject(), name);
+    if (job == null) {
       throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINEST);
     }
+
     jobController.unscheduleJob(job);
     return Response.noContent().build();
   }
 
   @Path("{name}/schedule/v2")
-  public JobScheduleV2Resource scheduleV2(@PathParam("name") String name) throws JobException {
-    Jobs job = jobFacade.findByProjectAndName(project, name);
-    if (job == null) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINEST, "Job name: " + name);
-    }
-    return this.scheduleResourceV2.setJob(job);
+  public JobScheduleV2Resource scheduleV2(@PathParam("name") String name) {
+    this.scheduleResourceV2.setProjectId(getProjectId());
+    this.scheduleResourceV2.setName(name);
+    return this.scheduleResourceV2;
   }
 
   @ApiOperation(value = "Inspect user program and return a JobConfiguration",
@@ -285,12 +293,13 @@ public class JobsResource {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response inspect (
-    @ApiParam (value = "job type", example = "spark") @PathParam("jobtype") JobType jobtype,
-    @ApiParam(value = "path", example = "/Projects/demo_spark_admin000/Resources/spark-examples.jar",
-      required = true)  @QueryParam("path") String path,
-    @Context SecurityContext sc) throws JobException {
+      @ApiParam(value = "job type", example = "spark") @PathParam("jobtype") JobType jobtype,
+      @ApiParam(value = "path", example = "/Projects/demo_spark_admin000/Resources/spark-examples.jar",
+        required = true) @QueryParam("path") String path,
+      @Context HttpServletRequest req,
+      @Context SecurityContext sc) throws JobException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    JobConfiguration config = jobController.inspectProgram(path, project, user, jobtype);
+    JobConfiguration config = jobController.inspectProgram(path, getProject(), user, jobtype);
     return Response.ok().entity(config).build();
   }
 
@@ -304,31 +313,26 @@ public class JobsResource {
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
-  public Response configuration (@ApiParam (value = "job type", example = "spark")
-                                 @PathParam("jobtype") JobType jobtype,
-                                 @Context SecurityContext sc) throws JobException {
-    JobConfiguration config = jobController.getConfiguration(project, jobtype, true);
+  public Response configuration(@ApiParam(value = "job type", example = "spark")
+                                @PathParam("jobtype") JobType jobtype,
+                                @Context HttpServletRequest req,
+                                @Context SecurityContext sc) throws JobException, ProjectException {
+    JobConfiguration config = jobController.getConfiguration(getProject(), jobtype, true);
     return Response.ok().entity(config).build();
   }
-  
+
   @Path("{name}/executions")
   public ExecutionsResource executions(@PathParam("name") String name) throws JobException {
-    Jobs job = jobFacade.findByProjectAndName(project, name);
-    if (job == null) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINEST, "job name:" + name);
-    } else {
-      return this.executions.setJob(job);
-    }
+    this.executions.setName(name);
+    this.executions.setProjectId(getProjectId());
+    return this.executions;
   }
-  
+
   @Path("{name}/alerts")
   public JobAlertsResource alerts(@PathParam("name") String name) throws JobException {
-    Jobs job = jobFacade.findByProjectAndName(project, name);
-    if (job == null) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINEST, "job name:" + name);
-    } else {
-      return this.jobAlertsResource.setJob(job);
-    }
+    this.jobAlertsResource.setName(name);
+    this.jobAlertsResource.setProjectId(getProjectId());
+    return this.jobAlertsResource;
   }
 
   public enum Action {
@@ -352,11 +356,13 @@ public class JobsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getJobUI(@PathParam("appId") String appId, @PathParam("isLivy") String isLivy,
-    @Context SecurityContext sc) throws JobException {
-    executionController.checkAccessRight(appId, project);
+  public Response getJobUI(@PathParam("appId") String appId,
+                           @PathParam("isLivy") String isLivy,
+                           @Context HttpServletRequest req,
+                           @Context SecurityContext sc) throws JobException, ProjectException {
+    executionController.checkAccessRight(appId, getProject());
     List<YarnAppUrlsDTO> urls = new ArrayList<>();
-    
+
     try {
       String trackingUrl = yarnApplicationAttemptStateFacade.findTrackingUrlByAppId(appId);
       if (trackingUrl != null && !trackingUrl.isEmpty()) {
@@ -385,8 +391,10 @@ public class JobsResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getTensorBoardUrls(@PathParam("appId") String appId,
-    @Context SecurityContext sc)
-    throws JobException {
+                                     @Context HttpServletRequest req,
+                                     @Context SecurityContext sc)
+      throws JobException, ProjectException {
+    Project project = getProject();
     executionController.checkAccessRight(appId, project);
     List<YarnAppUrlsDTO> urls = new ArrayList<>();
     Users user = jWTHelper.getUserPrincipal(sc);

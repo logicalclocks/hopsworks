@@ -17,20 +17,21 @@
 package io.hops.hopsworks.api.serving.inference;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.featureFlags.FeatureFlagRequired;
 import io.hops.hopsworks.api.filter.featureFlags.FeatureFlags;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.api.project.ProjectSubResource;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.serving.inference.InferenceController;
 import io.hops.hopsworks.common.serving.inference.InferenceEndpoint;
 import io.hops.hopsworks.common.serving.inference.InferenceVerb;
 import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.InferenceException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -63,19 +64,18 @@ import java.util.logging.Logger;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Model inference service", description = "Handles inference requests for ML models")
-public class InferenceResource {
+public class InferenceResource extends ProjectSubResource {
 
   @EJB
   private InferenceController inferenceController;
   @EJB
-  private ProjectFacade projectFacade;
-
-  private Project project;
+  private ProjectController projectController;
 
   private final static Logger logger = Logger.getLogger(InferenceResource.class.getName());
 
-  public void setProjectId(Integer projectId) {
-    this.project = projectFacade.find(projectId);
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
   @POST
@@ -93,15 +93,17 @@ public class InferenceResource {
       @ApiParam(value = "Name of the model to query", required = true) @PathParam("modelName") String modelName,
       @ApiParam(value = "Version of the model to query") @PathParam("version") String modelVersion,
       @ApiParam(value = "Type of query") @PathParam("verb") InferenceVerb verb,
+      @Context HttpServletRequest req,
       @Context SecurityContext sc,
-      @Context HttpHeaders httpHeaders, String inferenceRequestJson) throws InferenceException, ApiKeyException {
+      @Context HttpHeaders httpHeaders, String inferenceRequestJson)
+      throws InferenceException, ApiKeyException, ProjectException {
     Integer version = null;
     if (!Strings.isNullOrEmpty(modelVersion)) {
       version = Integer.valueOf(modelVersion.split("/")[2]);
     }
     String authHeader = httpHeaders.getRequestHeader(HttpHeaders.AUTHORIZATION).get(0);
-    String inferenceResult = inferenceController.infer(project, sc.getUserPrincipal().getName(), modelName, version,
-      verb, inferenceRequestJson, authHeader);
+    String inferenceResult = inferenceController.infer(getProject(), sc.getUserPrincipal().getName(), modelName,
+      version, verb, inferenceRequestJson, authHeader);
     return Response.ok().entity(inferenceResult).build();
   }
   

@@ -17,6 +17,7 @@
 package io.hops.hopsworks.api.experiments.tensorboard;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.hops.hopsworks.api.experiments.ExperimentsSubResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.featureFlags.FeatureFlagRequired;
@@ -26,6 +27,7 @@ import io.hops.hopsworks.api.project.util.DsPath;
 import io.hops.hopsworks.api.project.util.PathValidator;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardDTO;
 import io.hops.hopsworks.common.experiments.tensorboard.TensorBoardController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.TensorBoardException;
@@ -40,6 +42,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.persistence.PersistenceException;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -59,7 +62,7 @@ import java.util.logging.Logger;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class TensorBoardResource {
+public class TensorBoardResource extends ExperimentsSubResource {
 
   @EJB
   private TensorBoardController tensorBoardController;
@@ -68,17 +71,11 @@ public class TensorBoardResource {
   @EJB
   private JWTHelper jWTHelper;
 
-  private Project project;
-  private String experimentId;
-  
-  public TensorBoardResource setProject(Project project, String experimentId) {
-    this.project = project;
-    this.experimentId = experimentId;
-    return this;
-  }
-  
-  public Project getProject() {
-    return project;
+  @EJB
+  private ProjectController projectController;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
   private final static Logger LOGGER = Logger.getLogger(TensorBoardResource.class.getName());
@@ -89,10 +86,11 @@ public class TensorBoardResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @FeatureFlagRequired(requiredFeatureFlags = {FeatureFlags.DATA_SCIENCE_PROFILE})
-  public Response getTensorBoard(@Context SecurityContext sc) throws TensorBoardException {
+  public Response getTensorBoard(@Context HttpServletRequest req,
+                                 @Context SecurityContext sc) throws TensorBoardException, ProjectException {
     try {
       Users user = jWTHelper.getUserPrincipal(sc);
-      TensorBoardDTO tbDTO = tensorBoardController.getTensorBoard(project, user);
+      TensorBoardDTO tbDTO = tensorBoardController.getTensorBoard(getProject(), user);
       if(tbDTO == null) {
         throw new TensorBoardException(RESTCodes.TensorBoardErrorCode.TENSORBOARD_NOT_FOUND, Level.FINE);
       }
@@ -109,13 +107,15 @@ public class TensorBoardResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @FeatureFlagRequired(requiredFeatureFlags = {FeatureFlags.DATA_SCIENCE_PROFILE})
-  public Response startTensorBoard(@Context SecurityContext sc, @Context UriInfo uriInfo) throws DatasetException,
+  public Response startTensorBoard(@Context SecurityContext sc,
+                                   @Context HttpServletRequest req,
+                                   @Context UriInfo uriInfo) throws DatasetException,
       ProjectException, TensorBoardException, UnsupportedEncodingException, ServiceDiscoveryException {
-
-    DsPath dsPath = pathValidator.validatePath(this.project, "Experiments/" + experimentId);
+    Project project = getProject();
+    DsPath dsPath = pathValidator.validatePath(project, "Experiments/" + getExperimentId());
     String fullPath = dsPath.getFullPath().toString();
     Users user = jWTHelper.getUserPrincipal(sc);
-    TensorBoardDTO tensorBoardDTO = tensorBoardController.startTensorBoard(experimentId, project, user, fullPath);
+    TensorBoardDTO tensorBoardDTO = tensorBoardController.startTensorBoard(getExperimentId(), project, user, fullPath);
     waitForTensorBoardLoaded(tensorBoardDTO);
 
     UriBuilder builder = uriInfo.getAbsolutePathBuilder();
@@ -127,13 +127,15 @@ public class TensorBoardResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @FeatureFlagRequired(requiredFeatureFlags = {FeatureFlags.DATA_SCIENCE_PROFILE})
-  public Response stopTensorBoard(@Context SecurityContext sc) throws TensorBoardException {
+  public Response stopTensorBoard(@Context HttpServletRequest req,
+                                  @Context SecurityContext sc) throws TensorBoardException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
     TensorBoardDTO tbDTO = tensorBoardController.getTensorBoard(project, user);
     if (tbDTO == null) {
       return Response.noContent().build();
     }
-    tensorBoardController.cleanup(this.project, user);
+    tensorBoardController.cleanup(project, user);
     return Response.noContent().build();
   }
 

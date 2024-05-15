@@ -39,19 +39,19 @@
 package io.hops.hopsworks.api.util;
 
 import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.dataset.DatasetSubResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.upload.FlowInfo;
 import io.hops.hopsworks.common.upload.UploadController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
@@ -80,7 +80,7 @@ import java.util.logging.Logger;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class UploadService {
+public class UploadService extends DatasetSubResource {
 
   private static final Logger LOGGER = Logger.getLogger(UploadService.class.getName());
 
@@ -91,58 +91,29 @@ public class UploadService {
   @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
-  private ProjectFacade projectFacade;
+  private ProjectController projectController;
   @EJB
   private UploadController uploadController;
 
   private String path;
-  private DatasetType datasetType;
   private String username;
-  
-  private Integer projectId;
-  private String projectName;
-  
-  private Project getProjectById() throws ProjectException {
-    Project project = projectFacade.find(this.projectId);
-    if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
-    }
-    return project;
-  }
-  
-  private Project getProjectByName() throws ProjectException {
-    Project project = projectFacade.findByName(this.projectName);
-    if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectName: " +
-        projectName);
-    }
-    return project;
-  }
-  
-  private Project getProject() throws ProjectException {
-    return this.projectId != null ? getProjectById() : getProjectByName();
-  }
 
   public UploadService() {
   }
-  
-  public void setParams(Integer projectId, String path, DatasetType datasetType) {
-    this.projectId = projectId;
+  public void setPath(String path) {
     this.path = path;
-    this.datasetType = datasetType;
   }
-  
-  public void setParams(String projectName, String path, DatasetType datasetType) {
-    this.projectName = projectName;
-    this.path = path;
-    this.datasetType = datasetType;
+
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
-  
+
   private void configureUploader(SecurityContext sc) throws DatasetException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    Project project =this.getProject();
+    Project project = getProject();
     this.username = hdfsUsersBean.getHdfsUserName(project, user);
-    DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, this.datasetType);
+    DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, getDatasetType());
     this.path = datasetPath.getFullPath().toString();
   }
 
