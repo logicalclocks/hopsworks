@@ -40,6 +40,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static io.hops.hopsworks.persistence.entity.featurestore.featuregroup.SimilarityFunctionType.COSINE;
+import static io.hops.hopsworks.persistence.entity.featurestore.featuregroup.SimilarityFunctionType.DOT_PRODUCT;
+import static io.hops.hopsworks.persistence.entity.featurestore.featuregroup.SimilarityFunctionType.L2_NORM;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -71,8 +74,9 @@ public class EmbeddingControllerTest {
   @Test
   public void testCreateIndex() {
     List<EmbeddingFeature> embeddingFeatures = new ArrayList<>();
-    embeddingFeatures.add(new EmbeddingFeature(null, "vector", 512, "l2"));
-    embeddingFeatures.add(new EmbeddingFeature(null, "vector2", 128, "l2"));
+    embeddingFeatures.add(new EmbeddingFeature(null, "vector", 512, L2_NORM));
+    embeddingFeatures.add(new EmbeddingFeature(null, "vector2", 128, COSINE));
+    embeddingFeatures.add(new EmbeddingFeature(null, "vector3", 64, DOT_PRODUCT));
     List<FeatureGroupFeatureDTO> features = new ArrayList<>();
     Set<String> offlineTypes =
         FeaturestoreConstants.SUGGESTED_HIVE_FEATURE_TYPES.stream().map(type -> type.split(" ")[0])
@@ -83,6 +87,7 @@ public class EmbeddingControllerTest {
     }
     features.add(new FeatureGroupFeatureDTO("vector", "ARRAY<DOUBLE>"));
     features.add(new FeatureGroupFeatureDTO("vector2", "ARRAY<DOUBLE>"));
+    features.add(new FeatureGroupFeatureDTO("vector3", "ARRAY<DOUBLE>"));
 
 
     String expectedMapping = "{\n" +
@@ -96,11 +101,30 @@ public class EmbeddingControllerTest {
         "    \"properties\": {\n" +
         "        \"vector\": {\n" +
         "          \"type\": \"knn_vector\",\n" +
-        "          \"dimension\": 512\n" +
+        "          \"dimension\": 512,\n" +
+        "          \"method\": {\n" +
+        "            \"name\": \"hnsw\",\n" +
+        "            \"space_type\": \"l2\",\n" +
+        "            \"engine\": \"nmslib\"\n" +
+        "            }\n" +
         "        },\n" +
         "        \"vector2\": {\n" +
         "          \"type\": \"knn_vector\",\n" +
-        "          \"dimension\": 128\n" +
+        "          \"dimension\": 128,\n" +
+        "          \"method\": {\n" +
+        "            \"name\": \"hnsw\",\n" +
+        "            \"space_type\": \"cosinesimil\",\n" +
+        "            \"engine\": \"nmslib\"\n" +
+        "            }\n" +
+        "        },\n" +
+        "        \"vector3\": {\n" +
+        "          \"type\": \"knn_vector\",\n" +
+        "          \"dimension\": 64,\n" +
+        "          \"method\": {\n" +
+        "            \"name\": \"hnsw\",\n" +
+        "            \"space_type\": \"innerproduct\",\n" +
+        "            \"engine\": \"nmslib\"\n" +
+        "            }\n" +
         "        }";
 
     for (String offlineType : offlineTypes) {

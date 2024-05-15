@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.featuregroup;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.SimilarityFunctionType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.EmbeddingFeature;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,13 +31,13 @@ public class EmbeddingFeatureDTO {
   @Getter
   private String name;
   @Getter
-  private String similarityFunctionType;
+  private SimilarityFunctionType similarityFunctionType;
   @Getter
   private Integer dimension;
   @Getter
   private ModelDto model;
 
-  public EmbeddingFeatureDTO(String name, String similarityFunctionType, Integer dimension) {
+  public EmbeddingFeatureDTO(String name, SimilarityFunctionType similarityFunctionType, Integer dimension) {
     this.name = name;
     this.similarityFunctionType = similarityFunctionType;
     this.dimension = dimension;

@@ -298,7 +298,12 @@ public class EmbeddingController {
         "  }";
     String embeddingFieldString = "        \"%s\": {\n" +
         "          \"type\": \"knn_vector\",\n" +
-        "          \"dimension\": %d\n" +
+        "          \"dimension\": %d,\n" +
+        "          \"method\": {\n" +
+        "            \"name\": \"hnsw\",\n" +
+        "            \"space_type\": \"%s\",\n" +
+        "            \"engine\": \"nmslib\"\n" +
+        "            }\n" +
         "        }";
     String fieldString = "        \"%s\": {\n" +
         "          \"type\": \"%s\"\n" +
@@ -307,7 +312,9 @@ public class EmbeddingController {
 
     for (EmbeddingFeature feature : embeddingFeatures) {
       fieldMapping.add(String.format(
-          embeddingFieldString, prefix + feature.getName(), feature.getDimension()));
+          embeddingFieldString,
+          prefix + feature.getName(), feature.getDimension(),
+          feature.getSimilarityFunctionType().getOpensearchFunction()));
     }
     for (FeatureGroupFeatureDTO feature : features) {
       if (!embeddingFeatureNames.contains(feature.getName())) {

@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static io.hops.hopsworks.persistence.entity.featurestore.featuregroup.SimilarityFunctionType.L2_NORM;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -706,9 +707,9 @@ public class TestFeatureGroupInputValidation {
     FeatureGroupFeatureDTO feature2 = new FeatureGroupFeatureDTO("feature2");
     FeatureGroupFeatureDTO feature3 = new FeatureGroupFeatureDTO("feature3");
 
-    EmbeddingFeatureDTO embeddingFeature1 = new EmbeddingFeatureDTO("feature1", "l2_norm", 3);
-    EmbeddingFeatureDTO embeddingFeature2 = new EmbeddingFeatureDTO("feature2", "l2_norm", 3);
-    EmbeddingFeatureDTO embeddingFeature3 = new EmbeddingFeatureDTO("feature3", "l2_norm", 3);
+    EmbeddingFeatureDTO embeddingFeature1 = new EmbeddingFeatureDTO("feature1", L2_NORM, 3);
+    EmbeddingFeatureDTO embeddingFeature2 = new EmbeddingFeatureDTO("feature2", L2_NORM, 3);
+    EmbeddingFeatureDTO embeddingFeature3 = new EmbeddingFeatureDTO("feature3", L2_NORM, 3);
 
     List<FeatureGroupFeatureDTO> features = Arrays.asList(feature1, feature2, feature3);
     List<EmbeddingFeatureDTO> embeddingFeatures =
@@ -732,10 +733,10 @@ public class TestFeatureGroupInputValidation {
     FeatureGroupFeatureDTO feature2 = new FeatureGroupFeatureDTO("feature2");
     FeatureGroupFeatureDTO feature3 = new FeatureGroupFeatureDTO("feature3");
 
-    EmbeddingFeatureDTO embeddingFeature1 = new EmbeddingFeatureDTO("feature1", "l2_norm", 3);
-    EmbeddingFeatureDTO embeddingFeature2 = new EmbeddingFeatureDTO("feature2", "l2_norm", 3);
+    EmbeddingFeatureDTO embeddingFeature1 = new EmbeddingFeatureDTO("feature1", L2_NORM, 3);
+    EmbeddingFeatureDTO embeddingFeature2 = new EmbeddingFeatureDTO("feature2", L2_NORM, 3);
     EmbeddingFeatureDTO embeddingFeature3 =
-        new EmbeddingFeatureDTO("feature4", "l2_norm", 3);  // this does not exist in feature group
+        new EmbeddingFeatureDTO("feature4", L2_NORM, 3);  // this does not exist in feature group
 
     List<FeatureGroupFeatureDTO> features = Arrays.asList(feature1, feature2, feature3);
     List<EmbeddingFeatureDTO> embeddingFeatures =
@@ -753,9 +754,9 @@ public class TestFeatureGroupInputValidation {
 
   @Test
   public void testVerifyEmbeddingIndex_pass() throws FeaturestoreException {
-    EmbeddingFeatureDTO embeddingFeature1 = new EmbeddingFeatureDTO("feature1", "l2_norm", 3);
-    EmbeddingFeatureDTO embeddingFeature2 = new EmbeddingFeatureDTO("feature2", "l2_norm", 3);
-    EmbeddingFeatureDTO embeddingFeature3 = new EmbeddingFeatureDTO("feature3", "l2_norm", 3);
+    EmbeddingFeatureDTO embeddingFeature1 = new EmbeddingFeatureDTO("feature1", L2_NORM, 3);
+    EmbeddingFeatureDTO embeddingFeature2 = new EmbeddingFeatureDTO("feature2", L2_NORM, 3);
+    EmbeddingFeatureDTO embeddingFeature3 = new EmbeddingFeatureDTO("feature3", L2_NORM, 3);
 
     List<EmbeddingFeatureDTO> embeddingFeatures =
         Arrays.asList(embeddingFeature1, embeddingFeature2, embeddingFeature3);
@@ -775,9 +776,9 @@ public class TestFeatureGroupInputValidation {
 
   @Test
   public void testVerifyEmbeddingIndex_fail() throws FeaturestoreException {
-    EmbeddingFeatureDTO embeddingFeature1 = new EmbeddingFeatureDTO("feature1", "l2_norm", 3);
-    EmbeddingFeatureDTO embeddingFeature2 = new EmbeddingFeatureDTO("feature2", "l2_norm", 3);
-    EmbeddingFeatureDTO embeddingFeature3 = new EmbeddingFeatureDTO("feature3", "l2_norm", 3);
+    EmbeddingFeatureDTO embeddingFeature1 = new EmbeddingFeatureDTO("feature1", L2_NORM, 3);
+    EmbeddingFeatureDTO embeddingFeature2 = new EmbeddingFeatureDTO("feature2", L2_NORM, 3);
+    EmbeddingFeatureDTO embeddingFeature3 = new EmbeddingFeatureDTO("feature3", L2_NORM, 3);
 
     List<EmbeddingFeatureDTO> embeddingFeatures =
         Arrays.asList(embeddingFeature1, embeddingFeature2, embeddingFeature3);
@@ -796,7 +797,7 @@ public class TestFeatureGroupInputValidation {
   }
 
   private FeaturegroupDTO createFeaturegroupDtoWithIndexName(String indexName) {
-    EmbeddingFeatureDTO embeddingFeature = new EmbeddingFeatureDTO("feature3", "l2_norm", 3);
+    EmbeddingFeatureDTO embeddingFeature = new EmbeddingFeatureDTO("feature3", L2_NORM, 3);
 
     List<EmbeddingFeatureDTO> embeddingFeatures =
         Arrays.asList(embeddingFeature);
