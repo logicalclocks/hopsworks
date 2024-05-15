@@ -149,7 +149,7 @@ public class TrainingDatasetProvenanceResource extends TrainingDatasetSubResourc
     resourceRequest.setExpansions(explicitProvenanceExpansionBeanParam.getResources());
     TrainingDataset td
       = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(getFeatureView(project),
-      getTrainingDatasetId());
+      getTrainingDatasetVersion());
     ProvExplicitLink<TrainingDataset> provenance
         = provCtrl.trainingDatasetLinks(project, td, pagination.getUpstreamLvls(), pagination.getDownstreamLvls());
     ProvExplicitLinkDTO<?> result = linksBuilder.build(uriInfo, resourceRequest, project, user, provenance);
@@ -172,7 +172,7 @@ public class TrainingDatasetProvenanceResource extends TrainingDatasetSubResourc
     Project project = getProject();
     FeatureView featureView = getFeatureView(project);
     TrainingDataset trainingDataset
-        = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(featureView, getTrainingDatasetId());
+        = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(featureView, getTrainingDatasetVersion());
     String tdProvenanceId = trainingDataset.getName() + "_" + trainingDataset.getVersion();
     ProvArtifactUsageParentDTO status =
       usageBuilder.buildAccessible(uriInfo, user, getTrainingDatasetPath(project, featureView),
