@@ -46,16 +46,18 @@ If you wish to run Hopsworks on your Azure, AWS or GCP environement, follow one 
 - [GCP Guide](https://docs.hopsworks.ai/3.0/setup_installation/gcp/getting_started/#step-1-connecting-your-gcp-account)
 
 ## **Installer - On-premise**
-### → **Follow the [installation instructions](https://docs.hopsworks.ai/3.0/setup_installation/on_prem/hopsworks_installer/).**
-The hopsworks-installer.sh script downloads, configures, and installs Hopsworks. It is typically run interactively, prompting the user about details of what is installed and where. It can also be run non-interactively (no user prompts) using the '-ni' switch.
+It is possible to use Hopsworks on-premises, which means that companies can run their machine learning workloads on their own hardware and infrastructure, rather than relying on a cloud provider. This can provide greater flexibility, control, and cost savings, as well as enabling companies to meet specific compliance and security requirements.
+
+Working on-premises with Hopsworks typically involves collaboration with the Hopsworks engineering teams, as each infrastructure is unique and requires a tailored approach to deployment and configuration. The process begins with an assessment of the company's existing infrastructure and requirements, including network topology, security policies, and hardware specifications.
+
+For further details about on-premise installations: [contact us](https://www.hopsworks.ai/contact).
 
 ### **Requirements**
 You need at least one server or virtual machine on which Hopsworks will be installed with at least the following specification:
-- Centos/RHEL 7.x or Ubuntu 18.04;
+- Centos/RHEL 8.x or Ubuntu 22.04;
 - at least 32GB RAM,
 - at least 8 CPUs,
 - 100 GB of free hard-disk space,
-- outside Internet access (if this server is air-gapped, contact us for support),
 - a UNIX user account with sudo privileges.
 <br />
 
