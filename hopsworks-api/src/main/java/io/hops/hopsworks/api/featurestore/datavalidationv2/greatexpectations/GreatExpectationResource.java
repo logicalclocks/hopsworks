@@ -16,9 +16,14 @@
 
 package io.hops.hopsworks.api.featurestore.datavalidationv2.greatexpectations;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.featurestore.FeaturestoreSubResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
+import io.hops.hopsworks.common.project.ProjectController;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -43,20 +48,24 @@ import javax.ws.rs.core.UriInfo;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Great expectation resource", description = "A service to retrieve all support great expectations")
-public class GreatExpectationResource {
+public class GreatExpectationResource extends FeaturestoreSubResource {
 
   @EJB
   GreatExpectationBuilder greatExpectationBuilder;
 
-  private Project project;
-  private Featurestore featurestore;
+  @EJB
+  private FeaturestoreController featurestoreController;
+  @EJB
+  private ProjectController projectController;
 
-  public void setProject(Project project) {
-    this.project = project;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
-  public void setFeaturestore(Featurestore featurestore) {
-    this.featurestore = featurestore;
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
   }
 
   @ApiOperation(value = "Fetch all validation report from feature group",
@@ -74,8 +83,9 @@ public class GreatExpectationResource {
     @Context
       HttpServletRequest req,
     @Context
-      UriInfo uriInfo) {
-
+      UriInfo uriInfo) throws ProjectException, FeaturestoreException {
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     GreatExpectationDTO dtos = greatExpectationBuilder.build(uriInfo, project, featurestore);
 
     return Response.ok().entity(dtos).build();

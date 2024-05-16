@@ -19,6 +19,7 @@ import io.hops.hopsworks.api.featurestore.featuremonitoring.config.FeatureMonito
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 
 import javax.ejb.EJB;
@@ -33,20 +34,24 @@ public class FeatureGroupFeatureMonitoringConfigurationResource extends FeatureM
   @EJB
   private FeaturegroupController featuregroupController;
   
-  private Featuregroup featureGroup;
+  private Integer featureGroupId;
   
   /**
    * Sets the feature group of the tag resource
    *
    * @param featureGroupId
    */
-  public void setFeatureGroup(Integer featureGroupId) throws FeaturestoreException {
-    this.featureGroup = featuregroupController.getFeaturegroupById(featureStore, featureGroupId);
+  public void setFeatureGroupId(Integer featureGroupId) throws FeaturestoreException {
+    this.featureGroupId = featureGroupId;
+  }
+
+  private Featuregroup getFeatureGroup() throws ProjectException, FeaturestoreException {
+    return featuregroupController.getFeaturegroupById(getFeaturestore(), featureGroupId);
   }
   
   @Override
   protected Integer getItemId() {
-    return featureGroup.getId();
+    return this.featureGroupId;
   }
   
   @Override
@@ -55,12 +60,12 @@ public class FeatureGroupFeatureMonitoringConfigurationResource extends FeatureM
   }
   
   @Override
-  protected String getItemName() {
-    return featureGroup.getName();
+  protected String getItemName() throws ProjectException, FeaturestoreException {
+    return getFeatureGroup().getName();
   }
   
   @Override
-  protected Integer getItemVersion() {
-    return featureGroup.getVersion();
+  protected Integer getItemVersion() throws ProjectException, FeaturestoreException {
+    return getFeatureGroup().getVersion();
   }
 }

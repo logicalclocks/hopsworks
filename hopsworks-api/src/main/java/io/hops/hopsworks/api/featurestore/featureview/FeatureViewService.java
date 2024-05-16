@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.featurestore.featureview;
 
+import io.hops.hopsworks.api.featurestore.FeaturestoreSubResource;
 import io.hops.hopsworks.api.featurestore.activities.ActivityResource;
 import io.hops.hopsworks.api.featurestore.keyword.FeatureViewKeywordResource;
 import io.hops.hopsworks.api.featurestore.preparestatement.PreparedStatementResource;
@@ -26,14 +27,12 @@ import io.hops.hopsworks.api.featurestore.trainingdataset.TrainingDatasetResourc
 import io.hops.hopsworks.api.featurestore.transformation.TransformationResource;
 import io.hops.hopsworks.api.provenance.FeatureViewProvenanceResource;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
-import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
-import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
-import java.util.logging.Level;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -42,11 +41,12 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import java.util.logging.Level;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Feature View service")
-public class FeatureViewService {
+public class FeatureViewService extends FeaturestoreSubResource {
 
   @Inject
   private FeatureViewResource featureViewResource;
@@ -78,14 +78,23 @@ public class FeatureViewService {
   private Settings settings;
   @Inject
   private FeatureViewFeatureMonitorAlertResource featureViewFeatureMonitorAlertResource;
+  @EJB
+  private ProjectController projectController;
 
-  private Project project;
-  private Featurestore featurestore;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
+  }
+
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
+  }
 
   @Path("")
   public FeatureViewResource featureViewResource() {
-    this.featureViewResource.setProject(project);
-    this.featureViewResource.setFeaturestore(featurestore);
+    this.featureViewResource.setProjectId(getProjectId());
+    this.featureViewResource.setFeaturestoreId(getFeaturestoreId());
     return this.featureViewResource;
   }
 
@@ -97,13 +106,28 @@ public class FeatureViewService {
       @ApiParam(value = "Version of the feature view", required = true)
       @PathParam("version")
           Integer version
-  ) throws FeaturestoreException {
-    this.trainingDatasetResource.setProject(project);
-    this.trainingDatasetResource.setFeaturestore(featurestore);
+  ) {
+    this.trainingDatasetResource.setProjectId(getProjectId());
+    this.trainingDatasetResource.setFeaturestoreId(getFeaturestoreId());
     this.trainingDatasetResource.setFeatureView(featureViewName, version);
     return this.trainingDatasetResource;
   }
-
+  
+  @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/tags")
+  public FeatureViewTagResource tags(
+      @ApiParam(value = "Name of the feature view", required = true)
+      @PathParam("name")
+          String featureViewName,
+      @ApiParam(value = "Version of the feature view", required = true)
+      @PathParam("version")
+          Integer version
+  ) {
+    this.tagResource.setProjectId(getProjectId());
+    this.tagResource.setFeaturestoreId(getFeaturestoreId());
+    this.tagResource.setFeatureView(featureViewName, version);
+    return this.tagResource;
+  }
+  
   @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/query")
   public QueryResource query(
       @ApiParam(value = "Name of the feature view", required = true)
@@ -112,13 +136,13 @@ public class FeatureViewService {
       @ApiParam(value = "Version of the feature view", required = true)
       @PathParam("version")
           Integer version
-  ) throws FeaturestoreException {
-    this.queryResource.setProject(project);
-    this.queryResource.setFeaturestore(featurestore);
+  ) {
+    this.queryResource.setProjectId(getProjectId());
+    this.queryResource.setFeaturestoreId(getFeaturestoreId());
     this.queryResource.setFeatureView(featureViewName, version);
     return this.queryResource;
   }
-
+  
   @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/keywords")
   public FeatureViewKeywordResource keywords(
       @ApiParam(value = "Name of the feature view", required = true)
@@ -127,13 +151,13 @@ public class FeatureViewService {
       @ApiParam(value = "Version of the feature view", required = true)
       @PathParam("version")
           Integer version
-  ) throws FeaturestoreException {
-    this.featureViewKeywordResource.setProject(project);
-    this.featureViewKeywordResource.setFeaturestore(featurestore);
+  ) {
+    this.featureViewKeywordResource.setProjectId(getProjectId());
+    this.featureViewKeywordResource.setFeaturestoreId(getFeaturestoreId());
     this.featureViewKeywordResource.setFeatureView(featureViewName, version);
     return this.featureViewKeywordResource;
   }
-
+  
   @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/activity")
   public ActivityResource activity(
       @ApiParam(value = "Id of the feature view", required = true)
@@ -142,10 +166,10 @@ public class FeatureViewService {
       @ApiParam(value = "Version of the feature view", required = true)
       @PathParam("version")
           Integer version
-  ) throws FeaturestoreException {
-    this.activityResource.setProject(project);
-    this.activityResource.setFeaturestore(featurestore);
-    this.activityResource.setFeatureViewByNameAndVersion(featureViewName, version);
+  ) {
+    this.activityResource.setProjectId(getProjectId());
+    this.activityResource.setFeaturestoreId(getFeaturestoreId());
+    this.activityResource.setFeatureView(featureViewName, version);
     return this.activityResource;
   }
 
@@ -156,13 +180,13 @@ public class FeatureViewService {
       @ApiParam(value = "Version of the feature view", required = true)
       @PathParam("version")
           Integer version
-  ) throws FeaturestoreException {
-    this.transformationResource.setProject(project);
-    this.transformationResource.setFeaturestore(featurestore);
+  ) {
+    this.transformationResource.setProjectId(getProjectId());
+    this.transformationResource.setFeaturestoreId(getFeaturestoreId());
     this.transformationResource.setFeatureView(featureViewName, version);
     return this.transformationResource;
   }
-
+  
   @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/preparedstatement")
   public PreparedStatementResource preparedStatement(
       @ApiParam(value = "Name of the feature view", required = true)
@@ -171,33 +195,23 @@ public class FeatureViewService {
       @ApiParam(value = "Version of the feature view", required = true)
       @PathParam("version")
           Integer version
-  ) throws FeaturestoreException {
-    this.preparedStatementResource.setProject(project);
-    this.preparedStatementResource.setFeatureStore(featurestore);
+  ) {
+    this.preparedStatementResource.setProjectId(getProjectId());
+    this.preparedStatementResource.setFeaturestoreId(getFeaturestoreId());
     this.preparedStatementResource.setFeatureView(featureViewName, version);
     return this.preparedStatementResource;
   }
 
-  public void setProject(Project project) {
-    this.project = project;
-  }
-
-  public void setFeaturestore(Integer featurestoreId) throws FeaturestoreException {
-    //This call verifies that the project have access to the featurestoreId provided
-    this.featurestore = featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId);
-  }
-  
   @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/provenance")
   public FeatureViewProvenanceResource provenance(
     @PathParam("name") String name,
     @PathParam("version") Integer version) {
-    this.provenanceResource.setProject(project);
-    this.provenanceResource.setFeatureStore(featurestore);
-    this.provenanceResource.setFeatureViewName(name);
-    this.provenanceResource.setFeatureViewVersion(version);
+    this.provenanceResource.setProjectId(getProjectId());
+    this.provenanceResource.setFeaturestoreId(getFeaturestoreId());
+    this.provenanceResource.setFeatureView(name, version);
     return provenanceResource;
   }
-  
+
   @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/statistics")
   public StatisticsResource statistics(
     @ApiParam(value = "Name of the feature view", required = true)
@@ -207,9 +221,9 @@ public class FeatureViewService {
     @PathParam("version")
     Integer version
   ) throws FeaturestoreException {
-    this.statisticsResource.setProject(project);
-    this.statisticsResource.setFeaturestore(featurestore);
-    this.statisticsResource.setFeatureViewByNameAndVersion(name, version);
+    this.statisticsResource.setProjectId(getProjectId());
+    this.statisticsResource.setFeaturestoreId(getFeaturestoreId());
+    this.statisticsResource.setFeatureView(name, version);
     return statisticsResource;
   }
   
@@ -228,8 +242,8 @@ public class FeatureViewService {
         Level.FINE
       );
     }
-    this.featureMonitoringConfigurationResource.setProject(project);
-    this.featureMonitoringConfigurationResource.setFeatureStore(featurestore);
+    this.featureMonitoringConfigurationResource.setProjectId(getProjectId());
+    this.featureMonitoringConfigurationResource.setFeaturestoreId(getFeaturestoreId());
     this.featureMonitoringConfigurationResource.setFeatureView(name, version);
     return this.featureMonitoringConfigurationResource;
   }
@@ -249,8 +263,8 @@ public class FeatureViewService {
         Level.FINE
       );
     }
-    this.featureMonitoringResultResource.setProject(project);
-    this.featureMonitoringResultResource.setFeatureStore(featurestore);
+    this.featureMonitoringResultResource.setProjectId(getProjectId());
+    this.featureMonitoringResultResource.setFeaturestoreId(getFeaturestoreId());
     this.featureMonitoringResultResource.setFeatureView(name, version);
     return this.featureMonitoringResultResource;
   }
@@ -270,9 +284,9 @@ public class FeatureViewService {
         Level.FINE
       );
     }
-    featureViewFeatureMonitorAlertResource.setFeatureStore(featurestore);
-    featureViewFeatureMonitorAlertResource.setFeatureView(featureViewName, version, featurestore);
-    featureViewFeatureMonitorAlertResource.setProject(project);
+    this.featureViewFeatureMonitorAlertResource.setProjectId(getProjectId());
+    this.featureViewFeatureMonitorAlertResource.setFeaturestoreId(getFeaturestoreId());
+    this.featureViewFeatureMonitorAlertResource.setFeatureView(featureViewName, version);
     return featureViewFeatureMonitorAlertResource;
   }
   

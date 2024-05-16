@@ -18,6 +18,7 @@ package io.hops.hopsworks.api.featurestore.featureview;
 import io.hops.hopsworks.api.featurestore.featuremonitoring.result.FeatureMonitoringResultResource;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 
 import javax.ejb.EJB;
@@ -29,10 +30,10 @@ import javax.enterprise.context.RequestScoped;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class FeatureViewFeatureMonitoringResultResource extends FeatureMonitoringResultResource {
   
-  private FeatureView featureView;
   @EJB
   private FeatureViewController featureViewController;
-  
+  private String featureViewName;
+  private Integer featureViewVersion;
   /**
    * Sets the feature view of the feature monitoring ressource
    *
@@ -40,6 +41,17 @@ public class FeatureViewFeatureMonitoringResultResource extends FeatureMonitorin
    * @param version of the Feature View
    */
   public void setFeatureView(String name, Integer version) throws FeaturestoreException {
-    this.featureView = featureViewController.getByNameVersionAndFeatureStore(name, version, featureStore);
+    this.featureViewName = name;
+    this.featureViewVersion = version;
+  }
+
+  protected FeatureView getFeatureView() throws ProjectException, FeaturestoreException {
+    return featureViewController.getByNameVersionAndFeatureStore(this.featureViewName, this.featureViewVersion,
+      getFeaturestore());
+  }
+
+  @Override
+  protected void check() throws ProjectException, FeaturestoreException {
+    getFeatureView();
   }
 }

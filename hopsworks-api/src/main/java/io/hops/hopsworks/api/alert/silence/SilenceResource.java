@@ -25,6 +25,7 @@ import io.hops.hopsworks.alerting.exceptions.AlertManagerResponseException;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.project.ProjectSubResource;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.project.ProjectController;
@@ -62,7 +63,7 @@ import java.util.logging.Logger;
 @Api(value = "Silence Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class SilenceResource {
+public class SilenceResource extends ProjectSubResource {
 
   private static final Logger LOGGER = Logger.getLogger(SilenceResource.class.getName());
 
@@ -75,24 +76,9 @@ public class SilenceResource {
   @EJB
   private JWTHelper jWTHelper;
 
-  private Integer projectId;
-  private String projectName;
-  
-  public void setProjectId(Integer projectId) {
-    this.projectId = projectId;
-  }
-
-  public void setProjectName(String projectName) {
-    this.projectName = projectName;
-  }
-
-  private Project getProject() throws ProjectException {
-    if (this.projectId != null) {
-      return projectController.findProjectById(this.projectId);
-    } else if (this.projectName != null) {
-      return projectController.findProjectByName(this.projectName);
-    }
-    throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE);
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
   @GET

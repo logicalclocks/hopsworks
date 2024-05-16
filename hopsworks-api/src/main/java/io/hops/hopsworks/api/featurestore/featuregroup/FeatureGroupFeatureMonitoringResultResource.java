@@ -18,6 +18,7 @@ package io.hops.hopsworks.api.featurestore.featuregroup;
 import io.hops.hopsworks.api.featurestore.featuremonitoring.result.FeatureMonitoringResultResource;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 
 import javax.ejb.EJB;
@@ -32,14 +33,18 @@ public class FeatureGroupFeatureMonitoringResultResource extends FeatureMonitori
   @EJB
   private FeaturegroupController featuregroupController;
   
-  private Featuregroup featureGroup;
+  private Integer featureGroupId;
   
-  /**
-   * Sets the feature group of the tag resource
-   *
-   * @param featureGroupId
-   */
-  public void setFeatureGroup(Integer featureGroupId) throws FeaturestoreException {
-    this.featureGroup = featuregroupController.getFeaturegroupById(featureStore, featureGroupId);
+  public void setFeatureGroupId(Integer featureGroupId) throws FeaturestoreException {
+    this.featureGroupId = featureGroupId;
+  }
+
+  private Featuregroup getFeatureGroup() throws ProjectException, FeaturestoreException {
+    return featuregroupController.getFeaturegroupById(getFeaturestore(), featureGroupId);
+  }
+
+  @Override
+  protected void check() throws ProjectException, FeaturestoreException {
+    getFeatureGroup();
   }
 }

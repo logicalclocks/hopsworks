@@ -16,18 +16,21 @@
 
 package io.hops.hopsworks.api.featurestore.datavalidationv2.reports;
 
-import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.ValidationReportController;
-import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.ValidationReportDTO;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.featurestore.featuregroup.FeatureGroupSubResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.ValidationReportController;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.ValidationReportDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationReport;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -43,10 +46,10 @@ import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
@@ -58,7 +61,7 @@ import javax.ws.rs.core.UriInfo;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Validation report resource")
-public class ValidationReportResource {
+public class ValidationReportResource extends FeatureGroupSubResource {
 
   @EJB
   private FeaturegroupController featuregroupController;
@@ -68,21 +71,24 @@ public class ValidationReportResource {
   private ValidationReportBuilder validationReportBuilder;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private FeaturestoreController featurestoreController;
+  @EJB
+  private ProjectController projectController;
 
-  private Project project;
-  private Featurestore featurestore;
-  private Featuregroup featuregroup;
-
-  public void setProject(Project project) {
-    this.project = project;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
-  public void setFeaturestore(Featurestore featurestore) {
-    this.featurestore = featurestore;
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
   }
 
-  public void setFeatureGroup(Integer featureGroupId) throws FeaturestoreException {
-    this.featuregroup = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
+  @Override
+  protected FeaturegroupController getFeaturegroupController() {
+    return featuregroupController;
   }
 
   /**
@@ -108,12 +114,12 @@ public class ValidationReportResource {
     @Context
       UriInfo uriInfo,
     @PathParam("validationReportId")
-      Integer validationReportId) throws FeaturestoreException {
+      Integer validationReportId) throws FeaturestoreException, ProjectException {
 
     ValidationReport validationReport = validationReportController.getValidationReportById(validationReportId);
-
+    Project project = getProject();
     ValidationReportDTO dto = validationReportBuilder.build(
-      uriInfo, project, featuregroup, validationReport);
+      uriInfo, project, getFeaturegroup(project), validationReport);
 
     return Response.ok().entity(dto).build();
   }
@@ -142,15 +148,16 @@ public class ValidationReportResource {
     @Context
       HttpServletRequest req,
     @Context
-      UriInfo uriInfo) {
+      UriInfo uriInfo) throws ProjectException, FeaturestoreException {
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.VALIDATIONREPORT);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
     resourceRequest.setSort(validationReportBeanParam.getSortBySet());
     resourceRequest.setFilter(validationReportBeanParam.getFilter());
-
-    ValidationReportDTO dtos = validationReportBuilder.build(uriInfo, resourceRequest, project, featuregroup);
+    Project project = getProject();
+    ValidationReportDTO dtos =
+      validationReportBuilder.build(uriInfo, resourceRequest, project, getFeaturegroup(project));
 
     return Response.ok().entity(dtos).build();
   }
@@ -178,10 +185,11 @@ public class ValidationReportResource {
       HttpServletRequest req,
     @Context
       UriInfo uriInfo,
-    ValidationReportDTO validationReportDTO) throws FeaturestoreException {
+    ValidationReportDTO validationReportDTO) throws FeaturestoreException, ProjectException {
 
-    Users user = jWTHelper.getUserPrincipal(sc);  
-
+    Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featuregroup featuregroup = getFeaturegroup(project);
     ValidationReport validationReport = validationReportController.createValidationReport(
       user, featuregroup, validationReportDTO);
 

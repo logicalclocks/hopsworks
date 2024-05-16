@@ -16,6 +16,7 @@
 package io.hops.hopsworks.api.provenance;
 
 import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.featurestore.FeaturestoreSubResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
@@ -24,7 +25,9 @@ import io.hops.hopsworks.api.provenance.explicit.ProvExplicitLinksBuilder;
 import io.hops.hopsworks.api.provenance.explicit.dto.ProvExplicitLinkDTO;
 import io.hops.hopsworks.api.provenance.ops.ProvLinksBeanParams;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.provenance.explicit.ProvExplicitControllerIface;
 import io.hops.hopsworks.common.provenance.explicit.ProvExplicitLink;
 import io.hops.hopsworks.common.provenance.ops.dto.ProvLinksDTO;
@@ -34,6 +37,7 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ModelRegistryException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
@@ -64,7 +68,7 @@ import java.io.IOException;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Storage Connector Explicit Provenance Resource")
-public class StorageConnectorProvenanceResource {
+public class StorageConnectorProvenanceResource extends FeaturestoreSubResource {
   @EJB
   private JWTHelper jwtHelper;
   @Inject
@@ -73,17 +77,21 @@ public class StorageConnectorProvenanceResource {
   private ProvExplicitLinksBuilder linksBuilder;
   @EJB
   private FeaturestoreStorageConnectorController storageConnectorController;
-  private Project project;
-  private Featurestore featureStore;
+  @EJB
+  private ProjectController projectController;
+  @EJB
+  private FeaturestoreController featurestoreController;
+
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
+  }
+
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
+  }
   private String connectorName;
-
-  public void setProject(Project project) {
-    this.project = project;
-  }
-
-  public void setFeatureStore(Featurestore featureStore) {
-    this.featureStore = featureStore;
-  }
   
   public void setConnectorName(String connectorName) {
     this.connectorName = connectorName;
@@ -106,13 +114,15 @@ public class StorageConnectorProvenanceResource {
       @Context UriInfo uriInfo,
       @Context HttpServletRequest req,
       @Context SecurityContext sc)
-      throws GenericException, FeaturestoreException, DatasetException, ServiceException, MetadataException,
-      FeatureStoreMetadataException, IOException, ModelRegistryException {
+    throws GenericException, FeaturestoreException, DatasetException, ServiceException, MetadataException,
+    FeatureStoreMetadataException, IOException, ModelRegistryException, ProjectException {
     Users user = jwtHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.PROVENANCE);
     resourceRequest.setExpansions(explicitProvenanceExpansionBeanParam.getResources());
     FeaturestoreConnector connector =
-        storageConnectorController.getConnectorWithName(user, project, featureStore, connectorName);
+        storageConnectorController.getConnectorWithName(user, project, featurestore, connectorName);
     ProvExplicitLink<FeaturestoreConnector> provenance = provCtrl.storageConnectorLinks(project, connector,
         pagination.getUpstreamLvls(), pagination.getDownstreamLvls());
     ProvExplicitLinkDTO<?> result = linksBuilder.build(uriInfo, resourceRequest, project, user, provenance);

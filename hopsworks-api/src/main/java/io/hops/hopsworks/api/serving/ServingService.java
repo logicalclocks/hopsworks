@@ -17,14 +17,15 @@
 package io.hops.hopsworks.api.serving;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.featureFlags.FeatureFlagRequired;
 import io.hops.hopsworks.api.filter.featureFlags.FeatureFlags;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.api.project.ProjectSubResource;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.security.QuotaEnforcementException;
 import io.hops.hopsworks.common.security.QuotasEnforcement;
 import io.hops.hopsworks.common.serving.ServingController;
@@ -82,7 +83,7 @@ import java.util.logging.Level;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "TensorFlow Serving service", description = "Manage Serving instances")
-public class ServingService {
+public class ServingService extends ProjectSubResource {
 
   @Inject
   private ServingController servingController;
@@ -91,18 +92,18 @@ public class ServingService {
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
-  private ProjectFacade projectFacade;
+  private ProjectController projectController;
   @EJB
   private JWTHelper jWTHelper;
   @EJB
   private QuotasEnforcement quotasEnforcement;
 
-  private Project project;
 
   public ServingService(){ }
-  
-  public void setProjectId(Integer projectId) {
-    this.project = projectFacade.find(projectId);
+
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
   @GET
@@ -117,13 +118,14 @@ public class ServingService {
       response = ServingView.class,
       responseContainer = "List")
   public Response getAll(
-    @QueryParam("model") String modelName,
-    @QueryParam("modelVersion") Integer modelVersion,
-    @QueryParam("status") ServingStatusEnum status,
-    @QueryParam("name") String servingName,
-    @Context SecurityContext sc)
-    throws ServingException, KafkaException, CryptoPasswordNotFoundException {
-
+      @QueryParam("model") String modelName,
+      @QueryParam("modelVersion") Integer modelVersion,
+      @QueryParam("status") ServingStatusEnum status,
+      @QueryParam("name") String servingName,
+      @Context HttpServletRequest req,
+      @Context SecurityContext sc)
+    throws ServingException, KafkaException, CryptoPasswordNotFoundException, ProjectException {
+    Project project = getProject();
     // if filter by name, return a single serving
     if (!Strings.isNullOrEmpty(servingName)) {
       ServingWrapper servingWrapper = servingController.get(project, servingName);
@@ -169,14 +171,15 @@ public class ServingService {
   @ApiOperation(value = "Get info about a serving instance for the project", response = ServingView.class)
   public Response get(
     @Context SecurityContext sc,
+    @Context HttpServletRequest req,
     @ApiParam(value = "Id of the Serving instance", required = true)
     @PathParam("servingId") Integer servingId)
-    throws ServingException, KafkaException, CryptoPasswordNotFoundException {
+    throws ServingException, KafkaException, CryptoPasswordNotFoundException, ProjectException {
 
     if (servingId == null) {
       throw new IllegalArgumentException("servingId was not provided");
     }
-    ServingWrapper servingWrapper = servingController.get(project, servingId);
+    ServingWrapper servingWrapper = servingController.get(getProject(), servingId);
     if (servingWrapper == null) {
       throw new ServingException(RESTCodes.ServingErrorCode.INSTANCE_NOT_FOUND, Level.FINE);
     }
@@ -201,12 +204,12 @@ public class ServingService {
     @Context HttpServletRequest req,
     @Context SecurityContext sc,
     @ApiParam(value = "Id of the serving instance", required = true) @PathParam("servingId") Integer servingId)
-    throws ServingException {
+    throws ServingException, ProjectException {
 
     if (servingId == null) {
       throw new IllegalArgumentException("servingId was not provided");
     }
-    servingController.delete(project, servingId);
+    servingController.delete(getProject(), servingId);
     return Response.ok().build();
   }
 
@@ -229,6 +232,7 @@ public class ServingService {
       InterruptedException, ExecutionException, UnsupportedEncodingException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
     if (serving == null) {
       throw new IllegalArgumentException("serving was not provided");
     }
@@ -267,9 +271,10 @@ public class ServingService {
     @ApiParam(value = "ID of the Serving instance to start/stop", required = true)
       @PathParam("servingId") Integer servingId,
     @ApiParam(value = "Action", required = true) @QueryParam("action") ServingCommands servingCommand)
-    throws ServingException {
+    throws ServingException, ProjectException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
     if (servingId == null) {
       throw new IllegalArgumentException("servingId was not provided");
     }
@@ -311,7 +316,7 @@ public class ServingService {
     @Context HttpServletRequest req,
     @ApiParam(value = "Id of the Serving instance", required = true)
     @PathParam("servingId") Integer servingId)
-    throws ServingException, KafkaException, CryptoPasswordNotFoundException {
+    throws ServingException, KafkaException, CryptoPasswordNotFoundException, ProjectException {
 
     if (servingId == null) {
       throw new IllegalArgumentException("servingId was not provided");
@@ -320,7 +325,7 @@ public class ServingService {
       throw new IllegalArgumentException("component not valid, possible values are predictor or transformer");
     }
 
-    List<ServingLogs> logs = servingController.getLogs(project, servingId, component, tailingLines);
+    List<ServingLogs> logs = servingController.getLogs(getProject(), servingId, component, tailingLines);
     GenericEntity<List<ServingLogs>> logsEntity = new GenericEntity<List<ServingLogs>>(logs){};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
       .entity(logsEntity)

@@ -41,14 +41,13 @@ package io.hops.hopsworks.api.project;
 import io.hops.hopsworks.api.activities.ProjectActivitiesResource;
 import io.hops.hopsworks.api.airflow.AirflowService;
 import io.hops.hopsworks.api.alert.AlertResource;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.dataset.DatasetResource;
-import io.hops.hopsworks.api.opensearch.OpenSearchResource;
 import io.hops.hopsworks.api.experiments.ExperimentsResource;
 import io.hops.hopsworks.api.featurestore.FeaturestoreService;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.git.GitResource;
 import io.hops.hopsworks.api.jobs.JobsResource;
 import io.hops.hopsworks.api.jupyter.JupyterService;
@@ -56,8 +55,9 @@ import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.kafka.KafkaResource;
 import io.hops.hopsworks.api.metadata.XAttrsResource;
 import io.hops.hopsworks.api.modelregistry.ModelRegistryResource;
-import io.hops.hopsworks.api.project.jobconfig.DefaultJobConfigurationResource;
+import io.hops.hopsworks.api.opensearch.OpenSearchResource;
 import io.hops.hopsworks.api.project.alert.ProjectAlertsResource;
+import io.hops.hopsworks.api.project.jobconfig.DefaultJobConfigurationResource;
 import io.hops.hopsworks.api.provenance.ProjectProvenanceResource;
 import io.hops.hopsworks.api.python.PythonResource;
 import io.hops.hopsworks.api.serving.ServingService;
@@ -87,11 +87,11 @@ import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.util.AccessController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
-import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.KafkaException;
+import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.SchemaException;
@@ -596,7 +596,8 @@ public class ProjectService {
   
   @Path("{projectId}/jobs")
   public JobsResource jobs(@PathParam("projectId") Integer projectId) {
-    return this.jobs.setProject(projectId);
+    this.jobs.setProjectId(projectId);
+    return this.jobs;
   }
 
   @GET
@@ -622,7 +623,7 @@ public class ProjectService {
     };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(multiplicators).build();
   }
-
+  
   @POST
   @Path("{projectId}/downloadCert")
   @Produces(MediaType.APPLICATION_JSON)
@@ -667,11 +668,10 @@ public class ProjectService {
   
   @Path("{projectId}/kafka")
   public KafkaResource kafka(@PathParam("projectId") Integer id) throws ProjectException {
-    Project project = projectController.findProjectById(id);
-    this.kafka.setProject(project);
+    this.kafka.setProjectId(id);
     return this.kafka;
   }
-  
+
   @Path("{projectId}/jupyter")
   public JupyterService jupyter(@PathParam("projectId") Integer id) {
     this.jupyter.setProjectId(id);
@@ -736,10 +736,10 @@ public class ProjectService {
   
   @Path("{projectId}/xattrs")
   public XAttrsResource xattrs(@PathParam("projectId") Integer projectId) {
-    this.xattrs.setProject(projectId);
+    this.xattrs.setProjectId(projectId);
     return xattrs;
   }
-  
+
   @Path("{projectId}/provenance")
   public ProjectProvenanceResource provenance(@PathParam("projectId") Integer id) {
     this.provenance.setProjectId(id);

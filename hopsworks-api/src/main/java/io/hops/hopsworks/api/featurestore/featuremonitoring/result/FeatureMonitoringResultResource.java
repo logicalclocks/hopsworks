@@ -15,17 +15,21 @@
  */
 package io.hops.hopsworks.api.featurestore.featuremonitoring.result;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.featurestore.FeaturestoreSubResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.featuremonitoring.config.FeatureMonitoringConfigurationController;
 import io.hops.hopsworks.common.featurestore.featuremonitoring.result.FeatureMonitoringResultController;
 import io.hops.hopsworks.common.featurestore.featuremonitoring.result.FeatureMonitoringResultDTO;
 import io.hops.hopsworks.common.featurestore.featuremonitoring.result.FeatureMonitoringResultInputValidation;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuremonitoring.result.FeatureMonitoringResult;
@@ -55,7 +59,7 @@ import javax.ws.rs.core.UriInfo;
 
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Feature Monitoring Result resource")
-public abstract class FeatureMonitoringResultResource {
+public abstract class FeatureMonitoringResultResource extends FeaturestoreSubResource {
   
   @EJB
   private FeatureMonitoringResultController featureMonitoringResultController;
@@ -66,17 +70,23 @@ public abstract class FeatureMonitoringResultResource {
   @EJB
   private FeatureMonitoringConfigurationController featureMonitoringConfigurationController;
   
-  protected Project project;
-  protected Featurestore featureStore;
+  @EJB
+  private FeaturestoreController featurestoreController;
+  @EJB
+  private ProjectController projectController;
   
-  public void setProject(Project project) {
-    this.project = project;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
   
-  public void setFeatureStore(Featurestore featureStore) {
-    this.featureStore = featureStore;
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
   }
   
+  protected abstract void check() throws ProjectException, FeaturestoreException;
+
   /**
    * Endpoint to fetch a list of feature monitoring results attached to a Feature.
    *
@@ -102,7 +112,7 @@ public abstract class FeatureMonitoringResultResource {
     @Context UriInfo uriInfo,
     @ApiParam(value = "Id of the configuration", required = true)
     @PathParam("configId") Integer configId
-  ) throws FeaturestoreException {
+  ) throws FeaturestoreException, ProjectException {
     
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.FEATURE_MONITORING);
     resourceRequest.setOffset(pagination.getOffset());
@@ -110,7 +120,9 @@ public abstract class FeatureMonitoringResultResource {
     resourceRequest.setSort(featureMonitoringResultBeanParam.getSortBySet());
     resourceRequest.setFilter(featureMonitoringResultBeanParam.getFilter());
     resourceRequest.setExpansions(featureMonitoringResultBeanParam.getExpansion().getResources());
-    
+    Project project = getProject();
+    Featurestore featureStore = getFeaturestore(project);
+    check();
     AbstractFacade.CollectionInfo<FeatureMonitoringResult> results =
       featureMonitoringResultController.getAllFeatureMonitoringResultByConfigId(
         pagination.getOffset(), pagination.getLimit(), featureMonitoringResultBeanParam.getSortBySet(),
@@ -144,7 +156,9 @@ public abstract class FeatureMonitoringResultResource {
     @Context UriInfo uriInfo,
     @ApiParam(value = "Id of the result", required = true)
     @PathParam("resultId") Integer resultId
-  ) throws FeaturestoreException {
+  ) throws FeaturestoreException, ProjectException {
+    Project project = getProject();
+    Featurestore featureStore = getFeaturestore(project);
     
     FeatureMonitoringResult result = featureMonitoringResultController.getFeatureMonitoringResultById(resultId);
     FeatureMonitoringResultDTO dtos = featureMonitoringResultBuilder.buildWithStats(
@@ -174,8 +188,9 @@ public abstract class FeatureMonitoringResultResource {
   public Response createFeatureMonitoringResult(@Context SecurityContext sc,
     @Context HttpServletRequest req,
     @Context UriInfo uriInfo,
-    FeatureMonitoringResultDTO resultDTO) throws FeaturestoreException {
-    
+    FeatureMonitoringResultDTO resultDTO) throws FeaturestoreException, ProjectException {
+    Project project = getProject();
+    Featurestore featureStore = getFeaturestore(project);
     featureMonitoringResultInputValidation.validateOnCreate(resultDTO);
     FeatureMonitoringResult result = featureMonitoringResultBuilder.buildFromDTO(resultDTO);
     result.setFeatureMonitoringConfig(

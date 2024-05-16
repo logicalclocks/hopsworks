@@ -39,11 +39,12 @@
 
 package io.hops.hopsworks.api.kafka;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.kafka.topics.TopicsBeanParam;
 import io.hops.hopsworks.api.kafka.topics.TopicsBuilder;
+import io.hops.hopsworks.api.project.ProjectSubResource;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.kafka.KafkaClusterInfoDTO;
@@ -54,14 +55,17 @@ import io.hops.hopsworks.common.dao.kafka.schemas.CompatibilityCheck;
 import io.hops.hopsworks.common.dao.kafka.schemas.CompatibilityLevel;
 import io.hops.hopsworks.common.dao.kafka.schemas.SchemaRegistryError;
 import io.hops.hopsworks.common.dao.kafka.schemas.SubjectDTO;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.kafka.FeatureStoreKafkaConnectorDTO;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.kafka.SchemasController;
 import io.hops.hopsworks.common.kafka.SubjectsCompatibilityController;
 import io.hops.hopsworks.common.kafka.SubjectsController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.KafkaException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.SchemaException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -95,7 +99,7 @@ import java.util.logging.Logger;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class KafkaResource {
+public class KafkaResource extends ProjectSubResource {
 
   private static final Logger LOGGER = Logger.getLogger(KafkaResource.class.getName());
 
@@ -113,16 +117,32 @@ public class KafkaResource {
   private FeaturestoreStorageConnectorController storageConnectorController;
   @EJB
   private KafkaClusterInfoBuilder kafkaClusterInfoBuilder;
+  @EJB
+  private ProjectController projectController;
+  @EJB
+  private FeaturestoreController featurestoreController;
 
-  private Project project;
+  private Integer featurestoreId;
 
   public KafkaResource() {
   }
 
-  public void setProject(Project project) {
-    this.project = project;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
-  
+
+  public void setFeaturestoreId(Integer featurestoreId) {
+    this.featurestoreId = featurestoreId;
+  }
+
+  private void verifyAccessToFeaturestore(Project project) throws FeaturestoreException {
+    //This call verifies that the project have access to the featurestoreId provided
+    if (featurestoreId != null) {
+      featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId);
+    }
+  }
+
   @ApiOperation(value = "Retrieve Kafka broker endpoints.")
   @GET
   @Path("/clusterinfo")
@@ -134,7 +154,9 @@ public class KafkaResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getBrokers(@Context UriInfo uriInfo,
                              @Context HttpServletRequest req,
-                             @Context SecurityContext sc) throws FeaturestoreException {
+                             @Context SecurityContext sc) throws FeaturestoreException, ProjectException {
+    Project project = getProject();
+    verifyAccessToFeaturestore(project);
     FeatureStoreKafkaConnectorDTO connectorDTO = storageConnectorController.getKafkaConnector(project);
     KafkaClusterInfoDTO dto = kafkaClusterInfoBuilder.build(uriInfo, project,
         Arrays.asList(connectorDTO.getBootstrapServers().split(",")));
@@ -154,12 +176,14 @@ public class KafkaResource {
                             @BeanParam Pagination pagination,
                             @BeanParam TopicsBeanParam topicsBeanParam,
                             @Context HttpServletRequest req,
-                            @Context SecurityContext sc) {
+                            @Context SecurityContext sc) throws ProjectException, FeaturestoreException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KAFKA);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
     resourceRequest.setSort(topicsBeanParam.getSortBySet());
     resourceRequest.setFilter(topicsBeanParam.getFilter());
+    Project project = getProject();
+    verifyAccessToFeaturestore(project);
     TopicDTO dto = topicsBuilder.build(uriInfo, resourceRequest, project);
     return Response.ok().entity(dto).build();
   }
@@ -176,7 +200,10 @@ public class KafkaResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response createTopic(TopicDTO topicDto, @Context UriInfo uriInfo,
                               @Context HttpServletRequest req,
-                              @Context SecurityContext sc) throws KafkaException {
+                              @Context SecurityContext sc)
+      throws KafkaException, ProjectException, FeaturestoreException {
+    Project project = getProject();
+    verifyAccessToFeaturestore(project);
     kafkaController.createTopic(project, topicDto);
     URI uri = uriInfo.getAbsolutePathBuilder().path(topicDto.getName()).build();
     topicDto.setHref(uri);
@@ -194,7 +221,9 @@ public class KafkaResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response removeTopic(@PathParam("topic") String topicName,
                               @Context HttpServletRequest req,
-                              @Context SecurityContext sc) throws KafkaException {
+                              @Context SecurityContext sc) throws ProjectException, FeaturestoreException {
+    Project project = getProject();
+    verifyAccessToFeaturestore(project);
     kafkaController.removeTopicFromProject(project, topicName);
     return Response.noContent().build();
   }
@@ -211,7 +240,9 @@ public class KafkaResource {
   public Response getTopic(@Context UriInfo uriInfo,
                            @PathParam("topic") String topicName,
                            @Context HttpServletRequest req,
-                           @Context SecurityContext sc) throws KafkaException {
+                           @Context SecurityContext sc) throws KafkaException, ProjectException, FeaturestoreException {
+    Project project = getProject();
+    verifyAccessToFeaturestore(project);
     PartitionDetailsDTO dto = topicsBuilder.buildTopicDetails(uriInfo, project, topicName);
     return Response.ok().entity(dto).build();
   }
@@ -228,7 +259,9 @@ public class KafkaResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "AGENT", "HOPS_SERVICE_USER"})
   public Response getSchema(@PathParam("id") Integer id,
                             @Context HttpServletRequest req,
-                            @Context SecurityContext sc) {
+                            @Context SecurityContext sc) throws ProjectException, FeaturestoreException {
+    Project project = getProject();
+    verifyAccessToFeaturestore(project);
     try {
       SubjectDTO dto = schemasController.findSchemaById(project, id);
       return Response.ok().entity(dto).build();
@@ -249,10 +282,13 @@ public class KafkaResource {
   @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getSubjects(@Context SecurityContext sc,
-                              @Context HttpServletRequest req) {
+                              @Context HttpServletRequest req) throws ProjectException, FeaturestoreException {
+    Project project = getProject();
+    verifyAccessToFeaturestore(project);
     List<String> subjects = subjectsController.getSubjects(project);
     String array = Arrays.toString(subjects.toArray());
-    GenericEntity<String> entity = new GenericEntity<String>(array) {};
+    GenericEntity<String> entity = new GenericEntity<String>(array) {
+    };
     return Response.ok().entity(entity).build();
   }
   
@@ -268,7 +304,9 @@ public class KafkaResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response checkIfSubjectRegistered(@PathParam("subject") String subject, SubjectDTO dto,
                                            @Context HttpServletRequest req,
-                                           @Context SecurityContext sc) {
+                                           @Context SecurityContext sc) throws ProjectException, FeaturestoreException {
+    Project project = getProject();
+    verifyAccessToFeaturestore(project);
     try {
       SubjectDTO res = subjectsController.checkIfSchemaRegistered(project, subject, dto.getSchema());
       return Response.ok().entity(res).build();
@@ -290,11 +328,15 @@ public class KafkaResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response deleteSubject(@PathParam("subject") String subject,
                                 @Context HttpServletRequest req,
-                                @Context SecurityContext sc) throws KafkaException {
+                                @Context SecurityContext sc)
+      throws KafkaException, ProjectException, FeaturestoreException {
+    Project project = getProject();
+    verifyAccessToFeaturestore(project);
     try {
       List<Integer> versions = subjectsController.deleteSubject(project, subject);
       String array = Arrays.toString(versions.toArray());
-      GenericEntity<String> entity = new GenericEntity<String>(array) {};
+      GenericEntity<String> entity = new GenericEntity<String>(array) {
+      };
       return Response.ok().entity(entity).build();
     } catch (SchemaException e) {
       SchemaRegistryError error =
@@ -314,10 +356,14 @@ public class KafkaResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response deleteSubjectsVersion(@PathParam("subject") String subject, @PathParam("version") String version,
                                         @Context HttpServletRequest req,
-                                        @Context SecurityContext sc) throws KafkaException {
+                                        @Context SecurityContext sc)
+      throws KafkaException, ProjectException, FeaturestoreException {
+    Project project = getProject();
+    verifyAccessToFeaturestore(project);
     try {
       Integer deleted = subjectsController.deleteSubjectsVersion(project, subject, version);
-      GenericEntity<Integer> entity = new GenericEntity<Integer>(deleted) {};
+      GenericEntity<Integer> entity = new GenericEntity<Integer>(deleted) {
+      };
       return Response.ok().entity(entity).build();
     } catch (SchemaException e) {
       SchemaRegistryError error =
@@ -338,7 +384,10 @@ public class KafkaResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response postNewSchema(@PathParam("subject") String subject, SubjectDTO dto,
                                 @Context HttpServletRequest req,
-                                @Context SecurityContext sc) throws KafkaException {
+                                @Context SecurityContext sc)
+      throws KafkaException, ProjectException, FeaturestoreException {
+    Project project = getProject();
+    verifyAccessToFeaturestore(project);
     try {
       SubjectDTO res = subjectsController.registerNewSubject(project, subject, dto.getSchema(), false);
       return Response.ok().entity(res).build();
@@ -361,7 +410,9 @@ public class KafkaResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getSubjectVersions(@PathParam("subject") String subject,
                                      @Context HttpServletRequest req,
-                                     @Context SecurityContext sc) {
+                                     @Context SecurityContext sc) throws ProjectException, FeaturestoreException {
+    Project project = getProject();
+    verifyAccessToFeaturestore(project);
     try {
       List<Integer> versions = subjectsController.getSubjectVersions(project, subject);
       String array = Arrays.toString(versions.toArray());
@@ -387,7 +438,9 @@ public class KafkaResource {
   public Response getSubjectDetails(@PathParam("subject") String subject,
                                     @PathParam("version") String version,
                                     @Context HttpServletRequest req,
-                                    @Context SecurityContext sc) {
+                                    @Context SecurityContext sc) throws ProjectException, FeaturestoreException {
+    Project project = getProject();
+    verifyAccessToFeaturestore(project);
     try {
       SubjectDTO dto = subjectsController.getSubjectDetails(project, subject, version);
       return Response.ok().entity(dto).build();
@@ -411,10 +464,13 @@ public class KafkaResource {
   public Response getSchema(@PathParam("subject") String subject,
                             @PathParam("version") String version,
                             @Context HttpServletRequest req,
-                            @Context SecurityContext sc) {
+                            @Context SecurityContext sc) throws ProjectException, FeaturestoreException {
+    Project project = getProject();
+    verifyAccessToFeaturestore(project);
     try {
       SubjectDTO dto = subjectsController.getSubjectDetails(project, subject, version);
-      GenericEntity<String> entity = new GenericEntity<String>(dto.getSchema()) {};
+      GenericEntity<String> entity = new GenericEntity<String>(dto.getSchema()) {
+      };
       return Response.ok().entity(entity).build();
     } catch (SchemaException e) {
       SchemaRegistryError error =
@@ -422,6 +478,7 @@ public class KafkaResource {
       return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
     }
   }
+  
   
   @ApiOperation(value = "Check if schema is compatible with a specific subject version.")
   @POST
@@ -436,10 +493,12 @@ public class KafkaResource {
   public Response checkSchemaCompatibility(@PathParam("subject") String subject,
                                            @PathParam("version") String version, SubjectDTO dto,
                                            @Context HttpServletRequest req,
-                                           @Context SecurityContext sc) {
+                                           @Context SecurityContext sc) throws ProjectException, FeaturestoreException {
+    Project project = getProject();
+    verifyAccessToFeaturestore(project);
     try {
       CompatibilityCheck isCompatible =
-        subjectsController.checkIfSchemaCompatible(project, subject, version, dto.getSchema());
+          subjectsController.checkIfSchemaCompatible(project, subject, version, dto.getSchema());
       return Response.ok().entity(isCompatible).build();
     } catch (SchemaException e) {
       SchemaRegistryError error =
@@ -458,7 +517,10 @@ public class KafkaResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
-  public Response getProjectCompatibility(@Context HttpServletRequest req, @Context SecurityContext sc) {
+  public Response getProjectCompatibility(@Context HttpServletRequest req, @Context SecurityContext sc)
+      throws ProjectException, FeaturestoreException {
+    Project project = getProject();
+    verifyAccessToFeaturestore(project);
     try {
       CompatibilityLevel dto = subjectsCompatibilityController.getProjectCompatibilityLevel(project);
       return Response.ok().entity(dto).build();
@@ -477,7 +539,11 @@ public class KafkaResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response setProjectCompatibility(Compatibility dto, @Context SecurityContext sc) {
+  public Response setProjectCompatibility(Compatibility dto,
+                                          @Context HttpServletRequest req,
+                                          @Context SecurityContext sc) throws ProjectException, FeaturestoreException {
+    Project project = getProject();
+    verifyAccessToFeaturestore(project);
     try {
       Compatibility result = subjectsCompatibilityController.setProjectCompatibility(project, dto);
       return Response.ok().entity(result).build();
@@ -500,7 +566,9 @@ public class KafkaResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getSubjectCompatibility(@PathParam("subject") String subject,
                                           @Context HttpServletRequest req,
-                                          @Context SecurityContext sc) {
+                                          @Context SecurityContext sc) throws ProjectException, FeaturestoreException {
+    Project project = getProject();
+    verifyAccessToFeaturestore(project);
     try {
       CompatibilityLevel dto = subjectsCompatibilityController.getSubjectCompatibility(project, subject);
       return Response.ok().entity(dto).build();
@@ -520,7 +588,10 @@ public class KafkaResource {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response setSubjectCompatibility(@PathParam("subject") String subject, Compatibility dto,
-    @Context SecurityContext sc){
+                                          @Context HttpServletRequest req,
+                                          @Context SecurityContext sc) throws ProjectException, FeaturestoreException {
+    Project project = getProject();
+    verifyAccessToFeaturestore(project);
     try {
       Compatibility result = subjectsCompatibilityController.setSubjectCompatibility(project, subject, dto);
       return Response.ok().entity(result).build();
@@ -542,7 +613,10 @@ public class KafkaResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getTopicSubject(@PathParam("topic") String topic,
                                   @Context HttpServletRequest req,
-                                  @Context SecurityContext sc) throws KafkaException {
+                                  @Context SecurityContext sc)
+      throws KafkaException, ProjectException, FeaturestoreException {
+    Project project = getProject();
+    verifyAccessToFeaturestore(project);
     SubjectDTO subjectDTO = kafkaController.getSubjectForTopic(project, topic);
     return Response.ok().entity(subjectDTO).build();
   }
@@ -559,7 +633,10 @@ public class KafkaResource {
   public Response updateSubjectVersion(@PathParam("topic") String topic, @PathParam("subject") String subject,
                                        @PathParam("version") Integer version,
                                        @Context HttpServletRequest req,
-                                       @Context SecurityContext sc) throws KafkaException {
+                                       @Context SecurityContext sc)
+      throws KafkaException, ProjectException, FeaturestoreException {
+    Project project = getProject();
+    verifyAccessToFeaturestore(project);
     try {
       kafkaController.updateTopicSubjectVersion(project, topic, subject, version);
       return Response.ok().build();

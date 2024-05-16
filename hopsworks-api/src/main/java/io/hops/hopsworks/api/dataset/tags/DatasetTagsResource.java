@@ -15,24 +15,26 @@
  */
 package io.hops.hopsworks.api.dataset.tags;
 
-import io.hops.hopsworks.api.tags.TagBuilder;
-import io.hops.hopsworks.common.tags.TagControllerIface;
-import io.hops.hopsworks.common.tags.TagsDTO;
-import io.hops.hopsworks.api.tags.TagsExpansionBeanParam;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.project.ProjectSubResource;
+import io.hops.hopsworks.api.tags.TagBuilder;
+import io.hops.hopsworks.api.tags.TagsExpansionBeanParam;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.featurestore.metadata.AttachMetadataResult;
+import io.hops.hopsworks.common.project.ProjectController;
+import io.hops.hopsworks.common.tags.TagControllerIface;
+import io.hops.hopsworks.common.tags.TagsDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.exceptions.MetadataException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
-import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
@@ -66,7 +68,7 @@ import java.util.logging.Logger;
 @Api(value = "Dataset Tags Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class DatasetTagsResource {
+public class DatasetTagsResource extends ProjectSubResource {
   private static final Logger LOGGER = Logger.getLogger(DatasetTagsResource.class.getName());
   
   @EJB
@@ -77,15 +79,12 @@ public class DatasetTagsResource {
   private TagControllerIface tagsController;
   @EJB
   private TagBuilder tagsBuilder;
+  @EJB
+  private ProjectController projectController;
   
-  private Project project;
-  
-  public void setProject(Project project) {
-    this.project = project;
-  }
-  
-  public void setParams(Project project) {
-    this.project = project;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
   
   @ApiOperation(value = "Create or update tag for a dataset", response = TagsDTO.class)
@@ -102,8 +101,8 @@ public class DatasetTagsResource {
                          @PathParam("path") String path,
                          @QueryParam("datasetType") DatasetType datasetType,
                          @ApiParam(value = "Value to set for the tag") String value)
-      throws DatasetException, MetadataException, FeatureStoreMetadataException {
-    DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, datasetType);
+    throws DatasetException, MetadataException, FeatureStoreMetadataException, ProjectException {
+    DatasetPath datasetPath = datasetHelper.getDatasetPath(getProject(), path, datasetType);
     Users user = jWTHelper.getUserPrincipal(sc);
     
     AttachMetadataResult result = tagsController.upsert(user, datasetPath, schemaName, value);
@@ -129,9 +128,10 @@ public class DatasetTagsResource {
   public Response bulkPutTags(@Context SecurityContext sc, @Context UriInfo uriInfo,
                               @PathParam("path") String path,
                               @QueryParam("datasetType") DatasetType datasetType,
+                              @Context HttpServletRequest req,
                               TagsDTO tags)
-    throws DatasetException, MetadataException, FeatureStoreMetadataException {
-    DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, datasetType);
+    throws DatasetException, MetadataException, FeatureStoreMetadataException, ProjectException {
+    DatasetPath datasetPath = datasetHelper.getDatasetPath(getProject(), path, datasetType);
     Users user = jWTHelper.getUserPrincipal(sc);
     
     AttachMetadataResult result;
@@ -170,8 +170,8 @@ public class DatasetTagsResource {
                           @PathParam("path") String path,
                           @QueryParam("datasetType") DatasetType datasetType,
                           @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
-    throws DatasetException, FeatureStoreMetadataException, MetadataException {
-    DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, datasetType);
+    throws DatasetException, FeatureStoreMetadataException, MetadataException, ProjectException {
+    DatasetPath datasetPath = datasetHelper.getDatasetPath(getProject(), path, datasetType);
     Users user = jWTHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
     resourceRequest.setExpansions(tagsExpansionBeanParam.getResources());
@@ -195,8 +195,8 @@ public class DatasetTagsResource {
                          @PathParam("path") String path,
                          @QueryParam("datasetType") DatasetType datasetType,
                          @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
-    throws DatasetException, FeatureStoreMetadataException, MetadataException {
-    DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, datasetType);
+    throws DatasetException, FeatureStoreMetadataException, MetadataException, ProjectException {
+    DatasetPath datasetPath = datasetHelper.getDatasetPath(getProject(), path, datasetType);
     Users user = jWTHelper.getUserPrincipal(sc);
     
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
@@ -218,8 +218,8 @@ public class DatasetTagsResource {
                              @Context HttpServletRequest req,
                              @PathParam("path") String path,
                              @QueryParam("datasetType") DatasetType datasetType)
-    throws DatasetException, MetadataException {
-    DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, datasetType);
+    throws DatasetException, MetadataException, ProjectException {
+    DatasetPath datasetPath = datasetHelper.getDatasetPath(getProject(), path, datasetType);
     Users user = jWTHelper.getUserPrincipal(sc);
     
     tagsController.deleteAll(user, datasetPath);
@@ -242,8 +242,8 @@ public class DatasetTagsResource {
                             @PathParam("schemaName") String schemaName,
                             @PathParam("path") String path,
                             @QueryParam("datasetType") DatasetType datasetType)
-    throws DatasetException, MetadataException {
-    DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, datasetType);
+    throws DatasetException, MetadataException, ProjectException {
+    DatasetPath datasetPath = datasetHelper.getDatasetPath(getProject(), path, datasetType);
     Users user = jWTHelper.getUserPrincipal(sc);
     
     tagsController.delete(user, datasetPath, schemaName);

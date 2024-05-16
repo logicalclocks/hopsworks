@@ -15,19 +15,22 @@
  */
 package io.hops.hopsworks.api.featurestore.featuremonitoring.config;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.featurestore.FeaturestoreSubResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
-import io.hops.hopsworks.api.jobs.JobsBuilder;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuremonitoring.config.FeatureMonitoringConfigurationController;
 import io.hops.hopsworks.common.featurestore.featuremonitoring.config.FeatureMonitoringConfigurationDTO;
 import io.hops.hopsworks.common.featurestore.featuremonitoring.config.FeatureMonitoringConfigurationInputValidation;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
@@ -61,7 +64,7 @@ import java.util.List;
 
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Feature Monitoring Configuration resource")
-public abstract class FeatureMonitoringConfigurationResource {
+public abstract class FeatureMonitoringConfigurationResource extends FeaturestoreSubResource {
   
   @EJB
   private FeatureMonitoringConfigurationController featureMonitoringConfigurationController;
@@ -72,29 +75,30 @@ public abstract class FeatureMonitoringConfigurationResource {
   @EJB
   private FeatureMonitoringConfigurationBuilder featureMonitoringConfigurationBuilder;
   @EJB
-  private JobsBuilder jobsBuilder;
-  @EJB
   private JWTHelper jWTHelper;
   @EJB
   private FeatureMonitoringConfigurationInputValidation featureMonitoringConfigurationInputValidation;
+  @EJB
+  private FeaturestoreController featurestoreController;
+  @EJB
+  private ProjectController projectController;
   
-  protected Project project;
-  protected Featurestore featureStore;
-  
-  public void setProject(Project project) {
-    this.project = project;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
   
-  public void setFeatureStore(Featurestore featureStore) {
-    this.featureStore = featureStore;
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
   }
   
-  protected abstract Integer getItemId();
+  protected abstract Integer getItemId() throws ProjectException, FeaturestoreException;
   protected abstract ResourceRequest.Name getItemType();
   
   // Added to init engine class for FV only
-  protected abstract String getItemName();
-  protected abstract Integer getItemVersion();
+  protected abstract String getItemName() throws ProjectException, FeaturestoreException;
+  protected abstract Integer getItemVersion() throws ProjectException, FeaturestoreException;
   
   /**
    * Endpoint to fetch the feature monitoring configuration with a given id.
@@ -118,14 +122,14 @@ public abstract class FeatureMonitoringConfigurationResource {
     @Context UriInfo uriInfo,
     @ApiParam(value = "Id of the Feature Monitoring Configuration", required = true)
     @PathParam("configId") Integer configId
-  ) throws FeaturestoreException {
+  ) throws FeaturestoreException, ProjectException {
     
     FeatureMonitoringConfiguration config =
       featureMonitoringConfigurationController.getFeatureMonitoringConfigurationByConfigId(configId);
     
     FeatureMonitoringConfigurationDTO dto =
       featureMonitoringConfigurationBuilder.build(
-        uriInfo, featureStore, getItemType(), getItemId(), getItemName(), getItemVersion(), config);
+        uriInfo, getFeaturestore(), getItemType(), getItemId(), getItemName(), getItemVersion(), config);
     
     return Response.ok().entity(dto).build();
   }
@@ -152,8 +156,8 @@ public abstract class FeatureMonitoringConfigurationResource {
     @Context UriInfo uriInfo,
     @ApiParam(value = "Name of the Feature Monitoring Configuration", required = true)
     @PathParam("name") String name
-  ) throws FeaturestoreException {
-    
+  ) throws FeaturestoreException, ProjectException {
+    Featurestore featureStore = getFeaturestore();
     FeatureMonitoringConfiguration config =
       featureMonitoringConfigurationController.getFeatureMonitoringConfigurationByEntityAndName(
         featureStore, getItemType(), getItemId(), name);
@@ -187,8 +191,8 @@ public abstract class FeatureMonitoringConfigurationResource {
     @Context UriInfo uriInfo,
     @ApiParam(value = "Name of the feature", required = true)
     @PathParam("featureName")String featureName
-  ) throws FeaturestoreException {
-    
+  ) throws FeaturestoreException, ProjectException {
+    Featurestore featureStore = getFeaturestore();
     List<FeatureMonitoringConfiguration> configs =
       featureMonitoringConfigurationController.getFeatureMonitoringConfigurationByEntityAndFeatureName(featureStore,
         getItemType(), getItemId(), featureName);
@@ -219,8 +223,8 @@ public abstract class FeatureMonitoringConfigurationResource {
   public Response getByEntityId(@Context SecurityContext sc,
     @Context HttpServletRequest req,
     @Context UriInfo uriInfo
-  ) throws FeaturestoreException {
-    
+  ) throws FeaturestoreException, ProjectException {
+    Featurestore featureStore = getFeaturestore();
     List<FeatureMonitoringConfiguration> configs =
       featureMonitoringConfigurationController.getFeatureMonitoringConfigurationByEntity(
         featureStore, getItemType(), getItemId());
@@ -252,9 +256,10 @@ public abstract class FeatureMonitoringConfigurationResource {
     @Context HttpServletRequest req,
     @Context UriInfo uriInfo,
     FeatureMonitoringConfigurationDTO configDTO
-  ) throws FeaturestoreException, JobException {
+  ) throws FeaturestoreException, JobException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    
+    Project project = getProject();
+    Featurestore featureStore = getFeaturestore(project);
     Featuregroup featureGroup = null;
     FeatureView featureView = null;
     if (getItemType() == ResourceRequest.Name.FEATUREGROUPS) {
@@ -297,8 +302,9 @@ public abstract class FeatureMonitoringConfigurationResource {
     @Context UriInfo uriInfo,
     @PathParam("configId") Integer configId,
     FeatureMonitoringConfigurationDTO configDTO
-  ) throws FeaturestoreException, JobException {
-    
+  ) throws FeaturestoreException, JobException, ProjectException {
+    Project project = getProject();
+    Featurestore featureStore = getFeaturestore(project);
     Featuregroup featureGroup = null;
     FeatureView featureView = null;
     if (getItemType() == ResourceRequest.Name.FEATUREGROUPS) {

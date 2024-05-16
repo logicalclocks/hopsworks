@@ -38,11 +38,12 @@
  */
 package io.hops.hopsworks.api.python;
 
+import io.hops.hopsworks.api.project.ProjectSubResource;
 import io.hops.hopsworks.api.python.environment.EnvironmentResource;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -54,24 +55,24 @@ import javax.ws.rs.Path;
 @Api(value = "Python")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class PythonResource {
+public class PythonResource extends ProjectSubResource {
 
   @Inject
   private EnvironmentResource environmentResource;
 
   @EJB
-  private ProjectFacade projectFacade;
-
-  private Project project;
+  private ProjectController projectController;
   
-  public void setProjectId(Integer projectId) {
-    this.project = projectFacade.find(projectId);
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
   
   @ApiOperation(value = "Python environment sub-resource")
   @Path("/environments")
   public EnvironmentResource environment() {
-    return this.environmentResource.setProject(project);
+    this.environmentResource.setProjectId(getProjectId());
+    return this.environmentResource;
   }
 
 }

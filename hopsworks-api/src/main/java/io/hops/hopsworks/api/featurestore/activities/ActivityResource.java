@@ -16,6 +16,8 @@
 
 package io.hops.hopsworks.api.featurestore.activities;
 
+import io.hops.hopsworks.api.featurestore.FeaturestoreCommonSubResource;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
@@ -25,8 +27,10 @@ import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.ActivitiesException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
@@ -42,6 +46,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
@@ -54,7 +59,7 @@ import javax.ws.rs.core.UriInfo;
 @Api(value = "Feature store activity Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class ActivityResource {
+public class ActivityResource extends FeaturestoreCommonSubResource {
 
   @EJB
   private FeaturegroupController featuregroupController;
@@ -67,31 +72,36 @@ public class ActivityResource {
   @EJB
   private JWTHelper jwtHelper;
 
-  private Project project;
-  private Featurestore featurestore;
-  private Featuregroup featuregroup;
-  private TrainingDataset trainingDataset;
-  private FeatureView featureView;
+  @EJB
+  private ProjectController projectController;
+  @EJB
+  private FeaturestoreController featurestoreController;
 
-  public void setProject(Project project) {
-    this.project = project;
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
   }
 
-  public void setFeaturestore(Featurestore featurestore) {
-    this.featurestore = featurestore;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
-  public void setFeatureGroupId(Integer featureGroupId) throws FeaturestoreException {
-    this.featuregroup = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
+  @Override
+  protected FeatureViewController getFeatureViewController() {
+    return featureViewController;
   }
 
-  public void setTrainingDatasetById(Integer trainingDatasetId) throws FeaturestoreException {
-    this.trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
+  @Override
+  protected TrainingDatasetController getTrainingDatasetController() {
+    return trainingDatasetController;
   }
 
-  public void setFeatureViewByNameAndVersion(String name, Integer version) throws FeaturestoreException {
-    this.featureView = featureViewController.getByNameVersionAndFeatureStore(name, version, featurestore);
+  @Override
+  protected FeaturegroupController getFeaturegroupController() {
+    return featuregroupController;
   }
+
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
@@ -104,7 +114,8 @@ public class ActivityResource {
   public Response get(@BeanParam Pagination pagination,
                       @BeanParam ActivitiesBeanParam activitiesBeanParam,
                       @Context UriInfo uriInfo,
-                      @Context SecurityContext sc) throws FeaturestoreException, ActivitiesException {
+                      @Context HttpServletRequest req,
+                      @Context SecurityContext sc) throws FeaturestoreException, ActivitiesException, ProjectException {
     Users user = jwtHelper.getUserPrincipal(sc);
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ACTIVITIES);
@@ -113,7 +124,11 @@ public class ActivityResource {
     resourceRequest.setSort(activitiesBeanParam.getSortBySet());
     resourceRequest.setFilter(activitiesBeanParam.getFilterBySet());
     resourceRequest.setExpansions(activitiesBeanParam.getExpansions().getResources());
-
+    Project project = getProject();
+    Featurestore featureStore = getFeaturestore(project);
+    TrainingDataset trainingDataset = getTrainingDataset(featureStore);
+    Featuregroup featuregroup = getFeaturegroup(featureStore);
+    FeatureView featureView = getFeatureView(featureStore);
     ActivityDTO dto = null;
     if (featuregroup != null) {
       dto = activityBuilder.build(uriInfo, resourceRequest, project, user, featuregroup);

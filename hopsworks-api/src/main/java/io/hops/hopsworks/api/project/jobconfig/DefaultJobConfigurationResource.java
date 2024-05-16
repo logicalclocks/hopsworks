@@ -16,12 +16,12 @@
 
 package io.hops.hopsworks.api.project.jobconfig;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.project.ProjectSubResource;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.exceptions.ProjectException;
@@ -39,6 +39,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -58,12 +59,9 @@ import java.util.logging.Logger;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class DefaultJobConfigurationResource {
+public class DefaultJobConfigurationResource extends ProjectSubResource {
 
   private static final Logger LOGGER = Logger.getLogger(DefaultJobConfigurationResource.class.getName());
-
-  @EJB
-  private ProjectFacade projectFacade;
 
   @EJB
   private ProjectController projectController;
@@ -71,10 +69,9 @@ public class DefaultJobConfigurationResource {
   @EJB
   private DefaultJobConfigurationBuilder defaultJobConfigurationBuilder;
 
-  private Project project;
-  public DefaultJobConfigurationResource setProjectId(Integer projectId) {
-    this.project = projectFacade.find(projectId);
-    return this;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
   @ApiOperation(value = "Get all the default job configurations", response = DefaultJobConfigurationDTO.class)
@@ -94,7 +91,7 @@ public class DefaultJobConfigurationResource {
     resourceRequest.setSort(defaultJobConfigurationBeanParam.getSortBySet());
     resourceRequest.setFilter(defaultJobConfigurationBeanParam.getFilter());
     DefaultJobConfigurationDTO defaultJobConfigurationDTO =
-      this.defaultJobConfigurationBuilder.build(uriInfo, resourceRequest, this.project);
+      this.defaultJobConfigurationBuilder.build(uriInfo, resourceRequest, getProject());
     if(defaultJobConfigurationDTO == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_DEFAULT_JOB_CONFIG_NOT_FOUND, Level.FINEST);
     }
@@ -113,7 +110,7 @@ public class DefaultJobConfigurationResource {
                             @Context SecurityContext sc) throws ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.JOBCONFIG);
     DefaultJobConfiguration defaultJobConfiguration =
-      projectController.getProjectDefaultJobConfiguration(project, jobType);
+      projectController.getProjectDefaultJobConfiguration(getProject(), jobType);
     if(defaultJobConfiguration == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_DEFAULT_JOB_CONFIG_NOT_FOUND, Level.FINEST);
     } else {
@@ -140,14 +137,14 @@ public class DefaultJobConfigurationResource {
     Response.Status status = Response.Status.CREATED;
 
     HopsUtils.validateJobConfigurationType(config, type);
-
+    Project project = getProject();
     DefaultJobConfiguration currentConfig = projectController.getProjectDefaultJobConfiguration(project, type);
     if(currentConfig != null) {
       status = Response.Status.OK;
     }
 
     DefaultJobConfiguration defaultConfig =
-      projectController.createOrUpdateDefaultJobConfig(this.project, config, type, currentConfig);
+      projectController.createOrUpdateDefaultJobConfig(project, config, type, currentConfig);
 
     DefaultJobConfigurationDTO defaultJobConfigurationDTO =
       this.defaultJobConfigurationBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.JOBCONFIG),
@@ -169,8 +166,9 @@ public class DefaultJobConfigurationResource {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response delete(@PathParam("type") JobType type,
-                         @Context SecurityContext sc) {
-    projectController.removeProjectDefaultJobConfiguration(this.project, type);
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc) throws ProjectException {
+    projectController.removeProjectDefaultJobConfiguration(getProject(), type);
     return Response.noContent().build();
   }
 }

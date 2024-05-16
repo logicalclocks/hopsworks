@@ -17,15 +17,18 @@ package io.hops.hopsworks.api.featurestore.keyword;
 
 import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordBuilder;
+import io.hops.hopsworks.api.featurestore.featuregroup.FeatureGroupSubResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.keyword.KeywordDTO;
 import io.hops.hopsworks.common.featurestore.metadata.FeatureStoreKeywordControllerIface;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
@@ -55,28 +58,31 @@ import java.util.List;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Feature Group Keywords Resource")
-public class FeatureGroupKeywordResource {
+public class FeatureGroupKeywordResource extends FeatureGroupSubResource {
   @EJB
   private FeaturegroupController featuregroupController;
   @EJB
   private FeaturestoreKeywordBuilder featurestoreKeywordBuilder;
   @Inject
   private FeatureStoreKeywordControllerIface keywordCtrl;
+  @EJB
+  private ProjectController projectController;
+  @EJB
+  private FeaturestoreController featurestoreController;
 
-  private Project project;
-  private Featurestore featurestore;
-  private Featuregroup featuregroup;
-
-  public void setProject(Project project) {
-    this.project = project;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
-  public void setFeaturestore(Featurestore featurestore) {
-    this.featurestore = featurestore;
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
   }
 
-  public void setFeatureGroupId(Integer featureGroupId) throws FeaturestoreException {
-    this.featuregroup = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
+  @Override
+  protected FeaturegroupController getFeaturegroupController() {
+    return featuregroupController;
   }
 
   @GET
@@ -89,8 +95,10 @@ public class FeatureGroupKeywordResource {
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getKeywords(@Context SecurityContext sc,
                               @Context HttpServletRequest req,
-                              @Context UriInfo uriInfo) {
+                              @Context UriInfo uriInfo) throws ProjectException, FeaturestoreException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
+    Project project = getProject();
+    Featuregroup featuregroup = getFeaturegroup(project);
     List<String> keywords = keywordCtrl.getKeywords(featuregroup);
     KeywordDTO dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project, featuregroup, keywords);
     return Response.ok().entity(dto).build();
@@ -108,8 +116,10 @@ public class FeatureGroupKeywordResource {
   public Response replaceKeywords(@Context SecurityContext sc,
                                   @Context HttpServletRequest req,
                                   @Context UriInfo uriInfo, KeywordDTO keywordDTO)
-      throws FeaturestoreException {
+      throws FeaturestoreException, ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
+    Project project = getProject();
+    Featuregroup featuregroup = getFeaturegroup(project);
     KeywordDTO dto;
     List<String> updatedKeywords = keywordCtrl.replaceKeywords(featuregroup, new HashSet<>(keywordDTO.getKeywords()));
     dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project, featuregroup, updatedKeywords);
@@ -127,8 +137,10 @@ public class FeatureGroupKeywordResource {
                                  @Context UriInfo uriInfo,
                                  @Context HttpServletRequest req,
                                  @QueryParam("keyword") String keyword)
-      throws FeaturestoreException {
+      throws FeaturestoreException, ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
+    Project project = getProject();
+    Featuregroup featuregroup = getFeaturegroup(project);
     keywordCtrl.deleteKeyword(featuregroup, keyword);
     List<String> updatedKeywords = keywordCtrl.getKeywords(featuregroup);
     KeywordDTO dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project, featuregroup, updatedKeywords);

@@ -29,16 +29,20 @@ import io.hops.hopsworks.alerting.exceptions.AlertManagerNoSuchElementException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerResponseException;
 import io.hops.hopsworks.api.alert.AlertBuilder;
 import io.hops.hopsworks.api.alert.AlertDTO;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.jobs.JobSubResource;
 import io.hops.hopsworks.api.project.alert.ProjectAlertsDTO;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.alert.AlertController;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.jobs.description.JobAlertsFacade;
+import io.hops.hopsworks.common.jobs.JobController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.AlertException;
 import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertReceiver;
 import io.hops.hopsworks.persistence.entity.jobs.description.JobAlert;
@@ -81,7 +85,7 @@ import java.util.logging.Logger;
 @Api(value = "JobAlerts Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class JobAlertsResource {
+public class JobAlertsResource extends JobSubResource {
 
   private static final Logger LOGGER = Logger.getLogger(JobAlertsResource.class.getName());
 
@@ -95,12 +99,19 @@ public class JobAlertsResource {
   private AlertBuilder alertBuilder;
   @EJB
   private AlertReceiverFacade alertReceiverFacade;
+  @EJB
+  private JobController jobController;
+  @EJB
+  private ProjectController projectController;
 
-  private Jobs job;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
+  }
 
-  public JobAlertsResource setJob(Jobs job) {
-    this.job = job;
-    return this;
+  @Override
+  protected JobController getJobController() {
+    return jobController;
   }
 
   @GET
@@ -111,13 +122,13 @@ public class JobAlertsResource {
   @ApiKeyRequired(acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response get(@BeanParam Pagination pagination, @BeanParam JobAlertsBeanParam jobalertsBeanParam,
                       @Context HttpServletRequest req,
-                      @Context UriInfo uriInfo, @Context SecurityContext sc) {
+                      @Context UriInfo uriInfo, @Context SecurityContext sc) throws ProjectException, JobException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
     resourceRequest.setSort(jobalertsBeanParam.getSortBySet());
     resourceRequest.setFilter(jobalertsBeanParam.getFilter());
-    JobAlertsDTO dto = jobalertsBuilder.buildItems(uriInfo, resourceRequest, job);
+    JobAlertsDTO dto = jobalertsBuilder.buildItems(uriInfo, resourceRequest, getJob());
     return Response.ok().entity(dto).build();
   }
 
@@ -131,9 +142,9 @@ public class JobAlertsResource {
   public Response getById(@PathParam("id") Integer id, @Context UriInfo uriInfo,
                           @Context HttpServletRequest req,
                           @Context SecurityContext sc)
-      throws JobException {
+    throws JobException, ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
-    JobAlertsDTO dto = jobalertsBuilder.build(uriInfo, resourceRequest, job, id);
+    JobAlertsDTO dto = jobalertsBuilder.build(uriInfo, resourceRequest, getJob(), id);
     return Response.ok().entity(dto).build();
   }
 
@@ -161,7 +172,8 @@ public class JobAlertsResource {
   public Response createOrUpdate(@PathParam("id") Integer id, JobAlertsDTO jobAlertsDTO,
                                  @Context HttpServletRequest req,
                                  @Context UriInfo uriInfo,
-                                 @Context SecurityContext sc) throws JobException {
+                                 @Context SecurityContext sc) throws JobException, ProjectException {
+    Jobs job = getJob();
     JobAlert jobAlert = jobalertsFacade.findByJobAndId(job, id);
     if (jobAlert == null) {
       throw new JobException(RESTCodes.JobErrorCode.JOB_ALERT_NOT_FOUND, Level.FINE,
@@ -204,14 +216,14 @@ public class JobAlertsResource {
                          @QueryParam("bulk") @DefaultValue("false") Boolean bulk,
                          @Context UriInfo uriInfo,
                          @Context HttpServletRequest req,
-                         @Context SecurityContext sc) throws JobException {
+                         @Context SecurityContext sc) throws JobException, ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
     JobAlertsDTO dto = createAlert(jobAlertsDTO, bulk, uriInfo, resourceRequest);
     return Response.created(dto.getHref()).entity(dto).build();
   }
 
   private JobAlertsDTO createAlert(PostableJobAlerts jobAlertsDTO, Boolean bulk, UriInfo uriInfo,
-      ResourceRequest resourceRequest) throws JobException {
+      ResourceRequest resourceRequest) throws JobException, ProjectException {
     JobAlertsDTO dto;
     if (bulk) {
       validateBulk(jobAlertsDTO);
@@ -239,9 +251,10 @@ public class JobAlertsResource {
     }
   }
 
-  private JobAlertsDTO createAlert(PostableJobAlerts jobAlertsDTO, UriInfo uriInfo, ResourceRequest resourceRequest)
-      throws JobException {
-    validate(jobAlertsDTO);
+  private JobAlertsDTO createAlert(PostableJobAlerts jobAlertsDTO, UriInfo uriInfo,
+                                   ResourceRequest resourceRequest) throws JobException, ProjectException {
+    Jobs job = getJob();
+    validate(jobAlertsDTO, job);
     JobAlert jobAlert = new JobAlert();
     jobAlert.setStatus(jobAlertsDTO.getStatus());
     jobAlert.setSeverity(jobAlertsDTO.getSeverity());
@@ -255,7 +268,7 @@ public class JobAlertsResource {
     return jobalertsBuilder.buildItems(uriInfo, resourceRequest, jobAlert);
   }
 
-  private void validate(PostableJobAlerts jobAlertsDTO) throws JobException {
+  private void validate(PostableJobAlerts jobAlertsDTO, Jobs job) throws JobException {
     if (jobAlertsDTO == null) {
       throw new JobException(RESTCodes.JobErrorCode.JOB_ALERT_ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
     }
@@ -284,7 +297,8 @@ public class JobAlertsResource {
                               @Context UriInfo uriInfo,
                               @Context HttpServletRequest req,
                               @Context SecurityContext sc)
-      throws AlertException {
+      throws AlertException, ProjectException, JobException {
+    Jobs job = getJob();
     JobAlert jobAlert = jobalertsFacade.findByJobAndId(job, id);
     List<Alert> alerts;
     try {
@@ -310,8 +324,8 @@ public class JobAlertsResource {
   public Response deleteById(@PathParam("id") Integer id,
                              @Context UriInfo uriInfo,
                              @Context HttpServletRequest req,
-                             @Context SecurityContext sc) throws JobException {
-    JobAlert jobAlert = jobalertsFacade.findByJobAndId(job, id);
+                             @Context SecurityContext sc) throws JobException, ProjectException {
+    JobAlert jobAlert = jobalertsFacade.findByJobAndId(getJob(), id);
     if (jobAlert != null) {
       deleteRoute(jobAlert);
       jobalertsFacade.remove(jobAlert);

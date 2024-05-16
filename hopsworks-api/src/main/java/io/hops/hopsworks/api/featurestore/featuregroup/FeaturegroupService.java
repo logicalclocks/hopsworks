@@ -17,6 +17,8 @@
 package io.hops.hopsworks.api.featurestore.featuregroup;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.featurestore.FeaturestoreSubResource;
 import io.hops.hopsworks.api.featurestore.activities.ActivityResource;
 import io.hops.hopsworks.api.featurestore.code.CodeResource;
 import io.hops.hopsworks.api.featurestore.commit.CommitResource;
@@ -28,16 +30,14 @@ import io.hops.hopsworks.api.featurestore.datavalidationv2.suites.ExpectationSui
 import io.hops.hopsworks.api.featurestore.keyword.FeatureGroupKeywordResource;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.featurestore.tag.FeatureGroupTagResource;
-import io.hops.hopsworks.api.filter.JWTNotRequired;
-import io.hops.hopsworks.api.jobs.JobDTO;
-import io.hops.hopsworks.api.jobs.JobsBuilder;
-import io.hops.hopsworks.api.provenance.FeatureGroupProvenanceResource;
-import io.hops.hopsworks.common.featurestore.featuregroup.stream.DeltaStreamerJobConf;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.JWTNotRequired;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.jobs.JobDTO;
+import io.hops.hopsworks.api.jobs.JobsBuilder;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.provenance.FeatureGroupProvenanceResource;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
@@ -46,6 +46,8 @@ import io.hops.hopsworks.common.featurestore.featuregroup.ImportFgJobConf;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.IngestionJob;
+import io.hops.hopsworks.common.featurestore.featuregroup.stream.DeltaStreamerJobConf;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -110,7 +112,7 @@ import java.util.stream.Collectors;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Featuregroup service", description = "A service that manages a feature store's feature groups")
-public class FeaturegroupService {
+public class FeaturegroupService extends FeaturestoreSubResource {
 
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -158,29 +160,19 @@ public class FeaturegroupService {
   private FeatureGroupFeatureMonitoringResultResource featureMonitoringResultResource;
   @EJB
   private Settings settings;
+  @EJB
+  private ProjectController projectController;
 
-  private Project project;
-  private Featurestore featurestore;
   private static final Logger LOGGER = Logger.getLogger(FeaturegroupService.class.getName());
 
-  /**
-   * Set the project of the featurestore (provided by parent resource)
-   *
-   * @param project the project where the featurestore resides
-   */
-  public void setProject(Project project) {
-    this.project = project;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
-  /**
-   * Sets the featurestore of the featuregroups (provided by parent resource)
-   *
-   * @param featurestoreId id of the featurestore
-   * @throws FeaturestoreException
-   */
-  public void setFeaturestoreId(Integer featurestoreId) throws FeaturestoreException {
-    //This call verifies that the project have access to the featurestoreId provided
-    this.featurestore = featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId);
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
   }
 
   /**
@@ -226,8 +218,10 @@ public class FeaturegroupService {
           HttpServletRequest req,
       @Context
           SecurityContext sc)
-      throws FeaturestoreException, ServiceException {
+      throws FeaturestoreException, ServiceException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     ResourceRequest resourceRequest = makeResourceRequest(featureGroupBeanParam);
     List<Featuregroup> featuregroups = featuregroupController
         .getFeaturegroupsForFeaturestore(featurestore, project, user, convertToQueryParam(resourceRequest));
@@ -259,6 +253,8 @@ public class FeaturegroupService {
     throws FeaturestoreException, ServiceException, KafkaException, SchemaException, ProjectException, UserException,
            GenericException {
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     if(featuregroupDTO == null) {
       throw new IllegalArgumentException("Input JSON for creating a new Feature Group cannot be null");
     }
@@ -295,9 +291,13 @@ public class FeaturegroupService {
   @ApiOperation(value = "Get specific featuregroup from a specific featurestore",
       response = FeaturegroupDTO.class)
   public Response getFeatureGroup(@ApiParam(value = "Id of the featuregroup", required = true)
-                                  @PathParam("featuregroupId") Integer featuregroupId, @Context SecurityContext sc)
-      throws FeaturestoreException, ServiceException {
+                                  @PathParam("featuregroupId") Integer featuregroupId,
+                                  @Context HttpServletRequest req,
+                                  @Context SecurityContext sc)
+      throws FeaturestoreException, ServiceException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     verifyIdProvided(featuregroupId);
     FeaturegroupDTO featuregroupDTO =
         featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId, project, user);
@@ -326,7 +326,8 @@ public class FeaturegroupService {
       @PathParam("featuregroupId") Integer featuregroupId,
       @Context HttpServletRequest req,
       @Context SecurityContext sc)
-      throws FeaturestoreException {
+      throws FeaturestoreException, ProjectException {
+    Featurestore featurestore = getFeaturestore();
     verifyIdProvided(featuregroupId);
     Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
     FeaturegroupDTO featuregroupDTO = new FeaturegroupDTO(featuregroup);
@@ -357,9 +358,13 @@ public class FeaturegroupService {
   public Response getFeatureGroup(@ApiParam(value = "Name of the feature group", required = true)
                                   @PathParam("name") String name,
                                   @ApiParam(value = "Filter by a specific version")
-                                  @QueryParam("version") Integer version, @Context SecurityContext sc)
-      throws FeaturestoreException, ServiceException {
+                                  @QueryParam("version") Integer version,
+                                  @Context HttpServletRequest req,
+                                  @Context SecurityContext sc)
+      throws FeaturestoreException, ServiceException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     verifyNameProvided(name);
     List<FeaturegroupDTO> featuregroupDTO;
     if (version == null) {
@@ -395,9 +400,11 @@ public class FeaturegroupService {
                                      @Context HttpServletRequest req,
                                      @ApiParam(value = "Id of the featuregroup", required = true)
                                        @PathParam("featuregroupId") Integer featuregroupId)
-      throws FeaturestoreException, ServiceException, SchemaException, KafkaException {
+      throws FeaturestoreException, ServiceException, SchemaException, KafkaException, ProjectException {
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     //Verify that the user has the data-owner role or is the creator of the featuregroup
     Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
     try {
@@ -441,6 +448,8 @@ public class FeaturegroupService {
            GenericException {
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     //Verify that the user has the data-owner role or is the creator of the featuregroup
     Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
     try {
@@ -497,6 +506,8 @@ public class FeaturegroupService {
     }
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
     FeaturegroupDTO updatedFeaturegroupDTO = null;
     if(updateMetadata) {
@@ -555,10 +566,11 @@ public class FeaturegroupService {
                                @ApiParam(value = "Id of the featuregroup", required = true)
                                @PathParam("featuregroupId") Integer featuregroupId,
                                IngestionJobConf ingestionJobConf)
-      throws DatasetException, HopsSecurityException, FeaturestoreException, JobException {
+      throws DatasetException, HopsSecurityException, FeaturestoreException, JobException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
     verifyIdProvided(featuregroupId);
-
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
     Map<String, String> dataOptions = null;
     if (ingestionJobConf.getDataOptions() != null) {
@@ -578,98 +590,88 @@ public class FeaturegroupService {
     IngestionJobDTO ingestionJobDTO = ingestionJobBuilder.build(uriInfo, project, featuregroup, ingestionJob);
     return Response.ok().entity(ingestionJobDTO).build();
   }
-
+  
   @Path("/{featuregroupId}/preview")
   public FeatureGroupPreviewResource getFeatureGroupPreview(
-      @ApiParam(value = "Id of the featuregroup") @PathParam("featuregroupId") Integer featuregroupId)
-      throws FeaturestoreException {
-    FeatureGroupPreviewResource fgPreviewResource = featureGroupPreviewResource.setProject(project);
-    fgPreviewResource.setFeaturestore(featurestore);
-    fgPreviewResource.setFeatureGroupId(featuregroupId);
-    return fgPreviewResource;
+      @ApiParam(value = "Id of the featuregroup") @PathParam("featuregroupId") Integer featuregroupId) {
+    featureGroupPreviewResource.setProjectId(getProjectId());
+    featureGroupPreviewResource.setFeaturestoreId(getFeaturestoreId());
+    featureGroupPreviewResource.setFeatureGroupId(featuregroupId);
+    return featureGroupPreviewResource;
   }
 
   @Path("/{featureGroupId}/statistics")
-  public StatisticsResource statistics(@PathParam("featureGroupId") Integer featureGroupId)
-      throws FeaturestoreException {
-    this.statisticsResource.setProject(project);
-    this.statisticsResource.setFeaturestore(featurestore);
-    this.statisticsResource.setFeatureGroupById(featureGroupId);
+  public StatisticsResource statistics(@PathParam("featureGroupId") Integer featureGroupId) {
+    this.statisticsResource.setProjectId(getProjectId());
+    this.statisticsResource.setFeaturestoreId(getFeaturestoreId());
+    this.statisticsResource.setFeatureGroupId(featureGroupId);
     return statisticsResource;
   }
 
   @Path("/{featureGroupId}/code")
-  public CodeResource code(@PathParam("featureGroupId") Integer featureGroupId)
-          throws FeaturestoreException {
-    this.codeResource.setProject(project);
-    this.codeResource.setFeatureStore(featurestore);
+  public CodeResource code(@PathParam("featureGroupId") Integer featureGroupId) {
+    this.codeResource.setProjectId(getProjectId());
+    this.codeResource.setFeaturestoreId(getFeaturestoreId());
     this.codeResource.setFeatureGroupId(featureGroupId);
     return codeResource;
   }
-
+  
   @Path("/{featureGroupId}/provenance")
   public FeatureGroupProvenanceResource provenance(@PathParam("featureGroupId") Integer featureGroupId) {
-    this.provenanceResource.setProject(project);
-    this.provenanceResource.setFeatureStore(featurestore);
+    this.provenanceResource.setProjectId(getProjectId());
+    this.provenanceResource.setFeaturestoreId(getFeaturestoreId());
     this.provenanceResource.setFeatureGroupId(featureGroupId);
     return provenanceResource;
   }
 
   @Path("/{featureGroupId}/expectationsuite")
-  public ExpectationSuiteResource expectationSuite(@PathParam("featureGroupId") Integer featureGroupId)
-    throws FeaturestoreException {
-    this.expectationSuiteResource.setProject(project);
-    this.expectationSuiteResource.setFeaturestore(featurestore);
-    this.expectationSuiteResource.setFeatureGroup(featureGroupId);
+  public ExpectationSuiteResource expectationSuite(@PathParam("featureGroupId") Integer featureGroupId) {
+    this.expectationSuiteResource.setProjectId(getProjectId());
+    this.expectationSuiteResource.setFeaturestoreId(getFeaturestoreId());
+    this.expectationSuiteResource.setFeatureGroupId(featureGroupId);
     return expectationSuiteResource;
   }
 
   @Path("/{featureGroupId}/validationreport")
-  public ValidationReportResource validationReport(@PathParam("featureGroupId") Integer featureGroupId)
-    throws FeaturestoreException {
-    this.validationReportResource.setProject(project);
-    this.validationReportResource.setFeaturestore(featurestore);
-    this.validationReportResource.setFeatureGroup(featureGroupId);
+  public ValidationReportResource validationReport(@PathParam("featureGroupId") Integer featureGroupId) {
+    this.validationReportResource.setProjectId(getProjectId());
+    this.validationReportResource.setFeaturestoreId(getFeaturestoreId());
+    this.validationReportResource.setFeatureGroupId(featureGroupId);
     return validationReportResource;
   }
 
   @Path("/{featureGroupId}/commits")
   public CommitResource timetravel (
-      @ApiParam(value = "Id of the featuregroup") @PathParam("featureGroupId") Integer featureGroupId)
-      throws FeaturestoreException {
-    this.commitResource.setProject(project);
-    this.commitResource.setFeaturestore(featurestore);
-    this.commitResource.setFeatureGroup(featureGroupId);
+      @ApiParam(value = "Id of the featuregroup") @PathParam("featureGroupId") Integer featureGroupId) {
+    this.commitResource.setProjectId(getProjectId());
+    this.commitResource.setFeaturestoreId(getFeaturestoreId());
+    this.commitResource.setFeatureGroupId(featureGroupId);
     return commitResource;
   }
 
-
   @Path("/{featureGroupId}/keywords")
   public FeatureGroupKeywordResource keywords (
-      @ApiParam(value = "Id of the featuregroup") @PathParam("featureGroupId") Integer featureGroupId)
-      throws FeaturestoreException {
-    this.featureGroupKeywordResource.setProject(project);
-    this.featureGroupKeywordResource.setFeaturestore(featurestore);
+      @ApiParam(value = "Id of the featuregroup") @PathParam("featureGroupId") Integer featureGroupId) {
+    this.featureGroupKeywordResource.setProjectId(getProjectId());
+    this.featureGroupKeywordResource.setFeaturestoreId(getFeaturestoreId());
     this.featureGroupKeywordResource.setFeatureGroupId(featureGroupId);
     return featureGroupKeywordResource;
   }
-
+  
   @Path("/{featureGroupId}/activity")
   public ActivityResource activity(@ApiParam(value = "Id of the feature group")
-                                     @PathParam("featureGroupId") Integer featureGroupId)
-      throws FeaturestoreException {
-    this.activityResource.setProject(project);
-    this.activityResource.setFeaturestore(featurestore);
+                                     @PathParam("featureGroupId") Integer featureGroupId) {
+    this.activityResource.setProjectId(getProjectId());
+    this.activityResource.setFeaturestoreId(getFeaturestoreId());
     this.activityResource.setFeatureGroupId(featureGroupId);
     return this.activityResource;
   }
-
+  
   @Path("/{featureGroupId}/alerts")
-  public FeatureStoreAlertResource alerts(@PathParam("featureGroupId") Integer featureGroupId)
-      throws FeaturestoreException {
-    featureGroupDataValidationAlertResource.setFeatureGroup(
-      featuregroupController.getFeaturegroupById(featurestore, featureGroupId));
-    featureGroupDataValidationAlertResource.setProject(project);
+  public FeatureStoreAlertResource alerts(@PathParam("featureGroupId") Integer featureGroupId) {
+    featureGroupDataValidationAlertResource.setProjectId(getProjectId());
+    featureGroupDataValidationAlertResource.setFeaturestoreId(getFeaturestoreId());
+    featureGroupDataValidationAlertResource.setFeatureGroupId(featureGroupId);
     return featureGroupDataValidationAlertResource;
   }
   
@@ -689,11 +691,11 @@ public class FeaturegroupService {
     @ApiParam(value = "Id of the featuregroup", required = true)
     @PathParam("featuregroupId") Integer featuregroupId,
     DeltaStreamerJobConf deltaStreamerJobConf)
-    throws FeaturestoreException, JobException {
+      throws FeaturestoreException, JobException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
     verifyIdProvided(featuregroupId);
-    
-    Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
+    Project project = getProject();
+    Featuregroup featuregroup = featuregroupController.getFeaturegroupById(getFeaturestore(project), featuregroupId);
     
     Jobs deltaStreamerJob = fsJobManagerController.setupHudiDeltaStreamerJob(project, user, featuregroup,
       deltaStreamerJobConf);
@@ -704,13 +706,11 @@ public class FeaturegroupService {
   
   @Path("/{featureGroupId}/tags")
   public FeatureGroupTagResource tags(@ApiParam(value = "Id of the feature group")
-                                     @PathParam("featureGroupId") Integer featureGroupId)
-    throws FeaturestoreException {
+                                     @PathParam("featureGroupId") Integer featureGroupId) {
     verifyIdProvided(featureGroupId);
-    this.tagResource.setProject(project);
-    this.tagResource.setFeatureStore(featurestore);
-    Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
-    this.tagResource.setFeatureGroup(featuregroup);
+    this.tagResource.setProjectId(getProjectId());
+    this.tagResource.setFeaturestoreId(getFeaturestoreId());
+    this.tagResource.setFeatureGroupId(featureGroupId);
     return this.tagResource;
   }
 
@@ -732,7 +732,9 @@ public class FeaturegroupService {
           throws FeaturestoreException, JobException, ProjectException, ServiceException, GenericException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
-    Jobs importDataJob = fsJobManagerController.setupImportFgJob(project, user, featurestore, importFgJobConf);
+    Project project = getProject();
+    Jobs importDataJob =
+      fsJobManagerController.setupImportFgJob(project, user, getFeaturestore(project), importFgJobConf);
     JobDTO jobDTO = jobsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.JOBS), importDataJob);
     return Response.created(jobDTO.getHref()).entity(jobDTO).build();
   }
@@ -742,13 +744,10 @@ public class FeaturegroupService {
   ////////////////////////////////////////
   
   @Path("/{featureGroupId}/validationresult")
-  public ValidationResultResource validationResultResource(
-    @PathParam("featureGroupId")
-      Integer featureGroupId
-  ) throws FeaturestoreException {
-    this.validationResultResource.setProject(project);
-    this.validationResultResource.setFeaturestore(featurestore);
-    this.validationResultResource.setFeatureGroup(featureGroupId);
+  public ValidationResultResource validationResultResource(@PathParam("featureGroupId") Integer featureGroupId) {
+    this.validationResultResource.setProjectId(getProjectId());
+    this.validationResultResource.setFeaturestoreId(getFeaturestoreId());
+    this.validationResultResource.setFeatureGroupId(featureGroupId);
 
     return validationResultResource;
   }
@@ -763,9 +762,9 @@ public class FeaturegroupService {
         Level.FINE
       );
     }
-    this.featureMonitoringConfigurationResource.setProject(project);
-    this.featureMonitoringConfigurationResource.setFeatureStore(featurestore);
-    this.featureMonitoringConfigurationResource.setFeatureGroup(featureGroupId);
+    this.featureMonitoringConfigurationResource.setProjectId(getProjectId());
+    this.featureMonitoringConfigurationResource.setFeaturestoreId(getFeaturestoreId());
+    this.featureMonitoringConfigurationResource.setFeatureGroupId(featureGroupId);
     return featureMonitoringConfigurationResource;
   }
   
@@ -779,9 +778,9 @@ public class FeaturegroupService {
         Level.FINE
       );
     }
-    this.featureMonitoringResultResource.setProject(project);
-    this.featureMonitoringResultResource.setFeatureStore(featurestore);
-    this.featureMonitoringResultResource.setFeatureGroup(featureGroupId);
+    this.featureMonitoringResultResource.setProjectId(getProjectId());
+    this.featureMonitoringResultResource.setFeaturestoreId(getFeaturestoreId());
+    this.featureMonitoringResultResource.setFeatureGroupId(featureGroupId);
     return featureMonitoringResultResource;
   }
 

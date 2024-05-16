@@ -23,8 +23,13 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.alert.FeatureViewAlert;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.ApiOperation;
@@ -74,13 +79,17 @@ public class FeatureViewFeatureMonitorAlertResource extends FeatureStoreAlertRes
     @Context
     HttpServletRequest req,
     @Context
-    SecurityContext sc) throws FeaturestoreException {
-    featureStoreAlertValidation.validateEntityType(getEntityType(), this.featuregroup, this.featureView);
+    SecurityContext sc) throws FeaturestoreException, ProjectException {
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    Featuregroup featuregroup = getFeatureGroup(featurestore);
+    FeatureView featureView = getFeatureView(featurestore);
+    featureStoreAlertValidation.validateEntityType(getEntityType(), featuregroup, featureView);
     if (dto == null) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ALERT_ILLEGAL_ARGUMENT, Level.FINE,
         Constants.NO_PAYLOAD);
     }
-    FeatureViewAlert featureViewAlert = featureViewAlertFacade.findByFeatureViewAndId(this.featureView, id);
+    FeatureViewAlert featureViewAlert = featureViewAlertFacade.findByFeatureViewAndId(featureView, id);
     featureStoreAlertValidation.validateUpdate(featureViewAlert, dto.getStatus(), featureView);
     featureViewAlert = featureStoreAlertController.updateAlert(dto, featureViewAlert, project);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);

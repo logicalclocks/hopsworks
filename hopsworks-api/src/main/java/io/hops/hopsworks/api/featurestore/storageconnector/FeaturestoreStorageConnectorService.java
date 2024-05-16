@@ -17,22 +17,22 @@
 package io.hops.hopsworks.api.featurestore.storageconnector;
 
 import com.google.common.base.Strings;
-import io.hops.hadoop.shaded.javax.servlet.http.HttpServletRequest;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.featurestore.FeaturestoreSubResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.provenance.StorageConnectorProvenanceResource;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
-import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
-import io.hops.hopsworks.common.featurestore.storageconnectors.connectionChecker.ConnectionChecker;
-import io.hops.hopsworks.common.featurestore.storageconnectors.connectionChecker.ConnectionCheckerDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.StorageConnectorUtil;
+import io.hops.hopsworks.common.featurestore.storageconnectors.connectionChecker.ConnectionChecker;
+import io.hops.hopsworks.common.featurestore.storageconnectors.connectionChecker.ConnectionCheckerDTO;
 import io.hops.hopsworks.common.kafka.KafkaBrokers;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ProjectException;
@@ -53,6 +53,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -81,7 +82,7 @@ import java.util.logging.Level;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "StorageConnector service", description = "A service that manages a feature store's storage connectors")
-public class FeaturestoreStorageConnectorService {
+public class FeaturestoreStorageConnectorService extends FeaturestoreSubResource {
   
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -94,37 +95,23 @@ public class FeaturestoreStorageConnectorService {
   @EJB
   private Settings settings;
   @EJB
-  private OnlineFeaturestoreController onlineFeaturestoreController;
-  @EJB
   private StorageConnectorUtil storageConnectorUtil;
   @EJB
   private ConnectionChecker connectionChecker;
   @Inject
   private StorageConnectorProvenanceResource provenanceResource;
 
-  private Project project;
-  private Featurestore featurestore;
+  @EJB
+  private ProjectController projectController;
 
-  /**
-   * Set the project of the featurestore (provided by parent resource)
-   *
-   * @param project
-   *   the project where the featurestore resides
-   */
-  public void setProject(Project project) {
-    this.project = project;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
   
-  /**
-   * Sets the featurestore of the featuregroups (provided by parent resource)
-   *
-   * @param featurestoreId
-   *   id of the featurestore
-   * @throws FeaturestoreException
-   */
-  public void setFeaturestoreId(Integer featurestoreId) throws FeaturestoreException {
-    //This call verifies that the project have access to the featurestoreId provided
-    this.featurestore = featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId);
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
   }
   
   /**
@@ -142,8 +129,10 @@ public class FeaturestoreStorageConnectorService {
   public Response getStorageConnectors(@BeanParam StorageConnectorBeanParam storageConnectorBeanParam,
                                        @Context SecurityContext sc,
                                        @Context HttpServletRequest req)
-      throws FeaturestoreException {
+      throws FeaturestoreException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     ResourceRequest resourceRequest = makeResourceRequest(storageConnectorBeanParam);
     List<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOS = storageConnectorController
         .getConnectorsForFeaturestore(user, project, featurestore, convertToQueryParam(resourceRequest));
@@ -158,16 +147,20 @@ public class FeaturestoreStorageConnectorService {
   @Path("{connectorName}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiOperation(value = "Get a storage connector with a specific name and from a featurestore",
     response = FeaturestoreStorageConnectorDTO.class)
   public Response getStorageConnector(@Context SecurityContext sc,
+                                      @Context HttpServletRequest req,
                                       @ApiParam(value = "Name of the storage connector", required = true)
                                       @PathParam("connectorName") String connectorName)
-      throws FeaturestoreException {
-
+      throws FeaturestoreException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     verifyStorageConnectorName(connectorName);
     FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO =
       storageConnectorController.getConnectorDTOWithName(user, project, featurestore, connectorName);
@@ -200,6 +193,8 @@ public class FeaturestoreStorageConnectorService {
         "null");
     }
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     FeaturestoreStorageConnectorDTO createdFeaturestoreStorageConnectorDTO = storageConnectorController
           .createStorageConnector(user, project, featurestore, featurestoreStorageConnectorDTO);
     GenericEntity<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOGenericEntity =
@@ -224,10 +219,13 @@ public class FeaturestoreStorageConnectorService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Delete storage connector with a specific name and type from a featurestore")
   public Response deleteStorageConnector(@Context SecurityContext sc,
+                                         @Context HttpServletRequest req,
                                          @ApiParam(value = "name of the storage connector", required = true)
                                          @PathParam("connectorName") String connectorName)
-    throws UserException, FeaturestoreException {
+      throws UserException, FeaturestoreException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     storageConnectorController.deleteConnectorWithName(user, project, connectorName, featurestore);
     return Response.ok().build();
   }
@@ -259,6 +257,8 @@ public class FeaturestoreStorageConnectorService {
         "null");
     }
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     verifyStorageConnectorName(connectorName);
     storageConnectorController.updateStorageConnector(user, project, featurestore,
         featurestoreStorageConnectorInputDTO, connectorName);
@@ -289,13 +289,15 @@ public class FeaturestoreStorageConnectorService {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiOperation(value = "Get online featurestore storage connector for this feature store",
           response = FeaturestoreStorageConnectorDTO.class)
-  public Response getOnlineFeaturestoreStorageConnector(@Context SecurityContext sc) throws FeaturestoreException {
+  public Response getOnlineFeaturestoreStorageConnector(@Context SecurityContext sc,
+                                                        @Context HttpServletRequest req)
+      throws FeaturestoreException, ProjectException {
     if (!settings.isOnlineFeaturestore()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
               Level.FINE, "Online Featurestore is not enabled for this Hopsworks cluster.");
     }
-    // continue even if featureStoreDb does not exist, see HWORKS-919
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
     FeaturestoreStorageConnectorDTO featurestoreJdbcConnectorDTO =
             storageConnectorController.getOnlineFeaturestoreConnector(user, project);
     GenericEntity<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOGenericEntity =
@@ -325,11 +327,11 @@ public class FeaturestoreStorageConnectorService {
                                                 @Context HttpServletRequest req,
                                                 @QueryParam("external") @DefaultValue("false")
                                                 Boolean externalListeners)
-      throws FeaturestoreException {
+      throws FeaturestoreException, ProjectException {
     KafkaBrokers.BrokerProtocol brokerProtocol = Boolean.TRUE.equals(externalListeners)
         ? KafkaBrokers.BrokerProtocol.EXTERNAL: KafkaBrokers.BrokerProtocol.INTERNAL;
     FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO =
-            storageConnectorController.getKafkaConnector(featurestore, brokerProtocol);
+            storageConnectorController.getKafkaConnector(getFeaturestore(), brokerProtocol);
 
     GenericEntity<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOGenericEntity =
             new GenericEntity<FeaturestoreStorageConnectorDTO>(featurestoreStorageConnectorDTO) {};
@@ -395,14 +397,14 @@ public class FeaturestoreStorageConnectorService {
   @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiOperation(value = "Test storage connector to data source")
-  public Response testConnection(@Context SecurityContext sc,
-    FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO)
-    throws FeaturestoreException {
+  public Response testConnection(@Context SecurityContext sc, @Context HttpServletRequest req,
+      FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO) throws FeaturestoreException, ProjectException {
     if (featurestoreStorageConnectorDTO == null) {
       throw new IllegalArgumentException("Input storage connector DTO cannot be null");
     }
     Users user = jWTHelper.getUserPrincipal(sc);
-  
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     ConnectionCheckerDTO resultDto =
       connectionChecker.checkConnection(user, project, featurestore, featurestoreStorageConnectorDTO);
     
@@ -414,8 +416,8 @@ public class FeaturestoreStorageConnectorService {
   public StorageConnectorProvenanceResource provenance(
         @ApiParam(value = "Name of the storage connector", required = true)
         @PathParam("connectorName") String connectorName) {
-    this.provenanceResource.setProject(project);
-    this.provenanceResource.setFeatureStore(featurestore);
+    this.provenanceResource.setProjectId(getProjectId());
+    this.provenanceResource.setFeaturestoreId(getFeaturestoreId());
     this.provenanceResource.setConnectorName(connectorName);
     return this.provenanceResource;
   }

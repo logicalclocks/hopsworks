@@ -16,18 +16,21 @@
 
 package io.hops.hopsworks.api.featurestore.datavalidationv2.suites;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.featurestore.datavalidationv2.expectations.ExpectationResource;
+import io.hops.hopsworks.api.featurestore.featuregroup.FeatureGroupSubResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jobs.JobDTO;
 import io.hops.hopsworks.api.jobs.JobsBuilder;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.JobException;
@@ -69,7 +72,7 @@ import java.util.logging.Level;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Expectation suite resource")
-public class ExpectationSuiteResource {
+public class ExpectationSuiteResource extends FeatureGroupSubResource {
 
   @EJB
   private JWTHelper jWTHelper;
@@ -86,20 +89,24 @@ public class ExpectationSuiteResource {
   @Inject
   private ExpectationResource expectationResource;
 
-  private Project project;
-  private Featurestore featurestore;
-  private Featuregroup featuregroup;
+  @EJB
+  private FeaturestoreController featurestoreController;
+  @EJB
+  private ProjectController projectController;
 
-  public void setProject(Project project) {
-    this.project = project;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
-  public void setFeaturestore(Featurestore featurestore) {
-    this.featurestore = featurestore;
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
   }
 
-  public void setFeatureGroup(Integer featureGroupId) throws FeaturestoreException {
-    this.featuregroup = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
+  @Override
+  protected FeaturegroupController getFeaturegroupController() {
+    return featuregroupController;
   }
 
   /**
@@ -121,7 +128,9 @@ public class ExpectationSuiteResource {
     @Context
       HttpServletRequest req,
     @Context
-      UriInfo uriInfo) throws FeaturestoreException {
+      UriInfo uriInfo) throws FeaturestoreException, ProjectException {
+    Project project = getProject();
+    Featuregroup featuregroup = getFeaturegroup(project);
     ExpectationSuite expectationSuite = expectationSuiteController.getExpectationSuite(featuregroup);
     return Response.ok()
       .entity(expectationSuiteBuilder.build(uriInfo, project, featuregroup, expectationSuite))
@@ -152,8 +161,9 @@ public class ExpectationSuiteResource {
       HttpServletRequest req,
     @Context
       UriInfo uriInfo,
-    ExpectationSuiteDTO expectationSuiteDTO) throws FeaturestoreException {
-
+    ExpectationSuiteDTO expectationSuiteDTO) throws FeaturestoreException, ProjectException {
+    Project project = getProject();
+    Featuregroup featuregroup = getFeaturegroup(project);
     if (expectationSuiteController.getExpectationSuite(featuregroup) != null) {
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.EXPECTATION_SUITE_ALREADY_EXISTS,
@@ -197,10 +207,11 @@ public class ExpectationSuiteResource {
       UriInfo uriInfo,
     @PathParam("expectationSuiteId")
       Integer expectationSuiteId,
-    ExpectationSuiteDTO expectationSuiteDTO) throws FeaturestoreException {
+    ExpectationSuiteDTO expectationSuiteDTO) throws FeaturestoreException, ProjectException {
     
-    Users user = jWTHelper.getUserPrincipal(sc); 
-
+    Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featuregroup featuregroup = getFeaturegroup(project);
     ExpectationSuite expectationSuite = expectationSuiteController.createOrUpdateExpectationSuite(
       user, featuregroup, expectationSuiteDTO);
 
@@ -238,10 +249,11 @@ public class ExpectationSuiteResource {
       UriInfo uriInfo,
     @PathParam("expectationSuiteId")
       Integer expectationSuiteId,
-    ExpectationSuiteDTO expectationSuiteDTO) throws FeaturestoreException {
+    ExpectationSuiteDTO expectationSuiteDTO) throws FeaturestoreException, ProjectException {
     
     Users user = jWTHelper.getUserPrincipal(sc);
-
+    Project project = getProject();
+    Featuregroup featuregroup = getFeaturegroup(project);
     // Expectations list of the DTO is discarded
     boolean verifyInput = true;
     boolean logActivity = true;
@@ -275,11 +287,11 @@ public class ExpectationSuiteResource {
     @Context
       UriInfo uriInfo,
     @PathParam("expectationSuiteId")
-      Integer expectationSuiteId) {
+      Integer expectationSuiteId) throws ProjectException, FeaturestoreException {
 
     Users user = jWTHelper.getUserPrincipal(sc); 
 
-    expectationSuiteController.deleteExpectationSuite(user, featuregroup);
+    expectationSuiteController.deleteExpectationSuite(user, getFeaturegroup());
 
     return Response.noContent().build();
   }
@@ -303,7 +315,9 @@ public class ExpectationSuiteResource {
       SecurityContext sc)
     throws FeaturestoreException, ServiceException, JobException, ProjectException, GenericException {
     Users user = jWTHelper.getUserPrincipal(sc);
-
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    Featuregroup featuregroup = getFeaturegroup(featurestore);
     if (expectationSuiteController.getExpectationSuite(featuregroup) == null) {
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.NO_EXPECTATION_SUITE_ATTACHED_TO_THIS_FEATUREGROUP,
@@ -318,16 +332,15 @@ public class ExpectationSuiteResource {
   /////////////////////////////////////////
   //// Single Expectation Service
   ////////////////////////////////////////
-
+  
   @Path("/{expectationSuiteId: [0-9]+}/expectations")
   public ExpectationResource expectationResource(
     @PathParam("expectationSuiteId")
-      Integer expectationSuiteId)
-    throws FeaturestoreException {
-    this.expectationResource.setProject(project);
-    this.expectationResource.setFeaturestore(featurestore);
-    this.expectationResource.setFeatureGroup(featuregroup.getId());
-    this.expectationResource.setExpectationSuite(expectationSuiteId);
+      Integer expectationSuiteId) {
+    this.expectationResource.setProjectId(getProjectId());
+    this.expectationResource.setFeaturestoreId(getFeaturestoreId());
+    this.expectationResource.setFeatureGroupId(getFeatureGroupId());
+    this.expectationResource.setExpectationSuiteId(expectationSuiteId);
     return expectationResource;
   }
 }

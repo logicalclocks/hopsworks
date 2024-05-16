@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.api.featurestore.datavalidation.alert;
 
-import io.hops.hopsworks.alert.dao.AlertReceiverFacade;
+import com.google.common.base.Strings;
 import io.hops.hopsworks.alert.exception.AlertManagerAccessControlException;
 import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
 import io.hops.hopsworks.alerting.api.alert.dto.Alert;
@@ -25,28 +25,32 @@ import io.hops.hopsworks.api.alert.AlertBuilder;
 import io.hops.hopsworks.api.alert.AlertDTO;
 import io.hops.hopsworks.api.alert.FeatureStoreAlertController;
 import io.hops.hopsworks.api.alert.FeatureStoreAlertValidation;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.featurestore.FeaturestoreSubResource;
 import io.hops.hopsworks.api.featurestore.featureview.FeatureViewAlertBuilder;
 import io.hops.hopsworks.api.featurestore.featureview.FeatureViewAlertDTO;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.project.alert.ProjectAlertsDTO;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.alert.AlertController;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.datavalidation.FeatureGroupAlertFacade;
-import io.hops.hopsworks.common.featurestore.featuremonitoring.alert.FeatureMonitoringAlertController;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewAlertFacade;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.AlertException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
-import io.hops.hopsworks.persistence.entity.featurestore.featureview.alert.FeatureViewAlert;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.FeatureGroupAlert;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.alert.FeatureViewAlert;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -77,7 +81,7 @@ import java.util.logging.Logger;
 
 @Api(value = "FeatureStoreAlert Resource")
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public abstract class FeatureStoreAlertResource {
+public abstract class FeatureStoreAlertResource extends FeaturestoreSubResource {
   
   private static final Logger LOGGER = Logger.getLogger(FeatureStoreAlertResource.class.getName());
   @EJB
@@ -89,40 +93,60 @@ public abstract class FeatureStoreAlertResource {
   @EJB
   private AlertBuilder alertBuilder;
   @EJB
-  private AlertReceiverFacade alertReceiverFacade;
-  @EJB
   private FeatureViewController featureViewController;
   @EJB
   private FeatureViewAlertBuilder featureViewAlertBuilder;
   @EJB
   protected FeatureViewAlertFacade featureViewAlertFacade;
   @EJB
-  protected FeatureMonitoringAlertController featureMonitoringAlertController;
-  @EJB
   protected FeatureStoreAlertController featureStoreAlertController;
   @EJB
   protected FeatureStoreAlertValidation featureStoreAlertValidation;
   
-  protected Featuregroup featuregroup;
-  protected FeatureView featureView;
-  protected Featurestore featureStore;
-  protected Project project;
+  @EJB
+  private FeaturestoreController featurestoreController;
+  @EJB
+  private ProjectController projectController;
+  @EJB
+  private FeaturegroupController featuregroupController;
+
+  private String featureViewName;
+  private Integer featureViewVersion;
+  private Integer featureGroupId;
   
-  public void setFeatureGroup(Featuregroup featuregroup) {
-    this.featuregroup = featuregroup;
+  public void setFeatureView(String name, Integer version) {
+    this.featureViewName = name;
+    this.featureViewVersion = version;
   }
   
-  public void setFeatureView(String name, Integer version, Featurestore featurestore) throws FeaturestoreException {
-    this.featureView = featureViewController.getByNameVersionAndFeatureStore(name, version, featurestore);
+  public void setFeatureGroupId(Integer featureGroupId) {
+    this.featureGroupId = featureGroupId;
   }
   
-  public void setFeatureStore(Featurestore featureStore) {
-    this.featureStore = featureStore;
+  protected FeatureView getFeatureView(Featurestore featurestore) throws FeaturestoreException {
+    if (Strings.isNullOrEmpty(featureViewName) || featureViewVersion == null) {
+      return null;
+    }
+    return featureViewController.getByNameVersionAndFeatureStore(this.featureViewName, this.featureViewVersion,
+      featurestore);
   }
   
-  public void setProject(Project project) {
-    this.project = project;
+  protected Featuregroup getFeatureGroup(Featurestore featurestore) throws FeaturestoreException {
+    if (featureGroupId != null) {
+      return featuregroupController.getFeaturegroupById(featurestore, this.featureGroupId);
+    }
+    return null;
   }
+
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
+  }
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
+  }
+
   protected abstract ResourceRequest.Name getEntityType();
   
   @GET
@@ -142,21 +166,25 @@ public abstract class FeatureStoreAlertResource {
     @Context
     HttpServletRequest req,
     @Context
-    SecurityContext sc) throws FeaturestoreException {
+    SecurityContext sc) throws FeaturestoreException, ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
     resourceRequest.setSort(featureGroupAlertBeanParam.getSortBySet());
     resourceRequest.setFilter(featureGroupAlertBeanParam.getFilter());
-    featureStoreAlertValidation.validateEntityType(getEntityType(), this.featuregroup, this.featureView);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    Featuregroup featuregroup = getFeatureGroup(featurestore);
+    FeatureView featureView = getFeatureView(featurestore);
+    featureStoreAlertValidation.validateEntityType(getEntityType(), featuregroup, featureView);
     FeatureGroupAlertDTO dto;
     FeatureViewAlertDTO featureViewAlertDto;
     if (getEntityType().equals(ResourceRequest.Name.FEATUREGROUPS)) {
-      dto = featureGroupAlertBuilder.buildItems(uriInfo, resourceRequest, this.featuregroup);
+      dto = featureGroupAlertBuilder.buildItems(uriInfo, resourceRequest, featuregroup);
       return Response.ok().entity(dto).build();
     } else {
       featureViewAlertDto = featureViewAlertBuilder.buildMany(uriInfo, resourceRequest,
-        featureStoreAlertController.retrieveManyAlerts(resourceRequest, this.featureView));
+        featureStoreAlertController.retrieveManyAlerts(resourceRequest, featureView));
       return Response.ok().entity(featureViewAlertDto).build();
     }
   }
@@ -178,15 +206,19 @@ public abstract class FeatureStoreAlertResource {
     HttpServletRequest req,
     @Context
     SecurityContext sc)
-    throws FeaturestoreException {
+    throws FeaturestoreException, ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
-    featureStoreAlertValidation.validateEntityType(getEntityType(), this.featuregroup, this.featureView);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    Featuregroup featuregroup = getFeatureGroup(featurestore);
+    FeatureView featureView = getFeatureView(featurestore);
+    featureStoreAlertValidation.validateEntityType(getEntityType(), featuregroup, featureView);
     if (getEntityType().equals(ResourceRequest.Name.FEATUREGROUPS)) {
-      FeatureGroupAlertDTO dto = featureGroupAlertBuilder.build(uriInfo, resourceRequest, this.featuregroup, id);
+      FeatureGroupAlertDTO dto = featureGroupAlertBuilder.build(uriInfo, resourceRequest, featuregroup, id);
       return Response.ok().entity(dto).build();
     } else {
       FeatureViewAlertDTO dto = featureViewAlertBuilder.buildFeatureViewAlertDto(uriInfo, resourceRequest,
-        featureStoreAlertController.retrieveSingleAlert(id, this.featureView));
+        featureStoreAlertController.retrieveSingleAlert(id, featureView));
       return Response.ok().entity(dto).build();
     }
   }
@@ -226,9 +258,13 @@ public abstract class FeatureStoreAlertResource {
     @Context
     HttpServletRequest req,
     @Context
-    SecurityContext sc) throws FeaturestoreException, AlertException {
+    SecurityContext sc) throws FeaturestoreException, AlertException, ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
-    featureStoreAlertValidation.validateEntityType(getEntityType(), this.featuregroup, this.featureView);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    Featuregroup featuregroup = getFeatureGroup(featurestore);
+    FeatureView featureView = getFeatureView(featurestore);
+    featureStoreAlertValidation.validateEntityType(getEntityType(), featuregroup, featureView);
     if (getEntityType().equals(ResourceRequest.Name.FEATUREGROUPS)) {
       FeatureGroupAlertDTO featureGroupAlertDTO = createAlert(dto, bulk, uriInfo, resourceRequest);
       return Response.created(featureGroupAlertDTO.getHref()).entity(featureGroupAlertDTO).build();
@@ -242,7 +278,7 @@ public abstract class FeatureStoreAlertResource {
   
   
   private FeatureGroupAlertDTO createAlert(PostableFeatureStoreAlerts featureGroupAlertDTO, Boolean bulk,
-    UriInfo uriInfo, ResourceRequest resourceRequest) throws FeaturestoreException {
+    UriInfo uriInfo, ResourceRequest resourceRequest) throws FeaturestoreException, ProjectException {
     FeatureGroupAlertDTO dto;
     if (bulk) {
       featureStoreAlertValidation.validateBulk(featureGroupAlertDTO);
@@ -257,12 +293,15 @@ public abstract class FeatureStoreAlertResource {
     return dto;
   }
   
-  
   private FeatureGroupAlertDTO createAlert(PostableFeatureStoreAlerts dto, UriInfo uriInfo,
-    ResourceRequest resourceRequest) throws FeaturestoreException {
-    featureStoreAlertValidation.validate(dto, this.featuregroup, this.featureView);
+    ResourceRequest resourceRequest) throws FeaturestoreException, ProjectException {
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    Featuregroup featuregroup = getFeatureGroup(featurestore);
+    FeatureView featureView = getFeatureView(featurestore);
+    featureStoreAlertValidation.validate(dto, featuregroup, featureView);
     FeatureGroupAlert featureGroupAlert =
-      featureStoreAlertController.persistFeatureGroupEntityValues(dto, this.featuregroup);
+      featureStoreAlertController.persistFeatureGroupEntityValues(dto, featuregroup);
     featureStoreAlertController.createRoute(project,featureGroupAlert);
     return featureGroupAlertBuilder.buildItems(uriInfo, resourceRequest, featureGroupAlert);
   }
@@ -283,8 +322,9 @@ public abstract class FeatureStoreAlertResource {
     @Context
     HttpServletRequest req,
     @Context
-    SecurityContext sc) throws AlertException {
+    SecurityContext sc) throws AlertException, ProjectException {
     List<Alert> alerts;
+    Project project = getProject();
     FeatureGroupAlert featureGroupAlert=null;
     FeatureViewAlert featureViewAlert=null;
     try {
@@ -331,17 +371,21 @@ public abstract class FeatureStoreAlertResource {
     @Context
     HttpServletRequest req,
     @Context
-    SecurityContext sc) throws FeaturestoreException {
-    featureStoreAlertValidation.validateEntityType(getEntityType(), this.featuregroup, this.featureView);
+    SecurityContext sc) throws FeaturestoreException, ProjectException {
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    Featuregroup featuregroup = getFeatureGroup(featurestore);
+    FeatureView featureView = getFeatureView(featurestore);
+    featureStoreAlertValidation.validateEntityType(getEntityType(), featuregroup, featureView);
     if (getEntityType().equals(ResourceRequest.Name.FEATUREGROUPS)) {
-      FeatureGroupAlert featureGroupAlert = featureGroupAlertFacade.findByFeatureGroupAndId(this.featuregroup, id);
+      FeatureGroupAlert featureGroupAlert = featureGroupAlertFacade.findByFeatureGroupAndId(featuregroup, id);
       if (featureGroupAlert != null) {
         featureStoreAlertController.deleteRoute(featureGroupAlert, project);
         featureGroupAlertFacade.remove(featureGroupAlert);
       }
       return Response.noContent().build();
     } else {
-      FeatureViewAlert featureViewAlert = featureViewAlertFacade.findByFeatureViewAndId(this.featureView, id);
+      FeatureViewAlert featureViewAlert = featureViewAlertFacade.findByFeatureViewAndId(featureView, id);
       if (featureViewAlert != null) {
         featureStoreAlertController.deleteRoute(featureViewAlert, project);
         featureViewAlertFacade.remove(featureViewAlert);
@@ -351,7 +395,7 @@ public abstract class FeatureStoreAlertResource {
   }
   
   private FeatureViewAlertDTO createFeatureViewAlert(PostableFeatureStoreAlerts paDTO, Boolean bulk,
-    UriInfo uriInfo, ResourceRequest resourceRequest) throws FeaturestoreException {
+    UriInfo uriInfo, ResourceRequest resourceRequest) throws FeaturestoreException, ProjectException {
     FeatureViewAlertDTO dto;
     if (bulk) {
       featureStoreAlertValidation.validateBulk(paDTO);
@@ -367,11 +411,15 @@ public abstract class FeatureStoreAlertResource {
   }
   
   private FeatureViewAlertDTO createFeatureViewAlert(PostableFeatureStoreAlerts dto, UriInfo uriInfo,
-    ResourceRequest resourceRequest) throws FeaturestoreException {
-    featureStoreAlertValidation.validate(dto, this.featuregroup, this.featureView);
+    ResourceRequest resourceRequest) throws FeaturestoreException, ProjectException {
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    Featuregroup featuregroup = getFeatureGroup(featurestore);
+    FeatureView featureView = getFeatureView(featurestore);
+    featureStoreAlertValidation.validate(dto, featuregroup, featureView);
     FeatureViewAlert featureViewAlert;
     FeatureViewAlertDTO fvDTO;
-    featureViewAlert = featureStoreAlertController.persistFeatureViewEntityValues(dto, this.featureView);
+    featureViewAlert = featureStoreAlertController.persistFeatureViewEntityValues(dto, featureView);
     fvDTO = featureViewAlertBuilder.buildFeatureViewAlertDto(uriInfo, resourceRequest, featureViewAlert);
     featureStoreAlertController.createRoute(project,featureViewAlert);
     return fvDTO;

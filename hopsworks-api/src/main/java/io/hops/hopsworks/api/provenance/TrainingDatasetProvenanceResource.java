@@ -16,6 +16,7 @@
 package io.hops.hopsworks.api.provenance;
 
 import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.featurestore.trainingdataset.TrainingDatasetSubResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
@@ -29,7 +30,10 @@ import io.hops.hopsworks.api.provenance.ops.dto.ProvArtifactUsageParentDTO;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
+import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.provenance.explicit.ProvExplicitControllerIface;
 import io.hops.hopsworks.common.provenance.explicit.ProvExplicitLink;
 import io.hops.hopsworks.common.provenance.ops.dto.ProvLinksDTO;
@@ -39,6 +43,7 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ModelRegistryException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -71,7 +76,7 @@ import java.io.IOException;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Training Dataset Explicit Provenance Resource")
-public class TrainingDatasetProvenanceResource {
+public class TrainingDatasetProvenanceResource extends TrainingDatasetSubResource {
   @EJB
   private TrainingDatasetController trainingDatasetController;
 
@@ -85,27 +90,37 @@ public class TrainingDatasetProvenanceResource {
   private JWTHelper jwtHelper;
   @EJB
   private DatasetHelper datasetHelper;
+  @EJB
+  private FeaturestoreController featurestoreController;
+  @EJB
+  private FeatureViewController featureViewController;
+  @EJB
+  private ProjectController projectController;
 
-  private Project project;
-  
-  private FeatureView featureView;
-  private Integer trainingDatasetVersion;
-  
-  public void setProject(Project project) {
-    this.project = project;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
-  public void setFeatureView(FeatureView featureView) {
-    this.featureView = featureView;
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
   }
-  
-  public void setTrainingDatasetVersion(Integer trainingDatasetVersion) {
-    this.trainingDatasetVersion = trainingDatasetVersion;
+  @Override
+  protected FeatureViewController getFeatureViewController() {
+    return featureViewController;
   }
-  
-  private DatasetPath getTrainingDatasetPath() throws FeaturestoreException, DatasetException {
+
+  @Override
+  protected TrainingDatasetController getTrainingDatasetController() {
+    return trainingDatasetController;
+  }
+
+  private DatasetPath getTrainingDatasetPath(Project project, FeatureView featureView)
+      throws FeaturestoreException, DatasetException {
     TrainingDataset trainingDataset
-      = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(featureView, trainingDatasetVersion);
+      = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(featureView,
+      getTrainingDatasetVersion());
     return datasetHelper.getDatasetPath(project, trainingDataset.getTagPath(), DatasetType.DATASET);
   }
 
@@ -127,12 +142,14 @@ public class TrainingDatasetProvenanceResource {
       @Context HttpServletRequest req,
       @Context SecurityContext sc)
       throws GenericException, FeaturestoreException, DatasetException, ServiceException, MetadataException,
-      FeatureStoreMetadataException, IOException, ModelRegistryException {
+      FeatureStoreMetadataException, IOException, ModelRegistryException, ProjectException {
     Users user = jwtHelper.getUserPrincipal(sc);
+    Project project = getProject();
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.PROVENANCE);
     resourceRequest.setExpansions(explicitProvenanceExpansionBeanParam.getResources());
     TrainingDataset td
-        = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(featureView, trainingDatasetVersion);
+      = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(getFeatureView(project),
+      getTrainingDatasetVersion());
     ProvExplicitLink<TrainingDataset> provenance
         = provCtrl.trainingDatasetLinks(project, td, pagination.getUpstreamLvls(), pagination.getDownstreamLvls());
     ProvExplicitLinkDTO<?> result = linksBuilder.build(uriInfo, resourceRequest, project, user, provenance);
@@ -150,12 +167,15 @@ public class TrainingDatasetProvenanceResource {
                          @Context HttpServletRequest req,
                          @Context SecurityContext sc)
       throws ProvenanceException, GenericException, DatasetException, MetadataException, FeatureStoreMetadataException,
-      FeaturestoreException {
+      FeaturestoreException, ProjectException {
     Users user = jwtHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    FeatureView featureView = getFeatureView(project);
     TrainingDataset trainingDataset
-        = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(featureView, trainingDatasetVersion);
+        = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(featureView, getTrainingDatasetVersion());
     String tdProvenanceId = trainingDataset.getName() + "_" + trainingDataset.getVersion();
-    ProvArtifactUsageParentDTO status = usageBuilder.buildAccessible(uriInfo, user, getTrainingDatasetPath(),
+    ProvArtifactUsageParentDTO status =
+      usageBuilder.buildAccessible(uriInfo, user, getTrainingDatasetPath(project, featureView),
         tdProvenanceId, params.getUsageType());
     return Response.ok().entity(status).build();
   }

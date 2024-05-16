@@ -16,18 +16,21 @@
 
 package io.hops.hopsworks.api.featurestore.preparestatement;
 
-import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
+import io.hops.hopsworks.api.featurestore.featureview.FeatureViewSubResource;
 import io.hops.hopsworks.api.featurestore.trainingdataset.PreparedStatementBuilder;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
+import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.common.featurestore.query.ServingPreparedStatementDTO;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
-import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
@@ -51,7 +54,7 @@ import javax.ws.rs.core.UriInfo;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class PreparedStatementResource {
+public class PreparedStatementResource extends FeatureViewSubResource {
 
   @EJB
   private JWTHelper jWTHelper;
@@ -60,21 +63,24 @@ public class PreparedStatementResource {
   @EJB
   private PreparedStatementBuilder preparedStatementBuilder;
 
-  private Project project;
-  private Featurestore featurestore;
-  private FeatureView featureView;
+  @EJB
+  private ProjectController projectController;
+  @EJB
+  private FeaturestoreController featurestoreController;
 
-  public void setProject(Project project) {
-    this.project = project;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
+  }
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
+  }
+  @Override
+  protected FeatureViewController getFeatureViewController() {
+    return featureViewController;
   }
 
-  public void setFeatureStore(Featurestore featurestore) {
-    this.featurestore = featurestore;
-  }
-
-  public void setFeatureView(String name, Integer version) throws FeaturestoreException {
-    featureView = featureViewController.getByNameVersionAndFeatureStore(name, version, featurestore);
-  }
 
   @ApiOperation(value = "Get prepared statements used to generate model serving vector from feature view query",
       response = ServingPreparedStatementDTO.class)
@@ -100,11 +106,13 @@ public class PreparedStatementResource {
       @QueryParam("inference_helper_columns")
       @DefaultValue("false")
       boolean inference_helper_columns)
-      throws FeaturestoreException {
+    throws FeaturestoreException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
     ServingPreparedStatementDTO servingPreparedStatementDTO = preparedStatementBuilder.build(uriInfo,
-       new ResourceRequest(ResourceRequest.Name.PREPAREDSTATEMENTS), project, user, featurestore, featureView, batch,
-      inference_helper_columns);
+      new ResourceRequest(ResourceRequest.Name.PREPAREDSTATEMENTS), project, user, featurestore,
+      getFeatureView(featurestore), batch, inference_helper_columns);
     return Response.ok().entity(servingPreparedStatementDTO).build();
   }
 }

@@ -17,13 +17,17 @@ package io.hops.hopsworks.api.featurestore.keyword;
 
 import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordBuilder;
+import io.hops.hopsworks.api.featurestore.featureview.FeatureViewSubResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.common.featurestore.keyword.KeywordDTO;
 import io.hops.hopsworks.common.featurestore.metadata.FeatureStoreKeywordControllerIface;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
@@ -55,7 +59,7 @@ import java.util.List;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Feature View Keywords Resource")
-public class FeatureViewKeywordResource {
+public class FeatureViewKeywordResource extends FeatureViewSubResource {
   @EJB
   private FeatureViewController featureViewController;
   @EJB
@@ -63,20 +67,22 @@ public class FeatureViewKeywordResource {
   @Inject
   private FeatureStoreKeywordControllerIface keywordCtrl;
 
-  private Project project;
-  private Featurestore featurestore;
-  private FeatureView featureView;
+  @EJB
+  private ProjectController projectController;
+  @EJB
+  private FeaturestoreController featurestoreController;
 
-  public void setProject(Project project) {
-    this.project = project;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
-
-  public void setFeaturestore(Featurestore featurestore) {
-    this.featurestore = featurestore;
+  @Override
+  protected FeaturestoreController getFeaturestoreController() {
+    return featurestoreController;
   }
-
-  public void setFeatureView(String name, Integer version) throws FeaturestoreException {
-    this.featureView = featureViewController.getByNameVersionAndFeatureStore(name, version, featurestore);
+  @Override
+  protected FeatureViewController getFeatureViewController() {
+    return featureViewController;
   }
 
   @GET
@@ -89,8 +95,11 @@ public class FeatureViewKeywordResource {
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getKeywords(@Context SecurityContext sc,
                               @Context HttpServletRequest req,
-                              @Context UriInfo uriInfo) {
+                              @Context UriInfo uriInfo) throws ProjectException, FeaturestoreException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    FeatureView featureView = getFeatureView(featurestore);
     List<String> keywords = keywordCtrl.getKeywords(featureView);
     KeywordDTO dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project, featureView, keywords);
     return Response.ok().entity(dto).build();
@@ -108,8 +117,11 @@ public class FeatureViewKeywordResource {
   public Response replaceKeywords(@Context SecurityContext sc,
                                   @Context HttpServletRequest req,
                                   @Context UriInfo uriInfo, KeywordDTO keywordDTO)
-      throws FeaturestoreException {
+      throws FeaturestoreException, ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    FeatureView featureView = getFeatureView(featurestore);
     List<String> updatedKeywords = keywordCtrl.replaceKeywords(featureView, new HashSet<>(keywordDTO.getKeywords()));
     KeywordDTO dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project, featureView, updatedKeywords);
     return Response.ok().entity(dto).build();
@@ -126,8 +138,11 @@ public class FeatureViewKeywordResource {
                                  @Context UriInfo uriInfo,
                                  @Context HttpServletRequest req,
                                  @QueryParam("keyword") String keyword)
-      throws FeaturestoreException {
+      throws FeaturestoreException, ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
+    Project project = getProject();
+    Featurestore featurestore = getFeaturestore(project);
+    FeatureView featureView = getFeatureView(featurestore);
     keywordCtrl.deleteKeyword(featureView, keyword);
     List<String> updatedKeywords = keywordCtrl.getKeywords(featureView);
     KeywordDTO dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project, featureView, updatedKeywords);

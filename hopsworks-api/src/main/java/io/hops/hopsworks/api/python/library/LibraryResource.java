@@ -16,10 +16,11 @@
 package io.hops.hopsworks.api.python.library;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.python.environment.EnvironmentSubResource;
 import io.hops.hopsworks.api.python.library.command.LibraryCommandsResource;
 import io.hops.hopsworks.api.python.library.search.LibrarySearchBuilder;
 import io.hops.hopsworks.api.python.library.search.LibrarySearchDTO;
@@ -27,6 +28,7 @@ import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.python.commands.CommandsController;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.python.library.LibraryController;
@@ -35,6 +37,7 @@ import io.hops.hopsworks.common.python.library.PackageSource;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.PythonException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -74,7 +77,7 @@ import java.util.regex.Pattern;
 @Api(value = "Python Environment Library Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class LibraryResource {
+public class LibraryResource extends EnvironmentSubResource {
 
   @EJB
   private LibraryController libraryController;
@@ -96,21 +99,15 @@ public class LibraryResource {
   private EnvironmentController environmentController;
   @EJB
   private JWTHelper jwtHelper;
+  @EJB
+  private ProjectController projectController;
 
   private static final Pattern VALIDATION_PATTERN = Pattern.compile("[a-zA-Z0-9_\\-\\.\\]\\[]+");
   private static final Pattern CHANNEL_PATTERN = Pattern.compile("[a-zA-Z0-9_\\-:/~?&\\.]+");
-
-  private Project project;
-  private String pythonVersion;
   
-  public LibraryResource setProjectAndVersion(Project project, String pythonVersion) {
-    this.project = project;
-    this.pythonVersion = pythonVersion;
-    return this;
-  }
-  
-  public Project getProject() {
-    return project;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
   @ApiOperation(value = "Get the python libraries installed in this environment", response = LibraryDTO.class)
@@ -124,8 +121,10 @@ public class LibraryResource {
   public Response get(@BeanParam Pagination pagination,
                       @BeanParam LibrariesBeanParam librariesBeanParam,
                       @Context UriInfo uriInfo,
-                      @Context SecurityContext sc) throws PythonException {
-    environmentController.checkCondaEnabled(project, pythonVersion, true);
+                      @Context HttpServletRequest req,
+                      @Context SecurityContext sc) throws PythonException, ProjectException {
+    Project project = getProject();
+    environmentController.checkCondaEnabled(project, getPythonVersion(), true);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.LIBRARIES);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -150,9 +149,10 @@ public class LibraryResource {
   public Response getByName(@PathParam("library") String library, @BeanParam LibraryExpansionBeanParam expansions,
                             @Context UriInfo uriInfo,
                             @Context HttpServletRequest req,
-                            @Context SecurityContext sc) throws PythonException {
+                            @Context SecurityContext sc) throws PythonException, ProjectException {
+    Project project = getProject();
     validatePattern(library);
-    environmentController.checkCondaEnabled(project, pythonVersion, true);
+    environmentController.checkCondaEnabled(project, getPythonVersion(), true);
     PythonDep dep = libraryController.getPythonDep(library, project);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.LIBRARIES);
     if (expansions != null) {
@@ -174,10 +174,11 @@ public class LibraryResource {
   public Response uninstall(@Context SecurityContext sc,
                             @Context HttpServletRequest req,
                             @PathParam("library") String library)
-      throws ServiceException, GenericException, PythonException {
+      throws ServiceException, GenericException, PythonException, ProjectException {
+    Project project = getProject();
     validatePattern(library);
     Users user = jwtHelper.getUserPrincipal(sc);
-    environmentController.checkCondaEnabled(project, pythonVersion, true);
+    environmentController.checkCondaEnabled(project, getPythonVersion(), true);
 
     if (settings.getImmutablePythonLibraryNames().contains(library)) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_DEP_REMOVE_FORBIDDEN, Level.INFO,
@@ -205,10 +206,11 @@ public class LibraryResource {
                           @Context UriInfo uriInfo,
                           @Context HttpServletRequest req,
                           @Context SecurityContext sc)
-      throws ServiceException, GenericException, PythonException, DatasetException {
+      throws ServiceException, GenericException, PythonException, DatasetException, ProjectException {
 
     Users user = jwtHelper.getUserPrincipal(sc);
-    environmentController.checkCondaEnabled(project, pythonVersion, true);
+    Project project = getProject();
+    environmentController.checkCondaEnabled(project, getPythonVersion(), true);
 
     PackageSource packageSource = librarySpecification.getPackageSource();
     if (packageSource == null) {
@@ -229,7 +231,7 @@ public class LibraryResource {
       case WHEEL:
       case REQUIREMENTS_TXT:
       case ENVIRONMENT_YAML:
-        validateBundledDependency(user, librarySpecification);
+        validateBundledDependency(user, librarySpecification, project);
         break;
       case GIT:
         validateGitURL(librarySpecification.getDependencyUrl());
@@ -263,10 +265,12 @@ public class LibraryResource {
                          @QueryParam("query") String query,
                          @QueryParam("channel") String channel,
                          @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
                          @Context SecurityContext sc)
-    throws ServiceException, PythonException {
+      throws ServiceException, PythonException, ProjectException {
+    Project project = getProject();
     validatePattern(query);
-    environmentController.checkCondaEnabled(project, pythonVersion, true);
+    environmentController.checkCondaEnabled(project, getPythonVersion(), true);
     LibrarySearchDTO librarySearchDTO;
     PackageSource packageSource = PackageSource.fromString(search);
     switch (packageSource) {
@@ -287,7 +291,9 @@ public class LibraryResource {
   @Path("{library}/commands")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public LibraryCommandsResource libraryCommandsResource() {
-    return this.libraryCommandsResource.setProject(project, pythonVersion);
+    this.libraryCommandsResource.setProjectId(getProjectId());
+    this.libraryCommandsResource.setPythonVersion(getPythonVersion());
+    return this.libraryCommandsResource;
   }
 
   private void validatePattern(String element) throws IllegalArgumentException {
@@ -325,7 +331,7 @@ public class LibraryResource {
     }
   }
 
-  private void validateBundledDependency(Users user, LibrarySpecification librarySpecification)
+  private void validateBundledDependency(Users user, LibrarySpecification librarySpecification, Project project)
       throws DatasetException, PythonException {
 
     String dependencyUrl = librarySpecification.getDependencyUrl();

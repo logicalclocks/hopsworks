@@ -19,12 +19,13 @@ package io.hops.hopsworks.api.airflow;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.project.ProjectSubResource;
 import io.hops.hopsworks.common.airflow.AirflowController;
 import io.hops.hopsworks.common.airflow.AirflowDagDTO;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.AirflowException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -45,31 +46,20 @@ import javax.ws.rs.core.SecurityContext;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Airflow related endpoints")
-public class AirflowService {
+public class AirflowService extends ProjectSubResource {
   @EJB
-  private ProjectFacade projectFacade;
+  private ProjectController projectController;
   @EJB
   private JWTHelper jwtHelper;
   @EJB
   private AirflowController airflowController;
-  private Integer projectId;
-  // No @EJB annotation for Project, it's injected explicitly in ProjectService.
-  private Project project;
-
-
-  // Audience for Airflow JWTs
-  private static final String[] JWT_AUDIENCE = new String[]{Audience.API};
 
   public AirflowService() {
   }
 
-  public void setProjectId(Integer projectId) {
-    this.projectId = projectId;
-    this.project = this.projectFacade.find(projectId);
-  }
-
-  public Integer getProjectId() {
-    return projectId;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
   @POST
@@ -80,9 +70,9 @@ public class AirflowService {
   @ApiOperation(value = "Generate an Airflow Python DAG file from a DAG definition")
   public Response composeDAG(AirflowDagDTO dagDefinition,
                              @Context HttpServletRequest req,
-                             @Context SecurityContext sc) throws AirflowException {
+                             @Context SecurityContext sc) throws AirflowException, ProjectException {
     Users user = jwtHelper.getUserPrincipal(sc);
-    airflowController.composeDAG(project, user, dagDefinition);
+    airflowController.composeDAG(getProject(), user, dagDefinition);
     return Response.ok().build();
   }
 }

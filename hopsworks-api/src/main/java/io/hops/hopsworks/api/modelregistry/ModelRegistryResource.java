@@ -16,9 +16,9 @@
 
 package io.hops.hopsworks.api.modelregistry;
 
+import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.auth.key.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.featureFlags.FeatureFlagRequired;
 import io.hops.hopsworks.api.filter.featureFlags.FeatureFlags;
 import io.hops.hopsworks.api.jwt.JWTHelper;
@@ -26,13 +26,15 @@ import io.hops.hopsworks.api.modelregistry.dto.ModelRegistryDTO;
 import io.hops.hopsworks.api.modelregistry.models.ModelsController;
 import io.hops.hopsworks.api.modelregistry.models.ModelsResource;
 import io.hops.hopsworks.api.modelregistry.models.dto.ModelDTO;
+import io.hops.hopsworks.api.project.ProjectSubResource;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.project.ProjectController;
+import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ModelRegistryException;
-import io.hops.hopsworks.exceptions.FeatureStoreMetadataException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -45,6 +47,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -58,10 +61,10 @@ import javax.ws.rs.core.UriInfo;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class ModelRegistryResource {
+public class ModelRegistryResource extends ProjectSubResource {
 
   @EJB
-  private ProjectFacade projectFacade;
+  private ProjectController projectController;
   @EJB
   private ModelRegistryBuilder modelRegistryBuilder;
   @EJB
@@ -71,10 +74,9 @@ public class ModelRegistryResource {
   @EJB
   private JWTHelper jwtHelper;
 
-  private Project project;
-  public ModelRegistryResource setProjectId(Integer projectId) {
-    this.project = projectFacade.find(projectId);
-    return this;
+  @Override
+  protected ProjectController getProjectController() {
+    return projectController;
   }
 
   @ApiOperation(value = "Get a list of all model registries accessible for this project",
@@ -91,14 +93,15 @@ public class ModelRegistryResource {
     @BeanParam ModelRegistryBeanParam modelRegistryBeanParam,
     @BeanParam Pagination pagination,
     @Context UriInfo uriInfo,
+    @Context HttpServletRequest req,
     @Context SecurityContext sc) throws GenericException, ModelRegistryException, FeatureStoreMetadataException,
-          MetadataException {
+    MetadataException, ProjectException {
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELREGISTRIES);
     resourceRequest.setExpansions(modelRegistryBeanParam.getExpansions().getResources());
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
-    ModelRegistryDTO dto = modelRegistryBuilder.build(uriInfo, resourceRequest, user, project);
+    ModelRegistryDTO dto = modelRegistryBuilder.build(uriInfo, resourceRequest, user, getProject());
 
     return Response.ok().entity(dto).build();
   }
@@ -118,9 +121,11 @@ public class ModelRegistryResource {
           @BeanParam ModelRegistryBeanParam modelRegistryBeanParam,
           @BeanParam Pagination pagination,
           @Context UriInfo uriInfo,
+          @Context HttpServletRequest req,
           @Context SecurityContext sc) throws GenericException, ModelRegistryException, FeatureStoreMetadataException,
-          MetadataException {
+          MetadataException, ProjectException {
     Users user = jwtHelper.getUserPrincipal(sc);
+    Project project = getProject();
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELREGISTRIES);
     resourceRequest.setExpansions(modelRegistryBeanParam.getExpansions().getResources());
     Project modelRegistryProject =
@@ -138,11 +143,11 @@ public class ModelRegistryResource {
    */
   @Path("/{modelRegistryId}/models")
   public ModelsResource modelsResource(@PathParam("modelRegistryId") Integer modelRegistryId,
-                                                 @Context SecurityContext sc) throws ModelRegistryException {
-    modelsResource.setProject(project);
+      @Context SecurityContext sc) {
     if (modelRegistryId == null) {
       throw new IllegalArgumentException(RESTCodes.ModelRegistryErrorCode.MODEL_REGISTRY_ID_NOT_PROVIDED.getMessage());
     }
+    modelsResource.setProjectId(getProjectId());
     modelsResource.setModelRegistryId(modelRegistryId);
     return modelsResource;
   }
