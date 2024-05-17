@@ -1329,7 +1329,7 @@ public class RESTCodes {
    */
   public enum FeaturestoreErrorCode implements RESTErrorCode {
 
-    COULD_NOT_CREATE_FEATUREGROUP(1, "Could not create feature group and corresponding Hive table",
+    COULD_NOT_CREATE_FEATUREGROUP(1, "Could not create feature group and corresponding online/offline store.",
         Response.Status.INTERNAL_SERVER_ERROR),
     FEATURESTORE_ID_NOT_PROVIDED(2, "Featurestore Id was not provided", Response.Status.BAD_REQUEST),
     FEATUREGROUP_ID_NOT_PROVIDED(3, "Featuregroup Id was not provided", Response.Status.BAD_REQUEST),
@@ -1702,7 +1702,17 @@ public class RESTCodes {
     FEATURE_NOT_FOUND_IN_VECTOR_DB(235, "Feature not found in vector db.",
         Response.Status.INTERNAL_SERVER_ERROR),
     COULD_NOT_PREVIEW_DATA_IN_VECTOR_DB(236, "Could not preview data in vector database.",
-        Response.Status.INTERNAL_SERVER_ERROR);
+        Response.Status.INTERNAL_SERVER_ERROR),
+    EMBEDDING_FEATURE_NOT_FOUND(237, "Embedding feature cannot be found in feature group.",
+        Response.Status.BAD_REQUEST),
+    COULD_NOT_GET_VECTOR_DB_INDEX(238, "Could not get index from vector db.",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    EMBEDDING_INDEX_EXISTED(239, "Embedding index already exists.", Response.Status.BAD_REQUEST),
+    INVALID_EMBEDDING_INDEX_NAME(240, "Embedding index name is not valid.", Response.Status.BAD_REQUEST),
+    VECTOR_DATABASE_INDEX_MAPPING_LIMIT_EXCEEDED(241, "Index mapping limit exceeded.", Response.Status.BAD_REQUEST),
+    VECTOR_DATABASE_DATA_TYPE_NOT_SUPPORTED(242, "Provided data type is not supported by vector database.",
+        Response.Status.BAD_REQUEST);
+
 
     private int code;
     private String message;

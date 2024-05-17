@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.featuregroup;
 
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Embedding;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
+@AllArgsConstructor
 public class EmbeddingDTO {
 
   @Getter

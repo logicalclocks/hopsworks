@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2023, Hopsworks AB. All rights reserved
+ * Copyright (C) 2024, Hopsworks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -14,18 +14,26 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.vectordb;
+package io.hops.hopsworks.persistence.entity.featurestore.featuregroup;
 
-import org.opensearch.client.RestHighLevelClient;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class VectorDatabaseFactory {
+public enum SimilarityFunctionType {
 
-  public static VectorDatabase getOpensearchDatabase(RestHighLevelClient client) {
-    return new OpensearchVectorDatabase(client);
+  @JsonProperty(value = "l2_norm")
+  L2_NORM("l2"),
+  @JsonProperty(value = "cosine")
+  COSINE("cosinesimil"),
+  @JsonProperty(value = "dot_product")
+  DOT_PRODUCT("innerproduct");
+
+  private final String opensearchFunction;
+
+  SimilarityFunctionType(String opensearchFunction) {
+    this.opensearchFunction = opensearchFunction;
   }
 
-  public static VectorDatabase getOpensearchDatabase(RestHighLevelClient client, Integer requestTimeout) {
-    return new OpensearchVectorDatabase(client, requestTimeout);
+  public String getOpensearchFunction() {
+    return opensearchFunction;
   }
 }
-

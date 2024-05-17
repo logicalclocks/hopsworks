@@ -224,6 +224,12 @@ public class FeaturegroupController {
     enforceFeaturegroupQuotas(featurestore, featuregroupDTO);
     featureGroupInputValidation.verifySchemaProvided(featuregroupDTO);
     featureGroupInputValidation.verifyNoDuplicatedFeatures(featuregroupDTO);
+    featureGroupInputValidation.verifyEmbeddingFeatureExist(featuregroupDTO);
+    featureGroupInputValidation.verifyEmbeddingIndexNotExist(project, featuregroupDTO);
+    featureGroupInputValidation.verifyEmbeddingIndexName(featuregroupDTO);
+    featureGroupInputValidation.verifyVectorDatabaseIndexMappingLimit(project, featuregroupDTO,
+        featuregroupDTO.getFeatures().size());
+    featureGroupInputValidation.verifyVectorDatabaseSupportedDataType(featuregroupDTO);
 
     // if version not provided, get latest and increment
     if (featuregroupDTO.getVersion() == null) {
@@ -694,13 +700,14 @@ public class FeaturegroupController {
         streamFeatureGroupController.deleteFeatureGroup(featuregroup, project, user);
         break;
       case ON_DEMAND_FEATURE_GROUP:
-        // Delete on_demand_feature_group will cascade to feature_group table
-        onDemandFeaturegroupController.removeOnDemandFeaturegroup(featuregroup, project, user);
         // Delete mysql table and metadata
         if (settings.isOnlineFeaturestore() && featuregroup.isOnlineEnabled()
             && !featuregroup.getOnDemandFeaturegroup().isSpine()) {
           onlineFeaturegroupController.disableOnlineFeatureGroup(featuregroup, project, user);
         }
+        // Delete the metadata at the end as `disableOnlineFeatureGroup` requires `Embedding` metadata.
+        // Delete on_demand_feature_group will cascade to feature_group table
+        onDemandFeaturegroupController.removeOnDemandFeaturegroup(featuregroup, project, user);
         break;
       default:
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE, Level.FINE,

@@ -22,6 +22,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -48,7 +50,8 @@ public class EmbeddingFeature implements Serializable {
   @Column
   private Integer dimension;
   @Column(name = "similarity_function_type")
-  private String similarityFunctionType;
+  @Enumerated(EnumType.STRING)
+  private SimilarityFunctionType similarityFunctionType;
   @JoinColumn(name = "model_version_id", referencedColumnName = "id")
   @OneToOne
   private ModelVersion modelVersion;
@@ -57,7 +60,7 @@ public class EmbeddingFeature implements Serializable {
   }
 
   public EmbeddingFeature(Embedding embedding, String name, Integer dimension,
-      String similarityFunctionType) {
+      SimilarityFunctionType similarityFunctionType) {
     this.embedding = embedding;
     this.name = name;
     this.dimension = dimension;
@@ -65,7 +68,7 @@ public class EmbeddingFeature implements Serializable {
   }
 
   public EmbeddingFeature(Embedding embedding, String name, Integer dimension,
-      String similarityFunctionType, ModelVersion modelVersion) {
+      SimilarityFunctionType similarityFunctionType, ModelVersion modelVersion) {
     this.embedding = embedding;
     this.name = name;
     this.dimension = dimension;
@@ -74,7 +77,7 @@ public class EmbeddingFeature implements Serializable {
   }
 
   public EmbeddingFeature(Integer id, Embedding embedding, String name, Integer dimension,
-      String similarityFunctionType) {
+      SimilarityFunctionType similarityFunctionType) {
     this.id = id;
     this.embedding = embedding;
     this.name = name;
@@ -98,7 +101,7 @@ public class EmbeddingFeature implements Serializable {
     return dimension;
   }
 
-  public String getSimilarityFunctionType() {
+  public SimilarityFunctionType getSimilarityFunctionType() {
     return similarityFunctionType;
   }
 

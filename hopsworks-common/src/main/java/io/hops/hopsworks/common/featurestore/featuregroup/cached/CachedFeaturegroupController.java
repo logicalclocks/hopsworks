@@ -423,6 +423,9 @@ public class CachedFeaturegroupController {
     if (featuregroupDTO.getFeatures() != null) {
       verifyPreviousSchemaUnchanged(previousSchema, featuregroupDTO.getFeatures());
       newFeatures = featureGroupInputValidation.verifyAndGetNewFeatures(previousSchema, featuregroupDTO.getFeatures());
+      featureGroupInputValidation.verifyVectorDatabaseIndexMappingLimit(project, featuregroupDTO, newFeatures.size());
+      featureGroupInputValidation.verifyVectorDatabaseSupportedDataType(newFeatures);
+
     }
 
     // change feature descriptions

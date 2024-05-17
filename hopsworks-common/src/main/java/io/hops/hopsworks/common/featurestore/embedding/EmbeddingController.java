@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.featurestore.embedding;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.EmbeddingDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.models.ModelFacade;
@@ -32,7 +33,9 @@ import io.hops.hopsworks.persistence.entity.models.Model;
 import io.hops.hopsworks.persistence.entity.models.version.ModelVersion;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.vectordb.Field;
 import io.hops.hopsworks.vectordb.Index;
+import io.hops.hopsworks.vectordb.OpensearchVectorDatabase;
 import io.hops.hopsworks.vectordb.VectorDatabaseException;
 
 import javax.ejb.EJB;
@@ -43,6 +46,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
@@ -62,20 +67,105 @@ public class EmbeddingController {
   private ModelVersionFacade modelVersionFacade;
   @EJB
   private ModelFacade modelFacade;
+  private static final String embeddingIndexIdentifier = "__embedding";
 
-  public void createVectorDbIndex(Project project, Featuregroup featureGroup)
+  public EmbeddingController() {
+  }
+
+  // For testing
+  EmbeddingController(VectorDatabaseClient vectorDatabaseClient, Settings settings) {
+    this.vectorDatabaseClient = vectorDatabaseClient;
+    this.settings = settings;
+  }
+
+  public void createVectorDbIndex(Project project, Featuregroup featureGroup, List<FeatureGroupFeatureDTO> features)
       throws FeaturestoreException {
     Index index = new Index(featureGroup.getEmbedding().getVectorDbIndexName());
     try {
-      vectorDatabaseClient.getClient().createIndex(index, createIndex(featureGroup.getEmbedding().getColPrefix(),
-          featureGroup.getEmbedding().getEmbeddingFeatures()), true);
       if (isDefaultVectorDbIndex(project, index.getName())) {
+        vectorDatabaseClient.getClient().createIndex(index, createIndex(featureGroup.getEmbedding().getColPrefix(),
+            featureGroup.getEmbedding().getEmbeddingFeatures(), features), true);
         vectorDatabaseClient.getClient().addFields(index, createMapping(featureGroup.getEmbedding().getColPrefix(),
-            featureGroup.getEmbedding().getEmbeddingFeatures()));
+            featureGroup.getEmbedding().getEmbeddingFeatures(), features));
+      } else {
+        vectorDatabaseClient.getClient().createIndex(index, createIndex(featureGroup.getEmbedding().getColPrefix(),
+            featureGroup.getEmbedding().getEmbeddingFeatures(), features), false);
+      }
+
+    } catch (VectorDatabaseException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_GET_VECTOR_DB_INDEX,
+          Level.FINE, String.format(
+              "Cannot create opensearch vectordb index: %s. Reason: %s", index.getName(), e.getMessage()));
+    }
+  }
+
+  public void validateWithinMappingLimit(Project project, Index index, Integer numFeatures)
+      throws FeaturestoreException {
+    String indexName = getProjectIndexName(project, index.getName());
+    try {
+      int remainingMappingSize;
+      if (indexExist(indexName)) {
+        remainingMappingSize = settings.getOpensearchDefaultIndexMappingLimit()
+            - vectorDatabaseClient.getClient().getSchema(new Index(indexName)).stream()
+            .mapToInt(field -> countMappingSizeIncludingSubFields(field.getType())).sum();
+      } else {
+        remainingMappingSize = settings.getOpensearchDefaultIndexMappingLimit();
+      }
+      if (numFeatures > remainingMappingSize) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.VECTOR_DATABASE_INDEX_MAPPING_LIMIT_EXCEEDED,
+            Level.FINE, String.format("Number of features exceeds the limit of the index '%s'."
+                + " Maximum number of features can be added/created is %d."
+                + " Reduce the number of features or use a different embedding index.",
+            index.getName(), remainingMappingSize));
       }
     } catch (VectorDatabaseException e) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP,
-          Level.FINE, "Cannot create opensearch vectordb index: " + index.getName());
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_GET_VECTOR_DB_INDEX,
+          Level.FINE, "Cannot create opensearch vectordb index: " + indexName, e.getMessage());
+    }
+  }
+
+  // In opensearch, if the type has sub-fields, it is considered as 2 mappings
+  // `"4160_col_98":{"type":"long"}` --> 1 mapping
+  // `"5438_binary":{"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}}` --> 2 mappings
+  private int countMappingSizeIncludingSubFields(Object value) {
+    int count = 1;
+    if (value instanceof Map) {
+      if (((Map<?, ?>) value).containsKey("fields")) {
+        count += 1;
+      }
+    }
+    return count;
+  }
+
+  public boolean indexExist(String name) throws FeaturestoreException {
+    try {
+      return vectorDatabaseClient.getClient().getIndex(name).isPresent();
+    } catch (VectorDatabaseException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_GET_VECTOR_DB_INDEX,
+          Level.FINE, "Cannot get opensearch vectordb index: " + name);
+    }
+  }
+
+  public void verifyIndexName(Project project, String name) throws FeaturestoreException {
+    if (name != null && !Strings.isNullOrEmpty(name)) {
+      String projectIndexName = getProjectIndexName(project, name);
+      if (indexExist(projectIndexName) && !isDefaultVectorDbIndex(project, projectIndexName)) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.EMBEDDING_INDEX_EXISTED, Level.FINE,
+            String.format("Provided embedding index `%s` already exists in the vector database.", projectIndexName));
+      }
+    }
+  }
+
+  String getProjectIndexName(Project project, String name) throws FeaturestoreException {
+    if (Strings.isNullOrEmpty(name)) {
+      return getDefaultVectorDbIndex(project);
+    } else {
+      String vectorDbIndexPrefix = getVectorDbIndexPrefix(project);
+      // In hopsworks opensearch, users can only access indexes which start with specific prefix
+      if (!name.startsWith(vectorDbIndexPrefix)) {
+        return vectorDbIndexPrefix + "_" + name;
+      }
+      return name;
     }
   }
 
@@ -94,15 +184,13 @@ public class EmbeddingController {
       throws FeaturestoreException {
     Embedding embedding = new Embedding();
     embedding.setFeaturegroup(featuregroup);
+    String projectIndexName = getProjectIndexName(project, embeddingDTO.getIndexName());
+    embedding.setVectorDbIndexName(projectIndexName);
     if (Strings.isNullOrEmpty(embeddingDTO.getIndexName())) {
-      embedding.setVectorDbIndexName(getDefaultVectorDbIndex(project));
       embedding.setColPrefix(getVectorDbColPrefix(featuregroup));
     } else {
       String vectorDbIndexPrefix = getVectorDbIndexPrefix(project);
-      // In hopsworks opensearch, users can only access indexes which start with specific prefix
       if (!embeddingDTO.getIndexName().startsWith(vectorDbIndexPrefix)) {
-        embedding.setVectorDbIndexName(
-            vectorDbIndexPrefix + "_" + embeddingDTO.getIndexName());
         embedding.setColPrefix("");
       }
       if (isDefaultVectorDbIndex(project, embeddingDTO.getIndexName())) {
@@ -133,7 +221,7 @@ public class EmbeddingController {
   public void dropEmbeddingForProject(Project project)
       throws FeaturestoreException {
     try {
-      for (Index index: vectorDatabaseClient.getClient().getAllIndices().stream()
+      for (Index index : vectorDatabaseClient.getClient().getAllIndices().stream()
           .filter(index -> index.getName().startsWith(getVectorDbIndexPrefix(project))).collect(Collectors.toSet())) {
         vectorDatabaseClient.getClient().deleteIndex(index);
       }
@@ -141,6 +229,14 @@ public class EmbeddingController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_VECTOR_DB_INDEX,
           Level.FINE, "Cannot delete index from vectordb for project: " + project.getName());
     }
+  }
+
+  public Boolean isEmbeddingIndex(String indexName) {
+    return indexName.matches("^\\d+" + embeddingIndexIdentifier + ".*");
+  }
+
+  public Integer getProjectId(String indexName) {
+    return Integer.valueOf(indexName.split(embeddingIndexIdentifier)[0]);
   }
 
   public void dropEmbedding(Project project, Featuregroup featureGroup)
@@ -160,7 +256,7 @@ public class EmbeddingController {
       }
     } catch (VectorDatabaseException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_FEATUREGROUP,
-          Level.FINE, "Cannot delete documents from vectordb for feature group: " +
+          Level.FINE, "Cannot delete index from vectordb for feature group: " +
           featureGroup.getName(), e.getMessage(), e);
     }
   }
@@ -174,37 +270,66 @@ public class EmbeddingController {
   }
 
   private void removeDocuments(Featuregroup featureGroup) throws FeaturestoreException, VectorDatabaseException {
-    EmbeddingFeature feature = featureGroup.getEmbedding().getEmbeddingFeatures().stream().findFirst().get();
+    Set<String> fields =
+        vectorDatabaseClient.getClient().getSchema(new Index(featureGroup.getEmbedding().getVectorDbIndexName()))
+            .stream().map(Field::getName).collect(Collectors.toSet());
+    // Get any of the embedding feature which exists in the vector database for removing document if it is not null
+    Optional<String> embeddingFeatureName = featureGroup
+        .getEmbedding().getEmbeddingFeatures().stream().map(feature -> feature.getEmbedding().getColPrefix() == null
+            ? feature.getName()
+            : feature.getEmbedding().getColPrefix() + feature.getName()).filter(fields::contains).findFirst();
     String matchQuery = "%s:*";
-
-    String field = feature.getEmbedding().getColPrefix() == null
-        ? feature.getName()
-        : feature.getEmbedding().getColPrefix() + feature.getName();
-    vectorDatabaseClient.getClient().deleteByQuery(
-        new Index(featureGroup.getEmbedding().getVectorDbIndexName()),
-        String.format(matchQuery, field)
-    );
+    if (embeddingFeatureName.isPresent()) {
+      vectorDatabaseClient.getClient().deleteByQuery(
+          new Index(featureGroup.getEmbedding().getVectorDbIndexName()),
+          String.format(matchQuery, embeddingFeatureName.get())
+      );
+    }
   }
 
-  protected String createMapping(String prefix, Collection<EmbeddingFeature> features) {
+  protected String createMapping(String prefix, Collection<EmbeddingFeature> embeddingFeatures,
+      List<FeatureGroupFeatureDTO> features) {
+    Set<String> embeddingFeatureNames =
+        embeddingFeatures.stream().map(EmbeddingFeature::getName).collect(Collectors.toSet());
     String mappingString = "{\n" +
         "    \"properties\": {\n" +
         "%s\n" +
         "    }\n" +
         "  }";
-    String fieldString = "        \"%s\": {\n" +
+    String embeddingFieldString = "        \"%s\": {\n" +
         "          \"type\": \"knn_vector\",\n" +
-        "          \"dimension\": %d\n" +
+        "          \"dimension\": %d,\n" +
+        "          \"method\": {\n" +
+        "            \"name\": \"hnsw\",\n" +
+        "            \"space_type\": \"%s\",\n" +
+        "            \"engine\": \"nmslib\"\n" +
+        "            }\n" +
+        "        }";
+    String fieldString = "        \"%s\": {\n" +
+        "          \"type\": \"%s\"\n" +
         "        }";
     List<String> fieldMapping = Lists.newArrayList();
-    for (EmbeddingFeature feature : features) {
+
+    for (EmbeddingFeature feature : embeddingFeatures) {
       fieldMapping.add(String.format(
-          fieldString, prefix + feature.getName(), feature.getDimension()));
+          embeddingFieldString,
+          prefix + feature.getName(), feature.getDimension(),
+          feature.getSimilarityFunctionType().getOpensearchFunction()));
+    }
+    for (FeatureGroupFeatureDTO feature : features) {
+      if (!embeddingFeatureNames.contains(feature.getName())) {
+        String type = OpensearchVectorDatabase.getDataType(feature.getType());
+        if (type != null) {  // if type cannot be converted, opensearch will infer the type
+          fieldMapping.add(String.format(
+              fieldString, prefix + feature.getName(), type));
+        }
+      }
     }
     return String.format(mappingString, String.join(",\n", fieldMapping));
   }
 
-  protected String createIndex(String prefix, Collection<EmbeddingFeature> features) {
+  protected String createIndex(String prefix, Collection<EmbeddingFeature> embeddingFeatures,
+      List<FeatureGroupFeatureDTO> features) {
     String jsonString = "{\n" +
         "  \"settings\": {\n" +
         "    \"index\": {\n" +
@@ -214,17 +339,17 @@ public class EmbeddingController {
         "  },\n" +
         "  \"mappings\": %s\n" +
         "}";
-    return String.format(jsonString, createMapping(prefix, features));
+    return String.format(jsonString, createMapping(prefix, embeddingFeatures, features));
 
   }
 
-  private String getDefaultVectorDbIndex(Project project) throws FeaturestoreException {
+  String getDefaultVectorDbIndex(Project project) throws FeaturestoreException {
     Set<String> indexName = getAllDefaultVectorDbIndex(project);
     // randomly select an index
     return indexName.stream().sorted(Comparator.comparingInt(i -> RANDOM.nextInt())).findFirst().get();
   }
 
-  private boolean isDefaultVectorDbIndex(Project project, String index) throws FeaturestoreException {
+  boolean isDefaultVectorDbIndex(Project project, String index) throws FeaturestoreException {
     return getAllDefaultVectorDbIndex(project).contains(index);
   }
 
@@ -247,8 +372,8 @@ public class EmbeddingController {
     return indices;
   }
 
-  private String getVectorDbIndexPrefix(Project project) {
-    return project.getId() + "__embedding";
+  String getVectorDbIndexPrefix(Project project) {
+    return project.getId() + embeddingIndexIdentifier;
   }
 
   private String getVectorDbColPrefix(Featuregroup featuregroup) {

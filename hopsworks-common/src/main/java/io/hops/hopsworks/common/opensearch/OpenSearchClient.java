@@ -136,7 +136,8 @@ public class OpenSearchClient {
         RestClient.builder(elasticAddr)
           .setHttpClientConfigCallback(httpAsyncClientBuilder -> {
             httpAsyncClientBuilder.setDefaultIOReactorConfig(
-              IOReactorConfig.custom().setIoThreadCount(Settings.OPENSEARCH_KIBANA_NO_CONNECTIONS).build());
+              IOReactorConfig.custom().setIoThreadCount(
+                  Settings.OPENSEARCH_KIBANA_NO_CONNECTIONS).setSoKeepAlive(true).build());
             if (isSecurityEnabled) {
               return httpAsyncClientBuilder.setSSLContext(finalSslCtx)
                 .setDefaultCredentialsProvider(

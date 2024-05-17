@@ -42,6 +42,7 @@ import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.SchemaException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.EmbeddingFeature;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.kafka.schemas.SchemaCompatibility;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -49,6 +50,7 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.vectordb.Field;
 import io.hops.hopsworks.vectordb.Index;
+import io.hops.hopsworks.vectordb.OpensearchVectorDatabase;
 import io.hops.hopsworks.vectordb.VectorDatabaseException;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -57,6 +59,7 @@ import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.dialect.MysqlSqlDialect;
 import org.apache.calcite.sql.parser.SqlParserPos;
+import org.glassfish.jersey.internal.guava.Sets;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -115,9 +118,11 @@ public class OnlineFeaturegroupController {
   public OnlineFeaturegroupController() {
   }
 
-  protected OnlineFeaturegroupController(Settings settings, EmbeddingController embeddingController) {
+  protected OnlineFeaturegroupController(Settings settings, EmbeddingController embeddingController,
+      FeaturegroupController featuregroupController) {
     this.settings = settings;
     this.embeddingController = embeddingController;
+    this.featuregroupController = featuregroupController;
   }
 
       /**
@@ -156,10 +161,10 @@ public class OnlineFeaturegroupController {
     checkOnlineFsUserExist(project);
 
     createFeatureGroupKafkaTopic(project, featureGroup, features);
+    // create mysql table for embedding feature group also for storing feature description
+    createMySQLTable(featureStore, Utils.getFeaturegroupName(featureGroup), features, project, user);
     if (featureGroup.getEmbedding() != null) {
-      embeddingController.createVectorDbIndex(project, featureGroup);
-    } else {
-      createMySQLTable(featureStore, Utils.getFeaturegroupName(featureGroup), features, project, user);
+      embeddingController.createVectorDbIndex(project, featureGroup, features);
     }
   }
 
@@ -450,10 +455,24 @@ public class OnlineFeaturegroupController {
     List<FeatureGroupFeatureDTO> onlineFeatureGroupFeatureDTOS = onlineFeaturestoreFacade.getMySQLFeatures(
         Utils.getFeatureStoreEntityName(featuregroup.getName(), featuregroup.getVersion()),
         onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()));
+    Set<String> embeddingFeatureNames = Sets.newHashSet();
+    if (featuregroup.getEmbedding() != null) {
+      embeddingFeatureNames = featuregroup.getEmbedding().getEmbeddingFeatures().stream().map(EmbeddingFeature::getName)
+          .collect(Collectors.toSet());
+    }
     for (FeatureGroupFeatureDTO featureGroupFeatureDTO : featureGroupFeatureDTOS) {
       for (FeatureGroupFeatureDTO onlineFeatureGroupFeatureDTO : onlineFeatureGroupFeatureDTOS) {
         if(featureGroupFeatureDTO.getName().equalsIgnoreCase(onlineFeatureGroupFeatureDTO.getName())){
-          featureGroupFeatureDTO.setOnlineType(onlineFeatureGroupFeatureDTO.getType());
+          if (featuregroup.getEmbedding() != null) {
+            if (embeddingFeatureNames.contains(featureGroupFeatureDTO.getName())) {
+              featureGroupFeatureDTO.setOnlineType("knn_vector");
+            } else {
+              featureGroupFeatureDTO.setOnlineType(
+                  OpensearchVectorDatabase.getDataType(featureGroupFeatureDTO.getType()));
+            }
+          } else {
+            featureGroupFeatureDTO.setOnlineType(onlineFeatureGroupFeatureDTO.getType());
+          }
         }
       }
     }

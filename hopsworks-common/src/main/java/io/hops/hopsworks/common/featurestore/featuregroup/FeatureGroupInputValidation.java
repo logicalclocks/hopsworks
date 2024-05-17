@@ -16,8 +16,10 @@
 
 package io.hops.hopsworks.common.featurestore.featuregroup;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
+import io.hops.hopsworks.common.featurestore.embedding.EmbeddingController;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
@@ -25,7 +27,10 @@ import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGr
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.vectordb.Index;
+import io.hops.hopsworks.vectordb.OpensearchVectorDatabase;
 import org.apache.commons.lang.StringUtils;
 
 import javax.ejb.EJB;
@@ -36,6 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -50,15 +56,19 @@ public class FeatureGroupInputValidation {
   protected FeaturestoreInputValidation featureStoreInputValidation;
   @EJB
   protected OnlineFeaturegroupController onlineFeaturegroupController;
+  @EJB
+  protected EmbeddingController embeddingController;
   
   public FeatureGroupInputValidation() {
   }
   
   // for testing
   public FeatureGroupInputValidation(FeaturestoreInputValidation featureStoreInputValidation,
-                                     OnlineFeaturegroupController onlineFeaturegroupController) {
+      OnlineFeaturegroupController onlineFeaturegroupController,
+      EmbeddingController embeddingController) {
     this.featureStoreInputValidation = featureStoreInputValidation;
     this.onlineFeaturegroupController = onlineFeaturegroupController;
+    this.embeddingController = embeddingController;
   }
   
   /**
@@ -166,6 +176,10 @@ public class FeatureGroupInputValidation {
    */
   public void verifyOnlineOfflineTypeMatch(FeaturegroupDTO featuregroupDTO) throws FeaturestoreException{
     if (featuregroupDTO.getOnlineEnabled()) {
+      // Users cannot specify the online type for embedding fg
+      if (featuregroupDTO.getEmbeddingIndex() != null) {
+        return;
+      }
       for (FeatureGroupFeatureDTO feature : featuregroupDTO.getFeatures()) {
         String offlineType = feature.getType().toLowerCase().replace(" ", "");
         String onlineType =
@@ -223,14 +237,14 @@ public class FeatureGroupInputValidation {
    * @throws FeaturestoreException
    */
   public void verifyOnlineSchemaValid(FeaturegroupDTO featuregroupDTO) throws FeaturestoreException{
-    if (featuregroupDTO.getOnlineEnabled()) {
+    if (featuregroupDTO.getOnlineEnabled() && featuregroupDTO.getEmbeddingIndex() == null) {
       if (featuregroupDTO.getFeatures().size() > FeaturestoreConstants.MAX_MYSQL_COLUMNS) {
         throw new FeaturestoreException(
           COULD_NOT_CREATE_ONLINE_FEATUREGROUP,
           Level.SEVERE,
           "Cannot create an online feature group because it contains > " +
-            FeaturestoreConstants.MAX_MYSQL_COLUMNS + " rows (provided: " +
-            featuregroupDTO.getFeatures().size() + " rows).");
+            FeaturestoreConstants.MAX_MYSQL_COLUMNS + " columns (provided: " +
+            featuregroupDTO.getFeatures().size() + " columns).");
       }
       
       Integer totalBytes = 0;
@@ -258,7 +272,7 @@ public class FeatureGroupInputValidation {
    * @throws FeaturestoreException
    */
   public void verifyPrimaryKeySupported(FeaturegroupDTO featuregroupDTO) throws FeaturestoreException{
-    if (featuregroupDTO.getOnlineEnabled()) {
+    if (featuregroupDTO.getOnlineEnabled() && featuregroupDTO.getEmbeddingIndex() == null) {
       Integer totalBytes = 0;
       for (FeatureGroupFeatureDTO feature : featuregroupDTO.getFeatures()) {
         if (feature.getPrimary()) {
@@ -387,5 +401,87 @@ public class FeatureGroupInputValidation {
       }
     }
     return newFeatures;
+  }
+
+  public void verifyEmbeddingFeatureExist(FeaturegroupDTO featureGroupDTO) throws FeaturestoreException {
+    Set<String> features =
+        featureGroupDTO.getFeatures().stream().map(FeatureGroupFeatureDTO::getName).collect(Collectors.toSet());
+    if (featureGroupDTO.getEmbeddingIndex() != null) {
+      for (EmbeddingFeatureDTO embeddingFeatureDTO : featureGroupDTO.getEmbeddingIndex().getFeatures()) {
+        if (!features.contains(embeddingFeatureDTO.getName())) {
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.EMBEDDING_FEATURE_NOT_FOUND, Level.FINE,
+              String.format("Provided embedding index `%s` does not exist in the feature group.",
+                  embeddingFeatureDTO.getName()));
+        }
+      }
+    }
+  }
+
+  public void verifyEmbeddingIndexNotExist(Project project, FeaturegroupDTO featureGroupDTO)
+      throws FeaturestoreException {
+    if (featureGroupDTO.getEmbeddingIndex() != null) {
+      embeddingController.verifyIndexName(project, featureGroupDTO.getEmbeddingIndex().getIndexName());
+    }
+  }
+
+  public void verifyEmbeddingIndexName(FeaturegroupDTO featureGroupDTO) throws FeaturestoreException {
+    if (featureGroupDTO.getEmbeddingIndex() != null && featureGroupDTO.getEmbeddingIndex().getIndexName() != null) {
+      String indexName = featureGroupDTO.getEmbeddingIndex().getIndexName();
+      String errorMessage = String.format("Provided embedding index name `%s` is not valid. It should be "
+          + "1. All letters must be lowercase."
+          + "2. Index names cannot begin with _ or -."
+          + "3. Index names can't contain specified special characters.", indexName);
+      // https://docs.aws.amazon.com/opensearch-service/latest/developerguide/indexing.html
+      // Rule 1: All letters must be lowercase.
+      if (!indexName.equals(indexName.toLowerCase())) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.INVALID_EMBEDDING_INDEX_NAME, Level.FINE,
+            errorMessage);
+      }
+
+      // Rule 2: Index names cannot begin with _ or -.
+      if (indexName.startsWith("_") || indexName.startsWith("-")) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.INVALID_EMBEDDING_INDEX_NAME, Level.FINE,
+            errorMessage);
+      }
+
+      // Rule 3: Index names can't contain specified special characters.
+      String[] forbiddenChars = {" ", ",", ":", "\"", "*", "+", "/", "\\", "|", "?", "#", ">", "<"};
+      for (String forbiddenChar : forbiddenChars) {
+        if (indexName.contains(forbiddenChar)) {
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.INVALID_EMBEDDING_INDEX_NAME, Level.FINE,
+              errorMessage);
+        }
+      }
+    }
+  }
+
+  public void verifyVectorDatabaseIndexMappingLimit(Project project, FeaturegroupDTO featureGroupDTO,
+      Integer numFeatures)
+      throws FeaturestoreException {
+    if (featureGroupDTO.getEmbeddingIndex() != null) {
+      embeddingController.validateWithinMappingLimit(project,
+          new Index(featureGroupDTO.getEmbeddingIndex().getIndexName()),
+          numFeatures);
+    }
+  }
+
+  public void verifyVectorDatabaseSupportedDataType(FeaturegroupDTO featureGroupDTO)
+      throws FeaturestoreException {
+    if (featureGroupDTO.getEmbeddingIndex() != null) {
+      verifyVectorDatabaseSupportedDataType(featureGroupDTO.getFeatures());
+    }
+  }
+
+  public void verifyVectorDatabaseSupportedDataType(List<FeatureGroupFeatureDTO> featureDTOS)
+      throws FeaturestoreException {
+    Set<FeatureGroupFeatureDTO> unsupportedFeatures =
+        featureDTOS.stream().filter(f -> OpensearchVectorDatabase.getDataType(f.getType()) == null)
+            .collect(Collectors.toSet());
+    if (unsupportedFeatures.size() > 0) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.VECTOR_DATABASE_DATA_TYPE_NOT_SUPPORTED,
+          Level.FINE, "Vector database does not support data type in the following features: " + Joiner.on(", ")
+          .join(unsupportedFeatures.stream().map(f -> f.getName() + ": " + f.getType()).collect(
+              Collectors.toSet())));
+    }
   }
 }

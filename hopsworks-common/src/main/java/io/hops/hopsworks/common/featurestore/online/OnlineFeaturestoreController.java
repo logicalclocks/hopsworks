@@ -352,6 +352,13 @@ public class OnlineFeaturestoreController {
       
       String db = getOnlineFeaturestoreDbName(project);
       onlineFeaturestoreFacade.removeOnlineFeaturestoreDatabase(db, connection);
+      try {
+        embeddingController.dropEmbeddingForProject(project);
+      } catch (FeaturestoreException e) {
+        // Do not interrupt project deletion, instead clean up the orphan index in batch later, because
+        // project deletion cannot be retried and fails with “Your project role does not allow to perform this action."
+        LOGGER.log(Level.WARNING, "Failed to drop embedding for project.", e);
+      }
     } catch (SQLException se) {
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE,
