@@ -2752,6 +2752,22 @@ describe "On #{ENV['OS']}" do
         expect_status_details(200)
       end
 
+      it "should be able to delete a cached online featuregroup from the featurestore even if online table was deleted" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(201)
+
+        # delete onlinefs table
+        ActiveRecord::Base.connection.execute "DROP TABLE " + project.projectname + "." + parsed_json["name"] + "_" + parsed_json["version"].to_s
+        
+        featuregroup_id = parsed_json["id"]
+        delete_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s
+        delete delete_featuregroup_endpoint
+        expect_status_details(200)
+      end
+
       it "should be able to update the metadata of a cached online featuregroup from the featurestore" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)

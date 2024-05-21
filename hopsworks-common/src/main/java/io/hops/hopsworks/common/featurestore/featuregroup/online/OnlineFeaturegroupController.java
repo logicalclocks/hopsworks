@@ -136,7 +136,7 @@ public class OnlineFeaturegroupController {
        */
   public void dropMySQLTable(Featuregroup featuregroup, Project project, Users user) throws FeaturestoreException {
     //Drop data table
-    String query = "DROP TABLE " + featuregroup.getName() + "_" + featuregroup.getVersion() + ";";
+    String query = "DROP TABLE IF EXISTS " + featuregroup.getName() + "_" + featuregroup.getVersion() + ";";
     onlineFeaturestoreFacade.executeUpdateJDBCQuery(query,
         onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()),
         project, user);
