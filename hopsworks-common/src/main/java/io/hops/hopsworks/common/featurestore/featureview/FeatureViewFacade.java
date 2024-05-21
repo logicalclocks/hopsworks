@@ -27,7 +27,6 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,11 +50,6 @@ public class FeatureViewFacade extends AbstractFacade<FeatureView> {
   }
 
   public List<FeatureView> findByFeaturestore(Featurestore featurestore, QueryParam queryParam) {
-    Boolean latestVersion = false;
-    if (queryParam != null && queryParam.getFilters().removeIf(filter -> filter.toString().equals("LATEST_VERSION"))) {
-      latestVersion = true;
-    }
-
     Map<String, Object> extraParam = new HashMap<>();
     extraParam.put("featurestore", featurestore);
     String queryStr = buildQuery("SELECT fv FROM FeatureView fv ",
@@ -63,31 +57,13 @@ public class FeatureViewFacade extends AbstractFacade<FeatureView> {
         queryParam != null ? queryParam.getSorts(): null,
         "fv.featurestore = :featurestore ");
     Query q = makeQuery(queryStr, queryParam, extraParam);
-    List<FeatureView> results = q.getResultList();
-
-    if (latestVersion) {
-      results = retainLatestVersion(results);
-    }
-    return results;
+    return q.getResultList();
   }
 
   public Long countByFeaturestore(Featurestore featurestore) {
     return em.createNamedQuery("FeatureView.countByFeaturestore", Long.class)
       .setParameter("featurestore", featurestore)
       .getSingleResult();
-  }
-
-  List<FeatureView> retainLatestVersion(List<FeatureView> featureViews) {
-    Map<String, FeatureView> latestVersion = new HashMap<>();
-    for (FeatureView featureView : featureViews) {
-      if (!latestVersion.containsKey(featureView.getName())) {
-        latestVersion.put(featureView.getName(), featureView);
-      } else if (latestVersion.containsKey(featureView.getName()) &&
-          featureView.getVersion() > latestVersion.get(featureView.getName()).getVersion()) {
-        latestVersion.put(featureView.getName(), featureView);
-      }
-    }
-    return new ArrayList<>(latestVersion.values());
   }
 
   public Optional<FeatureView> findByIdAndFeatureStore(Integer id, Featurestore featureStore) {
@@ -191,7 +167,11 @@ public class FeatureViewFacade extends AbstractFacade<FeatureView> {
   public enum Filters {
     NAME("NAME", String.format("%s.name = :%%s ", FeatureView.TABLE_NAME_ALIAS), "name", ""),
     VERSION("VERSION", String.format("%s.version = :%%s ", FeatureView.TABLE_NAME_ALIAS), "version", ""),
-    LATEST_VERSION("LATEST_VERSION", null, null, null);
+    LATEST_VERSION("LATEST_VERSION", String.format("%1$s.version = ( " +
+        "SELECT MAX(%2$s.version) " +
+        "FROM FeatureView %2$s " +
+        "WHERE %1$s.name = %2$s.name AND %1$s.featurestore = %2$s.featurestore " +
+        ") ", FeatureView.TABLE_NAME_ALIAS, "fv2"), null, null);
 
     private final String name;
     private final String sql;

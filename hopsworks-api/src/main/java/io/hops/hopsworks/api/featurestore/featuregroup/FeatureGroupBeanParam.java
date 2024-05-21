@@ -28,10 +28,9 @@ import java.util.Set;
 public class FeatureGroupBeanParam {
 
   @QueryParam("filter_by")
-  @ApiParam(value = "ex. filter_by=expectations:exp1&filter_by=expectations:exp2",
-          allowableValues =
-                  "filter_by=expectations:exp1",
-          allowMultiple = true)
+  @ApiParam(value = "filter_by=latest_version",
+      allowableValues = "filter_by=latest_version,filter_by=name:value,filter_by=version:value",
+      allowMultiple = true)
   private Set<FilterBy> filter;
 
   @QueryParam("sort_by")

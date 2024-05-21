@@ -3235,6 +3235,20 @@ describe "On #{ENV['OS']}" do
         expect(json_body.all? { |fg| fg[:name] == "featuregroup1" }).to be true
       end
 
+      it "should be able to list all featuregroups of the project's featurestore filtered by latest_version" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+
+        # get fgs
+        get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups?filter_by=latest_version"
+        expect_status_details(200)
+        names = json_body.map { |o| "#{o[:name]}" }
+
+        expect(json_body.length).to eq(3)
+        expect(json_body.length).to eq(names.uniq.size)
+        expect(json_body.any? { |fg| fg[:name] == "featuregroup1" && fg[:version] == 3}).to be true
+      end
+
       it "should be able to list all featuregroups of the project's featurestore filtered by name and version" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
