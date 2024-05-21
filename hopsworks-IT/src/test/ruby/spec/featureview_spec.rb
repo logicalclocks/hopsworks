@@ -648,6 +648,20 @@ describe "On #{ENV['OS']}" do
           expect(json_body[:items].all? { |fv| fv[:name] == "featureview2" }).to be true
         end
 
+        it "should be able to get a list of feature view filtered by latest_version" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+
+          # Get the list
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featureview?filter_by=latest_version"
+          expect_status_details(200)
+          names = json_body[:items].map { |o| "#{o[:name]}" }
+  
+          expect(json_body[:items].length).to eq(2)
+          expect(json_body[:items].length).to eq(names.uniq.size)
+          expect(json_body[:items].any? { |fv| fv[:name] == "featureview2" && fv[:version] == 2}).to be true
+        end
+
         it "should be able to get a list of feature view filtered by name and version" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)

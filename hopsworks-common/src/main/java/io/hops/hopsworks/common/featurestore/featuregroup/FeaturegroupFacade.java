@@ -253,7 +253,6 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
   private void setFilterQuery(FilterBy filter, Query q) {
     switch (Filters.valueOf(filter.getValue())) {
       case NAME:
-      case EXPECTATIONS:
         q.setParameter(filter.getField(), filter.getParam());
         break;
       case VERSION:
@@ -267,7 +266,11 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
   public enum Filters {
     NAME("NAME", "fg.name = :name", "name", ""),
     VERSION("VERSION", "fg.version = :version", "version", ""),
-    EXPECTATIONS("EXPECTATIONS", "", "expectations", "");
+    LATEST_VERSION("LATEST_VERSION", String.format("%1$s.version = ( " +
+        "SELECT MAX(%2$s.version) " +
+        "FROM Featuregroup %2$s " +
+        "WHERE %1$s.name = %2$s.name AND %1$s.featurestore = %2$s.featurestore " +
+        ") ", "fg", "fg2"), null, null);
 
     private final String value;
     private final String sql;
