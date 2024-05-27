@@ -36,7 +36,6 @@ public class FeaturestoreDTO {
   private Integer projectId;
   private String onlineFeaturestoreName;
   private String offlineFeaturestoreName;
-  private String hiveEndpoint;
   private String mysqlServerEndpoint;
   private Boolean onlineEnabled = false;
   private Long numFeatureGroups;
@@ -55,7 +54,6 @@ public class FeaturestoreDTO {
     this.featurestoreName = null;
     this.onlineFeaturestoreName = null;
     this.offlineFeaturestoreName = null;
-    this.hiveEndpoint = null;
     this.mysqlServerEndpoint = null;
     this.onlineEnabled = false;
   }
@@ -101,24 +99,6 @@ public class FeaturestoreDTO {
   
   public void setOfflineFeaturestoreName(String offlineFeaturestoreName) {
     this.offlineFeaturestoreName = offlineFeaturestoreName;
-  }
-
-  @XmlElement
-  public String getHiveEndpoint() {
-    return hiveEndpoint;
-  }
-  
-  public void setHiveEndpoint(String hiveEndpoint) {
-    this.hiveEndpoint = hiveEndpoint;
-  }
-  
-  @XmlElement
-  public String getMysqlServerEndpoint() {
-    return mysqlServerEndpoint;
-  }
-  
-  public void setMysqlServerEndpoint(String mysqlServerEndpoint) {
-    this.mysqlServerEndpoint = mysqlServerEndpoint;
   }
 
   public void setOnlineFeaturestoreName(String onlineFeaturestoreName) {
@@ -176,7 +156,6 @@ public class FeaturestoreDTO {
         ", projectId=" + projectId +
         ", onlineFeaturestoreName='" + onlineFeaturestoreName + '\'' +
         ", offlineFeaturestoreName='" + offlineFeaturestoreName + '\'' +
-        ", hiveEndpoint='" + hiveEndpoint + '\'' +
         ", mysqlServerEndpoint='" + mysqlServerEndpoint + '\'' +
         ", onlineEnabled=" + onlineEnabled +
         ", numFeatureGroups=" + numFeatureGroups +

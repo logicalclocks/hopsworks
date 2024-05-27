@@ -16,23 +16,17 @@
 
 package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 
-import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
-import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
-import io.hops.hopsworks.common.security.CertificateMaterializer;
+import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.servicediscovery.HopsworksService;
-import io.hops.hopsworks.servicediscovery.tags.HiveTags;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.TableType;
@@ -48,13 +42,7 @@ import org.apache.hadoop.hive.metastore.api.ThriftHiveMetastore;
 import org.apache.hadoop.hive.metastore.api.hive_metastoreConstants;
 import org.apache.hadoop.hive.metastore.conf.MetastoreConf;
 import org.apache.hadoop.hive.serde.serdeConstants;
-import org.apache.thrift.TConfiguration;
 import org.apache.thrift.TException;
-import org.apache.thrift.protocol.TBinaryProtocol;
-import org.apache.thrift.protocol.TProtocol;
-import org.apache.thrift.transport.TSSLTransportFactory;
-import org.apache.thrift.transport.TSocket;
-import org.apache.thrift.transport.TTransport;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -83,9 +71,7 @@ public class OfflineFeatureGroupController {
   @EJB
   private Settings settings;
   @EJB
-  private CertificateMaterializer certificateMaterializer;
-  @EJB
-  private ServiceDiscoveryController serviceDiscoveryController;
+  private HiveController hiveController;
 
   private Configuration metastoreConf;
 
@@ -94,9 +80,6 @@ public class OfflineFeatureGroupController {
     metastoreConf = MetastoreConf.newMetastoreConf();
     metastoreConf.addResource(new Path(settings.getHiveConfPath()));
   }
-
-  private static final String COMMENT = "comment";
-  private static final int CONNECTION_TIMEOUT = 600000;
 
   public enum Formats {
     ORC("org.apache.hadoop.hive.ql.io.orc.OrcInputFormat",
@@ -166,7 +149,7 @@ public class OfflineFeatureGroupController {
     try {
       createTable(client, table, defaultConstraints);
     } finally {
-      finalizeMetastoreOperation(project, user, client);
+      hiveController.finalizeMetastoreOperation(project, user, client);
     }
   }
 
@@ -193,7 +176,7 @@ public class OfflineFeatureGroupController {
       alterTable(client, table);
       addDefaultConstraints(client, defaultConstraints);
     } finally {
-      finalizeMetastoreOperation(project, user, client);
+      hiveController.finalizeMetastoreOperation(project, user, client);
     }
   }
 
@@ -209,7 +192,7 @@ public class OfflineFeatureGroupController {
       schema = getFields(client, dbName, tableName);
       defaultConstraints = getDefaultConstraints(client, "hive", dbName, tableName);
     } finally {
-      finalizeMetastoreOperation(project, user, client);
+      hiveController.finalizeMetastoreOperation(project, user, client);
     }
 
     // Setup a map of constraint values for easy access
@@ -299,21 +282,10 @@ public class OfflineFeatureGroupController {
   
   private ThriftHiveMetastore.Client getMetaStoreClient(Project project, Users user) throws FeaturestoreException {
     try {
-      return openMetastoreClient(project, user);
+      return hiveController.openUserMetastoreClient(project, user);
     } catch (ServiceException | IOException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_CREATING_HIVE_METASTORE_CLIENT,
         Level.SEVERE, "Error opening the Hive Metastore client: " + e.getMessage(), e.getMessage(), e);
-    }
-  }
-
-  private void finalizeMetastoreOperation(Project project, Users user, ThriftHiveMetastore.Client client) {
-    certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
-    if (client != null) {
-      try {
-        client.shutdown();
-      } catch (TException e) {
-        LOGGER.log(Level.SEVERE, "Error closing Metastore connection", e);
-      }
     }
   }
 
@@ -321,71 +293,14 @@ public class OfflineFeatureGroupController {
       throws FeaturestoreException, ServiceException, IOException {
     ThriftHiveMetastore.Client client = null;
     try {
-      client = openMetastoreClient(project, user);
+      client = hiveController.openUserMetastoreClient(project, user);
       client.drop_table(dbName, tableName, true);
     } catch (TException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_FEATUREGROUP, Level.SEVERE,
           "Error dropping feature group in the Hive Metastore: " +  e.getMessage(), e.getMessage(), e);
     } finally {
-      finalizeMetastoreOperation(project, user, client);
+      hiveController.finalizeMetastoreOperation(project, user, client);
     }
-  }
-
-  // Here we can't use the HiveMetaStoreClient.java wrapper as we would need to export environment variables and so on
-  // instead we assemble directly the thirft client, which is what the HiveMetaStoreClient does behind the scenes.
-  private ThriftHiveMetastore.Client openMetastoreClient(Project project, Users user)
-      throws ServiceException, IOException {
-    String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
-    ThriftHiveMetastore.Client client = null;
-
-    try {
-      certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
-      CertificateMaterializer.CryptoMaterial userMaterial =
-          certificateMaterializer.getUserMaterial(user.getUsername(), project.getName());
-
-      // read Password
-      String password = String.copyValueOf(userMaterial.getPassword());
-
-      // Get metastore service information from consul
-      Service metastoreService = serviceDiscoveryController
-          .getAnyAddressOfServiceWithDNS(HopsworksService.HIVE.getNameWithTag(HiveTags.metastore));
-
-      TTransport transport;
-      if (settings.getHopsRpcTls()) {
-        // Setup secure connection with the Hive metastore.
-        TSSLTransportFactory.TSSLTransportParameters params =
-            new TSSLTransportFactory.TSSLTransportParameters();
-        params.setTrustStore(certificateMaterializer.getUserTransientTruststorePath(project, user), password);
-        params.setKeyStore(certificateMaterializer.getUserTransientKeystorePath(project, user), password);
-
-        transport = TSSLTransportFactory.getClientSocket(metastoreService.getAddress(),
-            metastoreService.getPort(), CONNECTION_TIMEOUT, params);
-      } else {
-        transport = new TSocket(TConfiguration.DEFAULT, metastoreService.getAddress(), metastoreService.getPort(),
-          CONNECTION_TIMEOUT);
-      }
-
-      TProtocol protocol = new TBinaryProtocol(transport);
-      client = new ThriftHiveMetastore.Client(protocol);
-
-      // Open transport
-      if (!transport.isOpen()) {
-        transport.open();
-      }
-
-      // Set the UGI on the metastore side
-      client.set_ugi(hdfsUsername, new ArrayList<>());
-
-      if (settings.getHopsRpcTls()) {
-        // Send the certificate to the metastore so it can operate with the fs.
-        client.set_crypto(userMaterial.getKeyStore(), password, userMaterial.getTrustStore(), password, false);
-      }
-    } catch (CryptoPasswordNotFoundException | ServiceDiscoveryException | TException e) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.METASTORE_CONNECTION_ERROR, Level.SEVERE,
-          "Hive metastore connection error", e.getMessage(), e);
-    }
-
-    return client;
   }
 
   private Table getEmptyTable(String databaseName, String tableName, String username, Formats format) {

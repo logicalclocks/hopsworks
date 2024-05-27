@@ -40,7 +40,6 @@
 package io.hops.hopsworks.common.project;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.alert.AMClient;
 import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
 import io.hops.hopsworks.alerting.api.alert.dto.PostableAlert;
@@ -890,9 +889,9 @@ public class ProjectController {
     try {
       hiveController.createDatabase(project.getName(), "Project general-purpose Hive database");
       hiveController.createDatasetDb(project, user, dfso, project.getName(), datasetProvCore);
-    } catch (SQLException | IOException | ServiceDiscoveryException ex) {
+    } catch (ServiceException | IOException ex) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HIVEDB_CREATE_ERROR, Level.SEVERE,
-        "project: " + project.getName(), ex.getMessage(), ex);
+          "project: " + project.getName(), ex.getMessage(), ex);
     }
   }
   
@@ -1014,7 +1013,7 @@ public class ProjectController {
         datasetProvCore);
       //Register built-in transformation function.
       transformationFunctionController.registerBuiltInTransformationFunctions(user, project, featurestore);
-    } catch (SQLException | IOException | ServiceDiscoveryException ex) {
+    } catch (ServiceException | IOException ex) {
       LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATURESTORE.getMessage(), ex);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATURESTORE, Level.SEVERE,
         "project: " + project.getName(), ex.getMessage(), ex);
@@ -1210,6 +1209,15 @@ public class ProjectController {
           cleanupLogger.logError(ex.getMessage());
         }
 
+        // Delete Hive database - will automatically cleanup all the Hive's metadata
+        try {
+          hiveController.dropDatabases(project, dfso, true);
+          cleanupLogger.logSuccess("Removed Hive db");
+        } catch (Exception ex) {
+          cleanupLogger.logError("Error when removing hive db during project cleanup");
+          cleanupLogger.logError(ex.getMessage());
+        }
+
         // Remove certificates
         try {
           certificatesController.revokeProjectCertificates(project);
@@ -1253,16 +1261,7 @@ public class ProjectController {
           cleanupLogger.logError("Error when changing ownership during project cleanup");
           cleanupLogger.logError(ex.getMessage());
         }
-
-        // 16) Delete Hive database - will automatically cleanup all the Hive's metadata
-        try {
-          hiveController.dropDatabases(project, dfso, true);
-          cleanupLogger.logSuccess("Removed Hive db");
-        } catch (Exception ex) {
-          cleanupLogger.logError("Error when removing hive db during project cleanup");
-          cleanupLogger.logError(ex.getMessage());
-        }
-
+        
         // 17) Delete online featurestore database
         try {
           onlineFeaturestoreController.removeOnlineFeatureStore(project);
@@ -1387,7 +1386,7 @@ public class ProjectController {
         try {
           hiveController.dropDatabases(toDeleteProject, dfso, true);
           cleanupLogger.logSuccess("Dropped Hive database");
-        } catch (IOException ex) {
+        } catch (IOException | ServiceException ex) {
           cleanupLogger.logError(ex.getMessage());
         }
 
@@ -1656,6 +1655,9 @@ public class ProjectController {
       //remove kafka topics
       kafkaController.removeKafkaTopics(project);
 
+      //Delete Hive database - will automatically cleanup all the Hive's metadata
+      hiveController.dropDatabases(project, dfso, false);
+
       // remove user certificate from local node
       // (they will be removed from db when the project folder is deleted)
       // projectCreationFutures will be null during project deletion.
@@ -1702,9 +1704,6 @@ public class ProjectController {
 
       //Delete online featurestore database
       onlineFeaturestoreController.removeOnlineFeatureStore(project);
-
-      //Delete Hive database - will automatically cleanup all the Hive's metadata
-      hiveController.dropDatabases(project, dfso, false);
 
       try {
         //Delete OpenSearch template for this project

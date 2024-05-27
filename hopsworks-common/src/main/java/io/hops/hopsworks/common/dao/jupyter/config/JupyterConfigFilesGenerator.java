@@ -58,7 +58,6 @@ import io.hops.hopsworks.common.util.templates.jupyter.SparkMagicConfigTemplate;
 import io.hops.hopsworks.common.util.templates.jupyter.SparkMagicConfigTemplateBuilder;
 import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.JobException;
-import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.kafka.KafkaBrokers;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.DockerJobConfiguration;
@@ -116,8 +115,6 @@ public class JupyterConfigFilesGenerator {
   private ServiceDiscoveryController serviceDiscoveryController;
   @EJB
   private KafkaBrokers kafkaBrokers;
-  @EJB
-  private HiveController hiveController;
   @EJB
   private JobController jobController;
   @EJB
@@ -211,14 +208,12 @@ public class JupyterConfigFilesGenerator {
           .setAnacondaHome(settings.getAnacondaProjectDir())
           .setSecretDirectory(settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret())
           .setProject(project)
-          .setHiveEndpoints(hiveController.getHiveServerInternalEndpoint())
           .setLibHdfsOpts("-Xmx512m")
           .build();
-
       Map<String, Object> dataModel = new HashMap<>(1);
       dataModel.put("kernel", kernelTemplate);
       templateEngine.template(KernelTemplate.TEMPLATE_NAME, dataModel, out);
-    } catch (TemplateException | ServiceDiscoveryException ex) {
+    } catch (TemplateException ex) {
       throw new IOException(ex);
     }
   }

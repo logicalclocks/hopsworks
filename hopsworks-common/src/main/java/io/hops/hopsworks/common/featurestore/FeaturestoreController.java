@@ -20,21 +20,17 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewFacade;
-import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
-import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorDTO;
-import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.hive.HiveController;
-import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -49,8 +45,6 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.servicediscovery.HopsworksService;
-import io.hops.hopsworks.servicediscovery.tags.HiveTags;
 import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
@@ -78,10 +72,6 @@ public class FeaturestoreController {
   @EJB
   private Settings settings;
   @EJB
-  private OnlineFeaturestoreController onlineFeaturestoreController;
-  @EJB
-  private OnlineFeaturestoreFacade onlineFeaturestoreFacade;
-  @EJB
   private HiveController hiveController;
   @EJB
   private FeaturegroupFacade featuregroupFacade;
@@ -91,8 +81,6 @@ public class FeaturestoreController {
   private FeaturestoreConnectorFacade connectorFacade;
   @EJB
   private FeaturestoreStorageConnectorController featurestoreStorageConnectorController;
-  @EJB
-  private ServiceDiscoveryController serviceDiscoveryController;
   @EJB
   private InodeController inodeController;
   @EJB
@@ -268,8 +256,6 @@ public class FeaturestoreController {
     activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR + trainingDatasetsFolder.
         getName(), project, project.getOwner(), ActivityFlag.SERVICE);
 
-    featurestoreStorageConnectorController
-        .createStorageConnector(user, project, featurestore, createOfflineJdbcConnector(featurestoreName));
     activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR + project.getName(),
         project, project.getOwner(), ActivityFlag.SERVICE);
 
@@ -314,30 +300,6 @@ public class FeaturestoreController {
     return featurestoreHopsfsConnectorDTO;
   }
 
-  public FeaturestoreStorageConnectorDTO createOfflineJdbcConnector(String databaseName)
-      throws FeaturestoreException {
-    String hiveEndpoint = "";
-    try {
-      hiveEndpoint = serviceDiscoveryController
-          .constructServiceFQDNWithPort(HopsworksService.HIVE.getNameWithTag(HiveTags.hiveserver2_tls));
-    } catch (ServiceDiscoveryException e) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CONNECTOR_NOT_FOUND,
-          Level.SEVERE, "Could not create Hive connection string", e.getMessage(), e);
-    }
-    String connectionString = HiveController.HIVE_JDBC_PREFIX + hiveEndpoint + "/" + databaseName +
-        ";auth=noSasl;ssl=true;twoWay=true;";
-    List<OptionDTO> arguments = FeaturestoreConstants.OFFLINE_JDBC_CONNECTOR_ARGS.stream()
-            .map(arg -> new OptionDTO(arg, null))
-            .collect(Collectors.toList());
-    FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO = new FeaturestoreJdbcConnectorDTO();
-    featurestoreJdbcConnectorDTO.setStorageConnectorType(FeaturestoreConnectorType.JDBC);
-    featurestoreJdbcConnectorDTO.setName(databaseName);
-    featurestoreJdbcConnectorDTO.setDescription("JDBC connector for the Offline Feature Store");
-    featurestoreJdbcConnectorDTO.setConnectionString(connectionString);
-    featurestoreJdbcConnectorDTO.setArguments(arguments);
-    return featurestoreJdbcConnectorDTO;
-  }
-
   /**
    * Converts a featurestore entity to a Featurestore DTO, supplements the featurestore entity
    * with Hive metadata and remove foreign keys that are less interesting for users.
@@ -352,17 +314,9 @@ public class FeaturestoreController {
     featurestoreDTO.setFeaturestoreName(featureStoreName);
     featurestoreDTO.setOfflineFeaturestoreName(featureStoreName);
 
-    try {
-      featurestoreDTO.setHiveEndpoint(hiveController.getHiveServerInternalEndpoint());
-      if (settings.isOnlineFeaturestore() &&
-          onlineFeaturestoreController.checkIfDatabaseExists(
-              onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
-        featurestoreDTO.setMysqlServerEndpoint(onlineFeaturestoreFacade.getJdbcURL());
-        featurestoreDTO.setOnlineFeaturestoreName(featurestore.getProject().getName());
-        featurestoreDTO.setOnlineEnabled(true);
-      }
-    } catch (ServiceDiscoveryException ex) {
-      throw new RuntimeException(ex);
+    if (settings.isOnlineFeaturestore()) {
+      featurestoreDTO.setOnlineFeaturestoreName(featurestore.getProject().getName());
+      featurestoreDTO.setOnlineEnabled(true);
     }
 
     // add counters

@@ -26,7 +26,6 @@ public class KernelTemplateBuilder {
   private String anacondaHome;
   private String hadoopVersion;
   private String secretDirectory;
-  private String hiveEndpoints;
   private String libHdfsOpts;
   
   private KernelTemplateBuilder() {}
@@ -88,11 +87,6 @@ public class KernelTemplateBuilder {
   public String getSecretDirectory() {
     return secretDirectory;
   }
-  
-  public KernelTemplateBuilder setHiveEndpoints(String hiveEndpoints) {
-    this.hiveEndpoints = hiveEndpoints;
-    return this;
-  }
 
   public String getLibHdfsOpts() {
     return libHdfsOpts;
@@ -102,11 +96,7 @@ public class KernelTemplateBuilder {
     this.libHdfsOpts = libHdfsOpts;
     return this;
   }
-  
-  public String getHiveEndpoints() {
-    return hiveEndpoints;
-  }
-  
+
   public KernelTemplate build() {
     return new KernelTemplate(this);
   }

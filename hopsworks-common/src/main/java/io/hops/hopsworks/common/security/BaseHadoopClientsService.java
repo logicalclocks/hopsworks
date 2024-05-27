@@ -43,6 +43,7 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.security.HopsUtil;
 import io.hops.security.SuperuserKeystoresLoader;
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.net.HopsSSLSocketFactory;
@@ -53,6 +54,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -98,15 +100,25 @@ public class BaseHadoopClientsService {
   public String getSuperKeystorePath() {
     return securityMaterial.getKeyStoreLocation().toString();
   }
+
+  public ByteBuffer getSuperKeystore() throws IOException {
+    byte[] keystore = FileUtils.readFileToByteArray(securityMaterial.getKeyStoreLocation().toFile());
+    return ByteBuffer.wrap(keystore);
+  }
   
   public String getSuperKeystorePassword() {
     return materialPassword;
   }
-  
+
   public String getSuperTrustStorePath() {
     return securityMaterial.getTrustStoreLocation().toString();
   }
-  
+
+  public ByteBuffer getSuperTrustStore() throws IOException {
+    byte[] trustStore = FileUtils.readFileToByteArray(securityMaterial.getTrustStoreLocation().toFile());
+    return ByteBuffer.wrap(trustStore);
+  }
+
   public String getSuperTrustStorePassword() {
     return materialPassword;
   }
