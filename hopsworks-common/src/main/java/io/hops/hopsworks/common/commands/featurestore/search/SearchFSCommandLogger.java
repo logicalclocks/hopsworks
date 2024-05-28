@@ -64,82 +64,82 @@ public class SearchFSCommandLogger {
   
   public void create(Featuregroup featureGroup) throws FeaturestoreException {
     SearchFSCommand command = getCommand(featureGroup, SearchFSCommandOp.CREATE);
-    commandFacade.persistAndFlush(command);
+    persistCommand(command);
   }
   
   public void create(FeatureView featureView) throws FeaturestoreException {
     SearchFSCommand command = getCommand(featureView, SearchFSCommandOp.CREATE);
-    commandFacade.persistAndFlush(command);
+    persistCommand(command);
   }
   
   public void create(TrainingDataset trainingDataset) throws FeaturestoreException {
     SearchFSCommand command = getCommand(trainingDataset, SearchFSCommandOp.CREATE);
-    commandFacade.persistAndFlush(command);
+    persistCommand(command);
   }
   
   public void updateMetadata(Featuregroup featureGroup) throws FeaturestoreException {
     SearchFSCommand command = getCommand(featureGroup, SearchFSCommandOp.UPDATE_METADATA);
-    commandFacade.persistAndFlush(command);
+    persistCommand(command);
   }
   
   public void updateMetadata(FeatureView featureView) throws FeaturestoreException {
     SearchFSCommand command = getCommand(featureView, SearchFSCommandOp.UPDATE_METADATA);
-    commandFacade.persistAndFlush(command);
+    persistCommand(command);
   }
   
   public void updateMetadata(TrainingDataset trainingDataset) throws FeaturestoreException {
     SearchFSCommand command = getCommand(trainingDataset, SearchFSCommandOp.UPDATE_METADATA);
-    commandFacade.persistAndFlush(command);
+    persistCommand(command);
   }
   
   public void updateKeywords(Featuregroup featureGroup) throws FeaturestoreException {
     SearchFSCommand command = getCommand(featureGroup, SearchFSCommandOp.UPDATE_KEYWORDS);
-    commandFacade.persistAndFlush(command);
+    persistCommand(command);
   }
   
   public void updateKeywords(FeatureView featureView) throws FeaturestoreException {
     SearchFSCommand command = getCommand(featureView, SearchFSCommandOp.UPDATE_KEYWORDS);
-    commandFacade.persistAndFlush(command);
+    persistCommand(command);
   }
   
   public void updateKeywords(TrainingDataset trainingDataset) throws FeaturestoreException {
     SearchFSCommand command = getCommand(trainingDataset, SearchFSCommandOp.UPDATE_KEYWORDS);
-    commandFacade.persistAndFlush(command);
+    persistCommand(command);
   }
   
   public void updateTags(Featuregroup featureGroup) throws FeaturestoreException {
     SearchFSCommand command = getCommand(featureGroup, SearchFSCommandOp.UPDATE_TAGS);
-    commandFacade.persistAndFlush(command);
+    persistCommand(command);
   }
   
   public void updateTags(FeatureView featureView) throws FeaturestoreException {
     SearchFSCommand command = getCommand(featureView, SearchFSCommandOp.UPDATE_TAGS);
-    commandFacade.persistAndFlush(command);
+    persistCommand(command);
   }
   
   public void updateTags(TrainingDataset trainingDataset) throws FeaturestoreException {
     SearchFSCommand command = getCommand(trainingDataset, SearchFSCommandOp.UPDATE_TAGS);
-    commandFacade.persistAndFlush(command);
+    persistCommand(command);
   }
   
   public void delete(Featuregroup featuregroup) throws FeaturestoreException {
     SearchFSCommand command = getCommand(featuregroup, SearchFSCommandOp.DELETE_ARTIFACT);
-    commandFacade.persistAndFlush(command);
+    persistCommand(command);
   }
   
   public void delete(FeatureView featureView) throws FeaturestoreException {
     SearchFSCommand command = getCommand(featureView, SearchFSCommandOp.DELETE_ARTIFACT);
-    commandFacade.persistAndFlush(command);
+    persistCommand(command);
   }
   
   public void delete(TrainingDataset trainingDataset) throws FeaturestoreException {
     SearchFSCommand command = getCommand(trainingDataset, SearchFSCommandOp.DELETE_ARTIFACT);
-    commandFacade.persistAndFlush(command);
+    persistCommand(command);
   }
   
   public void delete(Project project) {
     SearchFSCommand command = getCommand(project, SearchFSCommandOp.DELETE_PROJECT);
-    commandFacade.persistAndFlush(command);
+    persistCommand(command);
   }
   
   private SearchFSCommand getCommand(Featuregroup featureGroup, SearchFSCommandOp op) throws FeaturestoreException {
@@ -206,5 +206,11 @@ public class SearchFSCommandLogger {
     command.setStatus(CommandStatus.NEW);
     command.setOp(op);
     return command;
+  }
+
+  private void persistCommand(SearchFSCommand command) {
+    if (command != null) {
+      commandFacade.persistAndFlush(command);
+    }
   }
 }

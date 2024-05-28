@@ -33,6 +33,7 @@ import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.AddDefaultConstraintRequest;
 import org.apache.hadoop.hive.metastore.api.DefaultConstraintsRequest;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.metastore.api.SQLDefaultConstraint;
 import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.metastore.api.SkewedInfo;
@@ -182,6 +183,8 @@ public class OfflineFeatureGroupController {
 
   public List<FeatureGroupFeatureDTO> getSchema(Featurestore featurestore, String tableName,
                                                 Project project, Users user) throws FeaturestoreException {
+    List<FeatureGroupFeatureDTO> featureSchema = new ArrayList<>();
+
     String dbName = featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject());
     ThriftHiveMetastore.Client client = getMetaStoreClient(project, user);
     Table table;
@@ -191,6 +194,15 @@ public class OfflineFeatureGroupController {
       table = getTable(client, dbName, tableName);
       schema = getFields(client, dbName, tableName);
       defaultConstraints = getDefaultConstraints(client, "hive", dbName, tableName);
+    } catch (FeaturestoreException e) {
+      if (e.getCause() instanceof NoSuchObjectException) {
+        // If the hive table doesn't exist return the feature group without features
+        // (Otherwise the user would not be able to get/delete the broken feature group in the UI/HSFS,
+        // since he would receive 500 responses to GET requests)
+        LOGGER.log(Level.SEVERE, "Feature group Hive table does not exist", e);
+        return featureSchema;
+      }
+      throw e;
     } finally {
       hiveController.finalizeMetastoreOperation(project, user, client);
     }
@@ -198,7 +210,6 @@ public class OfflineFeatureGroupController {
     // Setup a map of constraint values for easy access
     Map<String, String> defaultConstraintsMap = defaultConstraints.stream()
         .collect(Collectors.toMap(SQLDefaultConstraint::getColumn_name, SQLDefaultConstraint::getDefault_value));
-    List<FeatureGroupFeatureDTO> featureSchema = new ArrayList<>();
 
     // Partitions are listed first
     for (FieldSchema fieldSchema : table.getPartitionKeys()) {
@@ -295,6 +306,8 @@ public class OfflineFeatureGroupController {
     try {
       client = hiveController.openUserMetastoreClient(project, user);
       client.drop_table(dbName, tableName, true);
+    } catch (NoSuchObjectException e) {
+      LOGGER.log(Level.INFO, "Hive table being deleted does not exist", e);
     } catch (TException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_FEATUREGROUP, Level.SEVERE,
           "Error dropping feature group in the Hive Metastore: " +  e.getMessage(), e.getMessage(), e);
