@@ -384,6 +384,23 @@ describe "On #{ENV['OS']}" do
         expect_status_details(200)
       end
 
+      it "should be able to delete a cached featuregroup from the featurestore if hive table was already deleted" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(201)
+
+        # delete feature group offlinefs directory
+        delete "#{ENV['HOPSWORKS_API']}/project/#{project.id.to_s}/dataset//apps/hive/warehouse/#{project.projectname.downcase}_featurestore.db/#{parsed_json["name"]}_#{parsed_json["version"]}"
+        expect_status_details(204)
+
+        featuregroup_id = parsed_json["id"]
+        delete_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s
+        delete delete_featuregroup_endpoint
+        expect_status_details(200)
+      end
+
       it "should be able to clear the contents of a cached featuregroup in the featurestore" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
