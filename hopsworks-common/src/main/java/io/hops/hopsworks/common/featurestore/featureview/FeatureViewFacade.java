@@ -49,7 +49,19 @@ public class FeatureViewFacade extends AbstractFacade<FeatureView> {
     return q.getResultList();
   }
 
-  public List<FeatureView> findByFeaturestore(Featurestore featurestore, QueryParam queryParam) {
+  public CollectionInfo findByFeatureStore(Featurestore featurestore, QueryParam queryParam) {
+    return new CollectionInfo(countByFeatureStore(featurestore, queryParam),
+    getByFeatureStore(featurestore, queryParam));
+  }
+
+  /**
+   * Retrieves feature views for a particular featurestore
+   *
+   * @param featurestore the featurestore to query
+   * @param queryParam
+   * @return feature view entities
+   */
+  public List<FeatureView> getByFeatureStore(Featurestore featurestore, QueryParam queryParam) {
     Map<String, Object> extraParam = new HashMap<>();
     extraParam.put("featurestore", featurestore);
     String queryStr = buildQuery("SELECT fv FROM FeatureView fv ",
@@ -60,10 +72,25 @@ public class FeatureViewFacade extends AbstractFacade<FeatureView> {
     return q.getResultList();
   }
 
-  public Long countByFeaturestore(Featurestore featurestore) {
-    return em.createNamedQuery("FeatureView.countByFeaturestore", Long.class)
-      .setParameter("featurestore", featurestore)
-      .getSingleResult();
+  /**
+   * Retrieves count of feature view for a particular featurestore
+   *
+   * @param featurestore the featurestore to query
+   * @param queryParam
+   * @return number of feature view entities
+   */
+  public Long countByFeatureStore(Featurestore featurestore, QueryParam queryParam) {
+    String queryStr = buildQuery("SELECT count(fv.id) FROM FeatureView fv ",
+      queryParam != null ? queryParam.getFilters(): null,
+      null,
+      "fv.featurestore = :featurestore ");
+
+    TypedQuery<Long> query = em.createQuery(queryStr, Long.class)
+        .setParameter("featurestore", featurestore);
+    if (queryParam != null) {
+      setFilter(queryParam.getFilters(), query);
+    }
+    return query.getSingleResult();
   }
 
   public Optional<FeatureView> findByIdAndFeatureStore(Integer id, Featurestore featureStore) {
@@ -77,45 +104,31 @@ public class FeatureViewFacade extends AbstractFacade<FeatureView> {
       return Optional.empty();
     }
   }
-  
-  public List<FeatureView> findByNameAndFeaturestore(String name, Featurestore featurestore) {
-    QueryParam queryParam = new QueryParam();
-    return findByNameAndFeaturestore(name, featurestore, queryParam);
-  }
 
-  public List<FeatureView> findByNameAndFeaturestore(String name, Featurestore featurestore,
-      QueryParam queryParam) {
-    Set<FilterBy> filters = queryParam.getFilters();
-    // Use different parameter name so do not conflict with the default one.
-    filters.add(new FeatureViewFilterBy("name", name, "name1"));
-    return findByFeaturestore(featurestore, queryParam);
-  }
-
-  public List<FeatureView> findByNameVersionAndFeaturestore(String name, Integer version,  Featurestore featurestore) {
-    QueryParam queryParam = new QueryParam();
-    return findByNameVersionAndFeaturestore(name, version, featurestore, queryParam);
-  }
-
-  public List<FeatureView> findByNameVersionAndFeaturestore(String name, Integer version,
-      Featurestore featurestore, QueryParam queryParam) {
-    Set<FilterBy> filters = queryParam.getFilters();
-    // Use different parameter name so do not conflict with the default one.
-    filters.add(new FeatureViewFilterBy("name", name, "name1"));
-    filters.add(new FeatureViewFilterBy("version", version.toString(), "version1"));
-    return findByFeaturestore(featurestore, queryParam);
+  public Optional<FeatureView> findByNameVersionAndFeaturestore(
+        String name, Integer version, Featurestore featureStore) {
+    try {
+      return Optional.of(
+        em.createNamedQuery("FeatureView.findByNameVersionAndFeaturestore", FeatureView.class)
+          .setParameter("name", name)
+          .setParameter("version", version)
+          .setParameter("featurestore", featureStore)
+          .getSingleResult());
+    } catch (NoResultException e) {
+      return Optional.empty();
+    }
   }
 
   public Integer findLatestVersion(String name, Featurestore featurestore) {
-    TypedQuery<FeatureView> query = em.createNamedQuery("FeatureView.findByFeaturestoreAndNameOrderedByDescVersion",
-        FeatureView.class);
+    TypedQuery<Integer> query = em.createNamedQuery("FeatureView.findMaxVersionByFeaturestoreAndName", Integer.class);
     query.setParameter("name", name);
     query.setParameter("featurestore", featurestore);
-    List<FeatureView> results = query.getResultList();
-    if (results != null && !results.isEmpty()) {
-      return results.get(0).getVersion();
-    } else {
-      return null;
-    }
+    return query.getSingleResult();
+  }
+
+  public List<FeatureView> findByFeatureGroup(Integer featureGroupId) {
+    return em.createNamedQuery("FeatureView.findByFeatureGroup", FeatureView.class)
+      .setParameter("featureGroupId", featureGroupId).getResultList();
   }
 
   private Query makeQuery(String queryStr, QueryParam queryParam, Map<String, Object> extraParam) {
@@ -144,6 +157,7 @@ public class FeatureViewFacade extends AbstractFacade<FeatureView> {
   private void setFilterQuery(AbstractFacade.FilterBy filterBy, Query q) {
     switch (FeatureViewFacade.Filters.valueOf(filterBy.toString())) {
       case NAME:
+      case NAME_LIKE:
         q.setParameter(filterBy.getParam(), filterBy.getValue());
         break;
       case VERSION:
@@ -154,11 +168,6 @@ public class FeatureViewFacade extends AbstractFacade<FeatureView> {
     }
   }
 
-  public List<FeatureView> findByFeatureGroup(Integer featureGroupId) {
-    return em.createNamedQuery("FeatureView.findByFeatureGroup", FeatureView.class)
-      .setParameter("featureGroupId", featureGroupId).getResultList();
-  }
-
   @Override
   protected EntityManager getEntityManager() {
     return em;
@@ -166,6 +175,8 @@ public class FeatureViewFacade extends AbstractFacade<FeatureView> {
 
   public enum Filters {
     NAME("NAME", String.format("%s.name = :%%s ", FeatureView.TABLE_NAME_ALIAS), "name", ""),
+    NAME_LIKE("NAME_LIKE", String.format("%s.name LIKE CONCAT('%%%%', :%%s, '%%%%') ", FeatureView.TABLE_NAME_ALIAS),
+        "name", ""),
     VERSION("VERSION", String.format("%s.version = :%%s ", FeatureView.TABLE_NAME_ALIAS), "version", ""),
     LATEST_VERSION("LATEST_VERSION", String.format("%1$s.version = ( " +
         "SELECT MAX(%2$s.version) " +

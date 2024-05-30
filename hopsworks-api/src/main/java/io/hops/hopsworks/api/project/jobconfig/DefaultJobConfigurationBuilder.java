@@ -84,10 +84,7 @@ public class DefaultJobConfigurationBuilder {
         resourceRequest.getLimit(),
         resourceRequest.getFilter(),
         resourceRequest.getSort(), project);
-      //set the count
-      if (collectionInfo.getCount() > 0) {
-        dto.setCount(collectionInfo.getCount());
-      }
+      dto.setCount(collectionInfo.getCount());
       collectionInfo.getItems().forEach((config) -> dto.addItem(build(uriInfo, resourceRequest,
         (DefaultJobConfiguration) config,
         ((DefaultJobConfiguration) config).getDefaultJobConfigurationPK().getType())));

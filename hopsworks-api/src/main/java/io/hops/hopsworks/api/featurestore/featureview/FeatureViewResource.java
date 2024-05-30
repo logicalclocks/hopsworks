@@ -24,7 +24,6 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.JWTNotRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.QueryParam;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewDTO;
@@ -44,6 +43,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featureview.ServingKey;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
+import io.hops.hopsworks.persistence.entity.util.AbstractFacade;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -68,7 +68,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -163,12 +162,13 @@ public class FeatureViewResource extends FeaturestoreSubResource {
     Project project = getProject();
     Featurestore featurestore = getFeaturestore(project);
     ResourceRequest resourceRequest = makeResourceRequest(param);
-    List<FeatureView> featureViews = featureViewController.getByFeatureStore(featurestore,
-        convertToQueryParam(resourceRequest));
 
-    return Response.ok()
-        .entity(featureViewBuilder.build(featureViews, resourceRequest, project, user, uriInfo))
-        .build();
+    AbstractFacade.CollectionInfo<FeatureView> featureviews = featureViewController.findByFeatureStore(featurestore,
+        resourceRequest.convertToQueryParam());
+    FeatureViewDTO featureViewDTO =
+      featureViewBuilder.build(featureviews, featurestore, project, user, uriInfo, resourceRequest);
+
+    return Response.ok().entity(featureViewDTO).build();
   }
 
   @GET
@@ -198,12 +198,13 @@ public class FeatureViewResource extends FeaturestoreSubResource {
     Project project = getProject();
     Featurestore featurestore = getFeaturestore(project);
     ResourceRequest resourceRequest = makeResourceRequest(param);
-    List<FeatureView> featureViews = featureViewController.getByNameAndFeatureStore(name, featurestore,
-        convertToQueryParam(resourceRequest));
 
-    return Response.ok()
-        .entity(featureViewBuilder.build(featureViews, resourceRequest, project, user, uriInfo))
-        .build();
+    AbstractFacade.CollectionInfo<FeatureView> featureviews = featureViewController
+        .findByNameAndFeatureStore(name, featurestore, resourceRequest.convertToQueryParam());
+    FeatureViewDTO featureViewDTO =
+      featureViewBuilder.build(featureviews, featurestore, project, user, uriInfo, resourceRequest);
+
+    return Response.ok().entity(featureViewDTO).build();
   }
 
   @GET
@@ -412,14 +413,5 @@ public class FeatureViewResource extends FeaturestoreSubResource {
     resourceRequest.setFilter(param.getFilters());
     resourceRequest.setExpansions(param.getExpansion().getResources());
     return resourceRequest;
-  }
-
-  private QueryParam convertToQueryParam(ResourceRequest resourceRequest) {
-    return new QueryParam(
-        resourceRequest.getOffset(),
-        resourceRequest.getLimit(),
-        resourceRequest.getFilter() == null ? new HashSet<>() : new HashSet<>(resourceRequest.getFilter()),
-        resourceRequest.getSort() == null ? new HashSet<>() : new HashSet<>(resourceRequest.getSort())
-    );
   }
 }

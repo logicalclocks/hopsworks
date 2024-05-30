@@ -20,6 +20,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import io.hops.hopsworks.common.commands.featurestore.search.SearchFSCommandLogger;
+import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.QueryParam;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
@@ -60,6 +61,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -120,9 +122,9 @@ public class FeatureViewController {
     }
 
     // Check that feature view doesn't already exists
-    if (!featureViewFacade
-        .findByNameVersionAndFeaturestore(featureView.getName(), featureView.getVersion(), featurestore)
-        .isEmpty()) {
+    if (featureViewFacade
+          .findByNameVersionAndFeaturestore(featureView.getName(), featureView.getVersion(), featurestore)
+          .isPresent()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_VIEW_ALREADY_EXISTS, Level.FINE,
           "Feature view: " + featureView.getName() + ", version: " + featureView.getVersion());
     }
@@ -181,15 +183,20 @@ public class FeatureViewController {
     return featureViewFacade.findAll();
   }
 
-  public List<FeatureView> getByFeatureStore(Featurestore featurestore, QueryParam queryParam) {
-    return featureViewFacade.findByFeaturestore(featurestore, queryParam);
+  public AbstractFacade.CollectionInfo<FeatureView> findByFeatureStore(
+        Featurestore featurestore, QueryParam queryParam) {
+    return featureViewFacade.findByFeatureStore(featurestore, queryParam);
   }
 
-  public List<FeatureView> getByNameAndFeatureStore(String name, Featurestore featurestore, QueryParam queryParam)
+  public AbstractFacade.CollectionInfo<FeatureView> findByNameAndFeatureStore(
+        String name, Featurestore featurestore, QueryParam queryParam)
       throws FeaturestoreException {
-    List<FeatureView> featureViews = featureViewFacade.findByNameAndFeaturestore(
-        name, featurestore, queryParam);
-    if (featureViews.isEmpty()) {
+    Set<FeatureViewFacade.FilterBy> filters = queryParam.getFilters();
+    // Use different parameter name so do not conflict with the default one.
+    filters.add(new FeatureViewFilterBy("name", name, "name1"));
+    AbstractFacade.CollectionInfo<FeatureView> featureViews =
+      featureViewFacade.findByFeatureStore(featurestore, queryParam);
+    if (featureViews.getItems().isEmpty()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_VIEW_NOT_FOUND,
           Level.FINE, String.format("There exists no feature view with the name %s.", name));
     }
@@ -207,24 +214,23 @@ public class FeatureViewController {
 
   public FeatureView getByNameVersionAndFeatureStore(String name, Integer version, Featurestore featurestore)
       throws FeaturestoreException {
-    List<FeatureView> featureViews = featureViewFacade.findByNameVersionAndFeaturestore(name, version, featurestore);
-    if (featureViews.isEmpty()) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_VIEW_NOT_FOUND,
-          Level.FINE, String.format("There exists no feature view with the name %s and version %d.", name, version));
-    }
-    return featureViews.get(0);
+    return featureViewFacade.findByNameVersionAndFeaturestore(name, version, featurestore)
+      .orElseThrow(() -> new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.FEATURE_VIEW_NOT_FOUND,
+        Level.FINE,
+        String.format("There exists no feature view with the name %s and version %d.", name, version)));
   }
 
   public void delete(Users user, Project project, Featurestore featurestore, String name)
       throws FeaturestoreException, JobException {
-    List<FeatureView> featureViews = featureViewFacade.findByNameAndFeaturestore(name, featurestore);
+    List<FeatureView> featureViews = findByNameAndFeatureStore(name, featurestore, null).getItems();
     delete(user, project, featurestore, featureViews);
   }
 
   public void delete(Users user, Project project, Featurestore featurestore, String name, Integer version)
       throws FeaturestoreException, JobException {
-    List<FeatureView> featureViews = featureViewFacade.findByNameVersionAndFeaturestore(name, version, featurestore);
-    delete(user, project, featurestore, featureViews);
+    FeatureView featureView = getByNameVersionAndFeatureStore(name, version, featurestore);
+    delete(user, project, featurestore, Arrays.asList(featureView));
   }
 
   private void delete(Users user, Project project, Featurestore featurestore, List<FeatureView> featureViews)

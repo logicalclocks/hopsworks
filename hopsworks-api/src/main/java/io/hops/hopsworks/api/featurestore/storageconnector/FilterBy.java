@@ -29,7 +29,7 @@ public class FilterBy implements AbstractFacade.FilterBy {
       this.filter = FeaturestoreConnectorFacade.Filters.valueOf(param.substring(0, param.indexOf(':')).toUpperCase());
       this.param = param.substring(param.indexOf(':') + 1);
     } else {
-      this.filter = FeaturestoreConnectorFacade.Filters.valueOf(param);
+      this.filter = FeaturestoreConnectorFacade.Filters.valueOf(param.toUpperCase());
       this.param = this.filter.getDefaultParam();
     }
   }

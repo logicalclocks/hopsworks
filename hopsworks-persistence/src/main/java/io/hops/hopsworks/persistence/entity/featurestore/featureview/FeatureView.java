@@ -51,18 +51,13 @@ import java.util.Objects;
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "FeatureView.findAll", query = "SELECT fv FROM FeatureView fv"),
-    @NamedQuery(name = "FeatureView.findById", query = "SELECT fv FROM FeatureView fv WHERE fv.id = :id"),
     @NamedQuery(name = "FeatureView.findByIdAndFeaturestore", query = "SELECT fv FROM FeatureView fv " +
         "WHERE fv.featurestore = :featurestore AND fv.id = :id"),
-    @NamedQuery(name = "FeatureView.findByFeaturestore", query = "SELECT fv FROM FeatureView fv " +
-        "WHERE fv.featurestore = :featurestore"),
-    @NamedQuery(name = "FeatureView.findByFeaturestoreAndNameVersion",
-        query = "SELECT fv FROM FeatureView fv WHERE fv.featurestore = :featurestore " +
-            "AND fv.name= :name AND fv.version = :version"),
-    @NamedQuery(name = "FeatureView.findByFeaturestoreAndNameOrderedByDescVersion", query = "SELECT fv FROM " +
-        "FeatureView fv WHERE fv.featurestore = :featurestore AND fv.name = :name ORDER BY fv.version DESC"),
-    @NamedQuery(name = "FeatureView.countByFeaturestore", query = "SELECT count(fv.id) FROM FeatureView fv " +
-        "WHERE fv.featurestore = :featurestore"),
+    @NamedQuery(name = "FeatureView.findByNameVersionAndFeaturestore", query = "SELECT fv FROM FeatureView fv " +
+        "WHERE fv.featurestore = :featurestore AND fv.name = :name AND fv.version = :version"),
+    @NamedQuery(name = "FeatureView.findMaxVersionByFeaturestoreAndName", query = 
+        "SELECT MAX(fv.version) FROM FeatureView fv " +
+        "WHERE fv.featurestore = :featurestore AND fv.name = :name"),
     @NamedQuery(name = "FeatureView.findByFeatureGroup", query = "SELECT DISTINCT fv FROM FeatureView fv " +
         "JOIN fv.features tdf WHERE tdf.featureGroup.id = :featureGroupId")})
 public class FeatureView implements Serializable {

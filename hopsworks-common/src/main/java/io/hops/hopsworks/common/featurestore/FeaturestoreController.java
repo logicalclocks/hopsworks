@@ -25,6 +25,7 @@ import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConne
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorDTO;
+import io.hops.hopsworks.common.featurestore.storageconnectors.StorageConnectorUtil;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -55,6 +56,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -93,6 +95,8 @@ public class FeaturestoreController {
   private ProjectTeamFacade projectTeamFacade;
   @EJB
   private FeatureViewFacade featureViewFacade;
+  @EJB
+  private StorageConnectorUtil storageConnectorUtil;
 
   /*
    * Retrieves a list of all featurestores for a particular project
@@ -320,10 +324,11 @@ public class FeaturestoreController {
     }
 
     // add counters
-    featurestoreDTO.setNumFeatureGroups(featuregroupFacade.countByFeaturestore(featurestore));
+    featurestoreDTO.setNumFeatureGroups(featuregroupFacade.countByFeatureStore(featurestore, null));
     featurestoreDTO.setNumTrainingDatasets(trainingDatasetFacade.countByFeaturestore(featurestore));
-    featurestoreDTO.setNumStorageConnectors(connectorFacade.countByFeaturestore(featurestore));
-    featurestoreDTO.setNumFeatureViews(featureViewFacade.countByFeaturestore(featurestore));
+    Set<FeaturestoreConnectorType> enabledScTypes = storageConnectorUtil.getEnabledStorageConnectorTypes();
+    featurestoreDTO.setNumStorageConnectors(connectorFacade.countByFeaturestore(featurestore, enabledScTypes, null));
+    featurestoreDTO.setNumFeatureViews(featureViewFacade.countByFeatureStore(featurestore, null));
 
     return featurestoreDTO;
   }

@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.storageconnectors;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.QueryParam;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
@@ -60,8 +61,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.transaction.Transactional;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
@@ -110,21 +109,17 @@ public class FeaturestoreStorageConnectorController {
   private static final String KAFKA_STORAGE_CONNECTOR_NAME = "kafka_connector";
 
   /**
-   * Returns a list with DTOs of all storage connectors for a featurestore
+   * Returns a list of all storage connectors for a featurestore
    *
-   * @param user the user making the request
-   * @param project the project to query
    * @param featurestore the featurestore to query
    * @param queryParam the queryParam
-   * @return List of JSON/XML DTOs of the storage connectors
+   * @return CollectionInfo object
    */
-  public List<FeaturestoreStorageConnectorDTO> getConnectorsForFeaturestore(Users user, Project project,
+  public AbstractFacade.CollectionInfo<FeaturestoreConnector> findByFeaturestore(
         Featurestore featurestore, QueryParam queryParam)
       throws FeaturestoreException {
     Set<FeaturestoreConnectorType> enabledScTypes = storageConnectorUtil.getEnabledStorageConnectorTypes();
-    List<FeaturestoreConnector> connectors = featurestoreConnectorFacade.findByType(featurestore,
-        enabledScTypes, queryParam);
-    return convertToConnectorDTOs(user, project, connectors);
+    return featurestoreConnectorFacade.findByFeaturestoreAndTypes(featurestore, enabledScTypes, queryParam);
   }
 
   public FeaturestoreConnector getConnectorWithName(Users user, Project project,
@@ -151,18 +146,6 @@ public class FeaturestoreStorageConnectorController {
       throws FeaturestoreException {
     FeaturestoreConnector featurestoreConnector = getConnectorWithName(user, project, featurestore, connectorName);
     return convertToConnectorDTO(user, project, featurestoreConnector);
-  }
-
-  public List<FeaturestoreStorageConnectorDTO> convertToConnectorDTOs(Users user, Project project,
-                                                                     List<FeaturestoreConnector> featurestoreConnectors)
-          throws FeaturestoreException {
-    List<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOS = new ArrayList<>();
-
-    for (FeaturestoreConnector featurestoreConnector : featurestoreConnectors) {
-      featurestoreStorageConnectorDTOS.add(convertToConnectorDTO(user, project, featurestoreConnector));
-    }
-
-    return featurestoreStorageConnectorDTOS;
   }
 
   public FeatureStoreKafkaConnectorDTO getKafkaConnector(Project project)

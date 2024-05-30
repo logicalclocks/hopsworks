@@ -69,16 +69,6 @@ import java.util.Objects;
         + " AND (fg.onDemandFeaturegroup IS NOT null "
         + "OR fg.cachedFeaturegroup IS NOT null "
         + "OR fg.streamFeatureGroup IS NOT null)"),
-    @NamedQuery(name = "Featuregroup.findByFeaturestore", query = "SELECT fg FROM Featuregroup fg " +
-        "WHERE fg.featurestore = :featurestore"
-        + " AND (fg.onDemandFeaturegroup IS NOT null "
-        + "OR fg.cachedFeaturegroup IS NOT null "
-        + "OR fg.streamFeatureGroup IS NOT null)"),
-    @NamedQuery(name = "Featuregroup.countByFeaturestore", query = "SELECT count(fg.id) FROM Featuregroup fg " +
-        "WHERE fg.featurestore = :featurestore"
-        + " AND (fg.onDemandFeaturegroup IS NOT null "
-        + "OR fg.cachedFeaturegroup IS NOT null "
-        + "OR fg.streamFeatureGroup IS NOT null)"),
     @NamedQuery(name = "Featuregroup.findByFeaturestoreAndId", query = "SELECT fg FROM Featuregroup fg " +
         "WHERE fg.featurestore = :featurestore AND fg.id = :id"),
     @NamedQuery(name = "Featuregroup.findByFeaturestoreAndNameVersion", query = "SELECT fg FROM Featuregroup fg " +

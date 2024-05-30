@@ -3180,12 +3180,6 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
 
         # create some feature groups
-        create_cached_featuregroup(project.id, featurestore_id)
-        expect_status_details(201)
-
-        create_cached_featuregroup(project.id, featurestore_id)
-        expect_status_details(201)
-
         create_cached_featuregroup(project.id, featurestore_id, featuregroup_name:"featuregroup1", version:1)
         expect_status_details(201)
 
@@ -3193,6 +3187,12 @@ describe "On #{ENV['OS']}" do
         expect_status_details(201)
 
         create_cached_featuregroup(project.id, featurestore_id, featuregroup_name:"featuregroup1", version:3)
+        expect_status_details(201)
+
+        create_cached_featuregroup(project.id, featurestore_id, featuregroup_name:"featuregroup2", version:1)
+        expect_status_details(201)
+
+        create_cached_featuregroup(project.id, featurestore_id, featuregroup_name:"featuregroup3", version:1)
         expect_status_details(201)
       end
 
@@ -3207,25 +3207,25 @@ describe "On #{ENV['OS']}" do
         get get_featuregroups_endpoint
         parsed_json = JSON.parse(response.body)
         expect_status_details(200)
-        old_count = parsed_json.length
+        old_count = parsed_json["items"].size
 
         # create fg
-        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, featuregroup_name:"featuregroup4", version:1)
         expect_status_details(201)
 
         # get fgs
         get get_featuregroups_endpoint
         parsed_json = JSON.parse(response.body)
         expect_status_details(200)
-        count = parsed_json.length
+        count = parsed_json["items"].size
 
         # ensure that the created fg is in returned fgs
         expect(count).to eq(old_count + 1)
-        expect(parsed_json[0].key?("id")).to be true
-        expect(parsed_json[0].key?("featurestoreName")).to be true
-        expect(parsed_json[0].key?("name")).to be true
-        expect(parsed_json[0]["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
-        expect(parsed_json.any? { |fg| fg["name"] == featuregroup_name }).to be true
+        expect(parsed_json["items"][0].key?("id")).to be true
+        expect(parsed_json["items"][0].key?("featurestoreName")).to be true
+        expect(parsed_json["items"][0].key?("name")).to be true
+        expect(parsed_json["items"][0]["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
+        expect(parsed_json["items"].any? { |fg| fg["name"] == featuregroup_name }).to be true
       end
 
       it "should be able to list all featuregroups of the project's featurestore sorted by name" do
@@ -3235,10 +3235,10 @@ describe "On #{ENV['OS']}" do
         # get fgs
         get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups?sort_by=NAME:asc"
         expect_status_details(200)
-        names = json_body.map { |o| "#{o[:name]}" }
+        names = json_body[:items].map { |o| "#{o[:name]}" }
         sorted_names = names.sort_by(&:downcase)
 
-        expect(json_body.length).to eq(6)
+        expect(json_body[:items].size).to eq(6)
         expect(names).to eq(sorted_names)
       end
 
@@ -3249,10 +3249,11 @@ describe "On #{ENV['OS']}" do
         # get fgs
         get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups?sort_by=NAME:asc,VERSION:asc"
         expect_status_details(200)
-        names_versions = json_body.map { |o| "#{o[:name]}_#{o[:version]}" }
+        names_versions = json_body[:items].map { |o| "#{o[:name]}_#{o[:version]}" }
         sorted_names_versions = names_versions.sort_by(&:downcase)
 
-        expect(json_body.length).to eq(6)
+        expect(json_body[:items].size).to eq(6)
+        expect(json_body[:count]).to eq(6)
         expect(names_versions).to eq(sorted_names_versions)
       end
 
@@ -3264,8 +3265,22 @@ describe "On #{ENV['OS']}" do
         get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups?filter_by=NAME:featuregroup1"
         expect_status_details(200)
 
-        expect(json_body.length).to eq(3)
-        expect(json_body.all? { |fg| fg[:name] == "featuregroup1" }).to be true
+        expect(json_body[:items].size).to eq(3)
+        expect(json_body[:count]).to eq(3)
+        expect(json_body[:items].all? { |fg| fg[:name] == "featuregroup1" }).to be true
+      end
+
+      it "should be able to list all featuregroups of the project's featurestore filtered by name like" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+
+        # get fgs
+        get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups?filter_by=NAME_LIKE:group1"
+        expect_status_details(200)
+
+        expect(json_body[:items].size).to eq(3)
+        expect(json_body[:count]).to eq(3)
+        expect(json_body[:items].all? { |fg| fg[:name] == "featuregroup1" }).to be true
       end
 
       it "should be able to list all featuregroups of the project's featurestore filtered by latest_version" do
@@ -3275,11 +3290,12 @@ describe "On #{ENV['OS']}" do
         # get fgs
         get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups?filter_by=latest_version"
         expect_status_details(200)
-        names = json_body.map { |o| "#{o[:name]}" }
+        names = json_body[:items].map { |o| "#{o[:name]}" }
 
-        expect(json_body.length).to eq(3)
-        expect(json_body.length).to eq(names.uniq.size)
-        expect(json_body.any? { |fg| fg[:name] == "featuregroup1" && fg[:version] == 3}).to be true
+        expect(json_body[:items].size).to eq(4)
+        expect(json_body[:count]).to eq(4)
+        expect(json_body[:items].size).to eq(names.uniq.size)
+        expect(json_body[:items].any? { |fg| fg[:name] == "featuregroup1" && fg[:version] == 3}).to be true
       end
 
       it "should be able to list all featuregroups of the project's featurestore filtered by name and version" do
@@ -3290,9 +3306,9 @@ describe "On #{ENV['OS']}" do
         get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups?filter_by=NAME:featuregroup1&filter_by=VERSION:2"
         expect_status_details(200)
 
-        expect(json_body.length).to eq(1)
-        expect(json_body.all? { |fg| fg[:name] == "featuregroup1" }).to be true
-        expect(json_body.all? { |fg| fg[:version] == 2 }).to be true
+        expect(json_body[:items].size).to eq(1)
+        expect(json_body[:items].all? { |fg| fg[:name] == "featuregroup1" }).to be true
+        expect(json_body[:items].all? { |fg| fg[:version] == 2 }).to be true
       end
 
       it "should be able to list all featuregroups of the project's featurestore limit" do
@@ -3303,7 +3319,8 @@ describe "On #{ENV['OS']}" do
         get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups?sort_by=NAME:asc&limit=2"
         expect_status_details(200)
 
-        expect(json_body.length).to eq(2)
+        expect(json_body[:items].size).to eq(2)
+        expect(json_body[:count]).to eq(6)
       end
 
       it "should be able to list all featuregroups of the project's featurestore offset" do
@@ -3313,14 +3330,15 @@ describe "On #{ENV['OS']}" do
         # get fgs
         get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups?sort_by=NAME:asc"
         expect_status_details(200)
-        names = json_body.map { |o| "#{o[:name]}" }
+        names = json_body[:items].map { |o| "#{o[:name]}" }
 
         get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups?sort_by=NAME:asc&offset=1"
         expect_status_details(200)
-        names_with_offset = json_body.map { |o| "#{o[:name]}" }
+        names_with_offset = json_body[:items].map { |o| "#{o[:name]}" }
 
-        expect(json_body.length).to eq(5)
-        for i in 0..json_body.length-1 do
+        expect(json_body[:items].size).to eq(5)
+        expect(json_body[:count]).to eq(6)
+        for i in 0..json_body[:items].size-1 do
           expect(names[i+1]).to eq(names_with_offset[i])
         end
       end

@@ -67,6 +67,7 @@ import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
+import io.hops.hopsworks.persistence.entity.util.AbstractFacade;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -98,7 +99,6 @@ import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -217,18 +217,21 @@ public class FeaturegroupService extends FeaturestoreSubResource {
       @Context
           HttpServletRequest req,
       @Context
-          SecurityContext sc)
+          SecurityContext sc,
+      @Context
+          UriInfo uriInfo)
       throws FeaturestoreException, ServiceException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
     Project project = getProject();
     Featurestore featurestore = getFeaturestore(project);
     ResourceRequest resourceRequest = makeResourceRequest(featureGroupBeanParam);
-    List<Featuregroup> featuregroups = featuregroupController
-        .getFeaturegroupsForFeaturestore(featurestore, project, user, convertToQueryParam(resourceRequest));
-    GenericEntity<List<FeaturegroupDTO>> featuregroupsGeneric =
-        new GenericEntity<List<FeaturegroupDTO>>(
-            featuregroupBuilder.build(featuregroups, project, user, resourceRequest)) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupsGeneric).build();
+
+    AbstractFacade.CollectionInfo<Featuregroup> featureGroups = featuregroupController.findByFeatureStore(featurestore,
+        resourceRequest.convertToQueryParam());
+    FeaturegroupDTO featuregroupDTO =
+      featuregroupBuilder.build(featureGroups, featurestore, project, user, resourceRequest, uriInfo);
+
+    return Response.ok().entity(featuregroupDTO).build();
   }
 
   /**
@@ -792,14 +795,5 @@ public class FeaturegroupService extends FeaturestoreSubResource {
     resourceRequest.setFilter(param.getFilters());
     resourceRequest.setExpansions(param.getExpansion().getResources());
     return resourceRequest;
-  }
-
-  private io.hops.hopsworks.common.dao.QueryParam convertToQueryParam(ResourceRequest resourceRequest) {
-    return new io.hops.hopsworks.common.dao.QueryParam(
-        resourceRequest.getOffset(),
-        resourceRequest.getLimit(),
-        resourceRequest.getFilter() == null ? new HashSet<>() : new HashSet<>(resourceRequest.getFilter()),
-        resourceRequest.getSort() == null ? new HashSet<>() : new HashSet<>(resourceRequest.getSort())
-    );
   }
 }
