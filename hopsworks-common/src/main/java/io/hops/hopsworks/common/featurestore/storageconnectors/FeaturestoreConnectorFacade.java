@@ -29,6 +29,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -76,17 +77,6 @@ public class FeaturestoreConnectorFacade extends AbstractFacade<FeaturestoreConn
         .getResultList();
   }
 
-  public Optional<FeaturestoreConnector> findByFeaturestoreId(Featurestore featurestore, Integer id) {
-    try {
-      return Optional.of(em.createNamedQuery("FeaturestoreConnector.findByFeaturestoreId", FeaturestoreConnector.class)
-          .setParameter("featurestore", featurestore)
-          .setParameter("id", id)
-          .getSingleResult());
-    } catch (NoResultException e) {
-      return Optional.empty();
-    }
-  }
-
   public Optional<FeaturestoreConnector> findByFeaturestoreName(Featurestore featurestore, String name) {
     try {
       return Optional.of(em.createNamedQuery("FeaturestoreConnector.findByFeaturestoreName",
@@ -99,7 +89,13 @@ public class FeaturestoreConnectorFacade extends AbstractFacade<FeaturestoreConn
     }
   }
 
-  public List<FeaturestoreConnector> findByType(Featurestore featurestore, Set<FeaturestoreConnectorType> types,
+  public CollectionInfo findByFeaturestoreAndTypes(Featurestore featurestore, Set<FeaturestoreConnectorType> types,
+        QueryParam queryParam) {
+    return new CollectionInfo(countByFeaturestore(featurestore, types, queryParam),
+        getByType(featurestore, types, queryParam));
+  }
+
+  private List<FeaturestoreConnector> getByType(Featurestore featurestore, Set<FeaturestoreConnectorType> types,
         QueryParam queryParam) {
     String queryStr = buildQuery("SELECT fsConn FROM FeaturestoreConnector fsConn ",
       queryParam != null ? queryParam.getFilters(): null,
@@ -120,10 +116,27 @@ public class FeaturestoreConnectorFacade extends AbstractFacade<FeaturestoreConn
     findByFeaturestoreName(featurestore, name).ifPresent(this::remove);
   }
 
-  public Long countByFeaturestore(Featurestore featurestore) {
-    return em.createNamedQuery("FeaturestoreConnector.countByFeaturestore", Long.class)
+  /**
+   * Retrieves count of storage connectors for a particular featurestore
+   *
+   * @param featurestore the featurestore to query
+   * @param queryParam
+   * @return number of storage connector entities
+   */
+  public Long countByFeaturestore(Featurestore featurestore, Set<FeaturestoreConnectorType> types,
+        QueryParam queryParam) {
+    String queryStr = buildQuery("SELECT count(fsConn.id) FROM FeaturestoreConnector fsConn ",
+      queryParam != null ? queryParam.getFilters(): null,
+      null,
+      "fsConn.featurestore = :featurestore AND fsConn.connectorType IN :types");
+
+    TypedQuery<Long> query = em.createQuery(queryStr, Long.class)
         .setParameter("featurestore", featurestore)
-        .getSingleResult();
+        .setParameter("types", types);
+    if (queryParam != null) {
+      setFilter(queryParam.getFilters(), query);
+    }
+    return query.getSingleResult();
   }
 
   private void setFilter(Set<? extends AbstractFacade.FilterBy> filters, Query q) {
@@ -137,6 +150,10 @@ public class FeaturestoreConnectorFacade extends AbstractFacade<FeaturestoreConn
 
   private void setFilterQuery(FilterBy filter, Query q) {
     switch (Filters.valueOf(filter.getValue())) {
+      case NAME:
+      case NAME_LIKE:
+        q.setParameter(filter.getField(), filter.getParam());
+        break;
       case TYPE:
         q.setParameter(filter.getField(), FeaturestoreConnectorType.valueOf(filter.getParam().toUpperCase()));
         break;
@@ -146,6 +163,8 @@ public class FeaturestoreConnectorFacade extends AbstractFacade<FeaturestoreConn
   }
 
   public enum Filters {
+    NAME("NAME", "fsConn.name = :name", "name", ""),
+    NAME_LIKE("NAME_LIKE", "fsConn.name LIKE CONCAT('%', :name, '%') ", "name", ""),
     TYPE("TYPE", "fsConn.connectorType = :type", "type", "");
 
     private final String value;

@@ -39,10 +39,12 @@ import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
+import io.hops.hopsworks.persistence.entity.util.AbstractFacade;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -70,8 +72,8 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import java.util.HashSet;
-import java.util.List;
+import javax.ws.rs.core.UriInfo;
+
 import java.util.Set;
 import java.util.logging.Level;
 
@@ -98,6 +100,8 @@ public class FeaturestoreStorageConnectorService extends FeaturestoreSubResource
   private StorageConnectorUtil storageConnectorUtil;
   @EJB
   private ConnectionChecker connectionChecker;
+  @EJB
+  private FeaturestoreStorageConnectorBuilder featurestoreStorageConnectorBuilder;
   @Inject
   private StorageConnectorProvenanceResource provenanceResource;
 
@@ -128,19 +132,20 @@ public class FeaturestoreStorageConnectorService extends FeaturestoreSubResource
     response = FeaturestoreStorageConnectorDTO.class, responseContainer = "List")
   public Response getStorageConnectors(@BeanParam StorageConnectorBeanParam storageConnectorBeanParam,
                                        @Context SecurityContext sc,
-                                       @Context HttpServletRequest req)
+                                       @Context HttpServletRequest req,
+                                       @Context UriInfo uriInfo)
       throws FeaturestoreException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
     Project project = getProject();
     Featurestore featurestore = getFeaturestore(project);
     ResourceRequest resourceRequest = makeResourceRequest(storageConnectorBeanParam);
-    List<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOS = storageConnectorController
-        .getConnectorsForFeaturestore(user, project, featurestore, convertToQueryParam(resourceRequest));
+    AbstractFacade.CollectionInfo<FeaturestoreConnector> connectors = storageConnectorController
+        .findByFeaturestore(featurestore, resourceRequest.convertToQueryParam());
+    FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO =
+        featurestoreStorageConnectorBuilder.build(connectors, featurestore, project, user, resourceRequest, uriInfo);
 
-    GenericEntity<List<FeaturestoreStorageConnectorDTO>> featurestoreStorageConnectorsGeneric =
-      new GenericEntity<List<FeaturestoreStorageConnectorDTO>>(featurestoreStorageConnectorDTOS) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featurestoreStorageConnectorsGeneric)
-      .build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
+        .entity(featurestoreStorageConnectorDTO).build();
   }
   
   @GET
@@ -429,14 +434,5 @@ public class FeaturestoreStorageConnectorService extends FeaturestoreSubResource
     resourceRequest.setSort(param.getParsedSortBy());
     resourceRequest.setFilter(param.getFilters());
     return resourceRequest;
-  }
-
-  private io.hops.hopsworks.common.dao.QueryParam convertToQueryParam(ResourceRequest resourceRequest) {
-    return new io.hops.hopsworks.common.dao.QueryParam(
-        resourceRequest.getOffset(),
-        resourceRequest.getLimit(),
-        resourceRequest.getFilter() == null ? new HashSet<>() : new HashSet<>(resourceRequest.getFilter()),
-        resourceRequest.getSort() == null ? new HashSet<>() : new HashSet<>(resourceRequest.getSort())
-    );
   }
 }

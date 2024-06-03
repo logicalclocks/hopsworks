@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.models.version;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.dao.QueryParam;
 import io.hops.hopsworks.persistence.entity.models.version.ModelVersion;
 import io.hops.hopsworks.persistence.entity.project.Project;
 
@@ -26,6 +27,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -46,26 +48,39 @@ public class ModelVersionFacade extends AbstractFacade<ModelVersion> {
     return em;
   }
 
-  public CollectionInfo findByProject(Integer offset, Integer limit,
-                                    Set<? extends AbstractFacade.FilterBy> filters,
-                                    Set<? extends AbstractFacade.SortBy> sorts,
-                                    Project project) {
+  public CollectionInfo findByProject(Project project, QueryParam queryParam) {
+    return new CollectionInfo(countByProject(project, queryParam), getByProject(project, queryParam));
+  }
 
-    String queryStr = buildQuery(
-      "SELECT * FROM hopsworks.`model_version` JOIN `hopsworks`.model ON `hopsworks`.model_version.model_id=model.id ",
-      filters, sorts, "`hopsworks`.model.project_id = ?project_id ");
+  private List<ModelVersion> getByProject(Project project, QueryParam queryParam) {
+    String queryStr = buildQuery("SELECT * FROM hopsworks.`model_version` mv " +
+      "JOIN `hopsworks`.model m ON mv.model_id=m.id ",
+      queryParam != null ? queryParam.getFilters(): null,
+      queryParam != null ? queryParam.getSorts(): null,
+      "m.project_id = ?project_id ");
 
-    String queryCountStr =
-      buildQuery("SELECT COUNT(DISTINCT concat(model_version.model_id, model_version.version)) " +
-          "FROM hopsworks.`model_version` JOIN `hopsworks`.model ON `hopsworks`.model_version.model_id=model.id ",
-        filters, sorts, "`hopsworks`.model.project_id = ?project_id ");
+    Query query = em.createNativeQuery(queryStr, ModelVersion.class)
+        .setParameter("project_id", project.getId());
+    if (queryParam != null) {
+      setFilter(queryParam.getFilters(), query);
+      setOffsetAndLim(queryParam.getOffset(), queryParam.getLimit(), query);
+    }
+    return query.getResultList();
+  }
 
-    Query query = em.createNativeQuery(queryStr, ModelVersion.class).setParameter("project_id", project.getId());
-    Query queryCount = em.createNativeQuery(queryCountStr).setParameter("project_id", project.getId());
-    setFilter(filters, query);
-    setFilter(filters, queryCount);
-    setOffsetAndLim(offset, limit, query);
-    return new CollectionInfo((Long)queryCount.getSingleResult(), query.getResultList());
+  private Long countByProject(Project project, QueryParam queryParam) {
+    String queryStr = buildQuery("SELECT COUNT(mv.id) FROM hopsworks.`model_version` mv " +
+      "JOIN `hopsworks`.model m ON mv.model_id=m.id ",
+      queryParam != null ? queryParam.getFilters(): null,
+      null,
+      "m.project_id = ?project_id ");
+
+    Query query = em.createNativeQuery(queryStr)
+        .setParameter("project_id", project.getId());
+    if (queryParam != null) {
+      setFilter(queryParam.getFilters(), query);
+    }
+    return (Long) query.getSingleResult();
   }
 
   public ModelVersion findByProjectAndMlId(Integer modelId, Integer version) {
@@ -91,8 +106,10 @@ public class ModelVersionFacade extends AbstractFacade<ModelVersion> {
     switch (Filters.valueOf(filterBy.getValue())) {
       case NAME_EQ:
       case NAME_LIKE:
-      case VERSION:
         q.setParameter(filterBy.getField(), filterBy.getParam());
+        break;
+      case VERSION:
+        q.setParameter(filterBy.getField(), Integer.valueOf(filterBy.getParam()));
         break;
       default:
         break;
@@ -100,9 +117,9 @@ public class ModelVersionFacade extends AbstractFacade<ModelVersion> {
   }
 
   public enum Sorts {
-    NAME("NAME", "`hopsworks`.model.name " , "ASC"),
-    METRIC("METRIC", "JSON_VALUE(`metrics`, '$.attributes.METRIC') IS NULL, " +
-            "CAST(JSON_VALUE(`metrics`, '$.attributes.METRIC') AS FLOAT) ",
+    NAME("NAME", "m.name " , "ASC"),
+    METRIC("METRIC", "JSON_VALUE(mv.metrics, '$.attributes.METRIC') IS NULL, " +
+            "CAST(JSON_VALUE(mv.metrics, '$.attributes.METRIC') AS FLOAT) ",
             "ASC"); //sort twice needed to make sure nulls always at the end of sorted items
     private final String value;
     private final String sql;
@@ -151,14 +168,19 @@ public class ModelVersionFacade extends AbstractFacade<ModelVersion> {
   }
   public enum Filters {
     NAME_EQ ("NAME_EQ",
-      "`hopsworks`.model.name = ?name",
+      "m.name = ?name",
       "name", ""),
     NAME_LIKE ("NAME_LIKE",
-      "`hopsworks`.model.name LIKE CONCAT('%', ?name, '%') ",
+      "m.name LIKE CONCAT('%', ?name, '%') ",
       "name", " "),
     VERSION ("VERSION",
-      "`hopsworks`.model_version.version = ?version ",
-      "version", "");
+      "mv.version = ?version ",
+      "version", ""),
+    LATEST_VERSION("LATEST_VERSION", String.format("%1$s.version = ( " +
+      "SELECT MAX(%2$s.version) " +
+      "FROM `hopsworks`.model_version %2$s " +
+      "WHERE %1$s.model_id = %2$s.model_id " +
+      ") ", "mv", "mv2"), null, null);
     private final String value;
     private final String sql;
     private final String field;

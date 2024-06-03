@@ -591,6 +591,7 @@ describe "On #{ENV['OS']}" do
           expect_status_details(200)
 
           expect(parsed_json["items"].size).to eq(3)
+          expect(parsed_json["count"]).to eq(3)
         end
 
         it "should be able to get a list of feature view sorted by id" do
@@ -604,6 +605,7 @@ describe "On #{ENV['OS']}" do
           sorted_ids = ids.sort
 
           expect(json_body[:items].length).to eq(3)
+          expect(json_body[:count]).to eq(3)
           expect(ids).to eq(ids.sort)
           expect(ids).not_to eq(ids.sort {|x, y| y <=> x})
         end
@@ -618,6 +620,7 @@ describe "On #{ENV['OS']}" do
           ids = json_body[:items].map { |o| o[:id] }
 
           expect(json_body[:items].length).to eq(3)
+          expect(json_body[:count]).to eq(3)
           expect(ids).to eq(ids.sort {|x, y| y <=> x})
           expect(ids).not_to eq(ids.sort)
         end
@@ -633,6 +636,7 @@ describe "On #{ENV['OS']}" do
           sorted_names_versions = names_versions.sort_by(&:downcase)
   
           expect(json_body[:items].length).to eq(3)
+          expect(json_body[:count]).to eq(3)
           expect(names_versions).to eq(sorted_names_versions)
         end
 
@@ -645,6 +649,20 @@ describe "On #{ENV['OS']}" do
           expect_status_details(200)
   
           expect(json_body[:items].length).to eq(2)
+          expect(json_body[:count]).to eq(2)
+          expect(json_body[:items].all? { |fv| fv[:name] == "featureview2" }).to be true
+        end
+
+        it "should be able to get a list of feature view filtered by name like" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+
+          # Get the list
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featureview?filter_by=NAME_LIKE:view2"
+          expect_status_details(200)
+  
+          expect(json_body[:items].length).to eq(2)
+          expect(json_body[:count]).to eq(2)
           expect(json_body[:items].all? { |fv| fv[:name] == "featureview2" }).to be true
         end
 
@@ -658,6 +676,7 @@ describe "On #{ENV['OS']}" do
           names = json_body[:items].map { |o| "#{o[:name]}" }
   
           expect(json_body[:items].length).to eq(2)
+          expect(json_body[:count]).to eq(2)
           expect(json_body[:items].length).to eq(names.uniq.size)
           expect(json_body[:items].any? { |fv| fv[:name] == "featureview2" && fv[:version] == 2}).to be true
         end
@@ -671,6 +690,7 @@ describe "On #{ENV['OS']}" do
           expect_status_details(200)
 
           expect(json_body[:items].length).to eq(1)
+          expect(json_body[:count]).to eq(1)
           expect(json_body[:items].all? { |fv| fv[:name] == "featureview2" }).to be true
           expect(json_body[:items].all? { |fv| fv[:version] == 2 }).to be true
         end
@@ -684,6 +704,7 @@ describe "On #{ENV['OS']}" do
           expect_status_details(200)
 
           expect(json_body[:items].length).to eq(2)
+          expect(json_body[:count]).to eq(3)
         end
 
         it "should be able to get a list of feature view offset" do
@@ -700,6 +721,7 @@ describe "On #{ENV['OS']}" do
           ids_with_offset = json_body[:items].map { |o| o[:id] }
 
           expect(json_body[:items].length).to eq(2)
+          expect(json_body[:count]).to eq(3)
           for i in 0..json_body[:items].length-1 do
             expect(ids[i+1]).to eq(ids_with_offset[i])
           end

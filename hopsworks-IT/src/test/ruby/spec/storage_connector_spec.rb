@@ -588,7 +588,7 @@ describe "On #{ENV['OS']}" do
           json_result, connector_name = create_hopsfs_connector(project.id, featurestore_id, datasetName: "Resources")
           expect_status_details(201)
 
-          json_result, connector_name = create_hopsfs_connector(project.id, featurestore_id, datasetName: "Resources")
+          json_result, @connector_name = create_hopsfs_connector(project.id, featurestore_id, datasetName: "Resources")
           expect_status_details(201)
         end
 
@@ -600,7 +600,8 @@ describe "On #{ENV['OS']}" do
           get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors"
           expect_status_details(200)
 
-          expect(json_body.length).to eq(5)
+          expect(json_body[:items].size).to eq(4)
+          expect(json_body[:count]).to eq(4)
         end
 
         it "should be able to get a list of connectors in the featurestore sorted by id" do
@@ -610,10 +611,11 @@ describe "On #{ENV['OS']}" do
           # Get the list
           get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors?sort_by=ID:asc"
           expect_status_details(200)
-          ids = json_body.map { |o| o[:id] }
+          ids = json_body[:items].map { |o| o[:id] }
           sorted_ids = ids.sort
 
-          expect(json_body.length).to eq(5)
+          expect(json_body[:items].size).to eq(4)
+          expect(json_body[:count]).to eq(4)
           expect(ids).to eq(sorted_ids)
         end
 
@@ -624,10 +626,11 @@ describe "On #{ENV['OS']}" do
           # Get the list
           get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors?sort_by=NAME:asc"
           expect_status_details(200)
-          names = json_body.map { |o| "#{o[:name]}" }
+          names = json_body[:items].map { |o| "#{o[:name]}" }
           sorted_names = names.sort_by(&:downcase)
 
-          expect(json_body.length).to eq(5)
+          expect(json_body[:items].size).to eq(4)
+          expect(json_body[:count]).to eq(4)
           expect(names).to eq(sorted_names)
         end
 
@@ -639,8 +642,35 @@ describe "On #{ENV['OS']}" do
           get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors?filter_by=TYPE:HOPSFS"
           expect_status_details(200)
 
-          expect(json_body.length).to eq(4)
-          expect(json_body.all? { |sc| sc[:storageConnectorType] == "HOPSFS" }).to be true
+          expect(json_body[:items].size).to eq(4)
+          expect(json_body[:count]).to eq(4)
+          expect(json_body[:items].all? { |sc| sc[:storageConnectorType] == "HOPSFS" }).to be true
+        end
+
+        it "should be able to get a list of connectors in the featurestore filtered by name" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+
+          # Get the list
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors?filter_by=NAME:" + @connector_name
+          expect_status_details(200)
+
+          expect(json_body[:items].size).to eq(1)
+          expect(json_body[:count]).to eq(1)
+          expect(json_body[:items].all? { |sc| sc[:storageConnectorType] == "HOPSFS" }).to be true
+        end
+
+        it "should be able to get a list of connectors in the featurestore filtered by name like" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+
+          # Get the list
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors?filter_by=NAME_LIKE:hopsfs_connector_"
+          expect_status_details(200)
+
+          expect(json_body[:items].size).to eq(3)
+          expect(json_body[:count]).to eq(3)
+          expect(json_body[:items].all? { |sc| sc[:storageConnectorType] == "HOPSFS" }).to be true
         end
 
         it "should be able to get a list of connectors in the featurestore limit" do
@@ -651,7 +681,8 @@ describe "On #{ENV['OS']}" do
           get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors?sort_by=ID:asc&limit=2"
           expect_status_details(200)
 
-          expect(json_body.length == 2).to be true
+          expect(json_body[:items].size == 2).to be true
+          expect(json_body[:count]).to eq(4)
         end
 
         it "should be able to get a list of connectors in the featurestore offset" do
@@ -661,14 +692,15 @@ describe "On #{ENV['OS']}" do
           # Get the list
           get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors?sort_by=ID:asc"
           expect_status_details(200)
-          ids = json_body.map { |o| o[:id] }
+          ids = json_body[:items].map { |o| o[:id] }
 
           get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors?sort_by=ID:asc&offset=1"
           expect_status_details(200)
-          ids_with_offset = json_body.map { |o| o[:id] }
+          ids_with_offset = json_body[:items].map { |o| o[:id] }
 
-          expect(json_body.length).to eq(4)
-          for i in 0..json_body.length-1 do
+          expect(json_body[:items].size).to eq(3)
+          expect(json_body[:count]).to eq(4)
+          for i in 0..json_body[:items].size-1 do
             expect(ids[i+1]).to eq(ids_with_offset[i])
           end
         end

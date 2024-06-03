@@ -155,6 +155,11 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
     TypedQuery<Featuregroup> q = em.createNamedQuery("Featuregroup.findAll", Featuregroup.class);
     return q.getResultList();
   }
+
+  public CollectionInfo findByFeatureStore(Featurestore featurestore, QueryParam queryParam) {
+    return new CollectionInfo(countByFeatureStore(featurestore, queryParam),
+      getByFeatureStore(featurestore, queryParam));
+  }
   
   /**
    * Retrieves all featuregroups for a particular featurestore
@@ -163,7 +168,7 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
    * @param queryParam
    * @return list of featuregroup entities
    */
-  public List<Featuregroup> findByFeaturestore(Featurestore featurestore, QueryParam queryParam) {
+  public List<Featuregroup> getByFeatureStore(Featurestore featurestore, QueryParam queryParam) {
     String queryStr = buildQuery("SELECT fg FROM Featuregroup fg ",
       queryParam != null ? queryParam.getFilters(): null,
       queryParam != null ? queryParam.getSorts(): null,
@@ -180,10 +185,28 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
     return query.getResultList();
   }
 
-  public Long countByFeaturestore(Featurestore featurestore) {
-    return em.createNamedQuery("Featuregroup.countByFeaturestore", Long.class)
-        .setParameter("featurestore", featurestore)
-        .getSingleResult();
+  /**
+   * Retrieves count of feature groups for a particular featurestore
+   *
+   * @param featurestore the featurestore to query
+   * @param queryParam
+   * @return number of feature group entities
+   */
+  public Long countByFeatureStore(Featurestore featurestore, QueryParam queryParam) {
+    String queryStr = buildQuery("SELECT count(fg.id) FROM Featuregroup fg ",
+      queryParam != null ? queryParam.getFilters(): null,
+      null,
+      "fg.featurestore = :featurestore"
+      + " AND (fg.onDemandFeaturegroup IS NOT null"
+      + " OR fg.cachedFeaturegroup IS NOT null"
+      + " OR fg.streamFeatureGroup IS NOT null)");
+
+    TypedQuery<Long> query = em.createQuery(queryStr, Long.class)
+        .setParameter("featurestore", featurestore);
+    if (queryParam != null) {
+      setFilter(queryParam.getFilters(), query);
+    }
+    return query.getSingleResult();
   }
 
   public List<Featuregroup> findByStorageConnectors(List<FeaturestoreConnector> storageConnectors) {
@@ -253,6 +276,7 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
   private void setFilterQuery(FilterBy filter, Query q) {
     switch (Filters.valueOf(filter.getValue())) {
       case NAME:
+      case NAME_LIKE:
         q.setParameter(filter.getField(), filter.getParam());
         break;
       case VERSION:
@@ -265,6 +289,7 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
 
   public enum Filters {
     NAME("NAME", "fg.name = :name", "name", ""),
+    NAME_LIKE("NAME_LIKE", "fg.name LIKE CONCAT('%', :name, '%') ", "name", ""),
     VERSION("VERSION", "fg.version = :version", "version", ""),
     LATEST_VERSION("LATEST_VERSION", String.format("%1$s.version = ( " +
         "SELECT MAX(%2$s.version) " +

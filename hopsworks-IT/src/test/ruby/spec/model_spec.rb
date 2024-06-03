@@ -235,6 +235,16 @@ describe "On #{ENV['OS']}" do
           expect(json_body[:items].count).to eq 3
           json_body[:items].each {|model| expect(model[:framework]).to eq "TENSORFLOW"}
         end
+        it "should get 4 models with version 1" do
+          get_models(@project[:id], "?filter_by=version:1")
+          expect_status_details(200)
+          expect(json_body[:items].count).to eq 4
+        end
+        it "should get 4 models with latest_version" do
+          get_models(@project[:id], "?filter_by=latest_version")
+          expect_status_details(200)
+          expect(json_body[:items].count).to eq 4
+        end
         it "should get 1 Python model with name_eq model_python" do
           get_models(@project[:id], "?filter_by=name_eq:model_python")
           expect_status_details(200)

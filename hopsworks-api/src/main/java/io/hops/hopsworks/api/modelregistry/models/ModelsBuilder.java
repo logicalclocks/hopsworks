@@ -22,7 +22,6 @@ import io.hops.hopsworks.api.modelregistry.models.tags.ModelRegistryTagUri;
 import io.hops.hopsworks.api.tags.TagBuilder;
 import io.hops.hopsworks.api.user.UsersBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dataset.FilePreviewMode;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
@@ -37,6 +36,7 @@ import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.models.version.ModelVersion;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.util.AbstractFacade;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
@@ -115,10 +115,8 @@ public class ModelsBuilder {
     dto.setCount(0l);
     if(dto.isExpand()) {
       try {
-        AbstractFacade.CollectionInfo<ModelVersion> models = modelVersionFacade.findByProject(
-          resourceRequest.getOffset(), resourceRequest.getLimit(), resourceRequest.getFilter(),
-          resourceRequest.getSort(), modelRegistryProject);
-        dto.setCount(models.getCount());
+        AbstractFacade.CollectionInfo<ModelVersion> models = modelVersionFacade.findByProject(modelRegistryProject, 
+          resourceRequest.convertToQueryParam());
         String modelsDatasetPath = modelUtils.getModelsDatasetPath(userProject, modelRegistryProject);
         for(ModelVersion modelVersion: models.getItems()) {
           ModelDTO modelDTO = build(uriInfo, resourceRequest, user, userProject, modelRegistryProject, modelVersion,
@@ -127,6 +125,7 @@ public class ModelsBuilder {
             dto.addItem(modelDTO);
           }
         }
+        dto.setCount(Long.valueOf(models.getCount()));
       } catch(DatasetException e) {
         throw new ModelRegistryException(RESTCodes.ModelRegistryErrorCode.MODEL_LIST_FAILED, Level.FINE,
           "Unable to list models for project " + modelRegistryProject.getName(), e.getMessage(), e);

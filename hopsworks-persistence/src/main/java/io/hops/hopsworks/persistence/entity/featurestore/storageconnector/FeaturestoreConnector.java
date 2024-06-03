@@ -52,8 +52,6 @@ import java.io.Serializable;
 @Table(name = "feature_store_connector", catalog = "hopsworks")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "FeaturestoreConnector.findAll",
-        query = "SELECT fsConn FROM FeaturestoreConnector fsConn"),
     @NamedQuery(name = "FeaturestoreConnector.findById",
         query = "SELECT fsConn FROM FeaturestoreConnector fsConn WHERE fsConn.id = :id"),
     @NamedQuery(name = "FeaturestoreConnector.findByIdType",
@@ -61,17 +59,9 @@ import java.io.Serializable;
             "WHERE fsConn.id = :id AND fsConn.connectorType= :type"),
     @NamedQuery(name = "FeaturestoreConnector.findByFeaturestore",
         query = "SELECT fsConn FROM FeaturestoreConnector fsConn WHERE fsConn.featurestore = :featurestore"),
-    @NamedQuery(name = "FeaturestoreConnector.countByFeaturestore",
-        query = "SELECT count(fsConn.id) FROM FeaturestoreConnector fsConn WHERE fsConn.featurestore = :featurestore"),
-    @NamedQuery(name = "FeaturestoreConnector.findByFeaturestoreId",
-        query = "SELECT fsConn FROM FeaturestoreConnector fsConn " +
-            "WHERE fsConn.featurestore = :featurestore AND fsConn.id = :id"),
     @NamedQuery(name = "FeaturestoreConnector.findByFeaturestoreName",
         query = "SELECT fsConn FROM FeaturestoreConnector fsConn " +
-            "WHERE fsConn.featurestore = :featurestore AND fsConn.name = :name"),
-    @NamedQuery(name = "FeaturestoreConnector.findByType",
-        query = "SELECT fsConn FROM FeaturestoreConnector fsConn " +
-                "WHERE fsConn.featurestore = :featurestore AND fsConn.connectorType IN :types")})
+            "WHERE fsConn.featurestore = :featurestore AND fsConn.name = :name")})
 public class FeaturestoreConnector implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id

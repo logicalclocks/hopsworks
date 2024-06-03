@@ -17,8 +17,10 @@ package io.hops.hopsworks.common.api;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.dao.QueryParam;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -146,6 +148,15 @@ public class ResourceRequest {
       }
     }
     return null;
+  }
+
+  public QueryParam convertToQueryParam() {
+    return new QueryParam(
+        getOffset(),
+        getLimit(),
+        getFilter() == null ? new HashSet<>() : new HashSet<>(getFilter()),
+        getSort() == null ? new HashSet<>() : new HashSet<>(getSort())
+    );
   }
 
   /**

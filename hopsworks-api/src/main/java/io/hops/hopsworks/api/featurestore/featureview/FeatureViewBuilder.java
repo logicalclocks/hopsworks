@@ -48,6 +48,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.Trainin
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetJoin;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.util.AbstractFacade;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -123,14 +124,14 @@ public class FeatureViewBuilder {
     }
   }
 
-  public FeatureViewDTO build(List<FeatureView> featureViews, ResourceRequest resourceRequest, Project project,
-      Users user, UriInfo uriInfo)
+  public FeatureViewDTO build(AbstractFacade.CollectionInfo<FeatureView> featureviews,
+        Featurestore featurestore, Project project, Users user, UriInfo uriInfo, ResourceRequest resourceRequest)
       throws FeaturestoreException, ServiceException, MetadataException, DatasetException,
              FeatureStoreMetadataException {
     FeatureViewDTO featureViewDTO = new FeatureViewDTO();
     featureViewDTO.setHref(uriInfo.getRequestUri());
 
-    for (FeatureView featureView : featureViews) {
+    for (FeatureView featureView : featureviews.getItems()) {
       FeatureViewDTO featureViewItem = build(featureView, resourceRequest, project, user, uriInfo);
       featureViewItem.setHref(uriInfo.getRequestUriBuilder()
           .path("version")
@@ -138,9 +139,7 @@ public class FeatureViewBuilder {
           .build());
       featureViewDTO.addItem(featureViewItem);
     }
-    if (featureViews.size() > 1) {
-      featureViewDTO.setCount(Long.valueOf(featureViews.size()));
-    }
+    featureViewDTO.setCount(featureviews.getCount());
     return featureViewDTO;
   }
 

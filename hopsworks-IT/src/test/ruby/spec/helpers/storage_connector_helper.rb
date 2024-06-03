@@ -40,7 +40,9 @@ module StorageConnectorHelper
   def get_storage_connectors(project_id, featurestore_id, type)
     json_result = get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/"
     connectors = JSON.parse(json_result)
-    connectors.select{|c| c['storageConnectorType'].eql?(type)}.map { |c| c.with_indifferent_access }
+    unless connectors["items"].nil?
+      connectors["items"].select{|c| c['storageConnectorType'].eql?(type)}.map { |c| c.with_indifferent_access }
+    end
   end
 
   def get_storage_connector(project_id, featurestore_id, name)
