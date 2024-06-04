@@ -202,6 +202,8 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
   private void setFilterQuery(AbstractFacade.FilterBy filterBy, Query q) {
     switch (Filters.valueOf(filterBy.getValue())) {
       case NAME:
+      case NAME_NEQ:
+      case NAME_LIKE:
         q.setParameter(filterBy.getField(), filterBy.getParam());
         break;
       case ACCEPTED:
@@ -259,7 +261,9 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
   }
   
   public enum Filters {
-    NAME("NAME", "d.name LIKE CONCAT(:name, '%') ", "name", " "),
+    NAME("NAME", "LOWER(d.name) LIKE LOWER(CONCAT(:name, '%')) ", "name", " "),
+    NAME_NEQ("NAME_NEQ", "LOWER(d.name) NOT LIKE LOWER(CONCAT(:name_not_eq, '%')) ", "name_not_eq", " "),
+    NAME_LIKE("NAME_LIKE", "LOWER(d.name) LIKE LOWER(CONCAT('%', :name_like, '%')) ", "name_like", " "),
     ACCEPTED("ACCEPTED", "true =:accepted ", "accepted", "true"),//return all if true
     SHARED("SHARED", "NOT :shared ", "shared", "true"),//return none if true
     SEARCHABLE("SEARCHABLE", "d.searchable =:searchable ", "searchable", "0"),

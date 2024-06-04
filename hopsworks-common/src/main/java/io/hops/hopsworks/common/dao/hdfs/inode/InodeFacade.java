@@ -276,6 +276,8 @@ public class InodeFacade extends AbstractFacade<Inode> {
   private void setFilterQuery(AbstractFacade.FilterBy filterBy, Query q, Project project) {
     switch (Filters.valueOf(filterBy.getValue())) {
       case NAME:
+      case NAME_NEQ:
+      case NAME_LIKE:
         q.setParameter(filterBy.getField(), filterBy.getParam());
         break;
       case UNDER_CONSTRUCTION:
@@ -300,6 +302,9 @@ public class InodeFacade extends AbstractFacade<Inode> {
       case SIZE_LT:
       case SIZE_GT:
         q.setParameter(filterBy.getField(), getIntValue(filterBy));
+        break;
+      case TYPE:
+        q.setParameter(filterBy.getField(), filterBy.getParam().equalsIgnoreCase("dir"));
         break;
       default:
         break;
@@ -365,7 +370,9 @@ public class InodeFacade extends AbstractFacade<Inode> {
   }
   
   public enum Filters {
-    NAME("NAME", "i.inodePK.name LIKE CONCAT(:name, '%') ", "name", " "),//case
+    NAME("NAME", "LOWER(i.inodePK.name) LIKE LOWER(CONCAT(:name, '%')) ", "name", " "),
+    NAME_NEQ("NAME_NEQ", "LOWER(i.inodePK.name) NOT LIKE LOWER(CONCAT(:name_not_eq, '%')) ", "name_not_eq", " "),
+    NAME_LIKE("NAME_LIKE", "LOWER(i.inodePK.name) LIKE LOWER(CONCAT('%', :name_like, '%')) ", "name_like", " "),
     USER_EMAIL("USER_EMAIL", "i.hdfsUser =:user ", "user", " "),
     HDFS_USER("HDFS_USER", "i.hdfsUser =:hdfsUser ", "hdfsUser", " "),
     UNDER_CONSTRUCTION("UNDER_CONSTRUCTION", "i.underConstruction  =:underConstruction ", "underConstruction", "true"),
@@ -377,6 +384,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
     ACCESS_TIME("ACCESS_TIME", "i.accessTime  =:accessTime ", "accessTime", ""),
     ACCESS_TIME_LT("ACCESS_TIME_LT", "i.accessTime  <:accessTime_lt ", "accessTime_lt", ""),
     ACCESS_TIME_GT("ACCESS_TIME_GT", "i.accessTime  >:accessTime_gt ", "accessTime_gt", ""),
+    TYPE("TYPE", "i.dir =:is_dir ", "is_dir", "dir"),
     SIZE("SIZE", "i.size  =:size_eq ", "size_eq", "0"),
     SIZE_LT("SIZE_LT", "i.size  <:size_lt ", "size_lt", "1"),
     SIZE_GT("SIZE_GT", "i.size  >:size_gt ", "size_gt", "0");
