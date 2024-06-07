@@ -927,7 +927,9 @@ public class PKI {
         onlinefsDomain.add(HopsworksService.MYSQL.getNameWithTag(MysqlTags.onlinefs));
         return convertToGeneralNames(onlinefsDomain, true, region);
       case "elastic":
-        return convertToGeneralNames(HopsworksService.LOGSTASH.domains(), true, region);
+        return convertToGeneralNames(mergeSets(
+            HopsworksService.LOGSTASH.domains(), HopsworksService.OPENSEARCH.domains()),
+            true, region);
       case "flyingduck":
         return convertToGeneralNames(HopsworksService.FLYING_DUCK.domains(), true, region);
       case "kagent":
