@@ -236,4 +236,11 @@
     <packageUrl regex="true">^pkg:maven/org\.apache\.commons/commons\-compress@.*$</packageUrl>
     <vulnerabilityName>CVE-2024-25710</vulnerabilityName>
   </suppress>
+  <suppress>
+    <notes><![CDATA[
+   file name: aircompressor-0.10.jar
+   ]]></notes>
+    <packageUrl regex="true">^pkg:maven/io\.airlift/aircompressor@.*$</packageUrl>
+    <vulnerabilityName>CVE-2024-36114</vulnerabilityName>
+  </suppress>
 </suppressions>
