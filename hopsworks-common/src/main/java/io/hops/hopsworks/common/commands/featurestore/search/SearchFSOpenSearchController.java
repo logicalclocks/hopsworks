@@ -17,6 +17,7 @@ package io.hops.hopsworks.common.commands.featurestore.search;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hops.hopsworks.common.commands.CommandException;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.metadata.FeatureStoreKeywordControllerIface;
 import io.hops.hopsworks.common.featurestore.metadata.FeatureStoreTagControllerIface;
@@ -40,9 +41,11 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.commands.search.SearchFSCommand;
+import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.metadata.FeatureStoreTag;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFeature;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.opensearch.action.delete.DeleteRequest;
 import org.opensearch.action.index.IndexRequest;
@@ -78,6 +81,8 @@ public class SearchFSOpenSearchController {
   private FeatureStoreTagControllerIface tagCtrl;
   @EJB
   private FeaturegroupController featureGroupCtrl;
+  @EJB
+  private FeaturestoreController featurestoreController;
   @EJB
   private TrainingDatasetController trainingDatasetCtrl;
   @EJB
@@ -158,6 +163,8 @@ public class SearchFSOpenSearchController {
     String featureStorePath = Utils.getFeaturestorePath(c.getProject(), settings);
     Long featureStoreInode = inodeCtrl.getInodeAtPath(featureStorePath).getId();
     doc.setDatasetIId(featureStoreInode);
+    Featurestore featurestore = getFeatureStoreForProject(c.getProject());
+    doc.setFeaturestoreId(featurestore.getId());
     if(c.getFeatureGroup() != null) {
       doc.setDocType(OpenSearchDocType.FEATURE_GROUP);
       doc.setName(c.getFeatureGroup().getName());
@@ -174,6 +181,15 @@ public class SearchFSOpenSearchController {
       throw CommandException.unhandledArtifactType();
     }
     return doc;
+  }
+  
+  private Featurestore getFeatureStoreForProject(Project project) throws CommandException {
+    try {
+      return featurestoreController.getProjectFeaturestore(project);
+    } catch (FeaturestoreException e) {
+      throw new CommandException(RESTCodes.CommandErrorCode.INTERNAL_SERVER_ERROR, Level.FINE,
+        e.getUsrMsg(), e.getDevMsg());
+    }
   }
   
   private SearchDoc updateTags(SearchFSCommand c) throws CommandException {

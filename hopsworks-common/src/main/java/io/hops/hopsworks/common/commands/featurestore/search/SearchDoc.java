@@ -40,6 +40,9 @@ public class SearchDoc {
   @JsonProperty(FeaturestoreXAttrsConstants.DATASET_INODE_ID)
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private Long datasetIId;
+  @JsonProperty(FeaturestoreXAttrsConstants.FEATURESTORE_ID)
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private Integer featurestoreId;
   @JsonProperty(FeaturestoreXAttrsConstants.OPENSEARCH_XATTR)
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private XAttr xattr;
@@ -90,6 +93,14 @@ public class SearchDoc {
   
   public void setDatasetIId(Long datasetIId) {
     this.datasetIId = datasetIId;
+  }
+  
+  public Integer getFeaturestoreId() {
+    return featurestoreId;
+  }
+  
+  public void setFeaturestoreId(Integer featurestoreId) {
+    this.featurestoreId = featurestoreId;
   }
   
   public XAttr getXattr() {

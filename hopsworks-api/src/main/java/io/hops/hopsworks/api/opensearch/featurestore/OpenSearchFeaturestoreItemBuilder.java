@@ -22,9 +22,9 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeatureStoreItem;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeatureViewXAttrDTO;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturegroupXAttr;
-import io.hops.hopsworks.common.opensearch.OpenSearchFeaturestoreHit;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturestoreXAttrsConstants;
 import io.hops.hopsworks.common.featurestore.xattr.dto.TrainingDatasetXAttrDTO;
+import io.hops.hopsworks.common.opensearch.OpenSearchFeaturestoreHit;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -57,6 +57,7 @@ public class OpenSearchFeaturestoreItemBuilder {
     item.datasetIId = hit.getDatasetIId();
     item.parentProjectId = hit.getProjectId();
     item.parentProjectName = hit.getProjectName();
+    item.featurestoreId = hit.getFeaturestoreId();
     Object featureStoreXAttr = hit.getXattrs().get(FeaturestoreXAttrsConstants.FEATURESTORE);
     if(featureStoreXAttr != null) {
       switch(hit.getDocType()) {
@@ -77,7 +78,6 @@ public class OpenSearchFeaturestoreItemBuilder {
   
   private OpenSearchFeaturestoreItemDTO.Base populateFeatureStoreItem(OpenSearchFeaturestoreItemDTO.Base item,
                                                                       FeatureStoreItem src){
-    item.featurestoreId = src.getFeaturestoreId();
     item.description = src.getDescription();
     item.created = new Date(src.getCreateDate());
     item.creator = new UserDTO(userFacade.findByEmail(src.getCreator()));

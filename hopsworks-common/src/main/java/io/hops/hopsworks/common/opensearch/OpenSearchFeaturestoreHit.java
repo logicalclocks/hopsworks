@@ -46,6 +46,7 @@ public class OpenSearchFeaturestoreHit implements Comparator<OpenSearchFeaturest
   private Integer projectId;
   private String projectName;
   private Long datasetIId;
+  private Integer featurestoreId;
   private Map<String, Object> xattrs = new HashMap<>();
 
   public OpenSearchFeaturestoreHit() {
@@ -72,6 +73,8 @@ public class OpenSearchFeaturestoreHit implements Comparator<OpenSearchFeaturest
           feHit.projectName = entry.getValue().toString();
         } else if (entry.getKey().equals(FeaturestoreXAttrsConstants.DATASET_INODE_ID)) {
           feHit.datasetIId = Long.parseLong(entry.getValue().toString());
+        } else if (entry.getKey().equals(FeaturestoreXAttrsConstants.FEATURESTORE_ID)) {
+          feHit.featurestoreId = Integer.parseInt(entry.getValue().toString());
         } else if (entry.getKey().equals(FeaturestoreXAttrsConstants.OPENSEARCH_XATTR)) {
           feHit.xattrs = (Map)entry.getValue();
         }
@@ -156,6 +159,14 @@ public class OpenSearchFeaturestoreHit implements Comparator<OpenSearchFeaturest
   
   public Map<String, Object> getXattrs() {
     return xattrs;
+  }
+  
+  public Integer getFeaturestoreId() {
+    return featurestoreId;
+  }
+  
+  public void setFeaturestoreId(Integer featurestoreId) {
+    this.featurestoreId = featurestoreId;
   }
   
   public void setXattrs(Map<String, Object> xattrs) {
