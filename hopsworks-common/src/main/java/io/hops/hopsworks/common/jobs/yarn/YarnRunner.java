@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.common.jobs.yarn;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.yarn.LocalResourceDTO;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.yarn.YarnJobConfiguration;
@@ -82,6 +83,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
@@ -89,6 +91,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**d
  * <p>
@@ -105,21 +108,21 @@ public class YarnRunner {
   private JobType jobType;
   private YarnClusterDescriptor yarnClusterDescriptor;
   private ClusterSpecification clusterSpecification;
-  private final String amQueue;
+  private String amQueue;
   private int amMemory;
   private int amVCores;
   private String appName;
-  private final String amMainClass;
+  private String amMainClass;
   private String amArgs;
-  private final Map<String, LocalResourceDTO> amLocalResourcesOnHDFS;
-  private final Map<String, String> amEnvironment;
+  private Map<String, LocalResourceDTO> amLocalResourcesOnHDFS;
+  private Map<String, String> amEnvironment;
   private String localResourcesBasePath;
-  private final List<String> filesToBeCopied;
-  private final List<YarnSetupCommand> commands;
-  private final List<String> javaOptions;
-  private final List<String> filesToRemove;
+  private List<String> filesToBeCopied;
+  private List<YarnSetupCommand> commands;
+  private List<String> javaOptions;
+  private List<String> filesToRemove;
   private String serviceDir;
-  private final AsynchronousJobExecutor services;
+  private AsynchronousJobExecutor services;
   private DistributedFileSystemOps dfsClient;
   private YarnClient yarnClient;
   
@@ -212,15 +215,10 @@ public class YarnRunner {
     YarnException, IOException, URISyntaxException, InterruptedException {
     logger.info("Starting application master.");
     if (jobType == JobType.SPARK || jobType == JobType.PYSPARK) {
-  
-      if(!Strings.isNullOrEmpty(args)) {
-        String[] argsArray= args.trim().split(" ");
-        for (String s : argsArray) {
-          amArgs = amArgs + " --arg '" + s + "'";
-        }
-      }
+
+      amArgs = amArgs + parseExecutionArgs(args);
+
       //Get application id
-      
       YarnClientApplication app = yarnClient.createApplication();
       GetNewApplicationResponse appResponse = app.getNewApplicationResponse();
       appId = appResponse.getApplicationId();
@@ -309,6 +307,17 @@ public class YarnRunner {
 
     }
     return appId;
+  }
+
+  public String parseExecutionArgs(String args) {
+    if(!Strings.isNullOrEmpty(args)) {
+      return Arrays.stream(args.trim().split(" "))
+          .filter(s -> !Strings.isNullOrEmpty(s))
+          .map(s -> " --arg '" + s + "'")
+          .collect(Collectors.joining());
+    }
+
+    return "";
   }
 
   //---------------------------------------------------------------------------
@@ -585,6 +594,11 @@ public class YarnRunner {
     this.filesToRemove = builder.filesToRemove;
     this.serviceDir = builder.serviceDir;
     this.services = builder.services;
+  }
+
+  // For testing
+  @VisibleForTesting
+  public YarnRunner() {
   }
 
   //---------------------------------------------------------------------------
@@ -888,9 +902,6 @@ public class YarnRunner {
       }
       return new YarnRunner(this);
     }
-
-
-
   }
 
   //---------------------------------------------------------------------------        

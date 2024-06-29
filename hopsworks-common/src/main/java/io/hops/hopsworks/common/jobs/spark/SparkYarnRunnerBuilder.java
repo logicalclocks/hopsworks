@@ -81,7 +81,6 @@ public class SparkYarnRunnerBuilder {
   private final SparkJobConfiguration sparkJobConfiguration;
 
   //Optional parameters
-  private final List<String> jobArgs = new ArrayList<>();
   private String jobName = "Untitled Spark Job";
   private final List<LocalResourceDTO> extraFiles = new ArrayList<>();
 
@@ -219,10 +218,6 @@ public class SparkYarnRunnerBuilder {
     for (String s : sysProps.keySet()) {
       String option = YarnRunner.escapeForShell("-D" + s + "=" + sysProps.get(s));
       builder.addJavaOption(option);
-    }
-
-    for (String s : jobArgs) {
-      amargs.append(" --arg '").append(s).append("'");
     }
 
     amargs.append(" --dist-cache-conf 'distcache.conf'");
