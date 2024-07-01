@@ -1052,15 +1052,6 @@
 
   <profiles>
     <profile>
-      <id>web</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <modules>
-        <module>hopsworks-web</module>
-      </modules>
-    </profile>
-    <profile>
       <id>testing</id>
       <activation>
         <activeByDefault>false</activeByDefault>
