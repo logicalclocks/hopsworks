@@ -154,7 +154,10 @@ public class SearchFSCommandLogger {
     command.setInodeId(inode.getId());
     command.setProject(featureGroup.getFeaturestore().getProject());
     command.setStatus(CommandStatus.NEW);
-    command.setFeatureGroup(featureGroup);
+    if (!SearchFSCommandOp.DELETE_ARTIFACT.equals(op)) {
+      // Don't set it since a separate transaction deletes FG, this could cause it to be potentially recreated
+      command.setFeatureGroup(featureGroup);
+    }
     command.setOp(op);
     return command;
   }
@@ -171,7 +174,10 @@ public class SearchFSCommandLogger {
     command.setInodeId(inode.getId());
     command.setProject(featureView.getFeaturestore().getProject());
     command.setStatus(CommandStatus.NEW);
-    command.setFeatureView(featureView);
+    if (!SearchFSCommandOp.DELETE_ARTIFACT.equals(op)) {
+      // Don't set it since a separate transaction deletes FV, this could cause it to be potentially recreated
+      command.setFeatureView(featureView);
+    }
     command.setOp(op);
     return command;
   }
@@ -194,7 +200,10 @@ public class SearchFSCommandLogger {
     command.setInodeId(inode.getId());
     command.setProject(trainingDataset.getFeaturestore().getProject());
     command.setStatus(CommandStatus.NEW);
-    command.setTrainingDataset(trainingDataset);
+    if (!SearchFSCommandOp.DELETE_ARTIFACT.equals(op)) {
+      // Don't set it since a separate transaction deletes TD, this could cause it to be potentially recreated
+      command.setTrainingDataset(trainingDataset);
+    }
     command.setOp(op);
     return command;
   }
