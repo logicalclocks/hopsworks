@@ -95,6 +95,17 @@ describe "On #{ENV['OS']}" do
           connector = JSON.parse(connector_json)
           expect(connector["name"]).to eql(base_project_connector)
         end
+
+        it "should not be able to delete default online connector from the featurestore" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector_name = "#{@project['projectname']}_#{@user['username']}_onlinefeaturestore"
+          result = get_storage_connector(project.id, featurestore_id, connector_name)
+          expect_status_details(200)
+          delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/storageconnectors/#{connector_name}"
+          delete delete_connector_endpoint
+          expect_status_details(400)
+        end
       end
     end
 
@@ -429,6 +440,15 @@ describe "On #{ENV['OS']}" do
           delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/storageconnectors/#{connector_name}"
           delete delete_connector_endpoint
           expect_status_details(200)
+        end
+
+        it "should not be able to delete default hopsfs connector from the featurestore" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector_name = project.projectname + "_Training_Datasets"
+          delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/storageconnectors/#{connector_name}"
+          delete delete_connector_endpoint
+          expect_status_details(400)
         end
 
         it "should be able to delete a s3 connector from the featurestore" do
