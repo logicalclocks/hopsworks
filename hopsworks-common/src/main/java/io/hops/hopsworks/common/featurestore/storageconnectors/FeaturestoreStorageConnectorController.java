@@ -20,7 +20,6 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.QueryParam;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
@@ -106,9 +105,7 @@ public class FeaturestoreStorageConnectorController {
   private FeaturestoreController featurestoreController;
   @EJB
   private Settings settings;
-  @EJB
-  private DatasetController datasetController;
-
+  
   private static final String KAFKA_STORAGE_CONNECTOR_NAME = "kafka_connector";
 
   /**
