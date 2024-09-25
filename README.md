@@ -35,12 +35,12 @@ Hopsworks is a data platform for ML with a **Python-centric Feature Store** and 
 
 ## **APP - Serverless (beta)**
 ### → **Go to [app.hopsworks.ai](https://app.hopsworks.ai)**
-Hopsworks is available as a serverless app, simply head to [app.hopsworks.ai](https://app.hopsworks.ai) and register with your **Gmail** or **Github** accounts. You will then be able to run a tutorial or access Hopsworks directly and try yourself. This is the prefered way to first experience the platform before diving into more advanced uses and installation requirements. 
+Hopsworks is available as a serverless app, simply head to [app.hopsworks.ai](https://app.hopsworks.ai) and register with your **Gmail** or **Github** accounts. You will then be able to run a tutorial or access Hopsworks directly and try yourself. This is the preferred way to first experience the platform before diving into more advanced uses and installation requirements. 
 
 ## **Azure, AWS & GCP**
 [Managed Hopsworks](https://managed.hopsworks.ai) is our platform for running Hopsworks and the Feature Store in the cloud and integrates directly with the customer AWS/Azure/GCP environment. It also integrates seamlessly with third party platforms such as Databricks, SageMaker and KubeFlow.
 
-If you wish to run Hopsworks on your Azure, AWS or GCP environement, follow one of the following guides in our documentation:
+If you wish to run Hopsworks on your Azure, AWS or GCP environment, follow one of the following guides in our documentation:
 - [AWS Guide](https://docs.hopsworks.ai/3.0/setup_installation/aws/getting_started/#step-1-connecting-your-aws-account)
 - [Azure Guide](https://docs.hopsworks.ai/3.0/setup_installation/azure/getting_started/#step-1-connecting-your-azure-account)
 - [GCP Guide](https://docs.hopsworks.ai/3.0/setup_installation/gcp/getting_started/#step-1-connecting-your-gcp-account)
@@ -70,7 +70,7 @@ You need at least one server or virtual machine on which Hopsworks will be insta
 - **MLOps:** [https://docs.hopsworks.ai/3.0/concepts/mlops/prediction_services/](https://docs.hopsworks.ai/3.0/concepts/mlops/prediction_services/)
 
 ### **APIs**
-Hopsworks API documentation is divided in 3 categories; Hopsworks API covers project level APIs, Feature Store API covers covers feature groups, feature views and connectors, and finally MLOps API covers Model Registry, serving and deployment. 
+Hopsworks API documentation is divided in 3 categories; Hopsworks API covers project level APIs, Feature Store API covers feature groups, feature views and connectors, and finally MLOps API covers Model Registry, serving and deployment. 
 - **Hopsworks API** - [https://docs.hopsworks.ai/hopsworks-api/3.0.1/generated/api/connection/](https://docs.hopsworks.ai/hopsworks-api/3.0.1/generated/api/connection/)
 - **Feature Store API** - [https://docs.hopsworks.ai/feature-store-api/3.0.0/generated/api/connection_api/](https://docs.hopsworks.ai/feature-store-api/3.0.0/generated/api/connection_api/)
 - **MLOps API** - [https://docs.hopsworks.ai/machine-learning-api/3.0.0/generated/connection_api/](https://docs.hopsworks.ai/machine-learning-api/3.0.0/generated/connection_api/)
