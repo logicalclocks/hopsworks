@@ -112,7 +112,7 @@
     <googlecode-json-simple.version>1.1.1</googlecode-json-simple.version>
     <handy-uri-templates.version>2.1.8</handy-uri-templates.version>
     <hive.version>3.0.0.13-SNAPSHOT</hive.version>
-    <hops.version>3.2.0.15-RC0</hops.version>
+    <hops.version>3.2.0.16-SNAPSHOT</hops.version>
     <jackson-core-asl.version>1.9.13</jackson-core-asl.version>
     <jackson.version>2.12.4</jackson.version>
     <jackson-datatype-jsr310.version>2.12.1</jackson-datatype-jsr310.version>
