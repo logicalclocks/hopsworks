@@ -20,10 +20,18 @@
         <img src="https://img.shields.io/static/v1?label=Hopsworks&message=Slack&color=36C5F0" /></a>
 </p>
 
+# Quick Install
+Get up and running with a single command:
+```bash
+curl -O https://raw.githubusercontent.com/logicalclocks/hopsworks-k8s-installer/master/install-hopsworks.py
+python3 install-hopsworks.py
+```
+
+
 <a name="what"></a>
 # What is Hopsworks?
 
-Hopsworks is a data platform for ML with a **Python-centric Feature Store** and MLOps capabilities. Hopsworks is a modular platform. You can use it as a standalone Feature Store, you can use it to manage, govern, and serve your models, and you can even use it to develop and operate feature pipelines and training pipelines. Hopsworks brings collaboration for ML teams, providing a secure, governed platform for developing, managing, and sharing ML assets - features, models, training data, batch scoring data, logs, and more.
+Hopsworks is a **Real-Time AI Lakehouse** for ML with a **Python-centric Feature Store** and MLOps capabilities. Hopsworks is a modular platform. You can use it as a standalone Feature Store, you can use it to manage, govern, and serve your models, and you can even use it to develop and operate feature pipelines and training pipelines. Hopsworks brings collaboration for ML teams, providing a secure, governed platform for developing, managing, and sharing ML assets - features, models, training data, batch scoring data, logs, and more.
 <br />
 <p align="center" style="background-color:white; border-radius:4px;">
 <img src="https://uploads-ssl.webflow.com/5f6353590bb01cacbcecfbac/62f21c38bc47b2d313fbf76d_Marchitecture%20-%20readme.svg" width="90%">
@@ -41,9 +49,9 @@ Hopsworks is available as a serverless app, simply head to [app.hopsworks.ai](ht
 [Managed Hopsworks](https://managed.hopsworks.ai) is our platform for running Hopsworks and the Feature Store in the cloud and integrates directly with the customer AWS/Azure/GCP environment. It also integrates seamlessly with third party platforms such as Databricks, SageMaker and KubeFlow.
 
 If you wish to run Hopsworks on your Azure, AWS or GCP environment, follow one of the following guides in our documentation:
-- [AWS Guide](https://docs.hopsworks.ai/3.0/setup_installation/aws/getting_started/#step-1-connecting-your-aws-account)
-- [Azure Guide](https://docs.hopsworks.ai/3.0/setup_installation/azure/getting_started/#step-1-connecting-your-azure-account)
-- [GCP Guide](https://docs.hopsworks.ai/3.0/setup_installation/gcp/getting_started/#step-1-connecting-your-gcp-account)
+- [AWS Guide](https://docs.hopsworks.ai/latest/setup_installation/aws/getting_started/#step-1-connecting-your-aws-account)
+- [Azure Guide](https://docs.hopsworks.ai/latest/setup_installation/azure/getting_started/#step-1-connecting-your-azure-account)
+- [GCP Guide](https://docs.hopsworks.ai/latest/setup_installation/gcp/getting_started/#step-1-connecting-your-gcp-account)
 
 ## **Installer - On-premise**
 It is possible to use Hopsworks on-premises, which means that companies can run their machine learning workloads on their own hardware and infrastructure, rather than relying on a cloud provider. This can provide greater flexibility, control, and cost savings, as well as enabling companies to meet specific compliance and security requirements.
@@ -65,15 +73,15 @@ You need at least one server or virtual machine on which Hopsworks will be insta
 # 🎓 Documentation and API
 ### **Documentation**
 [Hopsworks documentation](https://docs.hopsworks.ai) includes user guides, feature store documentation and an administration guide. We also include concepts to help user navigates the abstractions and logics of the feature stores and MLOps in general:
-- **Feature Store:** [https://docs.hopsworks.ai/3.0/concepts/fs/](https://docs.hopsworks.ai/3.0/concepts/fs/)
-- **Projects:** [https://docs.hopsworks.ai/3.0/concepts/projects/governance/](https://docs.hopsworks.ai/3.0/concepts/projects/governance/)
-- **MLOps:** [https://docs.hopsworks.ai/3.0/concepts/mlops/prediction_services/](https://docs.hopsworks.ai/3.0/concepts/mlops/prediction_services/)
+- **Feature Store:** [https://docs.hopsworks.ai/latest/concepts/fs/](https://docs.hopsworks.ai/latest/concepts/fs/)
+- **Projects:** [https://docs.hopsworks.ai/latest/concepts/projects/governance/](https://docs.hopsworks.ai/latest/concepts/projects/governance/)
+- **MLOps:** [https://docs.hopsworks.ai/latest/concepts/mlops/prediction_services/](https://docs.hopsworks.ai/latest/concepts/mlops/prediction_services/)
 
 ### **APIs**
 Hopsworks API documentation is divided in 3 categories; Hopsworks API covers project level APIs, Feature Store API covers feature groups, feature views and connectors, and finally MLOps API covers Model Registry, serving and deployment. 
-- **Hopsworks API** - [https://docs.hopsworks.ai/hopsworks-api/3.0.1/generated/api/connection/](https://docs.hopsworks.ai/hopsworks-api/3.0.1/generated/api/connection/)
-- **Feature Store API** - [https://docs.hopsworks.ai/feature-store-api/3.0.0/generated/api/connection_api/](https://docs.hopsworks.ai/feature-store-api/3.0.0/generated/api/connection_api/)
-- **MLOps API** - [https://docs.hopsworks.ai/machine-learning-api/3.0.0/generated/connection_api/](https://docs.hopsworks.ai/machine-learning-api/3.0.0/generated/connection_api/)
+- **Hopsworks API** - [https://docs.hopsworks.ai/hopsworks-api/latest.1/generated/api/connection/](https://docs.hopsworks.ai/hopsworks-api/latest.1/generated/api/connection/)
+- **Feature Store API** - [https://docs.hopsworks.ai/feature-store-api/latest/generated/api/connection_api/](https://docs.hopsworks.ai/feature-store-api/latest/generated/api/connection_api/)
+- **MLOps API** - [https://docs.hopsworks.ai/machine-learning-api/latest/generated/connection_api/](https://docs.hopsworks.ai/machine-learning-api/latest/generated/connection_api/)
 
 ### **Tutorials**
 Most of the tutorials require you to have at least an account on [app.hopsworks.ai](https://app.hopsworks.ai). You can explore the dedicated [https://github.com/logicalclocks/hopsworks-tutorials](https://github.com/logicalclocks/hopsworks-tutorials) repository containing our tutorials or jump directly in one of the existing use cases:
